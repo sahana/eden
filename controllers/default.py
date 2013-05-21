@@ -497,18 +497,18 @@ def user():
     if customize:
         customize(arg=arg)
 
+    # Needs more work to integrate our form extensions
+    #auth.settings.formstyle = s3_formstyle
     if arg == "login":
-        response.title = T("Login")
-        # @ToDo: move this code to /modules/s3/s3aaa.py:def login?
+        title = response.title = T("Login")
+        # @ToDo: move this code to /modules/s3/s3aaa.py:def login()?
         auth.messages.submit_button = T("Login")
         form = auth()
         #form = auth.login()
         login_form = form
-        if s3.crud.submit_style:
-            form[0][-1][1][0]["_class"] = s3.crud.submit_style
     elif arg == "register":
-        response.title = T("Register")
-        # @ToDo: move this code to /modules/s3/s3aaa.py:def register?
+        title = response.title = T("Register")
+        # @ToDo: move this code to /modules/s3/s3aaa.py:def register()?
         if not self_registration:
             session.error = T("Registration not permitted")
             redirect(URL(f="index"))
@@ -518,14 +518,29 @@ def user():
         # Add client-side validation
         s3base.s3_register_validation()
     elif arg == "change_password":
-        response.title = T("Change Password")
+        title = response.title = T("Change Password")
+        form = auth()
+        # Add client-side validation
+        if s3.debug:
+            s3.scripts.append("/%s/static/scripts/jquery.pstrength.2.1.0.js" % appname)
+        else:
+            s3.scripts.append("/%s/static/scripts/jquery.pstrength.2.1.0.min.js" % appname)
+        s3.jquery_ready.append("$('.password:eq(1)').pstrength()")
+    elif arg == "retrieve_password":
+        title = response.title = T("Retrieve Password")
         form = auth()
     elif arg == "profile":
-        response.title = T("Profile")
+        title = response.title = T("User Profile")
         form = auth.profile()
     else:
-        # Retrieve Password / Logout
-        form = auth()
+        # logout
+        form = title = ""
+
+    if form:
+        if s3.crud.submit_style:
+            form[0][-1][1][0]["_class"] = s3.crud.submit_style
+        elif s3_formstyle == "bootstrap":
+            form[0][-1][1][0]["_class"] = "btn btn-primary"
 
     # Use Custom Ext views
     # Best to not use an Ext form for login: can't save username/password in browser & can't hit 'Enter' to submit!
@@ -545,7 +560,8 @@ def user():
                 from gluon.http import HTTP
                 raise HTTP("404", "Unable to open Custom View: %s" % view)
 
-    return dict(form=form,
+    return dict(title=title,
+                form=form,
                 login_form=login_form,
                 register_form=register_form,
                 self_registration=self_registration)

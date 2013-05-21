@@ -5,11 +5,11 @@
 <div class='form-container'>
 {{=login_form}}
 {{if auth.settings.facebook:}}
-<a class='zocial facebook' href='{{=URL(f="facebook", args="login")}}' title='Login using Facebook account'>
+<a class='zocial facebook' href='{{=URL(f="facebook", args="login")}}' title='{{=T("Login using Facebook account")}}'>
 <span>{{=T("Login with Facebook")}}</span>
 </a>{{pass}}
 {{if auth.settings.google:}}
-<a class='zocial google' href='{{=URL(f="google", args="login")}}' title="Login using Google account">
+<a class='zocial google' href='{{=URL(f="google", args="login")}}' title='{{=T("Login using Google account")}}'>
 <span>{{=T("Login with Google")}}</span>
 </a>{{pass}}
 </div>
