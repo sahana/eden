@@ -534,7 +534,8 @@ def user():
         form = auth.profile()
     else:
         # logout
-        form = title = ""
+        title = ""
+        form = auth()
 
     if form:
         if s3.crud.submit_style:
