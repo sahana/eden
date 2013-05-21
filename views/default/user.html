@@ -1,42 +1,11 @@
 {{extend "layout.html"}}
 <div id='home'>
+{{try:}}{{H2(title)}}{{except:}}{{pass}}
 {{if request.args(0) == "login":}}
- {{=H2(T("Login"))}}
  {{include "auth/_login.html"}}
 {{elif request.args(0) == "register":}}
- {{=H2(T("Register"))}}
  {{include "auth/_register.html"}}
-{{if s3.debug:}}
-  {{if s3.cdn:}}
-{{s3.scripts.append("http://ajax.aspnetcdn.com/ajax/jquery.validate/1.9/jquery.validate.js")}}
-  {{else:}}
-{{s3.scripts.append("/%s/static/scripts/jquery.validate.js" % appname)}}
-  {{pass}}
- {{else:}}
-  {{if s3.cdn:}}
-{{s3.scripts.append("http://ajax.aspnetcdn.com/ajax/jquery.validate/1.9/jquery.validate.min.js")}}
-  {{else:}}
-{{s3.scripts.append("/%s/static/scripts/jquery.validate.min.js" % appname)}}
- {{pass}}
-{{pass}}
-{{elif request.args(0) == "profile":}}
- {{=H2(T("User Profile"))}}
- <div class='form-container'>
- {{=form}}
- </div>
-{{elif request.args(0) == "change_password":}}
- {{=H2(T("Change Password"))}}
- {{=form}}
-{{if s3.debug:}}{{s3.scripts.append("/%s/static/scripts/jquery.pstrength.2.1.0.js" % appname)}}
-{{else:}}{{s3.scripts.append("/%s/static/scripts/jquery.pstrength.2.1.0.min.js" % appname)}}{{pass}}
-{{s3.jquery_ready.append("$('.password:eq(1)').pstrength()")}}
-{{elif request.args(0) == "reset_password":}}
- {{=H2(T("Reset Password"))}}
-<div class='form-container'>
- {{=form}}
-</div>
-{{elif request.args(0) == "retrieve_password":}}
- {{=H2(T("Retrieve Password"))}}
+{{else:}}
  <div class='form-container'>
  {{=form}}
  </div>

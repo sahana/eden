@@ -32,7 +32,7 @@ class ReceiveItem(InvTestFunctions):
             Inventory Test - Receive Workflow (Receive items)
             @Case: INV002
             @param items: This test receives a specific item from another party.
-        This test assume that regression/inv-mngt has been added to prepop
+        This test assume that test/inv-mngt has been added to prepop
         - e.g. via demo/IFRC_Train
         
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE

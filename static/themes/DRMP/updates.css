@@ -96,7 +96,6 @@ h4.latest-updates {
 .icon.icon-incident, 
 .icon.icon-report,
 .icon.icon-assessment,
-.icon.icon-disaster,
 .icon.icon-training_material,
 .icon.icon-plans  {
     font-size: 14px;
@@ -104,40 +103,6 @@ h4.latest-updates {
     color: #413b3b;
     padding-left: 1px;
     width: 106px;
-}
-
-/* Activity */
-/*.icon-truck:*/
-.icon-activity:before  {
-    content: "\f0d1";
-}
-/* Alert */
-/*.icon-bullhorn*/
-.icon-alert:before {
-    content: "\f0a1";
-}
-/* Report */
-/*.icon-file-alt*/
-.icon-report:before {
-    content: "\f0f6";
-}
-/* Training Material */
-/*icon-book*/
-.icon.icon-training_material:before {
-    content: "\f02d";
-}
-
-/* Assessment */
-/*icon-info-sign*/
-.icon.icon-assessment:before{
-    content: "\f05a";
-}
-/* Disaster */
-/* Incident */
-/*icon-warning-sign*/
-.icon.icon-incident:before,
-.icon.icon-disaster:before {
-    content: "\f071";
 }
 
 /*  Filter Styling  */

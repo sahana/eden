@@ -54,7 +54,8 @@ h4.profile-sub-header {
     margin-top: 5px;
 }
 
-.icon.icon-plus-sign.small-add {
+.icon-fullscreen,
+.icon-plus-sign.small-add {
     font-size: 17px;
     color: #0096fe;
     float: right;
@@ -63,7 +64,8 @@ h4.profile-sub-header {
     right: 9px;
 }
 
-.icon.icon-plus-sign.small-add:hover{
+.icon-fullscreen:hover,
+.icon-plus-sign.small-add:hover {
     text-decoration: none;
     color: #2da7fc;
 }
@@ -76,7 +78,7 @@ h4.profile-sub-header {
     opacity: 0.67;
 }
 
-.icon-folder-open-alt {
+.empty_card-holder .icon-folder-open-alt {
     font-size: 25px;
 }
 

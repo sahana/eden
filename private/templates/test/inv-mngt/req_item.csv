@@ -1,0 +1,11 @@
+"Request","Item","Pack","Quantity","Currency","Value","Comments"
+"REQ-LOS-000001","Plastic Sheets","m2",2000,"USD",0.5,
+"REQ-LOS-000001","Blankets","Piece",100,"USD",4.5,
+"REQ-LOS-000001","Kitchen Sets","Unit",500,"USD",28,
+"REQ-LOS-000001","Hygiene Kits","Unit",1000,"USD",25,
+"REQ-LOS-000001","Jerry Cans","Piece",1000,"USD",1.2,
+"REQ-MAN-000001","Plastic Sheets","m2",30000,"USD",0.5,
+"REQ-MAN-000001","Blankets","Piece",5000,"USD",4.5,
+"REQ-MAN-000001","Kitchen Sets","Unit",500,"USD",28,
+"REQ-MAN-000001","Hygiene Kits","Unit",500,"USD",25,
+"REQ-MAN-000001","Jerry Cans","Piece",5000,"USD",1.2,
