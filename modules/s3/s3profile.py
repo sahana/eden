@@ -399,8 +399,22 @@ class S3Profile(S3CRUD):
                                    feature_resources=feature_resources,
                                    )
 
+        # Button to go full-screen
+        fullscreen = A(I(_class="icon icon-fullscreen"),
+                       _href=URL(c="gis", f="map_viewing_client"),
+                       _id="gis_fullscreen_map-btn",
+                       _title=T("View full screen"),
+                       )
+        s3 = current.response.s3
+        if s3.debug:
+            script = "/%s/static/scripts/S3/s3.gis.fullscreen.js" % current.request.application
+        else:
+            script = "/%s/static/scripts/S3/s3.gis.fullscreen.min.js" % current.request.application
+        s3.scripts.append(script)
+
         # Render the widget
-        output = DIV(H4(icon,
+        output = DIV(fullscreen,
+                     H4(icon,
                         label,
                         _class="profile-sub-header"),
                      DIV(map,
