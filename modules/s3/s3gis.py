@@ -5295,6 +5295,7 @@ class GIS(object):
                   "active" : True,         # Is the feed displayed upon load or needs ticking to load afterwards?
                   "marker" : None,         # Optional: A per-Layer marker query or marker_id for the icon used to display the feature
                   "opacity" : 1,           # Optional
+                  "cluster_attribute",     # Optional
                   "cluster_distance",      # Optional
                   "cluster_threshold"      # Optional
                 }]
@@ -5306,6 +5307,7 @@ class GIS(object):
                   "active"    : True,         # Is the feed displayed upon load or needs ticking to load afterwards?
                   "marker"    : None,         # Optional: A per-Layer marker dict for the icon used to display the feature
                   "opacity"   : 1,            # Optional
+                  "cluster_attribute",        # Optional
                   "cluster_distance",         # Optional
                   "cluster_threshold"         # Optional
                 }]
@@ -5371,6 +5373,7 @@ class GIS(object):
         # Defaults
         # Also in static/S3/s3.gis.js
         # http://dev.openlayers.org/docs/files/OpenLayers/Strategy/Cluster-js.html
+        self.cluster_attribute = 'colour'
         self.cluster_distance = 20   # pixels
         self.cluster_threshold = 2   # minimum # of features to form a cluster
 
@@ -5825,6 +5828,11 @@ S3.gis.layers_feature_query=new Array()'''
  "opacity":%.1f''' % layer["opacity"]
             else:
                 opacity = ""
+            if "cluster_attribute" in layer and layer["cluster_attribute"] != self.cluster_attribute:
+                cluster_attribute = ''',
+ "cluster_attribute":"%s"''' % layer["cluster_attribute"]
+            else:
+                cluster_attribute = ""
             if "cluster_distance" in layer and layer["cluster_distance"] != self.cluster_distance:
                 cluster_distance = ''',
  "cluster_distance":%i''' % layer["cluster_distance"]
@@ -5840,7 +5848,7 @@ S3.gis.layers_feature_query=new Array()'''
             layers_feature_query += '''
 S3.gis.layers_feature_query[%i]={
  "name":"%s",
- "url":"%s"%s%s%s%s%s
+ "url":"%s"%s%s%s%s%s%s
 }
 ''' % (counter,
        name,
@@ -5848,6 +5856,7 @@ S3.gis.layers_feature_query[%i]={
        visibility,
        markerLayer,
        opacity,
+       cluster_attribute,
        cluster_distance,
        cluster_threshold)
 
@@ -5907,6 +5916,11 @@ S3.gis.layers_feature_resource=new Array()'''
                 opacity = ""
             if "cluster_distance" in layer and layer["cluster_distance"] != self.cluster_distance:
                 cluster_distance = ''',
+ "cluster_attribute":"%s"''' % layer["cluster_attribute"]
+            else:
+                cluster_attribute = ""
+            if "cluster_distance" in layer and layer["cluster_distance"] != self.cluster_distance:
+                cluster_distance = ''',
  "cluster_distance":%i''' % layer["cluster_distance"]
             else:
                 cluster_distance = ""
@@ -5932,7 +5946,7 @@ S3.gis.layers_feature_resource=new Array()'''
 S3.gis.layers_feature_resource[%i]={
  "name":"%s",
  "id":"%s",
- "url":"%s"%s%s%s%s%s
+ "url":"%s"%s%s%s%s%s%s
 }
 ''' % (counter,
        name,
@@ -5941,6 +5955,7 @@ S3.gis.layers_feature_resource[%i]={
        visibility,
        markerLayer,
        opacity,
+       cluster_attribute,
        cluster_distance,
        cluster_threshold)
 
@@ -6423,12 +6438,16 @@ class Layer(object):
 
         def setup_clustering(self, output):
             gis = current.gis
-            cluster_distance = gis.cluster_distance
-            cluster_threshold = gis.cluster_threshold
-            if self.cluster_distance != cluster_distance:
-                output["cluster_distance"] = self.cluster_distance
-            if self.cluster_threshold != cluster_threshold:
-                output["cluster_threshold"] = self.cluster_threshold
+            cluster_attribute = self.cluster_attribute
+            cluster_distance = self.cluster_distance
+            cluster_threshold = self.cluster_threshold
+            if cluster_attribute and \
+               cluster_attribute != gis.cluster_attribute:
+                output["cluster_attribute"] = cluster_attribute
+            if cluster_distance != gis.cluster_distance:
+                output["cluster_distance"] = cluster_distance
+            if cluster_threshold != gis.cluster_threshold:
+                output["cluster_threshold"] = cluster_threshold
 
         def setup_folder(self, output):
             if self.dir:

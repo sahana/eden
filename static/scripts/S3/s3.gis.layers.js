@@ -412,6 +412,13 @@ function addGeoJSONLayer(layer) {
         // Default to opaque
         opacity = 1;
     }
+    var cluster_attribute;
+    if (undefined != layer.cluster_attribute) {
+        cluster_attribute = layer.cluster_attribute;
+    } else {
+        // Default to global settings
+        cluster_attribute = 'colour';
+    }
     var cluster_distance;
     if (undefined != layer.cluster_distance) {
         cluster_distance = layer.cluster_distance;
@@ -570,21 +577,20 @@ function addGeoJSONLayer(layer) {
                             if (undefined != elem.cat) {
                                 // Category-based style
                                 if (value == elem.cat) {
-                                    url = S3.Ap.concat('/static/' + elem.external_graphic);
+                                    url = S3.Ap.concat('/static/' + elem.external_graphic) || marker_url; // Fallback to Layer Marker
                                     return false;
                                 }
                             } else {
                                 // Range-based style
                                 if ((value >= elem.low) && (value < elem.high)) {
-                                    url = S3.Ap.concat('/static/' + elem.external_graphic);
+                                    url = S3.Ap.concat('/static/' + elem.external_graphic) || marker_url; // Fallback to Layer Marker
                                     return false;
                                 }
                             }
                         });
                     }
                 }
-                // Default to Layer Marker
-                return url || marker_url;
+                return url;
             },
             radius: function(feature) {
             	var pix;
@@ -943,7 +949,7 @@ function addGeoJSONLayer(layer) {
                     //}
                 }),
                 new OpenLayers.Strategy.AttributeCluster({
-                    attribute: 'colour',
+                    attribute: cluster_attribute,
                     distance: cluster_distance,
                     threshold: cluster_threshold
                 })
