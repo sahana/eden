@@ -2260,6 +2260,7 @@ class S3FeatureLayerModel(S3Model):
                                   gis_opacity()(),
                                   # @ToDo: Expose the Graphic options
                                   gis_refresh()(),
+                                  cluster_attribute()(),
                                   cluster_distance()(),
                                   cluster_threshold()(),
                                   s3_role_required(),    # Single Role
@@ -2646,6 +2647,7 @@ class S3MapModel(S3Model):
                              gis_layer_folder()(),
                              gis_opacity()(),
                              gis_refresh()(),
+                             cluster_attribute()(),
                              cluster_distance()(),
                              cluster_threshold()(),
                              s3_role_required(),       # Single Role
@@ -3103,6 +3105,7 @@ class S3MapModel(S3Model):
                              gis_opacity()(),
                              # @ToDo
                              #gis_refresh()(),
+                             cluster_attribute()(),
                              cluster_distance()(),
                              cluster_threshold()(),
                              s3_role_required(), # Single Role
@@ -3264,6 +3267,7 @@ class S3MapModel(S3Model):
                              gis_layer_folder()(),
                              #gis_refresh()(),
                              gis_opacity()(),
+                             #cluster_attribute()(),
                              cluster_distance()(),
                              cluster_threshold()(),
                              #Field("editable", "boolean", default=False, label=T("Editable?")),
@@ -3964,6 +3968,17 @@ def gis_refresh():
     return S3ReusableField("refresh", "integer", default=900,        # 15 minutes
                            requires = IS_INT_IN_RANGE(10, 86400),    # 10 seconds - 24 hours
                            label = T("Refresh Rate (seconds)"))
+
+# =============================================================================
+def cluster_attribute():
+    T = current.T
+    CLUSTER_ATTRIBUTE = T("Cluster Attribute")
+    return S3ReusableField("cluster_attribute",
+                           label = CLUSTER_ATTRIBUTE,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (CLUSTER_ATTRIBUTE,
+                                                           T("The attribute used to determine which features to cluster together (optional).")))
+                           )
 
 # =============================================================================
 def cluster_distance():

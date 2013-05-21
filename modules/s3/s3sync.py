@@ -497,16 +497,26 @@ class S3Sync(S3Method):
                 result = log.FATAL
             message = "%s" % resource.error
             for element in resource.error_tree.findall("resource"):
-                for field in element.findall("data[@error]"):
-                    error_msg = field.get("error", None)
-                    if error_msg:
-                        msg = "(UID: %s) %s.%s=%s: %s" % \
-                                (element.get("uuid", None),
-                                 element.get("name", None),
-                                 field.get("field", None),
-                                 field.get("value", field.text),
-                                 field.get("error", None))
-                        message = "%s, %s" % (message, msg)
+                error_msg = element.get("error", "unknown error")
+                
+                error_fields = element.findall("data[@error]")
+                if error_fields:
+                    for field in error_fields:
+                        error_msg = field.get("error", "unknown error")
+                        if error_msg:
+                            msg = "(UID: %s) %s.%s=%s: %s" % \
+                                    (element.get("uuid", None),
+                                     element.get("name", None),
+                                     field.get("field", None),
+                                     field.get("value", field.text),
+                                     error_msg)
+                            message = "%s, %s" % (message, msg)
+                else:
+                    msg = "(UID: %s) %s: %s" % \
+                          (element.get("uuid", None),
+                           element.get("name", None),
+                           error_msg)
+                    message = "%s, %s" % (message, msg)
         else:
             result = log.SUCCESS
             message = "data received from peer"
