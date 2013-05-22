@@ -1548,7 +1548,6 @@ class IS_LOCATION_SELECTOR2(Validator):
         lon = vars.get("lon", None)
         parent = vars.get("parent", None)
         # Rough check for valid Lat/Lon
-        # @ToDo: Detailed bounds-check later
         errors = Storage()
         if lat:
             try:
@@ -1579,6 +1578,8 @@ class IS_LOCATION_SELECTOR2(Validator):
                 form = Storage()
                 form.errors = errors
                 form.vars = vars
+                # Will include detailed bounds check if deployment_setting doesn't disable it
+                # @ToDo: Check validaton errors on form if bounds check fails
                 current.s3db.gis_location_onvalidation(form)
                 if form.errors:
                     errors = form.errors
@@ -1604,10 +1605,10 @@ class IS_LOCATION_SELECTOR2(Validator):
                                             table.parent,
                                             limitby=(0, 1)).first()
                 if location:
-                    # @ToDo: Allow amending the Parent
-                    if lat != location.lat or \
-                       lon != location.lon or \
-                       parent != location.parent:
+                    # Float comparisons need care - just check the 1st 4 decimal points, as that's all we care about
+                    if round(lat, 4) != round(location.lat, 4) or \
+                       round(lon, 4) != round(location.lon, 4) or \
+                       int(parent) != int(location.parent):
                         vars = Storage(lat=lat,
                                        lon=lon,
                                        parent=parent,
@@ -1616,6 +1617,8 @@ class IS_LOCATION_SELECTOR2(Validator):
                         form = Storage()
                         form.errors = errors
                         form.vars = vars
+                        # Will include detailed bounds check if deployment_setting doesn't disable it
+                        # @ToDo: Check validaton errors on form if bounds check fails
                         current.s3db.gis_location_onvalidation(form)
                         if form.errors:
                             errors = form.errors

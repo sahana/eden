@@ -2624,19 +2624,24 @@ class S3LocationSelectorWidget2(FormWidget):
 
         # @ToDo: Support default locations from gis_config
         values = dict(L0 = countries[0],
-                      L1 = None,
-                      L2 = None,
-                      L3 = None,
-                      L4 = None,
-                      L5 = None,
+                      L1 = 0,
+                      L2 = 0,
+                      L3 = 0,
+                      L4 = 0,
+                      L5 = 0,
+                      specific = 0,
                       )
         lat = None
         lon = None
         parent = ""
         if value == "dummy":
-            # Validation Error on creating a new Point
+            # Validation Error when Creating a specific point
+            post_vars = request.post_vars
             # Revert to Parent
-            value = request.post_vars.parent
+            value = post_vars.parent
+            # But keep the selected Lat/Lon
+            lat = post_vars.lat
+            lon = post_vars.lon
         if value:
             record = db(gtable.id == value).select(gtable.path,
                                                    gtable.parent,
@@ -2655,6 +2660,7 @@ class S3LocationSelectorWidget2(FormWidget):
                 # Only use a specific Lat/Lon when not an Lx
                 lat = record.lat
                 lon = record.lon
+                values["specific"] = value
                 if len(path) < len(levels):
                     # We don't have a full path
                     # @ToDo: Retrieve all records in the path to match them up to their Lx
@@ -2780,36 +2786,33 @@ class S3LocationSelectorWidget2(FormWidget):
         # then we need to launch the client-side JS as a callback to the MapJS loader
         max_level = levels[len(levels) - 1]
         use_callback = False
-        script = '''s3_gis_locationselector2('%s',%s''' % (fieldname, country_id)
         L1 = values["L1"]
-        if L1:
-            script = '''%s,%s''' % (script, L1)
-            if max_level == "L1":
-                use_callback = True
-            else:
-                L2 = values["L2"]
-                if L2:
-                    script = '''%s,%s''' % (script, L2)
-                    if max_level == "L2":
-                        use_callback = True
-                    else:
-                        L3 = values["L3"]
-                        if L3:
-                            script = '''%s,%s''' % (script, L3)
-                            if max_level == "L3":
-                                use_callback = True
-                            else:
-                                L4 = values["L4"]
-                                if L4:
-                                    script = '''%s,%s''' % (script, L4)
-                                    if max_level == "L4":
-                                        use_callback = True
-                                    else:
-                                        L5 = values["L5"]
-                                        if L5:
-                                            script = '''%s,%s''' % (script, L5)
-                                            use_callback = True
-        script = '''%s)''' % script
+        specific = values["specific"]
+        args = [country_id]
+        if specific:
+            use_callback = True
+            # We need to proivde all args
+            args += [L1, values["L2"], values["L3"], values["L4"], values["L5"], specific]
+        elif L1:
+            use_callback = True
+            # Add only required args
+            args.append(L1)
+            L2 = values["L2"]
+            if L2:
+                args.append(L2)
+                L3 = values["L3"]
+                if L3:
+                    args.append(L3)
+                    L4 = values["L4"]
+                    if L4:
+                        args.append(L4)
+                        L5 = values["L5"]
+                        if L5:
+                            args.append(L5)
+
+        args = [str(arg) for arg in args]
+        args = ''','''.join(args)
+        script = '''s3_gis_locationselector2('%s',%s)''' % (fieldname, args)
         if use_callback:
             callback = script
         else:

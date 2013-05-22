@@ -5914,8 +5914,8 @@ S3.gis.layers_feature_resource=new Array()'''
  "opacity":%.1f''' % layer["opacity"]
             else:
                 opacity = ""
-            if "cluster_distance" in layer and layer["cluster_distance"] != self.cluster_distance:
-                cluster_distance = ''',
+            if "cluster_attribute" in layer and layer["cluster_attribute"] != self.cluster_attribute:
+                cluster_attribute = ''',
  "cluster_attribute":"%s"''' % layer["cluster_attribute"]
             else:
                 cluster_attribute = ""
