@@ -48,9 +48,13 @@ form {
 div.dl {
     border-bottom: 0;
 }
+.dl-row,
 .dl-item {
     border-top: 0;
     clear: none;
+}
+.dl-1-cols {
+    width: 98%;
 }
 .dl-header {
     display: none;

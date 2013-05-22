@@ -50,9 +50,9 @@ function dlItemBindEvents() {
 /*
  * dlAutoRetrieve: Force retrieval of the next scroll page
  */
-function dlAutoRetrieve(item) {
+function dlAutoRetrieve(row) {
     // Force page retrieval
-    $(item).closest('.dl').infinitescroll('retrieve');
+    $(row).closest('.dl').infinitescroll('retrieve');
 }
 
 /*
@@ -60,8 +60,8 @@ function dlAutoRetrieve(item) {
  */
 function dlAjaxReloadItem(list_id, record_id) {
 
-    datalist = '#' + list_id;
-    var item_id = '#' + list_id + '-' + record_id;
+    var datalist = '#' + list_id,
+        item_id = '#' + list_id + '-' + record_id;
 
     var pagination = $(datalist).find('input.dl-pagination');
     if (!pagination.length) {
@@ -118,24 +118,92 @@ function dlAjaxDeleteItem(anchor) {
     var record_id = item_list.pop();
 
     var datalist = $(item).closest('.dl');
-    var pagination = $(datalist).find('input.dl-pagination');
+    var pagination = $(datalist).find('input.dl-pagination').first();
     if (!pagination.length) {
         // No such datalist or no pagination data
         return;
     }
-    var dl_data = JSON.parse($(pagination[0]).val());
+    var dl_data = JSON.parse($(pagination).val());
 
     // Do we have an Ajax-URL?
     var ajaxurl = dl_data['ajaxurl'];
     if (ajaxurl === null) {
         return;
     }
+    var pagesize = dl_data['pagesize'],
+        rowsize = dl_data['rowsize'];
 
     // Ajax-delete the item
     $.ajax({
         'url': dlURLAppend(ajaxurl, 'delete=' + record_id),
         'success': function(data) {
+
+            var row_index = $(item).index(),
+                row = $(item).closest('.dl-row'),
+                i, prev, next;
+
+            // 1. Remove the item
             $(item).remove();
+
+            // 2. Move all following items in the row 1 position to the left
+            if (row_index < rowsize - 1) {
+                for (i=row_index + 1; i < rowsize; i++) {
+                    prev = 'dl-col-' + (i-1);
+                    next = 'dl-col-' + i;
+                    $(row).find('.' + next).removeClass(next).addClass(prev);
+                }
+            }
+            
+            // 3. Move all first items of all following rows to the end of the previous row
+            var prev_row = row;
+            $(row).nextAll('.dl-row').each(function() {
+                $(this).find('.dl-col-0').first()
+                       .appendTo(prev_row)
+                       .removeClass('dl-col-0')
+                       .addClass('dl-col-' + (rowsize - 1));
+                if (rowsize > 1) {
+                    for (i=1; i < rowsize; i++) {
+                        prev = 'dl-col-' + (i-1);
+                        next = 'dl-col-' + i;
+                        $(this).find('.' + next).removeClass(next).addClass(prev);
+                    }
+                }
+                prev_row = this;
+            });
+
+            // 4. Load 1 more item to fill up the last row
+            last_row = $(row).closest('.dl').find('.dl-row').last();
+            var numitems = $(row).closest('.dl').find('.dl-item').length;
+            
+            $.ajax({
+                'url': dlURLAppend(ajaxurl, 'start=' + numitems + '&limit=1'),
+                'success': function(data) {
+                    $(data.slice(data.indexOf('<')))
+                        .find('.dl-item')
+                        .first()
+                        .removeClass('dl-col-0')
+                        .addClass('dl-col-' + (rowsize - 1))
+                        .appendTo(last_row);
+                    dlItemBindEvents();
+                },
+                'error': function(request, status, error) {
+                    if (error == 'UNAUTHORIZED') {
+                        msg = i18n.gis_requires_login;
+                    } else {
+                        msg = request.responseText;
+                    }
+                    console.log(msg);
+                },
+                'dataType': 'html'
+            });
+
+            // Update dl-data totalitems/maxitems
+            dl_data['totalitems']--;
+            if (dl_data['maxitems'] > dl_data['totalitems']) {
+                dl_data['maxitems'] = dl_data['totalitems'];
+            }
+            $(pagination).val(JSON.stringify(dl_data));
+
             // Also update the layer on the Map (if any)
             if (typeof map != 'undefined') {
                 var layers = map.layers;
@@ -318,7 +386,7 @@ function dlInfiniteScroll(datalist) {
                 },
                 navSelector: "div.dl-navigation",
                 nextSelector: "div.dl-navigation a:first",
-                itemSelector: "div.dl-item",
+                itemSelector: "div.dl-row",
                 path: function(page) {
                     // Compute start+limit
                     var start = initialitems + (page - 2) * pagesize;
@@ -332,7 +400,7 @@ function dlInfiniteScroll(datalist) {
             },
             function(data) {
                 $('.dl').each(function() {
-                    $(this).find('.dl-item:last:in-viewport').each(function() {
+                    $(this).find('.dl-row:last:in-viewport').each(function() {
                         if (!$(this).hasClass('autoretrieve')) {
                             $(this).addClass('autoretrieve');
                             dlAutoRetrieve(this);
@@ -357,7 +425,7 @@ $(document).ready(function() {
 
     // Auto-retrieve paginated lists which don't reach their view-port bottom
     $('.dl').each(function() {
-        $(this).find('.dl-item:last:in-viewport').each(function() {
+        $(this).find('.dl-row:last:in-viewport').each(function() {
             $(this).addClass('autoretrieve');
             dlAutoRetrieve(this);
         });

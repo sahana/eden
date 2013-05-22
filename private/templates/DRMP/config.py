@@ -1293,10 +1293,10 @@ def customize_cms_post(**attr):
         if callable(standard_postp):
             output = standard_postp(r, output)
 
-        if r.interactive:
+        if r.interactive and isinstance(output, dict):
             if "form" in output:
                 output["form"].add_class("cms_post")
-            elif "item" in output:
+            elif "item" in output and hasattr(output["item"], "add_class"):
                 output["item"].add_class("cms_post")
 
         return output
@@ -1640,10 +1640,11 @@ def customize_hrm_job_title(**attr):
                                     url=URL(c="hrm", f="job_title",
                                             args=["[id]", "delete"])))
             s3.actions = actions
-            if "form" in output:
-                output["form"].add_class("hrm_job_title")
-            elif "item" in output:
-                output["item"].add_class("hrm_job_title")
+            if isinstance(output, dict):
+                if "form" in output:
+                    output["form"].add_class("hrm_job_title")
+                elif "item" in output and hasattr(output["item"], "add_class"):
+                    output["item"].add_class("hrm_job_title")
 
         # Call standard postp
         if callable(standard_postp):
@@ -1675,6 +1676,11 @@ def customize_org_organisation(**attr):
                 return False
 
         if r.interactive:
+
+            # 2-column datalist, 6 rows per page
+            s3.dl_pagelength = 12
+            s3.dl_rowsize = 2
+
             s3db = current.s3db
             # Customise tables used by widgets
             customize_cms_post_fields()
@@ -1888,10 +1894,11 @@ def customize_org_office(**attr):
                                     url=URL(c="org", f="office",
                                             args=["[id]", "delete"])))
             s3.actions = actions
-            if "form" in output:
-                output["form"].add_class("org_office")
-            elif "item" in output:
-                output["item"].add_class("org_office")
+            if isinstance(output, dict):
+                if "form" in output:
+                    output["form"].add_class("org_office")
+                elif "item" in output and hasattr(output["item"], "add_class"):
+                    output["item"].add_class("org_office")
 
         # Call standard postp
         if callable(standard_postp):
@@ -1966,10 +1973,11 @@ def customize_org_resource(**attr):
                                     url=URL(c="org", f="resource",
                                             args=["[id]", "delete"])))
             s3.actions = actions
-            if "form" in output:
-                output["form"].add_class("org_resource")
-            elif "item" in output:
-                output["item"].add_class("org_resource")
+            if isinstance(output, dict):
+                if "form" in output:
+                    output["form"].add_class("org_resource")
+                elif "item" in output and hasattr(output["item"], "add_class"):
+                    output["item"].add_class("org_resource")
 
         # Call standard postp
         if callable(standard_postp):
@@ -2147,10 +2155,11 @@ def customize_pr_person(**attr):
                                     url=URL(c="pr", f="person",
                                             args=["[id]", "delete"])))
             s3.actions = actions
-            if "form" in output:
-                output["form"].add_class("pr_person")
-            elif "item" in output:
-                output["item"].add_class("pr_person")
+            if isinstance(output, dict):
+                if "form" in output:
+                    output["form"].add_class("pr_person")
+                elif "item" in output and hasattr(output["item"], "add_class"):
+                    output["item"].add_class("pr_person")
 
         return output
     s3.postp = custom_postp
@@ -2291,10 +2300,11 @@ def customize_project_project(**attr):
                                     url=URL(c="project", f="project",
                                             args=["[id]", "delete"])))
             s3.actions = actions
-            if "form" in output:
-                output["form"].add_class("project_project")
-            elif "item" in output:
-                output["item"].add_class("project_project")
+            if isinstance(output, dict):
+                if "form" in output:
+                    output["form"].add_class("project_project")
+                elif "item" in output and hasattr(output["item"], "add_class"):
+                    output["item"].add_class("project_project")
 
         # Call standard postp
         if callable(standard_postp):
