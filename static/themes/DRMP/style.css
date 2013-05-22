@@ -56,6 +56,10 @@ div.dl {
 .dl-1-cols {
     width: 98%;
 }
+.dl-row.odd,
+.dl-row.odd .dl-item {
+    background-color: #FFF;
+}
 .dl-header {
     display: none;
 }
