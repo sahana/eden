@@ -5239,9 +5239,9 @@ class GIS(object):
                  add_feature_active = False,
                  add_polygon = False,
                  add_polygon_active = False,
-                 features = [],
-                 feature_queries = [],
-                 feature_resources = [],
+                 features = None,
+                 feature_queries = None,
+                 feature_resources = None,
                  wms_browser = {},
                  catalogue_layers = False,
                  legend = False,
@@ -5261,7 +5261,7 @@ class GIS(object):
                  collapsed = False,
                  location_selector = False,
                  callback = "S3.gis.show_map()",
-                 plugins = [],
+                 plugins = None,
                 ):
         """
             Returns the HTML to display a map
@@ -5302,14 +5302,21 @@ class GIS(object):
             @param feature_resources: REST URLs for (filtered) resources to overlay onto the map & their options (List of Dicts):
                 [{"name"      : T("MyLabel"), # A string: the label for the layer
                   "id"        : "search",     # A string: the id for the layer (for manipulation by JavaScript)
+                  "active"    : True,         # Is the feed displayed upon load or needs ticking to load afterwards?
+                  EITHER:
+                  "layer_id"  : 1,            # An integer: the layer_id to load (optional alternative to specifying URL/tablename/marker)
+                  "filter"    : "filter",     # A string: an optional URL filter which *replaces* any in the layer
+                  OR:
                   "tablename" : "module_resource", # A string: the tablename (used to determine whether to locate via location_id or site_id)
                   "url"       : "/eden/module/resource.geojson?filter", # A URL to load the resource
-                  "active"    : True,         # Is the feed displayed upon load or needs ticking to load afterwards?
-                  "marker"    : None,         # Optional: A per-Layer marker dict for the icon used to display the feature
-                  "opacity"   : 1,            # Optional
-                  "cluster_attribute",        # Optional
-                  "cluster_distance",         # Optional
-                  "cluster_threshold"         # Optional
+
+                  "marker"    : None,         # Optional: A per-Layer marker dict for the icon used to display the feature (overrides layer_id if-set)
+                  "opacity"   : 1,            # Optional (overrides layer_id if-set)
+                  "cluster_attribute",        # Optional (overrides layer_id if-set)
+                  "cluster_distance",         # Optional (overrides layer_id if-set)
+                  "cluster_threshold",        # Optional (overrides layer_id if-set)
+                  "dir",                    # Optional (overrides layer_id if-set)
+                  "style",                    # Optional (overrides layer_id if-set)
                 }]
             @param wms_browser: WMS Server's GetCapabilities & options (dict)
                 {"name": T("MyLabel"),     # Name for the Folder in LayerTree
@@ -5723,129 +5730,127 @@ S3.gis.lon=%s
 S3.gis.layers_feature_query=new Array()'''
             counter = -1
             mtable = s3db.gis_marker
-        else:
-            layers_feature_query = ""
-        for layer in feature_queries:
-            counter = counter + 1
-            name = str(layer["name"])
-            name_safe = re.sub("\W", "_", name)
+            for layer in feature_queries:
+                counter = counter + 1
+                name = str(layer["name"])
+                name_safe = re.sub("\W", "_", name)
 
-            # Lat/Lon via Join or direct?
-            try:
-                layer["query"][0].gis_location.lat
-                join = True
-            except:
-                join = False
+                # Lat/Lon via Join or direct?
+                try:
+                    layer["query"][0].gis_location.lat
+                    join = True
+                except:
+                    join = False
 
-            # Push the Features into a temporary table in order to have them accessible via GeoJSON
-            # @ToDo: Maintenance Script to clean out old entries (> 24 hours?)
-            fqtable = s3db.gis_feature_query
-            cname = "%s_%s_%s" % (name_safe,
-                                  request.controller,
-                                  request.function)
-            # Clear old records
-            query = (fqtable.name == cname)
-            if auth.user:
-                created_by = auth.user.id
-            else:
-                # Anonymous
-                # @ToDo: A deployment with many Anonymous Feature Queries being
-                #        accessed will need to change this design - e.g. use session ID instead
-                created_by = None
-            query = query & (fqtable.created_by == created_by)
-            db(query).delete()
-            for row in layer["query"]:
-                rowdict = {"name" : cname}
-                if join:
-                    rowdict["lat"] = row.gis_location.lat
-                    rowdict["lon"] = row.gis_location.lon
+                # Push the Features into a temporary table in order to have them accessible via GeoJSON
+                # @ToDo: Maintenance Script to clean out old entries (> 24 hours?)
+                fqtable = s3db.gis_feature_query
+                cname = "%s_%s_%s" % (name_safe,
+                                      request.controller,
+                                      request.function)
+                # Clear old records
+                query = (fqtable.name == cname)
+                if auth.user:
+                    created_by = auth.user.id
                 else:
-                    rowdict["lat"] = row["lat"]
-                    rowdict["lon"] = row["lon"]
-                if "popup_url" in row:
-                    rowdict["popup_url"] = row["popup_url"]
-                if "popup_label" in row:
-                    rowdict["popup_label"] = row["popup_label"]
-                if "marker" in row:
-                    rowdict["marker_url"] = URL(c="static", f="img",
-                                                args=["markers",
-                                                      row["marker"].image])
-                    rowdict["marker_height"] = row["marker"].height
-                    rowdict["marker_width"] = row["marker"].width
-                else:
-                    if "marker_url" in row:
-                        rowdict["marker_url"] = row["marker_url"]
-                    if "marker_height" in row:
-                        rowdict["marker_height"] = row["marker_height"]
-                    if "marker_width" in row:
-                        rowdict["marker_width"] = row["marker_width"]
-                if "shape" in row:
-                    rowdict["shape"] = row["shape"]
-                if "size" in row:
-                    rowdict["size"] = row["size"]
-                if "colour" in row:
-                    rowdict["colour"] = row["colour"]
-                if "opacity" in row:
-                    rowdict["opacity"] = row["opacity"]
-                record_id = fqtable.insert(**rowdict)
-                if not created_by:
-                    auth.s3_make_session_owner(fqtable, record_id)
+                    # Anonymous
+                    # @ToDo: A deployment with many Anonymous Feature Queries being
+                    #        accessed will need to change this design - e.g. use session ID instead
+                    created_by = None
+                query = query & (fqtable.created_by == created_by)
+                db(query).delete()
+                for row in layer["query"]:
+                    rowdict = {"name" : cname}
+                    if join:
+                        rowdict["lat"] = row.gis_location.lat
+                        rowdict["lon"] = row.gis_location.lon
+                    else:
+                        rowdict["lat"] = row["lat"]
+                        rowdict["lon"] = row["lon"]
+                    if "popup_url" in row:
+                        rowdict["popup_url"] = row["popup_url"]
+                    if "popup_label" in row:
+                        rowdict["popup_label"] = row["popup_label"]
+                    if "marker" in row:
+                        rowdict["marker_url"] = URL(c="static", f="img",
+                                                    args=["markers",
+                                                          row["marker"].image])
+                        rowdict["marker_height"] = row["marker"].height
+                        rowdict["marker_width"] = row["marker"].width
+                    else:
+                        if "marker_url" in row:
+                            rowdict["marker_url"] = row["marker_url"]
+                        if "marker_height" in row:
+                            rowdict["marker_height"] = row["marker_height"]
+                        if "marker_width" in row:
+                            rowdict["marker_width"] = row["marker_width"]
+                    if "shape" in row:
+                        rowdict["shape"] = row["shape"]
+                    if "size" in row:
+                        rowdict["size"] = row["size"]
+                    if "colour" in row:
+                        rowdict["colour"] = row["colour"]
+                    if "opacity" in row:
+                        rowdict["opacity"] = row["opacity"]
+                    record_id = fqtable.insert(**rowdict)
+                    if not created_by:
+                        auth.s3_make_session_owner(fqtable, record_id)
 
-            # URL to retrieve the data
-            url = "%s.geojson?feature_query.name=%s&feature_query.created_by=%s" % \
-                    (URL(c="gis", f="feature_query"),
-                     cname,
-                     created_by)
+                # URL to retrieve the data
+                url = "%s.geojson?feature_query.name=%s&feature_query.created_by=%s" % \
+                        (URL(c="gis", f="feature_query"),
+                         cname,
+                         created_by)
 
-            if "active" in layer and not layer["active"]:
-                visibility = ''',
+                if "active" in layer and not layer["active"]:
+                    visibility = ''',
  "visibility":false'''
-            else:
-                visibility = ""
+                else:
+                    visibility = ""
 
-            markerLayer = ""
-            if "marker" in layer:
-                # per-Layer Marker
-                marker = layer["marker"]
-                if isinstance(marker, int):
-                    # integer (marker_id) not row
-                    query = (mtable.id == marker)
-                    marker = db(query).select(mtable.image,
-                                              mtable.height,
-                                              mtable.width,
-                                              limitby=(0, 1),
-                                              cache=cache).first()
-                if marker:
-                    markerLayer = ''',
+                markerLayer = ""
+                if "marker" in layer:
+                    # per-Layer Marker
+                    marker = layer["marker"]
+                    if isinstance(marker, int):
+                        # integer (marker_id) not row
+                        query = (mtable.id == marker)
+                        marker = db(query).select(mtable.image,
+                                                  mtable.height,
+                                                  mtable.width,
+                                                  limitby=(0, 1),
+                                                  cache=cache).first()
+                    if marker:
+                        markerLayer = ''',
  "marker_url":"%s",
  "marker_height":%i,
  "marker_width":%i''' % (marker["image"], marker["height"], marker["width"])
-                else:
-                    markerLayer = ""
+                    else:
+                        markerLayer = ""
 
-            if "opacity" in layer and layer["opacity"] != 1:
-                opacity = ''',
+                if "opacity" in layer and layer["opacity"] != 1:
+                    opacity = ''',
  "opacity":%.1f''' % layer["opacity"]
-            else:
-                opacity = ""
-            if "cluster_attribute" in layer and layer["cluster_attribute"] != self.cluster_attribute:
-                cluster_attribute = ''',
+                else:
+                    opacity = ""
+                if "cluster_attribute" in layer and layer["cluster_attribute"] != self.cluster_attribute:
+                    cluster_attribute = ''',
  "cluster_attribute":"%s"''' % layer["cluster_attribute"]
-            else:
-                cluster_attribute = ""
-            if "cluster_distance" in layer and layer["cluster_distance"] != self.cluster_distance:
-                cluster_distance = ''',
+                else:
+                    cluster_attribute = ""
+                if "cluster_distance" in layer and layer["cluster_distance"] != self.cluster_distance:
+                    cluster_distance = ''',
  "cluster_distance":%i''' % layer["cluster_distance"]
-            else:
-                cluster_distance = ""
-            if "cluster_threshold" in layer and layer["cluster_threshold"] != self.cluster_threshold:
-                cluster_threshold = ''',
+                else:
+                    cluster_distance = ""
+                if "cluster_threshold" in layer and layer["cluster_threshold"] != self.cluster_threshold:
+                    cluster_threshold = ''',
  "cluster_threshold":%i''' % layer["cluster_threshold"]
-            else:
-                cluster_threshold = ""
+                else:
+                    cluster_threshold = ""
 
-            # Generate JS snippet to pass to static
-            layers_feature_query += '''
+                # Generate JS snippet to pass to static
+                layers_feature_query += '''
 S3.gis.layers_feature_query[%i]={
  "name":"%s",
  "url":"%s"%s%s%s%s%s%s
@@ -5859,6 +5864,8 @@ S3.gis.layers_feature_query[%i]={
        cluster_attribute,
        cluster_distance,
        cluster_threshold)
+        else:
+            layers_feature_query = ""
 
         # ---------------------------------------------------------------------
         # Feature Resources
@@ -5869,84 +5876,138 @@ S3.gis.layers_feature_query[%i]={
             layers_feature_resource = '''
 S3.gis.layers_feature_resource=new Array()'''
             counter = -1
-        else:
-            layers_feature_resource = ""
-        for layer in feature_resources:
-            counter = counter + 1
-            name = str(layer["name"])
-            id = str(layer["id"])
-            id = re.sub("\W", "_", id)
+            for layer in feature_resources:
+                counter = counter + 1
+                name = str(layer["name"])
+                id = str(layer["id"])
+                id = re.sub("\W", "_", id)
 
-            # URL to retrieve the data
-            url = layer["url"]
-            tablename = layer["tablename"]
-            table = s3db[tablename]
-            # Optimise the query & tell back-end not to add the type to the tooltips
-            if "location_id" in table.fields:
-                maxdepth = 0
-                references = "location_id"
-            elif "site_id" in table.fields:
-                maxdepth = 1
-                references = "site_id,location_id&show_ids=true"
-            else:
-                # Not much we can do!
-                raise
-            # @ToDo: layer["namefield"]
-            if "name" in table.fields:
-                title = "name"
-            else:
-                title = "id"
-            options = "components=None&maxdepth=%s&references=%s&fields=%s&label_off=1" % \
-                        (maxdepth, references, title)
-            if "?" in url:
-                url = "%s&%s" % (url, options)
-            else:
-                url = "%s?%s" % (url, options)
+                # Are we loading a Catalogue Layer or a simple URL?
+                layer_id = layer.get("layer_id", None)
+                if layer_id:
+                    table = s3db.gis_layer_feature
+                    query = (table.layer_id == layer_id)
+                    flayer = db(query).select(table.id,
+                                              table.controller,
+                                              table.function,
+                                              table.filter,
+                                              table.trackable,
+                                              table.use_site,
+                                              table.opacity,
+                                              table.cluster_attribute,
+                                              table.cluster_distance,
+                                              table.cluster_threshold,
+                                              table.dir,
+                                              table.style, # @ToDo: Move to gis_layer_config link table
+                                              limitby=(0, 1)).first()
+                    if flayer.use_site:
+                        maxdepth = 1
+                        references = "site_id,location_id&show_ids=true"
+                    else:
+                        maxdepth = 0
+                        references = "location_id"
+                    url = "%s.geojson?layer=%i&components=None&maxdepth=%s&references=%s&fields=name" % \
+                        (URL(flayer.controller, flayer.function), flayer.id, maxdepth, references)
+                    # Use specified filter or fallback to the one in the layer
+                    filter = layer.get("filter", flayer.filter)
+                    if filter:
+                        url = "%s&%s" % (url, filter)
+                    if flayer.trackable:
+                        url = "%s&track=1" % url
+                    opacity = layer.get("opacity", flayer.opacity)
+                    cluster_attribute = layer.get("cluster_attribute",
+                                                  flayer.cluster_attribute)
+                    cluster_distance = layer.get("cluster_distance",
+                                                 flayer.cluster_distance)
+                    cluster_threshold = layer.get("cluster_threshold",
+                                                  flayer.cluster_threshold)
+                    dir = layer.get("dir", flayer.dir)
+                    marker = layer.get("marker",
+                                       Marker(layer_id=layer_id).as_dict())
+                else:
+                    # URL to retrieve the data
+                    url = layer["url"]
+                    tablename = layer["tablename"]
+                    table = s3db[tablename]
+                    # Optimise the query & tell back-end not to add the type to the tooltips
+                    if "location_id" in table.fields:
+                        maxdepth = 0
+                        references = "location_id"
+                    elif "site_id" in table.fields:
+                        maxdepth = 1
+                        references = "site_id,location_id&show_ids=true"
+                    else:
+                        # Not much we can do!
+                        raise
+                    # @ToDo: layer["namefield"]
+                    if "name" in table.fields:
+                        title = "name"
+                    else:
+                        title = "id"
+                    options = "components=None&maxdepth=%s&references=%s&fields=%s&label_off=1" % \
+                                (maxdepth, references, title)
+                    if "?" in url:
+                        url = "%s&%s" % (url, options)
+                    else:
+                        url = "%s?%s" % (url, options)
+                    opacity = layer.get("opacity", 1)
+                    cluster_attribute = layer.get("cluster_attribute",
+                                                  self.cluster_attribute)
+                    cluster_distance = layer.get("cluster_distance",
+                                                 self.cluster_distance)
+                    cluster_threshold = layer.get("cluster_threshold",
+                                                  self.cluster_threshold)
+                    dir = layer.get("dir", None)
+                    marker = layer.get("marker", None)
 
-            if "active" in layer and not layer["active"]:
-                visibility = ''',
+                if "active" in layer and not layer["active"]:
+                    visibility = ''',
  "visibility":false'''
-            else:
-                visibility = ""
+                else:
+                    visibility = ""
 
-            if "opacity" in layer and layer["opacity"] != 1:
-                opacity = ''',
- "opacity":%.1f''' % layer["opacity"]
-            else:
-                opacity = ""
-            if "cluster_attribute" in layer and layer["cluster_attribute"] != self.cluster_attribute:
-                cluster_attribute = ''',
- "cluster_attribute":"%s"''' % layer["cluster_attribute"]
-            else:
-                cluster_attribute = ""
-            if "cluster_distance" in layer and layer["cluster_distance"] != self.cluster_distance:
-                cluster_distance = ''',
- "cluster_distance":%i''' % layer["cluster_distance"]
-            else:
-                cluster_distance = ""
-            if "cluster_threshold" in layer and layer["cluster_threshold"] != self.cluster_threshold:
-                cluster_threshold = ''',
- "cluster_threshold":%i''' % layer["cluster_threshold"]
-            else:
-                cluster_threshold = ""
+                if opacity != 1:
+                    opacity = ''',
+ "opacity":%.1f''' % opacity
+                else:
+                    opacity = ""
+                if cluster_attribute != self.cluster_attribute:
+                    cluster_attribute = ''',
+ "cluster_attribute":"%s"''' % cluster_attribute
+                else:
+                    cluster_attribute = ""
+                if cluster_distance != self.cluster_distance:
+                    cluster_distance = ''',
+ "cluster_distance":%i''' % cluster_distance
+                else:
+                    cluster_distance = ""
+                if cluster_threshold != self.cluster_threshold:
+                    cluster_threshold = ''',
+ "cluster_threshold":%i''' % cluster_threshold
+                else:
+                    cluster_threshold = ""
+                if dir:
+                    dir = ''',
+ "dir":"%s"''' % dir
+                else:
+                    dir = ""
 
-            if "marker" in layer and layer["marker"]:
-                # Per-layer Marker
-                marker = layer["marker"]
-                markerLayer = ''',
+                if marker:
+                    # Per-layer Marker
+                    markerLayer = ''',
  "marker_image":"%s",
  "marker_height":%i,
  "marker_width":%i''' % (marker["image"], marker["height"], marker["width"])
-            else:
-                markerLayer = ""
-                # Request the server to provide per-feature Markers
-                url = "%s&markers=1" % url
-            # Generate JS snippet to pass to static
-            layers_feature_resource += '''
+                else:
+                    markerLayer = ""
+                    # Request the server to provide per-feature Markers
+                    url = "%s&markers=1" % url
+                # Generate JS snippet to pass to static
+                layers_feature_resource += '''
 S3.gis.layers_feature_resource[%i]={
  "name":"%s",
  "id":"%s",
- "url":"%s"%s%s%s%s%s%s
+ "url":"%s"%s%s%s%s%s%s%s
 }
 ''' % (counter,
        name,
@@ -5955,9 +6016,12 @@ S3.gis.layers_feature_resource[%i]={
        visibility,
        markerLayer,
        opacity,
+       dir,
        cluster_attribute,
        cluster_distance,
        cluster_threshold)
+        else:
+            layers_feature_resource = ""
 
         if catalogue_layers:
             # Add all Layers from the Catalogue
@@ -6140,11 +6204,12 @@ i18n.gis_feature_info="%s"
         # @ToDo: Get these working with new loader
         # This, and any code it generates, is done last
         # However, map plugin should not assume this.
-        for plugin in plugins:
-            plugin.extend_gis_map(
-                add_javascript,
-                html_append # for adding in dynamic configuration, etc.
-            )
+        if plugins:
+            for plugin in plugins:
+                plugin.extend_gis_map(
+                    add_javascript,
+                    html_append # for adding in dynamic configuration, etc.
+                )
 
         if callback:
             js_global_append('''S3.gis.callback=function(){%s}''' % callback)
@@ -6242,7 +6307,7 @@ class Marker(object):
 
     def as_dict(self):
         """
-            Called by gis.get_marker()
+            Called by gis.get_marker(), feature_resources & s3profile
         """
 
         output = Storage(image = self.image,
@@ -6648,7 +6713,7 @@ class FeatureLayer(Layer):
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
         def __init__(self, tablename, record):
-            record_module = record.controller or record.module # Backwards-compatibility
+            record_module = record.controller
             self.skip = False
             if record_module is not None:
                 if record_module not in current.deployment_settings.modules:
@@ -6656,7 +6721,7 @@ class FeatureLayer(Layer):
                     self.skip = True
                 if not current.auth.permission.has_permission("read",
                                                               c=record_module,
-                                                              f=record.function or record.resource):
+                                                              f=record.function):
                     # User has no permission to this resource (in ACL)
                     self.skip = True
             else:
@@ -6667,8 +6732,6 @@ class FeatureLayer(Layer):
             if self.skip:
                 # Skip layer
                 return
-            controller = self.controller or self.module # Backwards-compatibility
-            function = self.function or self.resource   # Backwards-compatibility
             if self.use_site:
                 maxdepth = 1
                 references = "site_id,location_id&show_ids=true"
@@ -6676,7 +6739,7 @@ class FeatureLayer(Layer):
                 maxdepth = 0
                 references = "location_id"
             url = "%s.geojson?layer=%i&components=None&maxdepth=%s&references=%s&fields=name" % \
-                (URL(controller, function), self.id, maxdepth, references)
+                (URL(self.controller, self.function), self.id, maxdepth, references)
             if self.filter:
                 url = "%s&%s" % (url, self.filter)
             if self.trackable:

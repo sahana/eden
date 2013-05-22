@@ -1336,7 +1336,9 @@ def customize_event_event(**attr):
                                  context = "event",
                                  filter = S3FieldSelector("series_id$name") == "Alert",
                                  icon = "icon-alert",
-                                 marker = "alert",
+                                 layer = "Alerts",
+                                 # provided by Catalogue Layer
+                                 #marker = "alert",
                                  list_layout = render_profile_posts,
                                  )
             map_widget = dict(label = "Location",
@@ -1353,7 +1355,9 @@ def customize_event_event(**attr):
                                     context = "event",
                                     filter = S3FieldSelector("series_id$name") == "Incident",
                                     icon = "icon-incident",
-                                    marker = "incident",
+                                    layer = "Incidents",
+                                    # provided by Catalogue Layer
+                                    #marker = "incident",
                                     list_layout = render_profile_posts,
                                     )
             assessments_widget = dict(label = "Assessments",
@@ -1363,7 +1367,9 @@ def customize_event_event(**attr):
                                       context = "event",
                                       filter = S3FieldSelector("series_id$name") == "Assessment",
                                       icon = "icon-info-sign",
-                                      marker = "assessment",
+                                      layer = "Assessments",
+                                      # provided by Catalogue Layer
+                                      #marker = "assessment",
                                       list_layout = render_profile_posts,
                                       )
             activities_widget = dict(label = "Activities",
@@ -1373,7 +1379,9 @@ def customize_event_event(**attr):
                                      context = "event",
                                      filter = S3FieldSelector("series_id$name") == "Activity",
                                      icon = "icon-activity",
-                                     marker = "activity",
+                                     layer = "Activities",
+                                     # provided by Catalogue Layer
+                                     #marker = "activity",
                                      list_layout = render_profile_posts,
                                      )
             reports_widget = dict(label = "Reports",
@@ -1383,7 +1391,9 @@ def customize_event_event(**attr):
                                   context = "event",
                                   filter = S3FieldSelector("series_id$name") == "Report",
                                   icon = "icon-report",
-                                  marker = "report",
+                                  layer = "Reports",
+                                  # provided by Catalogue Layer
+                                  #marker = "report",
                                   list_layout = render_profile_posts,
                                   )
             #comments_widget = dict(label = "Comments",
@@ -1545,9 +1555,11 @@ def customize_gis_location(**attr):
                                         type = "datalist",
                                         tablename = "cms_post",
                                         context = "location",
-                                        filter = S3FieldSelector("series_id$name") == "Incident",
+                                        filter = (S3FieldSelector("series_id$name") == "Incident") & (S3FieldSelector("expired") == False),
                                         icon = "icon-incident",
-                                        marker = "incident",
+                                        layer = "Incidents",
+                                        # provided by Catalogue Layer
+                                        #marker = "incident",
                                         list_layout = render_profile_posts,
                                         )
                 reports_widget = dict(label = "Reports",
@@ -1557,7 +1569,9 @@ def customize_gis_location(**attr):
                                       context = "location",
                                       filter = S3FieldSelector("series_id$name") == "Report",
                                       icon = "icon-report",
-                                      marker = "report",
+                                      layer = "Reports",
+                                      # provided by Catalogue Layer
+                                      #marker = "report",
                                       list_layout = render_profile_posts,
                                       )
                 projects_widget = dict(label = "Projects",
@@ -1576,7 +1590,9 @@ def customize_gis_location(**attr):
                                          context = "location",
                                          filter = S3FieldSelector("series_id$name") == "Activity",
                                          icon = "icon-activity",
-                                         marker = "activity",
+                                         layer = "Activities",
+                                         # provided by Catalogue Layer
+                                         #marker = "activity",
                                          list_layout = render_profile_posts,
                                          )
                 s3db.configure("gis_location",
@@ -1757,7 +1773,9 @@ def customize_org_organisation(**attr):
                                   tablename = "org_office",
                                   context = "organisation",
                                   icon = "icon-home",
-                                  marker = "office",
+                                  layer = "Offices",
+                                  # provided by Catalogue Layer
+                                  #marker = "office",
                                   list_layout = render_offices,
                                   )
             resources_widget = dict(label = "Resources",
@@ -1785,7 +1803,9 @@ def customize_org_organisation(**attr):
                                      context = "organisation",
                                      filter = S3FieldSelector("series_id$name") == "Activity",
                                      icon = "icon-activity",
-                                     marker = "activity",
+                                     layer = "Activities",
+                                     # provided by Catalogue Layer
+                                     #marker = "activity",
                                      list_layout = render_profile_posts,
                                      )
             reports_widget = dict(label = "Reports",
@@ -1795,7 +1815,9 @@ def customize_org_organisation(**attr):
                                   context = "organisation",
                                   filter = S3FieldSelector("series_id$name") == "Report",
                                   icon = "icon-report",
-                                  marker = "report",
+                                  layer = "Reports",
+                                  # provided by Catalogue Layer
+                                  #marker = "report",
                                   list_layout = render_profile_posts,
                                   )
             assessments_widget = dict(label = "Assessments",
@@ -1805,7 +1827,9 @@ def customize_org_organisation(**attr):
                                       context = "organisation",
                                       filter = S3FieldSelector("series_id$name") == "Assessment",
                                       icon = "icon-info-sign",
-                                      marker = "assessment",
+                                      layer = "Assessments",
+                                      # provided by Catalogue Layer
+                                      #marker = "assessment",
                                       list_layout = render_profile_posts,
                                       )
             s3db.configure("org_organisation",

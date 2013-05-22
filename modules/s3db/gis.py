@@ -2176,13 +2176,6 @@ class S3FeatureLayerModel(S3Model):
                                   name_field()(),
                                   Field("description",
                                         label=T("Description")),
-                                  # Kept for backwards-compatibility
-                                  Field("module",
-                                        readable=False,
-                                        writable=False),
-                                  Field("resource",
-                                        readable=False,
-                                        writable=False),
                                   Field("trackable", "boolean",
                                         label = T("Trackable"),
                                         represent = s3_yes_no_represent,
