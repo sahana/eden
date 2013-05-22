@@ -1567,7 +1567,7 @@ class IS_LOCATION_SELECTOR2(Validator):
             db = current.db
             table = db.gis_location
             if value == "dummy":
-                # Create form
+                # Create a new point
                 if not current.auth.s3_has_permission("create", table):
                     return (None, current.auth.messages.access_denied)
                 vars = Storage(lat=lat,
@@ -1575,27 +1575,24 @@ class IS_LOCATION_SELECTOR2(Validator):
                                parent=parent,
                                )
                 # onvalidation
+                # - includes detailed bounds check if deployment_setting doesn't disable it
                 form = Storage()
                 form.errors = errors
                 form.vars = vars
-                # Will include detailed bounds check if deployment_setting doesn't disable it
-                # @ToDo: Check validaton errors on form if bounds check fails
                 current.s3db.gis_location_onvalidation(form)
                 if form.errors:
                     errors = form.errors
                     error = ""
                     for e in errors:
                         error = "%s\n%s" % (error, errors[e]) if error else errors[e]
-                    return (None, error)
+                    return (parent, error)
                 id = table.insert(**vars)
                 vars.id = id
                 # onaccept
                 current.gis.update_location_tree(vars)
                 return (id, None)
             else:
-                # This must be an Update form
-                if not current.auth.s3_has_permission("update", table, record_id=value):
-                    return (value, current.auth.messages.access_denied)
+                # Update existing Point
                 # Check that this is a valid location_id
                 query = (table.id == value) & \
                         (table.deleted == False) & \
@@ -1605,27 +1602,29 @@ class IS_LOCATION_SELECTOR2(Validator):
                                             table.parent,
                                             limitby=(0, 1)).first()
                 if location:
-                    # Float comparisons need care - just check the 1st 4 decimal points, as that's all we care about
-                    if round(lat, 4) != round(location.lat, 4) or \
-                       round(lon, 4) != round(location.lon, 4) or \
+                    # Float comparisons need care - just check the 1st 5 decimal points, as that's all we care about
+                    if round(lat, 5) != round(location.lat, 5) or \
+                       round(lon, 5) != round(location.lon, 5) or \
                        int(parent) != int(location.parent):
+                        # Update the record
+                        if not current.auth.s3_has_permission("update", table, record_id=value):
+                            return (value, current.auth.messages.access_denied)
                         vars = Storage(lat=lat,
                                        lon=lon,
                                        parent=parent,
                                        )
                         # onvalidation
+                        # - includes detailed bounds check if deployment_setting doesn't disable it
                         form = Storage()
                         form.errors = errors
                         form.vars = vars
-                        # Will include detailed bounds check if deployment_setting doesn't disable it
-                        # @ToDo: Check validaton errors on form if bounds check fails
                         current.s3db.gis_location_onvalidation(form)
                         if form.errors:
                             errors = form.errors
                             error = ""
                             for e in errors:
                                 error = "%s\n%s" % (error, errors[e]) if error else errors[e]
-                            return (None, error)
+                            return (value, error)
                         # Update the record
                         db(table.id == value).update(**vars)
                         # Update location tree in case parent has changed
@@ -1634,7 +1633,8 @@ class IS_LOCATION_SELECTOR2(Validator):
                         current.gis.update_location_tree(vars)
                     return (value, None)
                 else:
-                    return (value, self.error_message or current.T("Invalid Location!"))
+                    return (value,
+                            self.error_message or current.T("Invalid Location!"))
         else:
             # Lx
             # - do a simple Location check
