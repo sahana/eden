@@ -347,17 +347,31 @@ div.dl {
     float: right;
     padding: 3px;
 }
-.dl-item {
+.dl-row {
     clear: both;
-    padding: 3px 5px 3px 5px;
+    padding: 0;
     border-top: 1px solid #aaa;
 }
-.dl-item.even {
+.dl-item {
+    float: left;
+    padding: 3px 5px 3px 5px;
+}
+.dl-row.even,
+.dl-row.even .dl-item {
     background-color: white;
 }
-
-.dl-item.odd {
+.dl-row.odd,
+.dl-row.odd .dl-item {
     background-color: #E2E4FF;
+}
+.dl-1-cols {
+    width: 90%;
+}
+.dl-2-cols {
+    width: 45%;
+}
+.dl-3-cols {
+    width: 30%;
 }
 
 .dl-field {
@@ -368,6 +382,10 @@ div.dl {
     font-weight: bold;
 }
 .dl-field-value {
+}
+.infscr-loading {
+    float: left;
+    clear: left;
 }
 
 /* Display view */

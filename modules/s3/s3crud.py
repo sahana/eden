@@ -1612,6 +1612,29 @@ class S3CRUD(S3Method):
             default_orderby = None
 
         # Pagination
+        response = current.response
+        s3 = response.s3
+
+        # Pagelength = number of items per page
+        if "dl_pagelength" in attr:
+            pagelength = attr["dl_pagelength"]
+        elif s3.dl_pagelength:
+            pagelength = s3.dl_pagelength
+        else:
+            pagelength = 10
+
+        # Rowsize = number of items per row
+        if "dl_rowsize" in attr:
+            rowsize = attr["dl_rowsize"]
+        elif s3.dl_rowsize:
+            rowsize = s3.dl_rowsize
+        else:
+            rowsize = 1
+
+        # Make sure that pagelength is a multiple of rowsize
+        if pagelength % rowsize:
+            pagelength = (int(pagelength / rowsize) + 1) * rowsize
+
         get_vars = self.request.get_vars
         record_id = get_vars.get("record", None)
         if record_id is not None:
@@ -1637,8 +1660,6 @@ class S3CRUD(S3Method):
         output = {}
 
         # Filter
-        response = current.response
-        s3 = response.s3
         if s3.filter is not None:
             resource.add_filter(s3.filter)
 
@@ -1653,12 +1674,6 @@ class S3CRUD(S3Method):
                 r.error(405, r.ERROR.BAD_METHOD)
 
         if representation in ("html", "dl"):
-
-            # How many records per page?
-            if s3.dl_pagelength:
-                pagelength = s3.dl_pagelength
-            else:
-                pagelength = 10
 
             # Retrieve the data
             if limit:
@@ -1719,6 +1734,7 @@ class S3CRUD(S3Method):
                         start = start if start else 0,
                         limit = limit if limit else numrows,
                         pagesize = pagelength,
+                        rowsize = rowsize,
                         ajaxurl = ajax_url
                      )
                 data = dl

@@ -356,10 +356,15 @@ S3.search.getCurrentFilters = function() {
     });
 
     // Options widgets
+    $('.ui-multiselect:visible').prev(
+      '.options-filter.multiselect-filter-widget,' +
+      '.options-filter.groupedopts-filter-widget')
+    .add(
     $('.options-filter:visible,' +
       '.options-filter.groupedopts-filter-widget.active,' +
       '.options-filter.multiselect-filter-widget.active,' +
-      '.options-filter.multiselect-filter-bootstrap.active').each(function() {
+      '.options-filter.multiselect-filter-bootstrap.active'))
+    .each(function() {
         var id = $(this).attr('id');
         var url_var = $('#' + id + '-data').val();
         var operator = $("input:radio[name='" + id + "_filter']:checked").val();
@@ -458,9 +463,14 @@ S3.search.getCurrentFilters = function() {
     });
 
     // Location widgets
+    $('.ui-multiselect:visible').prev(
+      '.location-filter.multiselect-filter-widget,' +
+      '.location-filter.groupedopts-filter-widget')
+    .add(
     $('.location-filter:visible,' +
       '.location-filter.multiselect-filter-widget.active,' +
-      '.location-filter.multiselect-filter-bootstrap.active').each(function() {
+      '.location-filter.multiselect-filter-bootstrap.active'))
+    .each(function() {
         var id = $(this).attr('id');
         var url_var = $('#' + id + '-data').val();
         var operator = $("input:radio[name='" + id + "_filter']:checked").val();
