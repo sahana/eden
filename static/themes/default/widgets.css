@@ -118,7 +118,7 @@ textarea.richtext {
 /* Used to diplay the list-add with the list-add-btn */
 #list-btn-add {
     margin-bottom: 10px;
-    float: left;
+/*     float: left; */
 }
 /*#list-btn-add + h3 {
     clear: both;

@@ -1676,6 +1676,11 @@ def customize_org_organisation(**attr):
                 return False
 
         if r.interactive:
+
+            # 2-column datalist, 6 rows per page
+            s3.dl_pagelength = 12
+            s3.dl_rowsize = 2
+
             s3db = current.s3db
             # Customise tables used by widgets
             customize_cms_post_fields()
