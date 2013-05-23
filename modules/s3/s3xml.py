@@ -1335,9 +1335,10 @@ class S3XML(S3Codec):
                 record[UID] = uid
 
         # Attribute names
-        FIELD = cls.ATTRIBUTE["field"]
-        VALUE = cls.ATTRIBUTE["value"]
-        ERROR = cls.ATTRIBUTE["error"]
+        ATTRIBUTE = cls.ATTRIBUTE
+        FIELD = ATTRIBUTE["field"]
+        VALUE = ATTRIBUTE["value"]
+        ERROR = ATTRIBUTE["error"]
 
         DELETED = cls.DELETED
         APPROVED = cls.APPROVED
@@ -1348,13 +1349,18 @@ class S3XML(S3Codec):
         # Attributes
         deleted = False
         for f in cls.ATTRIBUTES_TO_FIELDS:
+            
             if f == DELETED:
                 if f in table and \
                    element.get(f, "false").lower() == "true":
                     record[f] = deleted = True
+                    replaced_by = element.get(ATTRIBUTE["replaced_by"], None)
+                    if replaced_by:
+                        record[cls.REPLACEDBY] = replaced_by
                     break
                 else:
                     continue
+                
             if f == APPROVED:
                 # Override default-approver:
                 if "approved_by" in table:
@@ -1364,8 +1370,10 @@ class S3XML(S3Codec):
                         if table["approved_by"].default == None:
                             auth.permission.set_default_approver(table)
                 continue
+            
             if f in IGNORE_FIELDS or f in skip:
                 continue
+            
             elif f in USER_FIELDS:
                 v = element.get(f, None)
                 if v and utable and "email" in utable:
@@ -1374,6 +1382,7 @@ class S3XML(S3Codec):
                     if user:
                         record[f] = user.id
                 continue
+            
             elif f == OGROUP:
                 v = element.get(f, None)
                 if v and gtable and "role" in gtable:
@@ -1382,6 +1391,7 @@ class S3XML(S3Codec):
                     if role:
                         record[f] = role.id
                 continue
+            
             if hasattr(table, f): #f in table.fields:
                 v = value = element.get(f, None)
                 if value is not None:

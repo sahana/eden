@@ -85,6 +85,51 @@ class S3ExportMergeTests(unittest.TestCase):
         current.auth.override = False
 
 # =============================================================================
+class S3ImportMergeTests(unittest.TestCase):
+
+    def testReadReplacedBy(self):
+
+        parse = current.xml.record
+
+        xmlstr = """
+<s3xml>
+  <resource name="org_office" uuid="TEST" deleted="true" replaced_by="OTHER" />
+</s3xml>"""
+
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+        element = xmltree.xpath("resource[@uuid='TEST']")[0]
+
+        table = current.s3db.org_office
+        record = parse(table, element)
+
+        self.assertTrue("uuid" in record)
+        self.assertEqual(record["uuid"], "TEST")
+
+        self.assertTrue("deleted" in record)
+        self.assertTrue(record["deleted"])
+
+        self.assertTrue("deleted_rb" in record)
+        self.assertEqual(record["deleted_rb"], "OTHER")
+
+        xmlstr = """
+<s3xml>
+  <resource name="org_office" uuid="TEST" deleted="true" />
+</s3xml>"""
+
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+        element = xmltree.xpath("resource[@uuid='TEST']")[0]
+
+        record = parse(table, element)
+
+        self.assertTrue("uuid" in record)
+        self.assertEqual(record["uuid"], "TEST")
+
+        self.assertTrue("deleted" in record)
+        self.assertTrue(record["deleted"])
+
+        self.assertFalse("deleted_rb" in record)
+
+# =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
 
@@ -100,7 +145,8 @@ def run_suite(*test_classes):
 if __name__ == "__main__":
 
     run_suite(
-        S3ExportMergeTests
+        S3ExportMergeTests,
+        S3ImportMergeTests
     )
 
 # END ========================================================================
