@@ -104,6 +104,39 @@ settings.fin.currencies = {
 settings.save_search.widget = False
 
 # =============================================================================
+# View Settings
+
+current.response.menu = [{"name": T("Residents"),
+                 "url": URL("pr","group"),
+                 "icon": "icon-group"
+                 },
+                {"name": T("Risks"),
+                 "url": URL("",""),
+                 "icon": "icon-warning-sign"
+                 },
+                {"name": T("Activities"),
+                 "url": URL("project","activity"),
+                 "icon": "icon-star-empty"
+                 },
+                {"name": T("Organizations"),
+                 "url": URL("org","organisation"),
+                 "icon": "icon-sitemap"
+                 },
+                {"name": T("Trained People"),
+                 "url": URL("hrm","human_resource"),
+                 "icon": "icon-user"
+                 },
+                {"name": T("Locations"),
+                 "url": URL("org","facility"),
+                 "icon": "icon-home"
+                 },
+                {"name": T("Evacuation Routes"),
+                 "url": URL("",""),
+                 "icon": "icon-road"
+                 },
+                 ]
+
+# =============================================================================
 # Module Settings
 
 # -----------------------------------------------------------------------------
