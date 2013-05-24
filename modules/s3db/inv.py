@@ -526,10 +526,10 @@ class S3InventoryModel(S3Model):
                                   s3_comments(),
                                   *s3_meta_fields())
 
+        table.total_value = Field.Lazy(self.inv_item_total_value)
+
         # pack_quantity Virtual Field
         table.virtualfields.append(self.supply_item_pack_virtualfields(tablename=tablename))
-        # total_value Virtual Field
-        table.virtualfields.append(InvItemVirtualFields())
 
         # CRUD strings
         INV_ITEM = T("Warehouse Stock")
@@ -733,6 +733,22 @@ S3OptionsFilter({
                     inv_remove = self.inv_remove,
                     inv_prep = self.inv_prep,
                 )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_item_total_value(row):
+        """ Total value of an inventory item """
+
+        if hasattr(row, "inv_inv_item"):
+            row = row.inv_inv_item
+        try:
+            v = row.quantity * row.pack_value
+            return v
+            
+        except (AttributeError,TypeError):
+            # not available
+            return current.messages["NONE"]
+
     # -------------------------------------------------------------------------
     @staticmethod
     def inv_inv_item_onvalidate(form):
@@ -1780,10 +1796,10 @@ S3OptionsFilter({
                              *s3_meta_fields()
                              )
 
+        table.total_value = Field.Lazy(self.inv_track_item_total_value)
+                             
         # pack_quantity virtual field
         table.virtualfields.append(self.supply_item_pack_virtualfields(tablename=tablename))
-        # total_value virtual field
-        table.virtualfields.append(InvTrackItemVirtualFields())
 
         # CRUD strings
         ADD_TRACK_ITEM = T("Add Item to Shipment")
@@ -1871,6 +1887,67 @@ S3OptionsFilter({
                        inv_track_item_deleting = self.inv_track_item_deleting,
                        inv_track_item_onaccept = self.inv_track_item_onaccept,
                        )
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def inv_track_item_total_value(row):
+        """ Total value of a track item """
+        
+        if hasattr(row, "inv_track_item"):
+            row = row.inv_track_item
+        try:
+            v = row.quantity * row.pack_value
+            return v
+        except:
+            # not available
+            return current.messages["NONE"]
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def inv_track_item_quantity_needed(row):
+        """
+            Quantity still needed for a track item - used in Inv Send
+            when an Item has come from a Request
+        """
+
+        if hasattr(row, "inv_track_item"):
+            row = row.inv_track_item
+        try:
+            req_item_id = row.req_item_id
+        except:
+            # not available
+            req_item_id = None
+            
+        if not req_item_id:
+            return current.messages["NONE"]
+
+        db = current.db
+        s3db = current.s3db
+        
+        ritable = s3db.req_req_item
+        siptable = s3db.supply_item_pack
+        
+        query = (ritable.id == req_item_id) & \
+                (ritable.item_pack_id == siptable.id)
+                
+        row = current.db(query).select(ritable.quantity,
+                                       ritable.quantity_transit,
+                                       ritable.quantity_fulfil,
+                                       siptable.quantity) \
+                               .first()
+
+        if row:
+            rim = row.req_req_item
+
+            quantity_shipped = max(rim.quantity_transit,
+                                   rim.quantity_fulfil)
+
+            quantity_needed = (rim.quantity - quantity_shipped) * \
+                               row.supply_item_pack.quantity
+        else:
+            return current.messages["NONE"]
+
+        return quantity_needed
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -1973,8 +2050,8 @@ S3OptionsFilter({
             db(stable.id == id).update(send_ref=code)
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def inv_send_controller():
+    @classmethod
+    def inv_send_controller(cls):
         """
            RESTful CRUD controller for inv_send
         """
@@ -2127,7 +2204,8 @@ S3OptionsFilter({
                     if record.req_ref and r.interactive:
                         s3db.configure("inv_track_item",
                                        extra_fields = ["req_item_id"])
-                        tracktable.virtualfields.append(InvQuantityNeededVirtualField())
+                        tracktable.quantity_needed = \
+                            Field.Lazy(cls.inv_track_item_quantity_needed)
                         list_fields.insert(4, (T("Quantity Needed"),
                                                "quantity_needed"))
 
@@ -2156,6 +2234,7 @@ S3OptionsFilter({
                                                                               tracktable.send_inv_item_id,
                                                                               tracktable.item_pack_id,
                                                                               tracktable.status,
+                                                                              tracktable.quantity,
                                                                               limitby=(0, 1)).first()
                     set_track_attr(track_record.status)
                     # If the track record is linked to a request item then
@@ -2163,7 +2242,7 @@ S3OptionsFilter({
                     if track_record and track_record.get("req_item_id"):
                         tracktable.send_inv_item_id.writable = False
                         tracktable.item_pack_id.writable = False
-                        stock_qnty = track_record.send_inv_item_id.quantity
+                        stock_qnty = track_record.quantity
                         tracktable.quantity.comment = T("%(quantity)s in stock") % dict(quantity=stock_qnty)
                         tracktable.quantity.requires = QUANTITY_INV_ITEM(db,
                                                                          track_record.send_inv_item_id,
@@ -4343,94 +4422,5 @@ def duplicator(job, query):
         job.method = job.METHOD.UPDATE
         return _duplicate.id
     return False
-
-# =============================================================================
-class InvItemVirtualFields:
-    """ Virtual fields as dimension classes for reports """
-
-    def total_value(self):
-        try:
-            v = self.inv_inv_item.quantity * self.inv_inv_item.pack_value
-            # Need real numbers to use for Report calculations
-            #return IS_FLOAT_AMOUNT.represent(v, precision=2)
-            return v
-        except (AttributeError,TypeError):
-            # not available
-            return current.messages["NONE"]
-
-    # -------------------------------------------------------------------------
-    #def item_code(self):
-    #    try:
-    #        return self.inv_inv_item.item_id.code
-    #    except AttributeError:
-    #        # not available
-    #        return current.messages["NONE"]
-
-    # -------------------------------------------------------------------------
-    #def item_category(self):
-    #    try:
-    #        return self.inv_inv_item.item_id.item_category_id.name
-    #    except AttributeError:
-    #        # not available
-    #        return current.messages["NONE"]
-
-# =============================================================================
-class InvTrackItemVirtualFields:
-    """ Virtual fields as dimension classes for reports """
-
-    def total_value(self):
-        try:
-            v = self.inv_track_item.quantity * self.inv_track_item.pack_value
-            # Need real numbers to use for Report calculations
-            #return IS_FLOAT_AMOUNT.represent(v, precision=2)
-            return v
-        except:
-            # not available
-            return current.messages["NONE"]
-
-    # -------------------------------------------------------------------------
-    #def item_code(self):
-    #    try:
-    #        return self.inv_track_item.item_id.code
-    #    except AttributeError:
-    #        # not available
-    #        return current.messages["NONE"]
-
-# =============================================================================
-class InvQuantityNeededVirtualField():
-    """
-        Calculate the Quantity still Needed for a Track Item
-        - used in Inv Send when an Item has come from a Request
-
-        NB This is a virtual field rather than a real field populated onaccept to make it more realtime and less of a race condition
-        There isn't a scalability issue here as it's only used for interactive UI of a single send record at a time, which doesn't generally have more than 10 rows
-    """
-
-    def quantity_needed(self):
-        try:
-            req_item_id = self.inv_track_item.req_item_id
-        except:
-            # not available
-            return current.messages["NONE"]
-
-        if not req_item_id:
-            return current.messages["NONE"]
-
-        s3db = current.s3db
-        ritable = s3db.req_req_item
-        siptable = s3db.supply_item_pack
-        query = (ritable.id == req_item_id) & \
-                (ritable.item_pack_id == siptable.id)
-        r = db(query).select(ritable.quantity,
-                             ritable.quantity_transit,
-                             ritable.quantity_fulfil,
-                             siptable.quantity,
-                             ).first()
-        rim = r.req_req_item
-        quantity_shipped = max(rim.quantity_transit, rim.quantity_fulfil)
-        quantity_needed = (rim.quantity - quantity_shipped) * \
-                            r.supply_item_pack.quantity
-
-        return quantity_needed
 
 # END =========================================================================
