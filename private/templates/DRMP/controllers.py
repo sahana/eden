@@ -34,90 +34,91 @@ class index():
         # Image Carousel
         response.s3.jquery_ready.append('''$('#myCarousel').carousel()''')
 
-        s3db = current.s3db
-        # Latest 4 Events
-        resource = s3db.resource("cms_post")
-        resource.add_filter(S3FieldSelector("series_id$name") == "Event")
-        list_fields = ["location_id",
-                       "created_on",
-                       "body",
-                       "created_by",
-                       "created_by$organisation_id",
-                       "document.file",
-                       "event_post.event_id",
-                       ]
-        orderby = resource.get_config("list_orderby",
-                                      ~resource.table.created_on)
-        datalist, numrows, ids = resource.datalist(fields=list_fields,
-                                                   start=None,
-                                                   limit=4,
-                                                   listid="event_datalist",
-                                                   orderby=orderby,
-                                                   layout=render_cms_events)
-        if numrows == 0:
-            # Empty table or just no match?
-            table = resource.table
-            if "deleted" in table:
-                available_records = current.db(table.deleted != True)
+        if current.auth.is_logged_in():
+            s3db = current.s3db
+            # Latest 4 Events
+            resource = s3db.resource("cms_post")
+            resource.add_filter(S3FieldSelector("series_id$name") == "Event")
+            list_fields = ["location_id",
+                           "created_on",
+                           "body",
+                           "created_by",
+                           "created_by$organisation_id",
+                           "document.file",
+                           "event_post.event_id",
+                           ]
+            orderby = resource.get_config("list_orderby",
+                                          ~resource.table.created_on)
+            datalist, numrows, ids = resource.datalist(fields=list_fields,
+                                                       start=None,
+                                                       limit=4,
+                                                       listid="event_datalist",
+                                                       orderby=orderby,
+                                                       layout=render_cms_events)
+            if numrows == 0:
+                # Empty table or just no match?
+                table = resource.table
+                if "deleted" in table:
+                    available_records = current.db(table.deleted != True)
+                else:
+                    available_records = current.db(table._id > 0)
+                if available_records.select(table._id,
+                                            limitby=(0, 1)).first():
+                    msg = DIV(S3CRUD.crud_string(resource.tablename,
+                                                 "msg_no_match"),
+                              _class="empty")
+                else:
+                    msg = DIV(S3CRUD.crud_string(resource.tablename,
+                                                 "msg_list_empty"),
+                              _class="empty")
+                data = msg
             else:
-                available_records = current.db(table._id > 0)
-            if available_records.select(table._id,
-                                        limitby=(0, 1)).first():
-                msg = DIV(S3CRUD.crud_string(resource.tablename,
-                                             "msg_no_match"),
-                          _class="empty")
-            else:
-                msg = DIV(S3CRUD.crud_string(resource.tablename,
-                                             "msg_list_empty"),
-                          _class="empty")
-            data = msg
-        else:
-            # Render the list
-            dl = datalist.html()
-            data = dl
-        output["events"] = data
+                # Render the list
+                dl = datalist.html()
+                data = dl
+            output["events"] = data
 
-        # Latest 4 Updates
-        resource = s3db.resource("cms_post")
-        list_fields = ["series_id",
-                       "location_id",
-                       "created_on",
-                       "body",
-                       "created_by",
-                       "created_by$organisation_id",
-                       "document.file",
-                       "event_post.event_id",
-                       ]
-        orderby = resource.get_config("list_orderby",
-                                      ~resource.table.created_on)
-        datalist, numrows, ids = resource.datalist(fields=list_fields,
-                                                   start=None,
-                                                   limit=4,
-                                                   listid="news_datalist",
-                                                   orderby=orderby,
-                                                   layout=render_posts)
-        if numrows == 0:
-            # Empty table or just no match?
-            table = resource.table
-            if "deleted" in table:
-                available_records = current.db(table.deleted != True)
+            # Latest 4 Updates
+            resource = s3db.resource("cms_post")
+            list_fields = ["series_id",
+                           "location_id",
+                           "created_on",
+                           "body",
+                           "created_by",
+                           "created_by$organisation_id",
+                           "document.file",
+                           "event_post.event_id",
+                           ]
+            orderby = resource.get_config("list_orderby",
+                                          ~resource.table.created_on)
+            datalist, numrows, ids = resource.datalist(fields=list_fields,
+                                                       start=None,
+                                                       limit=4,
+                                                       listid="news_datalist",
+                                                       orderby=orderby,
+                                                       layout=render_posts)
+            if numrows == 0:
+                # Empty table or just no match?
+                table = resource.table
+                if "deleted" in table:
+                    available_records = current.db(table.deleted != True)
+                else:
+                    available_records = current.db(table._id > 0)
+                if available_records.select(table._id,
+                                            limitby=(0, 1)).first():
+                    msg = DIV(S3CRUD.crud_string(resource.tablename,
+                                                 "msg_no_match"),
+                              _class="empty")
+                else:
+                    msg = DIV(S3CRUD.crud_string(resource.tablename,
+                                                 "msg_list_empty"),
+                              _class="empty")
+                data = msg
             else:
-                available_records = current.db(table._id > 0)
-            if available_records.select(table._id,
-                                        limitby=(0, 1)).first():
-                msg = DIV(S3CRUD.crud_string(resource.tablename,
-                                             "msg_no_match"),
-                          _class="empty")
-            else:
-                msg = DIV(S3CRUD.crud_string(resource.tablename,
-                                             "msg_list_empty"),
-                          _class="empty")
-            data = msg
-        else:
-            # Render the list
-            dl = datalist.html()
-            data = dl
-        output["news"] = data
+                # Render the list
+                dl = datalist.html()
+                data = dl
+            output["news"] = data
 
         return output
 

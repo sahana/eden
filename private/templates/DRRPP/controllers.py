@@ -812,7 +812,7 @@ class organisations():
 
         s3db = current.s3db
         table = s3db.org_organisation
-        table.virtualfields.append(s3db.org_organisation_address_virtual_field())
+        table.address = Field.Lazy(s3db.org_organisation_address)
 
         s3request = s3_request("org", "organisation", extension="aadata")
         #(S3FieldSelector("project.id") != None) & \
@@ -834,70 +834,31 @@ class organisations():
     # -------------------------------------------------------------------------
     @staticmethod
     def _table(name, resource, field_list, limit=10, orderby="name"):
-        """
-        """
+        """ Generate a datatable in the organisations custom page """
 
-        from s3 import S3FieldSelector
+        details = resource.fast_select(field_list,
+                                       start=None,
+                                       limit=None,
+                                       orderby=orderby,
+                                       count=True,
+                                       represent=True)
 
-        fields = []
+        rfields = details["rfields"]
+        records = details["data"]
+        
+        numrows = len(records)
+
+        rows = [[] * numrows] if numrows > 0 else []
         cols = []
-        for field_name in field_list:
-            if isinstance(field_name, tuple):
-                field_label = field_name[0]
-                field_name = field_name[1]
-            else:
-                field_label = None
-
-            fs = S3FieldSelector(field_name)
-            list_field = fs.resolve(resource)
-
-            if list_field.field != None:
-                field = list_field.field
-            else:
-                field = field_name
-
-            if field_label is None:
-                if list_field.field is not None:
-                    field_label = field.label
-                else:
-                    field_label = " ".join([w.capitalize() for w in field_name.split(".")[-1].split("_")])
-
-            fields.append(field)
-            cols.append({
-                "name": field_name,
-                "label": field_label
-            })
-
-            if orderby and str(orderby)==str(field_name):
-                orderby=field
-
-        records = resource.select(fields=field_list,
-                                  start=None,
-                                  limit=None,
-                                  orderby=orderby,
-                                  #as_page=True,
-                                  )
-
-        if records is None:
-            records = []
-
-        rows = []
-        rsappend = rows.append
-        represent = current.manager.represent
-        for record in records:
-            row = []
-            rappend = row.append
-            for field in fields:
-                if isinstance(field, basestring):
-                    rappend(record[field])
-                else:
-                    rappend(represent(field=field, record=record))
-
-            rsappend(row)
+        for rfield in rfields:
+            colname = rfield.colname
+            cols.append({"name": colname, "label": rfield.label})
+            for i in xrange(numrows):
+                rows[i].append(records[i][colname])
 
         options = json.dumps({
             "iDisplayLength": limit,
-            "iDeferLoading": resource.count(),
+            "iDeferLoading": details["numrows"],
             "bProcessing": True,
             #"bServerSide": True,
             #"sAjaxSource": "/%s/default/index/organisations/?table=%s" % (current.request.application, name),
