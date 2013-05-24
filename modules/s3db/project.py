@@ -2469,7 +2469,6 @@ class S3ProjectLocationModel(S3Model):
     names = ["project_location",
              "project_location_id",
              "project_location_contact",
-             "project_location_virtualfields",
              ]
 
     def model(self):
@@ -3962,6 +3961,9 @@ class S3ProjectTaskModel(S3Model):
                                                                  UNKNOWN_OPT)),
                              *s3_meta_fields())
 
+        # Virtual field
+        table.task_id = Field.Lazy(self.project_task_task_id)
+
         # Field configurations
         # Comment these if you don't need a Site associated with Tasks
         #table.site_id.readable = table.site_id.writable = True
@@ -3985,10 +3987,6 @@ class S3ProjectTaskModel(S3Model):
             msg_record_modified = T("Task updated"),
             msg_record_deleted = T("Task deleted"),
             msg_list_empty = T("No tasks currently registered"))
-
-        # Virtual Fields
-        # Do just for the common report
-        table.virtualfields.append(S3ProjectTaskVirtualFields())
 
         # Search Method
         advanced_task_search = [
@@ -4434,6 +4432,18 @@ class S3ProjectTaskModel(S3Model):
             project_task_active_statuses = [],
         )
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_task_task_id(row):
+        """ The record ID of a task as separate column in the data table """
+        
+        if hasattr(row, "project_task"):
+            row = row.project_task
+        try:
+            return row.id
+        except AttributeError:
+            return None
+            
     # -------------------------------------------------------------------------
     @staticmethod
     def project_task_project_opts():
@@ -5265,17 +5275,6 @@ class S3ProjectThemeVirtualFields:
                 represent = "%s (%s%s)" % (name, percentage, "%")
 
         return represent
-
-# =============================================================================
-class S3ProjectTaskVirtualFields:
-    """ Virtual fields for the project_task table """
-
-    def task_id(self):
-
-        try:
-            return self.project_task.id
-        except AttributeError:
-            return None
 
 # =============================================================================
 # project_time virtual fields
