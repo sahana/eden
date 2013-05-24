@@ -9,9 +9,16 @@ import unittest
 from gluon import current
 from gluon.dal import Query
 from lxml import etree
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 # =============================================================================
-class S3ExportMergeTests(unittest.TestCase):
+class ExportMergeTests(unittest.TestCase):
     """ Test correct handling of merge information by the exporter """
 
     def setUp(self):
@@ -85,7 +92,8 @@ class S3ExportMergeTests(unittest.TestCase):
         current.auth.override = False
 
 # =============================================================================
-class S3ImportMergeTests(unittest.TestCase):
+class ImportMergeTests(unittest.TestCase):
+    """ Test correct handling of merge information by S3XML parser """
 
     def testReadReplacedBy(self):
 
@@ -130,6 +138,307 @@ class S3ImportMergeTests(unittest.TestCase):
         self.assertFalse("deleted_rb" in record)
 
 # =============================================================================
+class ImportMergeWithExistingRecords(unittest.TestCase):
+    """ Test correct import of merges if both records pre-exist """
+
+    def setUp(self):
+    
+        current.auth.override = True
+
+        # Create records
+        xmlstr = """
+<s3xml>
+<resource name="org_organisation" uuid="TESTIMPORTMERGEORG1">
+    <data field="name">TestImportMergeOrg1</data>
+</resource>
+<resource name="org_organisation" uuid="TESTIMPORTMERGEORG2">
+    <data field="name">TestImportMergeOrg2</data>
+    <resource name="org_office" uuid="TESTIMPORTMERGEOFFICE2">
+        <data field="name">TestImportMergeOffice2</data>
+    </resource>
+</resource>
+</s3xml>"""
+
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+        resource = current.s3db.resource("org_organisation")
+        resource.import_xml(xmltree)
+        self.assertEqual(resource.error, None)
+
+    def testImportMerge(self):
+
+        s3db = current.s3db
+        UUID = "org_organisation.uuid"
+        DELETED = "org_organisation.deleted"
+        REPLACEDBY = "org_organisation.deleted_rb"
+        uids = ["TESTIMPORTMERGEORG1", "TESTIMPORTMERGEORG2"]
+        test_fields = ["id", "uuid", "deleted", "deleted_rb", "office.name"]
+        
+        # Check the existing records
+        resource = s3db.resource("org_organisation",
+                                 uid =uids, include_deleted = True)
+        result = resource.fast_select(test_fields)["data"]
+        self.assertEqual(len(result), 2)
+        for record in result:
+            self.assertTrue(record[UUID] in uids)
+            self.assertFalse(record[DELETED])
+            self.assertEqual(record[REPLACEDBY], None)
+            if record[UUID] == "TESTIMPORTMERGEORG2":
+                self.assertEqual(record["org_office.name"], "TestImportMergeOffice2")
+            else:
+                self.assertEqual(record["org_office.name"], None)
+
+        # Send the merge
+        xmlstr = """
+<s3xml>
+<resource name="org_organisation" uuid="TESTIMPORTMERGEORG1">
+    <data field="name">TestImportMergeOrg1</data>
+</resource>
+<resource name="org_organisation" uuid="TESTIMPORTMERGEORG2"
+            deleted="True" replaced_by="TESTIMPORTMERGEORG1" />
+</s3xml>"""
+
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+        resource = current.s3db.resource("org_organisation")
+        msg = resource.import_xml(xmltree)
+        #print msg
+        self.assertEqual(resource.error, None)
+
+        # Check the result
+        resource = s3db.resource("org_organisation",
+                                 uid =uids, include_deleted = True)
+        result = resource.fast_select(test_fields)["data"]
+        self.assertEqual(len(result), 2)
+        for record in result:
+            if record[UUID] == "TESTIMPORTMERGEORG1":
+                self.assertFalse(record[DELETED])
+                self.assertEqual(record[REPLACEDBY], None)
+            elif record[UUID] == "TESTIMPORTMERGEORG2":
+                self.assertTrue(record[DELETED])
+                replaced_by = record[REPLACEDBY]
+                row = current.db(resource.table._id == replaced_by) \
+                             .select(resource.table.uuid, limitby=(0, 1)) \
+                             .first()
+                self.assertEqual(row.uuid, "TESTIMPORTMERGEORG1")
+
+    def tearDown(self):
+        
+        current.auth.override = False
+        current.db.rollback()
+
+# =============================================================================
+class ImportMergeWithExistingOriginal(unittest.TestCase):
+    """ Test correct import of merge if only the final record pre-exists """
+
+    def setUp(self):
+
+        current.auth.override = True
+
+        # Create records
+        xmlstr = """
+<s3xml>
+<resource name="org_organisation" uuid="TESTIMPORTMERGEORG3">
+    <data field="name">TestImportMergeOrg3</data>
+</resource>
+</s3xml>"""
+
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+        resource = current.s3db.resource("org_organisation")
+        resource.import_xml(xmltree)
+        self.assertEqual(resource.error, None)
+
+    def testImportMerge(self):
+
+        s3db = current.s3db
+        UUID = "org_organisation.uuid"
+        DELETED = "org_organisation.deleted"
+        REPLACEDBY = "org_organisation.deleted_rb"
+        uids = ["TESTIMPORTMERGEORG3", "TESTIMPORTMERGEORG4"]
+        test_fields = ["id", "uuid", "deleted", "deleted_rb"]
+
+        # Check the existing record
+        resource = s3db.resource("org_organisation",
+                                 uid =uids, include_deleted = True)
+        result = resource.fast_select(test_fields)["data"]
+        self.assertEqual(len(result), 1)
+        record = result[0]
+        self.assertTrue(record[UUID] in uids)
+        self.assertFalse(record[DELETED])
+        self.assertEqual(record[REPLACEDBY], None)
+
+        # Send the merge
+        xmlstr = """
+<s3xml>
+<resource name="org_organisation" uuid="TESTIMPORTMERGEORG3">
+    <data field="name">TestImportMergeOrg3</data>
+</resource>
+<resource name="org_organisation" uuid="TESTIMPORTMERGEORG4"
+            deleted="True" replaced_by="TESTIMPORTMERGEORG3" />
+</s3xml>"""
+
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+        resource = current.s3db.resource("org_organisation")
+        msg = resource.import_xml(xmltree)
+        #print msg
+        self.assertEqual(resource.error, None)
+
+        # Check the result: the duplicate should never be imported
+        # Note that no components of the deleted duplicate would ever
+        # get exported - hence no need to test the handling of it
+        resource = s3db.resource("org_organisation",
+                                 uid =uids, include_deleted = True)
+        result = resource.fast_select(test_fields)["data"]
+        self.assertEqual(len(result), 1)
+        record = result[0]
+        self.assertEqual(record[UUID], "TESTIMPORTMERGEORG3")
+        self.assertFalse(record[DELETED])
+        self.assertEqual(record[REPLACEDBY], None)
+
+    def tearDown(self):
+
+        current.auth.override = False
+        current.db.rollback()
+
+# =============================================================================
+class ImportMergeWithExistingDuplicate(unittest.TestCase):
+    """ Test correct import of merge if only the duplicate record pre-exists """
+
+    def setUp(self):
+
+        current.auth.override = True
+
+        # Create records
+        xmlstr = """
+<s3xml>
+<resource name="org_organisation" uuid="TESTIMPORTMERGEORG6">
+    <data field="name">TestImportMergeOrg6</data>
+    <resource name="org_office" uuid="TESTIMPORTMERGEOFFICE6">
+        <data field="name">TestImportMergeOffice6</data>
+    </resource>
+</resource>
+</s3xml>"""
+
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+        resource = current.s3db.resource("org_organisation")
+        resource.import_xml(xmltree)
+        self.assertEqual(resource.error, None)
+
+    def testImportMerge(self):
+
+        s3db = current.s3db
+        UUID = "org_organisation.uuid"
+        DELETED = "org_organisation.deleted"
+        REPLACEDBY = "org_organisation.deleted_rb"
+        uids = ["TESTIMPORTMERGEORG5", "TESTIMPORTMERGEORG6"]
+        test_fields = ["id", "uuid", "deleted", "deleted_rb", "office.name"]
+
+        # Check the existing records
+        resource = s3db.resource("org_organisation",
+                                 uid =uids, include_deleted = True)
+        result = resource.fast_select(test_fields)["data"]
+        self.assertEqual(len(result), 1)
+        record = result[0]
+        self.assertTrue(record[UUID] in uids)
+        self.assertFalse(record[DELETED])
+        self.assertEqual(record[REPLACEDBY], None)
+        self.assertEqual(record["org_office.name"], "TestImportMergeOffice6")
+
+        # Send the merge
+        xmlstr = """
+<s3xml>
+<resource name="org_organisation" uuid="TESTIMPORTMERGEORG5">
+    <data field="name">TestImportMergeOrg5</data>
+</resource>
+<resource name="org_organisation" uuid="TESTIMPORTMERGEORG6"
+            deleted="True" replaced_by="TESTIMPORTMERGEORG5" />
+</s3xml>"""
+
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+        resource = current.s3db.resource("org_organisation")
+        msg = resource.import_xml(xmltree)
+        #print msg
+        self.assertEqual(resource.error, None)
+
+        # Check the result: new record gets imported, duplicate merged into it
+        resource = s3db.resource("org_organisation",
+                                 uid =uids, include_deleted = True)
+        result = resource.fast_select(test_fields)["data"]
+        self.assertEqual(len(result), 2)
+        for record in result:
+            if record[UUID] == "TESTIMPORTMERGEORG5":
+                self.assertFalse(record[DELETED])
+                self.assertEqual(record[REPLACEDBY], None)
+                self.assertEqual(record["org_office.name"], "TestImportMergeOffice6")
+            elif record[UUID] == "TESTIMPORTMERGEORG6":
+                self.assertTrue(record[DELETED])
+                replaced_by = record[REPLACEDBY]
+                row = current.db(resource.table._id == replaced_by) \
+                             .select(resource.table.uuid, limitby=(0, 1)) \
+                             .first()
+                self.assertEqual(row.uuid, "TESTIMPORTMERGEORG5")
+                self.assertEqual(record["org_office.name"], None)
+                
+    def tearDown(self):
+
+        current.auth.override = False
+        current.db.rollback()
+
+# =============================================================================
+class ImportMergeWithoutExistingRecords(unittest.TestCase):
+    """ Test correct import of merge if none of the records pre-exists """
+
+    def setUp(self):
+
+        current.auth.override = True
+
+    def testImportMerge(self):
+
+        s3db = current.s3db
+        UUID = "org_organisation.uuid"
+        DELETED = "org_organisation.deleted"
+        REPLACEDBY = "org_organisation.deleted_rb"
+        uids = ["TESTIMPORTMERGEORG7", "TESTIMPORTMERGEORG8"]
+        test_fields = ["id", "uuid", "deleted", "deleted_rb"]
+
+        # Check the existing records
+        resource = s3db.resource("org_organisation",
+                                 uid =uids, include_deleted = True)
+        result = resource.fast_select(test_fields)["data"]
+        self.assertEqual(len(result), 0)
+
+        # Send the merge
+        xmlstr = """
+<s3xml>
+<resource name="org_organisation" uuid="TESTIMPORTMERGEORG7">
+    <data field="name">TestImportMergeOrg7</data>
+</resource>
+<resource name="org_organisation" uuid="TESTIMPORTMERGEORG8"
+            deleted="True" replaced_by="TESTIMPORTMERGEORG7" />
+</s3xml>"""
+
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+        resource = current.s3db.resource("org_organisation")
+        msg = resource.import_xml(xmltree)
+        #print msg
+        self.assertEqual(resource.error, None)
+
+        # Check the result: only the final record gets imported
+        # Note that no components of the deleted duplicate would ever
+        # get exported - hence no need to test the handling of it
+        resource = s3db.resource("org_organisation",
+                                 uid =uids, include_deleted = True)
+        result = resource.fast_select(test_fields)["data"]
+        self.assertEqual(len(result), 1)
+        for record in result:
+            self.assertEqual(record[UUID], "TESTIMPORTMERGEORG7")
+            self.assertFalse(record[DELETED])
+            self.assertEqual(record[REPLACEDBY], None)
+
+    def tearDown(self):
+
+        current.auth.override = False
+        current.db.rollback()
+
+# =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
 
@@ -145,8 +454,12 @@ def run_suite(*test_classes):
 if __name__ == "__main__":
 
     run_suite(
-        S3ExportMergeTests,
-        S3ImportMergeTests
+        ExportMergeTests,
+        ImportMergeTests,
+        ImportMergeWithExistingRecords,
+        ImportMergeWithExistingOriginal,
+        ImportMergeWithExistingDuplicate,
+        ImportMergeWithoutExistingRecords
     )
 
 # END ========================================================================
