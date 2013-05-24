@@ -1703,7 +1703,8 @@ class S3ImportItem(object):
     METHOD = Storage(
         CREATE = "create",
         UPDATE = "update",
-        DELETE = "delete"
+        DELETE = "delete",
+        MERGE = "merge"
     )
 
     POLICY = Storage(
@@ -1866,8 +1867,12 @@ class S3ImportItem(object):
         METHOD = self.METHOD
         UPDATE = METHOD["UPDATE"]
         DELETE = METHOD["DELETE"]
+        MERGE = METHOD["MERGE"]
 
-        UID = current.xml.UID
+        xml = current.xml
+        UID = xml.UID
+        DELETED = xml.DELETED
+        REPLACEDBY = xml.REPLACEDBY
 
         table = self.table
 
@@ -1886,15 +1891,25 @@ class S3ImportItem(object):
             if UID in original:
                 self.uid = original[UID]
                 self.data.update({UID:self.uid})
-            self.method = DELETE if self.data.deleted else UPDATE
+            if self.data[DELETED]:
+                if self.data[REPLACEDBY]:
+                    self.method = MERGE
+                else:
+                    self.method = DELETE
+            else:
+                self.method = UPDATE
+                
         else:
-            if self.data.deleted:
-                self.method = DELETE
+            if self.data[DELETED]:
+                if self.data[REPLACEDBY]:
+                    self.method = MERGE
+                else:
+                    self.method = DELETE
             else:
                 resolve = current.s3db.get_config(self.tablename, RESOLVER)
                 if self.data and resolve:
                     resolve(self)
-                if self.id and self.method in (UPDATE, DELETE):
+                if self.id and self.method in (UPDATE, DELETE, MERGE):
                     self.original = current.db(table._id == self.id) \
                                            .select(limitby=(0, 1)).first()
                     if original and UID in original:
@@ -1916,21 +1931,28 @@ class S3ImportItem(object):
         if prefix in current.manager.PROTECTED:
             return False
 
+        xml = current.xml
+        DELETED = xml.DELETED
+        REPLACEDBY = xml.REPLACEDBY
+
         # Determine the method
         METHOD = self.METHOD
-        self.method = METHOD["CREATE"]
-        if self.id:
-
-            if self.data.deleted is True:
-                self.method = METHOD["DELETE"]
-                self.accepted = True
-
+        if self.data.deleted is True:
+            if self.data.deleted_rb:
+                self.method = METHOD["MERGE"]
             else:
-                if not self.original:
-                    query = (self.table.id == self.id)
-                    self.original = current.db(query).select(limitby=(0, 1)).first()
-                if self.original:
-                    self.method = METHOD["UPDATE"]
+                self.method = METHOD["DELETE"]
+            self.accepted = True if self.id else False
+        elif self.id:
+            if not self.original:
+                query = (self.table.id == self.id)
+                self.original = current.db(query).select(limitby=(0, 1)).first()
+            if self.original:
+                self.method = METHOD["UPDATE"]
+            else:
+                self.method = METHOD["CREATE"]
+        else:
+            self.method = METHOD["CREATE"]
 
         # Set self.id
         if self.method == METHOD["CREATE"]:
@@ -1961,12 +1983,16 @@ class S3ImportItem(object):
 
         ERROR = current.xml.ATTRIBUTE["error"]
 
+        METHOD = self.METHOD
+        DELETE = METHOD["DELETE"]
+        MERGE = METHOD["MERGE"]
+
         # Detect update
         self.deduplicate()
 
         # Don't need to validate deleted records
-        if self.method == self.METHOD["DELETE"]:
-            self.accepted = self.id and True or False
+        if self.method in (DELETE, MERGE):
+            self.accepted = True if self.id else False
             return True
                 
         # Set dynamic defaults for new records
@@ -2071,6 +2097,7 @@ class S3ImportItem(object):
         CREATE = METHOD.CREATE
         UPDATE = METHOD.UPDATE
         DELETE = METHOD.DELETE
+        MERGE = METHOD.MERGE
 
         # Policies
         POLICY = self.POLICY
@@ -2083,6 +2110,9 @@ class S3ImportItem(object):
         MCI = xml.MCI
         MTIME = xml.MTIME
 
+        # Make item mtime TZ-aware
+        self.mtime = xml.as_utc(self.mtime)
+        
         # If the parent item gets skipped, then skip this item as well
         if self.parent is not None and self.parent.skip:
             return True
@@ -2114,7 +2144,7 @@ class S3ImportItem(object):
                     
             return ignore_errors
 
-        elif self.method != DELETE and self.components:
+        elif self.method not in (MERGE, DELETE) and self.components:
             for component in self.components:
                 if component.accepted is False or \
                    component.data is None:
@@ -2129,7 +2159,7 @@ class S3ImportItem(object):
                     self.error = self.ERROR.VALIDATION_ERROR
                     return False
 
-        elif self.method == DELETE and not self.accepted:
+        elif self.method in (MERGE, DELETE) and not self.accepted:
             self.skip = True
             # Deletion of non-existent record: ignore silently
             return True
@@ -2165,7 +2195,6 @@ class S3ImportItem(object):
                 this_mtime = xml.as_utc(this[MTIME])
             if hasattr(table, MCI):
                 this_mci = this[MCI]
-        self.mtime = xml.as_utc(self.mtime)
 
         # Detect conflicts
         this_modified = True
@@ -2179,7 +2208,7 @@ class S3ImportItem(object):
                 self.modified = False
             if self.modified and this_modified:
                 self.conflict = True
-        if self.conflict and method in (UPDATE, DELETE):
+        if self.conflict and method in (UPDATE, DELETE, MERGE):
             _debug("Conflict: %s" % self)
             if self.job.onconflict:
                 self.job.onconflict(self)
@@ -2349,6 +2378,54 @@ class S3ImportItem(object):
                                                self.skip and "skippe" or \
                                                method))
             return True
+
+        # Merge records
+        elif method == MERGE:
+
+            if UID not in table.fields:
+                self.skip = True
+            elif this:
+                if this.deleted:
+                    self.skip = True
+                policy = update_policy(None)
+                if policy == THIS:
+                    self.skip = True
+                elif policy == NEWER and \
+                     (this_mtime and this_mtime > self.mtime):
+                    self.skip = True
+                elif policy == MASTER and \
+                     (this_mci == 0 or self.mci != 1):
+                    self.skip = True
+            else:
+                self.skip = True
+
+            if not self.skip and not self.conflict:
+
+                row = db(table[UID] == data[xml.REPLACEDBY]) \
+                                        .select(table._id, limitby=(0, 1)) \
+                                        .first()
+                if row:
+                    original_id = row[table._id]
+                    resource = s3db.resource(self.tablename,
+                                             id = [original_id, self.id])
+                    try:
+                        success = resource.merge(original_id, self.id)
+                    except:
+                        self.error = sys.exc_info()[1]
+                        self.skip = True
+                        return False
+                    if success:
+                        self.committed = True
+                else:
+                    self.skip = True
+
+            _debug("Success: %s, id=%s %sd" % (self.tablename, self.id,
+                                               self.skip and "skippe" or \
+                                               method))
+            return True
+            
+        else:
+            raise RuntimeError("unknown import method: %s" % method)
 
         # Audit + onaccept on successful commits
         if self.committed:
@@ -2742,7 +2819,8 @@ class S3ImportJob():
             METHOD = S3ImportItem.METHOD
             strategy = [METHOD.CREATE,
                         METHOD.UPDATE,
-                        METHOD.DELETE]
+                        METHOD.DELETE,
+                        METHOD.MERGE]
         if not isinstance(strategy, (tuple, list)):
             strategy = [strategy]
         self.strategy = strategy
@@ -2911,24 +2989,31 @@ class S3ImportJob():
                     citem.parent = item
                     item.components.append(citem)
 
+            lookahead = self.lookahead
+            directory = self.directory
+
             # Handle references
             table = item.table
             tree = self.tree
             if tree is not None:
                 fields = [table[f] for f in table.fields]
                 rfields = filter(s3_has_foreign_key, fields)
-                item.references = self.lookahead(element,
-                                                 table=table,
-                                                 fields=rfields,
-                                                 tree=tree,
-                                                 directory=self.directory)
+                item.references = lookahead(element,
+                                            table=table,
+                                            fields=rfields,
+                                            tree=tree,
+                                            directory=directory)
+                                            
                 for reference in item.references:
                     entry = reference.entry
                     if entry and entry.element is not None:
-                        item_id = add_item(element=entry.element)
-                        if item_id:
-                            entry.update(item_id=item_id)
+                        if not entry.item_id:
+                            item_id = add_item(element=entry.element)
+                            if item_id:
+                                entry.update(item_id=item_id)
 
+            references = item.references
+                            
             # Parent reference
             if parent is not None:
                 entry = Storage(item_id=parent.item_id,
@@ -2936,6 +3021,27 @@ class S3ImportJob():
                                 tablename=parent.tablename)
                 item.references.append(Storage(field=joinby,
                                                entry=entry))
+
+            # Replacement reference
+            data = item.data
+            deleted = data.get(xml.DELETED, False)
+            if deleted:
+                field = xml.REPLACEDBY
+                replaced_by = data.get(field, None)
+                if replaced_by:
+                    rl = lookahead(element,
+                                   table=table,
+                                   tree=tree,
+                                   directory=directory,
+                                   lookup=(table, field, replaced_by))
+                    if rl:
+                        entry = rl[0].entry
+                        if entry.element is not None and not entry.item_id:
+                            item_id = add_item(element=entry.element)
+                            if item_id:
+                                entry.item_id = item_id
+                        item.references.append(Storage(field=field,
+                                                       entry=entry))
 
         return item.item_id
 
@@ -2945,7 +3051,8 @@ class S3ImportJob():
                   table=None,
                   fields=None,
                   tree=None,
-                  directory=None):
+                  directory=None,
+                  lookup=None):
         """
             Find referenced elements in the tree
 
@@ -2972,50 +3079,63 @@ class S3ImportJob():
                 root = tree
             else:
                 root = tree.getroot()
-        references = element.findall("reference")
+                
+        if lookup:
+            references = [lookup]
+        else:
+            references = element.findall("reference")
+            
         for reference in references:
-            field = reference.get(ATTRIBUTE.field, None)
 
-            # Ignore references without valid field-attribute
-            if not field or field not in fields or field not in table:
-                continue
+            if lookup:
+                tablename = element.get(ATTRIBUTE.name, None)
+                ktable, field, uid = reference
+                attr = UID
+                uids = [import_uid(uid)]
 
-            # Find the key table
-            ktablename, key, multiple = s3_get_foreign_key(table[field])
-            if not ktablename:
-                if table._tablename == "auth_user" and \
-                   field == "organisation_id":
-                    ktablename = "org_organisation"
-                else:
+            else:
+                field = reference.get(ATTRIBUTE.field, None)
+
+                # Ignore references without valid field-attribute
+                if not field or field not in fields or field not in table:
                     continue
-            try:
-                ktable = s3db[ktablename]
-            except:
-                continue
 
-            tablename = reference.get(ATTRIBUTE.resource, None)
-            # Ignore references to tables without UID field:
-            if UID not in ktable.fields:
-                continue
-            # Fall back to key table name if tablename is not specified:
-            if not tablename:
-                tablename = ktablename
-            # Super-entity references must use the super-key:
-            if tablename != ktablename:
-                field = (ktable._id.name, field)
-            # Ignore direct references to super-entities:
-            if tablename == ktablename and ktable._id.name != "id":
-                continue
-            # Get the foreign key
-            uids = reference.get(UID, None)
-            attr = UID
-            if not uids:
-                uids = reference.get(ATTRIBUTE.tuid, None)
-                attr = ATTRIBUTE.tuid
-            if uids and multiple:
-                uids = json.loads(uids)
-            elif uids:
-                uids = [uids]
+                # Find the key table
+                ktablename, key, multiple = s3_get_foreign_key(table[field])
+                if not ktablename:
+                    if table._tablename == "auth_user" and \
+                    field == "organisation_id":
+                        ktablename = "org_organisation"
+                    else:
+                        continue
+                try:
+                    ktable = s3db[ktablename]
+                except:
+                    continue
+
+                tablename = reference.get(ATTRIBUTE.resource, None)
+                # Ignore references to tables without UID field:
+                if UID not in ktable.fields:
+                    continue
+                # Fall back to key table name if tablename is not specified:
+                if not tablename:
+                    tablename = ktablename
+                # Super-entity references must use the super-key:
+                if tablename != ktablename:
+                    field = (ktable._id.name, field)
+                # Ignore direct references to super-entities:
+                if tablename == ktablename and ktable._id.name != "id":
+                    continue
+                # Get the foreign key
+                uids = reference.get(UID, None)
+                attr = UID
+                if not uids:
+                    uids = reference.get(ATTRIBUTE.tuid, None)
+                    attr = ATTRIBUTE.tuid
+                if uids and multiple:
+                    uids = json.loads(uids)
+                elif uids:
+                    uids = [uids]
 
             # Find the elements and map to DB records
             relements = []
@@ -3187,7 +3307,7 @@ class S3ImportJob():
                         cappend(item.id)
                     elif item.method == METHOD.UPDATE:
                         updated.append(item.id)
-                    elif item.method == METHOD.DELETE:
+                    elif item.method in (METHOD.MERGE, METHOD.DELETE):
                         deleted.append(item.id)
         self.count = count
         self.mtime = mtime

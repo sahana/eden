@@ -75,6 +75,7 @@ class S3XML(S3Codec):
     UID = "uuid"
     MCI = "mci"
     DELETED = "deleted"
+    REPLACEDBY = "deleted_rb"
     APPROVED = "approved"
     CTIME = "created_on"
     CUSER = "created_by"
@@ -183,6 +184,7 @@ class S3XML(S3Codec):
         tuid="tuid",
         label="label",
         comment="comment",
+        replaced_by="replaced_by"
         )
 
     ACTION = Storage(
@@ -494,7 +496,17 @@ class S3XML(S3Codec):
 
         reference_map = []
 
-        fields = [f for f in fields if f in record and record[f]]
+        DELETED = self.DELETED
+        REPLACEDBY = self.REPLACEDBY
+
+        if DELETED in record and record[DELETED] and \
+           REPLACEDBY in record and record[REPLACEDBY]:
+            fields = [REPLACEDBY]
+            replace = True
+        else:
+            fields = [f for f in fields if f in record and record[f]]
+            replace = False
+            
         if not fields:
             return reference_map
 
@@ -503,7 +515,6 @@ class S3XML(S3Codec):
 
         UID = self.UID
         MCI = self.MCI
-        DELETED = self.DELETED
 
         export_uid = self.export_uid
         represent = self.represent
@@ -513,6 +524,28 @@ class S3XML(S3Codec):
         load_table = current.s3db.table
 
         for f in fields:
+
+            if f == REPLACEDBY:
+                val = ogetattr(record, f)
+                if not val:
+                    continue
+                row = db(table._id == val).select(table[UID],
+                                                  limitby=(0, 1)).first()
+                if not row:
+                    continue
+                else:
+                    uids = [export_uid(row[UID])]
+                entry = {"field": f,
+                         "table": tablename,
+                         "multiple": False,
+                         "id": [val],
+                         "uid": uids,
+                         "text": None,
+                         "lazy": False,
+                         "value": None}
+                reference_map.append(Storage(entry))
+                continue
+
             try:
                 dbfield = ogetattr(table, f)
             except:
@@ -634,18 +667,28 @@ class S3XML(S3Codec):
         ATTRIBUTE = self.ATTRIBUTE
         RESOURCE = ATTRIBUTE.resource
         FIELD = ATTRIBUTE.field
-        UID = self.UID
-        ID = ATTRIBUTE.id
         VALUE = ATTRIBUTE.value
+        ID = ATTRIBUTE.id
+        RB = ATTRIBUTE.replaced_by
 
+        UID = self.UID
+        REPLACEDBY = self.REPLACEDBY
+        
         as_json = json.dumps
         SubElement = etree.SubElement
 
         for i in xrange(0, len(rmap)):
+
             r = rmap[i]
+            
+            f = r.field
+            if f == REPLACEDBY:
+                element.set(RB, r.uid[0])
+                continue
+
             reference = SubElement(element, REFERENCE)
             attr = reference.attrib
-            attr[FIELD] = r.field
+            attr[FIELD] = f
             attr[RESOURCE] = r.table
 
             if show_ids:
@@ -1107,7 +1150,7 @@ class S3XML(S3Codec):
                     v = 0
                 attrib[MCI] = str(int(v) + 1)
                 continue
-
+            
             if v is None or not hasattr(table, f):
                 continue
 
@@ -1292,9 +1335,10 @@ class S3XML(S3Codec):
                 record[UID] = uid
 
         # Attribute names
-        FIELD = cls.ATTRIBUTE["field"]
-        VALUE = cls.ATTRIBUTE["value"]
-        ERROR = cls.ATTRIBUTE["error"]
+        ATTRIBUTE = cls.ATTRIBUTE
+        FIELD = ATTRIBUTE["field"]
+        VALUE = ATTRIBUTE["value"]
+        ERROR = ATTRIBUTE["error"]
 
         DELETED = cls.DELETED
         APPROVED = cls.APPROVED
@@ -1305,13 +1349,18 @@ class S3XML(S3Codec):
         # Attributes
         deleted = False
         for f in cls.ATTRIBUTES_TO_FIELDS:
+            
             if f == DELETED:
                 if f in table and \
                    element.get(f, "false").lower() == "true":
                     record[f] = deleted = True
+                    replaced_by = element.get(ATTRIBUTE["replaced_by"], None)
+                    if replaced_by:
+                        record[cls.REPLACEDBY] = replaced_by
                     break
                 else:
                     continue
+                
             if f == APPROVED:
                 # Override default-approver:
                 if "approved_by" in table:
@@ -1321,8 +1370,10 @@ class S3XML(S3Codec):
                         if table["approved_by"].default == None:
                             auth.permission.set_default_approver(table)
                 continue
+            
             if f in IGNORE_FIELDS or f in skip:
                 continue
+            
             elif f in USER_FIELDS:
                 v = element.get(f, None)
                 if v and utable and "email" in utable:
@@ -1331,6 +1382,7 @@ class S3XML(S3Codec):
                     if user:
                         record[f] = user.id
                 continue
+            
             elif f == OGROUP:
                 v = element.get(f, None)
                 if v and gtable and "role" in gtable:
@@ -1339,6 +1391,7 @@ class S3XML(S3Codec):
                     if role:
                         record[f] = role.id
                 continue
+            
             if hasattr(table, f): #f in table.fields:
                 v = value = element.get(f, None)
                 if value is not None:
