@@ -18,12 +18,12 @@ OpenLayers.Handler.Feature.prototype.activate = function() {
 // Workaround:
 // for some reason some features remain styled after being unselected
 // so just unselect all features. Takes longer but doesn't confuse the user.
-OpenLayers.Control.SelectFeature.prototype.unselectAll = function (options) {
+OpenLayers.Control.SelectFeature.prototype.unselectAll = function(options) {
     var layers = this.layers || [this.layer];
     var layer, feature;
-    for(var l=0; l<layers.length; ++l) {
+    for (var l=0; l<layers.length; ++l) {
         layer = layers[l];
-        for(var i=layer.features.length-1; i>=0; --i) {
+        for (var i=layer.features.length-1; i>=0; --i) {
             feature = layer.features[i];
             if(!options || options.except != feature) {
                 this.unselect(feature);
@@ -33,11 +33,7 @@ OpenLayers.Control.SelectFeature.prototype.unselectAll = function (options) {
 };
 
 function each(array, fn) {
-    for (
-        var i = 0;
-        i < array.length;
-        ++i
-    ) {
+    for (var i = 0; i < array.length; ++i) {
         fn(array[i], i);
     }
 }
@@ -149,7 +145,7 @@ function node(tag_name, attrs, children) {
     return result;
 }
 function NodeGenerator(tag_name) {
-    return function (/* attrs, child1... */) {
+    return function(/* attrs, child1... */) {
         var attrs = Array.prototype.shift.apply(arguments);
         return node(tag_name, attrs, arguments);
     };
@@ -186,7 +182,7 @@ var ColourKey = OpenLayers.Class(OpenLayers.Control, {
                 base64_encode(create_bitmap_data())
             );
             // when the user changes limits, the map colours update instantly
-            colour_scale.use_callback = function () {
+            colour_scale.use_callback = function() {
                 if (!!colour_scale.use_limits) {
                     colour_scale.with_limits(colour_scale.use_limits);
                 }
@@ -202,14 +198,13 @@ var ColourKey = OpenLayers.Class(OpenLayers.Control, {
     deactivate: function() {
         var colour_scale = this;
         if (OpenLayers.Control.prototype.deactivate.apply(colour_scale, arguments)) {
-            
             return true;
         } else {
             return false;
         }
     },
 
-    with_limits: function (use_limits) {
+    with_limits: function(use_limits) {
         // immediately use the limits
         var colour_scale = this;
         use_limits(
@@ -218,17 +213,13 @@ var ColourKey = OpenLayers.Class(OpenLayers.Control, {
         );
     },
 
-    on_change: function (use_limits) {
+    on_change: function(use_limits) {
         // provide a callback for when the limits change
         // use_limits needs to accept min and max
         this.use_limits = use_limits;
     },
 
-    update_from: function (
-        new_units, 
-        max_value, 
-        min_value
-    ) {
+    update_from: function(new_units, max_value, min_value) {
         // Sets units, and limits (rounded sensibly) from supplied arguments.
         // If the limit lock checkbox is checked, doesn't change limits unless
         // the units change.
@@ -238,13 +229,10 @@ var ColourKey = OpenLayers.Class(OpenLayers.Control, {
         var previous_units = colour_scale.$units.html();
         colour_scale.$units.html(new_units);
 
-        if (
-            // user can lock limits
+        if (// user can lock limits
             !colour_scale.$limit_lock.is(':checked')
-
             // but if units change, old limits become meaningless
-            || previous_units != new_units
-        ) {
+            || previous_units != new_units) {
             // sensible range
             var significant_digits = 2;
             function scaling_factor(value) {
@@ -257,8 +245,7 @@ var ColourKey = OpenLayers.Class(OpenLayers.Control, {
             function sensible(value, round) {
                 if (value === 0.0) {
                     return 0.0;
-                }
-                else {
+                } else {
                     factor = scaling_factor(value);
                     return round(value/factor) * factor;
                 }
@@ -351,7 +338,7 @@ var ColourKey = OpenLayers.Class(OpenLayers.Control, {
         return colour_scale.div;
     },
 
-    print_mode: function () {
+    print_mode: function() {
         var colour_scale = this;
         colour_scale.$limit_lock.hide();
         colour_scale.$limit_lock_label.hide();
@@ -373,12 +360,8 @@ var TextAreaAutoResizer = function(
     function resize(force) {
         var value_length = $text_area.val().length, 
             $text_area_width = $text_area.width;
-        if (
-            force || (
-                value_length != resizer.previous_value_length || 
-                $text_area_width != resizer.previous_width
-            )
-        ) {
+        if (force || (value_length != resizer.previous_value_length || 
+                      $text_area_width != resizer.previous_width)) {
             $text_area.height(0);
             var height = Math.max(
                 resizer.min_height,
@@ -434,9 +417,7 @@ var QueryBox = OpenLayers.Class(OpenLayers.Control, {
         }
     },
 
-    update: function (
-        query_expression
-    ) {
+    update: function(query_expression) {
         var query_box = this;
         $(query_box.div).css('background-color', 'white');
         query_box.$text_area.val(query_expression);
@@ -445,9 +426,7 @@ var QueryBox = OpenLayers.Class(OpenLayers.Control, {
         query_box.resizer.resize();
     },
 
-    error: function (
-        position
-    ) {
+    error: function(position) {
         // inform the query box that there is an error, 
         var query_box = this;
         var text = query_box.$text_area.val();
@@ -458,9 +437,7 @@ var QueryBox = OpenLayers.Class(OpenLayers.Control, {
         // highlight where it starts
         var following_text = text.substr(position);
         var selection_size = following_text.search(new RegExp('\\s|$'));
-        if (
-            selection_size + message.length <= 0
-        ) {
+        if (selection_size + message.length <= 0) {
             selection_size = following_text.search(new RegExp('\n|$'));
         }
         query_box.$text_area.blur();
@@ -496,7 +473,7 @@ var QueryBox = OpenLayers.Class(OpenLayers.Control, {
             style:'margin-top:5px;'
         });
         $update_button.hide();
-        $update_button.click(function () {
+        $update_button.click(function() {
             query_box.updated(query_box.$text_area.val());
         });
         $query_box_div.append($text_area);
@@ -532,7 +509,7 @@ var QueryBox = OpenLayers.Class(OpenLayers.Control, {
         return query_box.div;
     },
 
-    print_mode: function () {
+    print_mode: function() {
         var query_box = this;
         query_box.$text_area.css('text-align', 'center');
     }
@@ -625,29 +602,27 @@ var FilterBox = OpenLayers.Class(OpenLayers.Control, {
         filter_box.update_plugin();
     },
 
-    update_plugin: function () {
+    update_plugin: function() {
         var filter_box = this;
         var $text_area = filter_box.$text_area;
         var filter_expression = $text_area.val();
         if (new RegExp('^\\s*$').test(filter_expression)) {
-            var filter_function = function () { return true; };
+            var filter_function = function() {
+                return true;
+            };
             $text_area.val('unfiltered');
         }
         else {
             try {
-                filter_function = filter_box.plugin.create_filter_function(
-                    $text_area.val()
-                );
+                filter_function = filter_box.plugin.create_filter_function($text_area.val());
                 // test it a bit
                 filter_function(filter_box.example, 0);
             }
-            catch (error) {
+            catch(error) {
                 $(filter_box.div).css('background-color', 'red');
                 var error_name = error.name;
                 $(filter_box.div).attr('title', error.message);
-                if (
-                    error_name == 'ReferenceError'
-                ) {
+                if (error_name == 'ReferenceError') {
                     var bad_ref = error.message.substr(
                         error.message.lastIndexOf(':') + 2
                     );
@@ -689,16 +664,14 @@ var FilterBox = OpenLayers.Class(OpenLayers.Control, {
         $filter_box_div.append($text_area);
 
         var $update_button = filter_box.$update_button = INPUT({
-            type:'button',
-            value:'Filter map overlay',
-            style:'margin-top:5px;'
+            type: 'button',
+            value: 'Filter map overlay',
+            style: 'margin-top:5px;'
         });
         $update_button.hide();
-        $update_button.click(
-            function () {
-                filter_box.update_plugin();
-            }
-        );
+        $update_button.click(function() {
+            filter_box.update_plugin();
+        });
         $filter_box_div.append($text_area);
         $filter_box_div.append(
             DIV({
@@ -749,7 +722,7 @@ function Point(lon, lat) {
     var point = new OpenLayers.Geometry.Point(lon, lat);
     return point.transform(
         S3.gis.proj4326,
-        S3.gis.projection_current
+        S3.gis.maps['default'].getProjectionObject()
     );
 }
 function LinearRing(point_list) {
@@ -764,29 +737,21 @@ function Place(data) {
     place.data.longitude = Math.round(place.data.longitude * 1000) / 1000;
 
     place.spaces = [];
-    var point = place.point = new OpenLayers.Geometry.Point(
-        data.longitude,
-        data.latitude
-    ).transform(
-        S3.gis.proj4326,
-        S3.gis.projection_current
-    );
-    var lonlat = place.lonlat = new OpenLayers.LonLat(
-        point.x,
-        point.y
-    );
+    var projection_current = S3.gis.maps['default'].getProjectionObject();
+    var point = place.point = new OpenLayers.Geometry.Point(data.longitude, data.latitude).transform(S3.gis.proj4326, projection_current);
+    var lonlat = place.lonlat = new OpenLayers.LonLat(point.x, point.y);
 }
-var station_marker_icon_size = new OpenLayers.Size(21,25);
+var station_marker_icon_size = new OpenLayers.Size(21, 25);
 var station_marker_icon = new OpenLayers.Icon(
     'http://www.openlayers.org/dev/img/marker.png', 
     station_marker_icon_size,
     new OpenLayers.Pixel(
-        -(station_marker_icon_size.w/2),
+        -(station_marker_icon_size.w / 2),
         -station_marker_icon_size.h
     )
 );
 Place.prototype = {
-    within: function () {
+    within: function() {
         for (var i = 0; i < arguments.length; i++) {
             if (this.spaces.indexOf(arguments[i]) != -1) {
                 return true;
@@ -794,10 +759,10 @@ Place.prototype = {
         }
         return false;
     },
-    within_Nepal: function () {
+    within_Nepal: function() {
         return this.spaces.length > 0;
     },
-    generate_marker: function (use_marker) {
+    generate_marker: function(use_marker) {
         // only for stations
         var place = this;
         if (place.data.station_id) {
@@ -806,7 +771,7 @@ Place.prototype = {
                 station_marker_icon.clone()
             );
             station_marker.place = place;
-            var show_place_info_popup = function (event) { 
+            var show_place_info_popup = function(event) { 
                 var marker = this;
                 var place = marker.place;
                 var info = [
@@ -818,7 +783,7 @@ Place.prototype = {
                     if (!!value) {
                         info.push(
                             //'<li>',
-                            attribute.replace('_',' '),': ', value,
+                            attribute.replace('_', ' '), ': ', value,
                             //'</li>'
                             '<br />'
                         );
@@ -840,6 +805,7 @@ Place.prototype = {
                     true
                 );
                 marker.popup = popup;
+                var map = S3.gis.maps['default'];
                 map.addPopup(popup);
                 function remove_place_info_popup() {
                     map.removePopup(marker.popup);
@@ -916,12 +882,8 @@ function PointInLinearRingDetector(linear_ring) {
     // containsPoint test can now be orders of magnitude faster, as far fewer
     // lines need consideration.
     var strips_count = parseInt(steps.length / 2, 10);
-    var strips = detector.strips = new Array(strips_count+1); // up and down again
-    for (
-        var i = 0;
-        i< strips.length;
-        i++
-    ) {
+    var strips = detector.strips = new Array(strips_count + 1); // up and down again
+    for (var i=0; i<strips.length; i++) {
         strips[i] = [];
     }
 
@@ -930,7 +892,7 @@ function PointInLinearRingDetector(linear_ring) {
     var acos = Math.acos;
     var floor = Math.floor, max = Math.max, min = Math.min;
     var strips_count_over_pi = strips_count / Math.PI;
-    var strip_selector = detector.strip_selector = function (latitude) {
+    var strip_selector = detector.strip_selector = function(latitude) {
         // for efficient strip sizes, assume polygons approximate a circle
         // i.e. the top lines are much more likely to run horizontally,
         // and the side lines vertically. Strip sizes reflect this.
@@ -949,12 +911,7 @@ function PointInLinearRingDetector(linear_ring) {
     var start_strip = strip_selector(start_y);
     var end_point, end_y, end_coords, end_strip;
     var line, direction, strip_number;
-    for(
-        var j = 1, 
-            len = steps.length;
-        j < len;
-        ++j
-    ) {
+    for (var j=1, len=steps.length; j < len; ++j) {
         end_point = steps[j];
         end_y = end_point.y;
         end_coords = [end_point.x, end_y];
@@ -975,7 +932,7 @@ function PointInLinearRingDetector(linear_ring) {
 }
 
 PointInLinearRingDetector.prototype = {
-    containsPoint: function (point, is_contained) {
+    containsPoint: function(point, is_contained) {
         if (this.bounds.contains(point.x, point.y)) {
             var digs = 14;
             var px = point.x;
@@ -988,11 +945,7 @@ PointInLinearRingDetector.prototype = {
             var lines_to_test = this.strips[this.strip_selector(py)];
             var line, x1, y1, x2, y2, cx, cy;
             var crosses = 0;
-            for(
-                var i=0, len = lines_to_test.length;
-                i < len;
-                ++i
-            ) {
+            for (var i=0, len=lines_to_test.length; i < len; ++i) {
                 line = lines_to_test[i];
                 x1 = line[0][0];
                 y1 = line[0][1];
@@ -1010,12 +963,12 @@ PointInLinearRingDetector.prototype = {
                  *    5. the edge-ray intersection point must be strictly right
                  *    of the point P.
                  */
-                if(y1 == y2) {
+                if (y1 == y2) {
                     // horizontal edge
-                    if(py == y1) {
+                    if (py == y1) {
                         // point on horizontal line
-                        if(x1 <= x2 && (px >= x1 && px <= x2) || // right or vert
-                           x1 >= x2 && (px <= x1 && px >= x2)) { // left or vert
+                        if (x1 <= x2 && (px >= x1 && px <= x2) || // right or vert
+                            x1 >= x2 && (px <= x1 && px >= x2)) { // left or vert
                             // point on edge
                             crosses = -1;
                             break;
@@ -1025,27 +978,27 @@ PointInLinearRingDetector.prototype = {
                     continue;
                 }
                 cx = getX(py, x1, y1, x2, y2);
-                if(cx == px) {
+                if (cx == px) {
                     // point on line
-                    if(y1 < y2 && (py >= y1 && py <= y2) || // upward
-                       y1 > y2 && (py <= y1 && py >= y2)) { // downward
+                    if (y1 < y2 && (py >= y1 && py <= y2) || // upward
+                        y1 > y2 && (py <= y1 && py >= y2)) { // downward
                         // point on edge
                         crosses = -1;
                         break;
                     }
                 }
-                if(cx <= px) {
+                if (cx <= px) {
                     // no crossing to the right
                     continue;
                 }
 
-                if(x1 != x2 && (cx < Math.min(x1, x2) || cx > Math.max(x1, x2))) {
+                if (x1 != x2 && (cx < Math.min(x1, x2) || cx > Math.max(x1, x2))) {
                     // no crossing                
                     continue;
                 }
 
-                if(y1 < y2 && (py >= y1 && py < y2) || // upward
-                   y1 > y2 && (py < y1 && py >= y2)) { // downward
+                if (y1 < y2 && (py >= y1 && py < y2) || // upward
+                    y1 > y2 && (py < y1 && py >= y2)) { // downward
                    ++crosses;
                 }
             }
@@ -1062,11 +1015,9 @@ PointInLinearRingDetector.prototype = {
     }
 };
 
-VariableResolutionVectorLayer = OpenLayers.Class(
-    OpenLayers.Layer.Vector,
-    {
+VariableResolutionVectorLayer = OpenLayers.Class(OpenLayers.Layer.Vector, {
         CLASS_NAME: 'VariableResolutionVectorLayer',
-        drawFeature: function (feature) {
+        drawFeature: function(feature) {
             var map = this.map;
             var zoom = map.zoom;
             OpenLayers.Layer.Vector.prototype.drawFeature.call(
@@ -1102,7 +1053,7 @@ VariableResolutionVectorLayer = OpenLayers.Class(
                         this.div.scrollLeft = this.div.scrollLeft;
                     }
                     if(!zoomChanged && coordSysUnchanged) {
-                        for(var i in this.unrenderedFeatures) {
+                        for (var i in this.unrenderedFeatures) {
                             var feature = this.unrenderedFeatures[i];
                             this.drawFeature(feature);
                         }
@@ -1114,7 +1065,7 @@ VariableResolutionVectorLayer = OpenLayers.Class(
                 this.renderer.clear();
                 this.unrenderedFeatures = {};
                 var features = this.features;
-                for(var j=0, len=features.length; j<len; j++) {
+                for (var j=0, len=features.length; j<len; j++) {
                     this.renderer.locked = (j !== (len - 1));
                     this.drawFeature(
                         features[j]
@@ -1124,10 +1075,10 @@ VariableResolutionVectorLayer = OpenLayers.Class(
         }
     }
 );
-OpenLayers.Feature.prototype.atZoom = function (zoom, map) {
+OpenLayers.Feature.prototype.atZoom = function(zoom, map) {
     return this;
 };
-OpenLayers.Feature.Vector.prototype.atZoom = function (zoom, map) {
+OpenLayers.Feature.Vector.prototype.atZoom = function(zoom, map) {
     var feature = this;
     var by_zoom = feature.by_zoom;
     if (!by_zoom) {
@@ -1162,7 +1113,9 @@ OpenLayers.Feature.Vector.prototype.atZoom = function (zoom, map) {
 // Rectangle
 // Point
 // Surface
-OpenLayers.Geometry.prototype.atZoom = function () { return this; };
+OpenLayers.Geometry.prototype.atZoom = function() {
+    return this;
+};
 
 // simplifying a Collection is like cloning its simplified components:
 
@@ -1170,12 +1123,10 @@ OpenLayers.Geometry.prototype.atZoom = function () { return this; };
 // Polygon,
 // MultiLineString
 
-OpenLayers.Geometry.Collection.prototype.atZoom = function (max_x_diff, max_y_diff) {
+OpenLayers.Geometry.Collection.prototype.atZoom = function(max_x_diff, max_y_diff) {
     var geometry = eval("new " + this.CLASS_NAME + "()");
-    for(var i=0, len=this.components.length; i<len; i++) {
-        geometry.addComponent(
-            this.components[i].atZoom(max_x_diff, max_y_diff)
-        );
+    for (var i=0, len=this.components.length; i<len; i++) {
+        geometry.addComponent(this.components[i].atZoom(max_x_diff, max_y_diff));
     }
     OpenLayers.Util.applyDefaults(geometry, this);
     return geometry;
@@ -1187,7 +1138,7 @@ OpenLayers.Geometry.Collection.prototype.atZoom = function (max_x_diff, max_y_di
 // Curve
 //  LineString
 //   LinearRing
-OpenLayers.Geometry.MultiPoint.prototype.atZoom = function (max_x_diff, max_y_diff) {
+OpenLayers.Geometry.MultiPoint.prototype.atZoom = function(max_x_diff, max_y_diff) {
     var geometry = eval("new " + this.CLASS_NAME + "()");
     var points = this.components;
     var points_length = points.length;
@@ -1204,10 +1155,8 @@ OpenLayers.Geometry.MultiPoint.prototype.atZoom = function (max_x_diff, max_y_di
             var abs = Math.abs;
             while (i < points_length - 1) {
                 var point = points[i];
-                if (
-                    abs(point.x - previous_x) > max_x_diff ||
-                    abs(point.y - previous_y) > max_y_diff
-                ) {
+                if (abs(point.x - previous_x) > max_x_diff ||
+                    abs(point.y - previous_y) > max_y_diff) {
                     // the point is far away enough from the previous point
                     // such that the difference is discernible on a pixel basis
                     geometry.addComponent(point.clone());
@@ -1225,10 +1174,9 @@ OpenLayers.Geometry.MultiPoint.prototype.atZoom = function (max_x_diff, max_y_di
     return geometry;
 };
 
-load_layer_and_locate_places_in_spaces = function (
-    name, layer_URL, format, label_colour, label_size
-) {
-    // can load the Kfrom http://maps.worldbank.org/overlays/3388.kml
+load_layer_and_locate_places_in_spaces = function(name, layer_URL, format, label_colour, label_size) {
+    // can load the KML from http://maps.worldbank.org/overlays/3388.kml
+    var map = S3.gis.maps['default'];
     var vector_layer = new VariableResolutionVectorLayer(
         name,
         {
@@ -1243,7 +1191,7 @@ load_layer_and_locate_places_in_spaces = function (
     map.addLayer(vector_layer);
   
     var region_names_layer = new OpenLayers.Layer.Vector(
-        name+" names",
+        name + " names",
         {
             projection: map.displayProjection,
             styleMap: new OpenLayers.StyleMap({'default':{
@@ -1264,11 +1212,11 @@ load_layer_and_locate_places_in_spaces = function (
     vector_layer.events.register(
         'loadend', 
         vector_layer,
-        function () {
+        function() {
             region_names_layer.setZIndex(109);
             each(
                 vector_layer.features,
-                function (feature) {
+                function(feature) {
                     var geometry = feature.geometry;
                     var polygon = geometry.components[0];
                     var district = feature.data.District || feature.data.DISTRICT;
@@ -1285,39 +1233,34 @@ load_layer_and_locate_places_in_spaces = function (
     vector_layer.events.register(
         'loadend', 
         vector_layer,
-        function () {
+        function() {
             vector_layer.setVisibility(false);
             setTimeout(
-                function () {
+                function() {
                     vector_layer.setZIndex(
                         110
                     );
                     var linear_rings = [];
 
                     function find_linear_rings(geometry, name) {
-                        if (
-                            geometry.CLASS_NAME == "OpenLayers.Geometry.LinearRing"
-                        ) {
+                        if (geometry.CLASS_NAME == "OpenLayers.Geometry.LinearRing") {
                             var linear_ring = geometry;
                             linear_ring.name = name;
                             plugin.spaces.push([name, name]);
                             linear_rings.push(linear_ring);
-                        }
-                        else {
-                            if (geometry.components) {
-                                each(
-                                    geometry.components,
-                                    function (geometry) {
-                                        find_linear_rings(geometry, name);
-                                    }
-                                );
-                            }
+                        } else if (geometry.components) {
+                            each(
+                                geometry.components,
+                                function(geometry) {
+                                    find_linear_rings(geometry, name);
+                                }
+                            );
                         }
                     }
 
                     each(
                         vector_layer.features,
-                        function (feature) {
+                        function(feature) {
                             var data = feature.data;
                             if (data) {
                                 var district = data.District || data.DISTRICT;
@@ -1332,9 +1275,9 @@ load_layer_and_locate_places_in_spaces = function (
                         }
                     );
                     each(linear_rings,
-                        function (linear_ring) {
+                        function(linear_ring) {
                             plugin.when_places_loaded(
-                                function (places) {
+                                function(places) {
                                     var detector = new PointInLinearRingDetector(
                                         linear_ring
                                     );
@@ -1343,7 +1286,7 @@ load_layer_and_locate_places_in_spaces = function (
                                             var place = places[p];
                                             detector.containsPoint(
                                                 place.point,
-                                                function () {
+                                                function() {
                                                     place.add_space(linear_ring);
                                                 }
                                             );
@@ -1365,7 +1308,7 @@ load_layer_and_locate_places_in_spaces = function (
 };
 
 var Logo = OpenLayers.Class(OpenLayers.Control, {
-    draw: function () {
+    draw: function() {
         return (
             DIV({
                     style:'width: 120px; position:absolute; left: 5px; bottom:60px;'
@@ -1379,8 +1322,9 @@ var Logo = OpenLayers.Class(OpenLayers.Control, {
     }
 });
 
-ClimateDataMapPlugin = function (config) {
+ClimateDataMapPlugin = function(config) {
     var plugin = this; // let's be explicit!
+    var map = plugin.map;
     window.plugin = plugin;
     plugin.data_type_option_names = config.data_type_option_names;
     plugin.parameter_names = config.parameter_names;
@@ -1401,11 +1345,8 @@ ClimateDataMapPlugin = function (config) {
     var display_mode = config.display_mode;
     var initial_query_expression;
     if (config.expression) {
-        initial_query_expression = decodeURI(
-            config.expression
-        );
-    }
-    else {
+        initial_query_expression = decodeURI(config.expression);
+    } else {
         initial_query_expression = (
             plugin.aggregation_names[0]+'('+
                 '"'+ //form_values.data_type+' '+
@@ -1413,8 +1354,8 @@ ClimateDataMapPlugin = function (config) {
                     new RegExp('\\+','g'),
                     ' '
                 )+'", '+
-                'From('+plugin.year_min+'), '+
-                'To('+plugin.year_max+')'+
+                'From(' + plugin.year_min + '), '+
+                'To(' + plugin.year_max + ')'+
             ')'
         );
     }
@@ -1428,12 +1369,12 @@ ClimateDataMapPlugin = function (config) {
     plugin.spaces = [];
 
     plugin.places_events = [];
-    plugin.when_places_loaded = function (places_function) {
+    plugin.when_places_loaded = function(places_function) {
         places_function(plugin.places);
         plugin.places_events.push(places_function);
     };
 
-    plugin.create_filter_function = function (filter_expression) {
+    plugin.create_filter_function = function(filter_expression) {
         var replacements = {
             '(\\W)and(\\W)': '$1&&$2',
             '(^|\\W)not(\\W)': '$1!$2',
@@ -1443,9 +1384,7 @@ ClimateDataMapPlugin = function (config) {
         for (var pattern in replacements) {
             if (replacements.hasOwnProperty(pattern)) {
                 var reg_exp = new RegExp(pattern, 'g');
-                filter_expression = filter_expression.replace(
-                    reg_exp, replacements[pattern]
-                );
+                filter_expression = filter_expression.replace(reg_exp, replacements[pattern]);
             }
         }
 
@@ -1477,14 +1416,14 @@ ClimateDataMapPlugin = function (config) {
 
     function init_tooltips() {
         each(tooltips,
-            function (config) {
+            function(config) {
                 new Ext.ToolTip(config);
             }
         );
-        //Ext.QuickTips.init(); // done by gis
+        //Ext.QuickTips.init(); // done by addMapUI()
     }
 
-    plugin.setup = function () {
+    plugin.setup = function() {
         var overlay_layer = plugin.overlay_layer = new OpenLayers.Layer.Vector(
             'Query result values',
             {
@@ -1503,18 +1442,18 @@ ClimateDataMapPlugin = function (config) {
             }
             if (hover_timeout === null) {
                 hover_timeout = setTimeout(
-                    function () {
+                    function() {
                         hover_delay = 0;
                         var place = plugin.places[feature.attributes.place_id];
                         if (!!place) {
                             place.popup(
                                 feature,
                                 feature.attributes.value,
-                                function (popup) {
+                                function(popup) {
                                     feature.popup = popup;
                                     map.addPopup(popup);
                                     setTimeout(
-                                        function () {
+                                        function() {
                                             onFeatureUnselect(feature);
                                             hover_delay = 1000;
                                         },
@@ -1540,7 +1479,7 @@ ClimateDataMapPlugin = function (config) {
             }
             if (hover_delay_clear_timeout === null) {
                 hover_delay_clear_timeout = setTimeout(
-                    function () {
+                    function() {
                         hover_delay = 1000;
                     },
                     3000
@@ -1580,13 +1519,13 @@ ClimateDataMapPlugin = function (config) {
                 multipleKey: 'shiftKey',
                 hover: false,
                 box: true,
-                onSelect: function (feature) {
+                onSelect: function(feature) {
                     feature.style.strokeColor = 'black';
                     feature.style.strokeDashstyle = 'dash';
                     overlay_layer.drawFeature(feature);
                     plugin.show_chart_button.enable();
                 },
-                onUnselect: function (feature) {
+                onUnselect: function(feature) {
                     feature.style.strokeColor = 'none';
                     overlay_layer.drawFeature(feature);
                     if (plugin.overlay_layer.selectedFeatures.length === 0) {
@@ -1596,7 +1535,7 @@ ClimateDataMapPlugin = function (config) {
             }
         );
         // workaround: is this a bug in OpenLayers?
-        selectCtrl.handlers.box.dragHandler.dragstart = function (evt) {
+        selectCtrl.handlers.box.dragHandler.dragstart = function(evt) {
             var propagate = true;
             this.dragging = false;
             if (this.checkModifiers(evt) &&
@@ -1606,10 +1545,10 @@ ClimateDataMapPlugin = function (config) {
                 this.start = evt.xy;
                 this.last = evt.xy;
                 OpenLayers.Element.addClass(
-                    this.map.viewPortDiv, "olDragDown"
+                    this.map.viewPortDiv, 'olDragDown'
                 );
                 this.down(evt);
-                this.callback("down", [evt.xy]);
+                this.callback('down', [evt.xy]);
 
                 //OpenLayers.Event.stop(evt);
 
@@ -1636,15 +1575,17 @@ ClimateDataMapPlugin = function (config) {
         $.ajax({
             url: plugin.places_URL,
             dataType: 'json',
-            success: function (rearranged_places_data) {
-                // add marker layer for places
+            success: function(rearranged_places_data) {
+                // Add marker layer for places
+                // NB This isn't in the standard Eden OpenLayers build, so added manually by MapPlugin.py
                 var station_markers_layer = new OpenLayers.Layer.Markers(
-                    "Observation stations"
+                    // @ToDo: i18n
+                    'Observation stations'
                 );
                 places_data = {};
                 each(
                     rearranged_places_data,
-                    function (places_by_attribute_group) {
+                    function(places_by_attribute_group) {
                         var attributes = places_by_attribute_group.attributes;
                         var compression = places_by_attribute_group.compression;
                         var places = places_by_attribute_group.places;
@@ -1652,7 +1593,7 @@ ClimateDataMapPlugin = function (config) {
                         var id_attribute = places[id_index];
                         var previous_id = 0;
                         each(id_attribute,
-                            function (id_offset, position) {
+                            function(id_offset, position) {
                                 var place_id = id_offset + previous_id;
                                 if (places_data[place_id] == undefined) {
                                     places_data[place_id] = {};
@@ -1665,12 +1606,12 @@ ClimateDataMapPlugin = function (config) {
                         compression.splice(id_index, 1);
                         each(
                             attributes,
-                            function (attribute_name, index) {
-                                if (compression[index] == "similar_numbers") {
+                            function(attribute_name, index) {
+                                if (compression[index] == 'similar_numbers') {
                                     var previous = 0;
                                     each(
                                         places[index],
-                                        function (value, position) {
+                                        function(value, position) {
                                             var place_id = id_attribute[position];
                                             var place_data = places_data[place_id];
                                             previous = place_data[attribute_name] = previous + value;
@@ -1681,7 +1622,7 @@ ClimateDataMapPlugin = function (config) {
                                     // no compression
                                     each(
                                         places[index],
-                                        function (value, position) {
+                                        function(value, position) {
                                             var place_id = id_attribute[position];
                                             var place_data = places_data[place_id];
                                             place_data[attribute_name] = value;
@@ -1702,7 +1643,7 @@ ClimateDataMapPlugin = function (config) {
                         plugin.places[place_id] = place;
                         // add marker
                         place.generate_marker(
-                            function (marker) { 
+                            function(marker) { 
                                 station_markers_layer.addMarker(marker);
                             }
                         );
@@ -1710,7 +1651,7 @@ ClimateDataMapPlugin = function (config) {
                 }
                 each(
                     plugin.places_events,
-                    function (places_function) {
+                    function(places_function) {
                         places_function(new_places);
                     }
                 );
@@ -1720,7 +1661,7 @@ ClimateDataMapPlugin = function (config) {
 
                 plugin.update_map_layer(initial_query_expression);
                 plugin.filter_box = new FilterBox({
-                    updated: function (filter_function) {
+                    updated: function(filter_function) {
                         plugin.filter = filter_function;
                         plugin.colour_scale.with_limits(
                             plugin.render_map_layer
@@ -1736,7 +1677,7 @@ ClimateDataMapPlugin = function (config) {
                 plugin.logo.activate();
                 map.addControl(plugin.logo);
             },
-            error: function (jqXHR, textStatus, errorThrown) {
+            error: function(jqXHR, textStatus, errorThrown) {
                 plugin.set_status(
                     '<a target= "_blank" href="climate/places">Could not load place data!</a>'
                 );
@@ -1775,25 +1716,25 @@ ClimateDataMapPlugin = function (config) {
 
         // make room by closing the layer tree
         setTimeout(
-            function () {
+            function() {
                 load_layer_and_locate_places_in_spaces(
-                    "Nepal districts (World Bank)",
-                    "http://maps.worldbank.org/overlays/3388.kml",
+                    'Nepal districts (World Bank)',
+                    'http://maps.worldbank.org/overlays/3388.kml',
                     new OpenLayers.Format.KML({
                         //maxDepth: 2, 
                         extractStyles: true,
                         extractAttributes: true
                     }),
-                    "black",
-                    "9px"
+                    'black',
+                    '9px'
                 );
 
                 load_layer_and_locate_places_in_spaces(
-                    "Nepal development regions",
-                    "/eden/static/data/NP_L1.geojson",
+                    'Nepal development regions',
+                    '/eden/static/data/NP_L1.geojson',
                     new OpenLayers.Format.GeoJSON(),
-                    "black",
-                    "11px"
+                    'black',
+                    '11px'
                 );
                 init_tooltips();
             },
@@ -1802,7 +1743,7 @@ ClimateDataMapPlugin = function (config) {
     };
 
     var conversion_functions = {
-        'Kelvin': function (value) {
+        'Kelvin': function(value) {
             return value - 273.16;
         }
     };
@@ -1824,12 +1765,8 @@ ClimateDataMapPlugin = function (config) {
 
         var range = max_value - min_value;
         var features = [];
-        var filter = plugin.filter || function () { return true; };
-        for (
-            var i = 0;
-            i < place_ids.length;
-            i++
-        ) {
+        var filter = plugin.filter || function() { return true; };
+        for (var i = 0; i < place_ids.length; i++) {
             var place_id = place_ids[i];
             var place = plugin.places[place_id];
             if (place == undefined) {
@@ -1849,14 +1786,11 @@ ClimateDataMapPlugin = function (config) {
             	var normalised_value;
             	if (range) {
                     normalised_value = (converted_value - min_value) / range;
-                }
-                else {
+                } else {
                     normalised_value = 0;
                 }
-                if (
-                    (0.0 <= normalised_value) && 
-                    (normalised_value <= 1.0)
-                ) {
+                if ((0.0 <= normalised_value) && 
+                    (normalised_value <= 1.0)) {
                     var colour_value = colour_map[Math.floor(
                         normalised_value * (colour_map.length-1)
                     )];
@@ -1889,8 +1823,7 @@ ClimateDataMapPlugin = function (config) {
                                 }
                             )
                         );
-                    }
-                    else {
+                    } else {
                         var border = grid_size / 220;
 
                         north = lat + border;
@@ -1909,7 +1842,7 @@ ClimateDataMapPlugin = function (config) {
                                     ])
                                 ]),
                                 {
-                                    value: converted_value.toPrecision(6)+' '+display_units,
+                                    value: converted_value.toPrecision(6) + ' ' + display_units,
                                     id: id,
                                     place_id: place_id
                                 },
@@ -1924,9 +1857,9 @@ ClimateDataMapPlugin = function (config) {
         }
         plugin.overlay_layer.addFeatures(features);
         
-        plugin.request_image = function () {
+        plugin.request_image = function() {
             var coords = map.getCenter().transform(
-                S3.gis.projection_current,
+                map.getProjectionObject(),
                 S3.gis.proj4326
             );
             window.location.href = encodeURI([
@@ -1946,7 +1879,7 @@ ClimateDataMapPlugin = function (config) {
             setTimeout(
                 // this setTimeout is to allow the map to expand.
                 // otherwise some map tiles might be missed
-                function () { 
+                function() { 
                     var allowed_control_class_names = [
                         "OpenLayers.Control.Attribution",
                         "OpenLayers.Control.ScaleLine",
@@ -1955,18 +1888,11 @@ ClimateDataMapPlugin = function (config) {
                         "QueryBox"
                     ];
                     each(map.controls,
-                        function (control) {
-                            if (    
-                                allowed_control_class_names.indexOf(
-                                    control.__proto__.CLASS_NAME
-                                ) == -1
-                            ) {
+                        function(control) {
+                            if (allowed_control_class_names.indexOf(control.__proto__.CLASS_NAME) == -1) {
                                 $(control.div).hide();
-                            }
-                            else {
-                                if (control.print_mode) {
-                                    control.print_mode();
-                                }
+                            } else if (control.print_mode) {
+                                control.print_mode();
                             }
                         }
                     );
@@ -1975,7 +1901,7 @@ ClimateDataMapPlugin = function (config) {
                     function print_if_no_more_images() {
                         if (images_waiting.length === 0) {
                             console.log('All images loaded, now printing.');
-                            setTimeout(function () {
+                            setTimeout(function() {
                                 window.print();
                             }, 0);
                         }
@@ -1986,9 +1912,8 @@ ClimateDataMapPlugin = function (config) {
                         images_waiting.splice(image_pos, 1);
                         print_if_no_more_images();
                     }
-                    each(
-                        document.getElementsByTagName('img'),
-                        function (img) {
+                    each(document.getElementsByTagName('img'),
+                         function(img) {
                             if (!img.complete) {
                                 images_waiting.push(img);
                                 $(img).load(image_done).error(image_done);
@@ -2002,7 +1927,7 @@ ClimateDataMapPlugin = function (config) {
 
                     // 10 sec max wait
                     setTimeout(
-                        function () { 
+                        function() { 
                             console.log('Could not load all images in time.');
                             window.print();
                         },
@@ -2014,14 +1939,12 @@ ClimateDataMapPlugin = function (config) {
         }
     };
 
-    plugin.update_query = function (query_expression) {
+    plugin.update_query = function(query_expression) {
         plugin.query_box.update(query_expression);
         plugin.last_query_expression = query_expression;
     };
 
-    plugin.update_map_layer = function (
-        query_expression
-    ) {
+    plugin.update_map_layer = function(query_expression) {
         // request new features
         plugin.overlay_layer.destroyFeatures();
         plugin.set_status('Updating...');
@@ -2048,7 +1971,7 @@ ClimateDataMapPlugin = function (config) {
                 } else {
                     plugin.feature_data = feature_data;
                     var units = feature_data.units;
-                    var converter = plugin.converter = conversion_functions[units] || function (x) { return x; };
+                    var converter = plugin.converter = conversion_functions[units] || function(x) { return x; };
                     var display_units = plugin.display_units = display_units_conversions[units] || units;
                     var values = feature_data.values;
                     
@@ -2063,7 +1986,7 @@ ClimateDataMapPlugin = function (config) {
                     plugin.set_status('');
                 }
             },
-            error: function (jqXHR, textStatus, errorThrown) {
+            error: function(jqXHR, textStatus, errorThrown) {
                 plugin.set_status(
                     'An error occurred: ' + (
                         jqXHR.statusText == 'error' ? 
@@ -2082,17 +2005,13 @@ ClimateDataMapPlugin = function (config) {
                     plugin.query_box.update(error.understood_expression);
                     plugin.query_box.error(error.offset);
                     plugin.set_status('');
-                }
-                else {
-                    if (
-                        error.error == 'MeaninglessUnits' ||
+                } else {
+                    if (error.error == 'MeaninglessUnits' ||
                         error.error == 'DSLTypeError' || 
-                        error.error == 'DimensionError'
-                    ) {
+                        error.error == 'DimensionError') {
                         window.analysis = error.analysis;
                         plugin.query_box.update(error.analysis);
-                    }
-                    else {
+                    } else {
                         plugin.set_status(
                             '<a target= "_blank" href="'+
                                 plugin.overlay_data_URL+'?'+
@@ -2102,7 +2021,7 @@ ClimateDataMapPlugin = function (config) {
                     }
                 }
             },
-            complete: function (jqXHR, status) {
+            complete: function(jqXHR, status) {
                 if (status != 'success' && status != 'error') {
                     plugin.set_status(status);
                 }
@@ -2114,19 +2033,12 @@ ClimateDataMapPlugin = function (config) {
         'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
 
-    function SpecPanel(
-        panel_id, panel_title, collapsed
-    ) {
-        function make_combo_box(
-            data,
-            fieldLabel,
-            hiddenName,
-            combo_box_size
-        ) {
+    function SpecPanel(panel_id, panel_title, collapsed) {
+        function make_combo_box(data, fieldLabel, hiddenName, combo_box_size) {
             var options = [];
             each(
                 data,
-                function (option) {
+                function(option) {
                     options.push([option, option]);
                 }
             );
@@ -2193,11 +2105,7 @@ ClimateDataMapPlugin = function (config) {
 
         function inclusive_range(start, end) {
             var values = [];
-            for (
-                var i = start;
-                i <= end;
-                i++
-            ) {
+            for (var i = start; i <= end; i++) {
                 values.push(i);
             }
             return values;
@@ -2233,14 +2141,14 @@ ClimateDataMapPlugin = function (config) {
             $.ajax({
                 url: plugin.years_URL+'?dataset_name='+dataset_name,
                 dataType: 'json',
-                success: function (year_ranges) {
+                success: function(year_ranges) {
                     variable_combo_box.year_ranges = year_ranges;
                 }
             });
         }
         variable_combo_box.on(
             'select', 
-            function (a, value) {
+            function(a, value) {
                 update_years(value.json[0]);
             }
         );
@@ -2249,14 +2157,14 @@ ClimateDataMapPlugin = function (config) {
         // combo boxes if no data is available for those years
         each(
             [from_year_combo_box, to_year_combo_box],
-            function (combo_box) {
+            function(combo_box) {
                 combo_box.on(
                     'expand',
-                    function () {
+                    function() {
                         $(combo_box.list.dom).find(
                             '.x-combo-list-item'
                         ).each(
-                            function (i, option_div) {
+                            function(i, option_div) {
                                 $option_div = $(option_div);
                                 $option_div.css('color', '');
                                 if (
@@ -2294,10 +2202,7 @@ ClimateDataMapPlugin = function (config) {
         // if some are picked, aggregate those months
         // if all are picked, aggregate for whole year
         each('DJFMAMJJASOND',
-            function (
-                month_letter,
-                month_index
-            ) {
+            function(month_letter, month_index) {
                 month_letters.push(
                     {
                         html: month_letter, 
@@ -2344,8 +2249,7 @@ ClimateDataMapPlugin = function (config) {
             var month_checkboxes = $('#'+month_checkboxes_id);
             if (value) {
                 month_checkboxes.show(300);
-            }
-            else {
+            } else {
                 month_checkboxes.hide(300);
             }
         });
@@ -2421,12 +2325,8 @@ ClimateDataMapPlugin = function (config) {
         var month_names = [];
         each(
             [0,1,2,3,4,5,6,7,8,9,10,11,12],
-            function (
-                month_number
-            ) {
-                if (
-                    form_values['month-'+month_number] == 'on'
-                ) {
+            function(month_number) {
+                if (form_values['month-'+month_number] == 'on') {
                     month_names.push(
                         filter_months[month_number]
                     );
@@ -2455,7 +2355,7 @@ ClimateDataMapPlugin = function (config) {
         );
     }
 
-    plugin.addToMapWindow = function (items) {
+    plugin.addToMapWindow = function(items) {
         // create the panels
         var climate_data_panel = SpecPanel(
             'climate_data_panel',
@@ -2463,7 +2363,7 @@ ClimateDataMapPlugin = function (config) {
             false
         );
         // This button does the simplest "show me data" overlay
-        plugin.update_map_layer_from_form = function () {
+        plugin.update_map_layer_from_form = function() {
             plugin.update_map_layer(
                 form_query_expression(climate_data_panel.getForm())
             );
@@ -2482,7 +2382,7 @@ ClimateDataMapPlugin = function (config) {
             true
         );
         // This button does the comparison overlay
-        plugin.update_map_layer_from_comparison = function () {
+        plugin.update_map_layer_from_comparison = function() {
             plugin.update_map_layer(
                 form_query_expression(comparison_panel.getForm()) + ' - ' +
                 form_query_expression(climate_data_panel.getForm())
@@ -2523,7 +2423,7 @@ ClimateDataMapPlugin = function (config) {
         });
         quick_filter_combo_box.on(
             'select',
-            function (combo_box, record, index) {
+            function(combo_box, record, index) {
                 plugin.filter_box.set_filter('within("'+record.data.name+'")');
             }
         );
@@ -2538,7 +2438,7 @@ ClimateDataMapPlugin = function (config) {
                 var place_names = [];
                 each(
                     plugin.overlay_layer.selectedFeatures, 
-                    function (feature) {
+                    function(feature) {
                         var place_id = feature.attributes.place_id;
                         place_ids.push(place_id);
                         var place = plugin.places[place_id];
@@ -2573,23 +2473,20 @@ ClimateDataMapPlugin = function (config) {
                 );
 
                 // get hold of a chart manager instance
-                if (
-                    !plugin.chart_window ||
-                    typeof plugin.chart_window.chart_manager == 'undefined'
-                ) {
+                if (!plugin.chart_window || typeof plugin.chart_window.chart_manager == 'undefined') {
                     var chart_window = plugin.chart_window = window.open(
                         plugin.chart_popup_URL,
                         'chart', 
                         'width=660,height=600,toolbar=0,resizable=0'
                     );
-                    chart_window.onload = function () {
+                    chart_window.onload = function() {
                         chart_window.chart_manager = new chart_window.ChartManager(plugin.chart_URL);
                         chart_window.chart_manager.addChartSpec(
                             spec, 
                             chart_name
                         );
                     };
-                    chart_window.onbeforeunload = function () {
+                    chart_window.onbeforeunload = function() {
                         delete plugin.chart_window;
                     };
                 } else {
@@ -2624,7 +2521,7 @@ ClimateDataMapPlugin = function (config) {
                 }                
             }
         );
-        plugin.set_status = function (html_message) {
+        plugin.set_status = function(html_message) {
             $('#error_div').html(html_message);
         };
 

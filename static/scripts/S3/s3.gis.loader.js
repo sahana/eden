@@ -333,6 +333,7 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
             'gis/openlayers/lib/OpenLayers/TileManager.js',
             //'gis/openlayers/lib/OpenLayers/WPSClient.js',
             //'gis/openlayers/lib/OpenLayers/WPSProcess.js',
+            'gis/openlayers/lib/OpenLayers/Strategy/AttributeCluster.js'
         ]
         jsFiles = jsFiles.concat(ol_files)
 
@@ -423,8 +424,6 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
         }
 
         // S3
-        jsFiles.push('S3/s3.gis.layers.js');
-        jsFiles.push('S3/s3.gis.controls.js');
         jsFiles.push('S3/s3.gis.js');
 
     } else {

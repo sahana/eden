@@ -263,6 +263,7 @@ def dojs(dogis = False, warnings = True):
     # Single scripts
     for filename in ["contacts",
                      "embed_component",
+                     "gis",
                      "gis.fullscreen",
                      "locationselector.widget",
                      "locationselector.widget2",
@@ -291,45 +292,28 @@ def dojs(dogis = False, warnings = True):
                 out.write(minimize(inp.read()))
         
     if dogis:
-        sourceDirectoryGIS = "../S3"
         sourceDirectoryOpenLayers = "../gis/openlayers/lib"
         sourceDirectoryOpenLayersExten = "../gis"
         sourceDirectoryMGRS = "../gis"
         sourceDirectoryGeoExt = "../gis/GeoExt/lib"
-        #sourceDirectoryGeoExtux = "../gis/GeoExt/ux"
         sourceDirectoryGxp = "../gis/gxp"
-        #sourceDirectoryGeoExplorer = "../gis/GeoExplorer"
-        configFilenameGIS = "sahana.js.gis.cfg"
         configFilenameOpenLayers = "sahana.js.ol.cfg"
-        #configFilenameOpenLayersExten = "sahana.js.ol_exten.cfg"
         configFilenameMGRS = "sahana.js.mgrs.cfg"
         configFilenameGeoExt = "sahana.js.geoext.cfg"
-        #configFilenameGeoExtux = "sahana.js.geoextux.cfg"
         configFilenameGxpMin = "sahana.js.gxp.cfg"
         configFilenameGxp2 = "sahana.js.gxp2.cfg"
         configFilenameGxpFull = "sahana.js.gxpfull.cfg"
-        #configFilenameGeoExplorer = "sahana.js.geoexplorer.cfg"
-        outputFilenameGIS = "s3.gis.min.js"
         outputFilenameOpenLayers = "OpenLayers.js"
         outputFilenameMGRS = "MGRS.min.js"
         outputFilenameGeoExt = "GeoExt.js"
         outputFilenameGxp = "gxp.js"
         outputFilenameGxp2 = "gxp_upload.js"
-        #outputFilenameGeoExplorer = "GeoExplorer.js"
 
         # Merge GIS JS Files
-        print "Merging GIS scripts."
-        mergedGIS = mergejs.run(sourceDirectoryGIS,
-                                None,
-                                configFilenameGIS)
-
         print "Merging OpenLayers libraries."
         mergedOpenLayers = mergejs.run(sourceDirectoryOpenLayers,
                                        None,
                                        configFilenameOpenLayers)
-        #mergedOpenLayersExten = mergejs.run(sourceDirectoryOpenLayersExten,
-        #                                    None,
-        #                                    configFilenameOpenLayersExten)
 
         print "Merging MGRS libraries."
         mergedMGRS = mergejs.run(sourceDirectoryMGRS,
@@ -340,9 +324,6 @@ def dojs(dogis = False, warnings = True):
         mergedGeoExt = mergejs.run(sourceDirectoryGeoExt,
                                    None,
                                    configFilenameGeoExt)
-        #mergedGeoExtux = mergejs.run(sourceDirectoryGeoExtux,
-        #                             None,
-        #                             configFilenameGeoExtux)
 
         print "Merging gxp libraries."
         mergedGxpMin = mergejs.run(sourceDirectoryGxp,
@@ -355,16 +336,7 @@ def dojs(dogis = False, warnings = True):
                                     None,
                                     configFilenameGxpFull)
 
-        #print "Merging GeoExplorer libraries."
-        #mergedGeoExplorer = mergejs.run(sourceDirectoryGeoExplorer,
-        #                                None,
-        #                                configFilenameGeoExplorer)
-
-        
         # Compress JS files
-        print "Compressing - GIS JS"
-        minimizedGIS = minimize(mergedGIS)
-
         print "Compressing - OpenLayers JS"
         if use_compressor == "closure_ws":
             # Limited to files < 1Mb!
@@ -442,16 +414,10 @@ def dojs(dogis = False, warnings = True):
                 pass
             shutil.move(outputFilename, "../gis/gxp/widgets")
 
-        #print "Compressing - GeoExplorer JS"
-        #minimizedGeoExplorer = minimize(mergedGeoExplorer)
-
         # Add license
         #minimizedGIS = open("license.gis.txt").read() + minimizedGIS
 
         # Print to output files
-        print "Writing to %s." % outputFilenameGIS
-        open(outputFilenameGIS, "w").write(minimizedGIS)
-
         print "Writing to %s." % outputFilenameOpenLayers
         open(outputFilenameOpenLayers, "w").write(minimizedOpenLayers)
 
@@ -467,18 +433,7 @@ def dojs(dogis = False, warnings = True):
         print "Writing to %s." % outputFilenameGxp2
         open(outputFilenameGxp2, "w").write(minimizedGxp2)
 
-        #print "Writing to %s." % outputFilenameGeoExplorer
-        #open(outputFilenameGeoExplorer, "w").write(minimizedGeoExplorer)
-
         # Move new JS files
-        print "Deleting %s." % outputFilenameGIS
-        try:
-            os.remove("../S3/%s" % outputFilenameGIS)
-        except:
-            pass
-        print "Moving new GIS JS files"
-        shutil.move(outputFilenameGIS, "../S3")
-
         print "Deleting %s." % outputFilenameOpenLayers
         try:
             os.remove("../gis/%s" % outputFilenameOpenLayers)
@@ -510,14 +465,6 @@ def dojs(dogis = False, warnings = True):
             pass
         print "Moving new gxp JS files"
         shutil.move(outputFilenameGxp, "../gis")
-
-        #print "Deleting %s." % outputFilenameGeoExplorer
-        #try:
-        #    os.remove("../gis/%s" % outputFilenameGeoExplorer)
-        #except:
-        #    pass
-        #print "Moving new GeoExplorer JS files"
-        #shutil.move(outputFilenameGeoExplorer, "../gis")
 
 def docss():
     """ Compresses the  CSS files """

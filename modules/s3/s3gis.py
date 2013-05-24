@@ -6126,10 +6126,10 @@ i18n.gis_feature_info="%s"
         #############
 
         # Configure settings to pass through to Static script
-        # @ToDo: Consider passing this as JSON Objects to allow it to be done dynamically
+        # @ToDo: Pass a JSON 'options' object to allow multiple maps ona  page and map configs to be saved & loaded more easily
         config_script = "".join((
             authenticated,
-            '''S3.public_url='%s'\n''' % public_url,  # Needed just for GoogleEarthPanel
+            '''S3.public_url='%s'\n''' % public_url,  # Needed for GoogleEarthPanel
             config_id,
             s3_gis_window,
             s3_gis_windowHide,
@@ -6138,6 +6138,7 @@ i18n.gis_feature_info="%s"
             collapsed,
             toolbar,
             loc_select,
+            # @ToDo: Pass these as args into showMap() rather than using globals
             '''S3.gis.map_height=%s\n''' % map_height,
             '''S3.gis.map_width=%s\n''' % map_width,
             '''S3.gis.zoom=%s\n''' % (zoom or 1),
@@ -6184,8 +6185,9 @@ i18n.gis_feature_info="%s"
             '''i18n.gis_length_tooltip='%s'\n''' % T("Measure Length: Click the points along the path & end with a double-click"),
             '''i18n.gis_area_tooltip='%s'\n''' % T("Measure Area: Click the points around the polygon & end with a double-click"),
             '''i18n.gis_zoomfull='%s'\n''' % T("Zoom to maximum map extent"),
+            '''i18n.gis_zoomin='%s'\n''' % T("Zoom In"),
+            '''i18n.gis_zoominbutton='%s'\n''' % T("Zoom In: click in the map or use the left mouse button and drag to create a rectangle"),
             '''i18n.gis_zoomout='%s'\n''' % T("Zoom Out: click in the map or use the left mouse button and drag to create a rectangle"),
-            '''i18n.gis_zoomin='%s'\n''' % T("Zoom In: click in the map or use the left mouse button and drag to create a rectangle"),
             '''i18n.gis_pan='%s'\n''' % T("Pan Map: keep the left mouse button pressed and drag the map"),
             '''i18n.gis_navPrevious='%s'\n''' % T("Previous View"),
             '''i18n.gis_navNext='%s'\n''' % T("Next View"),

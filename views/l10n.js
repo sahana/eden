@@ -1,5 +1,5 @@
 {{# These are messages which are translatable & can then be available to Static JavaScript}}
-i18n=Object()
+i18n={}
 i18n.language='{{=s3.language}}'
 i18n.ajax_wht='{{=T("We have tried")}}'
 i18n.ajax_gvn='{{=T("times and it is still not working. We give in. Sorry.")}}'

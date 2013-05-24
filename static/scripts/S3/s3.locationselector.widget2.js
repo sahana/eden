@@ -158,9 +158,9 @@ function lx_select(fieldname, level, id) {
             }
             values.sort(nameSort);
             var _id, location, option, selected;
-            var select = $('#' + fieldname + '_L' + level);
+            var select = $(selector + '_L' + level);
             // Remove old entries
-            $('#' + fieldname + '_L' + level + ' option').remove('[value != ""]');
+            $(selector + '_L' + level + ' option').remove('[value != ""]');
             for (var i=0, len=values.length; i < len; i++) {
                 location = values[i];
                 _id = location['i'];
@@ -188,15 +188,16 @@ function lx_select(fieldname, level, id) {
                 latfield.val(lat);
                 lonfield.val(lon);
             }
-            if (!S3.gis.mapPanel) {
+            var map_id = 'location_selector_' + fieldname;
+            if (!S3.gis.maps || !S3.gis.maps[map_id]) {
                 // Instantiate the Map as we couldn't do it when DIV is hidden
-                var map = S3.gis.show_map();
+                var map = S3.gis.show_map(map_id, {});
                 if (lat != undefined) {
                     // Display feature
                     var geometry = new OpenLayers.Geometry.Point(parseFloat(lon), parseFloat(lat));
                     geometry.transform(S3.gis.proj4326, map.getProjectionObject());
                     var feature = new OpenLayers.Feature.Vector(geometry);
-                    S3.gis.draftLayer.addFeatures([feature]);
+                    map.s3.draftLayer.addFeatures([feature]);
                     if (!specific) {
                         // This is a Create form with a validation error
                         // Dummify the real input (need this for IS_LOCATION_SELECTOR2 to differentiate create/update)
@@ -227,7 +228,7 @@ function lx_select(fieldname, level, id) {
                 }
             } else {
                 // Map already-showing
-                var map = S3.gis.mapPanel.map;
+                var map = S3.gis.maps[map_id];
             }
             // Zoom to extent of the Lx, if we have it
             var bounds = l[id].b;
@@ -256,7 +257,7 @@ function lx_select(fieldname, level, id) {
                 }
             }
             if (bounds) {
-                bounds = OpenLayers.Bounds.fromArray(bounds).transform(S3.gis.proj4326, S3.gis.projection_current);
+                bounds = OpenLayers.Bounds.fromArray(bounds).transform(S3.gis.proj4326, map.getProjectionObject());
                 map.zoomToExtent(bounds);
             }
         }

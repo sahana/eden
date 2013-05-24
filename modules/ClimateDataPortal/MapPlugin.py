@@ -1,19 +1,30 @@
 # -*- coding: utf-8 -*-
 
+import datetime
+import hashlib
+from math import log10, floor, isnan
+
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
+from gluon import current
 from gluon.dal import Expression
 
 from Cache import *
-import gluon.contrib.simplejson as JSON
+from DSL.Units import MeaninglessUnitsException
+from DSL import aggregations, grid_sizes
 from . import (
     SampleTable,
     month_number_to_year_month,
     units_in_out,
     start_month_0_indexed
 )
-from DSL.Units import MeaninglessUnitsException
-from DSL import aggregations, grid_sizes
 
-from math import log10, floor
 def round_to_4_sd(x):
     if x == 0:
         return 0.0
@@ -36,20 +47,19 @@ def between(items, main, between, *a, **kw):
         else:
             between(item, *a, **kw)
 
-
 class MapPlugin(object):
-    def __init__(
-        map_plugin,
-        env,
-        year_min,
-        year_max,
-        place_table,
-        client_config = {}
-    ):
+    def __init__(map_plugin,
+                 env,
+                 year_min,
+                 year_max,
+                 place_table,
+                 client_config = {}
+                 ):
         """
-            param: client_config (optional) passes configuration dict 
-                                            through to the client-side map plugin.
+            @param: client_config (optional) passes configuration dict 
+                                             through to the client-side map plugin.
         """
+
         try:
             import rpy2
             import rpy2.robjects as robjects
@@ -79,15 +89,16 @@ class MapPlugin(object):
         map_plugin.client_config = client_config
 
     def extend_gis_map(map_plugin, add_javascript, add_configuration):
-        add_javascript("S3/s3.gis.climate.js")
-        env = map_plugin.env
-        SCRIPT = env.SCRIPT
-        T = env.T
-        import json
-        application_name = env.request.application
-        
+
+        T = current.T
+        s3 = current.response.s3
+        appname = current.request.application
+        # @ToDo: Minified version for Production
+        s3.scripts.append("/%s/static/scripts/S3/s3.gis.climate.js" % appname)
+        s3.scripts.append("/%s/static/scripts/gis/openlayers/lib/OpenLayers/Layer/Markers.js" % appname)
+
         def climate_URL(url):
-            return "/%s/climate/%s" % (application_name, url)
+            return "/%s/climate/%s" % (appname, url)
         
         config_dict = dict(
             map_plugin.client_config,
@@ -112,26 +123,15 @@ class MapPlugin(object):
             ],
         )
         SampleTable.add_to_client_config_dict(config_dict)
-        add_configuration(
-            SCRIPT(
-                "\n".join((
-                    "registerPlugin(",
-                    "    new ClimateDataMapPlugin("+
-                            json.dumps(
-                                config_dict,
-                                indent = 4
-                            )+
-                        ")",
-                    ")",
-                )),
-                _type="text/javascript"
-            )
-        )
+        config = json.dumps(config_dict, indent=4)
 
-    def get_overlay_data(
-        map_plugin,
-        query_expression,
-    ):
+        s3.jquery_ready.append('''
+var map = S3.gis.maps['default'];
+var plugin = new ClimateDataMapPlugin(config);
+map.registerPlugin(plugin);
+''')
+
+    def get_overlay_data(map_plugin, query_expression):
         env = map_plugin.env
         DSL = env.DSL
         expression = DSL.parse(query_expression)
@@ -201,16 +201,12 @@ class MapPlugin(object):
             finally:
                 overlay_data_file.close()
             
-        import hashlib
         return get_cached_or_generated_file(
-            hashlib.md5(understood_expression_string).hexdigest()+".json",
+            hashlib.md5(understood_expression_string).hexdigest() + ".json",
             generate_map_overlay_data
         )
     
-    def get_csv_location_data(
-        map_plugin,
-        query_expression,
-    ):
+    def get_csv_location_data(map_plugin, query_expression):
         env = map_plugin.env
         DSL = env.DSL
         expression = DSL.parse(query_expression)
@@ -302,18 +298,16 @@ class MapPlugin(object):
             finally:
                 csv_data_file.close()
             
-        import hashlib
         return get_cached_or_generated_file(
             hashlib.md5(understood_expression_string).hexdigest()+".csv",
             generate_map_csv_data
         )
     
-    def render_plots(
-        map_plugin,
-        specs,
-        width,
-        height
-    ):
+    def render_plots(map_plugin,
+                     specs,
+                     width,
+                     height
+                     ):
         env = map_plugin.env
         DSL = env.DSL
         
@@ -555,7 +549,6 @@ function (
         text.width = 3
     )
 }""" )
-            from math import log10, floor, isnan
             for regression_line, i in zip(
                 regression_lines,
                 range(len(time_serieses))
@@ -692,28 +685,16 @@ function (
             #watermark_image = scale_preserving_aspect_ratio(watermark_image, 0.5)
             watermark(image, watermark_image, 'scale', 0.05).save(file_path)
 
-
-        import md5
-        import gluon.contrib.simplejson as JSON
-
-        import datetime
         def serialiseDate(obj):
-            if isinstance(
-                obj,
-                (
-                    datetime.date, 
-                    datetime.datetime, 
-                    datetime.time
-                )
-            ): 
+            if isinstance(obj, (datetime.date, datetime.datetime, datetime.time)):
                 return obj.isoformat()[:19].replace("T"," ")
             else:
                 raise TypeError("%r is not JSON serializable" % (obj,)) 
-        
+
         return get_cached_or_generated_file(
             "".join((
-                md5.md5(
-                    JSON.dumps(
+                hashlib.md5(
+                    json.dumps(
                         [specs, width, height],
                         sort_keys=True,
                         default=serialiseDate,
@@ -893,7 +874,7 @@ function (
     def printable_map_image_file(plugin, command, url_prefix, query_string, width, height):
         def generate_printable_map_image(file_path):
             import urllib
-            url = url_prefix+"?"+query_string+"&display_mode=print"
+            url = url_prefix + "?" + query_string + "&display_mode=print"
                         
             # PyQT4 signals don't like not being run in the main thread
             # run in a subprocess to give it it's own thread
@@ -915,11 +896,9 @@ function (
                 )
             )
 
-        import md5
-        import gluon.contrib.simplejson as JSON
         return get_cached_or_generated_file(
-            md5.md5(
-                JSON.dumps(
+            hashlib.md5(
+                json.dumps(
                     [query_string, width, height],
                     sort_keys=True,
                 )
@@ -935,9 +914,7 @@ function (
             file.write(str(years))
             file.close()
         
-        import md5
-        import gluon.contrib.simplejson as JSON
         return get_cached_or_generated_file(
-            md5.md5(sample_table_name+" years").hexdigest()+".json",
+            hashlib.md5(sample_table_name + " years").hexdigest() + ".json",
             generate_years_json
         )

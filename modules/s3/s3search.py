@@ -864,11 +864,15 @@ class S3SearchLocationWidget(S3SearchWidget):
         OPEN_MAP = T("Open Map")
         CLEAR_MAP = T("Clear selection")
         map_buttons = TAG[""](BUTTON(OPEN_MAP,
-                                     _id="gis_search_map-btn"),
+                                     _id="gis_search_map-btn",
+                                     # If we need to support multiple maps
+                                     #_map="default",
+                                     ),
                               BUTTON(CLEAR_MAP,
                                      _id="gis_search_polygon_input_clear"))
 
         # Settings to be read by static/scripts/S3/s3.gis.js
+        # @ToDo: migrate to options once show_map() does
         js_location_search = '''S3.gis.draw_polygon=true'''
 
         # The overall layout of the components
@@ -1576,19 +1580,18 @@ i18n.edit_saved_search="%s"
                         "active"    : False, # Gets activated when the Map is opened up
                         "marker"    : gis.get_marker(request.controller, request.function)
                     }]
-                map_popup = gis.show_map(
-                                        feature_resources=feature_resources,
-                                        # Added by search widget onClick in s3.dataTables.js
-                                        #add_polygon = True,
-                                        #add_polygon_active = True,
-                                        catalogue_layers=True,
-                                        legend=True,
-                                        toolbar=True,
-                                        collapsed=True,
-                                        #search = True,
-                                        window=True,
-                                        window_hide=True
-                                        )
+                map_popup = gis.show_map(feature_resources=feature_resources,
+                                         # Added by search widget onClick in s3.dataTables.js
+                                         #add_polygon = True,
+                                         #add_polygon_active = True,
+                                         catalogue_layers=True,
+                                         legend=True,
+                                         toolbar=True,
+                                         collapsed=True,
+                                         #search = True,
+                                         window=True,
+                                         window_hide=True
+                                         )
                 s3.dataTableMap = map_popup
 
             if settings.has_module("msg") and \

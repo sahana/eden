@@ -1,33 +1,32 @@
 
 """
-Gridded data is already aggregated by month
+    Gridded data is already aggregated by month
 
-therefore we don't have daily gridded data, but this is 
-importing to the same basic table type as if it were daily.
+    therefore we don't have daily gridded data, but this is 
+    importing to the same basic table type as if it were daily.
 
-So:
-Don't make a daily table
-Record what monthly aggregations are available
-We only use monthly aggregations on the map and chart so
+    So:
+    Don't make a daily table
+    Record what monthly aggregations are available
+    We only use monthly aggregations on the map and chart so
 
-Some statistics won't be available depending on the aggregation of the gridded data.
+    Some statistics won't be available depending on the aggregation of the gridded data.
 
-Rainfall:
-SUM -> AVERAGE -> COUNT
+    Rainfall:
+    SUM -> AVERAGE -> COUNT
 
-We want SUM
+    We want SUM
 
-Temp:
-We want MAX, MIN, 
+    Temp:
+    We want MAX, MIN, 
 
-Or:
-  record what time_period means in the table.
-  aggregate month tables into year tables
-  leave daily tables empty so that we just don't get any values to add
-  but the table is ready there in case the values ever turn up.
-  
-NetCDF data includes units information so need to use this to convert the data.
-
+    Or:
+      record what time_period means in the table.
+      aggregate month tables into year tables
+      leave daily tables empty so that we just don't get any values to add
+      but the table is ready there in case the values ever turn up.
+      
+    NetCDF data includes units information so need to use this to convert the data.
 """
 
 ClimateDataPortal = local_import("ClimateDataPortal")

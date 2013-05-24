@@ -632,6 +632,40 @@ def climate_first_run():
         Manual SQL Statements to run after tables are created
     """
 
+    errors = []
+    settings = current.deployment_settings
+    if settings.get_database_type() != "postgres":
+        errors.append("Climate unresolved dependency: PostgreSQL required")
+    try:
+       import rpy2
+    except ImportError:
+       errors.append("""
+R is required by the climate data portal to generate charts
+
+To install R: refer to:
+http://cran.r-project.org/doc/manuals/R-admin.html
+
+rpy2 is required to interact with python.
+
+To install rpy2, refer to:
+http://rpy.sourceforge.net/rpy2/doc-dev/html/overview.html
+""")
+    try:
+       from Scientific.IO import NetCDF
+    except ImportError:
+       errors.append("Climate unresolved dependency: NetCDF required if you want to import readings")
+    try:
+       from scipy import stats
+    except ImportError:
+       errors.append("Climate unresolved dependency: SciPy required if you want to generate graphs on the map")
+
+    if errors:
+        # Report errors and stop.
+        prefix = "\n%s: " % current.T("ACTION REQUIRED")
+        msg = prefix + prefix.join(errors)
+        s3_debug(msg)
+        raise HTTP(500, body=msg)
+
     db = current.db
     # Load all stations and parameters
     s3db = current.s3db

@@ -7,11 +7,11 @@
 {{include "jquery.html"}}
 {{include "ext.html"}}
 <script type="text/javascript">//<![CDATA[
-// Global variable to store all of our variables inside
-var S3 = Object();
-S3.gis = Object();
-function s3_debug(message, value) {
- // no debug
-}
+{{ # Global variable to store all of our variables inside }}
+var S3={}
+S3.Ap='/{{=appname}}'
+S3.gis={}
+i18n={}
+function s3_debug(message, value) {}
 //]]></script>
 {{=XML(map)}}

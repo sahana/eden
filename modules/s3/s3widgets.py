@@ -400,7 +400,7 @@ class S3DateTimeWidget(FormWidget):
    defaultValue: '%(default)s',
    onClose: %(onclose)s
 });
-clear_button=$('<input id="%(selector)s_clear" type="button" value="clear"/>').click(function(){
+var clear_button=$('<input id="%(selector)s_clear" type="button" value="clear"/>').click(function(){
  $('#%(selector)s').val('');%(onclear)s
 });
 if($('#%(selector)s_clear').length == 0){

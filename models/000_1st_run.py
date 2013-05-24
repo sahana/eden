@@ -24,16 +24,15 @@ except NameError:
 appname = request.application
 
 if update_check_needed:
+    # @ToDo: Load deployment_settings so that we can configure the update_check
+    # - need to rework so that 000_config.py is parsed 1st
+    import s3cfg
+    settings = s3cfg.S3Config()
     # Run update checks
     from s3_update_check import update_check
     errors = []
     warnings = []
-    # Supply the current (Web2py) environment. Pick out only the items that are
-    # safe for the check functions to combine with their own environments, i.e.
-    # not anything of the form __x__.
-    #environment = dict((k, v) for (k, v) in globals().iteritems() if not k.startswith("__"))
-    #messages = update_check(environment)
-    messages = update_check()
+    messages = update_check(settings)
     errors.extend(messages.get("error_messages", []))
     warnings.extend(messages.get("warning_messages", []))
 

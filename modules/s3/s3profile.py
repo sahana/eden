@@ -427,7 +427,9 @@ class S3Profile(S3CRUD):
         # Button to go full-screen
         fullscreen = A(I(_class="icon icon-fullscreen"),
                        _href=URL(c="gis", f="map_viewing_client"),
-                       _id="gis_fullscreen_map-btn",
+                       _class="gis_fullscreen_map-btn",
+                       # If we need to support multiple maps on a page
+                       #_map="default",
                        _title=T("View full screen"),
                        )
         s3 = current.response.s3

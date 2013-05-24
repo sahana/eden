@@ -1,17 +1,22 @@
-$(function() {
+// Module pattern to hide internal vars
+(function () {
+    // Module scope
+    var map;
+
     function is_fullscreen() {
         return document.fullscreen || document.mozFullScreen || document.webkitIsFullScreen;
     }
 
-    function enable_fullscreen() {
+    function enable_fullscreen(map) {
         // Remove map elements
-        S3.gis.mapWestPanelContainer.removeAll(false);
-        S3.gis.mapPanelContainer.removeAll(false);
-        S3.gis.mapWin.items.items = [];
-        S3.gis.mapWin.doLayout();
-        S3.gis.mapWin.destroy();
+        map.s3.mapWestPanelContainer.removeAll(false);
+        map.s3.mapPanelContainer.removeAll(false);
+        var mapWin = map.s3.mapWin;
+        mapWin.items.items = [];
+        mapWin.doLayout();
+        mapWin.destroy();
         // Add Window
-        addMapWindow();
+        S3.gis.addMapWindow(map);
         // Request browser to go full-screen
         if (document.body.requestFullScreen) {
             document.body.requestFullScreen();
@@ -22,39 +27,53 @@ $(function() {
         }
     }
 
-    function disable_fullscreen() {
+    function disable_fullscreen(map) {
         // Remove map elements
-        S3.gis.mapWestPanelContainer.removeAll(false);
-        S3.gis.mapPanelContainer.removeAll(false);
-        S3.gis.mapWin.items.items = [];
-        S3.gis.mapWin.doLayout();
-        S3.gis.mapWin.destroy();
+        map.s3.mapWestPanelContainer.removeAll(false);
+        map.s3.mapPanelContainer.removeAll(false);
+        var mapWin = map.s3.mapWin;
+        mapWin.items.items = [];
+        mapWin.doLayout();
+        mapWin.destroy();
         // Add embedded Panel
-        addMapPanel();
+        S3.gis.addMapPanel(map);
     }
 
-    $('#gis_fullscreen_map-btn').click(function(evt) {
+    $('.gis_fullscreen_map-btn').click(function(evt) {
         if (navigator.appVersion.indexOf('MSIE') != -1) {
             // Not supported on IE
             return;
         } else {
-            enable_fullscreen();
+            // Read map_id from the Button to determine which Map to make fullscreen
+            var map_id;
+            var attributes = this.attributes;
+            for (var i=0; i < attributes.length; i++) {
+                if (attributes[i].name == 'map') {
+                    map_id = attributes[i].value;
+                    break;
+                }
+            }
+            if (undefined == map_id) {
+                map_id = 'default';
+            }
+            map = S3.gis.maps[map_id];
+            enable_fullscreen(map);
             evt.preventDefault();
         }
     });
 
     $('body').bind('webkitfullscreenchange', function() {
         if (!is_fullscreen())
-            disable_fullscreen();
+            disable_fullscreen(map);
     });
 
     $(document).bind('mozfullscreenchange', function() {
         if (!is_fullscreen())
-            disable_fullscreen();
+            disable_fullscreen(map);
     });
 
     $('body').bind('webkitfullscreenchange', function() {
         if (!is_fullscreen())
-            disable_fullscreen();
+            disable_fullscreen(map);
     });
-});
+}());

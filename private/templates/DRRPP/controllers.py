@@ -527,7 +527,6 @@ class about():
 class admin():
     """
         Custom Admin Index Page
-
     """
 
     def __call__(self):
@@ -718,11 +717,9 @@ class organisations():
         from gluon.storage import Storage
         from s3 import S3FieldSelector
 
-        T = current.T
+        #T = current.T
         request = current.request
         response = current.response
-
-        current.response.s3["dataTable_sDom"] = 'ripl<"dataTable_table"t>p'
 
         response.title = "DRR Projects Portal - Regional Organizations"
         view = path.join(request.folder, "private", "templates",
@@ -734,31 +731,43 @@ class organisations():
             from gluon.http import HTTP
             raise HTTP("404", "Unable to open Custom View: %s" % view)
 
+        s3 = response.s3
+        s3["dataTable_sDom"] = 'ripl<"dataTable_table"t>p'
+
         tables = []
         table = request.vars.get("table", None)
 
         # URL format breaks the REST controller conventions
         #request.args.pop()
 
-        if table is None or table == "regional":
+        if table is None:
+            # HTML call
+            if s3.debug:
+                append = s3.scripts.append
+                appname = request.application
+                append("/%s/static/scripts/jquery.dataTables.js" % appname)
+                append("/%s/static/scripts/jquery.dataTables.fnSetFilteringDelay.js" % appname)
+                append("/%s/static/scripts/jquery.dataTables.sortFunctions.js" % appname)
+                append("/%s/static/scripts/S3/s3.dataTables.multi.js" % appname)
+            else:
+                s3.scripts.append("/%s/static/scripts/S3/s3.dataTables.multi.min.js" % request.application)
+
+            s3.js_global.append('''S3.dataTablesInstances=[]''')
             s3request, field_list = self._regional()
-
-            if table is None:
-                tables.append(self._table("regional", s3request.resource, field_list))
-
-        if table is None or table == "groups":
+            tables.append(self._table("regional", s3request.resource, field_list))
             s3request, field_list = self._groups()
-
-            if table is None:
-                tables.append(self._table("groups", s3request.resource, field_list))
-
-        if table is not None:
+            tables.append(self._table("groups", s3request.resource, field_list))
+        else:
+            # AJAX call
+            if table == "groups":
+                s3request, field_list = self._groups()
+            elif table == "regional":
+                s3request, field_list = self._regional()
             current.s3db.configure(s3request.resource.tablename,
                                    list_fields = field_list)
             return s3request()
 
-        return dict(tables=tables,
-                    appname=request.application)
+        return dict(tables=tables)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -829,7 +838,6 @@ class organisations():
         """
 
         from s3 import S3FieldSelector
-        T = current.T
 
         fields = []
         cols = []
@@ -900,9 +908,12 @@ class organisations():
             "sDom": 'rifpl<"dataTable_table"t>p'
         })
 
+        script = '''S3.dataTablesInstances.push({'options':%s})''' % XML(options)
+        current.response.s3.js_global.append(script)
+
         table = Storage(cols=cols,
                         rows=rows,
-                        options=options,
+                        #options=options,
                         classes="dataTable display"
                         )
 

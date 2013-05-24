@@ -2,6 +2,8 @@
  * Used by the S3LocationSelectorWidget (modules/s3/s3widgets.py)
  * This script is in Static to allow caching
  * Dynamic constants (e.g. Internationalised strings) are set in server-generated script
+ *
+ * @ToDo: Support more than 1/page by not using fixed ids but varying with fieldname (see locationselector.widget2)
  */
 
 // Main jQuery function
@@ -139,14 +141,21 @@ function s3_gis_locationselector_Ext_onReady() {
     var mapButton = Ext.get('gis_location_map-btn');
     if (mapButton) {
         mapButton.on('click', function() {
-            S3.gis.mapWin.show();
-            if (S3.gis.polygonButton) {
+            // Find the map
+            var map_button = $('#gis_location_map-btn');
+            var map_id = map_button.attr('map');
+            if (undefined == map_id) {
+                map_id = 'default';
+            }
+            var map = S3.gis.maps[map_id];
+            map.s3.mapWin.show();
+            if (map.s3.polygonButton) {
                 var wkt = $('#gis_location_wkt').val();
                 if (!wkt) {
                     // Enable the crosshair on the Map Selector
                     $('.olMapViewport').addClass('crosshair');
                     // Enable the Control
-                    S3.gis.polygonButton.control.activate();
+                    map.s3.polygonButton.control.activate();
                 }
             } else {
                 var lat = $('#gis_location_lat').val();
@@ -155,7 +164,7 @@ function s3_gis_locationselector_Ext_onReady() {
                     // Enable the crosshair on the Map Selector
                     $('.olMapViewport').addClass('crosshair');
                     // Enable the Control
-                    S3.gis.pointButton.control.activate();
+                    map.s3.pointButton.control.activate();
                 }
             }
         });
@@ -697,14 +706,16 @@ function s3_gis_l0_select() {
                             lon = data.lon;
                             if (lat && lon) {
                                 // Otherwise, simply Center the map
+                                // @ToDo: Support non-default maps
+                                var map = S3.gis.maps['default'];
                                 var newPoint = new OpenLayers.LonLat(lon, lat);
-                                newPoint.transform(S3.gis.proj4326, S3.gis.projection_current);
-                                if (S3.gis.mapWin.rendered) {
+                                newPoint.transform(S3.gis.proj4326, map.getProjectionObject());
+                                if (map.s3.mapWin.rendered) {
                                     // Map has been opened, so center directly
                                     map.setCenter(newPoint);
                                 } else {
                                     // Map hasn't yet been opened, so change the mapPanel ready for when it is
-                                    S3.gis.mapPanel.center = newPoint;
+                                    map.s3.mapPanel.center = newPoint;
                                 }
                             }
                         }
@@ -729,12 +740,16 @@ function s3_gis_l0_select() {
 
 function s3_gis_zoomMap(left, bottom, right, top) {
     // Zoom the Map to the specified bounds
-    if (S3.gis.mapWin.rendered) {
+    // @ToDo: Support non-default maps
+    var map = S3.gis.maps['default'];
+    var proj4326 = S3.gis.proj4326;
+    var projection_current = map.getProjectionObject();
+    if (map.s3.mapWin.rendered) {
         // For some reason the reprojection shouldn't be done if the Map hasn't been opened yet
         var southWest = new OpenLayers.LonLat(left, bottom);
         var northEast = new OpenLayers.LonLat(right, top);
-        southWest.transform(S3.gis.proj4326, S3.gis.projection_current);
-        northEast.transform(S3.gis.proj4326, S3.gis.projection_current);
+        southWest.transform(proj4326, projection_current);
+        northEast.transform(proj4326, projection_current);
         left = southWest.lon;
         bottom = southWest.lat;
         right = northEast.lon;
@@ -747,15 +762,16 @@ function s3_gis_zoomMap(left, bottom, right, top) {
         // Stop us being too zoomed in
         zoom = 16;
     }
-    if (S3.gis.mapWin.rendered) {
+    if (map.s3.mapWin.rendered) {
         // Map has been opened, so zoom directly
         map.setCenter(newPoint);
         map.zoomTo(zoom);
     } else {
         // Map hasn't yet been opened, so change the mapPanel ready for when it is
-        newPoint.transform(S3.gis.proj4326, S3.gis.projection_current);
-        S3.gis.mapPanel.center = newPoint;
-        S3.gis.mapPanel.zoom = zoom;
+        newPoint.transform(proj4326, projection_current);
+        var mapPanel = map.s3.mapPanel;
+        mapPanel.center = newPoint;
+        mapPanel.zoom = zoom;
     }
 }
 
@@ -1302,13 +1318,16 @@ function s3_gis_geocode(active) {
     S3.gis.geocoder.geocode(query, function(results, status) {
         if (status == google.maps.GeocoderStatus.OK) {
 
+            // @ToDo: Support non-default maps
+            var map = S3.gis.maps['default'];
+
             // Parse the returned Location
             var myLatLng = results[0].geometry.location;
             // Convert to OpenLayers format
             var lat = myLatLng.lat();
             var lon = myLatLng.lng();
             var newPoint = new OpenLayers.LonLat(lon, lat);
-            newPoint.transform(S3.gis.proj4326, S3.gis.projection_current);
+            newPoint.transform(S3.gis.proj4326, map.getProjectionObject());
 
             var myLatLngBounds = results[0].geometry.viewport;
             if (myLatLngBounds) {
@@ -1320,12 +1339,12 @@ function s3_gis_geocode(active) {
                 var right = northEast.lng();
                 var top = northEast.lat();
                 s3_gis_zoomMap(left, bottom, right, top);
-            } else if (S3.gis.mapWin.rendered) {
+            } else if (map.s3.mapWin.rendered) {
                 // Map has been opened, so center directly
                 map.setCenter(newPoint);
             } else {
                 // Map hasn't yet been opened, so change the mapPanel ready for when it is
-                S3.gis.mapPanel.center = newPoint;
+                map.s3.mapPanel.center = newPoint;
             }
 
             if (active) {
@@ -1352,7 +1371,7 @@ function s3_gis_geocode(active) {
                 });
                 // Set the Marker
                 var feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.Point(newPoint.lon, newPoint.lat));
-                S3.gis.draftLayer.addFeatures([feature]);
+                map.s3.draftLayer.addFeatures([feature]);
             }
         } else {
             // @ToDo: Visible notification?

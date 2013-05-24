@@ -3,7 +3,7 @@
  * Currently hardcoded for the hrm_human_resource/create context
  */
 
- // Module pattern to hide internal vars
+// Module pattern to hide internal vars
 (function () {
     // Can only have 1 per page currently
     var addPerson_real_input;

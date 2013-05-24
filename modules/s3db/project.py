@@ -3822,7 +3822,10 @@ class S3ProjectTaskModel(S3Model):
         )
 
         # Reusable Field
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup=tablename,
+                                fields=["name", "date"],
+                                labels="%(name)s: %(date)s",
+                                )
         milestone_id = S3ReusableField("milestone_id", table,
                                        sortby="name",
                                        requires = IS_NULL_OR(

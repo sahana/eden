@@ -416,7 +416,7 @@ class S3DataTable(object):
         application = request.application
 
         # @todo: this needs rework
-        #        - s3FormatRequest must remove the "search" method
+        #        - formatRequest must remove the "search" method
         #        - other data formats could have other list_fields,
         #          hence applying the datatable sorting/filters is
         #          not transparent
@@ -439,28 +439,28 @@ class S3DataTable(object):
         if "pdf" in export_formats:
             url = formats.pdf if formats.pdf else default_url
             iconList.append(IMG(_src="/%s/static/img/pdficon_small.gif" % application,
-                                _onclick="s3FormatRequest('pdf','%s','%s');" % (id, url),
+                                _onclick="S3.dataTables.formatRequest('pdf','%s','%s');" % (id, url),
                                 _alt=T("Export in PDF format"),
                                 _title=T("Export in PDF format"),
                                 ))
         if "xls" in export_formats:
             url = formats.xls if formats.xls else default_url
             iconList.append(IMG(_src="/%s/static/img/icon-xls.png" % application,
-                                _onclick="s3FormatRequest('xls','%s','%s');" % (id, url),
+                                _onclick="S3.dataTables.formatRequest('xls','%s','%s');" % (id, url),
                                 _alt=T("Export in XLS format"),
                                 _title=T("Export in XLS format"),
                                 ))
         if "rss" in export_formats:
             url = formats.rss if formats.rss else default_url
             iconList.append(IMG(_src="/%s/static/img/RSS_16.png" % application,
-                                _onclick="s3FormatRequest('rss','%s','%s');" % (id, url),
+                                _onclick="S3.dataTables.formatRequest('rss','%s','%s');" % (id, url),
                                 _alt=T("Export in RSS format"),
                                 _title=T("Export in RSS format"),
                                 ))
         if "xml" in export_formats:
             url = formats.xml if formats.xml else default_url
             iconList.append(IMG(_src="/%s/static/img/icon-xml.png" % application,
-                                _onclick="s3FormatRequest('xml','%s','%s');" % (id, url),
+                                _onclick="S3.dataTables.formatRequest('xml','%s','%s');" % (id, url),
                                 _alt=T("Export in XML format"),
                                 _title=T("Export in XML format"),
                                 ))
@@ -476,14 +476,14 @@ class S3DataTable(object):
         div.append(current.T("Export to:"))
         if "have" in formats and "have" in export_formats:
             iconList.append(IMG(_src="/%s/static/img/have_16.png" % application,
-                                _onclick="s3FormatRequest('have','%s','%s');" % (id, formats.have),
+                                _onclick="S3.dataTables.formatRequest('have','%s','%s');" % (id, formats.have),
                                 _alt=T("Export in HAVE format"),
                                 _title=T("Export in HAVE format"),
                                 ))
         if "kml" in export_formats:
             if "kml" in formats:
                 iconList.append(IMG(_src="/%s/static/img/kml_icon.png" % application,
-                                    _onclick="s3FormatRequest('kml','%s','%s');" % (id, formats.kml),
+                                    _onclick="S3.dataTables.formatRequest('kml','%s','%s');" % (id, formats.kml),
                                     _alt=T("Export in KML format"),
                                     _title=T("Export in KML format"),
                                     ))
@@ -494,14 +494,14 @@ class S3DataTable(object):
                 for r in rfields:
                     if r.fname in kml_list:
                         iconList.append(IMG(_src="/%s/static/img/kml_icon.png" % application,
-                                            _onclick="s3FormatRequest('kml','%s','%s');" % (id, default_url),
+                                            _onclick="S3.dataTables.formatRequest('kml','%s','%s');" % (id, default_url),
                                             _alt=T("Export in KML format"),
                                             _title=T("Export in KML format"),
                                             ))
                         break
         if "map" in formats and "map" in export_formats:
             iconList.append(IMG(_src="/%s/static/img/map_icon.png" % application,
-                                _onclick="s3FormatRequest('map','%s','%s');" % (id, formats.map),
+                                _onclick="S3.dataTables.formatRequest('map','%s','%s');" % (id, formats.map),
                                 _alt=T("Show on map"),
                                 _title=T("Show on map"),
                                 ))

@@ -223,7 +223,7 @@ div .dataTable_table {
 
 .dataTables_filter {
     width: auto;
-    float: left;
+    float: left !important;
     margin-bottom: 4px;
 }
 .dataTables_processing {
@@ -232,12 +232,12 @@ div .dataTable_table {
 }
 .dataTables_info  {
 	width: auto;
-    float: right;
-    clear: none;
+    float: right !important;
+    clear: none !important;
     margin: 7px 0 4px 10px;
 }
 .dataTables_length {
-    float: right;
+    float: right !important;
     margin-bottom:4px;
 }
 .dataTables_paginate {
@@ -1021,7 +1021,7 @@ ul.x-tree-root-ct {
 .filter-form tr:first-child > td,
 .search_form tr:first-child > td,
 #filter_options tr:first-child > td {
-    border-top: 0px;
+    border-top: 0;
 }
 .filter-form table.s3-checkboxes-widget td,
 .filter-form table.s3-groupopts-widget td,
@@ -1029,7 +1029,7 @@ ul.x-tree-root-ct {
 .search_form table.s3searchminmaxwidget td,
 #filter_options table.s3-checkboxes-widget td,
 #filter_options table.s3searchminmaxwidget td {
-    border-top: 0px;
+    border-top: 0;
 }
 
 .widget-org-hierarchy-menu {

@@ -2,7 +2,7 @@
     S3Search Static JS Code
 */
 
-S3.search = Object();
+S3.search = {};
 
 /*
  * Save the current search to the users' profile
