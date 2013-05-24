@@ -848,12 +848,14 @@ class organisations():
         
         numrows = len(records)
 
-        rows = [[] * numrows] if numrows > 0 else []
+        rows = []
         cols = []
         for rfield in rfields:
             colname = rfield.colname
             cols.append({"name": colname, "label": rfield.label})
             for i in xrange(numrows):
+                if len(rows) == i:
+                    rows.append([])
                 rows[i].append(records[i][colname])
 
         options = json.dumps({
