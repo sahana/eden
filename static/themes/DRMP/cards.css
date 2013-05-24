@@ -1,3 +1,6 @@
+/* @override 
+	http://127.0.0.1:8000/eden/static/themes/DRMP/cards.css */
+
 @charset "UTF-8";
 
 /* Cards - common styling for Updates & Profile pages */
@@ -37,6 +40,13 @@
     padding-bottom: 9px;
 }
 
+.media-body a span.date-title {
+	border-left: none;
+	margin-left: 0;
+	padding-left: 1px;
+}
+
+
 .location-title {
     border-left: 1px solid rgba(0, 0, 0, 0.1);
     text-shadow: 0px 1px 0px white;
@@ -63,8 +73,11 @@
 
 img.media-object {
     border-radius: 8px;
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
+	padding-bottom: 3px;
+	padding-left: 2px;
+	margin-top: 0;
 }
 
 /* Edit Toolbar */
@@ -74,10 +87,6 @@ img.media-object {
     position: relative;
     top: 4px;
     float: right;
-}
-
-.icon.icon-edit {
-    padding-right: 3px;
 }
 
 .icon.icon-edit,
