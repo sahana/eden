@@ -136,8 +136,6 @@ s3_has_permission = auth.s3_has_permission
 s3_logged_in_person = auth.s3_logged_in_person
 
 # CRUD
-crud = s3base.CrudS3()
-current.crud = crud
 s3.crud = Storage()
 
 # S3 Custom Validators and Widgets, imported here into the global

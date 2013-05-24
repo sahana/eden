@@ -259,12 +259,12 @@ class S3Profile(S3CRUD):
                         start = int(start)
                         limit = int(limit)
                     except ValueError:
-                        start, limit = 0, 4
+                        start, limit = 0, pagesize
                 else:
                     start = None
         else:
             # Page-load
-            start, limit = 0, 4
+            start, limit = 0, pagesize
 
         # Ajax-delete items?
         if representation == "dl" and r.http in ("DELETE", "POST"):
@@ -304,12 +304,24 @@ class S3Profile(S3CRUD):
         if icon:
             icon = TAG[""](I(_class=icon), " ")
 
+        if resource.count() > pagesize:
+            # Button to display the rest of the records in a Modal
+            more = DIV(A(BUTTON(T("see more"),
+                                _class="btn btn-mini",
+                                _type="button",
+                                ),
+                         _href="#"),
+                       _class="more_profile")
+        else:
+            more = ""
+
         # Render the widget
         output = DIV(create,
                      H4(icon,
                         label,
                         _class="profile-sub-header"),
                      DIV(data,
+                         more,
                          _class="card-holder"),
                      _class="span6")
 

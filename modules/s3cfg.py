@@ -613,9 +613,9 @@ class S3Config(Storage):
                 "other":T("other")
             })
     def get_L10n_date_format(self):
-        return self.L10n.get("date_format", current.T("%Y-%m-%d"))
+        return self.L10n.get("date_format", "%Y-%m-%d")
     def get_L10n_time_format(self):
-        return self.L10n.get("time_format", current.T("%H:%M"))
+        return self.L10n.get("time_format", "%H:%M")
     def get_L10n_datetime_separator(self):
         return self.L10n.get("datetime_separator", " ")
     def get_L10n_datetime_format(self):

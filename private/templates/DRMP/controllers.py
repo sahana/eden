@@ -498,11 +498,11 @@ def render_posts(listid, resource, rfields, record, **attr):
         item_class = "%s disaster" % item_class
 
     # Render the item
-    item = DIV(DIV(I(SPAN(" %s" % current.T(series),
-                          _class="card-title",
-                          ),
-                     _class="icon icon-%s" % series.lower().replace(" ", "_"),
+    item = DIV(DIV(I(_class="icon icon-%s" % series.lower().replace(" ", "_"),
                      ),
+                   SPAN(" %s" % current.T(series),
+                        _class="card-title"
+                        ),
                    SPAN(A(location,
                           _href=location_url,
                           ),

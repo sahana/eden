@@ -11,7 +11,7 @@ from s3layouts import S3AddResourceLink
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
 from s3.s3fields import S3Represent
 from s3.s3resource import S3FieldSelector
-from s3.s3utils import s3_auth_user_represent_name, s3_avatar_represent, s3_unicode
+from s3.s3utils import S3DateTime, s3_auth_user_represent_name, s3_avatar_represent, s3_unicode
 from s3.s3validators import IS_LOCATION_SELECTOR2, IS_ONE_OF
 from s3.s3widgets import S3LocationAutocompleteWidget, S3LocationSelectorWidget2
 
@@ -69,8 +69,8 @@ settings.L10n.languages = OrderedDict([
 settings.L10n.default_language = "en"
 # Default timezone for users
 settings.L10n.utc_offset = "UTC +0900"
-# Don't show Seconds
-settings.L10n.time_format = T("%H:%M")
+# Unsortable 'pretty' date format
+settings.L10n.date_format = "%d %b %y"
 # Number formats (defaults to ISO 31-0)
 # Decimal separator for numbers (defaults to ,)
 settings.L10n.decimal_separator = "."
@@ -192,37 +192,25 @@ def render_contacts(listid, resource, rfields, record, **attr):
 
     raw = record._row
     fullname = record["hrm_human_resource.person_id"]
-    job_title_id = raw["hrm_human_resource.job_title_id"]
-    if job_title_id:
+    job_title = raw["hrm_human_resource.job_title_id"] or ""
+    if job_title:
         job_title = record["hrm_human_resource.job_title_id"]
     organisation_id = raw["hrm_human_resource.organisation_id"]
     pe_id = raw["pr_person.pe_id"]
     person_id = raw["hrm_human_resource.person_id"]
     avatar_url = URL(c="hrm", f="person", args=[person_id, "image"])
-    site_id = raw["hrm_human_resource.site_id"]
-    if site_id:
-        office = record["hrm_human_resource.site_id"]
-        if job_title_id:
-            body = "%s, %s, %s" % (fullname, job_title, office)
-        else:
-            body = "%s, %s" % (fullname, office)
-        location = record["hrm_human_resource.location_id"]
-        location_id = raw["hrm_human_resource.location_id"]
-        location_url = URL(c="gis", f="location",
-                           args=[location_id, "profile"])
-    else:
-        if job_title_id:
-            body = "%s, %s" % (fullname, job_title)
-        else:
-            body = fullname
-        location = ""
-        location_url = "#"
+    address = raw["gis_location.addr_street"] or ""
+    email = raw["pr_email_contact.value"] or ""
+    if isinstance(email, list):
+        email = email[0]
+    phone = raw["pr_phone_contact.value"] or ""
+    if isinstance(phone, list):
+        phone = phone[0]
 
     db = current.db
     s3db = current.s3db
     ltable = s3db.pr_person_user
-    ptable = db.pr_person
-    query = (ltable.pe_id == ptable.pe_id)
+    query = (ltable.pe_id == pe_id)
     row = db(query).select(ltable.user_id,
                            limitby=(0, 1)
                            ).first()
@@ -231,10 +219,12 @@ def render_contacts(listid, resource, rfields, record, **attr):
         # @ToDo: Optimise by not doing DB lookups (especially duplicate) within render, but doing these in the bulk query
         avatar = s3_avatar_represent(row.user_id,
                                      _class="media-object")
-        avatar = A(avatar,
-                   _href=avatar_url,
-                   _class="pull-left",
-                   )
+    else:
+        avatar = IMG(_class="media-object")
+    avatar = A(avatar,
+               _href=avatar_url,
+               _class="pull-left",
+               )
 
     # Edit Bar
     permit = current.auth.s3_has_permission
@@ -246,15 +236,19 @@ def render_contacts(listid, resource, rfields, record, **attr):
         f = current.request.function
         if f == "organisation" and organisation_id:
             vars["(organisation)"] = organisation_id
+        edit_url = URL(c="hrm", f="person",
+                       args=[person_id, "update.popup"],
+                       vars=vars)
+        title_update = current.response.s3.crud_strings.hrm_human_resource.title_update
         edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="hrm", f="person",
-                               args=[person_id, "update.popup"],
-                               vars=vars),
+                     _href=edit_url,
                      _class="s3_modal",
-                     _title=current.response.s3.crud_strings.hrm_human_resource.title_update,
+                     _title=title_update,
                      )
     else:
         edit_btn = ""
+        edit_url = "#"
+        title_update = ""
     # Deletions failing due to Integrity Errors
     #if permit("delete", table, record_id=person_id):
     #    delete_btn = A(I(" ", _class="icon icon-remove-sign"),
@@ -269,16 +263,36 @@ def render_contacts(listid, resource, rfields, record, **attr):
 
     # Render the item
     item = DIV(DIV(DIV(avatar,
-                       _class="span1"),
-                   DIV(SPAN(A(location,
-                              _href=location_url,
-                              ),
-                            _class="location-title"),
-                       " ",
-                       edit_bar,
-                       P(body,
-                         _class="card_comments"),
-                       _class="span5 card-details"),
+                       _class="span1",
+                       ),
+                   DIV(edit_bar,
+                       DIV(P(A(fullname,
+                               _href=edit_url,
+                               _class="media-heading s3_modal",
+                               _title=title_update,
+                               ),
+                             " ",
+                             SPAN(job_title),
+                             _class="person_pos",
+                             ),
+                           P(I(_class="icon-phone"),
+                             " ",
+                             SPAN(phone),
+                             " ",
+                             I(_class="icon-envelope-alt"),
+                             " ",
+                             SPAN(email),
+                             _class="main_contact_ph",
+                             ),
+                           P(I(_class="icon-home"),
+                             " ",
+                             address,
+                             _class="main_office-add",
+                             ),
+                           _class="card_comments",
+                           ),
+                       _class="span5 card-details",
+                       ),
                    _class="row",
                    ),
                _class=item_class,
@@ -316,6 +330,9 @@ def render_events(listid, resource, rfields, record, **attr):
     date = record["event_event.zero_hour"]
     closed = raw["event_event.closed"]
     event_type = record["event_event_type.name"]
+    event_url = URL(c="event", f="event",
+                    args=[record_id, "profile"])
+    comments = raw["event_event.comments"] or ""
 
     if closed:
         edit_bar = DIV()
@@ -346,6 +363,37 @@ def render_events(listid, resource, rfields, record, **attr):
                        _class="edit-bar fright",
                        )
 
+    # Tallies
+    tally_alerts = 0
+    tally_incidents = 0
+    tally_assessments = 0
+    tally_activities = 0
+    tally_reports = 0
+    db = current.db
+    s3db = current.s3db
+    ltable = s3db.event_event_post
+    table = db.cms_post
+    stable = db.cms_series
+    types = ["Alert", "Incident", "Assessment", "Activity", "Report"]
+    query = (table.deleted == False) & \
+            (ltable.event_id == record_id) & \
+            (ltable.post_id == table.id) & \
+            (stable.id == table.series_id) & \
+            (stable.name.belongs(types))
+    rows = db(query).select(stable.name)
+    for row in rows:
+        series = row.name
+        if series == "Alert":
+            tally_alerts += 1
+        elif series == "Incident":
+            tally_incidents += 1
+        elif series == "Assessment":
+            tally_assessments += 1
+        elif series == "Activity":
+            tally_activities += 1
+        elif series == "Report":
+            tally_reports += 1
+
     # Render the item
     item = DIV(DIV(A(IMG(_class="media-object",
                          _src=URL(c="static",
@@ -353,16 +401,41 @@ def render_events(listid, resource, rfields, record, **attr):
                                   args=["DRMP", "img", "%s.png" % event_type]),
                          ),
                      _class="pull-left",
-                     _href="#",
+                     _href=event_url,
                      ),
-  		           edit_bar,
-                   DIV(A(H5(name,
-                            _class="media-heading"),
-                         SPAN(date,
-                              _class="date-title",
+  		           DIV(SPAN(A(name,
+                              _href=event_url,
+                              _class="media-heading"
                               ),
-                         _href=URL(c="event", f="event",
-                                   args=[record_id, "profile"]),
+                            ),
+                       SPAN(date,
+                            _class="date-title",
+                            ),
+                       edit_bar,
+                       _class="card-header-select",
+                       ),
+                   DIV(P(comments),
+                       P(T("Alerts"),
+                         SPAN(tally_alerts,
+                              _class="badge badge-warning",
+                              ),
+                         T("Incidents"),
+                         SPAN(tally_incidents,
+                              _class="badge",
+                              ),
+                         T("Assessments"),
+                         SPAN(tally_assessments,
+                              _class="badge",
+                              ),
+                         T("Activities"),
+                         SPAN(tally_activities,
+                              _class="badge",
+                              ),
+                         T("Reports"),
+                         SPAN(tally_reports,
+                              _class="badge",
+                              ),
+                         _class="tally",
                          ),
                        _class="media-body",
                        ),
@@ -404,6 +477,8 @@ def render_locations(listid, resource, rfields, record, **attr):
     L1 = raw["gis_location.L1"]
     L2 = raw["gis_location.L2"]
     L3 = raw["gis_location.L3"]
+    location_url = URL(c="gis", f="location",
+                       args=[record_id, "profile"])
 
     if level == "L1":
         represent = name
@@ -415,35 +490,95 @@ def render_locations(listid, resource, rfields, record, **attr):
         # L0 or specific
         represent = name
 
-    permit = current.auth.s3_has_permission
-    table = current.db.gis_location
-    if permit("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="gis", f="location",
-                               args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
-                                     "record": record_id}),
-                     _class="s3_modal",
-                     _title=current.response.s3.crud_strings.gis_location.title_update,
-                     )
-    else:
-        edit_btn = ""
-    if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
-                       _class="dl-item-delete",
-                      )
-    else:
-        delete_btn = ""
-    edit_bar = DIV(edit_btn,
-                   delete_btn,
-                   _class="edit-bar fright",
-                   )
+    # Users don't edit locations
+    # permit = current.auth.s3_has_permission
+    # table = current.db.gis_location
+    # if permit("update", table, record_id=record_id):
+        # edit_btn = A(I(" ", _class="icon icon-edit"),
+                     # _href=URL(c="gis", f="location",
+                               # args=[record_id, "update.popup"],
+                               # vars={"refresh": listid,
+                                     # "record": record_id}),
+                     # _class="s3_modal",
+                     # _title=current.response.s3.crud_strings.gis_location.title_update,
+                     # )
+    # else:
+        # edit_btn = ""
+    # if permit("delete", table, record_id=record_id):
+        # delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+                       # _class="dl-item-delete",
+                      # )
+    # else:
+        # delete_btn = ""
+    # edit_bar = DIV(edit_btn,
+                   # delete_btn,
+                   # _class="edit-bar fright",
+                   # )
 
+    # Tallies
+    # NB We assume that all records are readable here
+    # Search all sub-locations
+    locations = current.gis.get_children(record_id)
+    locations = [l.id for l in locations]
+    db = current.db
+    s3db = current.s3db
+    ltable = s3db.project_location
+    table = db.project_project
+    query = (table.deleted == False) & \
+            (ltable.deleted == False) & \
+            (ltable.project_id == table.id) & \
+            (ltable.location_id.belongs(locations))
+    rows = db(query).select(table.id, distinct=True)
+    tally_projects = len(rows)
+    tally_incidents = 0
+    tally_activities = 0
+    tally_reports = 0
+    table = s3db.cms_post
+    stable = db.cms_series
+    types = ["Incident", "Activity", "Report"]
+    query = (table.deleted == False) & \
+            (table.location_id.belongs(locations)) & \
+            (stable.id == table.series_id) & \
+            (stable.name.belongs(types))
+    rows = db(query).select(stable.name)
+    for row in rows:
+        series = row.name
+        if series == "Incident":
+            tally_incidents += 1
+        elif series == "Activity":
+            tally_activities += 1
+        elif series == "Report":
+            tally_reports += 1
+    
     # Render the item
-    item = DIV(DIV(A(represent,
-                     _href=URL(c="gis", f="location",
-                               args=[record_id, "profile"]),
-                     ),
+    item = DIV(DIV(DIV(SPAN(A(represent,
+                              _href=location_url,
+                              _class="media-heading"
+                              ),
+                            ),
+                       #edit_bar,
+                       _class="card-header-select",
+                       ),
+                   DIV(P(T("Incidents"),
+                         SPAN(tally_incidents,
+                              _class="badge",
+                              ),
+                         T("Reports"),
+                         SPAN(tally_reports,
+                              _class="badge",
+                              ),
+                         T("Projects"),
+                         SPAN(tally_projects,
+                              _class="badge",
+                              ),
+                         T("Activities"),
+                         SPAN(tally_activities,
+                              _class="badge",
+                              ),
+                         _class="tally",
+                         ),
+                       _class="media-body",
+                       ),
                    _class="media",
                    ),
                _class=item_class,
@@ -478,9 +613,8 @@ def render_locations_profile(listid, resource, rfields, record, **attr):
 
     raw = record._row
     name = record["gis_location.name"]
-    location_id = raw["gis_location.id"]
     location_url = URL(c="gis", f="location",
-                       args=[location_id, "profile"])
+                       args=[record_id, "profile"])
 
     # Placeholder to maintain style
     #logo = DIV(IMG(_class="media-object"),
@@ -531,8 +665,6 @@ def render_locations_profile(listid, resource, rfields, record, **attr):
                        _class="span5"), # card-details
                    _class="row",
                    ),
-               _class=item_class,
-               _id=item_id,
                )
 
     return item
@@ -660,7 +792,12 @@ def render_organisations(listid, resource, rfields, record, **attr):
     raw = record._row
     name = record["org_organisation.name"]
     logo = raw["org_organisation.logo"]
-    #address = raw["office.location_id$addr_street"]
+    addresses = raw["office.location_id$addr_street"]
+    if addresses:
+        address = addresses[0]
+    else:
+        address = ""
+    phone = raw["org_organisation.phone"] or ""
 
     org_url = URL(c="org", f="organisation", args=[record_id, "profile"])
     if logo:
@@ -698,12 +835,74 @@ def render_organisations(listid, resource, rfields, record, **attr):
                    _class="edit-bar fright",
                    )
 
+    # Tallies
+    # NB We assume that all records are readable here
+    db = current.db
+    s3db = current.s3db
+    table = s3db.project_project
+    query = (table.deleted == False) & \
+            (table.organisation_id == record_id)
+    tally_projects = db(query).count()
+    tally_assessments = 0
+    tally_activities = 0
+    tally_reports = 0
+    table = s3db.cms_post
+    atable = db.auth_user
+    stable = db.cms_series
+    types = ["Assessment", "Activity", "Report"]
+    query = (table.deleted == False) & \
+            (table.created_by == atable.id) & \
+            (atable.organisation_id == record_id) & \
+            (stable.id == table.series_id) & \
+            (stable.name.belongs(types))
+    rows = db(query).select(stable.name)
+    for row in rows:
+        series = row.name
+        if series == "Assessment":
+            tally_assessments += 1
+        elif series == "Activity":
+            tally_activities += 1
+        elif series == "Report":
+            tally_reports += 1
+    
     # Render the item
     item = DIV(DIV(logo,
-                   DIV(A(name,
-                         _href=org_url,
+                   DIV(SPAN(A(name,
+                              _href=org_url,
+                              _class="media-heading"
+                              ),
+                            ),
+                       edit_bar,
+                       _class="card-header-select",
+                       ),
+                   DIV(P(I(_class="icon icon-phone"),
+                         " ",
+                         phone,
+                         _class="main_contact_ph",
                          ),
-                       #address,
+                       P(I(_class="icon icon-home"),
+                         " ",
+                         address,
+                         _class="main_office-add",
+                         ),
+                       P(T("Projects"),
+                         SPAN(tally_projects,
+                              _class="badge",
+                              ),
+                         T("Activities"),
+                         SPAN(tally_activities,
+                              _class="badge",
+                              ),
+                         T("Reports"),
+                         SPAN(tally_reports,
+                              _class="badge",
+                              ),
+                         T("Assessments"),
+                         SPAN(tally_assessments,
+                              _class="badge",
+                              ),
+                         _class="tally",
+                         ),
                        _class="media-body",
                        ),
                    _class="media",
@@ -1167,6 +1366,7 @@ def customize_cms_post_fields():
     field.widget = S3LocationSelectorWidget2(levels=["L1", "L2", "L3"])
 
     table.created_by.represent = s3_auth_user_represent_name
+    table.created_on.represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
 
     list_fields = ["series_id",
                    "location_id",
@@ -1344,7 +1544,7 @@ def customize_event_event(**attr):
             map_widget = dict(label = "Location",
                               type = "map",
                               context = "event",
-                              icon = "icon-map-marker",
+                              icon = "icon-map",
                               height = 383,
                               width = 568,
                               )
@@ -1366,7 +1566,7 @@ def customize_event_event(**attr):
                                       tablename = "cms_post",
                                       context = "event",
                                       filter = S3FieldSelector("series_id$name") == "Assessment",
-                                      icon = "icon-info-sign",
+                                      icon = "icon-assessment",
                                       layer = "Assessments",
                                       # provided by Catalogue Layer
                                       #marker = "assessment",
@@ -1541,7 +1741,7 @@ def customize_gis_location(**attr):
                 map_widget = dict(label = "Location",
                                   type = "map",
                                   context = "location",
-                                  icon = "icon-map-marker",
+                                  icon = "icon-map",
                                   height = 383,
                                   width = 568,
                                   bbox = {"lat_max" : record.lat_max,
@@ -1711,9 +1911,10 @@ def customize_org_organisation(**attr):
             list_fields = ["person_id",
                            "person_id$pe_id",
                            "organisation_id",
-                           "site_id",
-                           "location_id",
+                           "site_id$location_id$addr_street",
                            "job_title_id",
+                           "email.value",
+                           "phone.value",
                            ]
 
             s3db.configure("hrm_human_resource",
@@ -1763,7 +1964,7 @@ def customize_org_organisation(**attr):
             map_widget = dict(label = "Location",
                               type = "map",
                               context = "organisation",
-                              icon = "icon-map-marker",
+                              icon = "icon-map",
                               height = 383,
                               width = 568,
                               )
@@ -1826,7 +2027,7 @@ def customize_org_organisation(**attr):
                                       tablename = "cms_post",
                                       context = "organisation",
                                       filter = S3FieldSelector("series_id$name") == "Assessment",
-                                      icon = "icon-info-sign",
+                                      icon = "icon-assessment",
                                       layer = "Assessments",
                                       # provided by Catalogue Layer
                                       #marker = "assessment",
@@ -1836,6 +2037,8 @@ def customize_org_organisation(**attr):
                            list_fields = ["id",
                                           "name",
                                           "logo",
+                                          "phone",
+                                          "office.location_id$addr_street",
                                           ],
                            list_layout = render_organisations,
                            profile_widgets=[contacts_widget,

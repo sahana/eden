@@ -11,7 +11,8 @@
          Email...................auth_user.email
          Password................auth_user.password
          Role....................auth_group.role
-         Organisation............org_organisation.name (Doesn't work as not a real Reference)
+         Organisation............org_organisation.name (@ToDo: Doesn't work as not a real Reference)
+         Site....................org_site.name (@ToDo: Doesn't work as not a real Reference)
 
     *********************************************************************** -->
     <xsl:output method="xml"/>

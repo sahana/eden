@@ -365,13 +365,14 @@ div.dl {
     background-color: #E2E4FF;
 }
 .dl-1-cols {
-    width: 90%;
+    /* Wide as possible for display on small screens */
+    width: 98%;
 }
 .dl-2-cols {
-    width: 45%;
+    width: 46%;
 }
 .dl-3-cols {
-    width: 30%;
+    width: 31%;
 }
 
 .dl-field {

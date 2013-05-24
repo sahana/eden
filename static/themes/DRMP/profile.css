@@ -128,3 +128,63 @@ h4.profile-sub-header {
     line-height: 11px;
     text-align: center;
 }
+
+/* Contact Details */
+.person_pos strong {
+    font: bold 13px "Helvetica Neue", Arial,sans-serif;
+    color: #333333;
+    padding: 0 4px 0 0;
+}
+
+.main_contact_ph span{
+    margin-right: 10px;
+    margin-left: 2px;
+}
+
+.person_pos,
+.main_contact_ph,
+.main_contact_email,
+.main_contact {
+    margin-bottom: 0;
+}
+
+.main_contact_ph,
+.main_contact_email,
+.main_office-add,
+.main_contact {
+    font-size: 12px;
+
+}
+
+.person_pos {
+    font: 13px "Helvetica Neue", Arial,sans-serif;
+    padding: 0;
+    display: inline-block;
+    margin-bottom: 3px;
+}
+
+/* Profile selection pages */
+.badge {
+    font-size: 11px;
+    border-radius: 2px;
+    margin-left: 3px;
+    margin-right: 5px;
+    background-color: #c9c9c9;
+    text-shadow: 0 0 3px #6a6a67;
+    border: 1px solid #b0b0ac;
+    display: inline-block;
+    width: 25px;
+    text-align: center;
+    padding: 1px 3px 0;
+}
+.badge-warning {
+    background-color: #D35400;
+    border: 1px solid #a84300;
+}
+.card-header-select {
+    padding: 5px;
+}
+.tally {
+    font-size: 10px;
+    color: #888787;
+}

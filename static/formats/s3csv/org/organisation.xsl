@@ -18,6 +18,7 @@
          Country.................org_organisation.country (ISO Code)
          Website.................org_organisation.website
          Twitter.................org_organisation.twitter
+         Phone...................org_organisation.phone
          Donation Phone..........org_organisation.donation_phone
          Logo....................org_organisation.logo
          Comments................org_organisation.comments
@@ -152,6 +153,9 @@
             </xsl:if>
             <xsl:if test="col[@field='Twitter']!=''">
                 <data field="twitter"><xsl:value-of select="col[@field='Twitter']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Phone']!=''">
+                <data field="phone"><xsl:value-of select="col[@field='Phone']"/></data>
             </xsl:if>
             <xsl:if test="col[@field='Donation Phone']!=''">
                 <data field="donation_phone"><xsl:value-of select="col[@field='Donation Phone']"/></data>

@@ -415,8 +415,8 @@ class S3OrganisationModel(S3Model):
                                                                  T("Twitter ID or #hashtag")))),
                              Field("donation_phone",
                                    label=T("Donation Phone #"),
-                                   #readable = False,
-                                   #writable = False,
+                                   readable = False,
+                                   writable = False,
                                    requires=IS_NULL_OR(s3_phone_requires),
                                    represent=lambda v: v or NONE,
                                    comment=DIV(_class="tooltip",
@@ -2518,12 +2518,12 @@ class S3OfficeModel(S3Model):
                                "name",
                                "organisation_id", # Filtered in Component views
                                "office_type_id",
-                               #(T("Address"), "location_id$addr_street"),
                                (messages.COUNTRY, "location_id$L0"),
                                "location_id$L1",
                                "location_id$L2",
                                "location_id$L3",
                                #"location_id$L4",
+                               (T("Address"), "location_id$addr_street"),
                                "phone1",
                                "email"
                                ],
@@ -2624,7 +2624,7 @@ class S3OfficeModel(S3Model):
     @staticmethod
     def org_office_duplicate(item):
         """
-            Import item deduplication, match by name
+            Import item deduplication: simple match by name
                 (Adding location_id doesn't seem to be a good idea)
 
             @param item: the S3ImportItem instance

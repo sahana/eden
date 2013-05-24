@@ -1,6 +1,3 @@
-/* @override 
-	http://127.0.0.1:8000/eden/static/themes/DRMP/cards.css */
-
 @charset "UTF-8";
 
 /* Cards - common styling for Updates & Profile pages */
@@ -29,6 +26,12 @@
     cursor: auto;
 }
 
+.media-body a span.date-title {
+    border-left: none;
+    margin-left: 0;
+    padding-left: 1px;
+}
+
 .date-title {
     font: 400 10px "Helvetica Neue",Arial,sans-serif;
     list-style: none outside none;
@@ -39,13 +42,6 @@
     padding-top: 10px;
     padding-bottom: 9px;
 }
-
-.media-body a span.date-title {
-	border-left: none;
-	margin-left: 0;
-	padding-left: 1px;
-}
-
 
 .location-title {
     border-left: 1px solid rgba(0, 0, 0, 0.1);
@@ -75,9 +71,9 @@ img.media-object {
     border-radius: 8px;
     width: 44px;
     height: 44px;
-	padding-bottom: 3px;
-	padding-left: 2px;
-	margin-top: 0;
+    padding-bottom: 3px;
+    padding-left: 2px;
+    margin-top: 0;
 }
 
 /* Edit Toolbar */
