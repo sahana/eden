@@ -3765,6 +3765,7 @@ class S3ProjectTaskModel(S3Model):
              "project_task_project",
              "project_task_activity",
              "project_task_milestone",
+             "project_task_represent_w_project",
              ]
 
     def model(self):
@@ -4425,6 +4426,7 @@ class S3ProjectTaskModel(S3Model):
         return dict(
             project_task_id = task_id,
             project_task_active_statuses = project_task_active_statuses,
+            project_task_represent_w_project = self.project_task_represent_w_project,
         )
 
     # -------------------------------------------------------------------------
