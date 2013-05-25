@@ -158,7 +158,7 @@ class S3Profile(S3CRUD):
         if context == "location":
             # Show records linked to this Location & all it's Child Locations
             m = ("%(id)s/*,*/%(id)s/*" % dict(id=id)).split(",")
-            filter = S3FieldSelector(s).like(m) | S3FieldSelector(s) == id
+            filter = (S3FieldSelector(s).like(m)) | (S3FieldSelector(s) == id)
         # @ToDo:
         #elif context == "organisation":
         #    # Show records linked to this Organisation and all it's Branches

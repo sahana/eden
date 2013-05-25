@@ -1201,8 +1201,8 @@ def render_projects(listid, resource, rfields, record, **attr):
         f = current.request.function
         if f == "organisation" and organisation_id:
             vars["(organisation)"] = organisation_id
-        elif f == "location" and location_id:
-            vars["(location)"] = location_id
+        #elif f == "location" and location_ids:
+        #    vars["(location)"] = location_ids
         edit_btn = A(I(" ", _class="icon icon-edit"),
                      _href=URL(c="project", f="project",
                                args=[record_id, "update.popup"],
