@@ -1414,6 +1414,7 @@ def customize_cms_post(**attr):
     def custom_prep(r):
         # Call standard prep
         if callable(standard_prep):
+            # Called first so that we can unhide the Type field
             result = standard_prep(r)
             if not result:
                 return False
@@ -1445,6 +1446,10 @@ def customize_cms_post(**attr):
             field.label = T("Description")
             field.widget = None
             #table.comments.readable = table.comments.writable = False
+
+            if current.request.controller == "default":
+                # Don't override card layout for Updates/Homepage
+                return True
 
             # Filter from a Profile page?
             # If so, then default the fields we know
