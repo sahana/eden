@@ -798,8 +798,7 @@ def time():
                     (ttable.status.belongs(s3db.project_task_active_statuses))
             dbset = db(query)
             table.task_id.requires = IS_ONE_OF(dbset, "project_task.id",
-                                               lambda id, row: \
-                                                s3db.project_task_represent(id, row, show_project=True),
+                                               s3db.project_task_represent_w_project
                                                )
         list_fields = ["id",
                        "date",
@@ -809,6 +808,10 @@ def time():
                        "task_id",
                        "comments",
                        ]
+        if settings.get_project_milestones():
+            # Use the field in this format to get the custom represent
+            list_fields.insert(5, (T("Milestone"), "task_id$task_milestone.milestone_id"))
+
         s3db.configure("project_time",
                        orderby="project_time.date desc",
                        list_fields=list_fields)

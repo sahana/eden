@@ -4064,7 +4064,8 @@ class S3ProjectTaskModel(S3Model):
                      ]
 
         if settings.get_project_milestones():
-            list_fields.insert(5, (T("Milestone"), "milestone.name"))
+            # Use the field in this format to get the custom represent
+            list_fields.insert(5, (T("Milestone"), "task_milestone.milestone_id"))
             advanced_task_search.insert(4, S3SearchOptionsWidget(
                                             name = "task_search_milestone",
                                             label = T("Milestone"),
@@ -4289,11 +4290,7 @@ class S3ProjectTaskModel(S3Model):
         table = define_table(tablename,
                              task_id(
                                 requires = IS_ONE_OF(db, "project_task.id",
-                                                     lambda id, row: \
-                                                        self.project_task_represent(id,
-                                                                                    row,
-                                                                                    show_link=False,
-                                                                                    show_project=True)
+                                                     self.project_task_represent_w_project,
                                                      ),
                                 ),
                              self.pr_person_id(default=auth.s3_logged_in_person(),
@@ -4346,10 +4343,6 @@ class S3ProjectTaskModel(S3Model):
         table.day = Field.Lazy(project_time_day)
         table.week = Field.Lazy(project_time_week)
 
-        report_fields = list_fields + \
-                        [(T("Day"), "day"),
-                         (T("Week"), "week")]
-
         task_time_search = [S3SearchOptionsWidget(name="person_id",
                                                   label = T("Person"),
                                                   field = "person_id",
@@ -4368,6 +4361,21 @@ class S3ProjectTaskModel(S3Model):
                                                  label=T("Date"),
                                                  field="date"),
                             ]
+
+        if settings.get_project_milestones():
+            # Use the field in this format to get the custom represent
+            list_fields.insert(3, (T("Milestone"), "task_id$task_milestone.milestone_id"))
+            advanced_task_search.insert(3, S3SearchOptionsWidget(
+                                            name = "task_search_milestone",
+                                            label = T("Milestone"),
+                                            field = "task_id$task_milestone.milestone_id",
+                                            options = self.project_task_milestone_opts,
+                                            cols = 3
+                                            ))
+
+        report_fields = list_fields + \
+                        [(T("Day"), "day"),
+                         (T("Week"), "week")]
 
         if settings.get_project_sectors():
             report_fields.insert(3, (T("Sector"),
@@ -4594,6 +4602,49 @@ class S3ProjectTaskModel(S3Model):
                 return A(represent,
                          _href=URL(c="project", f="task", extension="html",
                                    args=[id]))
+            return represent
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def project_task_represent_w_project(id, row=None):
+        """
+            FK representation
+            The show_project=True in the normal represent doesn't work as a lambda in IS_ONE_OF
+        """
+
+        if row:
+            db = current.db
+            ltable = db.project_task_project
+            ptable = db.project_project
+            query = (ltable.task_id == row.id) & \
+                    (ltable.project_id == ptable.id)
+            project = db(query).select(ptable.name,
+                                       limitby=(0, 1)).first()
+            if project:
+                represent = "%s: %s" % (project.name, row.name)
+
+            return represent
+        elif not id:
+            return current.messages["NONE"]
+
+        db = current.db
+        table = db.project_task
+        r = db(table.id == id).select(table.name,
+                                      limitby=(0, 1)).first()
+        try:
+            name = r.name
+        except:
+            return current.messages.UNKNOWN_OPT
+        else:
+            ltable = db.project_task_project
+            ptable = db.project_project
+            query = (ltable.task_id == id) & \
+                    (ltable.project_id == ptable.id)
+            project = db(query).select(ptable.name,
+                                       limitby=(0, 1)).first()
+            if project:
+                represent = "%s: %s" % (project.name, name)
+
             return represent
 
     # -------------------------------------------------------------------------
@@ -4874,6 +4925,30 @@ class S3ProjectTaskModel(S3Model):
 
         else:
             raise HTTP(501, BADMETHOD)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_milestone_duplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename == "project_milestone":
+            data = item.data
+            table = item.table
+            # Duplicate if same Name & Project
+            if "name" in data and data.name:
+                query = (table.name.lower() == data.name.lower())
+            else:
+                # Nothing we can work with
+                return
+            if "project_id" in data and data.project_id:
+                query &= (table.project_id == data.project_id)
+
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -4035,6 +4035,7 @@ def gis_layer_onaccept(form):
 def gis_location_filter(r):
     """
         Filter resources to those for a specified location
+        @ToDo: Migrate to Context
     """
 
     lfilter = current.session.s3.location_filter

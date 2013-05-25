@@ -1131,16 +1131,16 @@ def render_projects(listid, resource, rfields, record, **attr):
     location = record["project_location.location_id"]
     locations = location.split(",")
     location_ids = raw["project_location.location_id"]
-    locations_div = DIV()
+    locations_list = []
     length = len(location_ids)
     i = 0
     for location_id in location_ids:
         location_url = URL(c="gis", f="location",
                            args=[location_id, "profile"])
-        locations_div.append(A(locations[i], _href=location_url))
+        locations_list.append(A(locations[i], _href=location_url))
         i += 1
         if i != length:
-            locations_div.append(",")
+            locations_list.append(",")
 
     logo = raw["org_organisation.logo"]
     org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
@@ -1230,7 +1230,7 @@ def render_projects(listid, resource, rfields, record, **attr):
                                ),
                          _class="citation"),
                        _class="span1"),
-                   DIV(SPAN(locations_div,
+                   DIV(SPAN(*locations_list,
                             _class="location-title"),
                        " ",
                        SPAN(date,
@@ -1541,7 +1541,7 @@ def customize_event_event(**attr):
                                  #marker = "alert",
                                  list_layout = render_profile_posts,
                                  )
-            map_widget = dict(label = "Location",
+            map_widget = dict(label = "Map",
                               type = "map",
                               context = "event",
                               icon = "icon-map",
@@ -1738,7 +1738,7 @@ def customize_gis_location(**attr):
                                         list_layout = render_resources,
                                         )
                 record = r.record
-                map_widget = dict(label = "Location",
+                map_widget = dict(label = "Map",
                                   type = "map",
                                   context = "location",
                                   icon = "icon-map",
@@ -1961,7 +1961,7 @@ def customize_org_organisation(**attr):
                                    show_on_map = False, # Since they will show within Offices
                                    list_layout = render_contacts,
                                    )
-            map_widget = dict(label = "Location",
+            map_widget = dict(label = "Map",
                               type = "map",
                               context = "organisation",
                               icon = "icon-map",

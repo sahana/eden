@@ -108,6 +108,7 @@ h4.profile-sub-header {
     font: bold 13px "Helvetica Neue", Arial, sans-serif;
     color: #333333;
     padding: 0;
+    border-left: 0;
 }
 
 .card-holder .card_comments {
