@@ -920,6 +920,10 @@ def comments():
     field.writable = field.readable = False
 
     # Form to add a new Comment
+    # @ToDo: Rewrite using SQLFORM or S3SQLCustomForm
+    from s3.s3msg import CrudS3
+    crud = CrudS3()
+    crud.messages.submit_button = T("Save")
     form = crud.create(table, formname="project_comment/%s" % task_id)
 
     # List of existing Comments

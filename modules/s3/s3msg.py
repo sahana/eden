@@ -1975,6 +1975,7 @@ class S3Compose(S3CRUD):
 
 # =============================================================================
 # @ToDo: Deprecate these classes once _compose_form() has been rewritten
+#        - also used by project/comments()
 # =============================================================================
 class CrudS3(Crud):
     """

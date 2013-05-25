@@ -198,7 +198,6 @@ def render_contacts(listid, resource, rfields, record, **attr):
     organisation_id = raw["hrm_human_resource.organisation_id"]
     pe_id = raw["pr_person.pe_id"]
     person_id = raw["hrm_human_resource.person_id"]
-    avatar_url = URL(c="hrm", f="person", args=[person_id, "image"])
     address = raw["gis_location.addr_street"] or ""
     email = raw["pr_email_contact.value"] or ""
     if isinstance(email, list):
@@ -221,10 +220,6 @@ def render_contacts(listid, resource, rfields, record, **attr):
                                      _class="media-object")
     else:
         avatar = IMG(_class="media-object")
-    avatar = A(avatar,
-               _href=avatar_url,
-               _class="pull-left",
-               )
 
     # Edit Bar
     permit = current.auth.s3_has_permission
@@ -260,6 +255,12 @@ def render_contacts(listid, resource, rfields, record, **attr):
                    delete_btn,
                    _class="edit-bar fright",
                    )
+
+    avatar = A(avatar,
+               _href=edit_url,
+               _class="pull-left s3_modal",
+               _title=title_update,
+               )
 
     # Render the item
     item = DIV(DIV(DIV(avatar,
@@ -520,6 +521,7 @@ def render_locations(listid, resource, rfields, record, **attr):
     # Search all sub-locations
     locations = current.gis.get_children(record_id)
     locations = [l.id for l in locations]
+    locations.append(record_id)
     db = current.db
     s3db = current.s3db
     ltable = s3db.project_location
@@ -591,6 +593,7 @@ def render_locations(listid, resource, rfields, record, **attr):
 def render_locations_profile(listid, resource, rfields, record, **attr):
     """
         Custom dataList item renderer for Locations on the Profile Page
+        - UNUSED
 
         @param listid: the HTML ID for this list
         @param resource: the S3Resource to render
@@ -1131,16 +1134,21 @@ def render_projects(listid, resource, rfields, record, **attr):
     location = record["project_location.location_id"]
     locations = location.split(",")
     location_ids = raw["project_location.location_id"]
-    locations_list = []
-    length = len(location_ids)
-    i = 0
-    for location_id in location_ids:
+    if isinstance(location_ids, list):
+        locations_list = []
+        length = len(location_ids)
+        i = 0
+        for location_id in location_ids:
+            location_url = URL(c="gis", f="location",
+                               args=[location_id, "profile"])
+            locations_list.append(A(locations[i], _href=location_url))
+            i += 1
+            if i != length:
+                locations_list.append(",")
+    else:
         location_url = URL(c="gis", f="location",
-                           args=[location_id, "profile"])
-        locations_list.append(A(locations[i], _href=location_url))
-        i += 1
-        if i != length:
-            locations_list.append(",")
+                           args=[location_ids, "profile"])
+        locations_list = [A(location, _href=location_url)]
 
     logo = raw["org_organisation.logo"]
     org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
@@ -1172,8 +1180,12 @@ def render_projects(listid, resource, rfields, record, **attr):
                _href=person_url,
                )
 
-    start_date = record["project_project.start_date"]
-    end_date = record["project_project.end_date"]
+    start_date = raw["project_project.start_date"] or ""
+    if start_date:
+        start_date = record["project_project.start_date"]
+    end_date = raw["project_project.end_date"] or ""
+    if end_date:
+        end_date = record["project_project.end_date"]
     date = "%s - %s" % (start_date, end_date)
     budget = record["project_project.budget"]
     if budget:
@@ -1277,6 +1289,7 @@ def render_resources(listid, resource, rfields, record, **attr):
     quantity = record["org_resource.quantity"]
     resource_type = record["org_resource.resource_type_id"]
     body = "%s %s" % (quantity, resource_type)
+    comments = raw["org_resource.comments"]
     organisation_id = raw["org_resource.organisation_id"]
     location = record["org_resource.location_id"]
     location_id = raw["org_resource.location_id"]
@@ -1338,6 +1351,8 @@ def render_resources(listid, resource, rfields, record, **attr):
                        " ",
                        edit_bar,
                        P(body,
+                         BR(),
+                         comments,
                          _class="card_comments"),
                        _class="span5 card-details"),
                    _class="row",
@@ -1418,9 +1433,12 @@ def customize_cms_post(**attr):
             field.widget = None
             #table.comments.readable = table.comments.writable = False
 
-            # Filter from a Profile page?"
+            # Filter from a Profile page?
+            # If so, then default the fields we know
             s3db = current.s3db
-            event_id = current.request.get_vars.get("(event)", None)
+            get_vars = current.request.get_vars
+            event_id = get_vars.get("~.(event)", None)
+            location_id = get_vars.get("~.(location)", None)
             if event_id:
                 crud_form = S3SQLCustomForm(
                     "series_id",
@@ -1442,6 +1460,29 @@ def customize_cms_post(**attr):
                 s3db.configure("cms_post",
                                create_onaccept = create_onaccept, 
                                )
+            elif location_id:
+                location_field = table.location_id
+                location_field.default = location_id
+                location_field.readable = location_field.writable = False
+                crud_form = S3SQLCustomForm(
+                    "series_id",
+                    "body",
+                    S3SQLInlineComponent(
+                        "event_post",
+                        label = T("Disaster(s)"),
+                        multiple = False,
+                        fields = ["event_id"],
+                        orderby = "event_id$name",
+                    ),
+                    S3SQLInlineComponent(
+                        "document",
+                        name = "file",
+                        label = T("Files"),
+                        fields = ["file",
+                                  #"comments",
+                                  ],
+                    ),
+                )
             else:
                 crud_form = S3SQLCustomForm(
                     "series_id",
@@ -1465,13 +1506,17 @@ def customize_cms_post(**attr):
                 )
 
             # Return to List view after create/update/delete
-            url_next = URL(c="default", f="index", args="updates")
+            # We now do all this in Popups
+            #url_next = URL(c="default", f="index", args="updates")
 
             s3db.configure("cms_post",
-                           create_next = url_next,
-                           delete_next = url_next,
-                           update_next = url_next,
+                           #create_next = url_next,
+                           #delete_next = url_next,
+                           #update_next = url_next,
                            crud_form = crud_form,
+                           # Don't include a Create form in 'More' popups
+                           listadd = False,
+                           list_layout = render_profile_posts,
                            )
 
             s3.cancel = True
@@ -2082,24 +2127,64 @@ def customize_org_office(**attr):
     """
 
     s3 = current.response.s3
+    s3db = current.s3db
+    table = s3db.org_office
+    
+    # Custom PreP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
 
-    table = current.s3db.org_office
-    
-    # Configure fields
-    table.code.readable = table.code.writable = False
-    table.office_type_id.readable = table.office_type_id.writable = False
-    table.phone1.readable = table.phone1.writable = False
-    table.phone2.readable = table.phone2.writable = False
-    table.email.readable = table.email.writable = False
-    table.fax.readable = table.fax.writable = False
-    table.location_id.requires = IS_ONE_OF(current.db, "gis_location.id",
-                                           S3Represent(lookup="gis_location"),
-                                           sort = True,
-                                           filterby = "level",
-                                           filter_opts = ["L1"]
-                                           )
-    table.location_id.widget = None
-    
+        if r.interactive:
+            # Configure fields
+            table.code.readable = table.code.writable = False
+            table.office_type_id.readable = table.office_type_id.writable = False
+            table.phone1.readable = table.phone1.writable = False
+            table.phone2.readable = table.phone2.writable = False
+            table.email.readable = table.email.writable = False
+            table.fax.readable = table.fax.writable = False
+            location_field = table.location_id
+
+            # Filter from a Profile page?
+            # If so, then default the fields we know
+            get_vars = current.request.get_vars
+            location_id = get_vars.get("~.(location)", None)
+            organisation_id = get_vars.get("~.(organisation)", None)
+            if organisation_id:
+                org_field = table.organisation_id
+                org_field.default = organisation_id
+                org_field.readable = org_field.writable = False
+            if location_id:
+                location_field.default = location_id
+                location_field.readable = location_field.writable = False
+            else:
+                location_field.requires = IS_ONE_OF(current.db, "gis_location.id",
+                                                    S3Represent(lookup="gis_location"),
+                                                    sort = True,
+                                                    filterby = "level",
+                                                    filter_opts = ["L1"]
+                                                    )
+                # Don't add new Locations here
+                location_field.comment = None
+                # Simple dropdown
+                location_field.widget = None
+                
+
+            s3db.configure("org_office",
+                           # Don't include a Create form in 'More' popups
+                           listadd = False,
+                           list_layout = render_offices,
+                           )
+
+            s3.cancel = True
+
+        return True
+    s3.prep = custom_prep
+
     # Custom postp
     standard_postp = s3.postp
     def custom_postp(r, output):
@@ -2153,6 +2238,7 @@ def customize_org_resource_fields():
                    "organisation_id",
                    "location_id",
                    "organisation_id$logo",
+                   "comments",
                    ]
 
     s3db.configure("org_resource",
@@ -2166,19 +2252,60 @@ def customize_org_resource(**attr):
     """
 
     s3 = current.response.s3
+    s3db = current.s3db
+    table = s3db.org_resource
 
-    table = current.s3db.org_resource
+    # Custom PreP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+
+        if r.interactive:
+            customize_org_resource_fields()
     
-    # Configure fields
-    #table.site_id.readable = table.site_id.readable = False
-    table.location_id.requires = IS_ONE_OF(current.db, "gis_location.id",
-                                           S3Represent(lookup="gis_location"),
-                                           sort = True,
-                                           filterby = "level",
-                                           filter_opts = ["L1"]
-                                           )
-    table.location_id.widget = None
-    
+            # Configure fields
+            #table.site_id.readable = table.site_id.readable = False
+            location_field = table.location_id
+
+            # Filter from a Profile page?
+            # If so, then default the fields we know
+            get_vars = current.request.get_vars
+            location_id = get_vars.get("~.(location)", None)
+            organisation_id = get_vars.get("~.(organisation)", None)
+            if organisation_id:
+                org_field = table.organisation_id
+                org_field.default = organisation_id
+                org_field.readable = org_field.writable = False
+            if location_id:
+                location_field.default = location_id
+                location_field.readable = location_field.writable = False
+            else:
+                location_field.requires = IS_ONE_OF(current.db, "gis_location.id",
+                                                    S3Represent(lookup="gis_location"),
+                                                    sort = True,
+                                                    filterby = "level",
+                                                    filter_opts = ["L1"]
+                                                    )
+                # Don't add new Locations here
+                location_field.comment = None
+                # Simple dropdown
+                location_field.widget = None
+
+            s3db.configure("org_resource",
+                           # Don't include a Create form in 'More' popups
+                           listadd = False,
+                           list_layout = render_resources,
+                           )
+
+            s3.cancel = True
+
+        return True
+    s3.prep = custom_prep
+
     # Custom postp
     standard_postp = s3.postp
     def custom_postp(r, output):
@@ -2324,6 +2451,14 @@ def customize_pr_person(**attr):
                                         options = "EMAIL"
                                         )
                     ),
+                    S3SQLInlineComponent(
+                        "image",
+                        name = "image",
+                        label = T("Photo"),
+                        multiple = False,
+                        fields = ["image",
+                                  ],
+                    ),
                 )
 
             list_fields = [(current.messages.ORGANISATION, "human_resource.organisation_id"),
@@ -2404,6 +2539,7 @@ def customize_project_project_fields():
     s3db = current.s3db
 
     s3db.project_location.location_id.represent = location_represent
+    s3db.project_project.created_by.represent = s3_auth_user_represent_name
 
     list_fields = ["name",
                    "organisation_id",
@@ -2427,84 +2563,182 @@ def customize_project_project(**attr):
 
     s3 = current.response.s3
     s3db = current.s3db
-    db = current.db
-
-    tablename = "project_project"
     table = s3db.project_project
-    
+
     # Remove rheader
     attr["rheader"] = None
-    
-    # Configure fields 
-    table.human_resource_id.label = T("Focal Person")
-    table.budget.label = "%s (USD)" % T("Budget")
-    # Better in column label & otherwise this construction loses thousands separators
-    #table.budget.represent = lambda value: "%d USD" % value
 
-    # Project Locations must be districts
-    ltable = s3db.project_location
-    ltable.location_id.label = ""
-    ltable.location_id.represent = S3Represent(lookup="gis_location")
-    ltable.location_id.requires = IS_ONE_OF(db, "gis_location.id",
-                                            S3Represent(lookup="gis_location"),
-                                            sort = True,
-                                            filterby = "level",
-                                            filter_opts = ["L1"]
-                                            )
-    # Don't add new Locations here
-    ltable.location_id.comment = None
-    # Simple dropdown
-    ltable.location_id.widget = None
+    # Custom PreP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
 
-    crud_form = S3SQLCustomForm(
-        "name",
-        "organisation_id",
-        S3SQLInlineComponent(
-            "location",
-            label = T("Districts"),
-            fields = ["location_id"],
-            orderby = "location_id$name",
-            render_list = True
-        ),
-        "human_resource_id",
-        "start_date",
-        "end_date",
-        # Partner Orgs
-        S3SQLInlineComponent(
-            "organisation",
-            name = "partner",
-            label = T("Partner Organisations"),
-            fields = ["organisation_id",
-                      ],
-            filterby = dict(field = "role",
-                            options = "2"
-                            )
-        ),
-        # Donors
-        S3SQLInlineComponent(
-            "organisation",
-            name = "donor",
-            label = T("Donor(s)"),
-            fields = ["organisation_id", "amount", "currency"],
-            filterby = dict(field = "role",
-                            options = "3"
-                            )
-        ),
-        "budget",
-        "comments",
-    )
+        if r.interactive:
+            #customize_project_project_fields()
+            # Configure fields 
+            table.human_resource_id.label = T("Focal Person")
+            table.budget.label = "%s (USD)" % T("Budget")
+            # Better in column label & otherwise this construction loses thousands separators
+            #table.budget.represent = lambda value: "%d USD" % value
 
-    list_fields = ["name",
-                   "organisation_id",
-                   "human_resource_id",
-                   "start_date",
-                   "end_date",
-                   "budget",
-                   ]
+            
 
-    s3db.configure(tablename,
-                   crud_form = crud_form,
-                   list_fields = list_fields)
+            # Filter from a Profile page?
+            # If so, then default the fields we know
+            get_vars = current.request.get_vars
+            location_id = get_vars.get("~.(location)", None)
+            organisation_id = get_vars.get("~.(organisation)", None)
+            if organisation_id:
+                org_field = table.organisation_id
+                org_field.default = organisation_id
+                org_field.readable = org_field.writable = False
+                crud_form = S3SQLCustomForm(
+                    "name",
+                    S3SQLInlineComponent(
+                        "location",
+                        label = T("Districts"),
+                        fields = ["location_id"],
+                        orderby = "location_id$name",
+                        render_list = True
+                    ),
+                    "human_resource_id",
+                    "start_date",
+                    "end_date",
+                    # Partner Orgs
+                    S3SQLInlineComponent(
+                        "organisation",
+                        name = "partner",
+                        label = T("Partner Organisations"),
+                        fields = ["organisation_id",
+                                  ],
+                        filterby = dict(field = "role",
+                                        options = "2"
+                                        )
+                    ),
+                    # Donors
+                    S3SQLInlineComponent(
+                        "organisation",
+                        name = "donor",
+                        label = T("Donor(s)"),
+                        fields = ["organisation_id", "amount", "currency"],
+                        filterby = dict(field = "role",
+                                        options = "3"
+                                        )
+                    ),
+                    "budget",
+                    "comments",
+                )
+            if location_id:
+                location_field.default = location_id
+                location_field.readable = location_field.writable = False
+                crud_form = S3SQLCustomForm(
+                    "name",
+                    "organisation_id",
+                    "human_resource_id",
+                    "start_date",
+                    "end_date",
+                    # Partner Orgs
+                    S3SQLInlineComponent(
+                        "organisation",
+                        name = "partner",
+                        label = T("Partner Organisations"),
+                        fields = ["organisation_id",
+                                  ],
+                        filterby = dict(field = "role",
+                                        options = "2"
+                                        )
+                    ),
+                    # Donors
+                    S3SQLInlineComponent(
+                        "organisation",
+                        name = "donor",
+                        label = T("Donor(s)"),
+                        fields = ["organisation_id", "amount", "currency"],
+                        filterby = dict(field = "role",
+                                        options = "3"
+                                        )
+                    ),
+                    "budget",
+                    "comments",
+                )
+            else:
+                # Project Locations must be districts
+                location_field = s3db.project_location.location_id
+                location_field.label = ""
+                location_field.represent = S3Represent(lookup="gis_location")
+                location_field.requires = IS_ONE_OF(current.db, "gis_location.id",
+                                                    S3Represent(lookup="gis_location"),
+                                                    sort = True,
+                                                    filterby = "level",
+                                                    filter_opts = ["L1"]
+                                                    )
+                # Don't add new Locations here
+                location_field.comment = None
+                # Simple dropdown
+                location_field.widget = None
+                
+                crud_form = S3SQLCustomForm(
+                    "name",
+                    "organisation_id",
+                    S3SQLInlineComponent(
+                        "location",
+                        label = T("Districts"),
+                        fields = ["location_id"],
+                        orderby = "location_id$name",
+                        render_list = True
+                    ),
+                    "human_resource_id",
+                    "start_date",
+                    "end_date",
+                    # Partner Orgs
+                    S3SQLInlineComponent(
+                        "organisation",
+                        name = "partner",
+                        label = T("Partner Organisations"),
+                        fields = ["organisation_id",
+                                  ],
+                        filterby = dict(field = "role",
+                                        options = "2"
+                                        )
+                    ),
+                    # Donors
+                    S3SQLInlineComponent(
+                        "organisation",
+                        name = "donor",
+                        label = T("Donor(s)"),
+                        fields = ["organisation_id", "amount", "currency"],
+                        filterby = dict(field = "role",
+                                        options = "3"
+                                        )
+                    ),
+                    "budget",
+                    "comments",
+                )
+
+            list_fields = ["name",
+                           "organisation_id",
+                           "human_resource_id",
+                           "start_date",
+                           "end_date",
+                           "budget",
+                           ]
+
+            s3db.configure("project_project",
+                           crud_form = crud_form,
+                           list_fields = list_fields,
+                           # Don't include a Create form in 'More' popups
+                           listadd = False,
+                           list_layout = render_offices,
+                           )
+
+            s3.cancel = True
+
+        return True
+    s3.prep = custom_prep
 
     # Custom postp
     standard_postp = s3.postp

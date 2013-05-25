@@ -705,16 +705,20 @@ class GIS(object):
             http://eden.sahanafoundation.org/wiki/HaitiGISToDo#HierarchicalTrees
 
             @param: level - optionally filter by level
+            
+            @returns: Rows object containing IDs & Names
+                      Note: This does NOT include the parent location itself
         """
 
         db = current.db
         table = db.gis_location
         query = (table.deleted == False)
         if level:
-            query = query & (table.level == level)
+            query &= (table.level == level)
         term = str(id)
-        query = query & ((table.path.like(term + "/%")) | \
-                         (table.path.like("%/" + term + "/%")))
+        path = table.path
+        query &= ((path.like(term + "/%")) | \
+                  (path.like("%/" + term + "/%")))
         children = db(query).select(table.id,
                                     table.name)
         return children

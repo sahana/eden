@@ -1161,7 +1161,7 @@ class S3CRUD(S3Method):
         list_fields = get_config("list_fields", None)
 
         representation = r.representation
-        if representation in ("html", "iframe", "aadata", "dl"):
+        if representation in ("html", "iframe", "aadata", "dl", "popup"):
 
             # Data
             list_type = attr.get("list_type", "datatable")
@@ -1174,7 +1174,7 @@ class S3CRUD(S3Method):
                 target = "datatable"
                 output = self._datatable(r, **attr)
 
-            if r.representation in ("aadata", "dl"):
+            if representation in ("aadata", "dl"):
                 return output
             else:
                 output["list_type"] = list_type
@@ -1575,7 +1575,7 @@ class S3CRUD(S3Method):
     # -------------------------------------------------------------------------
     def _datalist(self, r, **attr):
         """
-            Experimental: Get a data list
+            Get a data list
 
             @param r: the S3Request
             @param attr: parameters for the method handler
@@ -1673,7 +1673,7 @@ class S3CRUD(S3Method):
             else:
                 r.error(405, r.ERROR.BAD_METHOD)
 
-        if representation in ("html", "dl"):
+        if representation in ("html", "dl", "popup"):
 
             # Retrieve the data
             if limit:
@@ -1753,6 +1753,21 @@ class S3CRUD(S3Method):
             # View + data
             response.view = "plain.html"
             output["item"] = data
+
+        elif representation == "popup":
+
+            # View + data
+            response.view = "popup.html"
+            output["items"] = data
+            # Pagination Support (normally added by views/dataLists.html)
+            if s3.debug:
+                appname = current.request.application
+                sappend = s3.scripts.append
+                sappend("/%s/static/scripts/jquery.infinitescroll.js" % appname)
+                sappend("/%s/static/scripts/jquery.viewport.js" % appname)
+                sappend("/%s/static/scripts/S3/s3.dataLists.js" % appname)
+            else:
+                s3.scripts.append("/%s/static/scripts/S3/s3.dataLists.min.js" % current.request.application)
 
         return output
 

@@ -36,6 +36,12 @@ form {
     margin-left: 20px;
 }
 
+.input-xlarge {
+    -moz-box-sizing: inherit;
+    min-height: inherit;
+    width: 206px;
+}
+
 .tooltip {
     opacity: 1;
 }
@@ -414,7 +420,7 @@ b.red {
     display: none;
 }
 
-/*Add new project form styling*/
+/* Add new Project form styling */
 
 #sub-partnerorganisation table.embeddedComponent thead,
 #sub-defaultlocation table.embeddedComponent thead tr.label-row td {
@@ -446,6 +452,13 @@ b.red {
 #sub_donororganisation_donororganisation_i_amount_edit_none {
     position: relative;
     top: -5px;
+}
+
+#sub_donororganisation_donororganisation_i_amount_edit_none {
+    width: 200px;
+}
+#sub_donororganisation_donororganisation_i_currency_edit_none {
+    width: 70px;
 }
 
 #sub_donororganisation_donororganisation_i_organisation_id_edit_none {

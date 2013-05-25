@@ -157,8 +157,8 @@ class S3Profile(S3CRUD):
         s = "(%s)" % context
         if context == "location":
             # Show records linked to this Location & all it's Child Locations
-            m = ("%(id)s,%(id)s/*,*/%(id)s,*/%(id)s/*" % dict(id=id)).split(",")
-            filter = S3FieldSelector(s).like(m)
+            m = ("%(id)s/*,*/%(id)s/*" % dict(id=id)).split(",")
+            filter = S3FieldSelector(s).like(m) | S3FieldSelector(s) == id
         # @ToDo:
         #elif context == "organisation":
         #    # Show records linked to this Organisation and all it's Branches
@@ -249,7 +249,9 @@ class S3Profile(S3CRUD):
                 vars = Storage()
             vars.refresh = listid
             if context:
-                vars[context] = id
+                filters = context.serialize_url(resource)
+                for f in filters:
+                    vars[f] = filters[f]
             title_create = widget.get("title_create", None)
             if title_create:
                 title_create = T(title_create)
@@ -331,13 +333,30 @@ class S3Profile(S3CRUD):
         if icon:
             icon = TAG[""](I(_class=icon), " ")
 
-        if resource.count() > pagesize:
+        total = resource.count()
+        if total > pagesize:
             # Button to display the rest of the records in a Modal
-            more = DIV(A(BUTTON(T("see more"),
+            more = total - pagesize
+            vars = {}
+            if context:
+                filters = context.serialize_url(resource)
+                for f in filters:
+                    vars[f] = filters[f]
+            if filter:
+                filters = filter.serialize_url(resource)
+                for f in filters:
+                    vars[f] = filters[f]
+            c, f = tablename.split("_", 1)
+            url = URL(c=c, f=f, args=["datalist.popup"],
+                      vars=vars)
+            more = DIV(A(BUTTON("%s (%s)" % (T("see more"), more),
                                 _class="btn btn-mini",
                                 _type="button",
                                 ),
-                         _href="#"),
+                         _class="s3_modal",
+                         _href=url,
+                         _title=label,
+                         ),
                        _class="more_profile")
         else:
             more = ""
