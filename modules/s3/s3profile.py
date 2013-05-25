@@ -154,17 +154,23 @@ class S3Profile(S3CRUD):
             @param id: the record_id
         """
 
-        s = "(%s)" % context
         if context == "location":
             # Show records linked to this Location & all it's Child Locations
-            m = ("%(id)s/*,*/%(id)s/*" % dict(id=id)).split(",")
-            filter = (S3FieldSelector(s).like(m)) | (S3FieldSelector(s) == id)
+            s = "(location)$path"
+            # This version doesn't serialize_url
+            #m = ("%(id)s/*,*/%(id)s/*" % dict(id=id)).split(",")
+            #filter = (S3FieldSelector(s).like(m)) | (S3FieldSelector(s) == id)
+            m = ("%(id)s,%(id)s/*,*/%(id)s/*,*/%(id)s" % dict(id=id)).split(",")
+            m = [f.replace("*", "%") for f in m]
+            filter = S3FieldSelector(s).like(m)
         # @ToDo:
         #elif context == "organisation":
         #    # Show records linked to this Organisation and all it's Branches
+        #    s = "(%s)" % context
         #    filter = S3FieldSelector(s) == id
         else:
             # Normal: show just records linked directly to this master resource
+            s = "(%s)" % context
             filter = S3FieldSelector(s) == id
 
         return filter
@@ -239,35 +245,6 @@ class S3Profile(S3CRUD):
         # Use the widget-index to create a unique ID
         listid = "profile-list-%s-%s" % (tablename, widget["index"])
 
-        # Permission to create new items?
-        # @ToDo: Special check for creating resources on Organisation profile
-        insert = widget.get("insert", True)
-        if insert and current.auth.s3_has_permission("create", table):
-            if filter:
-                vars = filter.serialize_url(filter)
-            else:
-                vars = Storage()
-            vars.refresh = listid
-            if context:
-                filters = context.serialize_url(resource)
-                for f in filters:
-                    vars[f] = filters[f]
-            title_create = widget.get("title_create", None)
-            if title_create:
-                title_create = T(title_create)
-            else:
-                title_create = S3CRUD.crud_string(tablename, "title_create")
-            c, f = tablename.split("_", 1)
-            c = widget.get("create_controller", c)
-            f = widget.get("create_function", f)
-            create = A(I(_class="icon icon-plus-sign small-add"),
-                       _href=URL(c=c, f=f, args=["create.popup"], vars=vars),
-                       _class="s3_modal",
-                       _title=title_create,
-                       )
-        else:
-            create = ""
-
         # Page size
         pagesize = 4
         representation = r.representation
@@ -326,6 +303,7 @@ class S3Profile(S3CRUD):
             current.response.view = "plain.html"
             return data
 
+        # Interactive only below here
         label = widget.get("label", "")
         if label:
             label = T(label)
@@ -333,10 +311,38 @@ class S3Profile(S3CRUD):
         if icon:
             icon = TAG[""](I(_class=icon), " ")
 
-        total = resource.count()
-        if total > pagesize:
+        # Permission to create new items?
+        # @ToDo: Special check for creating resources on Organisation profile
+        insert = widget.get("insert", True)
+        if insert and current.auth.s3_has_permission("create", table):
+            if filter:
+                vars = filter.serialize_url(filter)
+            else:
+                vars = Storage()
+            vars.refresh = listid
+            if context:
+                filters = context.serialize_url(resource)
+                for f in filters:
+                    vars[f] = filters[f]
+            title_create = widget.get("title_create", None)
+            if title_create:
+                title_create = T(title_create)
+            else:
+                title_create = S3CRUD.crud_string(tablename, "title_create")
+            c, f = tablename.split("_", 1)
+            c = widget.get("create_controller", c)
+            f = widget.get("create_function", f)
+            create = A(I(_class="icon icon-plus-sign small-add"),
+                       _href=URL(c=c, f=f, args=["create.popup"], vars=vars),
+                       _class="s3_modal",
+                       _title=title_create,
+                       )
+        else:
+            create = ""
+
+        if numrows > pagesize:
             # Button to display the rest of the records in a Modal
-            more = total - pagesize
+            more = numrows - pagesize
             vars = {}
             if context:
                 filters = context.serialize_url(resource)
@@ -443,14 +449,19 @@ class S3Profile(S3CRUD):
                     marker = Marker(layer_id=layer_id).as_dict()
                 resource = s3dbresource(tablename)
                 filter_url = ""
+                first = True
                 if context:
                     filters = cserialize_url(resource)
                     for f in filters:
-                        filter_url = "%s&%s=%s" % (filter_url, f, filters[f])
+                        sep = "" if first else "&"
+                        filter_url = "%s%s%s=%s" % (filter_url, sep, f, filters[f])
+                        first = False
                 if filter:
                     filters = filter.serialize_url(resource)
                     for f in filters:
-                        filter_url = "%s&%s=%s" % (filter_url, f, filters[f])
+                        sep = "" if first else "&"
+                        filter_url = "%s%s%s=%s" % (filter_url, sep, f, filters[f])
+                        first = False
                 if filter_url:
                     layer["filter"] = filter_url
             else:
