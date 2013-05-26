@@ -795,9 +795,12 @@ def render_organisations(listid, resource, rfields, record, **attr):
     raw = record._row
     name = record["org_organisation.name"]
     logo = raw["org_organisation.logo"]
-    addresses = raw["office.location_id$addr_street"]
+    addresses = raw["gis_location.addr_street"]
     if addresses:
-        address = addresses[0]
+        if isinstance(addresses, list):
+            address = addresses[0]
+        else:
+            address = addresses
     else:
         address = ""
     phone = raw["org_organisation.phone"] or ""
@@ -2392,6 +2395,11 @@ def customize_pr_person(**attr):
             if not result:
                 return False
 
+        if r.method == "validate":
+            # Can't validate image without the file
+            image_field = s3db.pr_image.image
+            image_field.requires = None
+
         if r.interactive or r.representation == "aadata":
             # CRUD Strings
             ADD_CONTACT = T("Add New Contact")
@@ -2415,22 +2423,24 @@ def customize_pr_person(**attr):
 
             htable = s3db.hrm_human_resource
             htable.organisation_id.widget = None
-            field = htable.site_id
+            site_field = htable.site_id
             represent = S3Represent(lookup="org_site")
-            field.represent = represent
-            field.requires = IS_ONE_OF(current.db, "org_site.site_id",
-                                       represent,
-                                       orderby = "org_site.name")
-            field.comment = S3AddResourceLink(c="org", f="office",
-                                              vars={"child": "site_id"},
-                                              label=T("Add New Office"),
-                                              title=T("Office"),
-                                              tooltip=T("If you don't see the Office in the list, you can add a new one by clicking link 'Add New Office'."))
+            site_field.represent = represent
+            site_field.requires = IS_ONE_OF(current.db, "org_site.site_id",
+                                            represent,
+                                            orderby = "org_site.name")
+            site_field.comment = S3AddResourceLink(c="org", f="office",
+                                                   vars={"child": "site_id"},
+                                                   label=T("Add New Office"),
+                                                   title=T("Office"),
+                                                   tooltip=T("If you don't see the Office in the list, you can add a new one by clicking link 'Add New Office'."))
 
             # Best to have no labels when only 1 field in the row
             s3db.pr_contact.value.label = ""
-            s3db.pr_image.image.label = ""
-            s3db.pr_image.image.widget = None
+            image_field = s3db.pr_image.image
+            image_field.label = ""
+            # ImageCrop widget doesn't currently work within an Inline Form
+            image_field.widget = None
 
             hr_fields = ["organisation_id",
                          "job_title_id",

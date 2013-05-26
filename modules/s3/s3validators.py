@@ -1971,7 +1971,9 @@ class IS_PROCESSED_IMAGE(Validator):
                  file_cb,
                  error_message="No image was specified!",
                  image_bounds=(300, 300),
-                 upload_path=None):
+                 upload_path=None,
+                 ):
+
         self.field_name = field_name
         self.file_cb = file_cb
         self.error_message = error_message

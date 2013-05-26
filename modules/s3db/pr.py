@@ -1675,8 +1675,10 @@ class S3PersonImageModel(S3Model):
             record = current.db(query).select(table.image, limitby = (0, 1)).first()
             return record.image if record else None
 
-        table.image.requires.append(IS_PROCESSED_IMAGE("image", get_file,
-            upload_path=os.path.join(current.request.folder, "uploads")))
+        # Can't be specified inline as needs callback to be defined, which needs table
+        table.image.requires = IS_PROCESSED_IMAGE("image", get_file,
+                                                  upload_path=os.path.join(current.request.folder,
+                                                                           "uploads"))
 
         # CRUD Strings
         current.response.s3.crud_strings[tablename] = Storage(

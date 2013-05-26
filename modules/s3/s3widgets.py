@@ -606,6 +606,8 @@ class S3ImageCropWidget(FormWidget):
     """
         Allows the user to crop an image and uploads it.
         Cropping is done client-side where supported, otherwise using PIL.
+
+        @ToDo: Doesn't currently work with Inline Component Forms
     """
 
     DEFAULT_WIDTH = 300
