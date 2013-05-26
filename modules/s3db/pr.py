@@ -781,20 +781,20 @@ class S3PersonModel(S3Model):
 
         # Email
         add_component("pr_contact",
-                      pr_person=dict(
-                        name="email",
-                        joinby="pe_id",
-                        filterby="contact_method",
-                        filterfor=["EMAIL"],
-                      ))
+                      pr_person=dict(name="email",
+                                    joinby="pe_id",
+                                    pkey="pe_id",
+                                    filterby="contact_method",
+                                    filterfor=["EMAIL"],
+                                    ))
         # Mobile Phone
         add_component("pr_contact",
-                      pr_person=dict(
-                        name="phone",
-                        joinby="pe_id",
-                        filterby="contact_method",
-                        filterfor=["SMS"],
-                      ))
+                      pr_person=dict(name="phone",
+                                     joinby="pe_id",
+                                     pkey="pe_id",
+                                     filterby="contact_method",
+                                     filterfor=["SMS"],
+                                     ))
 
         # HR Record
         add_component("hrm_human_resource", pr_person="person_id")

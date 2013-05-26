@@ -350,28 +350,26 @@ class S3HRModel(S3Model):
         # Components
         # Email
         add_component("pr_contact",
-                      hrm_human_resource=dict(
-                        name="email",
-                        link="pr_person",
-                        joinby="id",
-                        key="pe_id",
-                        fkey="pe_id",
-                        pkey="person_id",
-                        filterby="contact_method",
-                        filterfor=["EMAIL"],
-                      ))
+                      hrm_human_resource=dict(name="email",
+                                              link="pr_person",
+                                              joinby="id",
+                                              key="pe_id",
+                                              fkey="pe_id",
+                                              pkey="person_id",
+                                              filterby="contact_method",
+                                              filterfor=["EMAIL"],
+                                              ))
         # Mobile Phone
         add_component("pr_contact",
-                      hrm_human_resource=dict(
-                        name="phone",
-                        link="pr_person",
-                        joinby="id",
-                        key="pe_id",
-                        fkey="pe_id",
-                        pkey="person_id",
-                        filterby="contact_method",
-                        filterfor=["SMS"],
-                      ))
+                      hrm_human_resource=dict(name="phone",
+                                              link="pr_person",
+                                              joinby="id",
+                                              key="pe_id",
+                                              fkey="pe_id",
+                                              pkey="person_id",
+                                              filterby="contact_method",
+                                              filterfor=["SMS"],
+                                              ))
 
         # Availability
         #add_component("hrm_availability",

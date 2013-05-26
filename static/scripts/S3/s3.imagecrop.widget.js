@@ -2,7 +2,7 @@ $(function () {
 	/* NOTE: Keep this in sync with s3.IMAGE_EXTENSIONS from 00_settings.py */
 	var IMAGE_EXTENSIONS = ['png', 'PNG', 'jpg', 'JPG', 'jpeg', 'JPEG', 'gif', 'GIF', 'tif', 'TIF', 'tiff', 'TIFF', 'bmp', 'BMP', 'raw', 'RAW'];
 
-	var isValidImagePathfunction = function(path) {
+	var isValidImagePath = function(path) {
 		var extension = path.split('.');
 		extension = extension[extension.length - 1];
 

@@ -2427,8 +2427,10 @@ def customize_pr_person(**attr):
                                               title=T("Office"),
                                               tooltip=T("If you don't see the Office in the list, you can add a new one by clicking link 'Add New Office'."))
 
+            # Best to have no labels when only 1 field in the row
             s3db.pr_contact.value.label = ""
             s3db.pr_image.image.label = ""
+            s3db.pr_image.image.widget = None
 
             hr_fields = ["organisation_id",
                          "job_title_id",
@@ -2462,8 +2464,7 @@ def customize_pr_person(**attr):
                         name = "phone",
                         label = MOBILE,
                         multiple = False,
-                        fields = ["value",
-                                  ],
+                        fields = ["value"],
                         filterby = dict(field = "contact_method",
                                         options = "SMS"
                                         )
@@ -2473,8 +2474,7 @@ def customize_pr_person(**attr):
                         name = "email",
                         label = EMAIL,
                         multiple = False,
-                        fields = ["value",
-                                  ],
+                        fields = ["value"],
                         filterby = dict(field = "contact_method",
                                         options = "EMAIL"
                                         )
@@ -2484,8 +2484,7 @@ def customize_pr_person(**attr):
                         name = "image",
                         label = T("Photo"),
                         multiple = False,
-                        fields = ["image",
-                                  ],
+                        fields = ["image"],
                     ),
                 )
 
