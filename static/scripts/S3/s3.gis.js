@@ -1213,7 +1213,7 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
                     return shape;
                 },
                 externalGraphic: function(feature) {
-                    var url;
+                    var url = '';
                     if (feature.cluster) {
                         // Clustered Point
                         // Just show shape not marker
@@ -1256,6 +1256,9 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
                                 }
                             });
                         }
+                    } else {
+                        // Use Layer Marker
+                        return marker_url;
                     }
                     return url;
                 },

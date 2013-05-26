@@ -826,6 +826,9 @@ class S3XML(S3Codec):
                     if row:
                         # Convert the WKT in XSLT
                         attr[ATTRIBUTE.wkt] = row.wkt
+                if row:
+                    # Locate the attributes
+                    row = row[tablename]
             else:
                 _fields = [table[f] for f in fields]
                 row = db(query).select(table[WKTFIELD],
@@ -936,7 +939,7 @@ class S3XML(S3Codec):
                         if format == "geojson":
                             # Do the Simplify & GeoJSON direct from the DB
                             row = db(query).select(ktable.the_geom.st_simplify(0.01).st_asgeojson(precision=4).with_alias("geojson"),
-                                                       limitby=(0, 1)).first()
+                                                   limitby=(0, 1)).first()
                             if row:
                                 # Output the GeoJSON directly into the XML, so that XSLT can simply drop in
                                 geometry = etree.SubElement(element, "geometry")
