@@ -451,7 +451,7 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
                 } else {
                     var active = false;
                 }
-                addPointControl(null, active);
+                addPointControl(map, null, active);
             }
         }
 
@@ -3497,7 +3497,7 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
             toolbar.addSeparator();
             //toolbar.add(selectButton);
             if (options.draw_feature) {
-                addPointControl(toolbar, point_pressed);
+                addPointControl(map, toolbar, point_pressed);
             }
             //toolbar.add(lineButton);
             if (options.draw_polygon) {
@@ -3916,8 +3916,7 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
     }
 
     // Point Control to add new Markers to the Map
-    var addPointControl = function(toolbar, active) {
-        var map = toolbar.map;
+    var addPointControl = function(map, toolbar, active) {
         OpenLayers.Handler.PointS3 = OpenLayers.Class(OpenLayers.Handler.Point, {
             // Ensure that we propagate Double Clicks (so we can still Zoom)
             dblclick: function(evt) {

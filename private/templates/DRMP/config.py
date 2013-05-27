@@ -1934,6 +1934,113 @@ def customize_hrm_job_title(**attr):
 settings.ui.customize_hrm_job_title = customize_hrm_job_title
 
 # -----------------------------------------------------------------------------
+def customize_org_office(**attr):
+    """
+        Customize org_office controller
+    """
+
+    s3 = current.response.s3
+    s3db = current.s3db
+    table = s3db.org_office
+    
+    # Custom PreP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+
+        if r.interactive:
+            # Configure fields
+            table.code.readable = table.code.writable = False
+            #table.office_type_id.readable = table.office_type_id.writable = False
+            table.phone1.readable = table.phone1.writable = False
+            table.phone2.readable = table.phone2.writable = False
+            table.email.readable = table.email.writable = False
+            table.fax.readable = table.fax.writable = False
+            location_field = table.location_id
+
+            # Filter from a Profile page?
+            # If so, then default the fields we know
+            get_vars = current.request.get_vars
+            location_id = get_vars.get("~.(location)", None)
+            organisation_id = get_vars.get("~.(organisation)", None)
+            if organisation_id:
+                org_field = table.organisation_id
+                org_field.default = organisation_id
+                org_field.readable = org_field.writable = False
+            if location_id:
+                location_field.default = location_id
+                location_field.readable = location_field.writable = False
+            else:
+                # Don't add new Locations here
+                location_field.comment = None
+                # L1s only
+                #location_field.requires = IS_ONE_OF(current.db, "gis_location.id",
+                #                                    S3Represent(lookup="gis_location"),
+                #                                    sort = True,
+                #                                    filterby = "level",
+                #                                    filter_opts = ["L1"]
+                #                                    )
+                # Simple dropdown
+                #location_field.widget = None
+                location_field.requires = IS_LOCATION_SELECTOR2(levels=["L1"])
+                location_field.widget = S3LocationSelectorWidget2(levels=["L1"],
+                                                                  show_address=True,
+                                                                  show_map=False)
+
+            s3db.configure("org_office",
+                           # Don't include a Create form in 'More' popups
+                           listadd = False,
+                           list_layout = render_offices,
+                           )
+
+            s3.cancel = True
+
+        return True
+    s3.prep = custom_prep
+
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        if r.interactive:
+            actions = [dict(label=str(T("Open")),
+                            _class="action-btn",
+                            url=URL(c="org", f="office",
+                                    args=["[id]", "read"]))
+                       ]
+            has_permission = current.auth.s3_has_permission
+            if has_permission("update", table):
+                actions.append(dict(label=str(T("Edit")),
+                                    _class="action-btn",
+                                    url=URL(c="org", f="office",
+                                            args=["[id]", "update"])))
+            if has_permission("delete", table):
+                actions.append(dict(label=str(T("Delete")),
+                                    _class="action-btn",
+                                    url=URL(c="org", f="office",
+                                            args=["[id]", "delete"])))
+            s3.actions = actions
+            if isinstance(output, dict):
+                if "form" in output:
+                    output["form"].add_class("org_office")
+                elif "item" in output and hasattr(output["item"], "add_class"):
+                    output["item"].add_class("org_office")
+
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        return output
+    s3.postp = custom_postp
+
+    return attr
+
+settings.ui.customize_org_office = customize_org_office
+
+# -----------------------------------------------------------------------------
 def customize_org_organisation(**attr):
     """
         Customize org_organisation controller
@@ -2184,109 +2291,6 @@ def customize_org_organisation(**attr):
     return attr
 
 settings.ui.customize_org_organisation = customize_org_organisation
-
-# -----------------------------------------------------------------------------
-def customize_org_office(**attr):
-    """
-        Customize org_office controller
-    """
-
-    s3 = current.response.s3
-    s3db = current.s3db
-    table = s3db.org_office
-    
-    # Custom PreP
-    standard_prep = s3.prep
-    def custom_prep(r):
-        # Call standard prep
-        if callable(standard_prep):
-            result = standard_prep(r)
-            if not result:
-                return False
-
-        if r.interactive:
-            # Configure fields
-            table.code.readable = table.code.writable = False
-            #table.office_type_id.readable = table.office_type_id.writable = False
-            table.phone1.readable = table.phone1.writable = False
-            table.phone2.readable = table.phone2.writable = False
-            table.email.readable = table.email.writable = False
-            table.fax.readable = table.fax.writable = False
-            location_field = table.location_id
-
-            # Filter from a Profile page?
-            # If so, then default the fields we know
-            get_vars = current.request.get_vars
-            location_id = get_vars.get("~.(location)", None)
-            organisation_id = get_vars.get("~.(organisation)", None)
-            if organisation_id:
-                org_field = table.organisation_id
-                org_field.default = organisation_id
-                org_field.readable = org_field.writable = False
-            if location_id:
-                location_field.default = location_id
-                location_field.readable = location_field.writable = False
-            else:
-                location_field.requires = IS_ONE_OF(current.db, "gis_location.id",
-                                                    S3Represent(lookup="gis_location"),
-                                                    sort = True,
-                                                    filterby = "level",
-                                                    filter_opts = ["L1"]
-                                                    )
-                # Don't add new Locations here
-                location_field.comment = None
-                # Simple dropdown
-                location_field.widget = None
-                
-
-            s3db.configure("org_office",
-                           # Don't include a Create form in 'More' popups
-                           listadd = False,
-                           list_layout = render_offices,
-                           )
-
-            s3.cancel = True
-
-        return True
-    s3.prep = custom_prep
-
-    # Custom postp
-    standard_postp = s3.postp
-    def custom_postp(r, output):
-        if r.interactive:
-            actions = [dict(label=str(T("Open")),
-                            _class="action-btn",
-                            url=URL(c="org", f="office",
-                                    args=["[id]", "read"]))
-                       ]
-            has_permission = current.auth.s3_has_permission
-            if has_permission("update", table):
-                actions.append(dict(label=str(T("Edit")),
-                                    _class="action-btn",
-                                    url=URL(c="org", f="office",
-                                            args=["[id]", "update"])))
-            if has_permission("delete", table):
-                actions.append(dict(label=str(T("Delete")),
-                                    _class="action-btn",
-                                    url=URL(c="org", f="office",
-                                            args=["[id]", "delete"])))
-            s3.actions = actions
-            if isinstance(output, dict):
-                if "form" in output:
-                    output["form"].add_class("org_office")
-                elif "item" in output and hasattr(output["item"], "add_class"):
-                    output["item"].add_class("org_office")
-
-        # Call standard postp
-        if callable(standard_postp):
-            output = standard_postp(r, output)
-
-        return output
-    s3.postp = custom_postp
-
-    return attr
-
-settings.ui.customize_org_office = customize_org_office
 
 # -----------------------------------------------------------------------------
 def customize_org_resource_fields(method):

@@ -1544,6 +1544,7 @@ class IS_LOCATION_SELECTOR2(Validator):
     def __call__(self, value):
 
         vars = current.request.post_vars
+        address = vars.get("address", None)
         lat = vars.get("lat", None)
         lon = vars.get("lon", None)
         parent = vars.get("parent", None)
@@ -1562,7 +1563,7 @@ class IS_LOCATION_SELECTOR2(Validator):
         if errors:
             return (value, errors)
 
-        if lat and lon:
+        if address or (lat is not None and lon is not None):
             # Specific Location
             db = current.db
             table = db.gis_location
@@ -1572,6 +1573,7 @@ class IS_LOCATION_SELECTOR2(Validator):
                     return (None, current.auth.messages.access_denied)
                 vars = Storage(lat=lat,
                                lon=lon,
+                               addr_street=address,
                                parent=parent,
                                )
                 # onvalidation
@@ -1599,18 +1601,21 @@ class IS_LOCATION_SELECTOR2(Validator):
                         (table.level == None) # NB Specific Locations only
                 location = db(query).select(table.lat,
                                             table.lon,
+                                            table.addr_street,
                                             table.parent,
                                             limitby=(0, 1)).first()
                 if location:
                     # Float comparisons need care - just check the 1st 5 decimal points, as that's all we care about
-                    if round(lat, 5) != round(location.lat, 5) or \
-                       round(lon, 5) != round(location.lon, 5) or \
-                       int(parent) != int(location.parent):
+                    if address != location.addr_street or \
+                       int(parent) != int(location.parent) or \
+                       (lat is not None and round(lat, 5) != round(location.lat, 5)) or \
+                       (lon is not None and round(lon, 5) != round(location.lon, 5)):
                         # Update the record
                         if not current.auth.s3_has_permission("update", table, record_id=value):
                             return (value, current.auth.messages.access_denied)
                         vars = Storage(lat=lat,
                                        lon=lon,
+                                       addr_street=address,
                                        parent=parent,
                                        )
                         # onvalidation

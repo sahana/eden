@@ -32,9 +32,11 @@ var s3_gis_locationselector2 = function(fieldname, L0, L1, L2, L3, L4, L5, speci
     var L3_row = $(selector + '_L3__row');
     var L4_row = $(selector + '_L4__row');
     var L5_row = $(selector + '_L5__row');
+    var address_row = $(selector + '_address__row');
     var error_row = real_input.next('.error_wrapper');
     $(selector + '__row').hide()
                          .after(map_div)
+                         .after(address_row)
                          .after(L5_row)
                          .after(L4_row)
                          .after(L3_row)
@@ -90,22 +92,28 @@ function lx_select(fieldname, level, id) {
     var selector = '#' + fieldname;
     var real_input = $(selector);
 
-    // Clear the Lat/Lon fields after storing the current value
+    // Clear the Address & Lat/Lon fields after storing the current value
     // - need to clear for IS_LOCATION_SELECTOR2
+    var addressfield = $(selector + '_address');
     var latfield = $(selector + '_lat');
     var lonfield = $(selector + '_lon');
+    var address = addressfield.val();
     var lat = latfield.val();
     var lon = lonfield.val();
+    if (address) {
+        addressfield.data('address', address).val('');
+    }
     if (lat) {
-        latfield.data('lat', lat);
+        latfield.data('lat', lat).val('');
     }
     if (lon) {
-        lonfield.data('lon', lon);
+        lonfield.data('lon', lon).val('');
     }
-    latfield.val('');
-    lonfield.val('');
-    // Hide Map
-    $(selector + '_map_wrapper').hide();
+    // Hide Map & Address
+    var map_wrapper = $(selector + '_map_wrapper');
+    map_wrapper.hide();
+    var addressrow = $(selector + '_address__row');
+    addressrow.hide();
     if (id) {
         // Set this dropdown to this value
         // - this is being set from outside the dropdown, e.g. an update form or using a visible default location
@@ -173,8 +181,14 @@ function lx_select(fieldname, level, id) {
                 select.append(option);
             }
         } else {
-            // We're at the top of the hierarchy so show the map so we can display/select a specific point
-            $(selector + '_map_wrapper').show();
+            // We're at the top of the hierarchy so show the address &/or map so we can display/select a specific point
+            addressrow.show();
+            if (map_wrapper.length) {
+                map_wrapper.show();
+                var show_map = true;
+            } else {
+                var show_map = false;
+            }
             // Store the parent
             $(selector + '_parent').val(id);
             // If we already have a specific location, then keep it
@@ -182,83 +196,103 @@ function lx_select(fieldname, level, id) {
             if (specific) {
                 real_input.val(specific);
             }
+            var address = addressfield.data('address');
+            if (address) {
+                addressfield.val(address);
+                if (!specific) {
+                    // We are creating a new Specific location
+                    // Dummify the real input (need this for IS_LOCATION_SELECTOR2 to differentiate create/update)
+                    real_input.val('dummy');
+                }
+            } else {
+                addressfield.change(function() {
+                    if (!specific) {
+                        // We are creating a new Specific location
+                        // Dummify the real input (need this for IS_LOCATION_SELECTOR2 to differentiate create/update)
+                        real_input.val('dummy');
+                    }
+                });
+            }
+            $(selector + '_parent').val(id);
             var lat = latfield.data('lat');
             var lon = lonfield.data('lon');
             if (lat != undefined) {
                 latfield.val(lat);
                 lonfield.val(lon);
             }
-            var map_id = 'location_selector_' + fieldname;
-            if (!S3.gis.maps || !S3.gis.maps[map_id]) {
-                // Instantiate the Map as we couldn't do it when DIV is hidden
-                var map = S3.gis.show_map(map_id, {});
-                if (lat != undefined) {
-                    // Display feature
-                    var geometry = new OpenLayers.Geometry.Point(parseFloat(lon), parseFloat(lat));
-                    geometry.transform(S3.gis.proj4326, map.getProjectionObject());
-                    var feature = new OpenLayers.Feature.Vector(geometry);
-                    map.s3.draftLayer.addFeatures([feature]);
-                    if (!specific) {
-                        // This is a Create form with a validation error
-                        // Dummify the real input (need this for IS_LOCATION_SELECTOR2 to differentiate create/update)
-                        real_input.val('dummy');
-                    }
-                }
-                // Watch for new points being selected, so that we can store the Lat/Lon
-                var control;
-                var controls = map.controls;
-                for (var i=0, len=controls.length; i < len; i++) {
-                    if (controls[i].CLASS_NAME == 'OpenLayers.Control.DrawFeature') {
-                        control = controls[i];
-                    }
-                }
-                if (control) {
-                    var updateForm = function(event) {
-                        var centerPoint = event.feature.geometry.getBounds().getCenterLonLat();
-                        centerPoint.transform(map.getProjectionObject(), S3.gis.proj4326);
-                        latfield.val(centerPoint.lat);
-                        lonfield.val(centerPoint.lon);
+            if (show_map) {
+                var map_id = 'location_selector_' + fieldname;
+                if (!S3.gis.maps || !S3.gis.maps[map_id]) {
+                    // Instantiate the Map as we couldn't do it when DIV is hidden
+                    var map = S3.gis.show_map(map_id, {});
+                    if (lat != undefined) {
+                        // Display feature
+                        var geometry = new OpenLayers.Geometry.Point(parseFloat(lon), parseFloat(lat));
+                        geometry.transform(S3.gis.proj4326, map.getProjectionObject());
+                        var feature = new OpenLayers.Feature.Vector(geometry);
+                        map.s3.draftLayer.addFeatures([feature]);
                         if (!specific) {
-                            // We are creating a new Specific location
+                            // This is a Create form with a validation error
                             // Dummify the real input (need this for IS_LOCATION_SELECTOR2 to differentiate create/update)
                             real_input.val('dummy');
                         }
                     }
-                    control.events.register('featureadded', null, updateForm);
+                    // Watch for new points being selected, so that we can store the Lat/Lon
+                    var control;
+                    var controls = map.controls;
+                    for (var i=0, len=controls.length; i < len; i++) {
+                        if (controls[i].CLASS_NAME == 'OpenLayers.Control.DrawFeature') {
+                            control = controls[i];
+                        }
+                    }
+                    if (control) {
+                        var updateForm = function(event) {
+                            var centerPoint = event.feature.geometry.getBounds().getCenterLonLat();
+                            centerPoint.transform(map.getProjectionObject(), S3.gis.proj4326);
+                            latfield.val(centerPoint.lat);
+                            lonfield.val(centerPoint.lon);
+                            if (!specific) {
+                                // We are creating a new Specific location
+                                // Dummify the real input (need this for IS_LOCATION_SELECTOR2 to differentiate create/update)
+                                real_input.val('dummy');
+                            }
+                        }
+                        control.events.register('featureadded', null, updateForm);
+                    }
+                } else {
+                    // Map already-showing
+                    var map = S3.gis.maps[map_id];
                 }
-            } else {
-                // Map already-showing
-                var map = S3.gis.maps[map_id];
-            }
-            // Zoom to extent of the Lx, if we have it
-            var bounds = l[id].b;
-            if (!bounds) {
-                // Try the parent
-                var parent = l[id].f;
-                parent = l[parent];
-                if (parent) {
-                    bounds = parent.b;
-                    if (!bounds) {
-                        // Try the grandparent
-                        var grandparent = parent.f;
-                        grandparent = l[grandparent];
-                        if (grandparent) {
-                            bounds = grandparent.b;
-                            if (!bounds) {
-                                // Try the greatgrandparent
-                                var greatgrandparent = grandparent.f;
-                                greatgrandparent = l[greatgrandparent];
-                                if (greatgrandparent) {
-                                    bounds = greatgrandparent.b;
+                // Zoom to extent of the Lx, if we have it
+                var bounds = l[id].b;
+                if (!bounds) {
+                    // Try the parent
+                    var parent = l[id].f;
+                    parent = l[parent];
+                    if (parent) {
+                        bounds = parent.b;
+                        if (!bounds) {
+                            // Try the grandparent
+                            var grandparent = parent.f;
+                            grandparent = l[grandparent];
+                            if (grandparent) {
+                                bounds = grandparent.b;
+                                if (!bounds) {
+                                    // Try the greatgrandparent
+                                    var greatgrandparent = grandparent.f;
+                                    greatgrandparent = l[greatgrandparent];
+                                    if (greatgrandparent) {
+                                        bounds = greatgrandparent.b;
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
-            if (bounds) {
-                bounds = OpenLayers.Bounds.fromArray(bounds).transform(S3.gis.proj4326, map.getProjectionObject());
-                map.zoomToExtent(bounds);
+                if (bounds) {
+                    bounds = OpenLayers.Bounds.fromArray(bounds).transform(S3.gis.proj4326, map.getProjectionObject());
+                    map.zoomToExtent(bounds);
+                }
             }
         }
     } else {
