@@ -36,23 +36,15 @@
 }
 
 /* Layer Tree */
-.x-tree-node-icon {
-    display: none;
-}
-
-.x-tree-node-anchor {
-    padding-left: 5px;
-}
-
 /* Radio
 input.x-tree-node-cb {
     margin-left: 6px;
 } */
 
+/*
 .x-tree-node {
-    font-size: 12px;
-    /* padding: 2px; */
-}
+    padding: 2px;
+} */
 
 /* Toolbar */
 /*

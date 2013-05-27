@@ -63,6 +63,13 @@ div.dl {
 .dl-header {
     display: none;
 }
+/* Override Bootstrap */
+.dl-2-cols {
+    margin-left: 0;
+}
+.dl-col-0 {
+    margin-right: 8px;
+}
 
 #cms_post_body.text.input-xlarge {
     height: 100px;

@@ -153,6 +153,7 @@ h4.profile-sub-header {
 .main_contact_email,
 .main_office-add,
 .main_contact {
+    height: 12px; /* Height needs to be same with or without contents */
     font-size: 12px;
     padding-top: 4px;
 }
