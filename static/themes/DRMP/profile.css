@@ -1,6 +1,3 @@
-/* @override 
-	http://127.0.0.1:8000/eden/static/themes/DRMP/profile.css */
-
 @charset "UTF-8";
 
 /* Profile Page */
@@ -157,7 +154,7 @@ h4.profile-sub-header {
 .main_office-add,
 .main_contact {
     font-size: 12px;
-	padding-top: 4px;
+    padding-top: 4px;
 }
 
 .person_pos {
@@ -167,22 +164,21 @@ h4.profile-sub-header {
     margin-bottom: 3px;
 }
 
-div.card-holder .thumbnail {
-	margin-bottom: 0;
-	border-radius: 0px;
-	padding-bottom: 10px;
-	padding-top: 5px;
-	-moz-box-shadow: 0 -1px 3px #cccccb;
-	-webkit-box-shadow: 0 -1px 3px #cccccb;
-	box-shadow: 0 -1px 3px #cccccb;
+.card-holder .thumbnail {
+    margin-bottom: 0;
+    border-radius: 0px;
+    padding-bottom: 10px;
+    padding-top: 5px;
+    -moz-box-shadow: 0 -1px 3px #cccccb;
+    -webkit-box-shadow: 0 -1px 3px #cccccb;
+    box-shadow: 0 -1px 3px #cccccb;
 }
 
-a.s3_modal button.btn.btn-mini {
-	margin-left: auto;
-	margin-right: auto;
-	margin-top: 15px;
+.s3_modal button.btn.btn-mini {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 15px;
 }
-
 
 /* Profile selection pages */
 .badge {
@@ -208,6 +204,6 @@ a.s3_modal button.btn.btn-mini {
 .tally {
     font-size: 10px;
     color: #888787;
-	padding-top: 7px;
-	padding-bottom: 4px;
+    padding-top: 7px;
+    padding-bottom: 4px;
 }
