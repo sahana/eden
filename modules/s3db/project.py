@@ -4366,13 +4366,13 @@ class S3ProjectTaskModel(S3Model):
         if settings.get_project_milestones():
             # Use the field in this format to get the custom represent
             list_fields.insert(3, (T("Milestone"), "task_id$task_milestone.milestone_id"))
-            advanced_task_search.insert(3, S3SearchOptionsWidget(
-                                            name = "task_search_milestone",
-                                            label = T("Milestone"),
-                                            field = "task_id$task_milestone.milestone_id",
-                                            options = self.project_task_milestone_opts,
-                                            cols = 3
-                                            ))
+            task_time_search.insert(3, S3SearchOptionsWidget(
+                                    name = "task_search_milestone",
+                                    label = T("Milestone"),
+                                    field = "task_id$task_milestone.milestone_id",
+                                    options = self.project_task_milestone_opts,
+                                    cols = 3
+                                   ))
 
         report_fields = list_fields + \
                         [(T("Day"), "day"),
