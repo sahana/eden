@@ -33,7 +33,7 @@ h4.latest-updates {
 
 /* Show a border around active disasters */
 .thumbnail.disaster {
-    border: 3px solid #f8c464;
+    border: 3px solid #E67E22;
 }
 
 /* Cards */

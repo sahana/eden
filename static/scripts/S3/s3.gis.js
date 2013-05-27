@@ -1546,7 +1546,7 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
                 }
                 if (undefined != elem.cat) {
                     // Category-based style
-                    title = elem.cat;
+                    title = elem.label || elem.cat;
                     filter = new OpenLayers.Filter.Comparison({
                         type: OpenLayers.Filter.Comparison.EQUAL_TO,
                         property: attrib,
@@ -1554,7 +1554,7 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
                     });
                 } else {
                     // Range-based Style
-                    title = elem.low + '-' + elem.high; 
+                    title = elem.label || (elem.low + '-' + elem.high);
                     filter = new OpenLayers.Filter.Comparison({
                         type: OpenLayers.Filter.Comparison.BETWEEN,
                         property: attrib,

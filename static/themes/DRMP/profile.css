@@ -112,8 +112,8 @@ h4.profile-sub-header {
 }
 
 .card-holder .card_comments {
-    font: 14px/19px "Georgia", Times;
-    color: #5c5c5c;
+    font: 13px/17px "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
+    word-spacing: -1px;
     padding-top: 6px;
 }
 
@@ -153,8 +153,9 @@ h4.profile-sub-header {
 .main_contact_email,
 .main_office-add,
 .main_contact {
+    height: 12px; /* Height needs to be same with or without contents */
     font-size: 12px;
-
+    padding-top: 4px;
 }
 
 .person_pos {
@@ -164,14 +165,30 @@ h4.profile-sub-header {
     margin-bottom: 3px;
 }
 
+.card-holder .thumbnail {
+    margin-bottom: 0;
+    border-radius: 0px;
+    padding-bottom: 10px;
+    padding-top: 5px;
+    -moz-box-shadow: 0 -1px 3px #cccccb;
+    -webkit-box-shadow: 0 -1px 3px #cccccb;
+    box-shadow: 0 -1px 3px #cccccb;
+}
+
+.s3_modal button.btn.btn-mini {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 15px;
+}
+
 /* Profile selection pages */
 .badge {
     font-size: 11px;
     border-radius: 2px;
     margin-left: 3px;
     margin-right: 5px;
-    background-color: #c9c9c9;
-    text-shadow: 0 0 3px #6a6a67;
+    background-color: #d2d3d3;
+    text-shadow: 0 0 2px #7b7b7b;
     border: 1px solid #b0b0ac;
     display: inline-block;
     width: 25px;
@@ -188,4 +205,6 @@ h4.profile-sub-header {
 .tally {
     font-size: 10px;
     color: #888787;
+    padding-top: 7px;
+    padding-bottom: 4px;
 }

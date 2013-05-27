@@ -795,6 +795,7 @@ def render_organisations(listid, resource, rfields, record, **attr):
     raw = record._row
     name = record["org_organisation.name"]
     logo = raw["org_organisation.logo"]
+    # @ToDo: Just take National offices
     addresses = raw["gis_location.addr_street"]
     if addresses:
         if isinstance(addresses, list):
@@ -1952,9 +1953,11 @@ def customize_org_organisation(**attr):
 
         if r.interactive:
 
-            # 2-column datalist, 6 rows per page
-            s3.dl_pagelength = 12
-            s3.dl_rowsize = 2
+            list_fields = ["id",
+                           "name",
+                           "logo",
+                           "phone",
+                           ]
 
             s3db = current.s3db
             if r.method == "profile":
@@ -1995,6 +1998,120 @@ def customize_org_organisation(**attr):
                                list_fields = list_fields,
                                )
 
+                contacts_widget = dict(label = "Contacts",
+                                       title_create = "Add New Contact",
+                                       type = "datalist",
+                                       tablename = "hrm_human_resource",
+                                       context = "organisation",
+                                       create_controller = "pr",
+                                       create_function = "person",
+                                       icon = "icon-contact",
+                                       show_on_map = False, # Since they will show within Offices
+                                       list_layout = render_contacts,
+                                       )
+                map_widget = dict(label = "Map",
+                                  type = "map",
+                                  context = "organisation",
+                                  icon = "icon-map",
+                                  height = 383,
+                                  width = 568,
+                                  )
+                offices_widget = dict(label = "Offices",
+                                      title_create = "Add New Office",
+                                      type = "datalist",
+                                      tablename = "org_office",
+                                      context = "organisation",
+                                      icon = "icon-home",
+                                      layer = "Offices",
+                                      # provided by Catalogue Layer
+                                      #marker = "office",
+                                      list_layout = render_offices,
+                                      )
+                resources_widget = dict(label = "Resources",
+                                        title_create = "Add New Resource",
+                                        type = "datalist",
+                                        tablename = "org_resource",
+                                        context = "organisation",
+                                        icon = "icon-resource",
+                                        show_on_map = False, # No Marker yet & only show at L1-level anyway
+                                        list_layout = render_resources,
+                                        )
+                projects_widget = dict(label = "Projects",
+                                       title_create = "Add New Project",
+                                       type = "datalist",
+                                       tablename = "project_project",
+                                       context = "organisation",
+                                       icon = "icon-project",
+                                       show_on_map = False, # No Marker yet & only show at L1-level anyway
+                                       list_layout = render_projects,
+                                       )
+                activities_widget = dict(label = "Activities",
+                                         title_create = "Add New Activity",
+                                         type = "datalist",
+                                         tablename = "cms_post",
+                                         context = "organisation",
+                                         filter = S3FieldSelector("series_id$name") == "Activity",
+                                         icon = "icon-activity",
+                                         layer = "Activities",
+                                         # provided by Catalogue Layer
+                                         #marker = "activity",
+                                         list_layout = render_profile_posts,
+                                         )
+                reports_widget = dict(label = "Reports",
+                                      title_create = "Add New Report",
+                                      type = "datalist",
+                                      tablename = "cms_post",
+                                      context = "organisation",
+                                      filter = S3FieldSelector("series_id$name") == "Report",
+                                      icon = "icon-report",
+                                      layer = "Reports",
+                                      # provided by Catalogue Layer
+                                      #marker = "report",
+                                      list_layout = render_profile_posts,
+                                      )
+                assessments_widget = dict(label = "Assessments",
+                                          title_create = "Add New Assessment",
+                                          type = "datalist",
+                                          tablename = "cms_post",
+                                          context = "organisation",
+                                          filter = S3FieldSelector("series_id$name") == "Assessment",
+                                          icon = "icon-assessment",
+                                          layer = "Assessments",
+                                          # provided by Catalogue Layer
+                                          #marker = "assessment",
+                                          list_layout = render_profile_posts,
+                                          )
+                s3db.configure("org_organisation",
+                               profile_widgets=[contacts_widget,
+                                                map_widget,
+                                                offices_widget,
+                                                resources_widget,
+                                                projects_widget,
+                                                activities_widget,
+                                                reports_widget,
+                                                assessments_widget,
+                                                ]
+                               )
+            elif r.method == "datalist":
+                # Stakeholder selection page
+                # 2-column datalist, 6 rows per page
+                s3.dl_pagelength = 12
+                s3.dl_rowsize = 2
+
+                # Add a component of just National offices for the Org address
+                ottable = s3db.org_office_type
+                query = (ottable.name == "National")
+                national = current.db(query).select(ottable.id,
+                                                    limitby=(0, 1)
+                                                    ).first().id
+                s3db.add_component("org_office",
+                                   org_organisation=dict(name="nat_office",
+                                                         joinby="organisation_id",
+                                                         filterby="office_type_id",
+                                                         filterfor=[national],
+                                                         ))
+                list_fields.append("nat_office.location_id$addr_street")
+
             # Represent used in rendering
             current.auth.settings.table_user.organisation_id.represent = s3db.org_organisation_represent
 
@@ -2010,89 +2127,6 @@ def customize_org_organisation(**attr):
             table.twitter.readable = table.twitter.writable = False
             table.donation_phone.readable = table.donation_phone.writable = False
             
-            contacts_widget = dict(label = "Contacts",
-                                   title_create = "Add New Contact",
-                                   type = "datalist",
-                                   tablename = "hrm_human_resource",
-                                   context = "organisation",
-                                   create_controller = "pr",
-                                   create_function = "person",
-                                   icon = "icon-contact",
-                                   show_on_map = False, # Since they will show within Offices
-                                   list_layout = render_contacts,
-                                   )
-            map_widget = dict(label = "Map",
-                              type = "map",
-                              context = "organisation",
-                              icon = "icon-map",
-                              height = 383,
-                              width = 568,
-                              )
-            offices_widget = dict(label = "Offices",
-                                  title_create = "Add New Office",
-                                  type = "datalist",
-                                  tablename = "org_office",
-                                  context = "organisation",
-                                  icon = "icon-home",
-                                  layer = "Offices",
-                                  # provided by Catalogue Layer
-                                  #marker = "office",
-                                  list_layout = render_offices,
-                                  )
-            resources_widget = dict(label = "Resources",
-                                    title_create = "Add New Resource",
-                                    type = "datalist",
-                                    tablename = "org_resource",
-                                    context = "organisation",
-                                    icon = "icon-resource",
-                                    show_on_map = False, # No Marker yet & only show at L1-level anyway
-                                    list_layout = render_resources,
-                                    )
-            projects_widget = dict(label = "Projects",
-                                   title_create = "Add New Project",
-                                   type = "datalist",
-                                   tablename = "project_project",
-                                   context = "organisation",
-                                   icon = "icon-project",
-                                   show_on_map = False, # No Marker yet & only show at L1-level anyway
-                                   list_layout = render_projects,
-                                   )
-            activities_widget = dict(label = "Activities",
-                                     title_create = "Add New Activity",
-                                     type = "datalist",
-                                     tablename = "cms_post",
-                                     context = "organisation",
-                                     filter = S3FieldSelector("series_id$name") == "Activity",
-                                     icon = "icon-activity",
-                                     layer = "Activities",
-                                     # provided by Catalogue Layer
-                                     #marker = "activity",
-                                     list_layout = render_profile_posts,
-                                     )
-            reports_widget = dict(label = "Reports",
-                                  title_create = "Add New Report",
-                                  type = "datalist",
-                                  tablename = "cms_post",
-                                  context = "organisation",
-                                  filter = S3FieldSelector("series_id$name") == "Report",
-                                  icon = "icon-report",
-                                  layer = "Reports",
-                                  # provided by Catalogue Layer
-                                  #marker = "report",
-                                  list_layout = render_profile_posts,
-                                  )
-            assessments_widget = dict(label = "Assessments",
-                                      title_create = "Add New Assessment",
-                                      type = "datalist",
-                                      tablename = "cms_post",
-                                      context = "organisation",
-                                      filter = S3FieldSelector("series_id$name") == "Assessment",
-                                      icon = "icon-assessment",
-                                      layer = "Assessments",
-                                      # provided by Catalogue Layer
-                                      #marker = "assessment",
-                                      list_layout = render_profile_posts,
-                                      )
             # Return to List view after create/update/delete (unless done via Modal)
             url_next = URL(c="org", f="organisation", args="datalist")
 
@@ -2100,22 +2134,10 @@ def customize_org_organisation(**attr):
                            create_next = url_next,
                            delete_next = url_next,
                            update_next = url_next,
-                           list_fields = ["id",
-                                          "name",
-                                          "logo",
-                                          "phone",
-                                          "office.location_id$addr_street",
-                                          ],
+                           # We want the Create form to be in a modal, not inline, for consistency
+                           listadd = False,
+                           list_fields = list_fields,
                            list_layout = render_organisations,
-                           profile_widgets=[contacts_widget,
-                                            map_widget,
-                                            offices_widget,
-                                            resources_widget,
-                                            projects_widget,
-                                            activities_widget,
-                                            reports_widget,
-                                            assessments_widget,
-                                            ],
                            )
 
             ADD_ORGANISATION = T("New Stakeholder")
@@ -2136,6 +2158,28 @@ def customize_org_organisation(**attr):
 
         return True
     s3.prep = custom_prep
+
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        if r.interactive and \
+           current.auth.s3_has_permission("create", r.table):
+            # Insert a Button to Create New in Modal
+            output["showadd_btn"] = A(I(_class="icon icon-plus-sign big-add"),
+                                      _href=URL(c="org", f="organisation",
+                                                args=["create.popup"],
+                                                vars={"refresh":"datalist"}),
+                                      _class="btn btn-primary s3_modal",
+                                      _role="button",
+                                      _title=T("Add New Organization"),
+                                      )
+
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        return output
+    s3.postp = custom_postp
 
     return attr
 
@@ -2163,7 +2207,7 @@ def customize_org_office(**attr):
         if r.interactive:
             # Configure fields
             table.code.readable = table.code.writable = False
-            table.office_type_id.readable = table.office_type_id.writable = False
+            #table.office_type_id.readable = table.office_type_id.writable = False
             table.phone1.readable = table.phone1.writable = False
             table.phone2.readable = table.phone2.writable = False
             table.email.readable = table.email.writable = False

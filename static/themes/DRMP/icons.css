@@ -220,7 +220,7 @@ you can use the generic selector below, but it's slower:
     display: inline-block;
     color: #413b3b;
     padding-left: 1px;
-    width: 106px;
+    width: 16px;
 }
 
 /* Icons still coming from font-awesome */

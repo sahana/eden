@@ -27,15 +27,12 @@ form {
 }
 
 /* Over-ride Bootstrap */
-.gis-map-window img,
-.map_wrapper img {
-    max-width: none;
-}
 
 .form-horizontal .map_wrapper {
     margin-left: 20px;
 }
 
+/* Web2Py styles Inputs as x-largem, which don't match other form inputs */
 .input-xlarge {
     -moz-box-sizing: inherit;
     min-height: inherit;
@@ -65,6 +62,13 @@ div.dl {
 }
 .dl-header {
     display: none;
+}
+/* Override Bootstrap */
+.dl-2-cols {
+    margin-left: 0;
+}
+.dl-col-0 {
+    margin-right: 8px;
 }
 
 #cms_post_body.text.input-xlarge {

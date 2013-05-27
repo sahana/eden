@@ -1,0 +1,58 @@
+/* Map */
+
+/* Over-ride Bootstrap: Tile images */
+.gis-map-window img,
+.map_wrapper img {
+    max-width: none;
+}
+
+/* Map DIV */
+/* Doesn't seem to do anything
+.x-border-layout-ct {
+    border: 1px solid #cbcaca;
+} */
+
+/* West Panel */
+.x-panel-body {
+    background-color: #f5f6f5;
+}
+
+/* Section headers */
+.x-panel-header {
+    text-indent: 4px;
+    padding: 5px;
+    font: bold 12px/21px 'Open Sans', sans-serif;
+    text-transform: uppercase;
+    color: #656665;
+    background-image: -webkit-gradient(linear,0 0,0 100%,from(#f9f9f9),to(#f2f2f2));
+    background-image: -moz-linear-gradient(center top,#f9f9f9,#f2f2f2);
+    border: none;
+    border-bottom: 1px solid #dedede;
+}
+
+/* Collapse arrow in section headers */
+.x-tool {
+    margin-top: 2px;
+}
+
+/* Layer Tree */
+/* Radio
+input.x-tree-node-cb {
+    margin-left: 6px;
+} */
+
+/*
+.x-tree-node {
+    padding: 2px;
+} */
+
+/* Toolbar */
+/*
+.x-toolbar.x-small-editor.x-toolbar-layout-ct {
+    display: none;
+}*/
+
+/* ext-gen IDs assigned dynamically, so need to fins another way to identify this
+div#ext-gen19 {
+    border-style: none;
+} */

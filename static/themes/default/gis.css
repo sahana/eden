@@ -17,6 +17,17 @@
     padding-top: 8px;
 }
 
+/* LayerTree */
+.x-tree-node-icon {
+    display: none;
+}
+.x-tree-node-anchor {
+    padding-left: 5px;
+}
+.x-tree-node {
+    font-size: 12px;
+}
+
 /* Current Coordinates */
 .olControlMousePosition {
     font-size: 10px;

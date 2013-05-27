@@ -1,4 +1,4 @@
 Name,Description,Shapefile,Projection,Style,Symbology,Marker,Filter,Folder,Config,Enabled,Visible,Cluster Distance,Cluster Threshold
 Airports,,http://tldrmp.aidiq.com/eden/static/prepop/Airport_Seaport.zip,4326,,DRMP,airport,"Class__like=*Airport",Infrastructure,,True,False,,
 Seaports,,http://tldrmp.aidiq.com/eden/static/prepop/Airport_Seaport.zip,4326,,DRMP,seaport,"Class=Main Seaport,Medium Seaport,Small Port",Infrastructure,,True,False,,
-Coastal Erosion,,http://tldrmp.aidiq.com/eden/static/prepop/erosion.zip,4326,"[{'attrib':'LAYER','cat':'1','stroke':'FFFF00','stroke_width':6},{'attrib':'LAYER','cat':'2','stroke':'FFA500','stroke_width':6},{'attrib':'LAYER','cat':'3','stroke':'FF0000','stroke_width':6}]",,,,Risks,,True,False,1,3
+Coastal Erosion,,http://tldrmp.aidiq.com/eden/static/prepop/erosion.zip,4326,"[{'attrib':'LAYER','cat':'1','label':'Low','stroke':'FFFF00','stroke_width':6},{'attrib':'LAYER','cat':'2','label':'Moderate','stroke':'FFA500','stroke_width':6},{'attrib':'LAYER','cat':'3','label':'High','stroke':'FF0000','stroke_width':6}]",,,,Risks,,True,False,1,3

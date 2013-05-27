@@ -2005,6 +2005,7 @@ class S3LayerEntityModel(S3Model):
         #   cat: string,    //* Value used to colour the element
         #   low: float,     //* Low value of the range of values used for this colour rule
         #   high: float,    //* High value of the range of values used for this colour rule
+        #   label: string,  //* Optional label for the Category/Range (fallas back to cat or 'low - high')
         #   external_graphic: string, //* Marker to load from /static/path/to/marker.png
         #   fill: string,   //*
         #   fill_opacity: float, //*
