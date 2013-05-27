@@ -1,3 +1,6 @@
+/* @override 
+	http://127.0.0.1:8000/eden/static/themes/DRMP/style.css */
+
 body {
     font: 14px/21px 'Open Sans', sans-serif;
     color: #666;
@@ -617,3 +620,80 @@ a.action-btn:hover {
     padding-top: 15px;
     padding-left: 12px;
 }
+
+
+
+/*--Maps .CSS--*/
+
+
+.x-panel-header{
+	text-indent: 4px;
+	padding: 5px;
+	font: bold 12px/21px 'Open Sans', sans-serif;
+	text-transform: uppercase;
+	color: #656665;
+	background-image: -webkit-gradient(linear,0 0,0 100%,from(#f9f9f9),to(#f2f2f2));
+	background-image: -moz-linear-gradient(center top,#f9f9f9,#f2f2f2);
+	border: none;
+	border-bottom: 1px solid #dedede;
+
+}
+
+.x-panel-body {
+	background-color: #f5f6f5;
+}
+
+.x-border-layout-ct{
+	border: 1px solid #cbcaca;
+}
+
+.x-tool{
+	margin-top: 2px;
+}
+
+
+li.x-tree-node {
+	padding: 3px;
+	font-size: 12px;
+	
+}
+
+a.x-tree-node-anchor {
+	padding-left: 5px;
+}
+
+
+input.x-tree-node-cb {
+	margin-left: 6px;
+}
+
+
+li.x-tree-node {
+	padding: 2px;
+	font-size: 12px;
+	
+}
+
+.x-tree-node-leaf .x-tree-node-icon {
+	display: none;
+}
+
+a.x-tree-node-anchor {
+	padding-left: 5px;
+}
+
+input.x-tree-node-cb {
+	margin-left: 6px;
+}
+
+div#ext-comp-1002.x-toolbar.x-small-editor.x-toolbar-layout-ct {
+	display: none;
+}
+
+div#ext-gen19 {
+	border-style: none;
+}
+
+
+
+
