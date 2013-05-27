@@ -364,6 +364,7 @@ def render_posts(listid, resource, rfields, record, **attr):
         @param attr: additional HTML attributes for the item
     """
 
+    T = current.T
     pkey = "cms_post.id"
 
     # Construct the item ID
@@ -444,7 +445,7 @@ def render_posts(listid, resource, rfields, record, **attr):
                                vars={"refresh": listid,
                                      "record": record_id}),
                      _class="s3_modal",
-                     _title=current.response.s3.crud_strings.cms_post.title_update,
+                     _title=T("Edit %(type)s") % dict(type=T(series)),
                      )
     else:
         edit_btn = ""
@@ -501,7 +502,7 @@ def render_posts(listid, resource, rfields, record, **attr):
     # Render the item
     item = DIV(DIV(I(_class="icon icon-%s" % series.lower().replace(" ", "_"),
                      ),
-                   SPAN(" %s" % current.T(series),
+                   SPAN(" %s" % T(series),
                         _class="card-title"
                         ),
                    SPAN(A(location,
@@ -637,6 +638,7 @@ def render_cms_events(listid, resource, rfields, record, **attr):
         @param attr: additional HTML attributes for the item
     """
 
+    T = current.T
     pkey = "cms_post.id"
 
     # Construct the item ID
@@ -695,7 +697,7 @@ def render_cms_events(listid, resource, rfields, record, **attr):
                                vars={"refresh": listid,
                                      "record": record_id}),
                      _class="s3_modal",
-                     _title=current.response.s3.crud_strings.cms_post.title_update,
+                     _title=T("Edit Event"),
                      )
     else:
         edit_btn = ""
@@ -747,7 +749,7 @@ def render_cms_events(listid, resource, rfields, record, **attr):
         docs = ""
 
     # Render the item
-    item = DIV(DIV(I(SPAN(" %s" % current.T(series),
+    item = DIV(DIV(I(SPAN(" %s" % T("Event"),
                           _class="card-title",
                           ),
                      _class="icon icon-%s" % series.lower().replace(" ", "_"),

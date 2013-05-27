@@ -14,7 +14,8 @@
  <div class='carousel-caption'>
   <h1>{{=T("Monitoring and improving disaster management")}}<br></h1>
   <p>{{=T("Monitoring and improving disaster response and preparedness in Timor-Leste.")}}</p>
-  <a href='/{{=appname}}/default/user/login' class='btn btn-custom btn-login'><i class='icon-signin'></i> {{=T("LOGIN")}} </a></p>
+  {{if not auth.is_logged_in():}}
+  <a href='/{{=appname}}/default/user/login' class='btn btn-custom btn-login'><i class='icon-signin'></i> {{=T("LOGIN")}} </a></p>{{pass}}
  </div>
 </div>
 <section id='homepage-about'>

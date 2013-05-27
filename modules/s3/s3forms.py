@@ -2036,7 +2036,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                             # Update realm
                             update_realm = s3db.get_config(table, "update_realm")
                             if update_realm:
-                                auth.set_realm_entity(table, vars,
+                                auth.set_realm_entity(table, values,
                                                       force_update=True)
                             # Onaccept
                             onaccept(table, Storage(vars=values), method="update")

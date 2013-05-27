@@ -171,94 +171,110 @@ def dojs(dogis = False, warnings = True):
 
     # dataLists
     print "Compressing dataLists"
-    sourceDirectorydataLists = ".."
-    configFilenamedataLists = "sahana.js.dataLists.cfg"
-    outputFilenamedataLists = "s3.dataLists.min.js"
-    mergeddataLists = mergejs.run(sourceDirectorydataLists,
-                                   None,
-                                   configFilenamedataLists)
-    minimizeddataLists = minimize(mergeddataLists)
-    open(outputFilenamedataLists, "w").write(minimizeddataLists)
+    sourceDirectory = ".."
+    configFilename = "sahana.js.dataLists.cfg"
+    outputFilename = "s3.dataLists.min.js"
+    merged = mergejs.run(sourceDirectory,
+                         None,
+                         configFilename)
+    minimized = minimize(merged)
+    open(outputFilename, "w").write(minimized)
     try:
-        os.remove("../S3/%s" % outputFilenamedataLists)
+        os.remove("../S3/%s" % outputFilename)
     except:
         pass
-    shutil.move(outputFilenamedataLists, "../S3")
+    shutil.move(outputFilename, "../S3")
 
     # dataTables
     print "Compressing dataTables"
-    sourceDirectorydataTables = ".."
-    configFilenamedataTables = "sahana.js.dataTables.cfg"
-    outputFilenamedataTables = "s3.dataTables.min.js"
-    mergeddataTables = mergejs.run(sourceDirectorydataTables,
-                                   None,
-                                   configFilenamedataTables)
-    minimizeddataTables = minimize(mergeddataTables)
-    open(outputFilenamedataTables, "w").write(minimizeddataTables)
+    sourceDirectory = ".."
+    configFilename = "sahana.js.dataTables.cfg"
+    outputFilename = "s3.dataTables.min.js"
+    merged = mergejs.run(sourceDirectory,
+                         None,
+                         configFilename)
+    minimized = minimize(merged)
+    open(outputFilename, "w").write(minimized)
     try:
-        os.remove("../S3/%s" % outputFilenamedataTables)
+        os.remove("../S3/%s" % outputFilename)
     except:
         pass
-    shutil.move(outputFilenamedataTables, "../S3")
+    shutil.move(outputFilename, "../S3")
 
-    configFilenamedataTables = "sahana.js.dataTables_multi.cfg"
-    outputFilenamedataTables = "s3.dataTables.multi.min.js"
-    mergeddataTables = mergejs.run(sourceDirectorydataTables,
+    configFilename = "sahana.js.dataTables_multi.cfg"
+    outputFilename = "s3.dataTables.multi.min.js"
+    merged = mergejs.run(sourceDirectory,
                                    None,
-                                   configFilenamedataTables)
-    minimizeddataTables = minimize(mergeddataTables)
-    open(outputFilenamedataTables, "w").write(minimizeddataTables)
+                                   configFilename)
+    minimized = minimize(merged)
+    open(outputFilename, "w").write(minimized)
     try:
-        os.remove("../S3/%s" % outputFilenamedataTables)
+        os.remove("../S3/%s" % outputFilename)
     except:
         pass
-    shutil.move(outputFilenamedataTables, "../S3")
+    shutil.move(outputFilename, "../S3")
+
+    # ImageCrop
+    print "Compressing ImageCrop"
+    sourceDirectory = ".."
+    configFilename = "sahana.js.imageCrop.cfg"
+    outputFilename = "s3.imagecrop.widget.min.js"
+    merged = mergejs.run(sourceDirectory,
+                         None,
+                         configFilename)
+    minimized = minimize(merged)
+    open(outputFilename, "w").write(minimized)
+    try:
+        os.remove("../S3/%s" % outputFilename)
+    except:
+        pass
+    shutil.move(outputFilename, "../S3")
 
     # Reports
     print "Compressing Reports"
-    sourceDirectoryReport = ".."
-    configFilenameReport = "sahana.js.report.cfg"
-    outputFilenameReport = "s3.report.min.js"
-    mergedReport = mergejs.run(sourceDirectoryReport,
-                               None,
-                               configFilenameReport)
-    minimizedReport = minimize(mergedReport)
-    open(outputFilenameReport, "w").write(minimizedReport)
+    sourceDirectory = ".."
+    configFilename = "sahana.js.report.cfg"
+    outputFilename = "s3.report.min.js"
+    merged = mergejs.run(sourceDirectory,
+                         None,
+                         configFilename)
+    minimized = minimize(merged)
+    open(outputFilename, "w").write(minimized)
     try:
-        os.remove("../S3/%s" % outputFilenameReport)
+        os.remove("../S3/%s" % outputFilename)
     except:
         pass
-    shutil.move(outputFilenameReport, "../S3")
+    shutil.move(outputFilename, "../S3")
 
     # Vulnerability
     print "Compressing Vulnerability"
-    sourceDirectoryVulnerability = "../.."
-    configFilenameVulnerability = "sahana.js.vulnerability.cfg"
-    outputFilenameVulnerability = "s3.vulnerability.min.js"
-    mergedVulnerability = mergejs.run(sourceDirectoryVulnerability,
-                                      None,
-                                      configFilenameVulnerability)
-    minimizedVulnerability = minimize(mergedVulnerability)
-    open(outputFilenameVulnerability, "w").write(minimizedVulnerability)
+    sourceDirectory = "../.."
+    configFilename = "sahana.js.vulnerability.cfg"
+    outputFilename = "s3.vulnerability.min.js"
+    merged = mergejs.run(sourceDirectory,
+                         None,
+                         configFilename)
+    minimized = minimize(merged)
+    open(outputFilename, "w").write(minimized)
     try:
-        os.remove("../../themes/Vulnerability/js/%s" % outputFilenameVulnerability)
+        os.remove("../../themes/Vulnerability/js/%s" % outputFilename)
     except:
         pass
-    shutil.move(outputFilenameVulnerability, "../../themes/Vulnerability/js")
+    shutil.move(outputFilename, "../../themes/Vulnerability/js")
     print "Compressing Vulnerability GIS"
-    sourceDirectoryVulnerability = "../../themes/Vulnerability/js"
-    configFilenameVulnerability = "sahana.js.vulnerability_gis.cfg"
-    outputFilenameVulnerability = "OpenLayers.js"
-    mergedVulnerability = mergejs.run(sourceDirectoryVulnerability,
-                                      None,
-                                      configFilenameVulnerability)
-    minimizedVulnerability = minimize(mergedVulnerability)
-    open(outputFilenameVulnerability, "w").write(minimizedVulnerability)
+    sourceDirectory = "../../themes/Vulnerability/js"
+    configFilename = "sahana.js.vulnerability_gis.cfg"
+    outputFilename = "OpenLayers.js"
+    merged = mergejs.run(sourceDirectory,
+                         None,
+                         configFilename)
+    minimized = minimize(merged)
+    open(outputFilename, "w").write(minimized)
     try:
-        os.remove("../../themes/Vulnerability/js/%s" % outputFilenameVulnerability)
+        os.remove("../../themes/Vulnerability/js/%s" % outputFilename)
     except:
         pass
-    shutil.move(outputFilenameVulnerability, "../../themes/Vulnerability/js")
+    shutil.move(outputFilename, "../../themes/Vulnerability/js")
 
     # Single scripts
     for filename in ["contacts",

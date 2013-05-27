@@ -798,8 +798,7 @@ def time():
                     (ttable.status.belongs(s3db.project_task_active_statuses))
             dbset = db(query)
             table.task_id.requires = IS_ONE_OF(dbset, "project_task.id",
-                                               lambda id, row: \
-                                                s3db.project_task_represent(id, row, show_project=True),
+                                               s3db.project_task_represent_w_project
                                                )
         list_fields = ["id",
                        "date",
@@ -809,6 +808,10 @@ def time():
                        "task_id",
                        "comments",
                        ]
+        if settings.get_project_milestones():
+            # Use the field in this format to get the custom represent
+            list_fields.insert(5, (T("Milestone"), "task_id$task_milestone.milestone_id"))
+
         s3db.configure("project_time",
                        orderby="project_time.date desc",
                        list_fields=list_fields)
@@ -917,6 +920,10 @@ def comments():
     field.writable = field.readable = False
 
     # Form to add a new Comment
+    # @ToDo: Rewrite using SQLFORM or S3SQLCustomForm
+    from s3.s3msg import CrudS3
+    crud = CrudS3()
+    crud.messages.submit_button = T("Save")
     form = crud.create(table, formname="project_comment/%s" % task_id)
 
     # List of existing Comments

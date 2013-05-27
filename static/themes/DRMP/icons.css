@@ -208,14 +208,14 @@ you can use the generic selector below, but it's slower:
 }
 */
 
-/* Updates cards */
-.icon-activity,
-.icon-alert,
-.icon-incident, 
-.icon-report,
-.icon-assessment,
-.icon-training_material,
-.icon-plans  {
+/* Update Cards */
+.card-header .icon-activity,
+.card-header .icon-alert,
+.card-header .icon-assessment,
+.card-header .icon-incident, 
+.card-header .icon-plan,
+.card-header .icon-report,
+.card-header .icon-training_material {
     font-size: 14px;
     display: inline-block;
     color: #413b3b;

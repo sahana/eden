@@ -542,9 +542,13 @@
 
             <!-- Person record -->
             <data field="first_name"><xsl:value-of select="col[@field='First Name']"/></data>
-            <data field="middle_name"><xsl:value-of select="col[@field='Middle Name']"/></data>
+            <xsl:if test="col[@field='Middle Name']">
+                <data field="middle_name"><xsl:value-of select="col[@field='Middle Name']"/></data>
+            </xsl:if>
             <data field="last_name"><xsl:value-of select="col[@field='Last Name']"/></data>
-            <data field="initials"><xsl:value-of select="col[@field='Initials']"/></data>
+            <xsl:if test="col[@field='Initials']">
+                <data field="initials"><xsl:value-of select="col[@field='Initials']"/></data>
+            </xsl:if>
             <xsl:if test="col[@field='DOB']">
                 <data field="date_of_birth"><xsl:value-of select="col[@field='DOB']"/></data>
             </xsl:if>
@@ -555,9 +559,13 @@
             </xsl:if>
 
             <resource name="pr_person_details">
-                <data field="father_name"><xsl:value-of select="col[@field='Father Name']"/></data>
-                <data field="mother_name"><xsl:value-of select="col[@field='Mother Name']"/></data>
-	            <xsl:if test="col[@field='Religion']">
+                <xsl:if test="col[@field='Father Name']!=''">
+                    <data field="father_name"><xsl:value-of select="col[@field='Father Name']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='Mother Name']!=''">
+                    <data field="mother_name"><xsl:value-of select="col[@field='Mother Name']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='Religion']">
 	                <data field="religion">
                         <xsl:call-template name="lowercase">
                             <xsl:with-param name="string">
@@ -594,12 +602,20 @@
                         </xsl:otherwise>
                     </xsl:choose>
                 </xsl:variable>
-                <data field="nationality">
-                    <xsl:value-of select="$countrycode"/>
-                </data>
-	            <data field="occupation"><xsl:value-of select="col[@field='Occupation']"/></data>
-	            <data field="company"><xsl:value-of select="col[@field='Company']"/></data>
-	            <data field="affiliations"><xsl:value-of select="col[@field='Affiliations']"/></data>
+                <xsl:if test="$countrycode!=''">
+                    <data field="nationality">
+                        <xsl:value-of select="$countrycode"/>
+                    </data>
+	            </xsl:if>
+                <xsl:if test="col[@field='Occupation']!=''">
+                    <data field="occupation"><xsl:value-of select="col[@field='Occupation']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='Company']!=''">
+                    <data field="company"><xsl:value-of select="col[@field='Company']"/></data>
+	            </xsl:if>
+                <xsl:if test="col[@field='Affiliations']!=''">
+                    <data field="affiliations"><xsl:value-of select="col[@field='Affiliations']"/></data>
+                </xsl:if>
             </resource>
 
             <xsl:if test="col[@field='Blood Type']!=''">
@@ -716,7 +732,9 @@
         <resource name="member_membership">
 
             <!-- Member data -->
-            <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
+            <xsl:if test="col[@field='Start Date']!=''">
+                <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
+            </xsl:if>
             <xsl:if test="$type!=0">
                 <data field="type"><xsl:value-of select="$type"/></data>
             </xsl:if>
@@ -751,7 +769,9 @@
         <resource name="hrm_human_resource">
 
             <!-- HR data -->
-            <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
+            <xsl:if test="col[@field='Start Date']!=''">
+                <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
+            </xsl:if>
             <xsl:if test="$type!=0">
                 <data field="type"><xsl:value-of select="$type"/></data>
             </xsl:if>

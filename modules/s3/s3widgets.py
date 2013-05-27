@@ -606,6 +606,8 @@ class S3ImageCropWidget(FormWidget):
     """
         Allows the user to crop an image and uploads it.
         Cropping is done client-side where supported, otherwise using PIL.
+
+        @ToDo: Doesn't currently work with Inline Component Forms
     """
 
     DEFAULT_WIDTH = 300
@@ -624,23 +626,37 @@ class S3ImageCropWidget(FormWidget):
         debug = s3.debug
         scripts = s3.scripts
 
-        s3.js_global.append('''
+        if debug:
+            script = "%s/jquery.color.js" % script_dir
+            if script not in scripts:
+                scripts.append(script)
+            script = "%s/jquery.Jcrop.js" % script_dir
+            if script not in scripts:
+                scripts.append(script)
+            script = "%s/S3/s3.imagecrop.widget.js" % script_dir
+            if script not in scripts:
+                scripts.append(script)
+                s3.js_global.append('''
 i18n.invalid_image='%s'
 i18n.crop_image='%s'
 i18n.cancel_crop="%s"''' % (T("Please select a valid image!"),
                             CROP_IMAGE,
                             T("Cancel Crop")))
-        if debug and \
-           "%s/jquery.Jcrop.js" % script_dir not in scripts:
-            scripts.append("%s/jquery.Jcrop.js" % script_dir)
+        else:
+            script = "%s/S3/s3.imagecrop.widget.min.js" % script_dir
+            if script not in scripts:
+                scripts.append(script)
+                s3.js_global.append('''
+i18n.invalid_image='%s'
+i18n.crop_image='%s'
+i18n.cancel_crop="%s"''' % (T("Please select a valid image!"),
+                            CROP_IMAGE,
+                            T("Cancel Crop")))
 
-        if debug and \
-            "%s/jquery.color.js" % script_dir not in scripts:
-            scripts.append("%s/jquery.color.js" % script_dir)
-
-        scripts.append("%s/S3/s3.imagecrop.widget.js" % script_dir)
-
-        s3.stylesheets.append("plugins/jquery.Jcrop.css")
+        stylesheets = s3.stylesheets
+        sheet = "plugins/jquery.Jcrop.css"
+        if sheet not in stylesheets:
+            stylesheets.append(sheet)
 
         attr = self._attributes(field, {
                 "_type": "file",
@@ -654,7 +670,7 @@ i18n.cancel_crop="%s"''' % (T("Please select a valid image!"),
             if callable(download_url):
                 download_url = download_url()
 
-            URL = download_url + "/" + value
+            URL = "%s/%s" (download_url ,value)
 
             append(IMG(_src=URL,
                        _class="imagecrop-preview",
@@ -680,9 +696,10 @@ i18n.cancel_crop="%s"''' % (T("Please select a valid image!"),
             # Set up the canvas
             canvas = TAG["canvas"](_class="imagecrop-canvas",
                                    _style="display: none;")
-            if self.image_bounds:
-                canvas.attributes["_width"] = self.image_bounds[0]
-                canvas.attributes["_height"] = self.image_bounds[1]
+            image_bounds = self.image_bounds
+            if image_bounds:
+                canvas.attributes["_width"] = image_bounds[0]
+                canvas.attributes["_height"] = image_bounds[1]
                 canvas.attributes["_style"] = "background: black;"
             append(INPUT(**attr))
             append(INPUT(_type="hidden",
