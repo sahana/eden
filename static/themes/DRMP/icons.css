@@ -1,3 +1,6 @@
+/* @override 
+	http://127.0.0.1:8000/eden/static/themes/DRMP/icons.css */
+
 @font-face {
     font-family: 'DRMP';
     src:url('fonts/DRMP.eot');
@@ -220,7 +223,7 @@ you can use the generic selector below, but it's slower:
     display: inline-block;
     color: #413b3b;
     padding-left: 1px;
-    width: 106px;
+    width: 16px;
 }
 
 /* Icons still coming from font-awesome */
