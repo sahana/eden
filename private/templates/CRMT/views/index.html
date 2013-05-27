@@ -1,2 +1,65 @@
 {{extend "layout.html"}}
-<h1>tbc</h1>
+<div class = "banner">
+  <img class = "banner" src="/{{=appname}}/static/themes/CRMT/LA.jpg" alt="Banner"/>
+  <div class="title">
+    <!-- <img class = "logo" src="/{{=appname}}/static/img/sahanalarge_14.png" alt="Sahana Logo"/> -->
+    <h1>Sahana</h1>
+    <h2>{{=settings.get_system_name()}}</h2>
+  </div>
+</div>
+<div class="row">
+ <div class="span8">
+  <div class="row">
+   <div class="span4">
+    <div class="intro">
+     <h3>All Your Data in One Place</h3>
+     <p>Manage the data you collect with data from external sources such as Hazard Data from USGS and Census Data</p>
+     <h3>Understand Your</br>Community Resilience</h3>
+     <p>Use maps and charts to understand the relationships between different factors which affect your community's resilience.</p>
+    </div>
+   </div>
+   <div class="span4">
+    <div class="updates">
+     <h3>Updates</h3>
+     <span class = "filter_opts">
+      All | <a href="#">My Community</a>
+     </span>
+     
+     {{for item in updates:}}
+      <div class="media">
+       <a class="pull-left" href="#">
+        <img class="media-object" width = 50px height = 50px src='{{=item["profile"]}}'>
+       </a>
+       <div class="media-body">
+        <h5 class="media-heading">{{=item["user"]}}</h5>
+        <p>
+         {{=item.get("update")}}
+        </p>
+       </div>
+      </div>
+     {{pass}}
+     <div class="more">More...</div>
+    </div>
+   </div>
+  </div>
+  <div class="row">
+   <div class="span8 map">
+    {{=XML(gis.show_map(width=770, height=270, collapsed = True))}}
+   </div>
+  </div>
+ </div>
+ <div class="span4"> 
+  <div class="community-data ">
+   <h3>Community Data</h3>
+   <p>Record the vulnerabilities, hazards, activities and resources which affects your community's resilience</p>
+   {{for item in response.menu:}}
+     <p>
+       <a href='{{=item["url"]}}' class="btn btn-info btn-large menu" type="button">
+        <i class='{{=item["icon"]}}'></i> {{=item["name"]}}
+       </a>
+       <a href='{{=item["url"]}}/create' class="btn btn-info btn-large create" type="button"><i class='icon-plus'></i></a>
+     </p>
+   {{pass}}
+  </div>
+ </div>
+</div>
