@@ -2284,8 +2284,9 @@ class S3Resource(object):
         """
 
         table = self.table
+        tablename = self.tablename
 
-        if self.tablename == "gis_location":
+        if tablename == "gis_location" or tablename.startswith("gis_layer_shapefile_"):
             # Filter out bulky Polygons
             fields = [f for f in table.fields if f not in ("wkt", "the_geom")]
         else:
@@ -2314,7 +2315,6 @@ class S3Resource(object):
 
         if rows:
             pkey = table._id.name
-            tablename = self.tablename
 
             UID = current.xml.UID
             if UID in table.fields:
