@@ -1,0 +1,28 @@
+@charset "UTF-8";
+
+/* Main Navigation (S3MainMenu or modules menu) */
+
+.navbar .nav > li > a.home > img {
+    width: 29px;
+    height: 30px;
+}
+.navbar .nav > li > a.home  {
+    padding: 5px;
+}
+
+.navbar .nav > li > a.map  {
+    padding: 10px;
+    font-size: 18px;
+}
+
+
+.navbar .nav > li > a  {
+    float: left;
+    font-size: 10pt;
+    text-transform: none; 
+    padding: 0.75em;
+}
+.dropdown-menu > li > a  {
+    font-size: 10pt;
+    padding: 0;
+}
