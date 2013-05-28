@@ -4064,7 +4064,8 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
 
     // Save button to save the Viewport settings
     var addSaveButton = function(toolbar) {
-        var config_id = toolbar.map.s3.options.config_id;
+        var map = toolbar.map;
+        var config_id = map.s3.options.config_id;
         // Toolbar Button
         var saveButton = new Ext.Toolbar.Button({
             iconCls: 'save',
