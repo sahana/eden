@@ -316,6 +316,11 @@ S3.search.toggleMapClearButton = function(event) {
 // New search framework (S3FilterForm aka "filtered GETs")
 
 /*
+ * pendingTargets: targets which were invisible during last filter-submit
+ */
+S3.search.pendingTargets = {};
+
+/*
  * quoteValue: add quotes to values which contain commas, escape quotes
  */
 S3.search.quoteValue = function(value) {
@@ -511,6 +516,48 @@ S3.search.getCurrentFilters = function() {
 };
 
 /*
+ * Update a variable in the query part of the filter-submit URL
+ */
+S3.search.updateFilterSubmitURL = function(form, name, value) {
+    
+    var submit_url = $('#' + form).find('input.filter-submit-url[type="hidden"]');
+
+    if (submit_url.length) {
+        
+        submit_url = submit_url.first();
+        
+        var url = $(submit_url).val();
+        
+        var url_parts = url.split('?'), update_url, query, vars=[];
+
+        if (url_parts.length > 1) {
+            
+            var qstr = url_parts[1];
+            var a = qstr.split('&'), b, c;
+            for (i=0; i<a.length; i++) {
+                var b = a[i].split('=');
+                if (b.length > 1) {
+                    c = decodeURIComponent(b[0]);
+                    if (c != name) {
+                        vars.push(b[0] + '=' + b[1]);
+                    }
+                }
+            }
+            vars.push(name + '=' + value);
+            
+            query = vars.join('&');
+            update_url = url_parts[0];
+            if (query) {
+                update_url = update_url + '?' + query;
+            }
+        } else {
+            update_url = url + '?' + name + '=' + value;
+        }
+        $(submit_url).val(update_url);
+    }
+}
+
+/*
  * filterURL: add filters to a URL
  * @note: this removes+replaces all existing filters in the URL query
  */
@@ -659,6 +706,75 @@ S3.search.ajaxUpdateOptions = function(form) {
         'dataType': 'json'
     });
 };
+
+/*
+ * updatePendingTargets: update all targets which were hidden during
+ *                       last filter-submit, reload page if required
+ */
+S3.search.updatePendingTargets = function(form) {
+    
+    var url = $('#' + form).find('input.filter-submit-url[type="hidden"]').first().val(),
+        targets = S3.search.pendingTargets,
+        target_id, target_data,
+        page_reload = false,
+        needs_reload,
+        ajaxurl,
+        queries,
+        t,
+        visible;
+
+    S3.search.pendingTargets = {};
+
+    // Inspect the targets
+    for (target_id in targets) {
+
+        t = $('#' + target_id);
+
+        if (!t.is(':visible')) {
+            visible = false;
+        } else {
+            visible = true;
+        }
+
+        target_data = targets[target_id];
+        
+        needs_reload = target_data['needs_reload'];
+        if (visible) {
+            if (needs_reload) {
+                // reload immediately
+                page_reload = true;
+                break;
+            } else {
+                
+            }
+        } else {
+            // re-schedule for later
+            S3.search.pendingTargets[target_id] = target_data;
+        }
+    }
+
+    if (page_reload) {
+        // Need to reload the page now
+        queries = S3.search.getCurrentFilters();
+        url = S3.search.filterURL(url, queries);
+        window.location.href = url;
+    } else {
+        // Ajax-update all visible targets
+        for (target_id in targets) {
+            t = $('#' + target_id);
+            if (!t.is(':visible')) {
+                continue
+            }
+            target_data = targets[target_id];
+            t = $('#' + target_id);
+            if (t.hasClass('dl')) {
+                dlAjaxReload(target_id, target_data['queries']);
+            } else if (t.hasClass('dataTable')) {
+                t.dataTable().fnReloadAjax(target_data['ajaxurl']);
+            }
+        }
+    }
+}
 
 /*
  * S3FilterForm: document-ready script
@@ -866,48 +982,107 @@ $(document).ready(function() {
             });
         } catch(err) {}
 
-        var url = $(this).nextAll('input.filter-submit-url[type="hidden"]').val();
-        var queries = S3.search.getCurrentFilters();
+        var url = $(this).nextAll('input.filter-submit-url[type="hidden"]').val(),
+            queries = S3.search.getCurrentFilters();
 
         if ($(this).hasClass('filter-ajax')) {
-            // Ajax-refresh the target object (@todo: support multiple)
-            var target = $(this).nextAll('input.filter-submit-target[type="hidden"]').val();
-            if ($('#' + target).hasClass('dl')) {
+            // Ajax-refresh the target objects
 
-                // Ajax-reload the datalist
-                dlAjaxReload(target, queries);
+            // Get the target IDs
+            var target = $(this)
+                         .nextAll('input.filter-submit-target[type="hidden"]')
+                         .val();
 
-            } else if ($('#' + target).hasClass('dataTable')) {
+            S3.search.pendingTargets = {};
 
-                // Experimental: Ajax-reloading of the datatable
-                var ajaxurl = null;
-                var config = $('input#' + target + '_configurations');
-                if (config.length) {
-                    var settings = JSON.parse($(config).val());
-                    var ajaxurl = settings['ajaxUrl'];
-                    if (typeof ajaxurl != 'undefined') {
-                        ajaxurl = S3.search.filterURL(ajaxurl, queries);
-                    } else {
-                        ajaxurl = null;
-                    }
-                }
-                if (ajaxurl) {
-                    $('#' + target).dataTable().fnReloadAjax(ajaxurl);
+            var targets = target.split(' '),
+                page_reload = false, needs_reload,
+                dt_ajaxurl = {},
+                ajaxurl,
+                settings,
+                config,
+                i,
+                t,
+                target_id,
+                visible;
+
+            // Inspect the targets
+            for (i=0; i<targets.length; i++) {
+                target_id = targets[i];
+                t = $('#' + target_id);
+
+                if (!t.is(':visible')) {
+                    visible = false;
                 } else {
-                    url = S3.search.filterURL(url, queries);
-                    window.location.href = url;
+                    visible = true;
+                }
+                
+                needs_reload = false;
+                ajaxurl = null;
+                
+                if (t.hasClass('dl')) {
+                    // data lists do not need page reload
+                    needs_reload = false;
+                } else if (t.hasClass('dataTable')) {
+                    // data tables need page reload if no AjaxURL configured
+                    config = $('input#' + targets[i] + '_configurations');
+                    if (config.length) {
+                        settings = JSON.parse($(config).val());
+                        ajaxurl = settings['ajaxUrl'];
+                        if (typeof ajaxurl != 'undefined') {
+                            ajaxurl = S3.search.filterURL(ajaxurl, queries);
+                        } else {
+                            ajaxurl = null;
+                        }
+                    }
+                    if (ajaxurl) {
+                        dt_ajaxurl[targets[i]] = ajaxurl;
+                        needs_reload = false;
+                    } else {
+                        needs_reload = true;
+                    }
+                } else {
+                    // all other targets need page reload
+                    needs_reload = true;
                 }
 
-            } else {
+                if (visible) {
+                    if (needs_reload) {
+                        // reload immediately
+                        page_reload = true;
+                        break;
+                    }
+                } else {
+                    // schedule for later
+                    S3.search.pendingTargets[target_id] = {
+                        needs_reload: needs_reload,
+                        ajaxurl: ajaxurl,
+                        queries: queries
+                    };
+                }
+            }
 
-                // All other targets
+            if (page_reload) {
+                // Need to reload the page now
                 url = S3.search.filterURL(url, queries);
                 window.location.href = url;
-
+            } else {
+                // Ajax-update all visible targets
+                for (i=0; i<targets.length; i++) {
+                    target_id = targets[i]
+                    t = $('#' + target_id);
+                    if (!t.is(':visible')) {
+                        continue;
+                    } else if (t.hasClass('dl')) {
+                        dlAjaxReload(target_id, queries);
+                    } else if (t.hasClass('dataTable')) {
+                        t.dataTable().fnReloadAjax(dt_ajaxurl[target_id]);
+                    }
+                }
             }
+            
         } else {
-
-            // Page reload
+            // Reload the page
             url = S3.search.filterURL(url, queries);
             window.location.href = url;
         }

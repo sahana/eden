@@ -2476,13 +2476,13 @@ class S3OfficeModel(S3Model):
                                        #label=messages.ORGANISATION,
                                        #comment=T("Search for office by organization."),
                                        #represent="%(name)s",
-                                       #cols=3),
-                                       ##widget="multiselect"),
+                                       #cols=3,
+                                       #widget="multiselect"),
                        #S3OptionsFilter("location_id$L1",
                                        #location_level="L1",
                                        #none=False,
-                                       #cols=3),
-                                       ##widget="multiselect")
+                                       #cols=3,
+                                       #widget="multiselect")
                   #],
                   list_fields=["id",
                                "name",

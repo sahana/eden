@@ -93,6 +93,9 @@ from s3report import *
 # Profiles
 from s3profile import *
 
+# Summary
+from s3summary import *
+
 # Synchronization
 from s3sync import *
 

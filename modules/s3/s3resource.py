@@ -76,7 +76,7 @@ from gluon.tools import callback
 
 from s3data import S3DataTable, S3DataList, S3PivotTable
 from s3fields import S3Represent, S3RepresentLazy
-from s3utils import s3_has_foreign_key, s3_get_foreign_key, s3_unicode, S3MarkupStripper, S3TypeConverter
+from s3utils import s3_has_foreign_key, s3_flatlist, s3_get_foreign_key, s3_unicode, S3MarkupStripper, S3TypeConverter
 from s3validators import IS_ONE_OF
 
 DEBUG = False
@@ -4611,6 +4611,9 @@ class S3Resource(object):
         # Resolve the list fields
         rfields, joins, ljoins, distinct = self.resolve_selectors(fields)
 
+        # @todo: only include left joins which are actually in the query
+        left_joins.update(ljoins)
+
         # FILTER --------------------------------------------------------------
 
         searchq = None
@@ -4672,6 +4675,7 @@ class S3Resource(object):
                         flist.append(field)
 
             # Build search query
+            # @todo: migrate this to S3ResourceQuery?
             opts = Storage()
             queries = []
             for w in words:
@@ -4797,7 +4801,8 @@ class S3Resource(object):
         else:
             orderby = None
 
-        return (searchq, orderby, left_joins.values())
+        left_joins = list(s3_flatlist(left_joins.values()))
+        return (searchq, orderby, left_joins)
 
     # -------------------------------------------------------------------------
     @classmethod
