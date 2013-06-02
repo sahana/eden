@@ -766,6 +766,67 @@ class S3Request(object):
                 return handler
 
     # -------------------------------------------------------------------------
+    def get_widget_handler(self, method):
+        """
+            Get the widget handler for a method
+
+            @param r: the S3Request
+            @param method: the widget method
+        """
+
+        if self.component:
+            resource = self.component
+            if resource.link:
+                resource = resource.link
+        else:
+            resource = self.resource
+        prefix, name = self.prefix, self.name
+        component_name = self.component_name
+                
+        custom_action = current.s3db.get_method(prefix,
+                                                name,
+                                                component_name=component_name,
+                                                method=method)
+
+        http = self.http
+        handler = None
+
+        if method and custom_action:
+            handler = custom_action
+            
+        if http == "GET":
+            if not method:
+                if resource.count() == 1:
+                    method = "read"
+                else:
+                    method = "list"
+            transform = self.transformable()
+            handler = self.get_handler(method, transform=transform)
+            
+        elif http == "PUT":
+            transform = self.transformable(method="import")
+            handler = self.get_handler(method, transform=transform)
+            
+        elif http == "POST":
+            transform = self.transformable(method="import")
+            return self.get_handler(method, transform=transform)
+                
+        elif http == "DELETE":
+            if method:
+                return self.get_handler(method)
+            else:
+                return self.get_handler("delete")
+                
+        else:
+            return None
+
+        if handler is None:
+            handler = resource.crud
+        if isinstance(handler, (type, types.ClassType)):
+            handler = handler()
+        return handler
+
+    # -------------------------------------------------------------------------
     # Request Parser
     # -------------------------------------------------------------------------
     def __parse(self):
@@ -966,7 +1027,7 @@ class S3Request(object):
         return output
 
     # -------------------------------------------------------------------------
-    def __GET(self):
+    def __GET(self, resource=None):
         """
             Get the GET method handler
         """
@@ -1849,12 +1910,13 @@ class S3Method(object):
     """
 
     # -------------------------------------------------------------------------
-    def __call__(self, r, method=None, **attr):
+    def __call__(self, r, method=None, widget_id=None, **attr):
         """
             Entry point for the REST interface
 
             @param r: the S3Request
             @param method: the method established by the REST interface
+            @param as_widget: render as widget (to embed in another method)
             @param attr: dict of parameters for the method handler
 
             @returns: output object to send to the view
@@ -1924,27 +1986,34 @@ class S3Method(object):
             return None
 
         # Apply method
-        output = self.apply_method(r, **attr)
+        if widget_id and hasattr(self, "widget"):
+            output = self.widget(r,
+                                 method=self.method,
+                                 widget_id=widget_id,
+                                 **attr)
+        else:
+            output = self.apply_method(r, **attr)
 
-        # Redirection
-        if self.next and resource.lastid:
-            self.next = str(self.next)
-            placeholder = "%5Bid%5D"
-            self.next = self.next.replace(placeholder, resource.lastid)
-            placeholder = "[id]"
-            self.next = self.next.replace(placeholder, resource.lastid)
-        if not response.error:
-            r.next = self.next
+            # Redirection
+            if self.next and resource.lastid:
+                self.next = str(self.next)
+                placeholder = "%5Bid%5D"
+                self.next = self.next.replace(placeholder, resource.lastid)
+                placeholder = "[id]"
+                self.next = self.next.replace(placeholder, resource.lastid)
+            if not response.error:
+                r.next = self.next
 
-        # Add additional view variables (e.g. rheader)
-        self._extend_view(output, r, **attr)
+            # Add additional view variables (e.g. rheader)
+            self._extend_view(output, r, **attr)
 
         return output
 
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
-            Stub for apply_method, to be implemented in subclass
+            Stub, to be implemented in subclass. This method is used
+            to get the results as a standalone page.
 
             @param r: the S3Request
             @param attr: dictionary of parameters for the method handler
@@ -1954,6 +2023,41 @@ class S3Method(object):
 
         output = dict()
         return output
+
+    # -------------------------------------------------------------------------
+    def widget(self, r, method=None, widget_id=None, **attr):
+        """
+            Stub, to be implemented in subclass. This method is used
+            by other method handlers to embed this method as widget.
+            
+            @note:
+            
+                For "html" format, the widget method must return an XML
+                component that can be embedded in a DIV. If a dict is
+                returned, it will be rendered against the view template
+                of the calling method - the view template selected by
+                the widget method will be ignored.
+
+                For other formats, the data returned by the widget method
+                will be rendered against the view template selected by
+                the widget method. If no view template is set, the data
+                will be returned as-is.
+
+                The widget must use the widget_id as HTML id for the element
+                providing the Ajax-update hook and this element must be
+                visible together with the widget.
+
+                The widget must include the widget_id as ?w=<widget_id> in
+                the URL query of the Ajax-update call, and Ajax-calls should
+                not use "html" format.
+
+            @param r: the S3Request
+            @param attr: dictionary of parameters for the method handler
+
+            @returns: output
+        """
+
+        return None
 
     # -------------------------------------------------------------------------
     # Utility functions

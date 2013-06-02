@@ -833,6 +833,41 @@ class S3Config(Storage):
         """
         return self.ui.get("social_buttons", False)
 
+    def get_ui_summary(self):
+        """
+            Default Summary Page Configuration (can also be
+            configured per-resource using s3db.configure)
+
+            @example:
+
+            settings.ui.summary = [
+                {
+                    "name": "table"     # the section name
+                    
+                    "label": "Table"    # the section label, will
+                                        # automatically be translated
+                                        
+                    "translate": True   # turn automatic label translation on/off
+
+                    "widgets": [        # list of widgets for this section
+                        {
+                            "method": "datatable"   # widget method, either a
+                                                    # name that resolves into
+                                                    # a S3Method, or a callable
+                                                    # to render the widget
+
+                            "filterable": True      # Whether the widget can
+                                                    # be filtered by the summary
+                                                    # filter form
+                        }
+                    ]
+                }
+            ]
+
+        """
+
+        return self.ui.get("summary", None)
+
     # =========================================================================
     # Messaging
     # -------------------------------------------------------------------------

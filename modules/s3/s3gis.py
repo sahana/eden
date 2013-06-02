@@ -7641,6 +7641,54 @@ class S3Map(S3Search):
         return output
 
     # -------------------------------------------------------------------------
+    def widget(self, r, **attr):
+
+        # @todo: implement
+        return None
+        
+        #s3db = current.s3db
+        #gis = current.gis
+        #request = self.request
+
+        #tablename = self.tablename
+        
+        #marker_fn = s3db.get_config(tablename, "marker_fn")
+        #if marker_fn:
+            #marker = None
+        #else:
+            #marker = gis.get_marker(request.controller,
+                                    #request.function)
+                                    
+        #url = URL(extension="geojson", args=None)
+                  
+        #feature_resources = [{
+                #"name"      : current.T("Search Results"),
+                #"id"        : "search_results",
+                #"tablename" : tablename,
+                #"url"       : url,
+                #"active"    : True,
+                #"marker"    : marker
+            #}]
+            
+        ## @ToDo: deployment_setting for whether to show WMSBrowser in Search?
+        ## @ToDo: WMSBrowser setting should come from hierarchy
+        #config = gis.get_config()
+        #if config.wmsbrowser_url:
+            #wms_browser = {"name": config.wmsbrowser_name,
+                            #"url": config.wmsbrowser_url}
+        #else:
+            #wms_browser = {}
+        #map = gis.show_map(feature_resources=feature_resources,
+                            #catalogue_layers=True,
+                            #legend=True,
+                            #toolbar=True,
+                            #collapsed=True,
+                            #search = True,
+                            #wms_browser = wms_browser,
+                            #)
+        #return map
+                               
+    # -------------------------------------------------------------------------
     def search_interactive(self, r, **attr):
         """
             Interactive search

@@ -141,6 +141,33 @@ class S3CRUD(S3Method):
         return output
 
     # -------------------------------------------------------------------------
+    def widget(self, r, method=None, widget_id=None, **attr):
+        """
+            Entry point for other method handlers to embed this
+            method as widget
+
+            @param method: the widget method
+            @param r: the S3Request
+            @param attr: controller attributes
+        """
+
+        _attr = Storage(attr)
+        _attr["listid"] = widget_id
+
+        if method == "datatable":
+            output = self._datatable(r, **_attr)
+            if isinstance(output, dict):
+                output = DIV(output["items"], _id="table-container")
+            return output
+        elif method == "datalist":
+            output = self._datalist(r, **_attr)
+            if isinstance(output, dict) and "items" in output:
+                output = DIV(output["items"], _id="list-container")
+            return output
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
     def create(self, r, **attr):
         """
             Create new records
@@ -1381,7 +1408,8 @@ class S3CRUD(S3Method):
         sortby = get_config("sortby", [[1, "asc"]])
         linkto = get_config("linkto", None)
 
-        listid = "datatable"
+        # List ID
+        listid = attr.get("listid", "datatable")
         
         # List fields
         list_fields = resource.list_fields()
@@ -1594,6 +1622,9 @@ class S3CRUD(S3Method):
         linkto = get_config("linkto", None)
         layout = get_config("list_layout", None)
 
+        # List ID
+        listid = attr.get("listid", "datalist")
+
         # List fields
         list_fields = resource.list_fields()
 
@@ -1690,7 +1721,7 @@ class S3CRUD(S3Method):
                                                        start=start,
                                                        limit=initial_limit,
                                                        orderby=orderby,
-                                                       listid="datalist",
+                                                       listid=listid,
                                                        layout=layout)
 
             if numrows == 0:
