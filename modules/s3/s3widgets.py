@@ -1837,9 +1837,8 @@ class S3LocationSelectorWidget(FormWidget):
         settings = current.deployment_settings
         response = current.response
         s3 = current.response.s3
-        if s3.gis.location_selector_loaded:
-            # We don't yet support multiple in a page
-            return TAG[""]()
+        location_selector_loaded = s3.gis.location_selector_loaded
+        # @ToDo: Don't insert JS snippets when location_selector already loaded
 
         appname = current.request.application
 
@@ -2564,8 +2563,10 @@ i18n.gis_country_required="%s"''' % (country_snippet,
         else:
             wkt_input_row = ""
 
+         # Ensure that we don't insert duplicate scripts on validation errors
+        s3.gis.location_selector_loaded = True
+
         # The overall layout of the components
-        s3.gis.location_selector_loaded = 1
         return TAG[""](TR(INPUT(**attr)),  # Real input, which is hidden
                        label_row,
                        tab_rows,
@@ -2636,6 +2637,7 @@ class S3LocationSelectorWidget2(FormWidget):
         s3db = current.s3db
         settings = current.deployment_settings
         s3 = current.response.s3
+        location_selector_loaded = s3.gis.location_selector_loaded
         formstyle = s3.crud.formstyle # Currently only Bootstrap has been tested
         request = current.request
         appname = request.application
@@ -2646,10 +2648,30 @@ class S3LocationSelectorWidget2(FormWidget):
         countries = settings.get_gis_countries()
         if len(countries) != 1:
             # @ToDo: Lookup Labels dynamically when L0 changes
-            raise
+            raise NotImplementedError
 
         # @ToDo: Support default locations from gis_config
-        values = dict(L0 = countries[0],
+        ttable = s3db.gis_location_tag
+        query = (ttable.tag == "ISO2") & \
+                (ttable.value == countries[0]) & \
+                (ttable.location_id == gtable.id)
+        default = db(query).select(gtable.id,
+                                   gtable.lat_min,
+                                   gtable.lon_min,
+                                   gtable.lat_max,
+                                   gtable.lon_max,
+                                   limitby=(0, 1)).first()
+        default_id = default.id
+        default_level = 0
+        # @ToDo: Use Bounds from gis_config if no default value
+        default_bounds = [default.lon_min,
+                          default.lat_min,
+                          default.lon_max,
+                          default.lat_max
+                          ]
+
+        default_L0 = default_id
+        values = dict(L0 = default_L0,
                       L1 = 0,
                       L2 = 0,
                       L3 = 0,
@@ -2657,24 +2679,22 @@ class S3LocationSelectorWidget2(FormWidget):
                       L5 = 0,
                       specific = 0,
                       )
-        lat = None
-        lon = None
-        address = None
         parent = ""
+        # Keep the selected Lat/Lon during validation errors
+        post_vars = request.post_vars
+        lat = post_vars.lat
+        lon = post_vars.lon
+        # & address
+        address = post_vars.address
         if value == "dummy":
             # Validation Error when Creating a specific point
-            post_vars = request.post_vars
             # Revert to Parent
             value = post_vars.parent
-            # But keep the selected Lat/Lon
-            lat = post_vars.lat
-            lon = post_vars.lon
-            # & address
-            address = post_vars.address
         if value:
             record = db(gtable.id == value).select(gtable.path,
                                                    gtable.parent,
                                                    gtable.level,
+                                                   gtable.inherited,
                                                    gtable.lat,
                                                    gtable.lon,
                                                    # @ToDo: Polygon support
@@ -2682,31 +2702,39 @@ class S3LocationSelectorWidget2(FormWidget):
                                                    gtable.addr_street,
                                                    limitby=(0, 1)).first()
             if not record:
-                raise
+                raise ValueError
             parent = record.parent
             level = record.level
             path = record.path.split("/")
-            if not level:
-                # Only use a specific Lat/Lon when not an Lx
-                lat = record.lat
-                lon = record.lon
-                address = record.addr_street
-                values["specific"] = value
-                if len(path) < len(levels):
-                    # We don't have a full path
-                    # @ToDo: Retrieve all records in the path to match them up to their Lx
-                    raise
-            else:
+            path_ok = True
+            if level:
                 if len(path) != (int(level[1:]) + 1):
                     # We don't have a full path
-                    # @ToDo: Retrieve all records in the path to match them up to their Lx
-                    raise
+                    path_ok = False
+            else:
+                # Specific location
+                # Only use a specific Lat/Lon when they are not inherited
+                if not record.inherited:
+                    lat = record.lat
+                    lon = record.lon
+                address = record.addr_street
+                values["specific"] = value
+                if len(path) < (len(levels) + 1):
+                    # We don't have a full path
+                    path_ok = False
 
-            for l in levels:
-                try:
-                    values[l] = path[int(l[1:])]
-                except:
-                    pass
+            if path_ok:
+                for l in levels:
+                    try:
+                        values[l] = path[int(l[1:])]
+                    except:
+                        pass
+            else:
+                # Retrieve all records in the path to match them up to their Lx
+                rows = db(gtable.id.belongs(path)).select(gtable.id,
+                                                          gtable.level)
+                for row in rows:
+                    values[row.level] = row.id
 
         fieldname = str(field).replace(".", "_")
 
@@ -2763,19 +2791,15 @@ class S3LocationSelectorWidget2(FormWidget):
         else:
             address_row = ""
 
-        # Lx Dropdowns
+        # Hierarchy Labels
         htable = s3db.gis_hierarchy
-        ttable = s3db.gis_location_tag
-        fields = [htable[level] for level in levels] + [htable.location_id]
-        query = (ttable.tag == "ISO2") & \
-                (ttable.value == countries[0]) & \
-                (ttable.location_id == htable.location_id)
-        labels = db(query).select(*fields).first()
-        country_id = labels.location_id
-        #del labels.location_id
+        fields = [htable[level] for level in levels]
+        labels = db(htable.location_id == default_L0).select(*fields,
+                                                             limitby=(0, 1)).first()
 
+        # Lx Dropdowns
         Lx_rows = DIV()
-        # 1st level is always visible
+        # 1st level is always visible (except in Bootstrap)
         hidden = False
         for level in levels:
             id = "%s_%s" % (fieldname, level)
@@ -2803,11 +2827,7 @@ class S3LocationSelectorWidget2(FormWidget):
                 #                 )
                 #_controls = DIV(widget, throbber, comment, _class="controls")
                 _controls = DIV(widget, throbber, _class="controls")
-                if hidden:
-                    _class = "control-group hide"
-                else:
-                    _class = "control-group"
-                row = DIV(label, _controls, _class=_class, _id="%s__row" % id)
+                row = DIV(label, _controls, _class="control-group hide", _id="%s__row" % id)
             elif callable(formstyle):
                 # @ToDo
                 row = formstyle(id, label, widget, comment, hidden=hidden)
@@ -2822,44 +2842,73 @@ class S3LocationSelectorWidget2(FormWidget):
         # @ToDo: Don't assume we start at L1
         query = (gtable.deleted == False) & \
                 (gtable.level == "L1") & \
-                (gtable.parent == country_id)
+                (gtable.parent == default_L0)
         locations = db(query).select(gtable.id,
                                      gtable.name,
                                      gtable.level,
-                                     gtable.parent)
-        location_dict = {}
+                                     gtable.parent,
+                                     gtable.inherited,
+                                     gtable.lat_min,
+                                     gtable.lon_min,
+                                     gtable.lat_max,
+                                     gtable.lon_max,
+                                     )
+        if default_id:
+            default = dict(id = default_id,
+                           l = default_level,
+                           b = default_bounds)
+        else:
+            default = dict(b = default_bounds)
+        location_dict = dict(d=default)
         for location in locations:
-            location_dict[int(location.id)] = dict(n=location.name,
-                                                   l=int(location.level[1]),
-                                                   f=int(location.parent))
+            if location.inherited:
+                location_dict[int(location.id)] = dict(n=location.name,
+                                                       l=int(location.level[1]),
+                                                       f=int(location.parent),
+                                                       )
+            else:
+                location_dict[int(location.id)] = dict(n=location.name,
+                                                       l=int(location.level[1]),
+                                                       f=int(location.parent),
+                                                       b=[location.lon_min,
+                                                          location.lat_min,
+                                                          location.lon_max,
+                                                          location.lat_max,
+                                                          ],
+                                                       )
+        if default_id and default_id not in location_dict:
+            location_dict[default_id] = dict(l=default_level,
+                                             b=default_bounds)
 
-        scripts = []
-        append = scripts.append
+        if not location_selector_loaded:
+            scripts = []
+            append = scripts.append
+            # i18n
+            i18n = "\n".join((
+                '''i18n.gis_requires_login="%s"''' % T("Requires Login"),
+                ))
+            append(i18n)
 
-        # i18n
-        i18n = "\n".join((
-            "i18n.gis_requires_login='%s'" % T("Requires Login"),
-            ))
-        append(i18n)
+            script = '''l=%s''' % json.dumps(location_dict)
+            append(script)
 
-        script = '''l=%s''' % json.dumps(location_dict)
-        append(script)
+            s3.js_global.append('''\n'''.join(scripts))
 
-        s3.js_global.append("\n".join(scripts))
-
-        # If we need to show the map since the lowest-level is predefined
+        # If we need to show the map since we have an existing lat/lon
         # then we need to launch the client-side JS as a callback to the MapJS loader
+        if lat is not None or lon is not None:
+            use_callback = True
+        else:
+            use_callback = False
+
         max_level = levels[len(levels) - 1]
-        use_callback = False
         L1 = values["L1"]
         specific = values["specific"]
-        args = [country_id]
+        args = [default_L0]
         if specific:
-            use_callback = True
             # We need to proivde all args
             args += [L1, values["L2"], values["L3"], values["L4"], values["L5"], specific]
         elif L1:
-            use_callback = True
             # Add only required args
             args.append(L1)
             L2 = values["L2"]
@@ -2877,10 +2926,10 @@ class S3LocationSelectorWidget2(FormWidget):
 
         args = [str(arg) for arg in args]
         args = ''','''.join(args)
-        script = '''s3_gis_locationselector2('%s',%s)''' % (fieldname, args)
+        script = '''S3.gis.locationselector('%s',%s)''' % (fieldname, args)
         if show_map and use_callback:
             callback = script
-        else:
+        elif not location_selector_loaded:
             s3.jquery_ready.append(script)
 
         if s3.debug:
@@ -2895,21 +2944,42 @@ class S3LocationSelectorWidget2(FormWidget):
 
         if show_map:
             # @ToDo: handle multiple LocationSelectors in 1 page
-            # (=> multiple callbacks, as well as the globals issue)
-            # Meanwhile change to make the map rendering lazy, i.e. to make it an HTML
-            # component of the widget and render it only when it's xml() method is called
-            s3.gis.location_selector_loaded = False # Hack to ensure that 2nd process of form on validation errors gives us a map
-            _map = current.gis.show_map(collapsed = True,
-                                        height = 320,
-                                        width = 480,
-                                        add_feature = True,
-                                        add_feature_active = True,
-                                        # Don't use normal callback (since we postpone rendering Map until DIV unhidden)
-                                        # but use our one if we need to display a map by default
-                                        callback = callback if use_callback else "",
-                                        )
+            # (=> multiple callbacks, as well as the need to migrate options from globals to a parameter)
+            map = current.gis.show_map(id = "location_selector_%s" % fieldname,
+                                       collapsed = True,
+                                       height = 320,
+                                       width = 480,
+                                       add_feature = True,
+                                       add_feature_active = True,
+                                       # Don't use normal callback (since we postpone rendering Map until DIV unhidden)
+                                       # but use our one if we need to display a map by default
+                                       callback = callback if use_callback else "",
+                                       )
+            icon_id = "%s_map_icon" % fieldname
+            row_id = "%s_map_icon__row" % fieldname
+            if formstyle == "bootstrap":
+                map_icon = DIV(LABEL(I(_class="icon-map",
+                                       _id=icon_id,
+                                       ),
+                                     _class="control-label",
+                                     ),
+                               _id = row_id,
+                               _class = "control-group hide",
+                               )
+            else:
+                # @ToDo: Icon in CSS, testing
+                label = LABEL(I(_class="icon-map",
+                                _id=icon_id,
+                                ))
+                widget = ""
+                comment = ""
+                map_icon = formstyle(row_id, label, widget, comment)
+            map = TAG[""](map, map_icon)
         else:
-            _map = ""
+            map = ""
+
+        # Ensure that we don't insert duplicate scripts on validation errors
+        s3.gis.location_selector_loaded = True
 
         # The overall layout of the components
         return TAG[""](DIV(INPUT(**attr), # Real input, hidden
@@ -2919,7 +2989,7 @@ class S3LocationSelectorWidget2(FormWidget):
                            _class="hide"),
                        Lx_rows,
                        address_row,
-                       _map,
+                       map,
                        requires=field.requires
                        )
 

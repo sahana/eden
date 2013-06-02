@@ -1705,15 +1705,11 @@ class S3FacilityModel(S3Model):
                              Field("name", notnull=True,
                                    length=64, # Mayon Compatibility
                                    label=T("Name")),
-                             Field("code",
-                                   length=10,
+                             Field("code", length=10, # Mayon compatibility
                                    # Deployments that don't wants office codes can hide them
-                                   #readable=False,
-                                   #writable=False,
-                                   # Mayon compatibility
+                                   #readable=False, writable=False,
                                    # @ToDo: Deployment Setting to add validator to make these unique
-                                   #notnull=True,
-                                   #unique=True,
+                                   #notnull=True, unique=True,
                                    represent = lambda v: v or NONE,
                                    label=T("Code")),
                              Field("facility_type_id", "list:reference org_facility_type",
@@ -2386,12 +2382,6 @@ class S3OfficeModel(S3Model):
                                    requires=IS_NULL_OR(s3_phone_requires),
                                    represent = lambda v: v or "",
                                    ),
-                             # @ToDo: Move to Fixed Assets
-                             #Field("number_of_vehicles", "integer",
-                             #      label = T("# of Vehicles"),
-                             #      requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 9999))),
-                             #Field("vehicle_types", label = T("Vehicle Types")),
-                             #Field("equipment", label = T("Equipment")),
                              Field("obsolete", "boolean",
                                    label=T("Obsolete"),
                                    represent=lambda bool: \

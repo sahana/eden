@@ -547,7 +547,7 @@ class S3CRUD(S3Method):
             return exporter(resource)
 
         #elif representation == "map":
-        #    exporter = S3MAP()
+        #    exporter = S3Map()
         #    return exporter(r, **attr)
 
         elif representation == "pdf":

@@ -32,6 +32,7 @@ settings.auth.registration_link_user_to = {"staff": T("Staff"),
 
 settings.auth.record_approval = True
 
+# @ToDo: Should we fallback to organisation_id if site_id is None?
 settings.auth.registration_roles = {"site_id": ["reader",
                                                 ],
                                     }

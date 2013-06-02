@@ -850,12 +850,14 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
             var draftLayer = addDraftLayer(map);
         }
         // Simple Features
+        // e.g. S3LocationSelectorWidget
         if (options.features) {
             var features = options.features;
             var current_projection = map.getProjectionObject();
-            var parsefeature = format_geojson.parseFeature;
+            //var parseFeature = format_geojson.parseFeature;
+            //var parseGeometry = format_geojson.parseGeometry;
             for (i = 0; i < features.length; i++) {
-                var feature = parseFeature(features[i]);
+                var feature = format_geojson.parseFeature(features[i]);
                 feature.geometry.transform(proj4326, current_projection);
                 draftLayer.addFeatures([feature]);
             }

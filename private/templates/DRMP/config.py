@@ -161,8 +161,10 @@ def location_represent(id, row=None):
         represent = "%s | %s" % (s3_unicode(row.L1) if row.L1 else "",
                                  s3_unicode(row.L2) if row.L2 else "",
                                  )
-    else:
+    elif row.L1:
         represent = row.L1
+    else:
+        represent = current.messages["NONE"]
 
     return represent
 

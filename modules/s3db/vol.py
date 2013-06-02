@@ -28,7 +28,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3VolClusterDataModel",
+__all__ = ["S3VolunteerModel",
+           "S3VolunteerClusterModel",
            "vol_active",
            ]
 
@@ -38,10 +39,54 @@ from ..s3 import *
 from s3layouts import S3AddResourceLink
 
 # =============================================================================
-class S3VolClusterDataModel(S3Model):
+class S3VolunteerModel(S3Model):
 
     names = ["vol_details",
-             "vol_cluster_type",
+             ]
+
+    def model(self):
+
+        # ---------------------------------------------------------------------
+        # Volunteer Details
+        # - extra details for volunteers
+        #
+        tablename = "vol_details"
+        table = self.define_table(tablename,
+                                  self.hrm_human_resource_id(ondelete = "CASCADE"),
+                                  Field("active", "boolean",
+                                        represent = self.vol_active_represent,
+                                        label = current.T("Active")),
+                                  *s3_meta_fields())
+
+    # =====================================================================
+    @staticmethod
+    def vol_active_represent(opt):
+        """
+            Represent the Active status of a Volunteer
+        """
+
+        args = current.request.args
+        if "search" in args:
+            # We can't use an HTML represent, but can use a LazyT
+            # if we match in the search options
+            return current.T("Yes") if opt else current.T("No")
+        elif "report" in args:
+            # We can't use a represent
+            return opt
+
+        # List view, so HTML represent is fine
+        if opt:
+            output = DIV(current.T("Yes"),
+                         _style="color:green;")
+        else:
+            output = DIV(current.T("No"),
+                         _style="color:red;")
+        return output
+
+# =============================================================================
+class S3VolunteerClusterModel(S3Model):
+
+    names = ["vol_cluster_type",
              "vol_cluster",
              "vol_cluster_position",
              "vol_volunteer_cluster"
@@ -53,27 +98,15 @@ class S3VolClusterDataModel(S3Model):
         T = current.T
 
         crud_strings = current.response.s3.crud_strings
-        hrm_human_resource_id = self.hrm_human_resource_id
-
-        # ---------------------------------------------------------------------
-        # Volunteer Details
-        # - extra details for volunteers
-        #
-        tablename = "vol_details"
-        table = self.define_table(tablename,
-                                  hrm_human_resource_id(ondelete = "CASCADE"),
-                                  Field("active", "boolean",
-                                        represent = self.vol_active_represent,
-                                        label = T("Active")),
-                                  *s3_meta_fields())
+        define_table = self.define_table
 
         # ---------------------------------------------------------------------
         # Volunteer Cluster
         tablename = "vol_cluster_type"
-        table = self.define_table(tablename,
-                                  Field("name", unique=True,
-                                        label = T("Name")),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             Field("name", unique=True,
+                                   label = T("Name")),
+                             *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
             title_create = T("Add Volunteer Cluster Type"),
@@ -113,11 +146,11 @@ class S3VolClusterDataModel(S3Model):
         # ---------------------------------------------------------------------
         # Volunteer Cluster
         tablename = "vol_cluster"
-        table = self.define_table(tablename,
-                                  vol_cluster_type_id(),
-                                  Field("name", unique=True,
-                                        label = T("Name")),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             vol_cluster_type_id(),
+                             Field("name", unique=True,
+                                   label = T("Name")),
+                             *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
             title_create = T("Add Volunteer Cluster"),
@@ -158,10 +191,10 @@ class S3VolClusterDataModel(S3Model):
         # Volunteer Group Position
         #
         tablename = "vol_cluster_position"
-        table = self.define_table(tablename,
-                                  Field("name", unique=True,
-                                        label = T("Name")),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             Field("name", unique=True,
+                                   label = T("Name")),
+                             *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
             title_create = T("Add Volunteer Cluster Position"),
@@ -210,14 +243,14 @@ S3OptionsFilter({
 })'''
 
         tablename = "vol_volunteer_cluster"
-        table = self.define_table(tablename,
-                                  hrm_human_resource_id(ondelete = "CASCADE"),
-                                  vol_cluster_type_id(script = cluster_type_filter), # This field is ONLY here to provide a filter
-                                  vol_cluster_id(readable=False,
-                                                 writable=False),
-                                  vol_cluster_position_id(readable=False,
-                                                          writable=False),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             self.hrm_human_resource_id(ondelete = "CASCADE"),
+                             vol_cluster_type_id(script = cluster_type_filter), # This field is ONLY here to provide a filter
+                             vol_cluster_id(readable=False,
+                                            writable=False),
+                             vol_cluster_position_id(readable=False,
+                                                     writable=False),
+                             *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
         return Storage(
@@ -239,31 +272,6 @@ S3OptionsFilter({
                                              readable=False,
                                              writable=False),
             )
-
-    # =====================================================================
-    @staticmethod
-    def vol_active_represent(opt):
-        """
-            Represent the Active status of a Volunteer
-        """
-
-        args = current.request.args
-        if "search" in args:
-            # We can't use an HTML represent, but can use a LazyT
-            # if we match in the search options
-            return current.T("Yes") if opt else current.T("No")
-        elif "report" in args:
-            # We can't use a represent
-            return opt
-
-        # List view, so HTML represent is fine
-        if opt:
-            output = DIV(current.T("Yes"),
-                         _style="color:green;")
-        else:
-            output = DIV(current.T("No"),
-                         _style="color:red;")
-        return output
 
 # =============================================================================
 def vol_active(person_id):

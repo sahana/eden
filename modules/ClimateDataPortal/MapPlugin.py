@@ -88,7 +88,7 @@ class MapPlugin(object):
         env.DSL.init_R_interpreter(R, env.deployment_settings.database)
         map_plugin.client_config = client_config
 
-    def extend_gis_map(map_plugin, add_javascript, add_configuration):
+    def extend_gis_map(map_plugin):
 
         T = current.T
         s3 = current.response.s3

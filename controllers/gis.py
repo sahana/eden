@@ -132,8 +132,16 @@ def location():
     tablename = "gis_location"
     table = s3db[tablename]
 
-    if "search" in request.args or\
-       "report" in request.args:
+    args = request.args
+    if "search.json" in args:
+        gis_location_search = s3base.S3LocationSearch()
+        s3db.configure(tablename,
+                       # Custom Search Method
+                       search_method=gis_location_search,
+                       )
+
+    elif "search" in args or\
+         "report" in args:
         # Location Search Method
         gis_location_adv_search = (s3base.S3SearchSimpleWidget(
                 name = "location_search_text_advanced",
@@ -174,7 +182,7 @@ def location():
                 #    cols = 2
                 #),
             )
-        gis_location_search = s3base.S3LocationSearch(
+        gis_location_search = s3base.S3Search(
             simple = (s3base.S3SearchSimpleWidget(
                 name="location_search_text_simple",
                 label = T("Search"),
@@ -191,9 +199,22 @@ def location():
                        # Custom Search Method
                        search_method=gis_location_search,
                        )
-
-
-    if "report" in request.args:
+    else:
+        # Custom Methods
+        set_method = s3db.set_method
+        from s3.s3gis import S3ExportPOI
+        set_method("gis", "location",
+                   method="export_poi",
+                   action=S3ExportPOI())
+        from s3.s3gis import S3ImportPOI
+        set_method("gis", "location",
+                   method="import_poi",
+                   action=S3ImportPOI())
+        set_method("gis", "location",
+                   method="parents",
+                   action=s3_gis_location_parents)
+    
+    if "report" in args:
         class S3LocationVirtualFields:
             def population(self):
                 """
@@ -230,20 +251,6 @@ def location():
                    # Don't include Bulky Location Selector in List Views
                    listadd=False,
                    )
-
-    # Custom Methods
-    set_method = s3db.set_method
-    from s3.s3gis import S3ExportPOI
-    set_method("gis", "location",
-               method="export_poi",
-               action=S3ExportPOI())
-    from s3.s3gis import S3ImportPOI
-    set_method("gis", "location",
-               method="import_poi",
-               action=S3ImportPOI())
-    set_method("gis", "location",
-               method="parents",
-               action=s3_gis_location_parents)
 
     # Pre-processor
     # Allow prep to pass vars back to the controller
@@ -408,12 +415,11 @@ def ldata():
     """
         Return JSON of location hierarchy suitable for use by S3LocationSelectorWidget2
         '/eden/gis/ldata/' + id
-        Append '/b' to request bounds
 
         n = {id : {'n' : name,
                    'l' : level,
                    'f' : parent,
-                   'b' : [lon_min, lat_min, lon_max, lat_max] // Just for lowest-level of hierarchy, for setting the map
+                   'b' : [lon_min, lat_min, lon_max, lat_max]
                    }}
     """
 
@@ -422,10 +428,6 @@ def ldata():
 
     if args_len == 0:
         raise HTTP(400)
-    elif args_len == 1:
-        bounds = False
-    else:
-        bounds = True
 
     id = args[0]
 
@@ -433,25 +435,25 @@ def ldata():
     query = (table.deleted == False) & \
             ((table.parent == id) | \
              (table.id == id))
-    fields = [table.id,
-              table.name,
-              table.level,
-              table.parent,
-              ]
-    if bounds:
-        fields += [table.lon_min,
-                   table.lat_min,
-                   table.lon_max,
-                   table.lat_max,
-                   ]
-    locations = db(query).select(*fields)
-    id_level = int(locations.as_dict()[int(id)]["level"][1:])
+    locations = db(query).select(table.id,
+                                 table.name,
+                                 table.level,
+                                 table.parent,
+                                 table.lon_min,
+                                 table.lat_min,
+                                 table.lon_max,
+                                 table.lat_max,
+                                 )
+    try:
+        id_level = int(locations.as_dict()[int(id)]["level"][1:])
+    except:
+        return ""
     output_level = id_level + 1
     search_level = "L%s" % output_level
     location_dict = {}
     for location in locations:
         if location.level == search_level:
-            if bounds and location.lon_min is not None:
+            if location.lon_min is not None:
                 location_dict[int(location.id)] = dict(n=location.name,
                                                        l=output_level,
                                                        f=int(location.parent),

@@ -1953,7 +1953,7 @@ class S3HRSkillModel(S3Model):
                                     child="person_id")
         tablename = "hrm_training"
         table = define_table(tablename,
-                             #@ToDo: Create a way to add new people to training as staff/volunteers
+                             # @ToDo: Create a way to add new people to training as staff/volunteers
                              person_id(empty=False,
                                        comment = participant_id_comment,
                                        ),
@@ -2080,8 +2080,8 @@ class S3HRSkillModel(S3Model):
 
         # Resource Configuration
         configure(tablename,
-                  onaccept=self.hrm_training_onaccept,
-                  ondelete=self.hrm_training_onaccept,
+                  onaccept=hrm_training_onaccept,
+                  ondelete=hrm_training_onaccept,
                   search_method=training_search,
                   deduplicate=self.hrm_training_duplicate,
                   report_options=Storage(
@@ -2371,7 +2371,7 @@ class S3HRSkillModel(S3Model):
                           _title="%s|%s" % (T("Competency Rating"),
                                             T("Level of competency this person has with this skill.")))
         if current.deployment_settings.get_hrm_skill_types():
-            s3.js_global.append("i18n.no_ratings = '%s';" % T("No Ratings for Skill Type"))
+            s3.js_global.append('''i18n.no_ratings="%s"''' % T("No Ratings for Skill Type"))
             s3.jquery_ready.append(
 '''S3OptionsFilter({
  'triggerName':'skill_id',
@@ -2737,102 +2737,116 @@ class S3HRSkillModel(S3Model):
                 job.data.id = _duplicate.id
                 job.method = job.METHOD.UPDATE
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def hrm_training_onaccept(form):
-        """
-            Ensure that Certifications & Hours are Populated from Trainings
-            - called both onaccept & ondelete
-        """
+# =============================================================================
+def hrm_training_onaccept(form):
+    """
+        Ensure that Certifications & Hours are Populated from Trainings
+        - called both onaccept & ondelete
+    """
 
-        # Deletion and update have a different format
-        try:
-            id = form.vars.id
-            delete = False
-        except:
-            id = form.id
-            delete = True
+    # Deletion and update have a different format
+    try:
+        id = form.vars.id
+        delete = False
+    except:
+        id = form.id
+        delete = True
 
-        # Get the full record
-        db = current.db
-        table = db.hrm_training
-        record = db(table.id == id).select(table.person_id,
-                                           table.course_id,
-                                           table.date,
-                                           table.hours,
-                                           table.deleted_fk,
-                                           limitby=(0, 1)).first()
+    # Get the full record
+    db = current.db
+    table = db.hrm_training
+    record = db(table.id == id).select(table.person_id,
+                                       table.course_id,
+                                       table.date,
+                                       table.hours,
+                                       table.deleted_fk,
+                                       limitby=(0, 1)).first()
 
-        if delete:
-            deleted_fks = json.loads(record.deleted_fk)
-            person_id = deleted_fks["person_id"]
-        else:
-            person_id = record.person_id
+    if delete:
+        deleted_fks = json.loads(record.deleted_fk)
+        person_id = deleted_fks["person_id"]
+    else:
+        person_id = record.person_id
 
-        s3db = current.s3db
-        if current.deployment_settings.get_hrm_vol_experience() == "programme":
-            # Check if this person is a volunteer
-            hrtable = db.hrm_human_resource
-            query = (hrtable.person_id == person_id) & \
-                    (hrtable.deleted == False)
-            vol = db(query).select(hrtable.type,
-                                   limitby=(0, 1)).first()
+    s3db = current.s3db
+    if current.deployment_settings.get_hrm_vol_experience() == "programme":
+        # Check if this person is a volunteer
+        hrtable = db.hrm_human_resource
+        query = (hrtable.person_id == person_id) & \
+                (hrtable.deleted == False)
+        vol = db(query).select(hrtable.type,
+                               limitby=(0, 1)).first()
 
-            if vol and vol.type == 2:
-                 # Update Hours
-                ptable = s3db.hrm_programme_hours
+        if vol and vol.type == 2:
+             # Update Hours
+            ptable = s3db.hrm_programme_hours
+            query = (ptable.training_id == id)
+            if delete:
+                resource = s3db.resource("hrm_programme_hours")
+                resource.add_filter(query)
+                # Automatically propagates to Active Status
+                resource.delete()
+            else:
                 date = record.date
                 hours = record.hours
-                if delete:
-                    resource = s3db.resource("hrm_programme_hours")
-                    query = (ptable.person_id == person_id) & \
-                            (ptable.date == date) & \
-                            (ptable.hours == hours) & \
-                            (ptable.training == True)
-                    resource.add_filter(query)
-                    resource.delete()
+                # Update or Insert?
+                exists = db(query).select(ptable.id,
+                                          ptable.date,
+                                          ptable.hours,
+                                          limitby=(0, 1)).first()
+                
+                if exists:
+                    if date != exists.date or \
+                       hours != exists.hours:
+                        db(query).update(date=date, hours=hours)
+                        id = exists.id
+                    else:
+                        # Nothing to propagate
+                        id = None
                 else:
-                    id = ptable.insert(person_id = person_id,
+                    id = ptable.insert(training_id = id,
+                                       person_id = person_id,
                                        date = date,
                                        hours = hours,
                                        training = True)
+                if id:
                     # Propagate to Active Status
                     form = Storage()
                     form.vars = Storage()
                     form.vars.id = id
                     hrm_programme_hours_onaccept(form)
 
-        # Update Certifications
-        ctable = db.hrm_certification
-        cctable = db.hrm_course_certificate
+    # Update Certifications
+    ctable = db.hrm_certification
+    cctable = db.hrm_course_certificate
 
-        # Drop all existing certifications which came from trainings
-        # - this is a lot easier than selective deletion.
-        query = (ctable.person_id == person_id) & \
-                (ctable.from_training == True)
-        db(query).delete()
+    # Drop all existing certifications which came from trainings
+    # - this is a lot easier than selective deletion.
+    query = (ctable.person_id == person_id) & \
+            (ctable.from_training == True)
+    db(query).delete()
 
-        # Figure out which certifications we're _supposed_ to have.
-        query = (table.person_id == person_id) & \
-                (table.course_id == cctable.course_id) & \
-                (cctable.certificate_id == db.hrm_certificate.id)
-        trainings = db(query).select()
+    # Figure out which certifications we're _supposed_ to have.
+    query = (table.person_id == person_id) & \
+            (table.course_id == cctable.course_id) & \
+            (cctable.certificate_id == db.hrm_certificate.id)
+    trainings = db(query).select()
 
-        # Add these certifications back in.
-        hrm_certification_onaccept = s3db.hrm_certification_onaccept
-        form = Storage()
-        form.vars = Storage()
-        vars = form.vars
-        for training in trainings:
-            id = ctable.update_or_insert(
-                    person_id=person_id,
-                    certificate_id=training["hrm_certificate"].id,
-                    comments="Added by training",
-                    from_training=True
-                )
-            # Propagate to Skills
-            vars.id = id
-            hrm_certification_onaccept(form)
+    # Add these certifications back in.
+    hrm_certification_onaccept = s3db.hrm_certification_onaccept
+    form = Storage()
+    form.vars = Storage()
+    vars = form.vars
+    for training in trainings:
+        id = ctable.update_or_insert(
+                person_id=person_id,
+                certificate_id=training["hrm_certificate"].id,
+                comments="Added by training",
+                from_training=True
+            )
+        # Propagate to Skills
+        vars.id = id
+        hrm_certification_onaccept(form)
 
 # =============================================================================
 class S3HRExperienceModel(S3Model):
@@ -2912,7 +2926,6 @@ class S3HRProgrammeModel(S3Model):
 
     names = ["hrm_programme",
              "hrm_programme_hours",
-             #"hrm_active_virtual_field",
              ]
 
     def model(self):
@@ -3015,8 +3028,13 @@ class S3HRProgrammeModel(S3Model):
                                    default=False,
                                    represent = lambda opt: \
                                         T("Training") if opt else T("Work"),
-                                   readable=False,
-                                   writable=False),
+                                   writable=False,
+                                   ),
+                             Field("training_id", self.hrm_training,
+                                   label = T("Course"),
+                                   represent = self.hrm_training_represent,
+                                   writable=False,
+                                   ),
                              s3_comments(comment=None),
                              *s3_meta_fields())
 
@@ -3043,6 +3061,7 @@ class S3HRProgrammeModel(S3Model):
                   list_fields=["id",
                                "training",
                                "programme_id",
+                               "training_id",
                                "date",
                                "hours",
                                ]
@@ -3077,6 +3096,33 @@ class S3HRProgrammeModel(S3Model):
             if row:
                 item.id = row.id
                 item.method = item.METHOD.UPDATE  
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hrm_training_represent(id, row=None):
+        """
+           Represent a Training by it's Course
+           - used from within hrm_programme_hours
+        """
+
+        if not row:
+            if not id:
+                return current.messages["NONE"]
+        else:
+            id = row.id
+
+        db = current.db
+        table = db.hrm_training
+        ctable = db.hrm_course
+        query = (table.id == id) & \
+                (ctable.id == table.course_id)
+        row = db(query).select(ctable.name,
+                               limitby=(0, 1)).first()
+
+        try:
+            return row.name
+        except:
+            current.messages.UNKNOWN_OPT
 
 # =============================================================================
 def hrm_programme_hours_onaccept(form):

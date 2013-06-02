@@ -146,7 +146,8 @@ def post():
         return True
     s3.prep = prep
     
-    return s3_rest_controller(rheader=s3db.cms_rheader)
+    output = s3_rest_controller(rheader=s3db.cms_rheader)
+    return output
 
 # -----------------------------------------------------------------------------
 def page():

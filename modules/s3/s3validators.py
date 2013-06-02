@@ -953,9 +953,15 @@ class IS_LOCATION(Validator):
             query = (table.id == value) & (table.deleted == False)
             if level:
                 if isinstance(level, list):
-                    query = query & (table.level.belongs(level))
+                    if None in level:
+                        # None needs special handling
+                        level.remove(None)
+                        query &= ((table.level.belongs(level)) | \
+                                  (table.level == None))
+                    else:
+                        query &= (table.level.belongs(level))
                 else:
-                    query = query & (table.level == level)
+                    query &= (table.level == level)
             ok = db(query).select(table.id, limitby=(0, 1))
         if ok:
             return (value, None)
@@ -1173,7 +1179,7 @@ class IS_LOCATION_SELECTOR(Validator):
                 # Test for duplicates
                 query = (table.name == L1) & (table.level == "L1")
                 if L0:
-                    query = query & (table.parent == L0)
+                    query &= (table.parent == L0)
                 location = db(query).select(table.id,
                                             limitby=(0, 1)).first()
                 if location:
@@ -1221,7 +1227,7 @@ class IS_LOCATION_SELECTOR(Validator):
                 # @ToDo: Also check for L2 parenting direct to L0
                 query = (table.name == L2) & (table.level == "L2")
                 if L1:
-                    query = query & (table.parent == L1)
+                    query &= (table.parent == L1)
                 location = db(query).select(table.id,
                                             limitby=(0, 1)).first()
                 if location:
@@ -1277,7 +1283,7 @@ class IS_LOCATION_SELECTOR(Validator):
                 # @ToDo: Also check for L3 parenting direct to L0/1
                 query = (table.name == L3) & (table.level == "L3")
                 if L2:
-                    query = query & (table.parent == L2)
+                    query &= (table.parent == L2)
                 location = db(query).select(table.id,
                                             limitby=(0, 1)).first()
                 if location:
@@ -1341,7 +1347,7 @@ class IS_LOCATION_SELECTOR(Validator):
                 # @ToDo: Also check for L4 parenting direct to L0/1/2
                 query = (table.name == L4) & (table.level == "L4")
                 if L3:
-                    query = query & (table.parent == L3)
+                    query &= (table.parent == L3)
                 location = db(query).select(table.id,
                                             limitby=(0, 1)).first()
                 if location:
@@ -1413,7 +1419,7 @@ class IS_LOCATION_SELECTOR(Validator):
                 # @ToDo: Also check for L5 parenting direct to L0/1/2/3
                 query = (table.name == L5) & (table.level == "L5")
                 if L4:
-                    query = query & (table.parent == L4)
+                    query &= (table.parent == L4)
                 location = db(query).select(table.id,
                                             limitby=(0, 1)).first()
                 if location:
@@ -1546,7 +1552,11 @@ class IS_LOCATION_SELECTOR2(Validator):
         vars = current.request.post_vars
         address = vars.get("address", None)
         lat = vars.get("lat", None)
+        if lat == "":
+            lat = None
         lon = vars.get("lon", None)
+        if lon == "":
+            lon = None
         parent = vars.get("parent", None)
         # Rough check for valid Lat/Lon
         errors = Storage()
@@ -1563,7 +1573,7 @@ class IS_LOCATION_SELECTOR2(Validator):
         if errors:
             return (value, errors)
 
-        if address or (lat is not None and lon is not None):
+        if parent or address or (lat is not None and lon is not None):
             # Specific Location
             db = current.db
             table = db.gis_location
@@ -1573,6 +1583,7 @@ class IS_LOCATION_SELECTOR2(Validator):
                     return (None, current.auth.messages.access_denied)
                 vars = Storage(lat=lat,
                                lon=lon,
+                               inherited=False,
                                addr_street=address,
                                parent=parent,
                                )
@@ -1605,19 +1616,47 @@ class IS_LOCATION_SELECTOR2(Validator):
                                             table.parent,
                                             limitby=(0, 1)).first()
                 if location:
-                    # Float comparisons need care - just check the 1st 5 decimal points, as that's all we care about
-                    if address != location.addr_street or \
-                       int(parent) != int(location.parent) or \
-                       (lat is not None and round(lat, 5) != round(location.lat, 5)) or \
-                       (lon is not None and round(lon, 5) != round(location.lon, 5)):
+                    changed = False
+                    lparent = location.parent
+                    if parent and lparent:
+                        if int(parent) != int(lparent):
+                            changed = True
+                    elif parent or lparent:
+                        changed = True
+                    if not changed:
+                        addr_street = location.addr_street
+                        if address and addr_street:
+                            if address != addr_street:
+                                changed = True
+                        elif address or addr_street:
+                            changed = True
+                        if not changed:
+                            # Float comparisons need care - just check the 1st 5 decimal points, as that's all we care about
+                            llat = location.lat
+                            if lat is not None and llat is not None:
+                                if round(lat, 5) != round(llat, 5):
+                                    changed = True
+                            elif lat is not None or llat is not None:
+                                changed = True
+                            if not changed:
+                                llon = location.lon
+                                if lon is not None and llon is not None:
+                                    if round(lon, 5) != round(llon, 5):
+                                        changed = True
+                                elif lon is not None or llon is not None:
+                                    changed = True
+
+                    if changed:
                         # Update the record
                         if not current.auth.s3_has_permission("update", table, record_id=value):
                             return (value, current.auth.messages.access_denied)
-                        vars = Storage(lat=lat,
-                                       lon=lon,
-                                       addr_street=address,
+                        vars = Storage(addr_street=address,
                                        parent=parent,
                                        )
+                        if lat is not None and lon is not None:
+                            vars.lat = lat
+                            vars.lon = lon
+                            vars.inherited = False
                         # onvalidation
                         # - includes detailed bounds check if deployment_setting doesn't disable it
                         form = Storage()
@@ -1641,9 +1680,38 @@ class IS_LOCATION_SELECTOR2(Validator):
                     return (value,
                             self.error_message or current.T("Invalid Location!"))
         else:
-            # Lx
-            # - do a simple Location check
-            return IS_LOCATION(level=self.levels)(value)
+            # Lx or a specific location with blank Parent/Address/Lat/Lon
+            if value:
+                db = current.db
+                table = db.gis_location
+                query = (table.id == value) & \
+                        (table.deleted == False)
+                location = db(query).select(table.level,
+                                            table.lat,
+                                            table.lon,
+                                            table.addr_street,
+                                            table.parent,
+                                            limitby=(0, 1)).first()
+                if not location:
+                    return (value,
+                            self.error_message or current.T("Invalid Location!"))
+                if location.level:
+                    # Do a simple Location check
+                    return IS_LOCATION(level=self.levels)(value)
+                else:
+                    # Clear the Parent/Lat/Lon/Address
+                    vars = Storage(lat = None,
+                                   lon = None,
+                                   addr_street = None,
+                                   parent = None)
+                    db(table.id == value).update(**vars)
+                    # Update location tree in case parent has changed
+                    vars.id = value
+                    # onaccept
+                    current.gis.update_location_tree(vars)
+            else:
+                # Do a simple Location check
+                return IS_LOCATION(level=self.levels)(value)
 
 # =============================================================================
 class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
@@ -1811,9 +1879,8 @@ class IS_ADD_PERSON_WIDGET(Validator):
                     (ctable.contact_method == "EMAIL") & \
                     (ctable.value == value)
             if person_id:
-                query = query & \
-                        (ctable.pe_id == ptable.pe_id) & \
-                        (ptable.id != person_id)
+                query &= (ctable.pe_id == ptable.pe_id) & \
+                         (ptable.id != person_id)
             email = db(query).select(ctable.id, limitby=(0, 1)).first()
             if email:
                 error_message = T("This email-address is already registered.")
