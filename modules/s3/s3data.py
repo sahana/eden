@@ -1442,7 +1442,6 @@ class S3PivotTable(object):
         thead = THEAD(titles, headers)
 
         # Render the table body:
-
         tbody = TBODY()
         add_row = tbody.append
 
@@ -1559,7 +1558,6 @@ class S3PivotTable(object):
             add_row(tr)
 
         # Table footer:
-
         i = numrows
         _class = i % 2 and "odd" or "even"
         _class = "%s %s" % (_class, "totals_row")
@@ -1581,7 +1579,6 @@ class S3PivotTable(object):
         tfoot = TFOOT(col_total)
 
         # Wrap up:
-
         append = components.append
         append(thead)
         append(tbody)
@@ -1589,9 +1586,8 @@ class S3PivotTable(object):
             append(tfoot)
 
         # Chart data:
-
         layer_label = s3_unicode(layer_label)
-        BY = T("by")
+        BY = s3_unicode(T("by"))
         row_label = "%s %s" % (BY, s3_unicode(row_label))
         if col_label:
             col_label = "%s %s" % (BY, s3_unicode(col_label))

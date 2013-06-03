@@ -28,7 +28,6 @@
 """
 
 __all__ = ["S3CAPModel",
-           "cap_first_run",
            "cap_info_labels",
            "cap_alert_is_template",
            "cap_alert_rheader",
@@ -937,19 +936,6 @@ def cap_info_rheader(r):
                              )
             return rheader
     return None
-
-# =============================================================================
-def cap_first_run():
-    """ Add the default template """
-
-    s3db = current.s3db
-    atable = s3db.cap_alert
-
-    if not current.db(atable.id > 0).select(atable.id,
-                                            limitby=(0, 1)):
-        s3db.cap_alert.insert(template_title="Default", is_template=True)
-
-    return
 
 # =============================================================================
 def update_alert_id(table):

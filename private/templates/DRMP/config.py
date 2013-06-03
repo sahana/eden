@@ -13,7 +13,7 @@ from s3.s3fields import S3Represent
 from s3.s3resource import S3FieldSelector
 from s3.s3utils import S3DateTime, s3_auth_user_represent_name, s3_avatar_represent, s3_unicode
 from s3.s3validators import IS_LOCATION_SELECTOR2, IS_ONE_OF
-from s3.s3widgets import S3LocationAutocompleteWidget, S3LocationSelectorWidget2
+from s3.s3widgets import S3LocationSelectorWidget2
 
 T = current.T
 settings = current.deployment_settings
@@ -1460,8 +1460,10 @@ def customize_cms_post(**attr):
             # Filter from a Profile page?
             # If so, then default the fields we know
             s3db = current.s3db
-            event_id = get_vars.get("~.(event)", None)
             location_id = get_vars.get("~.(location)", None)
+            if location_id:
+                table.location_id.default = location_id
+            event_id = get_vars.get("~.(event)", None)
             if event_id:
                 crud_form = S3SQLCustomForm(
                     "series_id",
@@ -1483,30 +1485,6 @@ def customize_cms_post(**attr):
                 s3db.configure("cms_post",
                                create_onaccept = create_onaccept, 
                                )
-            elif location_id:
-                location_field = table.location_id
-                location_field.default = location_id
-                location_field.readable = location_field.writable = False
-                crud_form = S3SQLCustomForm(
-                    "series_id",
-                    "body",
-                    S3SQLInlineComponent(
-                        "event_post",
-                        #label = T("Disaster(s)"),
-                        label = T("Disaster"),
-                        multiple = False,
-                        fields = ["event_id"],
-                        orderby = "event_id$name",
-                    ),
-                    S3SQLInlineComponent(
-                        "document",
-                        name = "file",
-                        label = T("Files"),
-                        fields = ["file",
-                                  #"comments",
-                                  ],
-                    ),
-                )
             else:
                 crud_form = S3SQLCustomForm(
                     "series_id",
@@ -1514,7 +1492,8 @@ def customize_cms_post(**attr):
                     "location_id",
                     S3SQLInlineComponent(
                         "event_post",
-                        label = T("Disaster(s)"),
+                        #label = T("Disaster(s)"),
+                        label = T("Disaster"),
                         multiple = False,
                         fields = ["event_id"],
                         orderby = "event_id$name",
@@ -1581,102 +1560,171 @@ def customize_event_event(**attr):
     standard_prep = s3.prep
     def custom_prep(r):
         if r.interactive:
+            db = current.db
             s3db = current.s3db
-            # Customise the cms_post table as that is used for the widgets
-            customize_cms_post_fields()
-
-            # Represent used in rendering
-            current.auth.settings.table_user.organisation_id.represent = s3db.org_organisation_represent
 
             # Load normal Model
             table = s3db.event_event
 
-            alerts_widget = dict(label = "Alerts",
-                                 title_create = "Add New Alert",
-                                 type = "datalist",
-                                 tablename = "cms_post",
-                                 context = "event",
-                                 filter = S3FieldSelector("series_id$name") == "Alert",
-                                 icon = "icon-alert",
-                                 layer = "Alerts",
-                                 # provided by Catalogue Layer
-                                 #marker = "alert",
-                                 list_layout = render_profile_posts,
-                                 )
-            map_widget = dict(label = "Map",
-                              type = "map",
-                              context = "event",
-                              icon = "icon-map",
-                              height = 383,
-                              width = 568,
-                              )
-            incidents_widget = dict(label = "Incidents",
-                                    title_create = "Add New Incident",
-                                    type = "datalist",
-                                    tablename = "cms_post",
-                                    context = "event",
-                                    filter = S3FieldSelector("series_id$name") == "Incident",
-                                    icon = "icon-incident",
-                                    layer = "Incidents",
-                                    # provided by Catalogue Layer
-                                    #marker = "incident",
-                                    list_layout = render_profile_posts,
-                                    )
-            assessments_widget = dict(label = "Assessments",
-                                      title_create = "Add New Assessment",
-                                      type = "datalist",
-                                      tablename = "cms_post",
-                                      context = "event",
-                                      filter = S3FieldSelector("series_id$name") == "Assessment",
-                                      icon = "icon-assessment",
-                                      layer = "Assessments",
-                                      # provided by Catalogue Layer
-                                      #marker = "assessment",
-                                      list_layout = render_profile_posts,
-                                      )
-            activities_widget = dict(label = "Activities",
-                                     title_create = "Add New Activity",
+            if r.method == "profile":
+                # Customise the cms_post table as that is used for the widgets
+                customize_cms_post_fields()
+
+                # Represent used in rendering
+                current.auth.settings.table_user.organisation_id.represent = s3db.org_organisation_represent
+
+                gtable = db.gis_location
+                ltable = db.event_event_location
+                query = (ltable.event_id == r.id) & \
+                        (ltable.location_id == gtable.id)
+                location = db(query).select(gtable.id,
+                                            gtable.lat_max,
+                                            gtable.lon_max,
+                                            gtable.lat_min,
+                                            gtable.lon_min,
+                                            limitby=(0, 1)).first()
+                if location:
+                    bbox = {"lat_max" : location.lat_max,
+                            "lon_max" : location.lon_max,
+                            "lat_min" : location.lat_min,
+                            "lon_min" : location.lon_min
+                            }
+                    default = "~.(location)=%s" % location.id
+                else:
+                    # Default bounds
+                    bbox = {}
+                    # No default Location
+                    default = None
+                map_widget = dict(label = "Map",
+                                  type = "map",
+                                  context = "event",
+                                  icon = "icon-map",
+                                  height = 383,
+                                  width = 568,
+                                  bbox = bbox,
+                                  )
+                alerts_widget = dict(label = "Alerts",
+                                     title_create = "Add New Alert",
                                      type = "datalist",
                                      tablename = "cms_post",
                                      context = "event",
-                                     filter = S3FieldSelector("series_id$name") == "Activity",
-                                     icon = "icon-activity",
-                                     layer = "Activities",
+                                     default = default,
+                                     filter = S3FieldSelector("series_id$name") == "Alert",
+                                     icon = "icon-alert",
+                                     layer = "Alerts",
                                      # provided by Catalogue Layer
-                                     #marker = "activity",
+                                     #marker = "alert",
                                      list_layout = render_profile_posts,
                                      )
-            reports_widget = dict(label = "Reports",
-                                  title_create = "Add New Report",
-                                  type = "datalist",
-                                  tablename = "cms_post",
-                                  context = "event",
-                                  filter = S3FieldSelector("series_id$name") == "Report",
-                                  icon = "icon-report",
-                                  layer = "Reports",
-                                  # provided by Catalogue Layer
-                                  #marker = "report",
-                                  list_layout = render_profile_posts,
-                                  )
-            #comments_widget = dict(label = "Comments",
-            #                       type = "comments",
-            #                       icon = "icon-comments-alt",
-            #                       colspan = 2,
-            #                       )
+                incidents_widget = dict(label = "Incidents",
+                                        title_create = "Add New Incident",
+                                        type = "datalist",
+                                        tablename = "cms_post",
+                                        context = "event",
+                                        default = default,
+                                        filter = S3FieldSelector("series_id$name") == "Incident",
+                                        icon = "icon-incident",
+                                        layer = "Incidents",
+                                        # provided by Catalogue Layer
+                                        #marker = "incident",
+                                        list_layout = render_profile_posts,
+                                        )
+                assessments_widget = dict(label = "Assessments",
+                                          title_create = "Add New Assessment",
+                                          type = "datalist",
+                                          tablename = "cms_post",
+                                          context = "event",
+                                          default = default,
+                                          filter = S3FieldSelector("series_id$name") == "Assessment",
+                                          icon = "icon-assessment",
+                                          layer = "Assessments",
+                                          # provided by Catalogue Layer
+                                          #marker = "assessment",
+                                          list_layout = render_profile_posts,
+                                          )
+                activities_widget = dict(label = "Activities",
+                                         title_create = "Add New Activity",
+                                         type = "datalist",
+                                         tablename = "cms_post",
+                                         context = "event",
+                                         default = default,
+                                         filter = S3FieldSelector("series_id$name") == "Activity",
+                                         icon = "icon-activity",
+                                         layer = "Activities",
+                                         # provided by Catalogue Layer
+                                         #marker = "activity",
+                                         list_layout = render_profile_posts,
+                                         )
+                reports_widget = dict(label = "Reports",
+                                      title_create = "Add New Report",
+                                      type = "datalist",
+                                      tablename = "cms_post",
+                                      context = "event",
+                                      default = default,
+                                      filter = S3FieldSelector("series_id$name") == "Report",
+                                      icon = "icon-report",
+                                      layer = "Reports",
+                                      # provided by Catalogue Layer
+                                      #marker = "report",
+                                      list_layout = render_profile_posts,
+                                      )
+                #comments_widget = dict(label = "Comments",
+                #                       type = "comments",
+                #                       icon = "icon-comments-alt",
+                #                       colspan = 2,
+                #                       )
+                s3db.configure("event_event",
+                               profile_widgets=[alerts_widget,
+                                                map_widget,
+                                                incidents_widget,
+                                                assessments_widget,
+                                                activities_widget,
+                                                reports_widget,
+                                                #comments_widget,
+                                                ])
+
+            # Include a Location inline
+            location_field = s3db.event_event_location.location_id
+            # Don't label a single field InlineComponent
+            location_field.label = ""
+            represent = S3Represent(lookup="gis_location")
+            location_field.represent = represent
+            # L1s only
+            location_field.requires = IS_NULL_OR(
+                                        IS_ONE_OF(db, "gis_location.id",
+                                                  represent,
+                                                  sort = True,
+                                                  filterby = "level",
+                                                  filter_opts = ["L1"]
+                                                  )
+                                        )
+            # Don't add new Locations here
+            location_field.comment = None
+            # Simple dropdown
+            location_field.widget = None
+
+            crud_form = S3SQLCustomForm(
+                    "name",
+                    "event_type_id",
+                    "exercise",
+                    "zero_hour",
+                    "closed",
+                    S3SQLInlineComponent(
+                        "event_location",
+                        label = T("Location"),
+                        multiple = False,
+                        fields = ["location_id"],
+                    ),
+                    "comments",
+                )
+            
             s3db.configure("event_event",
                            create_next = URL(c="event", f="event",
                                              args=["[id]", "profile"]),
+                           crud_form = crud_form,
                            # We want the Create form to be in a modal, not inline, for consistency
                            listadd = False,
                            list_layout = render_events,
-                           profile_widgets=[alerts_widget,
-                                            map_widget,
-                                            incidents_widget,
-                                            assessments_widget,
-                                            activities_widget,
-                                            reports_widget,
-                                            #comments_widget,
-                                            ],
                            )
 
             ADD_EVENT = T("New Disaster")
@@ -1779,6 +1827,20 @@ def customize_gis_location(**attr):
                 # Represent used in rendering
                 current.auth.settings.table_user.organisation_id.represent = s3db.org_organisation_represent
 
+                location = r.record
+                default = "~.(location)=%s" % location.id
+                map_widget = dict(label = "Map",
+                                  type = "map",
+                                  context = "location",
+                                  icon = "icon-map",
+                                  height = 383,
+                                  width = 568,
+                                  bbox = {"lat_max" : location.lat_max,
+                                          "lon_max" : location.lon_max,
+                                          "lat_min" : location.lat_min,
+                                          "lon_min" : location.lon_min
+                                          },
+                                  )
                 #locations_widget = dict(label = "Locations",
                 #                        insert = False,
                 #                        #title_create = "Add New Location",
@@ -1795,28 +1857,17 @@ def customize_gis_location(**attr):
                                         type = "datalist",
                                         tablename = "org_resource",
                                         context = "location",
+                                        default = default,
                                         icon = "icon-resource",
                                         show_on_map = False, # No Marker yet & only show at L1-level anyway
                                         list_layout = render_resources,
                                         )
-                record = r.record
-                map_widget = dict(label = "Map",
-                                  type = "map",
-                                  context = "location",
-                                  icon = "icon-map",
-                                  height = 383,
-                                  width = 568,
-                                  bbox = {"lat_max" : record.lat_max,
-                                          "lon_max" : record.lon_max,
-                                          "lat_min" : record.lat_min,
-                                          "lon_min" : record.lon_min
-                                          },
-                                  )
                 incidents_widget = dict(label = "Incidents",
                                         title_create = "Add New Incident",
                                         type = "datalist",
                                         tablename = "cms_post",
                                         context = "location",
+                                        default = default,
                                         filter = (S3FieldSelector("series_id$name") == "Incident") & (S3FieldSelector("expired") == False),
                                         icon = "icon-incident",
                                         layer = "Incidents",
@@ -1829,6 +1880,7 @@ def customize_gis_location(**attr):
                                       type = "datalist",
                                       tablename = "cms_post",
                                       context = "location",
+                                      default = default,
                                       filter = S3FieldSelector("series_id$name") == "Report",
                                       icon = "icon-report",
                                       layer = "Reports",
@@ -1841,6 +1893,7 @@ def customize_gis_location(**attr):
                                        type = "datalist",
                                        tablename = "project_project",
                                        context = "location",
+                                       default = default,
                                        icon = "icon-project",
                                        show_on_map = False, # No Marker yet & only show at L1-level anyway
                                        list_layout = render_projects,
@@ -1850,6 +1903,7 @@ def customize_gis_location(**attr):
                                          type = "datalist",
                                          tablename = "cms_post",
                                          context = "location",
+                                         default = default,
                                          filter = S3FieldSelector("series_id$name") == "Activity",
                                          icon = "icon-activity",
                                          layer = "Activities",
@@ -1980,14 +2034,6 @@ def customize_org_office(**attr):
                 # Don't add new Locations here
                 location_field.comment = None
                 # L1s only
-                #location_field.requires = IS_ONE_OF(current.db, "gis_location.id",
-                #                                    S3Represent(lookup="gis_location"),
-                #                                    sort = True,
-                #                                    filterby = "level",
-                #                                    filter_opts = ["L1"]
-                #                                    )
-                # Simple dropdown
-                #location_field.widget = None
                 location_field.requires = IS_LOCATION_SELECTOR2(levels=["L1"])
                 location_field.widget = S3LocationSelectorWidget2(levels=["L1"],
                                                                   show_address=True,

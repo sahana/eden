@@ -155,6 +155,7 @@ a i.icon.icon-plus-sign.big-add:hover {
     background-image: linear-gradient(top,#f9f9fa,#e0e2e8) !important;
 }
 
+/* S3SQLCustomForm */
 table.embeddedComponent {
     border: 0;
     display: inline-block;
@@ -165,12 +166,14 @@ table.embeddedComponent {
     -moz-border-radius: 4px;
 }
 
+#add-row-defaultevent_location td, 
 #add-row-defaultevent_post td, 
 #add-row-filedocument td {
     border: 0;
     padding-left: 0;
 }
 
+#sub_defaultevent_location_defaultevent_location_i_location_id_edit_none,
 #sub_defaultevent_post_defaultevent_post_i_event_id_edit_none,
 #sub_filedocument_filedocument_i_file_edit_none.upload {
     padding-top: 6px;
@@ -341,7 +344,6 @@ h2 {
 }
 
 /* Project & Resource Read Screen */
-
 form.form-horizontal {  /*temporary we need to pass another class to the form so I can style it without problems*/
     background-color: #fff;
     border: 1px solid #b2b2b2;
@@ -449,7 +451,6 @@ b.red {
 }
 
 /* Add new Project form styling */
-
 #sub-partnerorganisation table.embeddedComponent thead,
 #sub-defaultlocation table.embeddedComponent thead tr.label-row td {
     display: none;

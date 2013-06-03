@@ -202,6 +202,8 @@ class S3EventModel(S3Model):
                   list_orderby=~table.zero_hour,
                   update_onaccept=self.event_update_onaccept,
                   deduplicate=self.event_duplicate,
+                  context = {"location": "event_location.location_id",
+                             },
                   list_fields = ["id",
                                  "name",
                                  "event_type_id$name",
@@ -210,7 +212,8 @@ class S3EventModel(S3Model):
                                  "exercise",
                                  "closed",
                                  "comments",
-                                 ])
+                                 ]
+                  )
 
         # Components
         # Incidents
@@ -222,6 +225,8 @@ class S3EventModel(S3Model):
                                           joinby="event_id",
                                           key="location_id",
                                           actuate="hide"))
+        # CustomForms don't work with link tables
+        add_component("event_event_location", event_event="event_id")
 
         # Requests
         add_component("req_req", event_event="event_id")

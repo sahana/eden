@@ -2635,6 +2635,7 @@ class S3LocationSelectorWidget2(FormWidget):
         T = current.T
         db = current.db
         s3db = current.s3db
+        gis = current.gis
         settings = current.deployment_settings
         s3 = current.response.s3
         location_selector_loaded = s3.gis.location_selector_loaded
@@ -2643,34 +2644,43 @@ class S3LocationSelectorWidget2(FormWidget):
         appname = request.application
         throbber_img = "/%s/static/img/ajax-loader.gif" % appname
 
+        default = field.default
+        if not default:
+            # Check for a default location in the active gis_config
+            config = gis.get_config()
+            default = config.default_location_id
+
         gtable = s3db.gis_location
 
         countries = settings.get_gis_countries()
-        if len(countries) != 1:
+        if len(countries) == 1:
+            ttable = s3db.gis_location_tag
+            query = (ttable.tag == "ISO2") & \
+                    (ttable.value == countries[0]) & \
+                    (ttable.location_id == gtable.id)
+            country = db(query).select(gtable.id,
+                                       gtable.lat_min,
+                                       gtable.lon_min,
+                                       gtable.lat_max,
+                                       gtable.lon_max,
+                                       limitby=(0, 1)).first()
+            default_L0 = country.id
+            default_bounds = [country.lon_min,
+                              country.lat_min,
+                              country.lon_max,
+                              country.lat_max
+                              ]
+        else:
+            default_L0 = 0
+            config = gis.get_config()
+            default_bounds = [config.lon_min,
+                              config.lat_min,
+                              config.lon_max,
+                              config.lat_max
+                              ]
             # @ToDo: Lookup Labels dynamically when L0 changes
             raise NotImplementedError
 
-        # @ToDo: Support default locations from gis_config
-        ttable = s3db.gis_location_tag
-        query = (ttable.tag == "ISO2") & \
-                (ttable.value == countries[0]) & \
-                (ttable.location_id == gtable.id)
-        default = db(query).select(gtable.id,
-                                   gtable.lat_min,
-                                   gtable.lon_min,
-                                   gtable.lat_max,
-                                   gtable.lon_max,
-                                   limitby=(0, 1)).first()
-        default_id = default.id
-        default_level = 0
-        # @ToDo: Use Bounds from gis_config if no default value
-        default_bounds = [default.lon_min,
-                          default.lat_min,
-                          default.lon_max,
-                          default.lat_max
-                          ]
-
-        default_L0 = default_id
         values = dict(L0 = default_L0,
                       L1 = 0,
                       L2 = 0,
@@ -2680,16 +2690,17 @@ class S3LocationSelectorWidget2(FormWidget):
                       specific = 0,
                       )
         parent = ""
-        # Keep the selected Lat/Lon during validation errors
+        # Keep the selected Lat/Lon/Address during validation errors
         post_vars = request.post_vars
         lat = post_vars.lat
         lon = post_vars.lon
-        # & address
         address = post_vars.address
         if value == "dummy":
             # Validation Error when Creating a specific point
             # Revert to Parent
             value = post_vars.parent
+        if not value:
+            value = default
         if value:
             record = db(gtable.id == value).select(gtable.path,
                                                    gtable.parent,
@@ -2853,13 +2864,9 @@ class S3LocationSelectorWidget2(FormWidget):
                                      gtable.lat_max,
                                      gtable.lon_max,
                                      )
-        if default_id:
-            default = dict(id = default_id,
-                           l = default_level,
-                           b = default_bounds)
-        else:
-            default = dict(b = default_bounds)
-        location_dict = dict(d=default)
+        top = dict(id = default_L0,
+                   b = default_bounds)
+        location_dict = dict(d=top)
         for location in locations:
             if location.inherited:
                 location_dict[int(location.id)] = dict(n=location.name,
@@ -2876,8 +2883,8 @@ class S3LocationSelectorWidget2(FormWidget):
                                                           location.lat_max,
                                                           ],
                                                        )
-        if default_id and default_id not in location_dict:
-            location_dict[default_id] = dict(l=default_level,
+        if default_L0 and default_L0 not in location_dict:
+            location_dict[default_L0] = dict(l=0,
                                              b=default_bounds)
 
         if not location_selector_loaded:
@@ -2945,16 +2952,16 @@ class S3LocationSelectorWidget2(FormWidget):
         if show_map:
             # @ToDo: handle multiple LocationSelectors in 1 page
             # (=> multiple callbacks, as well as the need to migrate options from globals to a parameter)
-            map = current.gis.show_map(id = "location_selector_%s" % fieldname,
-                                       collapsed = True,
-                                       height = 320,
-                                       width = 480,
-                                       add_feature = True,
-                                       add_feature_active = True,
-                                       # Don't use normal callback (since we postpone rendering Map until DIV unhidden)
-                                       # but use our one if we need to display a map by default
-                                       callback = callback if use_callback else "",
-                                       )
+            map = gis.show_map(id = "location_selector_%s" % fieldname,
+                               collapsed = True,
+                               height = 320,
+                               width = 480,
+                               add_feature = True,
+                               add_feature_active = True,
+                               # Don't use normal callback (since we postpone rendering Map until DIV unhidden)
+                               # but use our one if we need to display a map by default
+                               callback = callback if use_callback else "",
+                               )
             icon_id = "%s_map_icon" % fieldname
             row_id = "%s_map_icon__row" % fieldname
             if formstyle == "bootstrap":

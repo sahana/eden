@@ -4624,7 +4624,8 @@ class S3ProjectTaskModel(S3Model):
                                        limitby=(0, 1)).first()
             if project:
                 represent = "%s: %s" % (project.name, row.name)
-
+            else:
+                represent = represent = "- %s" % row.name
             return represent
         elif not id:
             return current.messages["NONE"]
@@ -4646,7 +4647,8 @@ class S3ProjectTaskModel(S3Model):
                                        limitby=(0, 1)).first()
             if project:
                 represent = "%s: %s" % (project.name, name)
-
+            else:
+                represent = "- %s" % name
             return represent
 
     # -------------------------------------------------------------------------

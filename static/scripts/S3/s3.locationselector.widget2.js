@@ -284,13 +284,9 @@
                 return id;
             }
         }
-        // No Lx set at all, so return the default value
+        // No Lx set at all, so return the default country if-any
         var d = l['d'];
-        if (d.l === 0) {
-            return d.id;
-        } else {
-            // @ToDo: Lookup the default country from the default Lx
-        }
+        return d.id;
     }
 
     /**

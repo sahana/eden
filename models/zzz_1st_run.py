@@ -213,7 +213,7 @@ if len(pop_list) > 0:
 
     # CAP module
     if has_module("cap"):
-        s3db.cap_first_run()
+        db.cap_alert.insert(template_title="Default", is_template=True)
 
     # Incident Reporting System
     if has_module("irs"):

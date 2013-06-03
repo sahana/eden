@@ -312,9 +312,10 @@ class S3Profile(S3CRUD):
             icon = TAG[""](I(_class=icon), " ")
 
         # Permission to create new items?
-        # @ToDo: Special check for creating resources on Organisation profile
         insert = widget.get("insert", True)
         if insert and current.auth.s3_has_permission("create", table):
+            #if r.tablename = "org_organisation":
+                # @ToDo: Special check for creating resources on Organisation profile
             if filter:
                 vars = filter.serialize_url(filter)
             else:
@@ -324,6 +325,10 @@ class S3Profile(S3CRUD):
                 filters = context.serialize_url(resource)
                 for f in filters:
                     vars[f] = filters[f]
+            default = widget.get("default", None)
+            if default:
+                k, v = default.split("=", 1)
+                vars[k] = v
             title_create = widget.get("title_create", None)
             if title_create:
                 title_create = T(title_create)
