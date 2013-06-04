@@ -30,6 +30,7 @@
 __all__ = ["S3ProjectModel",
            "S3ProjectActivityModel",
            "S3ProjectActivityTypeModel",
+           "S3ProjectActivityOrganisationModel",
            "S3ProjectAnnualBudgetModel",
            "S3ProjectBeneficiaryModel",
            "S3ProjectCampaignModel",
@@ -514,7 +515,7 @@ class S3ProjectModel(S3Model):
                       project_project=Storage(link="project_activity_type_project",
                                               joinby="project_id",
                                               key="activity_type_id",
-                                              actuate="link"))        
+                                              actuate="link"))
 
         # Milestones
         add_component("project_milestone", project_project="project_id")
@@ -1109,14 +1110,17 @@ class S3ProjectActivityModel(S3Model):
         tablename = "project_activity"
         table = define_table(tablename,
                              self.super_link("doc_id", "doc_entity"),
+                             s3_datetime(),
                              self.project_project_id(),
                              Field("name",
-                                   label = T("Short Description"),
+                                   label = T("Name"),
                                    requires = IS_NOT_EMPTY()
                                    ),
+                             self.project_activity_type_id(),
                              self.gis_location_id(
                                 widget = S3LocationSelectorWidget(hide_address=True)
                                 ),
+                             self.pr_person_id(label=T("Contact Person")),
                              Field("time_estimated", "double",
                                    readable = mode_task,
                                    writable = mode_task,
@@ -1268,6 +1272,10 @@ class S3ProjectActivityModel(S3Model):
             msg_record_deleted = T("Activity Type removed from Activity"),
             msg_list_empty = T("No Activity Types found for this Activity")
         )
+        
+        # Activity Organization
+        add_component("project_activity_organisation", 
+                      project_activity="activity_id")
 
         # Pass names back to global scope (s3.*)
         return dict(
@@ -1483,6 +1491,56 @@ class S3ProjectActivityTypeModel(S3Model):
         return dict(
             project_activity_type_id = activity_type_id,
         )
+# =============================================================================
+class S3ProjectActivityOrganisationModel(S3Model):
+    """
+        Project Activity Organisation Model
+
+        This model holds the Activity Organisations for Projects
+        - it is useful where we don't have the details on the actual Activities,
+          but just this summary of Organisations
+    """
+
+    names = ["project_activity_organisation",
+             ]
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        # Activity Organisations - Link table
+        #
+        tablename = "project_activity_organisation"
+        table = define_table(tablename,
+                             self.project_activity_id(),
+                             self.org_organisation_id(),
+                             *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_ACTIVITY_TYPE = T("Add Activity Organisation")
+        crud_strings[tablename] = Storage(
+            title_create = ADD_ACTIVITY_TYPE,
+            title_display = T("Activity Organisation"),
+            title_list = T("Activity Organisations"),
+            title_update = T("Edit Activity Organisation"),
+            title_search = T("Search for Activity Organisation"),
+            subtitle_create = T("Add New Activity Organisation"),
+            label_list_button = T("List Activity Organisations"),
+            label_create_button = ADD_ACTIVITY_TYPE,
+            msg_record_created = T("Activity Organisation Added"),
+            msg_record_modified = T("Activity Organisation Updated"),
+            msg_record_deleted = T("Activity Organisation Deleted"),
+            msg_list_empty = T("No Activity Organisations Found")
+        )
+
+        # Pass names back to global scope (s3.*)
+        return dict(
+        )
 
 # =============================================================================
 class S3ProjectAnnualBudgetModel(S3Model):
@@ -1626,7 +1684,6 @@ class S3ProjectBeneficiaryModel(S3Model):
                              self.project_project_id(readable=False,
                                                      writable=False),
                              self.project_location_id(comment=None),
-
                              # Instance
                              super_link("data_id", "stats_data"),
                              # This is a component, so needs to be a super_link

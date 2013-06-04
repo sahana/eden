@@ -52,12 +52,12 @@
   <div class="community-data ">
    <h3>Community Data</h3>
    <p>Record the vulnerabilities, hazards, activities and resources which affects your community's resilience</p>
-   {{for item in response.menu:}}
+   {{for opt in response.menu:}}
      <p>
-       <a href='{{=item["url"]}}' class="btn btn-info btn-large menu" type="button">
-        <i class='{{=item["icon"]}}'></i> {{=item["name"]}}
+       <a href='{{=opt["url"]}}' class="btn btn-info btn-large menu" type="button">
+        <i class='{{=opt["icon"]}}'></i> {{=opt["name"]}}
        </a>
-       <a href='{{=item["url"]}}/create' class="btn btn-info btn-large create" type="button"><i class='icon-plus'></i></a>
+       <a href='{{=opt["url"]}}/create' class="btn btn-info btn-large create" type="button"><i class='icon-plus'></i></a>
      </p>
    {{pass}}
   </div>

@@ -29,6 +29,7 @@
 
 __all__ = ["S3OrganisationModel",
            "S3OrganisationResourceModel",
+           "S3OrganisationServiceModel",
            "S3OrganisationSummaryModel",
            "S3OrganisationTypeTagModel",
            "S3SiteModel",
@@ -600,6 +601,17 @@ class S3OrganisationModel(S3Model):
         add_component("member_membership",
                       org_organisation="organisation_id")
 
+        # Resources
+        add_component("org_resource",
+                      org_organisation="organisation_id")
+
+        # Services
+        add_component("org_service",
+                      org_organisation=Storage(link="org_service_organisation",
+                                               joinby="organisation_id",
+                                               key="service_id",
+                                               actuate="hide"))
+
         # Projects
         if settings.get_project_mode_3w():
             add_component("project_project",
@@ -1163,6 +1175,7 @@ class S3OrganisationModel(S3Model):
 class S3OrganisationResourceModel(S3Model):
     """
         Organisation Resource Model
+        - depends on Stats module
     """
 
     names = ["org_resource",
@@ -1171,17 +1184,24 @@ class S3OrganisationResourceModel(S3Model):
 
     def model(self):
 
+        if not current.deployment_settings.has_module("stats"):
+            # Organisation Resource Model needs Stats module enabling
+            return dict()
+
         T = current.T
         db = current.db
         auth = current.auth
         settings = current.deployment_settings
         crud_strings = current.response.s3.crud_strings
+        super_link = self.super_link
+        configure = self.configure
 
         # ---------------------------------------------------------------------
         # Resource Type data
         #
         tablename = "org_resource_type"
         table = self.define_table(tablename,
+                                  super_link("parameter_id", "stats_parameter"),
                                   Field("name",
                                         label=T("Resource Type")),
                                   s3_comments(),
@@ -1205,23 +1225,10 @@ class S3OrganisationResourceModel(S3Model):
             msg_record_deleted=T("Resource Type deleted"),
             msg_list_empty=T("No Resource Types defined"))
 
-        represent = S3Represent(lookup=tablename)
-
-        org_resource_type_id = \
-            S3ReusableField("resource_type_id", "reference org_resource_type",
-                            sortby="name",
-                            requires=IS_NULL_OR(
-                                        IS_ONE_OF(db, "org_resource_type.id",
-                                                  represent,
-                                                  sort=True,
-                                                  )),
-                            represent=represent,
-                            comment=S3AddResourceLink(c="org",
-                                            f="resource_type",
-                                            label=ADD_RESOURCE_TYPE,
-                                            ),
-                            label=T("Resource Type"),
-                            ondelete="SET NULL")
+        # Resource Configuration
+        configure(tablename,
+                  super_entity = "stats_parameter",
+                  )
 
         # ---------------------------------------------------------------------
         # Resource data
@@ -1243,8 +1250,23 @@ class S3OrganisationResourceModel(S3Model):
                                                   # represent = self.org_site_represent,
                                                   # ),
                                   self.gis_location_id(),
-                                  org_resource_type_id(),
-                                  Field("quantity", "integer", 
+                                  # Instance
+                                  super_link("data_id", "stats_data"),
+                                  # This is a component, so needs to be a super_link
+                                  # - can't override field name, ondelete or requires
+                                  super_link("parameter_id", "stats_parameter",
+                                             label = T("Resource Type"),
+                                             instance_types = ["org_resource_type"],
+                                             represent = S3Represent(lookup="stats_parameter"),
+                                             readable = True,
+                                             writable = True,
+                                             empty = True,
+                                             comment = S3AddResourceLink(c="org",
+                                                                         f="resource_type",
+                                                                         vars = dict(child = "parameter_id"),
+                                                                         title=ADD_RESOURCE_TYPE),
+                                             ),
+                                  Field("value", "integer", 
                                         requires=IS_NULL_OR(
                                                     IS_INT_IN_RANGE(0, 999999)
                                                     ),
@@ -1281,6 +1303,129 @@ class S3OrganisationResourceModel(S3Model):
         #
         return Storage(
                 )
+
+# =============================================================================
+class S3OrganisationServiceModel(S3Model):
+    """
+        Organisation Service Model
+    """
+
+    names = ["org_service",
+             "org_service_organisation",
+             ]
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        # Service
+        #
+        tablename = "org_service"
+        table = define_table(tablename,
+                             Field("name", length=128, notnull=True, unique=True,
+                                   label=T("Name"),
+                                   ),
+                             s3_comments(),
+                             *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_HAZARD = T("Add Service")
+        crud_strings[tablename] = Storage(
+            title_create = ADD_HAZARD,
+            title_display = T("Service Details"),
+            title_list = T("Services"),
+            title_update = T("Edit Service"),
+            title_upload = T("Import Services"),
+            subtitle_create = T("Add New Service"),
+            label_list_button = T("List Services"),
+            label_create_button = ADD_HAZARD,
+            label_delete_button = T("Delete Service"),
+            msg_record_created = T("Service added"),
+            msg_record_modified = T("Service updated"),
+            msg_record_deleted = T("Service deleted"),
+            msg_list_empty = T("No Services currently registered"))
+
+        # Reusable Field
+        represent = S3Represent(lookup=tablename)
+        service_id = S3ReusableField("service_id", table,
+                                    sortby = "name",
+                                    label = T("Services"),
+                                    requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "org_service.id",
+                                                          represent,
+                                                          sort=True)),
+                                    represent = represent,
+                                    ondelete = "CASCADE",
+                                    )
+
+        # Field settings for org_organisation.service field in friendly_string_from_field_query function
+        # - breaks Action Buttons, so moved to inside the fn which calls them
+        #table.id.represent = represent
+        #table.id.label = T("Service")
+
+        # ---------------------------------------------------------------------
+        # Organizations <> Services Link Table
+        #
+        tablename = "org_service_organisation"
+        define_table(tablename,
+                     service_id(),
+                     self.org_organisation_id(),
+                     *s3_meta_fields()
+                     )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            title_create = T("New Service"),
+            title_display = T("Service"),
+            title_list = T("Services"),
+            title_update = T("Edit Service"),
+            title_search = T("Search Services"),
+            title_upload = T("Import Service data"),
+            subtitle_create = T("Add New Service"),
+            label_list_button = T("List Services"),
+            label_create_button = T("Add Service to Organization"),
+            msg_record_created = T("Service added to Organization"),
+            msg_record_modified = T("Service updated"),
+            msg_record_deleted = T("Service removed from Organization"),
+            msg_list_empty = T("No Services found for this Organization"))
+
+        self.configure(tablename,
+                       deduplicate=self.org_service_organisation_deduplicate,
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return dict(
+            )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_service_organisation_deduplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename != "org_service_organisation":
+            return
+
+        data = item.data
+        if "organisation_id" in data and \
+           "service_id" in data:
+            organisation_id = data.organisation_id
+            service_id = data.service_id
+            table = item.table
+            query = (table.organisation_id == organisation_id) & \
+                    (table.service_id == service_id)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+
+        return
 
 # =============================================================================
 class S3OrganisationSummaryModel(S3Model):
