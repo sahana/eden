@@ -5395,7 +5395,15 @@ class S3Permission(object):
         if q:
             query &= q
             query &= (table.group_id == gtable.id)
-            rows = db(query).select(gtable.id, table.ALL, cacheable=True)
+            rows = db(query).select(gtable.id,
+                                    table.controller,
+                                    table.function,
+                                    table.tablename,
+                                    table.unrestricted,
+                                    table.entity,
+                                    table.uacl,
+                                    table.oacl,
+                                    cacheable=True)
         else:
             rows = []
 
