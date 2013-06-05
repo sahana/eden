@@ -19,6 +19,16 @@
     /**
      * Instantiate a LocationSelector
      * - in global scope as called from outside
+     *
+     * Parameters:
+     * fieldname - {String} A unique fieldname for a location_id field
+     * L0 - {Integer} gis_location.id of the L0
+     * L1 - {Integer} gis_location.id of the L1
+     * L2 - {Integer} gis_location.id of the L2
+     * L3 - {Integer} gis_location.id of the L3
+     * L4 - {Integer} gis_location.id of the L4
+     * L5 - {Integer} gis_location.id of the L5
+     * specific - {Integer} gis_location.id of the specific location
      */
     S3.gis.locationselector = function(fieldname, L0, L1, L2, L3, L4, L5, specific) {
         // Function to be called by S3LocationSelectorWidget2
@@ -373,7 +383,7 @@
      * - this doesn't imply that a specific location is to be created
      * - that only happens if a Point is created on the Map
      */
-    var showMap = function(fieldname) {
+    var showMap = function(fieldname, options) {
         var selector = '#' + fieldname;
 
         // Reset the Click event
@@ -388,9 +398,10 @@
         map_wrapper.show();
 
         var map_id = 'location_selector_' + fieldname;
-        if (!S3.gis.maps || !S3.gis.maps[map_id]) {
+        var gis = S3.gis;
+        if (!gis.maps || !gis.maps[map_id]) {
             // Instantiate the Map as we couldn't do it when DIV is hidden
-            var map = S3.gis.show_map(map_id, {});
+            var map = gis.show_map(map_id);
 
             var real_input = $(selector);
             var parent_input = $(selector + '_parent');
@@ -409,7 +420,7 @@
             if (lat != undefined) {
                 // Display feature
                 var geometry = new OpenLayers.Geometry.Point(parseFloat(lon), parseFloat(lat));
-                geometry.transform(S3.gis.proj4326, map.getProjectionObject());
+                geometry.transform(gis.proj4326, map.getProjectionObject());
                 var feature = new OpenLayers.Feature.Vector(geometry);
                 map.s3.draftLayer.addFeatures([feature]);
                 // Update the Hidden Fields
@@ -427,7 +438,7 @@
                 var updateForm = function(event) {
                     // Update the Form fields
                     var centerPoint = event.feature.geometry.getBounds().getCenterLonLat();
-                    centerPoint.transform(map.getProjectionObject(), S3.gis.proj4326);
+                    centerPoint.transform(map.getProjectionObject(), gis.proj4326);
                     latfield.val(centerPoint.lat);
                     lonfield.val(centerPoint.lon);
                     // Update the Hidden Fields
@@ -437,10 +448,14 @@
             }
         } else {
             // Map already instantiated
-            //var map = S3.gis.maps[map_id];
+            //var map = gis.maps[map_id];
         }
     }
 
+    /**
+     * Zoom the Map
+     * - to the appropriate bounds
+     */
     var zoomMap = function(fieldname, id) {
         if (S3.gis.maps) {
             var map_id = 'location_selector_' + fieldname;

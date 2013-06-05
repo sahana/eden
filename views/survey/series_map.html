@@ -19,6 +19,6 @@
  </div>
  <div id='survey_map-container' class='survey_map-container' style='clear:both; padding-top:10px'>
  {{try:}}{{=P(instructions)}}{{except:}}{{pass}}
- {{try:}}{{=map}}{{except:}}{{pass}}
+ {{=XML(map)}}
  </div>
 </div>

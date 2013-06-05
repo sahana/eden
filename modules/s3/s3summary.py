@@ -32,8 +32,8 @@
 from gluon import *
 from gluon.storage import Storage
 
-from s3rest import S3Method
 from s3filter import S3FilterForm
+from s3rest import S3Method
 
 # =============================================================================
 class S3Summary(S3Method):
@@ -119,11 +119,11 @@ class S3Summary(S3Method):
             widgets = section.get("widgets", [])
             for widget in widgets:
 
-                # Widget-ID
+                # Widget ID
                 widget_id = "summary-%s" % widget_idx
 
                 # Make sure widgets include the widget ID when
-                # generating Ajax-URLs:
+                # generating Ajax URLs:
                 r.get_vars["w"] = r.vars["w"] = widget_id
 
                 # Append to filter targets
@@ -171,7 +171,7 @@ class S3Summary(S3Method):
         # Filter targets
         target = " ".join(targets)
 
-        # Filter-form
+        # Filter form
         filter_ajax = True
         form_id = "summary-filter-form"
         filter_widgets = get_config("filter_widgets", None)
@@ -217,17 +217,17 @@ class S3Summary(S3Method):
         response = current.response
         response.view = self._view(r, "summary.html")
 
-        # Script for tabs
+        # Script for tabs & map
         if len(sections) > 1:
             script = """
 $('#summary-tabs').tabs({
-    active: %(active_tab)s,
-    activate: function(event, ui) {
-        if (ui.newTab.length) {
-            S3.search.updateFilterSubmitURL('%(form_id)s', 't', $(ui.newTab).index());
-        }
-        S3.search.updatePendingTargets('%(form_id)s');
-    }
+ active:%(active_tab)s,
+ activate:function(event,ui){
+  if(ui.newTab.length){
+   S3.search.updateFilterSubmitURL('%(form_id)s','t',$(ui.newTab).index())
+  }
+  S3.search.updatePendingTargets('%(form_id)s')
+ }
 });""" % dict(form_id = form_id, active_tab = active_tab)
 
             response.s3.jquery_ready.append(script)
@@ -237,7 +237,7 @@ $('#summary-tabs').tabs({
     # -------------------------------------------------------------------------
     def ajax(self, r, **attr):
         """
-            Render Ajax-data of a specific widget
+            Render a specific widget for pulling-in via AJAX
 
             @param r: the S3Request
             @param attr: controller attributes
@@ -278,7 +278,7 @@ $('#summary-tabs').tabs({
 
             @param resource: the target S3Resource
         """
-        
+
         get_config = resource.get_config
         config = get_config("summary",
                             current.deployment_settings.get_ui_summary())

@@ -103,6 +103,18 @@ settings.fin.currencies = {
 # Save Search Widget
 settings.save_search.widget = False
 
+# -----------------------------------------------------------------------------
+# Summary Pages
+settings.ui.summary = [{"name": "table",
+                        "label": "Table",
+                        "widgets": [{"method": "datatable"}]
+                        },
+                       {"name": "map",
+                        "label": "Map",
+                        "widgets": [{"method": "map"}]
+                        },
+                       ]
+
 # =============================================================================
 # View Settings
 

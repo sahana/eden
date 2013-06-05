@@ -48,7 +48,7 @@ def between(items, main, between, *a, **kw):
             between(item, *a, **kw)
 
 class MapPlugin(object):
-    def __init__(map_plugin,
+    def __init__(self,
                  env,
                  year_min,
                  year_max,
@@ -79,60 +79,53 @@ class MapPlugin(object):
         """)
             raise
 
-        map_plugin.env = env
-        map_plugin.year_min = year_min 
-        map_plugin.year_max = year_max
-        map_plugin.place_table = place_table
-        map_plugin.robjects = robjects
-        R = map_plugin.R = robjects.r
-        env.DSL.init_R_interpreter(R, env.deployment_settings.database)
-        map_plugin.client_config = client_config
+        self.env = env
+        self.year_min = year_min 
+        self.year_max = year_max
+        self.place_table = place_table
+        self.robjects = robjects
+        R = self.R = robjects.r
+        env.DSL.init_R_interpreter(R, current.deployment_settings.database)
+        self.client_config = client_config
 
-    def extend_gis_map(map_plugin):
+    def extend_gis_map(self, map):
 
         T = current.T
         s3 = current.response.s3
         appname = current.request.application
         # @ToDo: Minified version for Production
-        s3.scripts.append("/%s/static/scripts/S3/s3.gis.climate.js" % appname)
-        s3.scripts.append("/%s/static/scripts/gis/openlayers/lib/OpenLayers/Layer/Markers.js" % appname)
+        map.scripts.append("/%s/static/scripts/S3/s3.gis.climate.js" % appname)
+        map.scripts.append("/%s/static/scripts/gis/openlayers/lib/OpenLayers/Layer/Markers.js" % appname)
 
         def climate_URL(url):
             return "/%s/climate/%s" % (appname, url)
         
-        config_dict = dict(
-            map_plugin.client_config,
-            
-            year_min = map_plugin.year_min,
-            year_max = map_plugin.year_max,
-            overlay_data_URL = climate_URL("climate_overlay_data"),
-            chart_URL = climate_URL("climate_chart"),
-            places_URL = climate_URL("places"),
-            chart_popup_URL = climate_URL("chart_popup.html"),
-            buy_data_popup_URL = climate_URL("buy_data.html"),
-            request_image_URL = climate_URL("request_image"),
-            data_URL = climate_URL("data"),
-            years_URL = climate_URL("get_years"),
-            station_parameters_URL = climate_URL("station_parameter"),
-            data_type_label = str(T("Data Type")),
-            projected_option_type_label = str(
-                T("Projection Type")
-            ),
-            aggregation_names = [
-                Aggregation.__name__ for Aggregation in aggregations
-            ],
-        )
+        config_dict = dict(self.client_config,
+                           year_min = self.year_min,
+                           year_max = self.year_max,
+                           overlay_data_URL = climate_URL("climate_overlay_data"),
+                           chart_URL = climate_URL("climate_chart"),
+                           places_URL = climate_URL("places"),
+                           chart_popup_URL = climate_URL("chart_popup.html"),
+                           buy_data_popup_URL = climate_URL("buy_data.html"),
+                           request_image_URL = climate_URL("request_image"),
+                           data_URL = climate_URL("data"),
+                           years_URL = climate_URL("get_years"),
+                           station_parameters_URL = climate_URL("station_parameter"),
+                           data_type_label = str(T("Data Type")),
+                           projected_option_type_label = str(T("Projection Type")),
+                           aggregation_names = [
+                                Aggregation.__name__ for Aggregation in aggregations
+                           ],
+                           )
         SampleTable.add_to_client_config_dict(config_dict)
         config = json.dumps(config_dict, indent=4)
 
-        s3.jquery_ready.append('''
-var map = S3.gis.maps['default'];
-var plugin = new ClimateDataMapPlugin(config);
-map.registerPlugin(plugin);
-''')
+        map.plugin_callbacks.append('''var plugin = new ClimateDataMapPlugin(config);
+S3.gis.maps['%s'].registerPlugin(plugin);''' % map.id)
 
-    def get_overlay_data(map_plugin, query_expression):
-        env = map_plugin.env
+    def get_overlay_data(self, query_expression):
+        env = self.env
         DSL = env.DSL
         expression = DSL.parse(query_expression)
         understood_expression_string = str(expression)        
@@ -147,14 +140,14 @@ map.registerPlugin(plugin);
             )                
         
         def generate_map_overlay_data(file_path):
-            R = map_plugin.R
+            R = self.R
             code = DSL.R_Code_for_values(expression, "place_id")
             values_by_place_data_frame = R(code)()
             # R willfully removes empty data frame columns 
             # which is ridiculous behaviour
             if isinstance(
                 values_by_place_data_frame,
-                map_plugin.robjects.vectors.StrVector
+                self.robjects.vectors.StrVector
             ):
                 raise Exception(str(values_by_place_data_frame))
             elif values_by_place_data_frame.ncol == 0:
@@ -206,8 +199,8 @@ map.registerPlugin(plugin);
             generate_map_overlay_data
         )
     
-    def get_csv_location_data(map_plugin, query_expression):
-        env = map_plugin.env
+    def get_csv_location_data(self, query_expression):
+        env = self.env
         DSL = env.DSL
         expression = DSL.parse(query_expression)
         understood_expression_string = str(expression)        
@@ -222,14 +215,14 @@ map.registerPlugin(plugin);
             )                
         
         def generate_map_csv_data(file_path):
-            R = map_plugin.R
+            R = self.R
             code = DSL.R_Code_for_values(expression, "place_id")
             values_by_place_data_frame = R(code)()
             # R willfully removes empty data frame columns 
             # which is ridiculous behaviour
             if isinstance(
                 values_by_place_data_frame,
-                map_plugin.robjects.vectors.StrVector
+                self.robjects.vectors.StrVector
             ):
                 raise Exception(str(values_by_place_data_frame))
             elif values_by_place_data_frame.ncol == 0:
@@ -238,7 +231,7 @@ map.registerPlugin(plugin);
             else:
                 keys = values_by_place_data_frame.rx2("key")
                 values = values_by_place_data_frame.rx2("value")
-            db = map_plugin.env.db
+            db = current.db
             try:
                 csv_data_file = open(file_path, "w")
                 write = csv_data_file.write
@@ -246,28 +239,32 @@ map.registerPlugin(plugin);
                 #min(grid_sizes(expression))
                 write("latitude,longitude,station_id,station_name,elevation,%s\n" % (units))
                 place_ids = {}
+                table = db.climate_place
+                etable = db.climate_place_elevation
+                itable = db.climate_place_station_id
+                ntable = db.climate_place_station_name
                 for place_row in db(
                     # only show Nepal
-                    (db.climate_place.longitude > 79.5) & 
-                    (db.climate_place.longitude < 88.5) & 
-                    (db.climate_place.latitude > 26.0) & 
-                    (db.climate_place.latitude < 30.7)
+                    (table.longitude > 79.5) & 
+                    (table.longitude < 88.5) & 
+                    (table.latitude > 26.0) & 
+                    (table.latitude < 30.7)
                 ).select(
-                    db.climate_place.id,
-                    db.climate_place.longitude,
-                    db.climate_place.latitude,
-                    db.climate_place_elevation.elevation_metres,
-                    db.climate_place_station_id.station_id,
-                    db.climate_place_station_name.name,
+                    table.id,
+                    table.longitude,
+                    table.latitude,
+                    etable.elevation_metres,
+                    itable.station_id,
+                    ntable.name,
                     left = (
-                        db.climate_place_elevation.on(
-                            db.climate_place.id == db.climate_place_elevation.id
+                        etable.on(
+                            table.id == etable.id
                         ),
                         db.climate_place_station_id.on(
-                            db.climate_place.id == db.climate_place_station_id.id
+                            table.id == itable.id
                         ),
                         db.climate_place_station_name.on(
-                            db.climate_place.id == db.climate_place_station_name.id
+                            table.id == ntable.id
                         )
                     )
                 ):
@@ -303,12 +300,12 @@ map.registerPlugin(plugin);
             generate_map_csv_data
         )
     
-    def render_plots(map_plugin,
+    def render_plots(self,
                      specs,
                      width,
                      height
                      ):
-        env = map_plugin.env
+        env = self.env
         DSL = env.DSL
         
         def generate_chart(file_path):
@@ -317,7 +314,7 @@ map.registerPlugin(plugin);
             from scipy import stats
             regression_lines = []
             
-            R = map_plugin.R
+            R = self.R
             c = R("c")
             spec_names = []
             starts = []
@@ -358,7 +355,7 @@ map.registerPlugin(plugin);
                 data = {}
                 if isinstance(
                     values_by_time_period_data_frame,
-                    map_plugin.robjects.vectors.StrVector
+                    self.robjects.vectors.StrVector
                 ):
                     raise Exception(str(values_by_time_period_data_frame))
                 elif values_by_time_period_data_frame.ncol == 0:
@@ -421,7 +418,7 @@ map.registerPlugin(plugin);
                     if is_yearly_values:
                         time_serieses.append(
                             R("ts")(
-                                map_plugin.robjects.FloatVector(values),
+                                self.robjects.FloatVector(values),
                                 start = c(start_year),
                                 end = c(end_year),
                                 frequency = 1
@@ -430,7 +427,7 @@ map.registerPlugin(plugin);
                     else:
                         time_serieses.append(
                             R("ts")(
-                                map_plugin.robjects.FloatVector(values),
+                                self.robjects.FloatVector(values),
                                 start = c(start_year, start_month),
                                 end = c(end_year, end_month),
                                 frequency = 12
@@ -677,7 +674,7 @@ function (
             watermark_image_path = os.path.join(
                 os.path.realpath("."),
                 "applications",
-                map_plugin.env.request.application, 
+                current.request.application, 
                 "static", "img", 
                 "Nepal-Government-Logo.png"
             )
@@ -705,10 +702,12 @@ function (
             generate_chart
         )
 
-    def place_data(map_plugin):
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def place_data():
         def generate_places(file_path):
             "return all place data in JSON format"
-            db = map_plugin.env.db
+            db = current.db
             
             class Attribute(object):
                 def __init__(attribute, name, getter, convert, compressor):
@@ -871,7 +870,9 @@ function (
             generate_places
         )
     
-    def printable_map_image_file(plugin, command, url_prefix, query_string, width, height):
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def printable_map_image_file(command, url_prefix, query_string, width, height):
         def generate_printable_map_image(file_path):
             import urllib
             url = url_prefix + "?" + query_string + "&display_mode=print"
@@ -906,7 +907,9 @@ function (
             generate_printable_map_image
         )
 
-    def get_available_years(map_plugin, sample_table_name):
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_available_years(sample_table_name):
         def generate_years_json(file_path):
             file = open(file_path, "w")
             years = SampleTable.with_name(sample_table_name).get_available_years()

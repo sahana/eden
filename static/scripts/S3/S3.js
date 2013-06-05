@@ -3,9 +3,22 @@
  * Strings are localised in views/l10n.js
  */
 
+ /**
+ * The startsWith string function is introduced in JS 1.8.6 -- it's not even
+ * accepted in ECMAScript yet, so don't expect all browsers to have it.
+ * Thx to http://www.moreofless.co.uk/javascript-string-startswith-endswith/
+ * for showing how to add it to string if not present.
+ */
+if (typeof String.prototype.startsWith != 'function') {
+    String.prototype.startsWith = function(str) {
+        return this.substring(0, str.length) === str;
+    };
+}
+
 // Global variable to store all of our variables inside
 var S3 = Object();
 S3.gis = Object();
+S3.gis.options = Object();
 S3.timeline = Object();
 S3.JSONRequest = Object(); // Used to store and abort JSON requests
 S3.TimeoutVar = Object(); // Used to store and abort JSON requests

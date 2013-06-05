@@ -46,82 +46,52 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
      * 
      * Parameters:
      * map_id - {String} A unique ID for this map
-     * options - {Array} An array of options for this map 
+     * options - {Array} An array of options for this map
      *
      * Returns:
      * {OpenLayers.Map} The openlayers map.
      */
     S3.gis.show_map = function(map_id, options) {
-        if (undefined == map_id) {
+        if (!map_id) {
             map_id = 'default';
         }
         if (undefined == options) {
-            options = {};
+            // Lookup options
+            options = S3.gis.options[map_id];
         }
 
-        // @ToDo: Modify modules/s3/s3gis.py to pass these in as options
-        // For now, gather them all here in this 1 place
-        var gis = S3.gis;
-
-        options.config_id = gis.config_id;
-
-        options.map_height = gis.map_height;
-        options.map_width = gis.map_width;
-        options.zoom = gis.zoom;
-        var lat = gis.lat;
-        var lon = gis.lon;
-        var bottom_left = gis.bottom_left;
-        var top_right = gis.top_right;
-
-        var projection = new OpenLayers.Projection('EPSG:' + gis.projection); // Set by gis.loader.js using arg to s3_gis_loadjs()
-        options.projection = projection;
-        options.maxResolution = gis.maxResolution;
-        var maxExtent = gis.maxExtent;
-        options.maxExtent = new OpenLayers.Bounds(maxExtent[0], maxExtent[1], maxExtent[2], maxExtent[3]);
-        options.numZoomLevels = gis.numZoomLevels;
-        options.units = gis.units;
-
-        options.draw_feature = gis.draw_feature;
-        options.draw_polygon = gis.draw_polygon;    // Set by S3SearchLocationWidget as well as s3gis.py
-        options.loc_select = gis.loc_select;
-        options.mouse_position = gis.mouse_position; // Also read by s3.gis.loader.js
-        options.osm_oauth = gis.osm_oauth;
-        options.overview = gis.overview;
-        options.permalink = gis.permalink;
-        options.scaleline = gis.scaleline;
-        options.zoomcontrol = gis.zoomcontrol;
-
-        options.marker_default = gis.marker_default;
-        options.marker_default_height = gis.marker_default_height;
-        options.marker_default_width = gis.marker_default_width;
-        // Used by scaleImage callback...currently only in global scope
-        //options.max_h = gis.max_h;
-        //options.max_w = gis.max_w; 
-
-        options.toolbar = gis.toolbar;
-        options.mgrs_name = gis.mgrs_name;
-        options.mgrs_url = gis.mgrs_url;
-        options.wms_browser_name = gis.wms_browser_name;
-        options.wms_browser_url = gis.wms_browser_url;
-
-        options.window = gis.window;
-        options.windowHide = gis.windowHide;
-        options.maximizable = gis.maximizable;
-        options.windowNotClosable = gis.windowNotClosable;
-        options.west_collapsed = gis.west_collapsed;
+        var projection = options.projection;
+        var projection_current = new OpenLayers.Projection('EPSG:' + projection);
+        options.projection_current = projection_current;
+        if (projection == 900913) {
+            options.maxExtent = new OpenLayers.Bounds(-20037508, -20037508, 20037508, 20037508.34);
+            options.maxResolution = 156543.0339;
+            options.units = 'm';
+        } else if (projection == 4326) {
+            options.maxExtent = new OpenLayers.Bounds(-180, -90, 180, 90);
+            options.maxResolution = 1.40625;
+            options.units = 'degrees';
+        } else {
+            var maxExtent = options.maxExtent.split(',');
+            options.maxExtent = new OpenLayers.Bounds(maxExtent[0], maxExtent[1], maxExtent[2], maxExtent[3]);
+        }
 
         // Configure the Viewport
         var bounds;
+        var lat = options.lat;
+        var lon = options.lon;
         if (lat && lon) {
             var center = new OpenLayers.LonLat(lon, lat);
-            center.transform(proj4326, projection);
-        } else if (bottom_left && top_right) {
-            bottom_left = new OpenLayers.LonLat(bottom_left[0], bottom_left[1]);
-            bottom_left.transform(proj4326, projection);
+            center.transform(proj4326, projection_current);
+        } else {
+            // BBOX
+            var bbox = options.bbox;
+            var bottom_left = new OpenLayers.LonLat(bbox[0], bbox[1]);
+            bottom_left.transform(proj4326, projection_current);
             var left = bottom_left.lon;
             var bottom = bottom_left.lat;
-            top_right = new OpenLayers.LonLat(top_right[0], top_right[1]);
-            top_right.transform(proj4326, projection);
+            var top_right = new OpenLayers.LonLat(bbox[2], bbox[3]);
+            top_right.transform(proj4326, projection_current);
             var right = top_right.lon;
             var top = top_right.lat;
             bounds = OpenLayers.Bounds.fromArray([left, bottom, right, top]);
@@ -153,7 +123,7 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
             // We will add these ourselves later for better control
             controls: [],
             displayProjection: proj4326,
-            projection: options.projection,
+            projection: options.projection_current,
             // Use Manual stylesheet download (means can be done in HEAD to not delay pageload)
             theme: null,
             // This means that Images get hidden by scrollbars
@@ -233,14 +203,16 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
         s3.portal = portal;
 
         if (i18n.gis_legend || options.layers_wms) {
-            for (var i = 0; i < map.layers.length; i++) {
+            var layers = map.layers;
+            var mp_items = mapPanel.layers.data.items;
+            for (var i = 0; i < layers.length; i++) {
                 // Ensure that legendPanel knows about the Markers for our Feature layers
-                if (map.layers[i].legendURL) {
-                    mapPanel.layers.data.items[i].data.legendURL = map.layers[i].legendURL;
+                if (layers[i].legendURL) {
+                    mp_items[i].data.legendURL = layers[i].legendURL;
                 }
                 // Ensure that mapPanel knows about whether our WMS layers are queryable
-                if (map.layers[i].queryable) {
-                    mapPanel.layers.data.items[i].data.queryable = 1;
+                if (layers[i].queryable) {
+                    mp_items[i].data.queryable = 1;
                 }
             }
         }
@@ -559,7 +531,7 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
         });
 
         var tbar;
-        if (i18n.gis_uploadlayer || i18n.gis_properties) {
+        if (i18n.gis_properties || i18n.gis_uploadlayer) {
             tbar = new Ext.Toolbar();
         } else {
             tbar = null;
@@ -652,30 +624,7 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
     var addLayers = function(map) {
         
         var s3 = map.s3;
-        // @ToDo: Move layer configs from S3.gis to options passed to show_map()
-        var gis = S3.gis;
         var options = s3.options;
-        options.features = gis.features;
-        options.layers_arcrest = gis.layers_arcrest;
-        options.layers_feature = gis.layers_feature;
-        options.layers_feature_query = gis.layers_feature_query;
-        options.layers_feature_resource = gis.layers_feature_resource;
-        options.layers_geojson = gis.layers_geojson;
-        options.layers_georss = gis.layers_georss;
-        options.layers_gpx = gis.layers_gpx;
-        options.layers_kml = gis.layers_kml;
-        options.layers_osm = gis.layers_osm;
-        options.layers_shapefile = gis.layers_shapefile;
-        options.layers_theme = gis.layers_theme;
-        options.layers_tms = gis.layers_tms;
-        options.layers_wfs = gis.layers_wfs;
-        options.layers_wms = gis.layers_wms;
-        options.layers_xyz = gis.layers_xyz;
-        options.Bing = gis.Bing;
-        options.CoordinateGrid = gis.CoordinateGrid;
-        options.EmptyLayer = gis.EmptyLayer;
-        options.Google = gis.Google;
-        options.OWM = gis.OWM;
 
         // List of all map layers
         s3.layers_all = [];
@@ -749,10 +698,13 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
                 map.setBaseLayer(layer);
             }
         }
-        // JS (generated server-side in s3gis.py)
-        try {
-            addJSLayers();
-        } catch(err) {}
+        // Raw Javascript layers
+        if (options.layers_js) {
+            var layers_js = options.layers_js;
+            for (i = layers_js.length; i > 0; i--) {
+                eval(map, layers_js[i - 1]);
+            }
+        }
 
         /* Overlays */
         // Theme
@@ -825,17 +777,17 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
             }
         }
         // Feature Queries from Mapping API
-        if (options.layers_feature_query) {
-            var layers_feature_query = options.layers_feature_query;
-            for (i = layers_feature_query.length; i > 0; i--) {
-                addGeoJSONLayer(map, layers_feature_query[i - 1]);
+        if (options.feature_queries) {
+            var feature_queries = options.feature_queries;
+            for (i = feature_queries.length; i > 0; i--) {
+                addGeoJSONLayer(map, feature_queries[i - 1]);
             }
         }
         // Feature Resources (e.g. Search Results or S3Profile)
-        if (options.layers_feature_resource) {
-            var layers_feature_resource = options.layers_feature_resource;
-            for (i = layers_feature_resource.length; i > 0; i--) {
-                addGeoJSONLayer(map, layers_feature_resource[i - 1]);
+        if (options.feature_resources) {
+            var feature_resources = options.feature_resources;
+            for (i = feature_resources.length; i > 0; i--) {
+                addGeoJSONLayer(map, feature_resources[i - 1]);
             }
         }
         // Feature Layers from Catalogue
@@ -1006,10 +958,10 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
     // DraftLayer
     // Used for drawing Points/Polygons & for HTML5 GeoLocation
     var addDraftLayer = function(map) {
-        var options = map.s3.options;
-        var iconURL = marker_url_path + options.marker_default;
-        var marker_height = options.marker_default_height;
-        var marker_width = options.marker_default_width;
+        var marker = map.s3.options.marker_default;
+        var iconURL = marker_url_path + marker.i;
+        var marker_height = marker.h;
+        var marker_width = marker.w;
         // Needs to be uniquely instantiated
         var style_marker = OpenLayers.Util.extend({}, OpenLayers.Feature.Vector.style['default']);
         style_marker.graphicOpacity = 1;
@@ -1038,11 +990,12 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
         var name = layer.name;
         var url = layer.url;
         var marker_url;
-        if (undefined != layer.marker_image) {
+        if (undefined != layer.marker) {
             // per-Layer Marker
-            marker_url = marker_url_path + layer.marker_image;
-            var marker_height = layer.marker_height;
-            var marker_width = layer.marker_width;
+            var marker = layer.marker;
+            marker_url = marker_url_path + marker.i;
+            var marker_height = marker.h;
+            var marker_width = marker.w;
         } else {
             // per-Feature Marker or Shape
             marker_url = '';
@@ -1822,9 +1775,10 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
     var addGPXLayer = function(map, layer) {
         var name = layer.name;
         var url = layer.url;
-        var marker_url = marker_url_path + layer.marker_image;
-        var marker_height = layer.marker_height;
-        var marker_width = layer.marker_width;
+        var marker = layer.marker;
+        var marker_url = marker_url_path + marker.i;
+        var marker_height = marker.h;
+        var marker_width = marker.w;
         var waypoints;
         if (undefined != layer.waypoints) {
             waypoints = layer.waypoints;
@@ -1942,11 +1896,32 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
 
     // KML
     var addKMLLayer = function(map, layer) {
+        var s3 = map.s3;
+        // Scales an Image
+        // Used by KML Layers whose Marker is downloaded from a remote site & so we don't know the height/width in advance
+        var scaleImage = function() {
+            var image = this;
+            var options = s3.options;
+            // Keep these in sync with MAP._setup() in s3gis.py
+            var max_h = options.max_h || 35;
+            var max_w = options.max_w || 30;
+            var scaleRatio = image.height / image.width;
+            var w = Math.min(image.width, max_w);
+            var h = w * scaleRatio;
+            if (h > max_h) {
+                h = max_h;
+                scaleRatio = w / h;
+                w = w * scaleRatio;
+            }
+            image.height = h;
+            image.width = w;
+        };
         var name = layer.name;
         var url = layer.url;
-        var marker_url = marker_url_path + layer.marker_image;
-        var marker_height = layer.marker_height;
-        var marker_width = layer.marker_width;
+        var marker = layer.marker;
+        var marker_url = marker_url_path + marker.i;
+        var marker_height = marker.h;
+        var marker_width = marker.w;
         var title;
         if (undefined != layer.title) {
             title = layer.title;
@@ -1975,9 +1950,9 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
         var dir;
         if (undefined != layer.dir) {
             dir = layer.dir;
-            if ( $.inArray(dir, map.s3.dirs) == -1 ) {
+            if ($.inArray(dir, s3.dirs) == -1) {
                 // Add this folder to the list of folders
-                map.s3.dirs.push(dir);
+                s3.dirs.push(dir);
             }
         } else {
             // Default folder
@@ -2006,9 +1981,7 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
         // Need unique names, but keep scope
         // - don't we need an array of these!?
         var image = new Image();
-        // Pass to global scope for access by callback
-        S3.gis.image = image;
-        image.onload = s3_gis_scaleImage;
+        image.onload = scaleImage;
         image.src = marker_url;
         // Style Rule For Clusters
         var cluster_style = {
@@ -2162,7 +2135,7 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
                 styleMap: featureClusterStyleMap,
                 protocol: new OpenLayers.Protocol.HTTP({
                     url: url,
-                    format: map.s3.format_kml
+                    format: s3.format_kml
                 })
             }
         );
@@ -2182,27 +2155,8 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
         });
         map.addLayer(kmlLayer);
         // Ensure Highlight & Popup Controls act on this layer
-        map.s3.layers_all.push(kmlLayer);
+        s3.layers_all.push(kmlLayer);
     }
-
-    // Scales the global Image() object
-    // Used by KML Layers whose Marker is downloaded from a remote site & so we don't know the height/width in advance
-    s3_gis_scaleImage = function() {
-        // @ToDo: Can we pass image this way instead of via global? (or just use Module scope at least?)
-        // - still need to collect the return output somehow...
-        //var image = this;
-        var image = S3.gis.image;
-        var scaleRatio = image.height / image.width;
-        var w = Math.min(image.width, max_w);
-        var h = w * scaleRatio;
-        if (h > max_h) {
-            h = max_h;
-            scaleRatio = w / h;
-            w = w * scaleRatio;
-        }
-        image.height = h;
-        image.width = w;
-    };
 
     // OpenStreetMap
     var addOSMLayer = function(map, layer) {
@@ -3459,7 +3413,7 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
         }
 
         // Don't include the Nav controls in the Location Selector
-        if (undefined === options.loc_select) {
+        if (undefined === options.nav) {
             var panButton = new GeoExt.Action({
                 control: new OpenLayers.Control.Navigation(),
                 map: map,
@@ -3480,7 +3434,7 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
         }
 
         // Save Viewport
-        if ((undefined === options.loc_select) && (S3.auth)) {
+        if (options.save) {
             addSaveButton(toolbar);
         }
         toolbar.addSeparator();
@@ -3519,7 +3473,7 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
         }
 
         // OpenStreetMap Editor
-        if (options.osm_oauth) {
+        if (i18n.gis_potlatch) {
             addPotlatchButton(toolbar);
         }
 
@@ -3539,7 +3493,7 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
         
         // Search box
         if (i18n.gis_search) {
-            if (options.loc_select) {
+            if (false === options.nav) {
                 // LocationSelector has fewer toolbar buttons, so can handle a greater width
                 // & this functionality is very useful here
                 var max_width = options.map_width - 500;
@@ -3865,7 +3819,7 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
         toolbar.add(lengthButton);
 
         // Don't include the Area button in the Location Selector
-        if (undefined === map.s3.options.loc_select) {
+        if (false === map.s3.options.area) {
             // Area Button
             var area = new OpenLayers.Control.Measure(
                 OpenLayers.Handler.Polygon, {
@@ -4049,8 +4003,8 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
             handler: function() {
                 // Read current settings from map
                 var zoom_current = map.getZoom();
-                if ( zoom_current < 14 ) {
-                    alert(map.s3.options.osm_oauth);
+                if (zoom_current < 14) {
+                    alert(i18n.gis_osm_zoom_closer);
                 } else {
                     var lonlat = map.getCenter();
                     // Convert back to LonLat for saving

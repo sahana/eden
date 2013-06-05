@@ -24,21 +24,28 @@ function s3_popup_refresh_main_form() {
                 self.parent.dlAjaxReload(refresh);
             }
         }
-        // Also update the layer on the Map (if any)
-        if (typeof self.parent.map != 'undefined') {
-            var layers = self.parent.map.layers;
-            var needle = refresh.replace(/-/g, '_');
-            Ext.iterate(layers, function(key, val, obj) {
-                if (key.s3_layer_id == needle) {
-                    var layer = layers[val];
-                    Ext.iterate(layer.strategies, function(key, val, obj) {
-                        if (key.CLASS_NAME == 'OpenLayers.Strategy.Refresh') {
-                            // Reload the layer
-                            layer.strategies[val].refresh();
+        // Also update the layer on the Maps (if any)
+        var maps = self.parent.S3.gis.maps
+        if (typeof maps != 'undefined') {
+            var map_id, map, needle, layers, i, len, layer, strategies, j, jlen, strategy;
+            for (map_id in maps) {
+                map = maps[map_id];
+                needle = refresh.replace(/-/g, '_');
+                layers = map.layers;
+                for (i=0, len=layers.length; i < len; i++) {
+                    layer = layers[i];
+                    if (layer.s3_layer_id == needle) {
+                        strategies = layer.strategies;
+                        for (j=0, jlen=strategies.length; j < jlen; j++) {
+                            strategy = strategies[j];
+                            if (strategy.CLASS_NAME == 'OpenLayers.Strategy.Refresh') {
+                                // Reload the layer
+                                strategy.refresh();
+                            }
                         }
-                    });
+                    }
                 }
-            });
+            }
         }
         // Also update the options in the filter-form for this target (if any)
         var filterform = self.parent.$('#' + refresh + '-filter-form');

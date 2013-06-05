@@ -5,18 +5,6 @@
  */
 
 /**
- * The startsWith string function is introduced in JS 1.8.6 -- it's not even
- * accepted in ECMAScript yet, so don't expect all browsers to have it.
- * Thx to http://www.moreofless.co.uk/javascript-string-startswith-endswith/
- * for showing how to add it to string if not present.
- */
-if (typeof String.prototype.startsWith != 'function') {
-    String.prototype.startsWith = function(str) {
-        return this.substring(0, str.length) === str;
-    };
-}
-
-/**
  * Global vars
  * - usage minimised
  * - documentation useful on what these are for
@@ -1132,21 +1120,22 @@ if (typeof String.prototype.startsWith != 'function') {
 $(document).ready(function() {
     // Initialise all dataTables on the page
     S3.dataTables.initAll();
-});
 
-// Add Events to any Map Buttons present
-Ext.onReady(function() {
-    var s3_gis_search_layer_loadend = function(event) {
+    // Add Events to any Map Buttons present
+    var gis_search_layer_loadend = function(event) {
         // Search results have Loaded
         var layer = event.object;
         // Read Bounds for Zoom
         var bounds = layer.getDataExtent();
         // Re-enable Clustering
-        Ext.iterate(layer.strategies, function(key, val, obj) {
-            if (key.CLASS_NAME == 'OpenLayers.Strategy.AttributeCluster') {
-                layer.strategies[val].activate();
+        var strategies = layer.strategies;
+        var strategy;
+        for (var i=0, len=strategies.length; i < len; i++) {
+            strategy = strategies[i];
+            if (strategy.CLASS_NAME == 'OpenLayers.Strategy.AttributeCluster') {
+                strategy.deactivate();
             }
-        });
+        }
         // Zoom Out to Cluster
         layer.map.zoomTo(0)
         // Zoom to Bounds
@@ -1155,9 +1144,11 @@ Ext.onReady(function() {
         }
         // Disable this event
         layer.events.un({
-            'loadend': s3_gis_search_layer_loadend
+            'loadend': gis_search_layer_loadend
         });
     }
+    // Pass to Global scope to be called from s3.filter.js
+    S3.gis.search_layer_loadend = gis_search_layer_loadend;
 
     // S3Search Results
     var s3_dataTables_mapButton = Ext.get('gis_datatables_map-btn');
@@ -1171,22 +1162,26 @@ Ext.onReady(function() {
             }
             var map = S3.gis.maps[map_id];
             // Load the search results layer
-            Ext.iterate(map.layers, function(key, val, obj) {
-                if (key.s3_layer_id == 'search_results') {
-                    var layer = map.layers[val];
+            var layers = map.layers;
+            var layer, j, jlen, strategies, strategy;
+            for (var i=0, len=layers.length; i < len; i++) {
+                layer = layers[i];
+                if (layer.s3_layer_id == 'search_results') {
                     // Set a new event when the layer is loaded
                     layer.events.on({
-                        'loadend': s3_gis_search_layer_loadend
+                        'loadend': gis_search_layer_loadend
                     });
                     // Disable Clustering to get correct bounds
-                    Ext.iterate(layer.strategies, function(key, val, obj) {
-                        if (key.CLASS_NAME == 'OpenLayers.Strategy.AttributeCluster') {
-                            layer.strategies[val].deactivate();
+                    strategies = layer.strategies;
+                    for (j=0, jlen=strategies.length; j < jlen; j++) {
+                        strategy = strategies[j];
+                        if (strategy.CLASS_NAME == 'OpenLayers.Strategy.AttributeCluster') {
+                            strategy.deactivate();
                         }
-                    });
+                    }
                     layer.setVisibility(true);
                 }
-            });
+            };
             if (map.s3.polygonButton) {
                 // Disable the polygon control
                 map.s3.polygonButton.disable();

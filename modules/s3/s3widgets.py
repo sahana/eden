@@ -123,10 +123,9 @@ class S3HiddenWidget(StringWidget):
         attr = StringWidget._attributes(field, default, **attributes)
         attr["_class"] = "hide %s" % attr["_class"]
 
-        return TAG[""](
-                        INPUT(**attr),
-                        requires = field.requires
-                      )
+        return TAG[""](INPUT(**attr),
+                       requires = field.requires
+                       )
 
 # =============================================================================
 class S3DateWidget(FormWidget):
@@ -183,10 +182,9 @@ class S3DateWidget(FormWidget):
              future = self.future,
              format = format))
 
-        return TAG[""](
-                        INPUT(**attr),
-                        requires = field.requires
-                      )
+        return TAG[""](INPUT(**attr),
+                       requires = field.requires
+                       )
 
 # =============================================================================
 class S3DateTimeWidget(FormWidget):
@@ -494,10 +492,9 @@ $('#%s').click(function(){
                     (show, click_start, hide, middle, show, click_end)
             response.s3.jquery_ready.append(script)
 
-        return TAG[""](
-                        INPUT(**attr),
-                        requires = field.requires
-                      )
+        return TAG[""](INPUT(**attr),
+                       requires = field.requires
+                       )
 
 # =============================================================================
 class S3ColorPickerWidget(FormWidget):
@@ -782,18 +779,17 @@ class S3AutocompleteWidget(FormWidget):
             represent = ""
 
         current.response.s3.jquery_ready.append(js_autocomplete)
-        return TAG[""](
-                        INPUT(_id=dummy_input,
-                              _class="string",
-                              _value=represent.encode("utf-8")),
-                        IMG(_src="/%s/static/img/ajax-loader.gif" % \
-                                 current.request.application,
-                            _height=32, _width=32,
-                            _id="%s_throbber" % dummy_input,
-                            _class="throbber hide"),
-                        INPUT(**attr),
-                        requires = field.requires
-                      )
+        return TAG[""](INPUT(_id=dummy_input,
+                             _class="string",
+                             _value=represent.encode("utf-8")),
+                       IMG(_src="/%s/static/img/ajax-loader.gif" % \
+                                current.request.application,
+                           _height=32, _width=32,
+                           _id="%s_throbber" % dummy_input,
+                           _class="throbber hide"),
+                       INPUT(**attr),
+                       requires = field.requires
+                       )
 
 # =============================================================================
 class S3LocationAutocompleteWidget(FormWidget):
@@ -1122,18 +1118,17 @@ $('#%(dummy_input)s').blur(function(){
             represent = ""
 
         current.response.s3.jquery_ready.append(js_autocomplete)
-        return TAG[""](
-                        INPUT(_id=dummy_input,
-                              _class="string",
-                              _value=represent.encode("utf-8")),
-                        IMG(_src="/%s/static/img/ajax-loader.gif" % \
-                                 current.request.application,
-                            _height=32, _width=32,
-                            _id="%s_throbber" % dummy_input,
-                            _class="throbber hide"),
-                        INPUT(hideerror=self.hideerror, **attr),
-                        requires = field.requires
-                      )
+        return TAG[""](INPUT(_id=dummy_input,
+                             _class="string",
+                             _value=represent.encode("utf-8")),
+                       IMG(_src="/%s/static/img/ajax-loader.gif" % \
+                                current.request.application,
+                           _height=32, _width=32,
+                           _id="%s_throbber" % dummy_input,
+                           _class="throbber hide"),
+                       INPUT(hideerror=self.hideerror, **attr),
+                       requires = field.requires
+                       )
 
 # =============================================================================
 class S3HumanResourceAutocompleteWidget(FormWidget):
@@ -1318,18 +1313,17 @@ $('#%(dummy_input)s').blur(function(){
             represent = ""
 
         response.s3.jquery_ready.append(js_autocomplete)
-        return TAG[""](
-                        INPUT(_id=dummy_input,
-                              _class="string",
-                              _value=represent.encode("utf-8")),
-                        IMG(_src="/%s/static/img/ajax-loader.gif" % \
-                                 request.application,
-                            _height=32, _width=32,
-                            _id="%s_throbber" % dummy_input,
-                            _class="throbber hide"),
-                        INPUT(**attr),
-                        requires = field.requires
-                      )
+        return TAG[""](INPUT(_id=dummy_input,
+                             _class="string",
+                             _value=represent.encode("utf-8")),
+                       IMG(_src="/%s/static/img/ajax-loader.gif" % \
+                                request.application,
+                           _height=32, _width=32,
+                           _id="%s_throbber" % dummy_input,
+                           _class="throbber hide"),
+                       INPUT(**attr),
+                       requires = field.requires
+                       )
 
 # =============================================================================
 class S3SiteAutocompleteWidget(FormWidget):
@@ -1467,18 +1461,17 @@ $('#%(dummy_input)s').blur(function(){
             represent = ""
 
         current.response.s3.jquery_ready.append(js_autocomplete)
-        return TAG[""](
-                        INPUT(_id=dummy_input,
-                              _class="string",
-                              _value=represent.encode("utf-8")),
-                        IMG(_src="/%s/static/img/ajax-loader.gif" % \
-                                 current.request.application,
-                            _height=32, _width=32,
-                            _id="%s_throbber" % dummy_input,
-                            _class="throbber hide"),
-                        INPUT(**attr),
-                        requires = field.requires
-                      )
+        return TAG[""](INPUT(_id=dummy_input,
+                             _class="string",
+                             _value=represent.encode("utf-8")),
+                       IMG(_src="/%s/static/img/ajax-loader.gif" % \
+                                current.request.application,
+                           _height=32, _width=32,
+                           _id="%s_throbber" % dummy_input,
+                           _class="throbber hide"),
+                       INPUT(**attr),
+                       requires = field.requires
+                       )
 
 # =============================================================================
 class S3SiteAddressAutocompleteWidget(FormWidget):
@@ -1581,18 +1574,17 @@ $('#%(dummy_input)s').blur(function(){
             represent = ""
 
         current.response.s3.jquery_ready.append(js_autocomplete)
-        return TAG[""](
-                        INPUT(_id=dummy_input,
-                              _class="string",
-                              _value=represent.encode("utf-8")),
-                        IMG(_src="/%s/static/img/ajax-loader.gif" % \
-                                 current.request.application,
-                            _height=32, _width=32,
-                            _id="%s_throbber" % dummy_input,
-                            _class="throbber hide"),
-                        INPUT(**attr),
-                        requires = field.requires
-                      )
+        return TAG[""](INPUT(_id=dummy_input,
+                             _class="string",
+                             _value=represent.encode("utf-8")),
+                       IMG(_src="/%s/static/img/ajax-loader.gif" % \
+                                current.request.application,
+                           _height=32, _width=32,
+                           _id="%s_throbber" % dummy_input,
+                           _class="throbber hide"),
+                       INPUT(**attr),
+                       requires = field.requires
+                       )
 
 # -----------------------------------------------------------------------------
 def S3GenericAutocompleteTemplate(post_process,
@@ -1695,18 +1687,17 @@ $('#%(dummy_input)s').blur(function(){
         represent = ""
 
     current.response.s3.jquery_ready.append(js_autocomplete)
-    return TAG[""](
-                    INPUT(_id=dummy_input,
-                          _class="string",
-                          value=represent.encode("utf-8")),
-                    IMG(_src="/%s/static/img/ajax-loader.gif" % \
-                             current.request.application,
-                        _height=32, _width=32,
-                        _id="%s_throbber" % dummy_input,
-                        _class="throbber hide"),
-                    INPUT(**attr),
-                    requires = field.requires
-                  )
+    return TAG[""](INPUT(_id=dummy_input,
+                         _class="string",
+                         value=represent.encode("utf-8")),
+                   IMG(_src="/%s/static/img/ajax-loader.gif" % \
+                            current.request.application,
+                       _height=32, _width=32,
+                       _id="%s_throbber" % dummy_input,
+                       _class="throbber hide"),
+                   INPUT(**attr),
+                   requires = field.requires
+                   )
 
 # =============================================================================
 class S3LocationDropdownWidget(FormWidget):
@@ -1756,10 +1747,9 @@ class S3LocationDropdownWidget(FormWidget):
         attr_dropdown["represent"] = \
             lambda id: locations["id"]["name"] or UNKNOWN_OPT
 
-        return TAG[""](
-                        SELECT(*opts, **attr_dropdown),
-                        requires=field.requires
-                      )
+        return TAG[""](SELECT(*opts, **attr_dropdown),
+                       requires=field.requires
+                       )
 
 # =============================================================================
 class S3LocationSelectorWidget(FormWidget):
@@ -1939,7 +1929,7 @@ class S3LocationSelectorWidget(FormWidget):
         if map_selector:
             no_map = ""
         else:
-            no_map = "S3.gis.no_map = true;\n"
+            no_map = '''S3.gis.no_map = true;\n'''
         # Should we display LatLon boxes?
         latlon_selector = settings.get_gis_latlon_selector()
         # Show we display Polygons?
@@ -2064,11 +2054,13 @@ S3.gis.tab="%s"''' % s3.gis.tab
                                                  add_polygon = polygon,
                                                  add_polygon_active = polygon,
                                                  toolbar = True,
+                                                 nav = False,
+                                                 area = False,
+                                                 save = False,
                                                  collapsed = True,
                                                  search = True,
                                                  window = True,
                                                  window_hide = True,
-                                                 location_selector = True
                                                  )
                 else:
                     # Bad location_id
@@ -2106,11 +2098,13 @@ S3.gis.tab="%s"''' % s3.gis.tab
                                              add_polygon_active = polygon,
                                              catalogue_layers = self.catalog_layers,
                                              toolbar = True,
+                                             nav = False,
+                                             area = False,
+                                             save = False,
                                              collapsed = True,
                                              search = True,
                                              window = True,
                                              window_hide = True,
-                                             location_selector = True
                                              )
             else:
                 # No Permission to create a location, so don't render a row
@@ -2606,7 +2600,8 @@ class S3LocationSelectorWidget2(FormWidget):
         May evolve into a replacement in-time if missing features get migrated here.
 
         Implementation Notes:
-        * Should support formstyles (Bootstrap most urgent)
+        * Should support formstyles (Bootstrap currenty supported)
+        * Should support use in an InlineComponent (not urgent)
         * Should support multiple on a page (not urgent)
         * Performance: Create JSON for the hierarchy, along with bboxes for the map zoom
                        - load progressively rather than all as 1 big download
@@ -2888,18 +2883,8 @@ class S3LocationSelectorWidget2(FormWidget):
                                              b=default_bounds)
 
         if not location_selector_loaded:
-            scripts = []
-            append = scripts.append
-            # i18n
-            i18n = "\n".join((
-                '''i18n.gis_requires_login="%s"''' % T("Requires Login"),
-                ))
-            append(i18n)
-
             script = '''l=%s''' % json.dumps(location_dict)
-            append(script)
-
-            s3.js_global.append('''\n'''.join(scripts))
+            s3.js_global.append(script)
 
         # If we need to show the map since we have an existing lat/lon
         # then we need to launch the client-side JS as a callback to the MapJS loader
@@ -2958,9 +2943,13 @@ class S3LocationSelectorWidget2(FormWidget):
                                width = 480,
                                add_feature = True,
                                add_feature_active = True,
+                               # Hide controls from toolbar
+                               nav = False,
+                               area = False,
+                               save = False,
                                # Don't use normal callback (since we postpone rendering Map until DIV unhidden)
                                # but use our one if we need to display a map by default
-                               callback = callback if use_callback else "",
+                               callback = callback if use_callback else None,
                                )
             icon_id = "%s_map_icon" % fieldname
             row_id = "%s_map_icon__row" % fieldname
@@ -3223,7 +3212,6 @@ class S3CheckboxesWidget(OptionsWidget):
             return ", ".join(list)
         else:
             return None
-
 
 # =============================================================================
 class S3MultiSelectWidget(MultipleOptionsWidget):
@@ -3726,13 +3714,11 @@ class S3AutocompleteOrAddWidget(FormWidget):
         self.add_widget = add_widget
 
     def __call__(self, field, value, **attributes):
-        return TAG[""](
-            # this does the input field
-            self.autocomplete_widget(field, value, **attributes),
-
-            # this can fill it if it isn't autocompleted
-            self.add_widget(field, value, **attributes)
-        )
+        return TAG[""](# this does the input field
+                       self.autocomplete_widget(field, value, **attributes),
+                       # this can fill it if it isn't autocompleted
+                       self.add_widget(field, value, **attributes)
+                       )
 
 # =============================================================================
 class S3AddObjectWidget(FormWidget):
@@ -3971,10 +3957,9 @@ class S3SearchAutocompleteWidget(FormWidget):
                              _name = field.name,
                             )
 
-        return TAG[""](
-                    search_div,
-                    hidden_input
-                    )
+        return TAG[""](search_div,
+                       hidden_input
+                       )
 
 # =============================================================================
 class S3TimeIntervalWidget(FormWidget):
@@ -4106,12 +4091,11 @@ class S3InvBinWidget(FormWidget):
                           _name = field.name,
                          )
         new_lbl = LABEL(T("...or add a new bin"))
-        return TAG[""](
-                    match_lbl,
-                    match_div,
-                    new_lbl,
-                    new_div
-                    )
+        return TAG[""](match_lbl,
+                       match_div,
+                       new_lbl,
+                       new_div
+                       )
 
 # =============================================================================
 class S3EmbedComponentWidget(FormWidget):
@@ -4309,7 +4293,8 @@ class S3EmbedComponentWidget(FormWidget):
         return TAG[""](select_row,
                        ac_row,
                        table,
-                       divider)
+                       divider,
+                       )
 
 # =============================================================================
 def s3_comments_widget(field, value, **attr):

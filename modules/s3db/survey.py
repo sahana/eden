@@ -2217,7 +2217,7 @@ $('#chart_btn').click(function(){
                            bbox = bounds,
                            #collapsed = True,
                            catalogue_layers = True,
-                          )
+                           )
         series = INPUT(_type="hidden",
                        _id="selectSeriesID",
                        _name="series",

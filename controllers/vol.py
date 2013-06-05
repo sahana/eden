@@ -298,7 +298,7 @@ def volunteer():
 def person():
     """
         Person Controller
-        - used for Personal Profile & Imports
+        - used to see PR component tabs, for Personal Profile & Imports
         - includes components relevant to HRM
     """
 

@@ -418,7 +418,7 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
         }
         jsFiles = jsFiles.concat(gxt_files)
 
-        if (S3.gis.mouse_position == 'mgrs') {
+        if (S3.gis.mgrs) {
             jsFiles.push('gis/usng2.js');
             jsFiles.push('gis/MP.js');
         }
@@ -440,7 +440,7 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
         if (i18n.gis_uploadlayer) {
             jsFiles.push('gis/gxp_upload.js');
         }
-        if (S3.gis.mouse_position == 'mgrs') {
+        if (S3.gis.mgrs) {
             jsFiles.push('gis/MGRS.min.js');
         }
         jsFiles.push('S3/s3.gis.min.js');
@@ -448,9 +448,6 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
 
     // Add the additional scritps from Layers/Plugins
     jsFiles = jsFiles.concat(scripts)
-
-    // Configuration options to pass through to the map
-    S3.gis.projection = projection;
 
     var path = S3.Ap.concat('/static/scripts/');
     if (callback) {
