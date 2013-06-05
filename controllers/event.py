@@ -136,6 +136,14 @@ def incident():
     return output
 
 # -----------------------------------------------------------------------------
+def incident_report():
+    """
+        RESTful CRUD controller
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def event_rheader(r):
     """ Resource headers for component views """
 

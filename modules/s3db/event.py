@@ -29,6 +29,7 @@
 
 __all__ = ["S3EventModel",
            "S3IncidentModel",
+           "S3IncidentReportModel",
            "S3IncidentTypeModel",
            "S3IncidentTypeTagModel",
            "S3EventAssetModel",
@@ -702,6 +703,66 @@ class S3IncidentModel(S3Model):
             item.id = _duplicate.id
             item.data.id = _duplicate.id
             item.method = item.METHOD.UPDATE
+
+# =============================================================================
+class S3IncidentReportModel(S3Model):
+    """
+        Incident Reports
+         - reports about incidents
+    """
+
+    names = ["event_incident_report",
+             ]
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+        settings = current.deployment_settings
+        super_link = self.super_link
+
+        # ---------------------------------------------------------------------
+        # Incident Reports
+        #
+        tablename = "event_incident_report"
+        table = self.define_table(tablename,
+                                  super_link("doc_id", "doc_entity"),
+                                  #self.event_event_id(),
+                                  #self.event_incident_id(),
+                                  #self.scenario_scenario_id(),
+                                  s3_datetime(),
+                                  Field("name", notnull=True,
+                                        label=T("Name")),
+                                  self.event_incident_type_id(),
+                                  self.gis_location_id(),
+                                  self.pr_person_id(label=T("Reported By")),
+                                  s3_comments(),
+                                  *s3_meta_fields())
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            title_create = T("Add Incident Report"),
+            title_display = T("Incident Report Details"),
+            title_list = T("Incident Reports"),
+            title_update = T("Edit Incident Report"),
+            title_search = T("Search Incident Reports"),
+            subtitle_create = T("Add New Incident Report"),
+            label_list_button = T("List Incident Reports"),
+            label_create_button = T("Add Incident Report"),
+            label_delete_button = T("Remove Incident Report from this event"),
+            msg_record_created = T("Incident Report added"),
+            msg_record_modified = T("Incident Report updated"),
+            msg_record_deleted = T("Incident Report removed"),
+            msg_list_empty = T("No Incident Reports currently registered for this event"))
+
+        self.configure(tablename,
+                       super_entity="doc_entity",
+                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return Storage(
+            )
 
 # =============================================================================
 class S3IncidentTypeModel(S3Model):
