@@ -4848,6 +4848,7 @@ class S3Resource(object):
             left_joins.extend(rfield.left)
 
             tablenames = left_joins.joins.keys()
+            tablenames.append(self.tablename)
             af = S3AxisFilter(qdict, tablenames)
 
             if af.op is not None:
@@ -4860,18 +4861,31 @@ class S3Resource(object):
                 rows = current.db(query).select(field,
                                                 left=left,
                                                 groupby=field)
-
                 colname = rfield.colname
                 if rfield.ftype[:5] == "list:":
-                    # @todo: this does not really work yet - it extracts
-                    # and merges lists but doesn't filter out individual
-                    # values
-                    values = set(chain.from_iterable([row[colname]
-                                                    for row in rows]))
-                    axisfilter[colname] = dict((v, None) for v in values)
+                    values = []
+                    vappend = values.append
+                    for row in rows:
+                        v = row[colname]
+                        if v:
+                            vappend(v)
+                    values = set(chain.from_iterable(values))
+                    
+                    include, exclude = af.values(rfield)
+                    fdict = {}
+                    if include:
+                        for v in values:
+                            vstr = s3_unicode(v)
+                            if vstr in include and vstr not in exclude:
+                                fdict[v] = None
+                    else:
+                        fdict = dict((v, None) for v in values)
+                        
+                    axisfilter[colname] = fdict
+                    
                 else:
-                    axisfilter[colname] = dict((row[colname], True)
-                                            for row in rows)
+                    axisfilter[colname] = dict((row[colname], None)
+                                               for row in rows)
 
         return axisfilter
 
@@ -6526,7 +6540,7 @@ class S3AxisFilter(object):
         r = qdict["second"]
 
         op = qdict["op"]
-
+        
         if "tablename" in l:
             if l["tablename"] in tablenames:
                 self.tablename = l["tablename"]
@@ -6572,7 +6586,7 @@ class S3AxisFilter(object):
 
         r = self.r
         if op in ("AND", "OR", "NOT"):
-            r = r.query()
+            r = r.query() if r else True
 
         if op == "AND":
             if l is not None and r is not None:
@@ -6617,6 +6631,46 @@ class S3AxisFilter(object):
         else:
             return None
 
+    # -------------------------------------------------------------------------
+    def values(self, rfield):
+        """
+            Helper method to filter list:type axis values
+
+            @param rfield: the axis field
+
+            @return: pair of value lists [include], [exclude]
+        """
+
+        op = self.op
+        tablename = self.tablename
+        fieldname = self.fieldname
+
+        if tablename == rfield.tname and \
+           fieldname == rfield.fname:
+            value = self.r
+            if isinstance(value, (list, tuple)):
+                value = [s3_unicode(v) for v in value]
+            else:
+                value = [s3_unicode(value)]
+            if op == "CONTAINS":
+                return value, []
+            elif op == "EQ":
+                return value, []
+            elif op == "NE":
+                return [], value
+        elif op == "AND":
+            li, le = self.l.values(rfield)
+            ri, re = self.r.values(rfield)
+            return [v for v in li + ri if v not in le + re], []
+        elif op == "OR":
+            li, le = self.l.values(rfield)
+            ri, re = self.r.values(rfield)
+            return [v for v in li + ri], []
+        if op == "NOT":
+            li, le = self.l.values(rfield)
+            return [], li
+        return [], []
+        
 # =============================================================================
 class S3URLQuery(object):
     """ URL Query Parser """
