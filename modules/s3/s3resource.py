@@ -875,6 +875,7 @@ class S3Resource(object):
                     virtual=True,
                     count=False,
                     getids=False,
+                    as_rows=False,
                     represent=False,
                     show_links=True,
                     raw_data=False):
@@ -891,6 +892,7 @@ class S3Resource(object):
             @param virtual: include mandatory virtual fields
             @param count: include the total number of matching records
             @param getids: include the IDs of all matching records
+            @param as_rows: return the rows (don't extract)
             @param represent: render field value representations
             @param raw_data: include raw data in the result
         """
@@ -1155,12 +1157,16 @@ class S3Resource(object):
             for flist in [dfields, vfields]:
                 for rfield in flist:
                     tname = rfield.tname
-                    if tname == tablename or tname in qtables:
+                    if tname == tablename or as_rows or tname in qtables:
                         colname = rfield.colname
                         if rfield.show:
                             mfields[colname] = True
                         if rfield.field:
                             qfields[colname] = rfield.field
+                        if as_rows and \
+                           tname != tablename and \
+                           tname not in qtables:
+                            qtables.append(tname)
 
         if not groupby:
             if distinct and orderby:
@@ -1193,7 +1199,7 @@ class S3Resource(object):
                                        groupby=groupby,
                                        orderby=orderby,
                                        limitby=limitby,
-                                       cacheable=True,
+                                       cacheable=not as_rows,
                                        *qfields.values())
 
         # Restore virtual fields (if they were deactivated before)
@@ -1223,7 +1229,7 @@ class S3Resource(object):
                 totalrows = len(ids)
 
         # With GROUPBY, return the grouped rows here:
-        if groupby:
+        if groupby or as_rows:
             return rows
 
         # Otherwise: initialize output
@@ -1299,6 +1305,7 @@ class S3Resource(object):
                                      distinct=True,
                                      cacheable=True,
                                      *sfields)
+
             # Extract and merge the data
             records = self.__extract(rows,
                                      pkey,
@@ -2273,7 +2280,12 @@ class S3Resource(object):
     # -------------------------------------------------------------------------
     # Data Object API
     # -------------------------------------------------------------------------
-    def load(self, start=None, limit=None, orderby=None, virtual=True, cacheable=False):
+    def load(self,
+             start=None,
+             limit=None,
+             orderby=None,
+             virtual=True,
+             cacheable=False):
         """
             Loads records from the resource, applying the current filters,
             and stores them in the instance.
@@ -2288,7 +2300,8 @@ class S3Resource(object):
         table = self.table
         tablename = self.tablename
 
-        if tablename == "gis_location" or tablename.startswith("gis_layer_shapefile_"):
+        if tablename == "gis_location" or \
+           tablename.startswith("gis_layer_shapefile_"):
             # Filter out bulky Polygons
             fields = [f for f in table.fields if f not in ("wkt", "the_geom")]
         else:
@@ -2303,12 +2316,12 @@ class S3Resource(object):
             start = 0
             limit = 1
 
-        rows = self.select(fields,
-                           start=start,
-                           limit=limit,
-                           orderby=orderby,
-                           virtual=virtual,
-                           cacheable=cacheable)
+        rows = self.fast_select(fields,
+                                start=start,
+                                limit=limit,
+                                orderby=orderby,
+                                virtual=virtual,
+                                as_rows=True)
 
         ids = self._ids = []
         new_id = ids.append
@@ -2527,16 +2540,16 @@ class S3Resource(object):
         else:
             start = limit = None
 
-        rows = self.select(fields,
-                           start=start,
-                           limit=limit)
+        rows = self.fast_select(fields,
+                                start=start,
+                                limit=limit)["data"]
 
         if rows:
-            records = self.extract(rows, fields)
-            self._ids = [record[str(table._id)] for record in records]
+            ID = str(table._id)
+            self._ids = [row[ID] for row in rows]
             if has_uid:
-                uid = str(ogetattr(table, UID))
-                self._uids = [record[uid] for record in records]
+                uid = str(table[UID])
+                self._uids = [row[uid] for row in rows]
         else:
             self._ids = []
 
@@ -7298,59 +7311,32 @@ class S3ResourceFilter(object):
             @param distinct: count only distinct rows
         """
 
-        resource = self.resource
         distinct |= self.distinct
+        
+        resource = self.resource
         if resource is None:
             return 0
+            
         table = resource.table
         tablename = resource.tablename
 
-        # Left joins
-        left_joins = left
-        if left_joins is None:
-            left_joins = []
-        elif not isinstance(left, list):
-            left_joins = [left_joins]
-        joined_tables = [str(join.first) for join in left_joins]
+        if self.vfltr is None and not distinct:
+            
+            left_joins = S3LeftJoins(resource.tablename, left)
+            left_joins.add(self.get_left_joins())
+            left = left_joins.as_list()
 
-        # Add the left joins from the filter
-        fjoins = self.get_left_joins()
-        for join in fjoins:
-            tn = str(join.first)
-            if tn not in joined_tables:
-                joined_tables.append(str(join.first))
-                left_joins.append(join)
-        if left_joins:
-            try:
-                left_joins = resource.sortleft(left_joins)
-            except:
-                pass
-            left = left_joins
-        else:
-            left = None
-
-        if self.vfltr is None:
-            if distinct:
-                rows = current.db(self.query).select(table._id,
-                                                     left=left,
-                                                     distinct=distinct)
-                return len(rows)
+            cnt = table[table._id.name].count()
+            
+            row = current.db(self.query).select(cnt, left=left).first()
+            if row:
+                return row[cnt]
             else:
-                cnt = table[table._id.name].count()
-                row = current.db(self.query).select(cnt, left=left).first()
-                if row:
-                    return(row[cnt])
-                else:
-                    return 0
-        else:
-            rows = resource.select([table._id.name],
-                                   left=left,
-                                   distinct=distinct)
-            rows = resource.extract(rows, [table._id.name])
+                return 0
 
-        if rows is None:
-            return 0
-        return len(rows)
+        else:
+            data = resource.fast_select([table._id.name], count=True)
+            return data["numrows"]
 
     # -------------------------------------------------------------------------
     def __nonzero__(self):
