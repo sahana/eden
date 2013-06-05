@@ -41,7 +41,6 @@ __all__ = ["S3RequestModel",
            "req_update_status",
            "req_rheader",
            "req_match",
-           "req_site_virtualfields",
            "req_add_from_template",
            ]
 
@@ -3231,45 +3230,6 @@ class ReqVirtualFields:
                 return ",".join(drivers)
 
         return current.messages["NONE"]
-
-# =============================================================================
-class req_site_virtualfields:
-    """
-        Virtual fields for the org_site table which reflect their Requests status
-    """
-
-    def __init__(self, tablename):
-        self.tablename = tablename
-
-    # -------------------------------------------------------------------------
-    def reqs(self):
-        """
-            Highest priority open requests for site
-        """
-
-        tablename = self.tablename
-        try:
-            id = self.__dict__[tablename].id
-        except AttributeError:
-            return None
-
-        s3db = current.s3db
-        rtable = s3db.req_req
-        stable = s3db[tablename]
-        query = (rtable.deleted != True) & \
-                (stable.id == id) & \
-                (rtable.site_id == stable.site_id) & \
-                (rtable.fulfil_status != REQ_STATUS_COMPLETE) & \
-                (rtable.is_template == False)
-        req = current.db(query).select(rtable.id,
-                                       rtable.priority,
-                                       orderby=~rtable.priority,
-                                       limitby=(0, 1)).first()
-        if req:
-            #return rtable.priority.represent(req.priority)
-            return req.priority
-        else:
-            return None
 
 # =============================================================================
 def req_rheader(r, check_page=False):
