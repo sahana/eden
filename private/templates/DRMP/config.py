@@ -1294,8 +1294,8 @@ def render_resources(listid, resource, rfields, record, **attr):
     item_class = "thumbnail"
 
     raw = record._row
-    quantity = record["org_resource.quantity"]
-    resource_type = record["org_resource.resource_type_id"]
+    quantity = record["org_resource.value"]
+    resource_type = record["org_resource.parameter_id"]
     body = "%s %s" % (quantity, resource_type)
     comments = raw["org_resource.comments"]
     organisation_id = raw["org_resource.organisation_id"]
@@ -2350,10 +2350,10 @@ def customize_org_resource_fields(method):
 
     s3db.org_resource.location_id.represent = location_represent
 
-    list_fields = ["resource_type_id",
-                   "quantity",
-                   "organisation_id",
+    list_fields = ["organisation_id",
                    "location_id",
+                   "parameter_id",
+                   "value",
                    "comments",
                    ]
     if method == "datalist":
@@ -2382,7 +2382,7 @@ def customize_org_resource(**attr):
             if not result:
                 return False
 
-        if r.interactive:
+        if r.interactive or r.representation == "aadata":
             customize_org_resource_fields(r.method)
     
             # Configure fields
@@ -2718,7 +2718,7 @@ def customize_project_project(**attr):
             if not result:
                 return False
 
-        if r.interactive:
+        if r.interactive  or r.representation == "aadata":
             #customize_project_project_fields()
             # Configure fields 
             table.human_resource_id.label = T("Focal Person")
@@ -2990,14 +2990,19 @@ settings.modules = OrderedDict([
             restricted = True,
             module_type = None
         )),
-    ("asset", Storage(
-            name_nice = T("Assets"),
+    ("stats", Storage(
+            name_nice = T("Statistics"),
             restricted = True,
             module_type = None
         )),
-    ("supply", Storage(
-            name_nice = "Supply",
-            restricted = True,
-            module_type = None
-        )),
+#    ("asset", Storage(
+#            name_nice = T("Assets"),
+#            restricted = True,
+#            module_type = None
+#        )),
+#    ("supply", Storage(
+#            name_nice = "Supply",
+#            restricted = True,
+#            module_type = None
+#        )),
 ])

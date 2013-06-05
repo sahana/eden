@@ -6,6 +6,8 @@ from gluon.storage import Storage
 
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
+from s3 import s3forms, S3LocationAutocompleteWidget, IS_NULL_OR, IS_ONE_OF, S3Represent
+
 T = current.T
 settings = current.deployment_settings
 
@@ -119,12 +121,16 @@ settings.ui.summary = [{"name": "table",
 # View Settings
 
 current.response.menu = [{"name": T("Residents"),
-                 "url": URL("pr","group"),
+                 "url": URL("stats","resident"),
                  "icon": "icon-group"
                  },
-                {"name": T("Risks"),
-                 "url": URL("",""),
+                {"name": T("Incidents"),
+                 "url": URL("event","incident_report"),
                  "icon": "icon-warning-sign"
+                 },
+                {"name": T("Risks"),
+                 "url": URL("vulnerability","risk"),
+                 "icon": "icon-bolt"
                  },
                 {"name": T("Activities"),
                  "url": URL("project","activity"),
@@ -135,7 +141,7 @@ current.response.menu = [{"name": T("Residents"),
                  "icon": "icon-sitemap"
                  },
                 {"name": T("Trained People"),
-                 "url": URL("hrm","human_resource"),
+                 "url": URL("stats","trained_people"),
                  "icon": "icon-user"
                  },
                 {"name": T("Locations"),
@@ -143,7 +149,7 @@ current.response.menu = [{"name": T("Residents"),
                  "icon": "icon-home"
                  },
                 {"name": T("Evacuation Routes"),
-                 "url": URL("",""),
+                 "url": URL("vulnerability","evac_route"),
                  "icon": "icon-road"
                  },
                  ]
@@ -167,10 +173,215 @@ settings.hrm.use_skills = False
 settings.hrm.use_teams = False
 
 # -----------------------------------------------------------------------------
-# Project
-# Uncomment this to use multiple Organisations per project
-#settings.project.multiple_organisations = True
+# Activity
+def customize_project_activity(**attr):
+    """
+        Customize project_project controller
+    """
+    
+    s3db = current.s3db
+    
+    tablename = "project_activity"
+    table = s3db[tablename]
 
+    # Remove rheader
+    attr["rheader"] = None
+
+    # Custom Crud Form
+    crud_form = s3forms.S3SQLCustomForm(
+        "date",
+        "name",
+        "activity_type_id",
+        "location_id",
+        "person_id",
+        s3forms.S3SQLInlineComponent(
+            "activity_organisation",
+            label = T("Participating Organizations"),
+            #comment = "Bob",
+            fields = ["organisation_id"],
+        ),
+        "comments",
+    ) 
+
+    s3db.configure(tablename,
+                   crud_form = crud_form)
+
+    return attr
+
+settings.ui.customize_project_activity = customize_project_activity
+
+# -----------------------------------------------------------------------------
+# Organisation
+def customize_org_organisation(**attr):
+    """
+        Customize org_organisation controller
+    """
+    
+    s3db = current.s3db
+
+    # Remove rheader
+    attr["rheader"] = None
+
+    tablename = "org_organisation"
+    table = s3db[tablename]
+
+    s3db.org_facility.location_id.widget = S3LocationAutocompleteWidget()
+    s3db.org_facility.location_id.label = T("Address")
+    s3db.hrm_human_resource.person_id.widget = None
+    s3db.hrm_human_resource.site_id.label = T("Location")
+
+    # Custom Crud Form
+    crud_form = s3forms.S3SQLCustomForm(
+        "name",
+        "logo",
+        "multi_sector_id",
+        s3forms.S3SQLInlineComponentCheckbox(
+            "service",
+            label = T("Services"),
+            field = "service_id",
+            cols = 4,
+        ),
+        s3forms.S3SQLInlineComponent(
+            "human_resource",
+            label = T("Organization's Contacts"),
+            #comment = "Bob",
+            fields = ["person_id",
+                      "site_id",
+                      "hrm_job_title_id",
+                      #"email",
+                      #"phone",
+                      ],
+        ),
+        s3forms.S3SQLInlineComponent(
+            "facility",
+            label = T("Organization's Locations"),
+            #comment = "Bob",
+            fields = ["name", 
+                      "facility_type_id",
+                      "location_id" ],
+        ),
+        s3forms.S3SQLInlineComponent(
+            "resource",
+            label = T("Organization's Resources"),
+            #comment = "Bob",
+            fields = ["parameter_id", 
+                      "value",
+                      "comments" ],
+        ),
+        "comments",
+    ) 
+
+    s3db.configure(tablename,
+                   crud_form = crud_form)
+
+    return attr
+
+settings.ui.customize_org_organisation = customize_org_organisation
+
+#-----------------------------------------------------------------------------
+# Location (org_facility)
+#-----------------------------------------------------------------------------
+
+def customize_org_facility(**attr):
+    """
+        Customize org_facility controller
+    """
+    
+    s3db = current.s3db
+    db = current.db
+
+    # Remove rheader
+    attr["rheader"] = None
+
+    tablename = "org_facility"
+    table = s3db[tablename]
+    
+    table.facility_type_id.requires = IS_NULL_OR(IS_ONE_OF(db, "org_facility_type.id",
+                                                          S3Represent(lookup=tablename),
+                                                          sort=True))
+    table.facility_type_id.widget = None
+
+    s3db.hrm_human_resource.person_id.widget = None
+
+    s3db.org_facility.location_id.label = T("Address")
+
+    # Custom Crud Form
+    crud_form = s3forms.S3SQLCustomForm(
+        "name",
+        "facility_type_id",
+        "organisation_id",
+        "location_id",
+        s3forms.S3SQLInlineComponent(
+            "human_resource",
+            label = T("Location's Contacts"),
+            #comment = "Bob",
+            fields = ["person_id",
+                      "hrm_job_title_id",
+                      #"email",
+                      #"phone",
+                      ],
+        ),
+        "comments",
+    ) 
+
+    s3db.configure(tablename,
+                   crud_form = crud_form)
+
+    current.response.s3.crud_strings[tablename] = Storage(
+                title_create = T("Add Location"),
+                title_display = T("Location Details"),
+                title_list = T("Locations"),
+                title_update = T("Edit Location"),
+                title_search = T("Search Locations"),
+                subtitle_create = T("Add New Location"),
+                label_list_button = T("List Locations"),
+                label_create_button = T("Add Location"),
+                label_delete_button = T("Remove Location"),
+                msg_record_created = T("Location added"),
+                msg_record_modified = T("Location updated"),
+                msg_record_deleted = T("Location removed"),
+                msg_list_empty = T("No Locations currently recorded"))
+
+    return attr
+
+settings.ui.customize_org_facility = customize_org_facility
+
+# -----------------------------------------------------------------------------
+# Incidents
+# -----------------------------------------------------------------------------
+def customize_event_incident_report(**attr):
+    """
+        Customize project_project controller
+    """
+    
+    s3db = current.s3db
+
+
+    # Remove rheader
+    attr["rheader"] = None
+
+    tablename = "event_incident_report"
+    table = s3db[tablename]
+    table.location_id.label=T("Address")
+    
+    current.response.s3.crud_strings[tablename] = Storage(
+                title_create = T("Add Incident"),
+                title_display = T("Incident Details"),
+                title_list = T("Incidents"),
+                title_update = T("Edit Incident"),
+                title_search = T("Search Incidents"),
+                subtitle_create = T("Add New Incident"),
+                label_list_button = T("List Incidents"),
+                label_create_button = T("Add Incident"),
+                label_delete_button = T("Remove Incident"),
+                msg_record_created = T("Incident added"),
+                msg_record_modified = T("Incident updated"),
+                msg_record_deleted = T("Incident removed"),
+                msg_list_empty = T("No Incidents currently recorded"))
+
+    return attr
+
+settings.ui.customize_event_incident_report = customize_event_incident_report
 # =============================================================================
 # Template Modules
 # Comment/uncomment modules here to disable/enable them
@@ -257,12 +468,12 @@ settings.modules = OrderedDict([
             # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
             module_type = None,
         )),
-    #("event", Storage(
-    #        name_nice = T("Disasters"),
-    #        #description = "Events",
-    #        restricted = True,
-    #        module_type = None
-    #    )),
+    ("event", Storage(
+            name_nice = T("Events"),
+            #description = "Events",
+            restricted = True,
+            module_type = None
+        )),
     ("project", Storage(
             name_nice = T("Projects"),
             restricted = True,
@@ -270,6 +481,11 @@ settings.modules = OrderedDict([
         )),
     ("stats", Storage(
             name_nice = T("Statistics"),
+            restricted = True,
+            module_type = None
+        )),
+    ("vulnerability", Storage(
+            name_nice = T("Vulnerability"),
             restricted = True,
             module_type = None
         )),

@@ -15,7 +15,7 @@
          L3......................gis_location.L3
          L4......................gis_location.L4
          Resource Type...........org_resource_type.name
-         Quantity................quantity
+         Quantity................value
          Comments................comments
 
     *********************************************************************** -->
@@ -97,7 +97,7 @@
             <xsl:call-template name="LocationReference"/>
 
             <xsl:if test="col[@field='Resource Type']!=''">
-                <reference field="resource_type_id" resource="org_resource_type">
+                <reference field="parameter_id" resource="org_resource_type">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat('ResourceType:', col[@field='Resource Type'])"/>
                     </xsl:attribute>
@@ -105,7 +105,7 @@
             </xsl:if>
 
             <!-- Resource data -->
-            <data field="quantity"><xsl:value-of select="col[@field='Quantity']"/></data>
+            <data field="value"><xsl:value-of select="col[@field='Quantity']"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
         </resource>
 
