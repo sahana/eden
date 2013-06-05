@@ -1120,6 +1120,10 @@ class S3ProjectActivityModel(S3Model):
                              self.gis_location_id(
                                 widget = S3LocationSelectorWidget(hide_address=True)
                                 ),
+                             # Which contact is this?
+                             # Implementing Org should be a human_resource_id
+                             # Beneficiary could be a person_id
+                             # Either way label should be clear
                              self.pr_person_id(label=T("Contact Person")),
                              Field("time_estimated", "double",
                                    readable = mode_task,
@@ -1501,37 +1505,32 @@ class S3ProjectActivityOrganisationModel(S3Model):
           but just this summary of Organisations
     """
 
-    names = ["project_activity_organisation",
-             ]
+    names = ["project_activity_organisation"]
 
     def model(self):
 
         T = current.T
-        db = current.db
-
-        crud_strings = current.response.s3.crud_strings
-        define_table = self.define_table
 
         # ---------------------------------------------------------------------
         # Activity Organisations - Link table
         #
         tablename = "project_activity_organisation"
-        table = define_table(tablename,
-                             self.project_activity_id(),
-                             self.org_organisation_id(),
-                             *s3_meta_fields())
+        table = self.define_table(tablename,
+                                  self.project_activity_id(),
+                                  self.org_organisation_id(),
+                                  *s3_meta_fields())
 
         # CRUD Strings
-        ADD_ACTIVITY_TYPE = T("Add Activity Organisation")
-        crud_strings[tablename] = Storage(
-            title_create = ADD_ACTIVITY_TYPE,
+        ADD_ACTIVITY_ORG = T("Add Activity Organisation")
+        current.response.s3.crud_strings[tablename] = Storage(
+            title_create = ADD_ACTIVITY_ORG,
             title_display = T("Activity Organisation"),
             title_list = T("Activity Organisations"),
             title_update = T("Edit Activity Organisation"),
             title_search = T("Search for Activity Organisation"),
             subtitle_create = T("Add New Activity Organisation"),
             label_list_button = T("List Activity Organisations"),
-            label_create_button = ADD_ACTIVITY_TYPE,
+            label_create_button = ADD_ACTIVITY_ORG,
             msg_record_created = T("Activity Organisation Added"),
             msg_record_modified = T("Activity Organisation Updated"),
             msg_record_deleted = T("Activity Organisation Deleted"),

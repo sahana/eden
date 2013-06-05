@@ -73,6 +73,8 @@ class S3StatsModel(S3Model):
         sp_types = Storage(stats_demographic = T("Demographic"),
                            project_beneficiary_type = T("Project Beneficiary Type"),
                            project_campaign_keyword = T("Project Campaign Keyword"),
+                           stats_resident_type = T("Types of Residents"),
+                           stats_trained_type = T("Types of Trained People"),
                            vulnerability_indicator = T("Vulnerability Indicator"),
                            vulnerability_aggregated_indicator = T("Vulnerability Aggregated Indicator"),
                            #survey_question_type = T("Survey Question Type"),
@@ -108,6 +110,8 @@ class S3StatsModel(S3Model):
         sd_types = Storage(stats_demographic_data = T("Demographic Data"),
                            project_beneficiary = T("Project Beneficiary"),
                            project_campaign_response_summary = T("Project Campaign Response Summary"),
+                           stats_resident = T("Residents"),
+                           stats_trained = T("Trained People"),
                            vulnerability_data = T("Vulnerability Data"),
                            #survey_answer = T("Survey Answer"),
                            #climate_data = T("Climate Data"),
@@ -778,7 +782,7 @@ class S3StatsModel(S3Model):
 # =============================================================================
 class S3StatsDemographicModel(S3Model):
     """
-        Demographic Management
+        Baseline Demographics
     """
 
     names = ["stats_demographic",
@@ -1296,27 +1300,29 @@ class StatsGroupVirtualFields:
             
 # =============================================================================
 class S3StatsResidentModel(S3Model):
-
-    # Used to record residents in the CRMT (Community Resilience Mapping Tool) template
+    """
+        Used to record residents in the CRMT (Community Resilience Mapping Tool) template
+    """
 
     names = ["stats_resident",
-             "stats_resident_type"]
+             "stats_resident_type",
+             ]
 
     def model(self):
 
-        db = current.db
         T = current.T
 
-        settings = current.deployment_settings
-        crud_strings = current.response.s3.crud_strings
-        super_link = self.super_link
         configure = self.configure
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+        super_link = self.super_link
 
         tablename = "stats_resident_type"
-        table = self.define_table(tablename,
-                                  super_link("parameter_id", "stats_parameter"),
-                                  Field("name"),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             super_link("parameter_id", "stats_parameter"),
+                             Field("name"),
+                             s3_comments(),
+                             *s3_meta_fields())
 
         ADD_RESIDENT_TYPE = T("Add New Resident Type")
         crud_strings[tablename] = Storage(
@@ -1343,38 +1349,38 @@ class S3StatsResidentModel(S3Model):
         represent = S3Represent(lookup=tablename)
 
         tablename = "stats_resident"
-        table = self.define_table(tablename,
-                                  # Link to photos
-                                  super_link("doc_id", "doc_entity"),
-                                  Field("name", notnull=True,
-                                        label=T("Name")),
-                                  # Instance
-                                  super_link("data_id", "stats_data"),
-                                  # This is a component, so needs to be a super_link
-                                  # - can't override field name, ondelete or requires
-                                  super_link("parameter_id", "stats_parameter",
-                                             label = T("Resident Type"),
-                                             instance_types = ["stats_resident_type"],
-                                             represent = S3Represent(lookup="stats_parameter"),
-                                             readable = True,
-                                             writable = True,
-                                             empty = True,
-                                             comment = S3AddResourceLink(c="stats",
-                                                                         f="resident_type",
-                                                                         vars = dict(child = "parameter_id"),
-                                                                         title=ADD_RESIDENT_TYPE),
-                                             ),
-                                  Field("value", "integer", 
-                                        requires=IS_NULL_OR(
-                                                    IS_INT_IN_RANGE(0, 999999)
-                                                    ),
-                                        label=T("Number of Residents")),
-                                  self.gis_location_id(label=T("Address")),
-                                  self.pr_person_id(label=T("Contact Person")),
-                                  s3_comments(),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             # Link to photos
+                             super_link("doc_id", "doc_entity"),
+                             Field("name", notnull=True,
+                                   label=T("Name")),
+                             # Instance
+                             super_link("data_id", "stats_data"),
+                             # This is a component, so needs to be a super_link
+                             # - can't override field name, ondelete or requires
+                             super_link("parameter_id", "stats_parameter",
+                                        label = T("Resident Type"),
+                                        instance_types = ["stats_resident_type"],
+                                        represent = S3Represent(lookup="stats_parameter"),
+                                        readable = True,
+                                        writable = True,
+                                        empty = True,
+                                        comment = S3AddResourceLink(c="stats",
+                                                                    f="resident_type",
+                                                                    vars = dict(child = "parameter_id"),
+                                                                    title=ADD_RESIDENT_TYPE),
+                                        ),
+                             Field("value", "integer", 
+                                   requires=IS_NULL_OR(
+                                               IS_INT_IN_RANGE(0, 999999)
+                                               ),
+                                   label=T("Number of Residents")),
+                             self.gis_location_id(label=T("Address")),
+                             self.pr_person_id(label=T("Contact Person")),
+                             s3_comments(),
+                             *s3_meta_fields())
 
-        ADD_RESIDENT_TYPE = T("Add New Resident")
+        ADD_RESIDENT = T("Add New Resident")
         crud_strings[tablename] = Storage(
             title_create=T("Add Resident"),
             title_display=T("Resident Details"),
@@ -1382,44 +1388,46 @@ class S3StatsResidentModel(S3Model):
             title_update=T("Edit Resident"),
             title_search=T("Search Residents"),
             title_upload=T("Import Residents"),
-            subtitle_create=ADD_RESIDENT_TYPE,
+            subtitle_create=ADD_RESIDENT,
             label_list_button=T("Residents"),
-            label_create_button=ADD_RESIDENT_TYPE,
+            label_create_button=ADD_RESIDENT,
             label_delete_button=T("Delete Resident"),
             msg_record_created=T("Resident added"),
             msg_record_modified=T("Resident updated"),
             msg_record_deleted=T("Resident deleted"),
             msg_list_empty=T("No Residents defined"))
 
-        self.configure(tablename,
-                       super_entity="doc_entity",
-                       )
+        configure(tablename,
+                  super_entity=["doc_entity", "stats_data"],
+                  )
 
         return Storage(
         )
 # =============================================================================
 class S3StatsTrainedPeopleModel(S3Model):
+    """
+        Used to record trained people in the CRMT (Community Resilience Mapping Tool) template
+    """
 
-    # Used to record trained_peoples in the CRMT (Community Resilience Mapping Tool) template
-
-    names = ["stats_trained_people",
-             "stats_trained_people_type"]
+    names = ["stats_trained",
+             "stats_trained_type",
+             ]
 
     def model(self):
 
-        db = current.db
         T = current.T
 
-        settings = current.deployment_settings
-        crud_strings = current.response.s3.crud_strings
-        super_link = self.super_link
         configure = self.configure
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+        super_link = self.super_link
 
-        tablename = "stats_trained_people_type"
-        table = self.define_table(tablename,
-                                  super_link("parameter_id", "stats_parameter"),
-                                  Field("name"),
-                                  *s3_meta_fields())
+        tablename = "stats_trained_type"
+        table = define_table(tablename,
+                             super_link("parameter_id", "stats_parameter"),
+                             Field("name"),
+                             s3_comments(),
+                             *s3_meta_fields())
 
         ADD_TRAINED_PEOPLE_TYPE = T("Add New Type of Trained People")
         crud_strings[tablename] = Storage(
@@ -1445,59 +1453,63 @@ class S3StatsTrainedPeopleModel(S3Model):
 
         represent = S3Represent(lookup=tablename)
 
-        tablename = "stats_trained_people"
-        table = self.define_table(tablename,
-                                  # Link to photos
-                                  super_link("doc_id", "doc_entity"),
-                                  Field("name", notnull=True,
-                                        label=T("Name")),
-                                  # Instance
-                                  super_link("data_id", "stats_data"),
-                                  # This is a component, so needs to be a super_link
-                                  # - can't override field name, ondelete or requires
-                                  super_link("parameter_id", "stats_parameter",
-                                             label = T("Type of Trained People"),
-                                             instance_types = ["stats_trained_people_type"],
-                                             represent = S3Represent(lookup="stats_parameter"),
-                                             readable = True,
-                                             writable = True,
-                                             empty = True,
-                                             comment = S3AddResourceLink(c="stats",
-                                                                         f="trained_people_type",
-                                                                         vars = dict(child = "parameter_id"),
-                                                                         title=ADD_TRAINED_PEOPLE_TYPE),
-                                             ),
-                                  Field("value", "integer", 
-                                        requires=IS_NULL_OR(
-                                                    IS_INT_IN_RANGE(0, 999999)
-                                                    ),
-                                        label=T("Number of Trained People")),
-                                  self.org_organisation_id(),
-                                  self.gis_location_id(label=T("Address")),
-                                  self.pr_person_id(label=T("Contact Person")),
-                                  s3_comments(),
-                                  *s3_meta_fields())
+        tablename = "stats_trained"
+        table = define_table(tablename,
+                             # Link to photos
+                             super_link("doc_id", "doc_entity"),
+                             Field("name", notnull=True,
+                                   label=T("Name")),
+                             # Instance
+                             super_link("data_id", "stats_data"),
+                             # This is a component, so needs to be a super_link
+                             # - can't override field name, ondelete or requires
+                             super_link("parameter_id", "stats_parameter",
+                                        label = T("Type of Trained People"),
+                                        instance_types = ["stats_trained_type"],
+                                        represent = S3Represent(lookup="stats_parameter"),
+                                        readable = True,
+                                        writable = True,
+                                        empty = True,
+                                        comment = S3AddResourceLink(c="stats",
+                                                                    f="trained_type",
+                                                                    vars = dict(child = "parameter_id"),
+                                                                    title=ADD_TRAINED_PEOPLE_TYPE),
+                                        ),
+                             Field("value", "integer", 
+                                   requires=IS_NULL_OR(
+                                               IS_INT_IN_RANGE(0, 999999)
+                                               ),
+                                   label=T("Number of Trained People")),
+                             self.org_organisation_id(),
+                             self.gis_location_id(label=T("Address")),
+                             # Which contact is this?
+                             # Training Org should be a human_resource_id
+                             # Team Leader should also be a human_resource_id
+                             # Either way label should be clear
+                             self.pr_person_id(label=T("Contact Person")),
+                             s3_comments(),
+                             *s3_meta_fields())
 
-        ADD_TRAINED_PEOPLE_TYPE = T("Add Trained People")
+        ADD_TRAINED_PEOPLE = T("Add Trained People")
         crud_strings[tablename] = Storage(
-            title_create=ADD_TRAINED_PEOPLE_TYPE,
+            title_create=ADD_TRAINED_PEOPLE,
             title_display=T("Trained People Details"),
             title_list=T("Trained People"),
             title_update=T("Edit Trained People"),
             title_search=T("Search Trained People"),
             title_upload=T("Import Trained People"),
-            subtitle_create=ADD_TRAINED_PEOPLE_TYPE,
+            subtitle_create=ADD_TRAINED_PEOPLE,
             label_list_button=T("Trained People"),
-            label_create_button=ADD_TRAINED_PEOPLE_TYPE,
+            label_create_button=ADD_TRAINED_PEOPLE,
             label_delete_button=T("Delete Trained People"),
             msg_record_created=T("Trained People added"),
             msg_record_modified=T("Trained People updated"),
             msg_record_deleted=T("Trained People deleted"),
             msg_list_empty=T("No Trained People defined"))
 
-        self.configure(tablename,
-                       super_entity="doc_entity",
-                       )
+        configure(tablename,
+                  super_entity=["doc_entity", "stats_data"],
+                  )
 
         return Storage(
         )

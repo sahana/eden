@@ -121,35 +121,35 @@ settings.ui.summary = [{"name": "table",
 # View Settings
 
 current.response.menu = [{"name": T("Residents"),
-                 "url": URL("stats","resident"),
+                 "url": URL(c="stats", f="resident", args="summary"),
                  "icon": "icon-group"
                  },
                 {"name": T("Incidents"),
-                 "url": URL("event","incident_report"),
+                 "url": URL(c="event", f="incident_report", args="summary"),
                  "icon": "icon-warning-sign"
                  },
                 {"name": T("Risks"),
-                 "url": URL("vulnerability","risk"),
+                 "url": URL(c="vulnerability", f="risk", args="summary"),
                  "icon": "icon-bolt"
                  },
                 {"name": T("Activities"),
-                 "url": URL("project","activity"),
+                 "url": URL(c="project", f="activity", args="summary"),
                  "icon": "icon-star-empty"
                  },
                 {"name": T("Organizations"),
-                 "url": URL("org","organisation"),
+                 "url": URL(c="org", f="organisation", args="summary"),
                  "icon": "icon-sitemap"
                  },
                 {"name": T("Trained People"),
-                 "url": URL("stats","trained_people"),
+                 "url": URL(c="stats", f="trained", args="summary"),
                  "icon": "icon-user"
                  },
                 {"name": T("Locations"),
-                 "url": URL("org","facility"),
+                 "url": URL(c="org", f="facility", args="summary"),
                  "icon": "icon-home"
                  },
                 {"name": T("Evacuation Routes"),
-                 "url": URL("vulnerability","evac_route"),
+                 "url": URL(c="vulnerability", f="evac_route", args="summary"),
                  "icon": "icon-road"
                  },
                  ]

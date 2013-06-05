@@ -70,24 +70,29 @@ def source():
     """ REST Controller """
 
     return s3_rest_controller()
+
 # -----------------------------------------------------------------------------
 def resident_type():
     """ REST Controller """
 
     return s3_rest_controller()
+
 # -----------------------------------------------------------------------------
 def resident():
     """ REST Controller """
 
     return s3_rest_controller()
+    
 # -----------------------------------------------------------------------------
-def trained_people_type():
+def trained_type():
     """ REST Controller """
 
     return s3_rest_controller()
+
 # -----------------------------------------------------------------------------
-def trained_people():
+def trained():
     """ REST Controller """
 
     return s3_rest_controller()
-# END =========================================================================
+
+ # END =========================================================================

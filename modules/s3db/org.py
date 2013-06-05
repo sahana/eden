@@ -1334,16 +1334,16 @@ class S3OrganisationServiceModel(S3Model):
                              *s3_meta_fields())
 
         # CRUD Strings
-        ADD_HAZARD = T("Add Service")
+        ADD_SERVICE = T("Add Service")
         crud_strings[tablename] = Storage(
-            title_create = ADD_HAZARD,
+            title_create = ADD_SERVICE,
             title_display = T("Service Details"),
             title_list = T("Services"),
             title_update = T("Edit Service"),
             title_upload = T("Import Services"),
             subtitle_create = T("Add New Service"),
             label_list_button = T("List Services"),
-            label_create_button = ADD_HAZARD,
+            label_create_button = ADD_SERVICE,
             label_delete_button = T("Delete Service"),
             msg_record_created = T("Service added"),
             msg_record_modified = T("Service updated"),

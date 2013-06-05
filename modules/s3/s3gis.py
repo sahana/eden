@@ -5973,7 +5973,7 @@ class MAP(DIV):
                     callback = '''S3.gis.show_map(%s,%s)''' % (map_id, options)
             else:
                 # Store options where they can be read by a later show_map()
-                js_global_append('''S3.gis.options.%s=%s''' % (map_id, options))
+                js_global_append('''S3.gis.options["%s"]=%s''' % (map_id, options))
             script = URL(c="static", f="scripts/yepnope.1.5.4-min.js")
             if script not in scripts:
                 scripts.append(script)
@@ -5982,7 +5982,7 @@ class MAP(DIV):
             callback = '''function(){%s}''' % callback
         else:
             # Store options where they can be read by a later show_map()
-            js_global_append('''S3.gis.options.%s=%s''' % (map_id, options))
+            js_global_append('''S3.gis.options["%s"]=%s''' % (map_id, options))
             if plugin_callbacks:
                 callback = '''function(){%s}''' % plugin_callbacks
             else:

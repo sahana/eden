@@ -709,6 +709,8 @@ class S3IncidentReportModel(S3Model):
     """
         Incident Reports
          - reports about incidents
+
+        @ToDo: Deprecate IRS module by porting functionality here
     """
 
     names = ["event_incident_report",
@@ -727,9 +729,9 @@ class S3IncidentReportModel(S3Model):
         tablename = "event_incident_report"
         table = self.define_table(tablename,
                                   super_link("doc_id", "doc_entity"),
+                                  # @ToDo: Use link tables?
                                   #self.event_event_id(),
                                   #self.event_incident_id(),
-                                  #self.scenario_scenario_id(),
                                   s3_datetime(),
                                   Field("name", notnull=True,
                                         label=T("Name")),

@@ -8,6 +8,7 @@
          Column headers defined in this stylesheet:
 
          Name...........................required.....name
+         Comments.......................optional.....comments
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -24,8 +25,9 @@
     <!-- ****************************************************************** -->
     <!--  Trained People Type Record -->
     <xsl:template match="row">
-        <resource name="stats_trained_people_type">
+        <resource name="stats_trained_type">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
+            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
         </resource>
     </xsl:template>
 </xsl:stylesheet>
