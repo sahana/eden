@@ -1852,8 +1852,12 @@ class S3FacilityModel(S3Model):
                          ]
         settings = current.deployment_settings
         if settings.has_module("req"):
-            # Add Req virtual fields
-            table.virtualfields.append(self.req_site_virtualfields(tablename))
+            # "reqs" virtual field: the highest priority of
+            # all open requests for this site:
+            table.reqs = Field.Lazy(
+                            lambda row: \
+                            org_site_top_req_priority(row,
+                                                      tablename=tablename))
             widget = S3SearchOptionsWidget(
                         name="facility_search_reqs",
                         field="reqs",
@@ -2929,6 +2933,42 @@ class org_OrganisationRepresent(S3Represent):
             name = "%s > %s" % (parent, name)
         return s3_unicode(name)
         
+# =============================================================================
+def org_site_top_req_priority(row, tablename="org_facility"):
+    """ Highest priority of open requests for a site """
+
+    try:
+        from req import REQ_STATUS_COMPLETE
+    except ImportError:
+        return None
+    
+    if hasattr(row, tablename):
+        row = row[tablename]
+    try:
+        id = row.id
+    except AttributeError:
+        return None
+
+    s3db = current.s3db
+    rtable = s3db.req_req
+    stable = s3db[tablename]
+    
+    query = (rtable.deleted != True) & \
+            (stable.id == id) & \
+            (rtable.site_id == stable.site_id) & \
+            (rtable.fulfil_status != REQ_STATUS_COMPLETE) & \
+            (rtable.is_template == False)
+            
+    req = current.db(query).select(rtable.id,
+                                   rtable.priority,
+                                   orderby=~rtable.priority,
+                                   limitby=(0, 1)).first()
+                                   
+    if req:
+        return req.priority
+    else:
+        return None
+
 # =============================================================================
 def org_site_represent(id, row=None, show_link=True):
     """

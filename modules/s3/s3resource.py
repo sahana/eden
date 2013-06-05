@@ -875,6 +875,7 @@ class S3Resource(object):
                     virtual=True,
                     count=False,
                     getids=False,
+                    as_rows=False,
                     represent=False,
                     show_links=True,
                     raw_data=False):
@@ -891,6 +892,7 @@ class S3Resource(object):
             @param virtual: include mandatory virtual fields
             @param count: include the total number of matching records
             @param getids: include the IDs of all matching records
+            @param as_rows: return the rows (don't extract)
             @param represent: render field value representations
             @param raw_data: include raw data in the result
         """
@@ -1155,12 +1157,16 @@ class S3Resource(object):
             for flist in [dfields, vfields]:
                 for rfield in flist:
                     tname = rfield.tname
-                    if tname == tablename or tname in qtables:
+                    if tname == tablename or as_rows or tname in qtables:
                         colname = rfield.colname
                         if rfield.show:
                             mfields[colname] = True
                         if rfield.field:
                             qfields[colname] = rfield.field
+                        if as_rows and \
+                           tname != tablename and \
+                           tname not in qtables:
+                            qtables.append(tname)
 
         if not groupby:
             if distinct and orderby:
@@ -1193,7 +1199,7 @@ class S3Resource(object):
                                        groupby=groupby,
                                        orderby=orderby,
                                        limitby=limitby,
-                                       cacheable=True,
+                                       cacheable=not as_rows,
                                        *qfields.values())
 
         # Restore virtual fields (if they were deactivated before)
@@ -1223,7 +1229,7 @@ class S3Resource(object):
                 totalrows = len(ids)
 
         # With GROUPBY, return the grouped rows here:
-        if groupby:
+        if groupby or as_rows:
             return rows
 
         # Otherwise: initialize output
@@ -1299,6 +1305,7 @@ class S3Resource(object):
                                      distinct=True,
                                      cacheable=True,
                                      *sfields)
+
             # Extract and merge the data
             records = self.__extract(rows,
                                      pkey,
@@ -2145,7 +2152,7 @@ class S3Resource(object):
         return dl, numrows, data["ids"]
 
     # -------------------------------------------------------------------------
-    def pivottable(self, rows, cols, layers):
+    def pivottable(self, rows, cols, layers, strict=True):
         """
             Generate a pivot table of this resource.
 
@@ -2153,13 +2160,15 @@ class S3Resource(object):
             @param cols: field selector for the columns dimension
             @param layers: list of tuples (field selector, method) for
                            the aggregation layers
+            @param strict: filter out dimension values which don't match
+                           the resource filter
 
             @return: an S3PivotTable instance
 
             Supported methods: see S3PivotTable
         """
 
-        return S3PivotTable(self, rows, cols, layers)
+        return S3PivotTable(self, rows, cols, layers, strict=strict)
 
     # -------------------------------------------------------------------------
     def json(self,
@@ -2271,7 +2280,12 @@ class S3Resource(object):
     # -------------------------------------------------------------------------
     # Data Object API
     # -------------------------------------------------------------------------
-    def load(self, start=None, limit=None, orderby=None, virtual=True, cacheable=False):
+    def load(self,
+             start=None,
+             limit=None,
+             orderby=None,
+             virtual=True,
+             cacheable=False):
         """
             Loads records from the resource, applying the current filters,
             and stores them in the instance.
@@ -2286,7 +2300,8 @@ class S3Resource(object):
         table = self.table
         tablename = self.tablename
 
-        if tablename == "gis_location" or tablename.startswith("gis_layer_shapefile_"):
+        if tablename == "gis_location" or \
+           tablename.startswith("gis_layer_shapefile_"):
             # Filter out bulky Polygons
             fields = [f for f in table.fields if f not in ("wkt", "the_geom")]
         else:
@@ -2301,12 +2316,12 @@ class S3Resource(object):
             start = 0
             limit = 1
 
-        rows = self.select(fields,
-                           start=start,
-                           limit=limit,
-                           orderby=orderby,
-                           virtual=virtual,
-                           cacheable=cacheable)
+        rows = self.fast_select(fields,
+                                start=start,
+                                limit=limit,
+                                orderby=orderby,
+                                virtual=virtual,
+                                as_rows=True)
 
         ids = self._ids = []
         new_id = ids.append
@@ -2525,16 +2540,16 @@ class S3Resource(object):
         else:
             start = limit = None
 
-        rows = self.select(fields,
-                           start=start,
-                           limit=limit)
+        rows = self.fast_select(fields,
+                                start=start,
+                                limit=limit)["data"]
 
         if rows:
-            records = self.extract(rows, fields)
-            self._ids = [record[str(table._id)] for record in records]
+            ID = str(table._id)
+            self._ids = [row[ID] for row in rows]
             if has_uid:
-                uid = str(ogetattr(table, UID))
-                self._uids = [record[uid] for record in records]
+                uid = str(table[UID])
+                self._uids = [row[uid] for row in rows]
         else:
             self._ids = []
 
@@ -4805,6 +4820,76 @@ class S3Resource(object):
         return (searchq, orderby, left_joins)
 
     # -------------------------------------------------------------------------
+    def axisfilter(self, axes):
+        """
+            Get all values for the given S3ResourceFields (axes) which
+            match the resource query, used in pivot tables to filter out
+            additional values where dimensions can have multiple values
+            per record
+
+            @param axes: the axis fields as list/tuple of S3ResourceFields
+
+            @return: a dict with values per axis, only containes those
+                     axes which are affected by the resource filter
+        """
+
+        axisfilter = {}
+
+        qdict = self.get_query().as_dict(flat=True)
+
+        for rfield in axes:
+            field = rfield.field
+
+            if field is None:
+                # virtual field or unresolvable selector
+                continue
+
+            left_joins = S3LeftJoins(self.tablename)
+            left_joins.extend(rfield.left)
+
+            tablenames = left_joins.joins.keys()
+            tablenames.append(self.tablename)
+            af = S3AxisFilter(qdict, tablenames)
+
+            if af.op is not None:
+                query = af.query()
+                left = left_joins.as_list()
+
+                # @todo: this does not work with virtual fields: need
+                # to retrieve all extra_fields for the dimension table
+                # and can't groupby (=must deduplicate afterwards)
+                rows = current.db(query).select(field,
+                                                left=left,
+                                                groupby=field)
+                colname = rfield.colname
+                if rfield.ftype[:5] == "list:":
+                    values = []
+                    vappend = values.append
+                    for row in rows:
+                        v = row[colname]
+                        if v:
+                            vappend(v)
+                    values = set(chain.from_iterable(values))
+                    
+                    include, exclude = af.values(rfield)
+                    fdict = {}
+                    if include:
+                        for v in values:
+                            vstr = s3_unicode(v)
+                            if vstr in include and vstr not in exclude:
+                                fdict[v] = None
+                    else:
+                        fdict = dict((v, None) for v in values)
+                        
+                    axisfilter[colname] = fdict
+                    
+                else:
+                    axisfilter[colname] = dict((row[colname], None)
+                                               for row in rows)
+
+        return axisfilter
+
+    # -------------------------------------------------------------------------
     @classmethod
     def sortleft(cls, joins):
         """
@@ -6428,6 +6513,165 @@ class S3ResourceQuery(object):
             return (self.left.name, self.op, self.right, False)
 
 # =============================================================================
+class S3AxisFilter(object):
+    """
+        Experimental: helper class to extract filter values for pivot
+        table axis fields
+    """
+
+    # -------------------------------------------------------------------------
+    def __init__(self, qdict, tablenames):
+        """
+            Constructor, recursively introspect the query dict and extract
+            all relevant subqueries.
+
+            @param qdict: the query dict (from Query.as_dict(flat=True))
+            @param tablenames: the names of the relevant tables
+        """
+
+        self.l = None
+        self.r = None
+        self.op = None
+
+        self.tablename = None
+        self.fieldname = None
+
+        l = qdict["first"]
+        r = qdict["second"]
+
+        op = qdict["op"]
+        
+        if "tablename" in l:
+            if l["tablename"] in tablenames:
+                self.tablename = l["tablename"]
+                self.fieldname = l["fieldname"]
+                self.op = op
+                self.r = r
+
+        elif op == "AND":
+            self.l = S3AxisFilter(l, tablenames)
+            self.r = S3AxisFilter(r, tablenames)
+            if self.l.op or self.r.op:
+                self.op = op
+
+        elif op == "OR":
+            self.l = S3AxisFilter(l, tablenames)
+            self.r = S3AxisFilter(r, tablenames)
+            if self.l.op and self.r.op:
+                self.op = op
+
+        elif op == "NOT":
+            self.l = S3AxisFilter(l, tablenames)
+            self.op = op
+
+        else:
+            self.l = S3AxisFilter(l, tablenames)
+            if self.l.op:
+                self.op = op
+
+    # -------------------------------------------------------------------------
+    def query(self):
+        """ Reconstruct the query from this filter """
+
+        op = self.op
+        if op is None:
+            return None
+
+        if self.tablename and self.fieldname:
+            l = current.s3db[self.tablename][self.fieldname]
+        elif self.l:
+            l = self.l.query()
+        else:
+            l = None
+
+        r = self.r
+        if op in ("AND", "OR", "NOT"):
+            r = r.query() if r else True
+
+        if op == "AND":
+            if l is not None and r is not None:
+                return l & r
+            elif r is not None:
+                return r
+            else:
+                return l
+        elif op == "OR":
+            if l is not None and r is not None:
+                return l | r
+            else:
+                return None
+        elif op == "NOT":
+            if l is not None:
+                return ~l
+            else:
+                return None
+        elif l is None:
+            return None
+
+        if op == "LOWER":
+            return l.lower()
+        elif op == "UPPER":
+            return l.upper()
+        elif op == "EQ":
+            return l == r
+        elif op == "NE":
+            return l != r
+        elif op == "LT":
+            return l < r
+        elif op == "LE":
+            return l <= r
+        elif op == "GE":
+            return l >= r
+        elif op == "GT":
+            return l > r
+        elif op == "BELONGS":
+            return l.belongs(r)
+        elif op == "CONTAINS":
+            return l.contains(r)
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
+    def values(self, rfield):
+        """
+            Helper method to filter list:type axis values
+
+            @param rfield: the axis field
+
+            @return: pair of value lists [include], [exclude]
+        """
+
+        op = self.op
+        tablename = self.tablename
+        fieldname = self.fieldname
+
+        if tablename == rfield.tname and \
+           fieldname == rfield.fname:
+            value = self.r
+            if isinstance(value, (list, tuple)):
+                value = [s3_unicode(v) for v in value]
+            else:
+                value = [s3_unicode(value)]
+            if op == "CONTAINS":
+                return value, []
+            elif op == "EQ":
+                return value, []
+            elif op == "NE":
+                return [], value
+        elif op == "AND":
+            li, le = self.l.values(rfield)
+            ri, re = self.r.values(rfield)
+            return [v for v in li + ri if v not in le + re], []
+        elif op == "OR":
+            li, le = self.l.values(rfield)
+            ri, re = self.r.values(rfield)
+            return [v for v in li + ri], []
+        if op == "NOT":
+            li, le = self.l.values(rfield)
+            return [], li
+        return [], []
+        
+# =============================================================================
 class S3URLQuery(object):
     """ URL Query Parser """
 
@@ -7121,59 +7365,32 @@ class S3ResourceFilter(object):
             @param distinct: count only distinct rows
         """
 
-        resource = self.resource
         distinct |= self.distinct
+        
+        resource = self.resource
         if resource is None:
             return 0
+            
         table = resource.table
         tablename = resource.tablename
 
-        # Left joins
-        left_joins = left
-        if left_joins is None:
-            left_joins = []
-        elif not isinstance(left, list):
-            left_joins = [left_joins]
-        joined_tables = [str(join.first) for join in left_joins]
+        if self.vfltr is None and not distinct:
+            
+            left_joins = S3LeftJoins(resource.tablename, left)
+            left_joins.add(self.get_left_joins())
+            left = left_joins.as_list()
 
-        # Add the left joins from the filter
-        fjoins = self.get_left_joins()
-        for join in fjoins:
-            tn = str(join.first)
-            if tn not in joined_tables:
-                joined_tables.append(str(join.first))
-                left_joins.append(join)
-        if left_joins:
-            try:
-                left_joins = resource.sortleft(left_joins)
-            except:
-                pass
-            left = left_joins
-        else:
-            left = None
-
-        if self.vfltr is None:
-            if distinct:
-                rows = current.db(self.query).select(table._id,
-                                                     left=left,
-                                                     distinct=distinct)
-                return len(rows)
+            cnt = table[table._id.name].count()
+            
+            row = current.db(self.query).select(cnt, left=left).first()
+            if row:
+                return row[cnt]
             else:
-                cnt = table[table._id.name].count()
-                row = current.db(self.query).select(cnt, left=left).first()
-                if row:
-                    return(row[cnt])
-                else:
-                    return 0
-        else:
-            rows = resource.select([table._id.name],
-                                   left=left,
-                                   distinct=distinct)
-            rows = resource.extract(rows, [table._id.name])
+                return 0
 
-        if rows is None:
-            return 0
-        return len(rows)
+        else:
+            data = resource.fast_select([table._id.name], count=True)
+            return data["numrows"]
 
     # -------------------------------------------------------------------------
     def __nonzero__(self):

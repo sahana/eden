@@ -1377,6 +1377,66 @@ class ResourceDataAccessTests(unittest.TestCase):
         current.auth.override = False
 
 # =============================================================================
+class ResourceAxisFilterTests(unittest.TestCase):
+    """ Test Axis Filters """
+
+    def testListTypeFilter(self):
+        """ Test list:type axis value filtering """
+
+        s3db = current.s3db
+
+        resource = s3db.resource("org_organisation")
+        rfield = S3ResourceField(resource, "multi_sector_id")
+        
+        resource = s3db.resource("org_organisation")
+        q = (S3FieldSelector("multi_sector_id").contains([1,2,3])) & \
+            (~(S3FieldSelector("multi_sector_id") == 2))
+        resource.add_filter(q)
+        query = resource.get_query()
+        af = S3AxisFilter(query.as_dict(flat=True), "org_organisation")
+        
+        values, ignore = af.values(rfield)
+        self.assertTrue("1" in values)
+        self.assertFalse("2" in values)
+        self.assertTrue("3" in values)
+
+        resource = s3db.resource("org_organisation")
+        q = (S3FieldSelector("multi_sector_id").contains([1,2,3])) & \
+            (~(S3FieldSelector("multi_sector_id") != 2))
+        resource.add_filter(q)
+        query = resource.get_query()
+        af = S3AxisFilter(query.as_dict(flat=True), "org_organisation")
+        
+        values, ignore = af.values(rfield)
+        self.assertTrue("1" in values)
+        self.assertTrue("2" in values)
+        self.assertTrue("3" in values)
+
+        resource = s3db.resource("org_organisation")
+        q = (S3FieldSelector("multi_sector_id").contains([1,2,3])) | \
+            (~(S3FieldSelector("multi_sector_id") == 2))
+        resource.add_filter(q)
+        query = resource.get_query()
+        af = S3AxisFilter(query.as_dict(flat=True), "org_organisation")
+
+        values, ignore = af.values(rfield)
+        self.assertTrue("1" in values)
+        self.assertTrue("2" in values)
+        self.assertTrue("3" in values)
+
+        resource = s3db.resource("org_organisation")
+        q = (S3FieldSelector("multi_sector_id").contains([1,2,3])) | \
+            (~(S3FieldSelector("multi_sector_id") != 2))
+        resource.add_filter(q)
+        query = resource.get_query()
+        af = S3AxisFilter(query.as_dict(flat=True), "org_organisation")
+
+        values, ignore = af.values(rfield)
+        self.assertTrue("1" in values)
+        self.assertTrue("2" in values)
+        self.assertTrue("3" in values)
+
+# =============================================================================
 class ResourceDataTableFilterTests(unittest.TestCase):
     """ Test datatable_filter """
 
@@ -3276,6 +3336,7 @@ if __name__ == "__main__":
         ResourceDataObjectAPITests,
 
         ResourceDataAccessTests,
+        ResourceAxisFilterTests,
         ResourceDataTableFilterTests,
         ResourceGetTests,
         #ResourceInsertTest,
