@@ -2179,8 +2179,7 @@ class S3Resource(object):
              distinct=False,
              orderby=None):
         """
-            Export a JSON representation of the records, the JSON would be
-            a list of dicts with {"tablename.fieldname":"value"}.
+            Export a JSON representation of the resource.
 
             @param fields: list of field selector strings
             @param start: index of the first record
@@ -2189,27 +2188,18 @@ class S3Resource(object):
             @param distinct: select only distinct rows
             @param orderby: Orderby-expression for the query
 
-            @return: the JSON
+            @return: the JSON (as string), representing a list of
+                     dicts with {"tablename.fieldname":"value"}
         """
 
-        # Choose fields
-        if fields is None:
-            fields = [f.name for f in self.readable_fields()]
-        selectors = list(fields)
+        data = self.fast_select(fields=fields,
+                                start=start,
+                                limit=limit,
+                                orderby=orderby,
+                                left=left,
+                                distinct=distinct)["data"]
 
-        # Retrieve the rows
-        rows = self.select(fields=selectors,
-                           start=start,
-                           limit=limit,
-                           orderby=orderby,
-                           left=left,
-                           distinct=distinct)
-
-        # Generate the JSON
-        if rows:
-            return json.dumps(self.extract(rows, fields))
-        else:
-            return "[]"
+        return json.dumps(data)
 
     # -------------------------------------------------------------------------
     # Deprecated API methods (retained for backward-compatiblity)
