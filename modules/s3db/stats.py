@@ -70,9 +70,10 @@ class S3StatsModel(S3Model):
         #----------------------------------------------------------------------
         # Super entity: stats_parameter
         #
-        sp_types = Storage(stats_demographic = T("Demographic"),
+        sp_types = Storage(org_resource_type = T("Organization Resource Type"),
                            project_beneficiary_type = T("Project Beneficiary Type"),
                            project_campaign_keyword = T("Project Campaign Keyword"),
+                           stats_demographic = T("Demographic"),
                            stats_resident_type = T("Types of Residents"),
                            stats_trained_type = T("Types of Trained People"),
                            vulnerability_indicator = T("Vulnerability Indicator"),
@@ -107,9 +108,10 @@ class S3StatsModel(S3Model):
         #----------------------------------------------------------------------
         # Super entity: stats_data
         #
-        sd_types = Storage(stats_demographic_data = T("Demographic Data"),
+        sd_types = Storage(org_resource = T("Organization Resource"),
                            project_beneficiary = T("Project Beneficiary"),
                            project_campaign_response_summary = T("Project Campaign Response Summary"),
+                           stats_demographic_data = T("Demographic Data"),
                            stats_resident = T("Residents"),
                            stats_trained = T("Trained People"),
                            vulnerability_data = T("Vulnerability Data"),

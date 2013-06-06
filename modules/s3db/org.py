@@ -1292,11 +1292,12 @@ class S3OrganisationResourceModel(S3Model):
             msg_record_deleted=T("Resource deleted"),
             msg_list_empty=T("No Resources in Inventory"))
 
-        self.configure(tablename,
-                       context = {"location": "location_id",
-                                  "organisation": "organisation_id",
-                                  },
-                       )
+        configure(tablename,
+                  super_entity = "stats_data",
+                  context = {"location": "location_id",
+                             "organisation": "organisation_id",
+                             },
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
