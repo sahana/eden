@@ -107,7 +107,7 @@ h4.profile-sub-header {
 .card-holder .location-title {
     font: bold 13px "Helvetica Neue", Arial, sans-serif;
     color: #333333;
-    padding: 0;
+    padding-left: 50px;
     border-left: 0;
 }
 
@@ -120,7 +120,7 @@ h4.profile-sub-header {
 .span5.card-details {
     margin-left: 0;
 }
-
+/*
 .citation {
     float: left;
     clear: left;
@@ -128,7 +128,7 @@ h4.profile-sub-header {
     font-size: 80%;
     line-height: 11px;
     text-align: center;
-}
+}*/
 
 /* Contact Details */
 .person_pos strong {

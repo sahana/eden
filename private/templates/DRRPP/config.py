@@ -3,7 +3,8 @@
 from gluon import current, A, DIV, H3, TAG, SQLFORM, IS_NOT_EMPTY, IS_EMAIL
 from gluon.storage import Storage
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
-from s3 import s3forms, s3search
+from s3 import s3search
+from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
 
 settings = current.deployment_settings
 T = current.T
@@ -501,7 +502,7 @@ def customize_project_project(**attr):
                              )
 
     # Custom Crud Form
-    crud_form = s3forms.S3SQLCustomForm(
+    crud_form = S3SQLCustomForm(
         "name",
         "code",
         "description",
@@ -509,7 +510,7 @@ def customize_project_project(**attr):
         "start_date",
         "end_date",
         "drrpp.duration",
-        s3forms.S3SQLInlineComponent(
+        S3SQLInlineComponent(
             "location",
             label = T("Countries"),
             fields = ["location_id"],
@@ -517,14 +518,14 @@ def customize_project_project(**attr):
             render_list = True
         ),
         "drrpp.L1",
-        s3forms.S3SQLInlineComponentCheckbox(
+        S3SQLInlineComponentCheckbox(
             "hazard",
             label = T("Hazards"),
             field = "hazard_id",
             option_help = "comments",
             cols = 4,
         ),
-        s3forms.S3SQLInlineComponentCheckbox(
+        S3SQLInlineComponentCheckbox(
             "theme",
             label = T("Themes"),
             field = "theme_id",
@@ -534,7 +535,7 @@ def customize_project_project(**attr):
         "objectives",
         "drrpp.activities",
         # Outputs
-        s3forms.S3SQLInlineComponent(
+        S3SQLInlineComponent(
             "output",
             label = T("Outputs"),
             #comment = "Bob",
@@ -546,7 +547,7 @@ def customize_project_project(**attr):
         "drrpp.jnap",
         "organisation_id",
         # Partner Orgs
-        s3forms.S3SQLInlineComponent(
+        S3SQLInlineComponent(
             "organisation",
             name = "partner",
             label = T("Partner Organizations"),
@@ -557,7 +558,7 @@ def customize_project_project(**attr):
                             options = [2, 9])
         ),
         # Donors
-        s3forms.S3SQLInlineComponent(
+        S3SQLInlineComponent(
             "organisation",
             name = "donor",
             label = T("Donor(s)"),
@@ -572,7 +573,7 @@ def customize_project_project(**attr):
         "drrpp.organisation_id",
         "drrpp.email",
         # Files
-        s3forms.S3SQLInlineComponent(
+        S3SQLInlineComponent(
             "document",
             name = "file",
             label = T("Files"),
@@ -583,7 +584,7 @@ def customize_project_project(**attr):
                             )
         ),
         # Links
-        s3forms.S3SQLInlineComponent(
+        S3SQLInlineComponent(
             "document",
             name = "url",
             label = T("Links"),

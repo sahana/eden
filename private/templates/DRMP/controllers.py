@@ -31,8 +31,9 @@ class index():
             from gluon.http import HTTP
             raise HTTP("404", "Unable to open Custom View: %s" % view)
 
+        s3 = response.s3
         # Image Carousel
-        response.s3.jquery_ready.append('''$('#myCarousel').carousel()''')
+        s3.jquery_ready.append('''$('#myCarousel').carousel()''')
 
         if current.auth.is_logged_in():
             s3db = current.s3db
@@ -96,7 +97,7 @@ class index():
                                                        limit=4,
                                                        listid="news_datalist",
                                                        orderby=orderby,
-                                                       layout=render_posts)
+                                                       layout=s3.render_posts)
             if numrows == 0:
                 # Empty table or just no match?
                 table = resource.table
@@ -188,7 +189,7 @@ def _updates():
 
     current.deployment_settings.ui.customize_cms_post()
 
-    list_layout = render_posts
+    list_layout = s3.render_posts
 
     filter_widgets = [S3TextFilter(["body"],
                                    label="",
@@ -351,193 +352,6 @@ def filter_formstyle(row_id, label, widget, comment, hidden=False):
         return DIV(label, widget, _id=row_id, _class=_class)
     else:
         return DIV(widget, _id=row_id, _class=_class)
-
-# -----------------------------------------------------------------------------
-def render_posts(listid, resource, rfields, record, **attr):
-    """
-        Custom dataList item renderer for CMS Posts on the Home & Updates pages
-
-        @param listid: the HTML ID for this list
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
-        @param attr: additional HTML attributes for the item
-    """
-
-    T = current.T
-    pkey = "cms_post.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
-    item_class = "thumbnail"
-
-    raw = record._row
-    series = record["cms_post.series_id"]
-    date = record["cms_post.created_on"]
-    body = record["cms_post.body"]
-    location = record["cms_post.location_id"]
-    location_id = raw["cms_post.location_id"]
-    location_url = URL(c="gis", f="location", args=[location_id])
-    author = record["cms_post.created_by"]
-    author_id = raw["cms_post.created_by"]
-    organisation = record["auth_user.organisation_id"]
-    organisation_id = raw["auth_user.organisation_id"]
-    org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
-
-    db = current.db
-    s3db = current.s3db
-    ltable = s3db.pr_person_user
-    ptable = db.pr_person
-    query = (ltable.user_id == author_id) & \
-            (ltable.pe_id == ptable.pe_id)
-    row = db(query).select(ptable.id,
-                           limitby=(0, 1)
-                           ).first()
-    if row:
-        person_url = URL(c="hrm", f="person", args=[row.id])
-    else:
-        person_url = "#"
-    author = A(author,
-               _href=person_url,
-               )
-
-    # Use Personal Avatar
-    # @ToDo: Optimise by not doing DB lookups (especially duplicate) within render, but doing these in the bulk query
-    #avatar = s3_avatar_represent(author_id,
-    #                             _class="media-object")
-    #avatar = A(avatar,
-    #           _href=person_url,
-    #           _class="pull-left",
-    #           )
-
-    # Use Organisation Logo
-    otable = db.org_organisation
-    row = db(otable.id == organisation_id).select(otable.logo,
-                                                  limitby=(0, 1)
-                                                  ).first()
-    if row and row.logo:
-        logo = URL(c="default", f="download", args=[row.logo])
-    else:
-        logo = ""
-    avatar = IMG(_src=logo,
-                 _height=50,
-                 _width=50,
-                 _style="padding-right:5px;",
-                 _class="media-object")
-    avatar = A(avatar,
-               _href=org_url,
-               _class="pull-left",
-               )
-
-    # Edit Bar
-    permit = current.auth.s3_has_permission
-    table = db.cms_post
-    if permit("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="cms", f="post",
-                               args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
-                                     "record": record_id}),
-                     _class="s3_modal",
-                     _title=T("Edit %(type)s") % dict(type=T(series)),
-                     )
-    else:
-        edit_btn = ""
-    if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
-                       _class="dl-item-delete",
-                       )
-    else:
-        delete_btn = ""
-    edit_bar = DIV(edit_btn,
-                   delete_btn,
-                   _class="edit-bar fright",
-                   )
-
-    # Dropdown of available documents
-    documents = raw["doc_document.file"]
-    if documents:
-        if not isinstance(documents, list):
-            documents = [documents]
-        doc_list = UL(_class="dropdown-menu",
-                      _role="menu",
-                      )
-        retrieve = db.doc_document.file.retrieve
-        for doc in documents:
-            try:
-                doc_name = retrieve(doc)[0]
-            except IOError:
-                doc_name = current.messages["NONE"]
-            doc_url = URL(c="default", f="download",
-                          args=[doc])
-            doc_item = LI(A(I(_class="icon-file"),
-                            " ",
-                            doc_name,
-                            _href=doc_url,
-                            ),
-                          _role="menuitem",
-                          )
-            doc_list.append(doc_item)
-        docs = DIV(A(I(_class="icon-paper-clip"),
-                     SPAN(_class="caret"),
-                     _class="btn dropdown-toggle",
-                     _href="#",
-                     **{"_data-toggle": "dropdown"}
-                     ),
-                   doc_list,
-                   _class="btn-group attachments dropdown pull-right",
-                   )
-    else:
-        docs = ""
-
-    if series == "Alert":
-        item_class = "%s disaster" % item_class
-
-    # Render the item
-    item = DIV(DIV(I(_class="icon icon-%s" % series.lower().replace(" ", "_"),
-                     ),
-                   SPAN(" %s" % T(series),
-                        _class="card-title"
-                        ),
-                   SPAN(A(location,
-                          _href=location_url,
-                          ),
-                        _class="location-title",
-                        ),
-                   SPAN(date,
-                        _class="date-title",
-                        ),
-                   edit_bar,
-                   _class="card-header",
-                   ),
-               DIV(avatar,
-                   DIV(DIV(body,
-                           DIV(author,
-                               " - ",
-                               A(organisation,
-                                 _href=org_url,
-                                 _class="card-organisation",
-                                 ),
-                               _class="card-person",
-                               ),
-                           _class="media",
-                           ),
-                       _class="media-body",
-                       ),
-                   _class="media",
-                   ),
-               docs,
-               _class=item_class,
-               _id=item_id,
-               )
-
-    return item
 
 # -----------------------------------------------------------------------------
 def render_events(listid, resource, rfields, record, **attr):

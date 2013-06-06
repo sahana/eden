@@ -259,19 +259,19 @@ p.quote.mb4 {
     color: #4e4e4d;
 }
 
-.icon-calendar,
+#homepage-layer .icon-calendar,
 .icon-bullhorn,
 .icon-bookmark-empty {
     font-size: 34px;
-    color: #1c94d4;
 }
-
 .icon-bullhorn{
     color: #bd382e;	
 }
-
-.icon-calendar{
+#homepage-layer .icon-calendar{
     color: #1ebaa6;	
+}
+.icon-bookmark-empty {
+    color: #1c94d4;
 }
 
 .st {
@@ -303,7 +303,7 @@ p.quote.mb4 {
     padding-bottom: 31px;
 }
 
-div.span4.first_stl {
+.span4.first_stl {
     padding-bottom: 31px;
 }
 

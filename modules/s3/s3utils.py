@@ -475,7 +475,7 @@ def s3_url_represent(url):
     return A(url, _href=url, _target="blank")
 
 # =============================================================================
-def s3_avatar_represent(id, tablename="auth_user", **attr):
+def s3_avatar_represent(id, tablename="auth_user", gravatar=False, **attr):
     """
         Represent a User as their profile picture or Gravatar
 
@@ -535,13 +535,16 @@ def s3_avatar_represent(id, tablename="auth_user", **attr):
         size = s3db.pr_image_size(image, size)
         url = URL(c="default", f="download",
                   args=image)
-    elif email:
-        # If no Image uploaded, try Gravatar, which also provides a nice fallback identicon
-        import hashlib
-        hash = hashlib.md5(email).hexdigest()
-        url = "http://www.gravatar.com/avatar/%s?s=50&d=identicon" % hash
+    elif gravatar:
+        if email:
+            # If no Image uploaded, try Gravatar, which also provides a nice fallback identicon
+            import hashlib
+            hash = hashlib.md5(email).hexdigest()
+            url = "http://www.gravatar.com/avatar/%s?s=50&d=identicon" % hash
+        else:
+            url = "http://www.gravatar.com/avatar/00000000000000000000000000000000?d=mm"
     else:
-        url = "http://www.gravatar.com/avatar/00000000000000000000000000000000?d=mm"
+        url = URL(c="static", f="img", args="blank-user.gif")
 
     if "_class" not in attr:
         attr["_class"] = "avatar"
@@ -1374,21 +1377,20 @@ class S3DateTime(object):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def date_represent(cls, date, utc=False):
+    def date_represent(cls, date, format=None, utc=False):
         """
             Represent the date according to deployment settings &/or T()
 
             @param date: the date
+            @param format: the format if wishing to override deployment_settings
             @param utc: the date is given in UTC
         """
 
-        session = current.session
-        settings = current.deployment_settings
-
-        format = settings.get_L10n_date_format()
+        if not format:
+            format = current.deployment_settings.get_L10n_date_format()
 
         if date and isinstance(date, datetime.datetime) and utc:
-            offset = cls.get_offset_value(session.s3.utc_offset)
+            offset = cls.get_offset_value(current.session.s3.utc_offset)
             if offset:
                 date = date + datetime.timedelta(seconds=offset)
 
