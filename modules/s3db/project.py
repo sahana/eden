@@ -1191,6 +1191,13 @@ class S3ProjectActivityModel(S3Model):
         else:
             create_next = URL(c="project", f="activity", args=["[id]"])
 
+        filter_widgets = [S3OptionsFilter("activity_type_id",
+                                          label=T("Type"),
+                                          represent="%(name)s",
+                                          widget="multiselect",
+                                          )
+                          ]
+
         self.configure(tablename,
                        super_entity="doc_entity",
                        create_next=create_next,
@@ -1208,6 +1215,7 @@ class S3ProjectActivityModel(S3Model):
                                     totals=True
                                 )
                             ),
+                       filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        )
 

@@ -2031,11 +2031,24 @@ class S3FacilityModel(S3Model):
                                     "obsolete",
                                     "comments")
 
+        filter_widgets = [S3OptionsFilter("facility_type_id",
+                                          label=T("Type"),
+                                          represent="%(name)s",
+                                          widget="multiselect",
+                                          ),
+                          S3OptionsFilter("organisation_id",
+                                          label=T("Organization"),
+                                          represent="%(name)s",
+                                          widget="multiselect",
+                                          ),
+                          ]
+
         configure(tablename,
                   super_entity=("org_site", "doc_entity", "pr_pentity"),
                   crud_form = crud_form,
-                  deduplicate=self.org_facility_duplicate,
+                  deduplicate = self.org_facility_duplicate,
                   onaccept = self.org_facility_onaccept,
+                  filter_widgets = filter_widgets,
                   search_method=S3Search(advanced=org_facility_search),
                   report_options = Storage(
                     search=org_facility_search,

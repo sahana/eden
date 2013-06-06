@@ -722,7 +722,7 @@ function Point(lon, lat) {
     var point = new OpenLayers.Geometry.Point(lon, lat);
     return point.transform(
         S3.gis.proj4326,
-        S3.gis.maps['default'].getProjectionObject()
+        S3.gis.maps['default_map'].getProjectionObject()
     );
 }
 function LinearRing(point_list) {
@@ -737,7 +737,7 @@ function Place(data) {
     place.data.longitude = Math.round(place.data.longitude * 1000) / 1000;
 
     place.spaces = [];
-    var projection_current = S3.gis.maps['default'].getProjectionObject();
+    var projection_current = S3.gis.maps['default_map'].getProjectionObject();
     var point = place.point = new OpenLayers.Geometry.Point(data.longitude, data.latitude).transform(S3.gis.proj4326, projection_current);
     var lonlat = place.lonlat = new OpenLayers.LonLat(point.x, point.y);
 }
@@ -805,7 +805,7 @@ Place.prototype = {
                     true
                 );
                 marker.popup = popup;
-                var map = S3.gis.maps['default'];
+                var map = S3.gis.maps['default_map'];
                 map.addPopup(popup);
                 function remove_place_info_popup() {
                     map.removePopup(marker.popup);
@@ -1176,7 +1176,7 @@ OpenLayers.Geometry.MultiPoint.prototype.atZoom = function(max_x_diff, max_y_dif
 
 load_layer_and_locate_places_in_spaces = function(name, layer_URL, format, label_colour, label_size) {
     // can load the KML from http://maps.worldbank.org/overlays/3388.kml
-    var map = S3.gis.maps['default'];
+    var map = S3.gis.maps['default_map'];
     var vector_layer = new VariableResolutionVectorLayer(
         name,
         {
@@ -1194,7 +1194,7 @@ load_layer_and_locate_places_in_spaces = function(name, layer_URL, format, label
         name + " names",
         {
             projection: map.displayProjection,
-            styleMap: new OpenLayers.StyleMap({'default':{
+            styleMap: new OpenLayers.StyleMap({'default': {
                 label : "${name}",
                 
                 fontColor: label_colour || "black",

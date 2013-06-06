@@ -905,7 +905,8 @@ class S3OptionsFilter(S3FilterWidget):
                 if self.operator == "belongs":
                     self.operator = "contains"
 
-            any_all = DIV(T("Filter type "),
+            T = current.T
+            any_all = DIV(T("Filter type"),
                           INPUT(_name="%s_filter" % name,
                                 _id="%s_filter_any" % name,
                                 _type="radio",

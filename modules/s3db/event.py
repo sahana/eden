@@ -713,8 +713,7 @@ class S3IncidentReportModel(S3Model):
         @ToDo: Deprecate IRS module by porting functionality here
     """
 
-    names = ["event_incident_report",
-             ]
+    names = ["event_incident_report"]
 
     def model(self):
 
@@ -756,8 +755,16 @@ class S3IncidentReportModel(S3Model):
             msg_record_deleted = T("Incident Report removed"),
             msg_list_empty = T("No Incident Reports currently registered for this event"))
 
+        filter_widgets = [S3OptionsFilter("incident_type_id",
+                                          label=T("Type"),
+                                          represent="%(name)s",
+                                          widget="multiselect",
+                                          ),
+                          ]
+
         self.configure(tablename,
                        super_entity="doc_entity",
+                       filter_widgets = filter_widgets,
                        )
 
         # ---------------------------------------------------------------------

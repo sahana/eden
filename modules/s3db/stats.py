@@ -1399,8 +1399,16 @@ class S3StatsResidentModel(S3Model):
             msg_record_deleted=T("Resident deleted"),
             msg_list_empty=T("No Residents defined"))
 
+        filter_widgets = [S3OptionsFilter("parameter_id",
+                                          label=T("Type"),
+                                          represent="%(name)s",
+                                          widget="multiselect",
+                                          ),
+                          ]
+
         configure(tablename,
                   super_entity=["doc_entity", "stats_data"],
+                  filter_widgets = filter_widgets,
                   )
 
         return Storage(
@@ -1509,8 +1517,16 @@ class S3StatsTrainedPeopleModel(S3Model):
             msg_record_deleted=T("Trained People deleted"),
             msg_list_empty=T("No Trained People defined"))
 
+        filter_widgets = [S3OptionsFilter("parameter_id",
+                                          label=T("Type"),
+                                          represent="%(name)s",
+                                          widget="multiselect",
+                                          ),
+                          ]
+
         configure(tablename,
                   super_entity=["doc_entity", "stats_data"],
+                  filter_widgets = filter_widgets,
                   )
 
         return Storage(

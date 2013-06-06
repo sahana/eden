@@ -53,7 +53,7 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
      */
     S3.gis.show_map = function(map_id, options) {
         if (!map_id) {
-            map_id = 'default';
+            map_id = 'default_map';
         }
         if (undefined == options) {
             // Lookup options
@@ -116,6 +116,87 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
         // Return the map object
         return map;
     };
+
+    /**
+     * Callback to Re-cluster Search Results after an AJAX refresh
+     * - to ensure that bounds are set correctly
+     */
+    var search_layer_loadend = function(event) {
+        // Search results have Loaded
+        var layer = event.object;
+        // Read Bounds for Zoom
+        var bounds = layer.getDataExtent();
+        // Re-enable Clustering
+        var strategies = layer.strategies;
+        var strategy;
+        for (var i=0, len=strategies.length; i < len; i++) {
+            strategy = strategies[i];
+            if (strategy.CLASS_NAME == 'OpenLayers.Strategy.AttributeCluster') {
+                strategy.deactivate();
+            }
+        }
+        // Zoom Out to Cluster
+        layer.map.zoomTo(0)
+        // Zoom to Bounds
+        if (bounds) {
+            layer.map.zoomToExtent(bounds);
+        }
+        // Disable this event
+        layer.events.un({
+            'loadend': search_layer_loadend
+        });
+    }
+    // Pass to Global scope to be called from s3.dataTables.js
+    S3.gis.search_layer_loadend = search_layer_loadend;
+
+    /**
+     * Refresh the given layer on all maps
+     * - called by s3.filter.js
+     * 
+     * Parameters:
+     * layer_id - {String} ID of the layer to be refreshed
+     * queries - {Array} Optional list of Queries to be applied to the Layer
+     */
+    S3.gis.refreshLayer = function(layer_id, queries) {
+        var maps = S3.gis.maps;
+        var map_id, map, layers, i, len, layer, url, strategies, j, jlen, strategy;
+        for (map_id in maps) {
+            map = maps[map_id];
+            layers = map.layers;
+            for (i=0, len=layers.length; i < len; i++) {
+                layer = layers[i];
+                if (layer.s3_layer_id == layer_id) {
+                    url = layer.protocol.url;
+                    // Apply any URL filters
+                    url = S3.search.filterURL(url, queries);
+                    layer.protocol.url = url;
+                    // If map is showing then refresh the layer
+                    if (map.s3.mapWin.isVisible()) {
+                        // Set an event to re-enable Clustering when the layer is loaded
+                        layer.events.on({
+                            'loadend': search_layer_loadend
+                        });
+                        strategies = layer.strategies;
+                        jlen = strategies.length;
+                        // Disable Clustering to get correct bounds
+                        for (j=0; j < jlen; j++) {
+                            strategy = strategies[j];
+                            if (strategy.CLASS_NAME == 'OpenLayers.Strategy.AttributeCluster') {
+                                strategy.deactivate();
+                            }
+                        }
+                        for (j=0; j < jlen; j++) {
+                            strategy = strategies[j];
+                            if (strategy.CLASS_NAME == 'OpenLayers.Strategy.Refresh') {
+                                // Reload the layer
+                                strategy.refresh();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     // Build the OpenLayers map
     var addMap = function(map_id, options) {

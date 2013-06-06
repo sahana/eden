@@ -145,7 +145,7 @@ function s3_gis_locationselector_Ext_onReady() {
             var map_button = $('#gis_location_map-btn');
             var map_id = map_button.attr('map');
             if (undefined == map_id) {
-                map_id = 'default';
+                map_id = 'default_map';
             }
             var map = S3.gis.maps[map_id];
             map.s3.mapWin.show();
@@ -707,7 +707,7 @@ function s3_gis_l0_select() {
                             if (lat && lon) {
                                 // Otherwise, simply Center the map
                                 // @ToDo: Support non-default maps
-                                var map = S3.gis.maps['default'];
+                                var map = S3.gis.maps['default_map'];
                                 var newPoint = new OpenLayers.LonLat(lon, lat);
                                 newPoint.transform(S3.gis.proj4326, map.getProjectionObject());
                                 if (map.s3.mapWin.rendered) {
@@ -741,7 +741,7 @@ function s3_gis_l0_select() {
 function s3_gis_zoomMap(left, bottom, right, top) {
     // Zoom the Map to the specified bounds
     // @ToDo: Support non-default maps
-    var map = S3.gis.maps['default'];
+    var map = S3.gis.maps['default_map'];
     var proj4326 = S3.gis.proj4326;
     var projection_current = map.getProjectionObject();
     if (map.s3.mapWin.rendered) {
@@ -1319,7 +1319,7 @@ function s3_gis_geocode(active) {
         if (status == google.maps.GeocoderStatus.OK) {
 
             // @ToDo: Support non-default maps
-            var map = S3.gis.maps['default'];
+            var map = S3.gis.maps['default_map'];
 
             // Parse the returned Location
             var myLatLng = results[0].geometry.location;

@@ -209,10 +209,8 @@ S3.search = {};
 
     /**
      * Update a variable in the query part of the filter-submit URL
-     *
-     * In global scope as called from s3summary.py
      */
-    S3.search.updateFilterSubmitURL = function(form, name, value) {
+    var updateFilterSubmitURL = function(form, name, value) {
         
         var submit_url = $('#' + form).find('input.filter-submit-url[type="hidden"]');
 
@@ -258,18 +256,24 @@ S3.search = {};
      */
     var filterURL = function(url, queries) {
 
+        if (undefined === queries) {
+            queries = getCurrentFilters();
+        }
         // Construct the URL
-        var url_parts = url.split('?'), url_query = queries.join('&');
+        var url_parts = url.split('?'),
+            url_query = queries.join('&');
         if (url_parts.length > 1) {
-            var qstr = url_parts[1], query = {};
-            var a = qstr.split('&'), v, i;
-            for (i=0; i<a.length; i++) {
+            var qstr = url_parts[1],
+                query = {};
+            var a = qstr.split('&'),
+                v, i, len;
+            for (i=0, len=a.length; i < len; i++) {
                 var b = a[i].split('=');
                 if (b.length > 1 && b[0].search(/\./) == -1) {
                     query[decodeURIComponent(b[0])] = decodeURIComponent(b[1]);
                 }
             }
-            for (i=0; i<queries.length; i++) {
+            for (i=0, len=queries.length; i < len; i++) {
                 v = queries[i].split('=');
                 if (v.length > 1) {
                     query[v[0]] = v[1];
@@ -287,6 +291,8 @@ S3.search = {};
         }
         return filtered_url;
     };
+    // Pass to global scope to be called by S3.gis.refreshLayer()
+    S3.search.filterURL = filterURL;
 
     /**
      * updateOptions: Update the options of all filter widgets
@@ -407,14 +413,14 @@ S3.search = {};
     /**
      * updatePendingTargets: update all targets which were hidden during
      *                       last filter-submit, reload page if required
-     *
-     * In global scope as called from s3summary.py
      */
-    S3.search.updatePendingTargets = function(form) {
+    var updatePendingTargets = function(form) {
         
-        var url = $('#' + form).find('input.filter-submit-url[type="hidden"]').first().val(),
+        var url = $('#' + form).find('input.filter-submit-url[type="hidden"]')
+                               .first().val(),
             targets = pendingTargets,
-            target_id, target_data,
+            target_id,
+            target_data,
             page_reload = false,
             needs_reload,
             ajaxurl,
@@ -437,15 +443,13 @@ S3.search = {};
             }
 
             target_data = targets[target_id];
-            
+
             needs_reload = target_data['needs_reload'];
             if (visible) {
                 if (needs_reload) {
                     // reload immediately
                     page_reload = true;
                     break;
-                } else {
-                    
                 }
             } else {
                 // re-schedule for later
@@ -471,6 +475,68 @@ S3.search = {};
                     dlAjaxReload(target_id, target_data['queries']);
                 } else if (t.hasClass('dataTable')) {
                     t.dataTable().fnReloadAjax(target_data['ajaxurl']);
+                } else if (t.hasClass('map_wrapper')) {
+                    S3.gis.refreshLayer('search_results');
+                }
+            }
+        }
+    }
+
+    /**
+     * Set up the Tabs for an S3Summary page
+     * - in global scope as called from outside
+     *
+     * Parameters:
+     * form - {String} ID of the form to be made into Tabs
+     * active_tab - {Integer} Which Section is active to start with
+     */
+    S3.search.summary_tabs = function(form, active_tab) {
+        // Initialise jQueryUI Tabs
+        $('#summary-tabs').tabs({
+            active: active_tab,
+            activate: function(event, ui) {
+                // A New Tab has been selected
+                if (ui.newTab.length) {
+                    // Update the Filter Query URL to show which tab is active
+                    updateFilterSubmitURL(form, 't', $(ui.newTab).index());
+                }
+                // Find any Map widgets in this section
+                var maps = ui.newPanel.find('.map_wrapper');
+                var gis = S3.gis;
+                for (var i=0; i < maps.length; i++) {
+                    var map_id = maps[i].attributes['id'].value;
+                    if (undefined === gis.maps[map_id]) {
+                        // Instantiate the map (can't be done when the DIV is hidden)
+                        var options = gis.options[map_id];
+                        gis.show_map(map_id, options);
+                        // Refresh the Search Layer with the current Filter options
+                        //gis.refreshLayer('search_results');
+                    }
+                }
+                // Update all just-unhidden widgets which have pending updates
+                updatePendingTargets(form);
+            }
+        });
+    }
+
+    /**
+     * Initialise Maps for an S3Summary page
+     * - in global scope as called from callback to Map Loader
+     */
+    S3.search.summary_maps = function() {
+        // Find any Map widgets in the initially active tab
+        var maps = $('#summary-sections').find('.map_wrapper');
+        for (var i=0; i < maps.length; i++) {
+            var map = maps[i];
+            if (!map.hidden) {
+                var gis = S3.gis;
+                var map_id = map.attributes['id'].value;
+                if (undefined === gis.maps[map_id]) {
+                    // Instantiate the map (can't be done when the DIV is hidden)
+                    var options = gis.options[map_id];
+                    gis.show_map(map_id, options);
+                    // Refresh the Search Layer with the current Filter options
+                    //gis.refreshLayer('search_results');
                 }
             }
         }
@@ -652,47 +718,6 @@ S3.search = {};
 
         // Filter-form submission
         $('.filter-submit').click(function() {
-            // If a Map is present, then Update the search_results URL
-            var maps = S3.gis.maps
-            if (typeof maps != 'undefined') {
-                var map_id, map, needle='search_results', layers, i, len, layer, url, strategies, j, jlen, strategy;
-                for (map_id in maps) {
-                    map = maps[map_id];
-                    layers = map.layers;
-                    for (i=0, len=layers.length; i < len; i++) {
-                        layer = layers[i];
-                        if (layer.s3_layer_id == needle) {
-                            url = layer.protocol.url;
-                            url = filterURL(url);
-                            layer.protocol.url = url;
-                            // If map is showing then refresh the layer
-                            if (map.s3.mapWin.isVisible()) {
-                                // Set an event to re-enable Clustering when the layer is loaded (defined in s3.dataTables.js)
-                                layer.events.on({
-                                    'loadend': S3.gis.search_layer_loadend
-                                });
-                                strategies = layer.strategies;
-                                jlen = strategies.length;
-                                // Disable Clustering to get correct bounds
-                                for (j=0; j < jlen; j++) {
-                                    strategy = strategies[j];
-                                    if (strategy.CLASS_NAME == 'OpenLayers.Strategy.AttributeCluster') {
-                                        strategy.deactivate();
-                                    }
-                                }
-                                for (j=0; j < jlen; j++) {
-                                    strategy = strategies[j];
-                                    if (strategy.CLASS_NAME == 'OpenLayers.Strategy.Refresh') {
-                                        // Reload the layer
-                                        strategy.refresh();
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
             var url = $(this).nextAll('input.filter-submit-url[type="hidden"]').val(),
                 queries = getCurrentFilters();
 
@@ -753,6 +778,9 @@ S3.search = {};
                         } else {
                             needs_reload = true;
                         }
+                    } else if (t.hasClass('map_wrapper')) {
+                        // maps do not need page reload
+                        needs_reload = false;
                     } else {
                         // all other targets need page reload
                         needs_reload = true;
@@ -789,10 +817,11 @@ S3.search = {};
                             dlAjaxReload(target_id, queries);
                         } else if (t.hasClass('dataTable')) {
                             t.dataTable().fnReloadAjax(dt_ajaxurl[target_id]);
+                        } else if (t.hasClass('map_wrapper')) {
+                            S3.gis.refreshLayer('search_results', queries);
                         }
                     }
                 }
-                
             } else {
                 // Reload the page
                 url = filterURL(url, queries);

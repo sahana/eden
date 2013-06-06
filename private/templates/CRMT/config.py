@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 
-from gluon import current
+from gluon import current, IS_NULL_OR
 from gluon.html import *
 from gluon.storage import Storage
 
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
-from s3 import s3forms, S3LocationAutocompleteWidget, IS_NULL_OR, IS_ONE_OF, S3Represent
+from s3.s3fields import S3Represent
+from s3.s3filter import S3OptionsFilter
+from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
+from s3.s3validators import IS_ONE_OF
+from s3.s3widgets import S3LocationAutocompleteWidget
 
 T = current.T
 settings = current.deployment_settings
@@ -107,13 +111,13 @@ settings.save_search.widget = False
 
 # -----------------------------------------------------------------------------
 # Summary Pages
-settings.ui.summary = [{"name": "table",
-                        "label": "Table",
-                        "widgets": [{"method": "datatable"}]
-                        },
-                       {"name": "map",
+settings.ui.summary = [{"name": "map",
                         "label": "Map",
                         "widgets": [{"method": "map"}]
+                        },
+                       {"name": "table",
+                        "label": "Table",
+                        "widgets": [{"method": "datatable"}]
                         },
                        ]
 
@@ -188,13 +192,13 @@ def customize_project_activity(**attr):
     attr["rheader"] = None
 
     # Custom Crud Form
-    crud_form = s3forms.S3SQLCustomForm(
+    crud_form = S3SQLCustomForm(
         "date",
         "name",
         "activity_type_id",
         "location_id",
         "person_id",
-        s3forms.S3SQLInlineComponent(
+        S3SQLInlineComponent(
             "activity_organisation",
             label = T("Participating Organizations"),
             #comment = "Bob",
@@ -231,17 +235,17 @@ def customize_org_organisation(**attr):
     s3db.hrm_human_resource.site_id.label = T("Location")
 
     # Custom Crud Form
-    crud_form = s3forms.S3SQLCustomForm(
+    crud_form = S3SQLCustomForm(
         "name",
         "logo",
         "multi_sector_id",
-        s3forms.S3SQLInlineComponentCheckbox(
+        S3SQLInlineComponentCheckbox(
             "service",
             label = T("Services"),
             field = "service_id",
             cols = 4,
         ),
-        s3forms.S3SQLInlineComponent(
+        S3SQLInlineComponent(
             "human_resource",
             label = T("Organization's Contacts"),
             #comment = "Bob",
@@ -252,7 +256,7 @@ def customize_org_organisation(**attr):
                       #"phone",
                       ],
         ),
-        s3forms.S3SQLInlineComponent(
+        S3SQLInlineComponent(
             "facility",
             label = T("Organization's Locations"),
             #comment = "Bob",
@@ -260,7 +264,7 @@ def customize_org_organisation(**attr):
                       "facility_type_id",
                       "location_id" ],
         ),
-        s3forms.S3SQLInlineComponent(
+        S3SQLInlineComponent(
             "resource",
             label = T("Organization's Resources"),
             #comment = "Bob",
@@ -271,8 +275,22 @@ def customize_org_organisation(**attr):
         "comments",
     ) 
 
+    filter_widgets = [S3OptionsFilter("multi_sector_id",
+                                      label=T("Sector"),
+                                      represent="%(name)s",
+                                      widget="multiselect",
+                                      ),
+                      #S3OptionsFilter("service.service_type_id",
+                      #                label=T("Service Type"),
+                      #                represent="%(name)s",
+                      #                widget="multiselect",
+                      #                ),
+                      ]
+
     s3db.configure(tablename,
-                   crud_form = crud_form)
+                   crud_form = crud_form,
+                   filter_widgets = filter_widgets,
+                   )
 
     return attr
 
@@ -306,12 +324,12 @@ def customize_org_facility(**attr):
     s3db.org_facility.location_id.label = T("Address")
 
     # Custom Crud Form
-    crud_form = s3forms.S3SQLCustomForm(
+    crud_form = S3SQLCustomForm(
         "name",
         "facility_type_id",
         "organisation_id",
         "location_id",
-        s3forms.S3SQLInlineComponent(
+        S3SQLInlineComponent(
             "human_resource",
             label = T("Location's Contacts"),
             #comment = "Bob",

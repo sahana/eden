@@ -1122,34 +1122,6 @@ $(document).ready(function() {
     S3.dataTables.initAll();
 
     // Add Events to any Map Buttons present
-    var gis_search_layer_loadend = function(event) {
-        // Search results have Loaded
-        var layer = event.object;
-        // Read Bounds for Zoom
-        var bounds = layer.getDataExtent();
-        // Re-enable Clustering
-        var strategies = layer.strategies;
-        var strategy;
-        for (var i=0, len=strategies.length; i < len; i++) {
-            strategy = strategies[i];
-            if (strategy.CLASS_NAME == 'OpenLayers.Strategy.AttributeCluster') {
-                strategy.deactivate();
-            }
-        }
-        // Zoom Out to Cluster
-        layer.map.zoomTo(0)
-        // Zoom to Bounds
-        if (bounds) {
-            layer.map.zoomToExtent(bounds);
-        }
-        // Disable this event
-        layer.events.un({
-            'loadend': gis_search_layer_loadend
-        });
-    }
-    // Pass to Global scope to be called from s3.filter.js
-    S3.gis.search_layer_loadend = gis_search_layer_loadend;
-
     // S3Search Results
     var s3_dataTables_mapButton = Ext.get('gis_datatables_map-btn');
     if (s3_dataTables_mapButton) {
@@ -1158,7 +1130,7 @@ $(document).ready(function() {
             var map_button = $('#gis_datatables_map-btn');
             var map_id = map_button.attr('map');
             if (undefined == map_id) {
-                map_id = 'default';
+                map_id = 'default_map';
             }
             var map = S3.gis.maps[map_id];
             // Load the search results layer
@@ -1169,7 +1141,7 @@ $(document).ready(function() {
                 if (layer.s3_layer_id == 'search_results') {
                     // Set a new event when the layer is loaded
                     layer.events.on({
-                        'loadend': gis_search_layer_loadend
+                        'loadend': S3.gis.search_layer_loadend
                     });
                     // Disable Clustering to get correct bounds
                     strategies = layer.strategies;
@@ -1221,7 +1193,7 @@ $(document).ready(function() {
             var map_button = $('#gis_search_map-btn');
             var map_id = map_button.attr('map');
             if (undefined == map_id) {
-                map_id = 'default';
+                map_id = 'default_map';
             }
             var map = S3.gis.maps[map_id];
             // Enable the polygon control

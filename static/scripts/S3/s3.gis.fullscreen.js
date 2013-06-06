@@ -54,7 +54,7 @@
                 }
             }
             if (undefined == map_id) {
-                map_id = 'default';
+                map_id = 'default_map';
             }
             map = S3.gis.maps[map_id];
             enable_fullscreen(map);

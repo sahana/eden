@@ -33,6 +33,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from s3filter import S3FilterForm
+from s3gis import MAP
 from s3rest import S3Method
 
 # =============================================================================
@@ -51,7 +52,7 @@ class S3Summary(S3Method):
         if "w" in r.get_vars:
             # Ajax-request for a specific widget
             return self.ajax(r, **attr)
-            
+
         else:
             # Full page request
             # @todo: check for proper format + method
@@ -87,10 +88,10 @@ class S3Summary(S3Method):
             active = r.get_vars["t"]
         else:
             active = None
-        active_tab = "null"
+        active_tab = 0
+        active_map = None
 
         # Render sections
-        
         section_idx = 0
         widget_idx = 0
         targets = []
@@ -133,7 +134,6 @@ class S3Summary(S3Method):
 
                 # Apply method
                 method = widget.get("method", None)
-                content = None
                 if callable(method):
                     content = method(r, widget_id=widget_id, **attr)
                 else:
@@ -152,6 +152,8 @@ class S3Summary(S3Method):
                         if k not in ("tabs", "sections", "widget"):
                             output[k] = v
                     content = content.get("widget", "EMPTY")
+                elif active_tab == section_idx and isinstance(content, MAP):
+                    active_map = content
                 s.append(DIV(content,
                              _id="%s-container" % widget_id,
                              _class="widget-container"))
@@ -179,13 +181,13 @@ class S3Summary(S3Method):
         if filter_widgets and not hide_filter:
 
             # Where to retrieve filtered data from:
-            if active_tab != "null":
+            if active_tab != 0:
                 submit_url_vars = {"t": active_tab}
             else:
                 submit_url_vars = {}
             filter_submit_url = attr.get("filter_submit_url",
                                          r.url(vars=submit_url_vars))
-            
+
             # Where to retrieve updated filter options from:
             filter_ajax_url = attr.get("filter_ajax_url",
                                         r.url(method="filter",
@@ -203,7 +205,7 @@ class S3Summary(S3Method):
                                        _class="filter-form",
                                        _id=form_id)
             fresource = current.s3db.resource(resource.tablename)
-            
+
             alias = resource.alias if r.component else None
             output["filter_form"] = filter_form.html(fresource,
                                                      r.get_vars,
@@ -217,20 +219,15 @@ class S3Summary(S3Method):
         response = current.response
         response.view = self._view(r, "summary.html")
 
-        # Script for tabs & map
         if len(sections) > 1:
-            script = """
-$('#summary-tabs').tabs({
- active:%(active_tab)s,
- activate:function(event,ui){
-  if(ui.newTab.length){
-   S3.search.updateFilterSubmitURL('%(form_id)s','t',$(ui.newTab).index())
-  }
-  S3.search.updatePendingTargets('%(form_id)s')
- }
-});""" % dict(form_id = form_id, active_tab = active_tab)
-
+            # Render the Sections as Tabs
+            script = '''S3.search.summary_tabs("%s",%s)''' % (form_id,
+                                                              active_tab)
             response.s3.jquery_ready.append(script)
+            if active_map:
+                # If there is a map on the active tab then we need to add
+                # a callback to the Map JS Loader
+                active_map.callback = '''S3.search.summary_maps()'''
 
         return output
 
@@ -270,7 +267,7 @@ $('#summary-tabs').tabs({
 
         # Not found?
         return None
-        
+
     # -------------------------------------------------------------------------
     def _get_config(self, resource):
         """

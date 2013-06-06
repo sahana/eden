@@ -5246,7 +5246,7 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     def show_map(self,
-                 id = "default",
+                 id = "default_map",
                  height = None,
                  width = None,
                  bbox = {},
@@ -5427,8 +5427,6 @@ class MAP(DIV):
         - used by gis.show_map()
     """
 
-    tag = 'div'
-
     def __init__(self, **opts):
         """
             :param **opts: options to pass to the Map for server-side processing
@@ -5439,6 +5437,7 @@ class MAP(DIV):
 
         # Options for server-side processing
         self.opts = opts
+        self.id = opts.get("id", "default_map")
 
         # Options for client-side processing
         self.options = {}
@@ -5449,15 +5448,16 @@ class MAP(DIV):
         # Map (Embedded not Window)
         # Needs to be an ID which means we can't have multiple per page :/
         # - Alternatives are also fragile. See s3.gis.js
-        #id = opts.get("id", "default")
         components.append(DIV(_id="map_panel"))
 
         self.components = components
         for c in components:
             self._setnode(c)
 
-        # Other DIV settings in case checked by other methods
-        self.attributes = dict(_class="map_wrapper")
+        # Other DIV settings
+        self.attributes = {"_class": "map_wrapper",
+                           "_id": self.id,
+                           }
         self.parent = None
 
     # -------------------------------------------------------------------------
@@ -5470,7 +5470,6 @@ class MAP(DIV):
         """
 
         opts = self.opts
-        self.id = opts.get("id", "default")
 
         request = current.request
         response = current.response
@@ -5895,8 +5894,10 @@ class MAP(DIV):
             i18n["gis_get_feature_info"] = T("Get Feature Info")
             i18n["gis_feature_info"] = T("Feature Info")
 
-        # NB These can be read/modified after _setup() & before xml()
-        self.callback = opts.get("callback", "DEFAULT")
+        # Callback can be set before _setup()
+        if not self.callback:
+            self.callback = opts.get("callback", "DEFAULT")
+        # These can be read/modified after _setup() & before xml()
         self.options = options
 
         self.globals = globals
@@ -5967,7 +5968,7 @@ class MAP(DIV):
         plugin_callbacks = '''\n'''.join(self.plugin_callbacks)
         if callback:
             if callback == "DEFAULT":
-                if map_id == "default":
+                if map_id == "default_map":
                     callback = '''S3.gis.show_map(null,%s)''' % options
                 else:
                     callback = '''S3.gis.show_map(%s,%s)''' % (map_id, options)
@@ -5996,11 +5997,7 @@ class MAP(DIV):
         s3.jquery_ready.append(loader)
 
         # Return the HTML
-        # (simplified version of DIV.xml())
-        from gluon.html import xmlescape
-        co = "".join([xmlescape(component) for component in
-                      self.components])
-        return '<div class="map_wrapper">%s</div>' % co
+        return super(MAP, self).xml()
 
 # =============================================================================
 def addFeatures(features):
@@ -7544,7 +7541,7 @@ class S3Map(S3Search):
         """
 
         if not widget_id:
-            widget_id = "default"
+            widget_id = "default_map"
 
         gis = current.gis
         tablename = self.tablename
@@ -7577,7 +7574,7 @@ class S3Map(S3Search):
                            legend = True,
                            toolbar = True,
                            search = True,
-                           # Don't show map by default
+                           # Don't show map by default in case DIV is hidden
                            callback = None,
                            )
         return map
