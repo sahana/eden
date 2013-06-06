@@ -956,14 +956,15 @@ class S3Resource(object):
             osetattr(table, "virtualfields", [])
 
         # Initialize field data and effort estimates
-        field_data = {pkey: ({}, {}, False, False)}
+        field_data = {pkey: ({}, {}, False, False, False)}
         effort = {pkey: 0}
         for dfield in dfields:
             colname = dfield.colname
             effort[colname] = 0
             field_data[colname] = ({}, {},
                                    dfield.tname != self.tablename,
-                                   dfield.ftype[:5] == "list:")
+                                   dfield.ftype[:5] == "list:",
+                                   dfield.virtual)
 
         # Resolve ORDERBY :
 
@@ -1330,7 +1331,7 @@ class S3Resource(object):
         for dfield in dfields:
             
             colname = dfield.colname
-            fvalues, frecords, joined, list_type = field_data[colname]
+            fvalues, frecords, joined, list_type, virtual = field_data[colname]
 
             if represent:
 
@@ -1489,7 +1490,7 @@ class S3Resource(object):
             group = list(g)
             record = records.get(k, {})
             for idx, col in enumerate(columns):
-                fvalues, frecords, joined, list_type = field_data[col]
+                fvalues, frecords, joined, list_type, virtual = field_data[col]
                 values = record.get(col, {})
                 lazy = False
                 for row in group:
@@ -1498,9 +1499,13 @@ class S3Resource(object):
                     except AttributeError:
                         _debug("Warning S3Resource.__extract: column %s not in row" % col)
                         value = None
-                    if lazy or callable(value): # lazy virtual field
+                    if lazy or callable(value):
+                        # Lazy virtual field
                         value = value()
                         lazy = True
+                    if virtual and not list_type and type(value) is list:
+                        # Virtual field that returns a list
+                        list_type = True
                     if list_type and value is not None:
                         if represent and value:
                             effort[col] += 30 + len(value)

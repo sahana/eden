@@ -1723,6 +1723,9 @@ class S3ProjectBeneficiaryModel(S3Model):
                              s3_comments(),
                              *s3_meta_fields())
 
+        # Virtual fields
+        table.year = Field.Lazy(self.project_beneficiary_year)
+
         # CRUD Strings
         ADD_BNF = T("Add Beneficiaries")
         crud_strings[tablename] = Storage(
@@ -1740,8 +1743,6 @@ class S3ProjectBeneficiaryModel(S3Model):
             msg_record_deleted = T("Beneficiaries Deleted"),
             msg_list_empty = T("No Beneficiaries Found")
         )
-
-        table.virtualfields.append(S3ProjectBeneficiaryVirtualFields())
 
         # Resource Configuration
         report_fields = ["project_location_id",
@@ -1960,6 +1961,48 @@ class S3ProjectBeneficiaryModel(S3Model):
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
         return
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def project_beneficiary_year(row):
+        """ Virtual field for the project_beneficiary table """
+
+        if hasattr(row, "project_beneficiary"):
+            row = row.project_beneficiary
+
+        try:
+            project_id = row.project_id
+        except AttributeError:
+            return []
+        try:
+            date = row.date
+        except AttributeError:
+            date = None
+        try:
+            end_date = row.end_date
+        except AttributeError:
+            end_date = None
+
+        if not date or not end_date:
+            table = current.s3db.project_project
+            project = current.db(table.id == project_id) \
+                             .select(table.start_date,
+                                     table.end_date,
+                                     limitby=(0, 1)).first()
+            if project:
+                if not date:
+                    date = project.start_date
+                if not end_date:
+                    end_date = project.end_date
+
+        if not date and not end_date:
+            return []
+        elif not end_date:
+            return [date.year]
+        elif not date:
+            return [end_date.year]
+        else:
+            return list(xrange(date.year, end_date.year + 1))
 
 # =============================================================================
 class S3ProjectCampaignModel(S3Model):
@@ -5332,43 +5375,6 @@ def task_notify(form):
                  vars.description or "")
             current.msg.send_by_pe_id(pe_id, subject, message)
     return
-
-# =============================================================================
-class S3ProjectBeneficiaryVirtualFields:
-    """ Virtual fields for the project_beneficiary table """
-
-    def year(self):
-
-        try:
-            project_id = self.project_beneficiary.project_id
-        except AttributeError:
-            return []
-        try:
-            date = self.project_beneficiary.date
-        except AttributeError:
-            date = None
-        try:
-            end_date = self.project_beneficiary.end_date
-        except AttributeError:
-            end_date = None
-
-        if not date or not end_date:
-            table = current.s3db.project_project
-            project = current.db(table.id == project_id).select(table.start_date,
-                                                                table.end_date,
-                                                                limitby=(0, 1)
-                                                                ).first()
-            if project:
-                if not date:
-                    date = project.start_date
-                if not end_date:
-                    end_date = project.end_date
-        if not date and not end_date:
-            return []
-        elif not date or not end_date:
-            return [date.year or end_date.year]
-        else:
-            return [year for year in xrange(date.year, end_date.year + 1)]
 
 # =============================================================================
 class S3ProjectThemeVirtualFields:
