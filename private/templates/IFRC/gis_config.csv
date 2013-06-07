@@ -7,5 +7,5 @@
 ,"MY","Malaysian Red Crescent Society","organisation","MY","MY",5,2.454333,108.940637,900913,"IFRC",0,8,99,120,"http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
 ,"NZ","New Zealand Red Cross","organisation","NZ","NZ",6,-41.99,172.34,900913,"IFRC",-53,-28,165,180,"http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
 ,"PH","Philippine Red Cross","organisation","PH","PH",6,12.567606,122.419227,900913,"IFRC",4,21,114,130,"http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
-,"TL","Timor-Leste Red Cross Society","organisation","TL","TL",8,-8.88,125.92,900913,"IFRC",-9.5,-8.4,124.04,127.3,"http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
+,"TL","Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)","organisation","TL","TL",8,-8.88,125.92,900913,"IFRC",-9.5,-8.4,124.04,127.3,"http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
 ,"US","American Red Cross","organisation","US","US",4,39.1348,-98.41,900913,"IFRC",0,90,-180,-50,"http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"

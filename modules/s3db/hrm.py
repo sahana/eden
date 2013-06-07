@@ -72,7 +72,6 @@ class S3HRModel(S3Model):
     names = ["hrm_human_resource",
              "hrm_human_resource_id",
              "hrm_autocomplete_search",
-             "hrm_human_resource_search",
              "hrm_type_opts",
              ]
 
@@ -386,107 +385,158 @@ class S3HRModel(S3Model):
         add_component("vol_details",
                       hrm_human_resource=dict(joinby="human_resource_id",
                                               multiple=False))
+                                              
+        crud_fields = ["organisation_id",
+                       "person_id",
+                       "job_title_id",
+                       "start_date",
+                       "end_date",
+                       "status",
+                       ]
 
-        hrm_autocomplete_search = S3HRSearch()
-        human_resource_search = S3Search(
-            simple=(self.human_resource_search_simple_widget("simple")),
-            advanced=(self.human_resource_search_simple_widget("advanced"),
-                      # S3SearchOptionsWidget(
-                        # name="human_resource_search_type",
-                        # label=T("Type"),
-                        # field="type",
-                        # cols = 2,
-                        # options = hrm_type_opts,
-                      # ),
-                      S3SearchOptionsWidget(
-                        name="human_resource_search_status",
-                        label=T("Status"),
-                        field="status",
-                        cols = 2,
-                        options = hrm_status_opts,
-                      ),
-                      S3SearchOptionsWidget(
-                        name="human_resource_search_org",
-                        label=ORGANISATION,
-                        field="organisation_id",
-                        represent = self.org_organisation_represent,
-                        cols = 3,
-                      ),
-                      S3SearchOptionsWidget(
-                        name="human_resource_search_L0",
-                        field="location_id$L0",
-                        location_level="L0",
-                        cols = 3,
-                      ),
-                      S3SearchOptionsWidget(
-                        name="human_resource_search_L1",
-                        field="location_id$L1",
-                        location_level="L1",
-                        cols = 3,
-                      ),
-                      S3SearchOptionsWidget(
-                        name="human_resource_search_L2",
-                        field="location_id$L2",
-                        location_level="L2",
-                        cols = 3,
-                      ),
-                      S3SearchOptionsWidget(
-                        name="human_resource_search_L3",
-                        field="location_id$L3",
-                        location_level="L3",
-                        cols = 3,
-                      ),
-                      S3SearchOptionsWidget(
-                        name="human_resource_search_L4",
-                        field="location_id$L4",
-                        location_level="L4",
-                        cols = 3,
-                      ),
-                      S3SearchLocationWidget(
-                        name="human_resource_search_map",
-                        label=T("Map"),
-                      ),
-                      # Don't change the order of this without updating controllers/vol/volunteer()
-                      S3SearchOptionsWidget(
-                        name="human_resource_search_site",
-                        label=T("Facility"),
-                        field="site_id",
-                      ),
-                      S3SearchOptionsWidget(
-                        name="human_resource_search_training",
-                        label=T("Training"),
-                        field="person_id$training.course_id",
-                        cols = 3,
-                        options = self.hrm_course_opts,
-                      ),
-                      S3SearchOptionsWidget(
-                        name="human_resource_search_teams",
-                        label=T("Teams"),
-                        field="person_id$group_membership.group_id",
-                        cols=3,
-                        ),
-                      # S3SearchSkillsWidget(
-                        # name="human_resource_search_skills",
-                        # label=T("Skills"),
-                        # field="skill_id"
-                      # ),
-                      # This currently breaks Requests from being able to save since this form is embedded inside the S3SearchAutocompleteWidget
-                      #S3SearchMinMaxWidget(
-                      #  name="human_resource_search_date",
-                      #  method="range",
-                      #  label=T("Contract Expiry Date"),
-                      #  field="end_date"
-                      #),
-            )
-        )
+        search_widgets = [# @ToDo: Use this only in new common view
+                          #S3SearchOptionsWidget(
+                          # name="human_resource_search_type",
+                          # label=T("Type"),
+                          # field="type",
+                          # cols = 2,
+                          # options = hrm_type_opts,
+                          # ),
+                          S3SearchOptionsWidget(
+                            name="human_resource_search_status",
+                            label=T("Status"),
+                            field="status",
+                            cols = 2,
+                            options = hrm_status_opts,
+                          ),
+                          S3SearchOptionsWidget(
+                            name="human_resource_search_org",
+                            label=ORGANISATION,
+                            field="organisation_id",
+                            represent = self.org_organisation_represent,
+                            cols = 3,
+                          ),
+                          S3SearchOptionsWidget(
+                            name="human_resource_search_L0",
+                            field="location_id$L0",
+                            location_level="L0",
+                            cols = 3,
+                          ),
+                          S3SearchOptionsWidget(
+                            name="human_resource_search_L1",
+                            field="location_id$L1",
+                            location_level="L1",
+                            cols = 3,
+                          ),
+                          S3SearchOptionsWidget(
+                            name="human_resource_search_L2",
+                            field="location_id$L2",
+                            location_level="L2",
+                            cols = 3,
+                          ),
+                          S3SearchOptionsWidget(
+                            name="human_resource_search_L3",
+                            field="location_id$L3",
+                            location_level="L3",
+                            cols = 3,
+                          ),
+                          S3SearchOptionsWidget(
+                            name="human_resource_search_L4",
+                            field="location_id$L4",
+                            location_level="L4",
+                            cols = 3,
+                          ),
+                          # Widget needs updating
+                          #S3SearchLocationWidget(
+                          #  name="human_resource_search_map",
+                          #  label=T("Map"),
+                          #),
+                          S3SearchOptionsWidget(
+                            name="human_resource_search_training",
+                            label=T("Training"),
+                            field="person_id$training.course_id",
+                            cols = 3,
+                            options = self.hrm_course_opts,
+                          ),
+                          S3SearchOptionsWidget(
+                            name="human_resource_search_teams",
+                            label=T("Teams"),
+                            field="person_id$group_membership.group_id",
+                            cols=3,
+                            ),
+                          # Widget needs updating
+                          # S3SearchSkillsWidget(
+                          #  name="human_resource_search_skills",
+                          #  label=T("Skills"),
+                          #  field="skill_id"
+                          # ),
+                          # This currently breaks Requests from being able to save since this form is embedded inside the S3SearchAutocompleteWidget
+                          #S3SearchMinMaxWidget(
+                          #  name="human_resource_search_date",
+                          #  method="range",
+                          #  label=T("Contract Expiry Date"),
+                          #  field="end_date"
+                          #),
+                          ]
 
+        report_search = [S3SearchOptionsWidget(
+                            name="human_resource_search_org",
+                            label=ORGANISATION,
+                            field="organisation_id",
+                            represent = self.org_organisation_represent,
+                            cols = 2
+                          ),
+                         S3SearchOptionsWidget(
+                            name="human_resource_search_L0",
+                            field="location_id$L0",
+                            location_level="L0",
+                            cols = 3,
+                         ),
+                         S3SearchOptionsWidget(
+                            name="human_resource_search_L1",
+                            field="location_id$L1",
+                            location_level="L1",
+                            cols = 3,
+                         ),
+                         S3SearchOptionsWidget(
+                            name="human_resource_search_L2",
+                            field="location_id$L2",
+                            location_level="L2",
+                            cols = 3,
+                         ),
+                        ]
         report_fields = ["organisation_id",
                          "person_id",
-                         "site_id",
+                         "person_id$gender",
+                         "job_title_id",
                          (T("Training"), "person_id$training.course_id"),
                          "location_id$L1",
                          "location_id$L2",
                          ]
+
+        if group == "volunteer":
+            crud_fields += ["volunteer_cluster.vol_cluster_type_id",
+                            "volunteer_cluster.vol_cluster_id",
+                            "volunteer_cluster.vol_cluster_position_id",
+                            ]
+        else:
+            # Staff
+            crud_fields.insert(1, "site_id")
+            crud_fields.insert(4, "department_id")
+            search_widgets.insert(7, S3SearchOptionsWidget(
+                                        name="human_resource_search_site",
+                                        label=T("Facility"),
+                                        field="site_id",
+                                     ))
+            report_fields += ["site_id",
+                              "department_id",
+                              ]
+            report_search += [S3SearchOptionsWidget(
+                                name="human_resource_search_site",
+                                label=T("Facility"),
+                                field="site_id"
+                                ),
+                              ]
 
         # Redirect to the Details tabs after creation
         if controller == "vol" or \
@@ -497,33 +547,13 @@ class S3HRModel(S3Model):
             # Being added as a component to Org, Site or Project
             hrm_url = None
 
-        if group == "vol":
-            fields = ["organisation_id",
-                      #"site_id",
-                      "person_id",
-                      "job_title_id",
-                      "job_role_id",
-                      "department_id",
-                      "volunteer_cluster.vol_cluster_type_id",
-                      "volunteer_cluster.vol_cluster_id",
-                      "volunteer_cluster.vol_cluster_position_id",
-                      "start_date",
-                      "end_date",
-                      "status",
-                      ]
-        else:
-            fields = ["organisation_id",
-                      "site_id",
-                      "person_id",
-                      "job_title_id",
-                      "job_role_id",
-                      "department_id",
-                      "start_date",
-                      "end_date",
-                      "status",
-                      ]
         # Custom Form
-        crud_form = S3SQLCustomForm(*fields)
+        crud_form = S3SQLCustomForm(*crud_fields)
+
+        search_method = S3Search(
+            simple=(self.human_resource_search_simple_widget("simple")),
+            advanced=[self.human_resource_search_simple_widget("advanced")] + \
+                      [w for w in search_widgets])
 
         if settings.get_hrm_org_required():
             mark_required = ["organisation_id"]
@@ -534,43 +564,12 @@ class S3HRModel(S3Model):
                        super_entity = "sit_trackable",
                        mark_required = mark_required,
                        deletable = settings.get_hrm_deletable(),
-                       search_method = human_resource_search,
+                       search_method = search_method,
                        onaccept = hrm_human_resource_onaccept,
                        ondelete = self.hrm_human_resource_ondelete,
                        deduplicate = self.hrm_human_resource_duplicate,
                        report_options = Storage(
-                            search=[
-                                  S3SearchOptionsWidget(
-                                    name="human_resource_search_org",
-                                    label=ORGANISATION,
-                                    field="organisation_id",
-                                    represent = self.org_organisation_represent,
-                                    cols = 2
-                                  ),
-                                S3SearchOptionsWidget(
-                                    name="human_resource_search_L0",
-                                    field="location_id$L0",
-                                    location_level="L0",
-                                    cols = 3,
-                                ),
-                                S3SearchOptionsWidget(
-                                    name="human_resource_search_L1",
-                                    field="location_id$L1",
-                                    location_level="L1",
-                                    cols = 3,
-                                ),
-                                S3SearchOptionsWidget(
-                                    name="human_resource_search_L2",
-                                    field="location_id$L2",
-                                    location_level="L2",
-                                    cols = 3,
-                                ),
-                                S3SearchOptionsWidget(
-                                    name="human_resource_search_site",
-                                    label=T("Facility"),
-                                    field="site_id"
-                                ),
-                            ],
+                            search=report_search,
                             rows=report_fields,
                             cols=report_fields,
                             fact=report_fields,
@@ -595,8 +594,7 @@ class S3HRModel(S3Model):
         #
         return Storage(
                     hrm_human_resource_id = human_resource_id,
-                    hrm_human_resource_search = human_resource_search,
-                    hrm_autocomplete_search = hrm_autocomplete_search,
+                    hrm_autocomplete_search = S3HRSearch(),
                     hrm_type_opts = hrm_type_opts,
                 )
 

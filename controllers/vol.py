@@ -113,13 +113,11 @@ def volunteer():
     if settings.get_hrm_use_certificates():
         list_fields.append("person_id$certification.certificate_id")
     get_config = s3db.get_config
+    # Modify list_fields, search_method & report_options based on Settings
+    search_method = get_config(tablename,
+                                       "search_method")
     report_options = get_config(tablename,
                                 "report_options")
-    # Remove inappropriate filters from the Search widget
-    human_resource_search = get_config(tablename,
-                                       "search_method")
-    # Remove Facility
-    human_resource_search.advanced.pop(8)
     if settings.get_hrm_vol_experience() == "programme":
         enable_active_field = settings.set_org_dependent_field("vol_details", "active",
                                                                enable_field = False)
@@ -136,7 +134,7 @@ def volunteer():
         report_options.cols = report_fields
         report_options.fact = report_fields
         # Remove deprecated Active/Obsolete
-        human_resource_search.advanced.pop(1)
+        search_method.advanced.pop(1)
         table.status.readable = table.status.writable = False
         # Add to the Search Filters
         if enable_active_field:
@@ -154,7 +152,7 @@ def volunteer():
                                     }
                               ),
             search_widget = ("human_resource_search_active", widget[0])
-            human_resource_search.advanced.insert(1, search_widget)
+            search_method.advanced.insert(1, search_widget)
 
         def hrm_programme_opts():
             """
@@ -184,14 +182,15 @@ def volunteer():
                             options = hrm_programme_opts
                           ),
         search_widget = ("human_resource_search_programme", widget[0])
-        human_resource_search.advanced.insert(3, search_widget)
+        search_method.advanced.insert(3, search_widget)
     else:
         list_fields.append("status")
     s3.crud_strings[tablename] = s3.crud_strings["hrm_volunteer"]
     s3db.configure(tablename,
                    list_fields = list_fields,
                    report_options = report_options,
-                   search_method = human_resource_search)
+                   search_method = search_method,
+                   )
 
     def prep(r):
         if r.interactive:

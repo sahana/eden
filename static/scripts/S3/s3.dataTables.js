@@ -19,6 +19,8 @@
     var bServerSide;
     var myList = [];
     var oDataTable = [];
+    var selectedRows = [];
+    var selectionMode = [];
     var tableCnt = 1;
     var tableId = [];
 
@@ -815,8 +817,6 @@
         // The configuration details for each table
         var sPagination = [];
         var aHiddenFieldsID = [];
-        var selectedRows = [];
-        var selectionMode = [];
         var cache = [];
         var totalRecords = [];
 
