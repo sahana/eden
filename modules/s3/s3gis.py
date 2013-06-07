@@ -1315,47 +1315,6 @@ class GIS(object):
             return all_levels
 
     # -------------------------------------------------------------------------
-    # @ToDo: There is nothing stopping someone from making extra configs that
-    # have country locations as their region location. Need to select here
-    # only those configs that belong to the hierarchy. If the L0 configs are
-    # created during initial db creation, then we can tell which they are
-    # either by recording the max id for an L0 config, or by taking the config
-    # with lowest id if there are more than one per country. This same issue
-    # applies to any other use of country configs that relies on getting the
-    # official set (e.g. looking up hierarchy labels).
-    def get_edit_level(self, level, id):
-        """
-            Returns the edit_<level> value from the parent country hierarchy.
-
-            Used by gis_location_onvalidation()
-
-            @param id: the id of the location or an ancestor - used to find
-                       the ancestor country location.
-        """
-
-        country = self.get_parent_country(id)
-
-        s3db = current.s3db
-        table = s3db.gis_hierarchy
-        fieldname = "edit_%s" % level
-
-        # Read the system default
-        query = (table.uuid == "SITE_DEFAULT")
-        if country:
-            # Try the Location's Country, but ensure we have the fallback available in a single query
-            query = query | (table.location_id == country)
-        rows = current.db(query).select(table[fieldname],
-                                        cache=s3db.cache)
-        if len(rows) > 1:
-            # Remove the Site Default
-            filter = lambda row: row.uuid == "SITE_DEFAULT"
-            rows.exclude(filter)
-        row = rows.first()
-        edit = row[fieldname]
-
-        return edit
-
-    # -------------------------------------------------------------------------
     @staticmethod
     def get_countries(key_type="id"):
         """
@@ -1443,6 +1402,8 @@ class GIS(object):
             @ToDo: Optimise to not use try/except
         """
 
+        if not location:
+            return None
         db = current.db
         s3db = current.s3db
 
