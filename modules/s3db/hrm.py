@@ -519,6 +519,9 @@ class S3HRModel(S3Model):
                             "volunteer_cluster.vol_cluster_id",
                             "volunteer_cluster.vol_cluster_position_id",
                             ]
+            report_fields += [#"person_id$age",
+                              "person_id$education.level",
+                              ]
         else:
             # Staff
             crud_fields.insert(1, "site_id")

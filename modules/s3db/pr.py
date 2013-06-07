@@ -603,16 +603,13 @@ class S3PersonModel(S3Model):
                                 comment = DIV(_class="tooltip",
                                               _title="%s|%s" % (T("ID Tag Number"),
                                                                 T("Number or Label on the identification tag this person is wearing (if any).")))),
+                             # @ToDo: Remove this field from this core table
                              Field("missing", "boolean",
                                    readable=False,
                                    writable=False,
                                    default=False,
                                    represent = lambda missing: \
                                                (missing and ["missing"] or [""])[0]),
-                             Field("volunteer", "boolean",
-                                   readable=False,
-                                   writable=False,
-                                   default=False),
                              Field("first_name", notnull=True,
                                    length=64, # Mayon Compatibility
                                    #default = "?" if current.auth.permission.format != "html" else "",
@@ -651,10 +648,11 @@ class S3PersonModel(S3Model):
                                      label = T("Date of Birth"),
                                      past = 1320,  # Months, so 110 years
                                      ),
-                             pr_age_group(
-                                    readable = False,
-                                    writable = False,
-                                    ),
+                             # @ToDo: Move this field from this core table
+                             pr_age_group(readable = False,
+                                          writable = False,
+                                          ),
+                             # @ToDo: Move this field from this core table
                              Field("opt_in", "string", # list of mailing lists which link to teams
                                    default=False,
                                    label = T("Receive updates"),
@@ -682,26 +680,25 @@ class S3PersonModel(S3Model):
             msg_record_deleted = T("Person deleted"),
             msg_list_empty = T("No Persons currently registered"))
 
-        # add an opt in clause to receive emails depending on the deployment settings
+        # Add an opt-in clause to receive emails depending on the deployment settings
+        # @ToDo: Repalce with Save Search/Subscriptions back-end & simple form-field injection in front-end
         if settings.get_auth_opt_in_to_email():
-            table.opt_in.readable = True
-            table.opt_in.writable = True
+            table.opt_in.readable = table.opt_in.writable = True
         else:
-            table.opt_in.readable = False
-            table.opt_in.writable = False
+            table.opt_in.readable = table.opt_in.writable = False
 
         # Search method
         pr_person_search = S3PersonSearch(
-                                name="person_search_simple",
-                                label=T("Name and/or ID"),
-                                comment=T("To search for a person, enter any of the first, middle or last names and/or an ID number of a person, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all persons."),
-                                field=["pe_label",
-                                       "first_name",
-                                       "middle_name",
-                                       "last_name",
-                                       "local_name",
-                                       "identity.value"
-                                       ])
+            name="person_search_simple",
+            label=T("Name and/or ID"),
+            comment=T("To search for a person, enter any of the first, middle or last names and/or an ID number of a person, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all persons."),
+            field=["pe_label",
+                   "first_name",
+                   "middle_name",
+                   "last_name",
+                   "local_name",
+                   "identity.value"
+                   ])
 
         # Custom Form
         crud_form = S3SQLCustomForm("first_name",
@@ -858,7 +855,7 @@ class S3PersonModel(S3Model):
     def pr_person_onaccept(form):
         """
             Onaccept callback
-            Update any user associated with this person
+            Update any User record associated with this person
         """
 
         db = current.db
@@ -2078,6 +2075,7 @@ class S3PersonEducationModel(S3Model):
         # Resource configuration
         self.configure("pr_education",
                        list_fields=["id",
+                                    "person_id",
                                     "year",
                                     "level",
                                     "award",
