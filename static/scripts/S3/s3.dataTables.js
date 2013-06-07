@@ -19,6 +19,7 @@
     var bServerSide;
     var myList = [];
     var oDataTable = [];
+    var selected;
     var selectedRows = [];
     var selectionMode = [];
     var tableCnt = 1;
@@ -30,6 +31,7 @@
     var aoTableConfig = []; // Passed in from the server
     // Create an array for the column settings (this is required, otherwise the column widths don't autosize)
     var aoColumns = [];
+    var bulk_action_controls;
     var fnAjaxCallback = [];
     var fnActionCallBacks = [];
     var oGroupColumns = [];
@@ -273,18 +275,6 @@
     }
 
     /* Helper functions */
-    var createSubmitBtn = function(t) {
-        if (aoTableConfig[t]['bulkActions']) {
-            // Make sure that the details of the selected records are stored in the hidden fields
-            $(aHiddenFieldsID[t][0]).val(selectionMode[t]);
-            $(aHiddenFieldsID[t][1]).val(selectedRows[t].join(','));
-            // Add the bulk action controls to the dataTable
-            $('.dataTable-action').remove();
-            $(bulk_action_controls).insertBefore('#bulk_select_options');
-            togglePairActions(t);
-        }
-    }
-
     var togglePairActions = function(t) {
         var s = selectedRows[t].length;
         if (selectionMode[t] == 'Exclusive') {
@@ -313,13 +303,13 @@
         if (aoTableConfig[t]['rowActions'].length > 0) {
             for (var i=0; i < fnActionCallBacks[t].length; i++){
                 var currentID = '#' + fnActionCallBacks[t][i][0];
-                $(currentID).unbind('click');
-                $(currentID).bind('click', fnActionCallBacks[t][i][1]);
+                $(currentID).unbind('click')
+                            .bind('click', fnActionCallBacks[t][i][1]);
             }
         }
         if (aoTableConfig[t]['bulkActions']) {
-            $('.bulkcheckbox').unbind('change');
-            $('.bulkcheckbox').change( function(event){
+            $('.bulkcheckbox').unbind('change')
+                              .change( function(event){
                 var id = this.id.substr(6);
                 var posn = inList(id, selectedRows[t]);
                 if (posn == -1) {
@@ -339,26 +329,35 @@
     var setSelectionClass = function(t, row, index) {
         /* This function is used to show which rows have been selected for a bulk select action */
         if (selectionMode[t] == 'Inclusive') {
+            // @ToDo: can 'selected' be pulled in from a parameter rather than module-scope?
             $('#totalSelected').text(selected.length);
             if (index == -1) {
                 $(row).removeClass('row_selected');
-                $('.bulkcheckbox', row).attr('checked', false);
+                $('.bulkcheckbox', row).prop('checked', false);
             } else {
                 $(row).addClass('row_selected');
-                $('.bulkcheckbox', row).attr('checked', true);
+                $('.bulkcheckbox', row).prop('checked', true);
             }
         }
         if (selectionMode[t] == 'Exclusive') {
             $('#totalSelected').text(parseInt($('#totalAvailable').text(), 10) - selected.length);
             if (index == -1) {
                 $(row).addClass('row_selected');
-                $('.bulkcheckbox', row).attr('checked', true);
+                $('.bulkcheckbox', row).prop('checked', true);
             } else {
                 $(row).removeClass('row_selected');
-                $('.bulkcheckbox', row).attr('checked', false);
+                $('.bulkcheckbox', row).prop('checked', false);
             }
         }
-        createSubmitBtn(t);
+        if (aoTableConfig[t]['bulkActions']) {
+            // Make sure that the details of the selected records are stored in the hidden fields
+            $(aHiddenFieldsID[t][0]).val(selectionMode[t]);
+            $(aHiddenFieldsID[t][1]).val(selectedRows[t].join(','));
+            // Add the bulk action controls to the dataTable
+            $('.dataTable-action').remove();
+            $(bulk_action_controls).insertBefore('#bulk_select_options');
+            togglePairActions(t);
+        };
     }
 
     var setModeSelectionAll = function(event) {
@@ -910,10 +909,11 @@
                     }
                     bulk_submit += '<input type="submit" id="submitSelection" class="' + cls + '" name="' + name + '" value="' + value + '">&nbsp;';
                 }
-                var bulk_action_controls = '<div class="dataTable-action">' + bulk_submit + '</div>';
+                // Module-scope currently as read by other functions
+                bulk_action_controls = '<div class="dataTable-action">' + bulk_submit + '</div>';
                 // Add hidden fields to the form to record what has been selected
                 var bulkSelectionID = tableId[t] + '_dataTable_bulkSelection';
-                // global
+                // module-scope as read by setSelectionClass()
                 selected = jQuery.parseJSON($(bulkSelectionID).val());
                 if (selected === null)
                     selected = [];
