@@ -25,6 +25,8 @@
     var tableId = [];
 
     // The configuration details for each table
+    // - if 'each table' then why do these need to be module-scope, they should be per-table options, no?
+    var aHiddenFieldsID = [];
     var aoTableConfig = []; // Passed in from the server
     // Create an array for the column settings (this is required, otherwise the column widths don't autosize)
     var aoColumns = [];
@@ -816,7 +818,6 @@
 
         // The configuration details for each table
         var sPagination = [];
-        var aHiddenFieldsID = [];
         var cache = [];
         var totalRecords = [];
 
