@@ -5434,6 +5434,7 @@ class MAP(DIV):
 
         # We haven't yet run _setup()
         self.setup = False
+        self.callback = None
 
         # Options for server-side processing
         self.opts = opts
@@ -6227,7 +6228,7 @@ def addFeatureResources(feature_resources):
                 references = "site_id,location_id&show_ids=true"
             else:
                 # Not much we can do!
-                raise
+                continue
             # @ToDo: layer["namefield"]
             if "name" in table.fields:
                 title = "name"
