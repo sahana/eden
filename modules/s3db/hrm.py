@@ -519,9 +519,11 @@ class S3HRModel(S3Model):
                             "volunteer_cluster.vol_cluster_id",
                             "volunteer_cluster.vol_cluster_position_id",
                             ]
-            report_fields += [#"person_id$age",
+            report_fields += ["person_id$age_group",
                               "person_id$education.level",
                               ]
+            # Needed for Age Group VirtualField to avoid extra DB calls
+            report_fields_extra = ["person_id$date_of_birth"]
         else:
             # Staff
             crud_fields.insert(1, "site_id")
@@ -534,6 +536,7 @@ class S3HRModel(S3Model):
             report_fields += ["site_id",
                               "department_id",
                               ]
+            report_fields_extra = []
             report_search += [S3SearchOptionsWidget(
                                 name="human_resource_search_site",
                                 label=T("Facility"),
@@ -571,6 +574,7 @@ class S3HRModel(S3Model):
                        onaccept = hrm_human_resource_onaccept,
                        ondelete = self.hrm_human_resource_ondelete,
                        deduplicate = self.hrm_human_resource_duplicate,
+                       report_fields = report_fields_extra,
                        report_options = Storage(
                             search=report_search,
                             rows=report_fields,

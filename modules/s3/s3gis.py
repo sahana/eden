@@ -564,7 +564,7 @@ class GIS(object):
                 if parent.path:
                     path = parent.path
                 else:
-                    path = self.update_location_tree(dict(id=parent))
+                    path = GIS.update_location_tree(dict(id=parent))
                 path_list = map(int, path.split("/"))
                 rows = db(table.id.belongs(path_list)).select(table.level,
                                                               table.name,
@@ -734,7 +734,8 @@ class GIS(object):
         return children
 
     # -------------------------------------------------------------------------
-    def get_parents(self, feature_id, feature=None, ids_only=False):
+    @staticmethod
+    def get_parents(feature_id, feature=None, ids_only=False):
         """
             Returns a list containing ancestors of the requested feature.
 
@@ -758,13 +759,13 @@ class GIS(object):
         """
 
         if not feature or "path" not in feature or "parent" not in feature:
-            feature = self._lookup_parent_path(feature_id)
+            feature = GIS._lookup_parent_path(feature_id)
 
         if feature and (feature.path or feature.parent):
             if feature.path:
                 path = feature.path
             else:
-                path = self.update_location_tree(feature)
+                path = GIS.update_location_tree(feature)
 
             path_list = map(int, path.split("/"))
             if len(path_list) == 1:
@@ -1199,7 +1200,8 @@ class GIS(object):
                   table.L2,
                   table.L3,
                   table.L4,
-                  table.L5]
+                  table.L5,
+                  ]
 
         query = (table.uuid == "SITE_DEFAULT")
         if not location:
@@ -3811,7 +3813,8 @@ class GIS(object):
         return res
 
     # -------------------------------------------------------------------------
-    def update_location_tree(self, feature=None):
+    @staticmethod
+    def update_location_tree(feature=None):
         """
             Update GIS Locations' Materialized path, Lx locations, Lat/Lon & the_geom
 
@@ -3838,8 +3841,8 @@ class GIS(object):
                       table.lat_min, table.lon_min, table.lat_max, table.lon_max,
                       table.path, table.parent]
             spatial = current.deployment_settings.get_gis_spatialdb()
-            update_location_tree = self.update_location_tree
-            wkt_centroid = self.wkt_centroid
+            update_location_tree = GIS.update_location_tree
+            wkt_centroid = GIS.wkt_centroid
             for level in ["L0", "L1", "L2", "L3", "L4", "L5", None]:
                 features = db(table.level == level).select(*fields)
                 for feature in features:
@@ -3984,7 +3987,7 @@ class GIS(object):
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.inherited]
             rows = db(query).select(*fields)
-            update_location_tree = self.update_location_tree
+            update_location_tree = GIS.update_location_tree
             for row in rows:
                 update_location_tree(row)
             return _path
@@ -4089,7 +4092,7 @@ class GIS(object):
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.inherited]
             rows = db(query).select(*fields)
-            update_location_tree = self.update_location_tree
+            update_location_tree = GIS.update_location_tree
             for row in rows:
                 update_location_tree(row)
             return _path
@@ -4142,7 +4145,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = self.update_location_tree(Lx)
+                        _path = GIS.update_location_tree(Lx)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -4162,7 +4165,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = self.update_location_tree(Lx)
+                        _path = GIS.update_location_tree(Lx)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -4231,7 +4234,7 @@ class GIS(object):
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.inherited]
             rows = db(query).select(*fields)
-            update_location_tree = self.update_location_tree
+            update_location_tree = GIS.update_location_tree
             for row in rows:
                 update_location_tree(row)
             return _path
@@ -4289,7 +4292,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = self.update_location_tree(Lx)
+                        _path = GIS.update_location_tree(Lx)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -4312,7 +4315,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = self.update_location_tree(Lx)
+                        _path = GIS.update_location_tree(Lx)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -4333,7 +4336,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = self.update_location_tree(Lx)
+                        _path = GIS.update_location_tree(Lx)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -4408,7 +4411,7 @@ class GIS(object):
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.inherited]
             rows = db(query).select(*fields)
-            update_location_tree = self.update_location_tree
+            update_location_tree = GIS.update_location_tree
             for row in rows:
                 update_location_tree(row)
             return _path
@@ -4470,7 +4473,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = self.update_location_tree(Lx)
+                        _path = GIS.update_location_tree(Lx)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -4496,7 +4499,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = self.update_location_tree(Lx)
+                        _path = GIS.update_location_tree(Lx)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -4520,7 +4523,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = self.update_location_tree(Lx)
+                        _path = GIS.update_location_tree(Lx)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -4542,7 +4545,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = self.update_location_tree(Lx)
+                        _path = GIS.update_location_tree(Lx)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -4622,7 +4625,7 @@ class GIS(object):
                       table.L0, table.L1, table.L2, table.L3, table.L4, table.L5,
                       table.lat, table.lon, table.inherited]
             rows = db(query).select(*fields)
-            update_location_tree = self.update_location_tree
+            update_location_tree = GIS.update_location_tree
             for row in rows:
                 update_location_tree(row)
             return _path
@@ -4687,7 +4690,7 @@ class GIS(object):
 
                 else:
                     # This feature needs to be updated
-                    _path = self.update_location_tree(Lx)
+                    _path = GIS.update_location_tree(Lx)
                     _path = "%s/%s" % (_path, id)
                     # Query again
                     Lx = db(table.id == parent).select(table.L0,
@@ -4715,7 +4718,7 @@ class GIS(object):
                     _path = "%s/%s" % (_path, id)
                 else:
                     # This feature needs to be updated
-                    _path = self.update_location_tree(Lx)
+                    _path = GIS.update_location_tree(Lx)
                     _path = "%s/%s" % (_path, id)
                     # Query again
                     Lx = db(table.id == parent).select(table.L0,
@@ -4741,7 +4744,7 @@ class GIS(object):
                     _path = "%s/%s" % (_path, id)
                 else:
                     # This feature needs to be updated
-                    _path = self.update_location_tree(Lx)
+                    _path = GIS.update_location_tree(Lx)
                     _path = "%s/%s" % (_path, id)
                     # Query again
                     Lx = db(table.id == parent).select(table.L0,
@@ -4765,7 +4768,7 @@ class GIS(object):
                     _path = "%s/%s" % (_path, id)
                 else:
                     # This feature needs to be updated
-                    _path = self.update_location_tree(Lx)
+                    _path = GIS.update_location_tree(Lx)
                     _path = "%s/%s" % (_path, id)
                     # Query again
                     Lx = db(table.id == parent).select(table.L0,
@@ -4787,7 +4790,7 @@ class GIS(object):
                     _path = "%s/%s" % (_path, id)
                 else:
                     # This feature needs to be updated
-                    _path = self.update_location_tree(Lx)
+                    _path = GIS.update_location_tree(Lx)
                     _path = "%s/%s" % (_path, id)
                     # Query again
                     Lx = db(table.id == parent).select(table.L0,
