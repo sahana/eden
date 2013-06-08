@@ -6531,8 +6531,14 @@ class S3AxisFilter(object):
         self.tablename = None
         self.fieldname = None
 
+        if not qdict:
+            return
+
         l = qdict["first"]
-        r = qdict["second"]
+        if "second" in qdict:
+            r = qdict["second"]
+        else:
+            r = None
 
         op = qdict["op"]
         
