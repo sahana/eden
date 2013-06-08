@@ -874,7 +874,7 @@ class S3PersonModel(S3Model):
             age = today.year - dob.year
 
         if age < 18 :
-            return "under 18"
+            return "-17" # "< 18"/" < 18" don't sort correctly
         elif age < 25 :
             return "18-24"
         elif age < 40:
