@@ -2,29 +2,27 @@
 
 /* Profile Page */
 
-h2.profile_header {
-    font-size: 25px;
-    color: #666;
-    text-align: left;
-    text-transform: uppercase;
-    font-weight: normal;
-    font-style: normal;
+.profile_header {
     background-color: #f7f8f7;
-    height: 40px;
-    padding: 20px;
     border: 1px solid #9e9b9b;
     border-radius: 4px;
     -moz-box-shadow: 0 -1px 3px #d7d7d6;
     -webkit-box-shadow: 0 -1px 3px #d7d7d6;
     box-shadow: 0 -1px 3px #d7d7d6;
 }
-
-h4.Profile_Header {
+.profile_header h2 {
+    height: 40px;
+    padding: 20px;
+    margin: 0;
     font-size: 25px;
     color: #666;
-    text-align: center;
+    text-align: left;
+    text-transform: uppercase;
     font-weight: normal;
     font-style: normal;
+}
+.profile_header img.media-object {
+    padding: 18px 10px 18px 5px;
 }
 
 h4.profile-sub-header {

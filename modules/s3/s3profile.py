@@ -77,12 +77,21 @@ class S3Profile(S3CRUD):
         """
 
         tablename = self.tablename
+        get_config = current.s3db.get_config
 
-        # Initialise Output
-        output = dict()
+        # Page Header
+        header = get_config(tablename, "profile_header")
+        if not header:
+            try:
+                title = r.record.name
+            except:
+                title = current.T("Profile Page")
+            header = H2(title, _class="profile_header")
+
+        output = dict(header=header)
 
         # Get the page widgets
-        widgets = current.s3db.get_config(tablename, "profile_widgets")
+        widgets = get_config(tablename, "profile_widgets")
 
         # Index the widgets by their position in the config
         for index, widget in enumerate(widgets):
@@ -136,10 +145,7 @@ class S3Profile(S3CRUD):
                 r.error(405, r.ERROR.BAD_METHOD)
 
             output["rows"] = rows
-            try:
-                output["title"] = r.record.name
-            except:
-                output["title"] = current.T("Profile Page")
+
             current.response.view = self._view(r, "profile.html")
 
         return output

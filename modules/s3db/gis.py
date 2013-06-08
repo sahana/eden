@@ -522,75 +522,76 @@ class S3LocationModel(S3Model):
                     form.errors["parent"] = T("Parent needs to be of the correct level")
                     return
 
-        # Check within permitted bounds
-        # (avoid incorrect data entry)
-        # Points only for now
-        if not "gis_feature_type" in vars or (vars.gis_feature_type == "1"):
-            #if lat not in (None, "") and lon not in (None, ""):
-            if lat and lon:
-                name = vars.name
-                if parent and current.deployment_settings.get_gis_check_within_parent_boundaries():
-                    # Check within Bounds of the Parent
-                    # Rough (Bounding Box)
-                    lat_min, lon_min, lat_max, lon_max, parent_name = gis.get_bounds(parent=parent)
-                    if (lat > lat_max) or (lat < lat_min):
-                        lat_error =  "%s: %s & %s" % (T("Latitude should be between"),
-                                                      lat_min, lat_max)
-                        form.errors["lat"] = lat_error
-                    if (lon > lon_max) or (lon < lon_min):
-                        lon_error = "%s: %s & %s" % (T("Longitude should be between"),
-                                                     lon_min, lon_max)
-                        form.errors["lon"] = lon_error
-                    if form.errors:
-                        if name:
-                            error = T("Sorry location %(location)s appears to be outside the area of parent %(parent)s.") % \
-                                dict(location=name, parent=parent_name)
+        if level != "L0":
+            # Check within permitted bounds
+            # (avoid incorrect data entry)
+            # Points only for now
+            if not "gis_feature_type" in vars or (vars.gis_feature_type == "1"):
+                #if lat not in (None, "") and lon not in (None, ""):
+                if lat and lon:
+                    name = vars.name
+                    if parent and current.deployment_settings.get_gis_check_within_parent_boundaries():
+                        # Check within Bounds of the Parent
+                        # Rough (Bounding Box)
+                        lat_min, lon_min, lat_max, lon_max, parent_name = gis.get_bounds(parent=parent)
+                        if (lat > lat_max) or (lat < lat_min):
+                            lat_error =  "%s: %s & %s" % (T("Latitude should be between"),
+                                                          lat_min, lat_max)
+                            form.errors["lat"] = lat_error
+                        if (lon > lon_max) or (lon < lon_min):
+                            lon_error = "%s: %s & %s" % (T("Longitude should be between"),
+                                                         lon_min, lon_max)
+                            form.errors["lon"] = lon_error
+                        if form.errors:
+                            if name:
+                                error = T("Sorry location %(location)s appears to be outside the area of parent %(parent)s.") % \
+                                    dict(location=name, parent=parent_name)
+                            else:
+                                error = T("Sorry location appears to be outside the area of parent %(parent)s.") % \
+                                    dict(parent=parent_name)
+                            current.response.error = error
+                            s3_debug(base_error)
+                            return
+
+                        # @ToDo: Precise (GIS function)
+                        # (if using PostGIS then don't do a separate BBOX check as this is done within the query)
+
+                    else:
+                        # Check bounds for the Instance
+                        config = gis.get_config()
+                        if config.lat_min is not None:
+                            lat_min = config.lat_min
                         else:
-                            error = T("Sorry location appears to be outside the area of parent %(parent)s.") % \
-                                dict(parent=parent_name)
+                            lat_min = -90
+                        if config.lon_min is not None:
+                            lon_min = config.lon_min
+                        else:
+                            lon_min = -180
+                        if config.lat_max is not None:
+                            lat_max = config.lat_max
+                        else:
+                            lat_max = 90
+                        if config.lon_max is not None:
+                            lon_max = config.lon_max
+                        else:
+                            lon_max = 180
+                        if name:
+                            error = T("Sorry location %(location)s appears to be outside the area supported by this deployment.") % \
+                                dict(location=name)
+                        else:
+                            error = T("Sorry location appears to be outside the area supported by this deployment.")
                         current.response.error = error
-                        s3_debug(base_error)
-                        return
-
-                    # @ToDo: Precise (GIS function)
-                    # (if using PostGIS then don't do a separate BBOX check as this is done within the query)
-
-                else:
-                    # Check bounds for the Instance
-                    config = gis.get_config()
-                    if config.lat_min is not None:
-                        lat_min = config.lat_min
-                    else:
-                        lat_min = -90
-                    if config.lon_min is not None:
-                        lon_min = config.lon_min
-                    else:
-                        lon_min = -180
-                    if config.lat_max is not None:
-                        lat_max = config.lat_max
-                    else:
-                        lat_max = 90
-                    if config.lon_max is not None:
-                        lon_max = config.lon_max
-                    else:
-                        lon_max = 180
-                    if name:
-                        error = T("Sorry location %(location)s appears to be outside the area supported by this deployment.") % \
-                            dict(location=name)
-                    else:
-                        error = T("Sorry location appears to be outside the area supported by this deployment.")
-                    current.response.error = error
-                    s3_debug(error)
-                    lat_error =  "%s: %s & %s" % (T("Latitude should be between"),
-                                                  str(lat_min), str(lat_max))
-                    lon_error = "%s: %s & %s" % (T("Longitude should be between"),
-                                                 str(lon_min), str(lon_max))
-                    if (lat > lat_max) or (lat < lat_min):
-                        form.errors["lat"] = lat_error
-                        return
-                    elif (lon > lon_max) or (lon < lon_min):
-                        form.errors["lon"] = lon_error
-                        return
+                        s3_debug(error)
+                        lat_error =  "%s: %s & %s" % (T("Latitude should be between"),
+                                                      str(lat_min), str(lat_max))
+                        lon_error = "%s: %s & %s" % (T("Longitude should be between"),
+                                                     str(lon_min), str(lon_max))
+                        if (lat > lat_max) or (lat < lat_min):
+                            form.errors["lat"] = lat_error
+                            return
+                        elif (lon > lon_max) or (lon < lon_min):
+                            form.errors["lon"] = lon_error
+                            return
 
         # Add the bounds (& Centroid for Polygons)
         gis.wkt_centroid(form)
@@ -1755,8 +1756,9 @@ class S3GISConfigModel(S3Model):
 
         vars = form.vars
         image = vars.image
-        if isinstance(image, str):
-            # This is an update not a create, so file not in form
+        if not image or isinstance(image, str):
+            # No Image => CSV import of resources which just need a ref
+            # Image = String => Update not a Create, so file not in form
             return
 
         try:
