@@ -12,7 +12,7 @@
 
 # Increment this when new dependencies are added
 # This will be compared to the version in the 0000_update_check.py 'canary' file.
-CURRENT_UPDATE_CHECK_ID = 3
+CURRENT_UPDATE_CHECK_ID = 4
 update_check_needed = False
 try:
     if CANARY_UPDATE_CHECK_ID != CURRENT_UPDATE_CHECK_ID:
