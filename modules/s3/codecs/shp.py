@@ -70,37 +70,35 @@ class S3SHP(S3Codec):
 
         title = self.crud_string(resource.tablename, "title_list")
 
-        rfields = resource.resolve_selectors(list_fields)[0]
+        get_vars = Storage(current.request.get_vars)
+        get_vars["iColumns"] = len(list_fields)
+        query, orderby, left = resource.datatable_filter(list_fields, get_vars)
+        resource.add_filter(query)
 
+        data = resource.fast_select(list_fields,
+                                    left=left,
+                                    start=None,
+                                    limit=None,
+                                    orderby=orderby,
+                                    represent=True,
+                                    show_links=False)
+
+        rfields = data["rfields"]
         types = []
-        lfields = []
+        colnames = []
         heading = {}
         for rfield in rfields:
             if rfield.show:
-                lfields.append(rfield.colname)
+                colnames.append(rfield.colname)
                 heading[rfield.colname] = rfield.label
-                if rfield.ftype == "virtual":
+                if rfield.virtual:
                     types.append("string")
                 else:
                     types.append(rfield.ftype)
 
-        vars = Storage(current.request.vars)
-        vars["iColumns"] = len(rfields)
-        filter, orderby, left = resource.datatable_filter(list_fields, vars)
-        resource.add_filter(filter)
+        items = data["data"]
 
-        rows, count, ids = resource.select(list_fields,
-                                           left=left,
-                                           start=None,
-                                           limit=None,
-                                           count=True,
-                                           getids=True,
-                                           orderby=orderby)
-
-        items = resource.extract(rows, list_fields,
-                                 represent=True, show_links=False)
-
-        return (title, types, lfields, heading, items)
+        return (title, types, colnames, heading, items)
 
     # -------------------------------------------------------------------------
     def encode(self, data_source, **attr):
