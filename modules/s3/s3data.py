@@ -2126,7 +2126,7 @@ class S3PivotTable(object):
                         return "-"
                     text = s3_unicode(val)
                     if "<" in text:
-                        stipper.feed(text)
+                        stripper.feed(text)
                         return stripper.stripped() # = totally naked ;)
                     else:
                         return text

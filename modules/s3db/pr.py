@@ -525,8 +525,6 @@ class S3PersonModel(S3Model):
              "pr_person_user",
              "pr_gender",
              "pr_gender_opts",
-             "pr_age_group",
-             "pr_age_group_opts",
              "pr_person_id",
              "pr_person_represent",
              ]
@@ -562,23 +560,6 @@ class S3PersonModel(S3Model):
                                     represent = lambda opt: \
                                                 pr_gender_opts.get(opt, UNKNOWN_OPT))
 
-        pr_age_group_opts = {
-            1:T("unknown"),
-            2:T("Infant (0-1)"),
-            3:T("Child (2-11)"),
-            4:T("Adolescent (12-20)"),
-            5:T("Adult (21-50)"),
-            6:T("Senior (50+)")
-        }
-        pr_age_group = S3ReusableField("age_group", "integer",
-                                       requires = IS_IN_SET(pr_age_group_opts,
-                                                            zero=None),
-                                       default = 1,
-                                       label = T("Age Group"),
-                                       represent = lambda opt: \
-                                                   pr_age_group_opts.get(opt,
-                                                                         UNKNOWN_OPT))
-
         pr_impact_tags = {
             1: T("injured"),
             4: T("diseased"),
@@ -603,16 +584,15 @@ class S3PersonModel(S3Model):
                                 comment = DIV(_class="tooltip",
                                               _title="%s|%s" % (T("ID Tag Number"),
                                                                 T("Number or Label on the identification tag this person is wearing (if any).")))),
+                             # @ToDo: Remove this field from this core table
+                             # - remove refs to writing this from this module
+                             # - update read refs in controllers/dvi.py & controllers/mpr.py
                              Field("missing", "boolean",
                                    readable=False,
                                    writable=False,
                                    default=False,
                                    represent = lambda missing: \
                                                (missing and ["missing"] or [""])[0]),
-                             Field("volunteer", "boolean",
-                                   readable=False,
-                                   writable=False,
-                                   default=False),
                              Field("first_name", notnull=True,
                                    length=64, # Mayon Compatibility
                                    #default = "?" if current.auth.permission.format != "html" else "",
@@ -640,7 +620,6 @@ class S3PersonModel(S3Model):
                                                  _title="%s|%s" % (T("Preferred Name"),
                                                                    T("The name to be used when calling for or directly addressing the person (optional)."))),
                                    ),
-                             # @ToDo: Move these fields to a component to keep the main heavily-used table as clean as possible
                              Field("local_name",
                                    label = T("Local Name"),
                                    comment = DIV(_class="tooltip",
@@ -651,10 +630,7 @@ class S3PersonModel(S3Model):
                                      label = T("Date of Birth"),
                                      past = 1320,  # Months, so 110 years
                                      ),
-                             pr_age_group(
-                                    readable = False,
-                                    writable = False,
-                                    ),
+                             # @ToDo: Move this field from this core table (should be using Saved Searches/Subscription)
                              Field("opt_in", "string", # list of mailing lists which link to teams
                                    default=False,
                                    label = T("Receive updates"),
@@ -682,31 +658,33 @@ class S3PersonModel(S3Model):
             msg_record_deleted = T("Person deleted"),
             msg_list_empty = T("No Persons currently registered"))
 
-        # add an opt in clause to receive emails depending on the deployment settings
+        # Add an opt-in clause to receive emails depending on the deployment settings
+        # @ToDo: Repalce with Save Search/Subscriptions back-end & simple form-field injection in front-end
         if settings.get_auth_opt_in_to_email():
-            table.opt_in.readable = True
-            table.opt_in.writable = True
+            table.opt_in.readable = table.opt_in.writable = True
         else:
-            table.opt_in.readable = False
-            table.opt_in.writable = False
+            table.opt_in.readable = table.opt_in.writable = False
+
+        # Virtual fields
+        table.age = Field.Lazy(self.pr_person_age)
+        table.age_group = Field.Lazy(self.pr_person_age_group)
 
         # Search method
         pr_person_search = S3PersonSearch(
-                                name="person_search_simple",
-                                label=T("Name and/or ID"),
-                                comment=T("To search for a person, enter any of the first, middle or last names and/or an ID number of a person, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all persons."),
-                                field=["pe_label",
-                                       "first_name",
-                                       "middle_name",
-                                       "last_name",
-                                       "local_name",
-                                       "identity.value"
-                                       ])
+            name="person_search_simple",
+            label=T("Name and/or ID"),
+            comment=T("To search for a person, enter any of the first, middle or last names and/or an ID number of a person, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all persons."),
+            field=["pe_label",
+                   "first_name",
+                   "middle_name",
+                   "last_name",
+                   "local_name",
+                   "identity.value"
+                   ])
 
         # Custom Form
         crud_form = S3SQLCustomForm("first_name",
                                     "last_name",
-                                    "age_group",
                                     "date_of_birth",
                                     "initials",
                                     "preferred_name",
@@ -732,11 +710,10 @@ class S3PersonModel(S3Model):
                                        "last_name",
                                        #"picture",
                                        "gender",
-                                       #"age_group",
+                                       (T("Age"), "age"),
                                        (messages.ORGANISATION, "human_resource.organisation_id"),
                                        ],
                         crud_form = crud_form,
-                        onvalidation=self.pr_person_onvalidation,
                         onaccept=self.pr_person_onaccept,
                         search_method=pr_person_search,
                         deduplicate=self.person_deduplicate,
@@ -815,50 +792,104 @@ class S3PersonModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return Storage(
-            pr_gender = pr_gender,
-            pr_gender_opts = pr_gender_opts,
-            pr_age_group = pr_age_group,
-            pr_age_group_opts = pr_age_group_opts,
-            pr_person_id = person_id,
-            pr_person_represent = person_represent,
-        )
+                pr_gender = pr_gender,
+                pr_gender_opts = pr_gender_opts,
+                pr_person_id = person_id,
+                pr_person_represent = person_represent,
+            )
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def pr_person_onvalidation(form):
-        """ Onvalidation callback """
+    def pr_person_age(row):
+        """
+            Virtual Field to display the Age of a person
+        """
 
-        try:
-            age = int(form.vars.get("age_group", None))
-        except (ValueError, TypeError):
-            age = None
-        dob = form.vars.get("date_of_birth", None)
+        if hasattr(row, "pr_person"):
+            row = row.pr_person
 
-        if age and age != 1 and dob:
-            now = current.request.utcnow
-            dy = int((now.date() - dob).days / 365.25)
-            if dy < 0:
-                ag = 1
-            elif dy < 2:
-                ag = 2
-            elif dy < 12:
-                ag = 3
-            elif dy < 21:
-                ag = 4
-            elif dy < 51:
-                ag = 5
-            else:
-                ag = 6
+        if "date_of_birth" in row:
+            dob = row.date_of_birth
+        else:
+            # DB lookup :/
+            db = current.db
+            table = db.pr_person
+            dob = db(table.id == row.id).select(table.date_of_birth,
+                                                limitby=(0, 1)
+                                                ).first().date_of_birth
 
-            if age != ag:
-                form.errors.age_group = current.T("Age group does not match actual age.")
+        if not dob:
+            return current.messages["NONE"]
+
+        today = current.request.now.today()
+        try: 
+            birthday = dob.replace(year=today.year)
+        except ValueError:
+            # raised when birth date is February 29 and the current year is not a leap year
+            birthday = dob.replace(year=today.year, day=dob.day-1)
+        if birthday > today.date():
+            return today.year - dob.year - 1
+        else:
+            return today.year - dob.year
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pr_person_age_group(row):
+        """
+            Virtual Field to allow Reporting by Age Group
+
+            @ToDo: This formula might need to be different for different Orgs
+                   or Usecases
+            @ToDo: If we need to be able to Filter based on these then we should
+                   create a 'Named Range' widget for an S3DateTimeFilter field
+        """
+
+        if hasattr(row, "pr_person"):
+            row = row.pr_person
+
+        if "date_of_birth" in row:
+            dob = row.date_of_birth
+        else:
+            # DB lookup :/
+            # - avoid this by putting this into extra report_fields:
+            #   s3db.configure(report_fields=["person_id$date_of_birth"])
+            db = current.db
+            table = db.pr_person
+            dob = db(table.id == row.id).select(table.date_of_birth,
+                                                limitby=(0, 1)
+                                                ).first().date_of_birth
+
+        if not dob:
+            return current.messages["NONE"]
+
+        today = current.request.now.today()
+        try: 
+            birthday = dob.replace(year=today.year)
+        except ValueError:
+            # raised when birth date is February 29 and the current year is not a leap year
+            birthday = dob.replace(year=today.year, day=dob.day-1)
+        if birthday > today.date():
+            age = today.year - dob.year - 1
+        else:
+            age = today.year - dob.year
+
+        if age < 18 :
+            return "-17" # "< 18"/" < 18" don't sort correctly
+        elif age < 25 :
+            return "18-24"
+        elif age < 40:
+            return "25-39"
+        elif age < 60:
+            return "40-59"
+        else:
+            return "60+"
 
     # -------------------------------------------------------------------------
     @staticmethod
     def pr_person_onaccept(form):
         """
             Onaccept callback
-            Update any user associated with this person
+            Update any User record associated with this person
         """
 
         db = current.db
@@ -2078,6 +2109,7 @@ class S3PersonEducationModel(S3Model):
         # Resource configuration
         self.configure("pr_education",
                        list_fields=["id",
+                                    "person_id",
                                     "year",
                                     "level",
                                     "award",
@@ -2834,8 +2866,10 @@ class S3PersonPresence(S3Model):
 class S3PersonDescription(S3Model):
     """ Additional tables for DVI/MPR """
 
-    names = ["pr_note",
-             "pr_physical_description"
+    names = ["pr_age_group",
+             "pr_age_group_opts",
+             "pr_note",
+             "pr_physical_description",
              ]
 
     def model(self):
@@ -2921,6 +2955,24 @@ class S3PersonDescription(S3Model):
         # =====================================================================
         # Physical Description
         #
+        pr_age_group_opts = {
+            1:T("unknown"),
+            2:T("Infant (0-1)"),
+            3:T("Child (2-11)"),
+            4:T("Adolescent (12-20)"),
+            5:T("Adult (21-50)"),
+            6:T("Senior (50+)")
+        }
+        # Also used in DVI
+        pr_age_group = S3ReusableField("age_group", "integer",
+                                       requires = IS_IN_SET(pr_age_group_opts,
+                                                            zero=None),
+                                       default = 1,
+                                       label = T("Age Group"),
+                                       represent = lambda opt: \
+                                                   pr_age_group_opts.get(opt,
+                                                                         UNKNOWN_OPT))
+
         pr_race_opts = {
             1: T("caucasoid"),
             2: T("mongoloid"),
@@ -3025,6 +3077,10 @@ class S3PersonDescription(S3Model):
         tablename = "pr_physical_description"
         table = define_table(tablename,
                              super_link("pe_id", "pr_pentity"),
+                             # Age Group - for use where we don't know the DoB
+                             pr_age_group(readable = False,
+                                          writable = False,
+                                          ),
                              # Race and complexion
                              Field("race", "integer",
                                    requires = IS_EMPTY_OR(IS_IN_SET(pr_race_opts)),
@@ -3143,7 +3199,9 @@ class S3PersonDescription(S3Model):
         # Return model-global names to response.s3
         #
         return Storage(
-        )
+                pr_age_group = pr_age_group,
+                pr_age_group_opts = pr_age_group_opts,
+            )
 
 
     # -------------------------------------------------------------------------
@@ -3614,9 +3672,8 @@ def pr_rheader(r, tabs=[]):
 
                     TR(TH("%s: " % T("Nationality")),
                        "%s" % (pdtable.nationality.represent(nationality)),
-                       TH("%s: " % T("Age Group")),
-                       "%s" % s3db.pr_age_group_opts.get(record.age_group,
-                                                         T("unknown"))),
+                       TH("%s: " % T("Age")),
+                       record.age()),
                     ), rheader_tabs)
                 return rheader
 

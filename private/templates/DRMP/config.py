@@ -601,7 +601,15 @@ def render_locations(listid, resource, rfields, record, **attr):
             tally_reports += 1
     
     # Render the item
-    item = DIV(DIV(DIV(SPAN(A(represent,
+    item = DIV(DIV(A(IMG(_class="media-object",
+                         _src=URL(c="static",
+                                  f="themes",
+                                  args=["DRMP", "img", "%s.png" % s3_unicode(name)]),
+                         ),
+                     _class="pull-left",
+                     _href=location_url,
+                     ),
+                   DIV(SPAN(A(represent,
                               _href=location_url,
                               _class="media-heading"
                               ),
@@ -1908,15 +1916,33 @@ def customize_event_event(**attr):
                 #                       icon = "icon-comments-alt",
                 #                       colspan = 2,
                 #                       )
+                record = r.record
+                ttable = db.event_event_type
+                event_type = db(ttable.id == record.event_type_id).select(ttable.name,
+                                                                          limitby=(0, 1),
+                                                                          ).first().name
                 s3db.configure("event_event",
-                               profile_widgets=[alerts_widget,
-                                                map_widget,
-                                                incidents_widget,
-                                                assessments_widget,
-                                                activities_widget,
-                                                reports_widget,
-                                                #comments_widget,
-                                                ])
+                               profile_header = DIV(A(IMG(_class="media-object",
+                                                          _src=URL(c="static",
+                                                                   f="themes",
+                                                                   args=["DRMP", "img",
+                                                                         "%s.png" % event_type]),
+                                                          ),
+                                                      _class="pull-left",
+                                                      #_href=event_url,
+                                                      ),
+                                                    H2(record.name),
+                                                    #P(record.comments),
+                                                    _class="profile_header",
+                                                    ),
+                               profile_widgets = [alerts_widget,
+                                                  map_widget,
+                                                  incidents_widget,
+                                                  assessments_widget,
+                                                  activities_widget,
+                                                  reports_widget,
+                                                  #comments_widget,
+                                                  ])
 
             # Include a Location inline
             location_field = s3db.event_event_location.location_id
@@ -2146,16 +2172,29 @@ def customize_gis_location(**attr):
                                          #marker = "activity",
                                          list_layout = render_posts,
                                          )
+                name = location.name
                 s3db.configure("gis_location",
                                list_fields = list_fields,
-                               profile_widgets=[#locations_widget,
-                                                resources_widget,
-                                                map_widget,
-                                                incidents_widget,
-                                                reports_widget,
-                                                projects_widget,
-                                                activities_widget,
-                                                ],
+                               profile_header = DIV(A(IMG(_class="media-object",
+                                                          _src=URL(c="static",
+                                                                   f="themes",
+                                                                   args=["DRMP", "img",
+                                                                         "%s.png" % s3_unicode(name)]),
+                                                          ),
+                                                      _class="pull-left",
+                                                      #_href=location_url,
+                                                      ),
+                                                    H2(name),
+                                                    _class="profile_header",
+                                                    ),
+                               profile_widgets = [#locations_widget,
+                                                  resources_widget,
+                                                  map_widget,
+                                                  incidents_widget,
+                                                  reports_widget,
+                                                  projects_widget,
+                                                  activities_widget,
+                                                  ],
                                )
 
         # Call standard prep
@@ -2530,16 +2569,27 @@ def customize_org_organisation(**attr):
                                           #marker = "assessment",
                                           list_layout = render_posts,
                                           )
+                record = r.record
                 s3db.configure("org_organisation",
-                               profile_widgets=[contacts_widget,
-                                                map_widget,
-                                                offices_widget,
-                                                resources_widget,
-                                                projects_widget,
-                                                activities_widget,
-                                                reports_widget,
-                                                assessments_widget,
-                                                ]
+                               profile_header = DIV(A(IMG(_class="media-object",
+                                                          _src=URL(c="default", f="download",
+                                                                   args=[record.logo]),
+                                                          ),
+                                                      _class="pull-left",
+                                                      #_href=org_url,
+                                                      ),
+                                                    H2(record.name),
+                                                    _class="profile_header",
+                                                    ),
+                               profile_widgets = [contacts_widget,
+                                                  map_widget,
+                                                  offices_widget,
+                                                  resources_widget,
+                                                  projects_widget,
+                                                  activities_widget,
+                                                  reports_widget,
+                                                  assessments_widget,
+                                                  ]
                                )
             elif r.method == "datalist":
                 # Stakeholder selection page

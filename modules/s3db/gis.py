@@ -445,20 +445,16 @@ class S3LocationModel(S3Model):
         T = current.T
         db = current.db
         gis = current.gis
-        request = current.request
-        response = current.response
 
         MAP_ADMIN = current.auth.s3_has_role(current.session.s3.system_roles.MAP_ADMIN)
 
-        record_error = T("Sorry, only users with the MapAdmin role are allowed to edit these locations")
-        field_error = T("Please select another level")
-
         # Shortcuts
         vars = form.vars
-        level = "level" in vars and vars.level
-        parent = "parent" in vars and vars.parent
-        lat = "lat" in vars and vars.lat
-        lon = "lon" in vars and vars.lon
+        vars_get = vars.get
+        level = vars_get("level", None)
+        parent = vars_get("parent", None)
+        lat = vars_get("lat", None)
+        lon = vars_get("lon", None)
         if lon:
             if lon > 180:
                 # Map Selector wrapped
@@ -466,16 +462,22 @@ class S3LocationModel(S3Model):
             elif lon < -180:
                 # Map Selector wrapped
                 vars.lon = lon = lon + 360
-        id = "id" in request.vars and request.vars.id
+        id = current.request.vars.get("id", None)
 
         # 'MapAdmin' has permission to edit hierarchy locations, no matter what
         # 000_config or the ancestor country's gis_config has.
         if not MAP_ADMIN:
-            if level and (level == "L0" or (level in gis.location_hierarchy_keys and \
-                                            not gis.get_edit_level(level, id))):
-                response.error = record_error
-                form.errors["level"] = T("This level is not open for editing.")
-                return
+            if level:
+                editable = level != "L0"
+                if editable and level in gis.hierarchy_level_keys:
+                    # Check whether the country config allows us to edit this location
+                    # id doesn't exist for create forms and parent is a quicker check anyway when available
+                    child = parent or id
+                    editable = gis_hierarchy_editable(level, child)
+                if not editable:
+                    current.response.error = T("Sorry, only users with the MapAdmin role are allowed to edit these locations")
+                    form.errors["level"] = T("This level is not open for editing.")
+                    return
 
         if parent:
             table = db.gis_location
@@ -486,7 +488,7 @@ class S3LocationModel(S3Model):
         if level and parent and _parent:
             # Check that parent is of a higher level
             if level[1:] < _parent.level[1:]:
-                response.error = "%s: %s" % (T("Parent level should be higher than this record's level. Parent level is"),
+                current.response.error = "%s: %s" % (T("Parent level should be higher than this record's level. Parent level is"),
                                              gis.get_location_hierarchy()[_parent.level])
                 form.errors["level"] = T("Level is higher than parent's")
                 return
@@ -497,7 +499,7 @@ class S3LocationModel(S3Model):
                 parent = ""
             elif not parent:
                 # Parent is mandatory
-                response.error = "%s: %s" % \
+                current.response.error = "%s: %s" % \
                     (T("Parent needs to be set for locations of level"),
                     gis.get_location_hierarchy()[level])
                 form.errors["parent"] = T("Parent needs to be set")
@@ -506,7 +508,7 @@ class S3LocationModel(S3Model):
                 # Parents needs to be of level max_hierarchy
                 max_hierarchy = gis.get_max_hierarchy_level()
                 if _parent.level != max_hierarchy:
-                    response.error = "%s: %s" % \
+                    current.response.error = "%s: %s" % \
                         (T("Specific locations need to have a parent of level"),
                         gis.get_location_hierarchy()[max_hierarchy])
                     form.errors["parent"] = T("Parent needs to be of the correct level")
@@ -514,82 +516,82 @@ class S3LocationModel(S3Model):
             else:
                 # Check that parent is of exactly next higher order
                 if (int(level[1:]) - 1) != int(_parent.level[1:]):
-                    response.error = "%s: %s" % \
+                    current.response.error = "%s: %s" % \
                         (T("Locations of this level need to have a parent of level"),
                         gis.get_location_hierarchy()["L%i" % (int(level[1:]) - 1)])
                     form.errors["parent"] = T("Parent needs to be of the correct level")
                     return
 
-        # Check within permitted bounds
-        # (avoid incorrect data entry)
-        # Points only for now
-        if not "gis_feature_type" in vars or (vars.gis_feature_type == "1"):
-            #if lat not in (None, "") and lon not in (None, ""):
-            if lat and lon:
-                name = vars.name
-                if parent and current.deployment_settings.get_gis_check_within_parent_boundaries():
-                    # Check within Bounds of the Parent
-                    # Rough (Bounding Box)
-                    lat_min, lon_min, lat_max, lon_max, parent_name = gis.get_bounds(parent=parent)
-                    if (lat > lat_max) or (lat < lat_min):
-                        lat_error =  "%s: %s & %s" % (T("Latitude should be between"),
-                                                      lat_min, lat_max)
-                        form.errors["lat"] = lat_error
-                    if (lon > lon_max) or (lon < lon_min):
-                        lon_error = "%s: %s & %s" % (T("Longitude should be between"),
-                                                     lon_min, lon_max)
-                        form.errors["lon"] = lon_error
-                    if form.errors:
-                        if name:
-                            base_error = T("Sorry location %(location)s appears to be outside the area of parent %(parent)s.") % \
-                                dict(location=name, parent=parent_name)
+        if level != "L0":
+            # Check within permitted bounds
+            # (avoid incorrect data entry)
+            # Points only for now
+            if not "gis_feature_type" in vars or (vars.gis_feature_type == "1"):
+                #if lat not in (None, "") and lon not in (None, ""):
+                if lat and lon:
+                    name = vars.name
+                    if parent and current.deployment_settings.get_gis_check_within_parent_boundaries():
+                        # Check within Bounds of the Parent
+                        # Rough (Bounding Box)
+                        lat_min, lon_min, lat_max, lon_max, parent_name = gis.get_bounds(parent=parent)
+                        if (lat > lat_max) or (lat < lat_min):
+                            lat_error =  "%s: %s & %s" % (T("Latitude should be between"),
+                                                          lat_min, lat_max)
+                            form.errors["lat"] = lat_error
+                        if (lon > lon_max) or (lon < lon_min):
+                            lon_error = "%s: %s & %s" % (T("Longitude should be between"),
+                                                         lon_min, lon_max)
+                            form.errors["lon"] = lon_error
+                        if form.errors:
+                            if name:
+                                error = T("Sorry location %(location)s appears to be outside the area of parent %(parent)s.") % \
+                                    dict(location=name, parent=parent_name)
+                            else:
+                                error = T("Sorry location appears to be outside the area of parent %(parent)s.") % \
+                                    dict(parent=parent_name)
+                            current.response.error = error
+                            s3_debug(base_error)
+                            return
+
+                        # @ToDo: Precise (GIS function)
+                        # (if using PostGIS then don't do a separate BBOX check as this is done within the query)
+
+                    else:
+                        # Check bounds for the Instance
+                        config = gis.get_config()
+                        if config.lat_min is not None:
+                            lat_min = config.lat_min
                         else:
-                            base_error = T("Sorry location appears to be outside the area of parent %(parent)s.") % \
-                                dict(parent=parent_name)
-                        response.error = base_error
-                        s3_debug(base_error)
-                        return
-
-                    # @ToDo: Precise (GIS function)
-                    # (if using PostGIS then don't do a separate BBOX check as this is done within the query)
-
-                else:
-                    # Check bounds for the Instance
-                    config = gis.get_config()
-                    if config.lat_min is not None:
-                        lat_min = config.lat_min
-                    else:
-                        lat_min = -90
-                    if config.lon_min is not None:
-                        lon_min = config.lon_min
-                    else:
-                        lon_min = -180
-                    if config.lat_max is not None:
-                        lat_max = config.lat_max
-                    else:
-                        lat_max = 90
-                    if config.lon_max is not None:
-                        lon_max = config.lon_max
-                    else:
-                        lon_max = 180
-                    if name:
-                        base_error = T("Sorry location %(location)s appears to be outside the area supported by this deployment.") % dict(location=name)
-                    else:
-                        base_error = T("Sorry location appears to be outside the area supported by this deployment.")
-                    lat_error =  "%s: %s & %s" % (T("Latitude should be between"),
-                                                  str(lat_min), str(lat_max))
-                    lon_error = "%s: %s & %s" % (T("Longitude should be between"),
-                                                 str(lon_min), str(lon_max))
-                    if (lat > lat_max) or (lat < lat_min):
-                        response.error = base_error
-                        s3_debug(base_error)
-                        form.errors["lat"] = lat_error
-                        return
-                    elif (lon > lon_max) or (lon < lon_min):
-                        response.error = base_error
-                        s3_debug(base_error)
-                        form.errors["lon"] = lon_error
-                        return
+                            lat_min = -90
+                        if config.lon_min is not None:
+                            lon_min = config.lon_min
+                        else:
+                            lon_min = -180
+                        if config.lat_max is not None:
+                            lat_max = config.lat_max
+                        else:
+                            lat_max = 90
+                        if config.lon_max is not None:
+                            lon_max = config.lon_max
+                        else:
+                            lon_max = 180
+                        if name:
+                            error = T("Sorry location %(location)s appears to be outside the area supported by this deployment.") % \
+                                dict(location=name)
+                        else:
+                            error = T("Sorry location appears to be outside the area supported by this deployment.")
+                        current.response.error = error
+                        s3_debug(error)
+                        lat_error =  "%s: %s & %s" % (T("Latitude should be between"),
+                                                      str(lat_min), str(lat_max))
+                        lon_error = "%s: %s & %s" % (T("Longitude should be between"),
+                                                     str(lon_min), str(lon_max))
+                        if (lat > lat_max) or (lat < lat_min):
+                            form.errors["lat"] = lat_error
+                            return
+                        elif (lon > lon_max) or (lon < lon_min):
+                            form.errors["lon"] = lon_error
+                            return
 
         # Add the bounds (& Centroid for Polygons)
         gis.wkt_centroid(form)
@@ -1754,8 +1756,9 @@ class S3GISConfigModel(S3Model):
 
         vars = form.vars
         image = vars.image
-        if isinstance(image, str):
-            # This is an update not a create, so file not in form
+        if not image or isinstance(image, str):
+            # No Image => CSV import of resources which just need a ref
+            # Image = String => Update not a Create, so file not in form
             return
 
         try:
@@ -4031,6 +4034,44 @@ def gis_layer_onaccept(form):
                           layer_id = layer_id,
                           enabled = True)
     return
+
+# =============================================================================
+def gis_hierarchy_editable(level, id):
+    """
+        Returns the edit_<level> value from the parent country hierarchy.
+
+        Used by gis_location_onvalidation()
+
+        @param id: the id of the location or an ancestor - used to find
+                   the ancestor country location.
+    """
+
+    country = current.gis.get_parent_country(id)
+
+    s3db = current.s3db
+    table = s3db.gis_hierarchy
+    fieldname = "edit_%s" % level
+
+    # Read the system default
+    query = (table.uuid == "SITE_DEFAULT")
+    if country:
+        # Try the Location's Country, but ensure we have the fallback available in a single query
+        query |= (table.location_id == country)
+        limitby = (0, 2)
+    else:
+        limitby = (0, 1)
+    rows = current.db(query).select(table[fieldname],
+                                    table.uuid,
+                                    limitby=limitby,
+                                    cache=s3db.cache)
+    if len(rows) > 1:
+        # Remove the Site Default
+        filter = lambda row: row.uuid == "SITE_DEFAULT"
+        rows.exclude(filter)
+    row = rows.first()
+    editable = row[fieldname]
+
+    return editable
 
 # =============================================================================
 def gis_location_filter(r):

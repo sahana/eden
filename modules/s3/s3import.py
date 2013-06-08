@@ -2053,17 +2053,18 @@ class S3ImportItem(object):
         if onvalidation:
             try:
                 callback(onvalidation, form, tablename=tablename)
-            except:
-                pass # @todo need a better handler here.
+            except Exception, e:
+                # @todo need a better handler here.
+                s3_debug("S3Import onvalidation failed", e)
         self.accepted = True
         if form.errors:
             for k in form.errors:
                 e = self.element.findall("data[@field='%s']" % k)
                 if not e:
                     e = self.element.findall("reference[@field='%s']" % k)
-                if not e:
-                    e = self.element
-                    form.errors[k] = "[%s] %s" % (k, form.errors[k])
+                    if not e:
+                        e = self.element
+                        form.errors[k] = "[%s] %s" % (k, form.errors[k])
                 else:
                     e = e[0]
                 e.set(ERROR, str(form.errors[k]).decode("utf-8"))
