@@ -2054,8 +2054,9 @@ class S3ImportItem(object):
             try:
                 callback(onvalidation, form, tablename=tablename)
             except Exception, e:
-                # @todo need a better handler here.
-                s3_debug("S3Import onvalidation failed", e)
+                from traceback import format_exc
+                s3_debug("S3Import %s onvalidation exception:" % tablename)
+                s3_debug(format_exc(10))
         self.accepted = True
         if form.errors:
             for k in form.errors:

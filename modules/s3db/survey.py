@@ -2706,7 +2706,7 @@ class S3SurveyCompleteModel(S3Model):
             return False
         series_id = vars.series_id
         answer_list = vars.answer_list
-        qstn_list = getAllQuestionsForSeries(series_id)
+        qstn_list = survey_getAllQuestionsForSeries(series_id)
         qstns = []
         for qstn in qstn_list:
             qstns.append(qstn["code"])

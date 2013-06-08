@@ -753,30 +753,42 @@ S3OptionsFilter({
     @staticmethod
     def inv_inv_item_onvalidate(form):
         """
-            When a inv item record is being created with a source number
-            then the source number needs to be unique within the organisation.
+            When a inv_inv_item record is created with a source number,
+            then the source number needs to be unique within the
+            organisation.
         """
 
-        # If there is a tracking number check that it is unique within the org
         item_source_no = form.vars.item_source_no
-        if item_source_no:
-            if form.record.item_source_no and form.record.item_source_no == item_source_no:
+        if not item_source_no:
+            return
+        if hasattr(form, "record"):
+            record = form.record
+            if record and \
+               record.item_source_no and \
+               record.item_source_no == item_source_no:
                 # The tracking number hasn't changed so no validation needed
-                pass
-            else:
-                db = current.db
-                s3db = current.s3db
-                itable = db.inv_inv_item
-                stable = s3db.org_site
-                query = (itable.track_org_id == form.vars.track_org_id) & \
-                        (itable.item_source_no == item_source_no)
-                record = db(query).select(record.track_org_id,
-                                          limitby=(0, 1)).first()
-                if record:
-                    org_repr = current.response.s3.org_organisation_represent
-                    form.errors.item_source_no = T("The Tracking Number %s is already used by %s.") % \
-                        (item_source_no,
-                         org_repr(record.track_org_id))
+                return
+                    
+        db = current.db
+        s3db = current.s3db
+        
+        itable = s3db.inv_inv_item
+
+        # Was: "track_org_id" - but inv_inv_item has no "track_org_id"!
+        org_field = "owner_org_id"
+        
+        query = (itable[org_field] == form.vars[org_field]) & \
+                (itable.item_source_no == item_source_no)
+                
+        record = db(query).select(itable[org_field],
+                                  limitby=(0, 1)).first()
+        if record:
+            org = current.response.s3 \
+                         .org_organisation_represent(record[org_field])
+
+            form.errors.item_source_no = T("The Tracking Number %s "
+                                           "is already used by %s.") % \
+                                           (item_source_no, org)
 
     # -------------------------------------------------------------------------
     @staticmethod
