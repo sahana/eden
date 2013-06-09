@@ -4683,7 +4683,7 @@ class S3Resource(object):
                     # Otherwise, we search through the field itself
                     else:
                         flist.append(field)
-
+                        
             # Build search query
             # @todo: migrate this to S3ResourceQuery?
             opts = Storage()

@@ -177,45 +177,52 @@ class req():
     """
 
     def __call__(self):
+        
         request = current.request
+        get_vars = request.get_vars
+
         resource = current.s3db.resource("req_req")
         totalrows = resource.count()
-        table = resource.table
+        if "iDisplayLength" in get_vars:
+            display_length = int(request.get_vars["iDisplayLength"])
+        else:
+            display_length = 10
+        limit = 4 * display_length
 
-        list_fields = ["id", "req_ref"]
-        limit = int(request.get_vars["iDisplayLength"]) if request.extension == "aadata" else 1
-        rfields = resource.resolve_selectors(list_fields)[0]
-        (orderby, filter) = S3DataTable.getControlData(rfields, request.vars)
+        list_fields = ["id", "name"]
+        filter, orderby, left = resource.datatable_filter(list_fields,
+                                                          get_vars)
         resource.add_filter(filter)
-        filteredrows = resource.count()
-        if isinstance(orderby, bool):
-            orderby = ~table.date
-        rows = resource.select(list_fields,
-                               orderby=orderby,
-                               start=0,
-                               limit=limit,
-                               )
-        data = resource.extract(rows,
-                                list_fields,
-                                represent=True,
-                                )
+
+        data = resource.fast_select(list_fields,
+                                    start=0,
+                                    limit=limit,
+                                    orderby=orderby,
+                                    left=left,
+                                    count=True,
+                                    represent=True)
+        filteredrows = data["numrows"]
+        rfields = data["rfields"]
+        data = data["data"]
+
         dt = S3DataTable(rfields, data)
         dt.defaultActionButtons(resource)
         current.response.s3.no_formats = True
+
         if request.extension == "html":
             items = dt.html(totalrows,
-                            filteredrows,
+                            totalrows,
                             "req_list_1",
-                            dt_displayLength=10,
+                            dt_displayLength=display_length,
                             dt_ajax_url=URL(c="default",
                                             f="index",
                                             args=["req"],
                                             extension="aadata",
                                             vars={"id": "req_list_1"},
                                             ),
+                            dt_pagination="true",
                            )
         elif request.extension.lower() == "aadata":
-            limit = resource.count()
             if "sEcho" in request.vars:
                 echo = int(request.vars.sEcho)
             else:
@@ -226,7 +233,7 @@ class req():
                             echo)
         else:
             from gluon.http import HTTP
-            raise HTTP(501, current.manager.ERROR.BAD_FORMAT)
+            raise HTTP(501, resource.ERROR.BAD_FORMAT)
         return items
 
 # =============================================================================
