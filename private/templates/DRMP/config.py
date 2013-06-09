@@ -85,8 +85,11 @@ settings.L10n.thousands_separator = ","
 # e.g. Activities filtered to those of parent Project
 settings.gis.countries = ["TL"]
 
-# Until Validation Errors fixed in LocationSelector2
+# Until we add support to LocationSelector2 to set dropdowns from LatLons
 settings.gis.check_within_parent_boundaries = False
+
+# Hide unnecessary Toolbar items
+settings.gis.nav_controls = False
 
 # -----------------------------------------------------------------------------
 # Finance settings

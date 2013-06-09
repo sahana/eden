@@ -106,6 +106,18 @@ table.embeddedComponent tr.label-row td {
 .form-container form .embeddedComponent  textarea  {
     width: auto;
 }
+
+/* Summary Page */
+#filter-form {
+    margin: 0;
+}
+#summary-filter-form {
+    margin: 0;
+}
+#summary-sections #map{
+    padding: 0;
+}
+
 /* ========================================================================= */
 
 textarea.comments {

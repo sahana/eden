@@ -252,7 +252,8 @@ S3.search = {};
     /**
      * filterURL: add filters to a URL
      *
-     * Note: this removes+replaces all existing filters in the URL query
+     * Note: this removes+replaces all existing filters in the URL query,
+     *       but leaves other vars untouched
      */
     var filterURL = function(url, queries) {
 
@@ -266,9 +267,9 @@ S3.search = {};
             var qstr = url_parts[1],
                 query = {};
             var a = qstr.split('&'),
-                v, i, len;
+                b, v, i, len;
             for (i=0, len=a.length; i < len; i++) {
-                var b = a[i].split('=');
+                b = a[i].split('=');
                 if (b.length > 1 && b[0].search(/\./) == -1) {
                     query[decodeURIComponent(b[0])] = decodeURIComponent(b[1]);
                 }
@@ -421,9 +422,7 @@ S3.search = {};
             targets = pendingTargets,
             target_id,
             target_data,
-            page_reload = false,
             needs_reload,
-            ajaxurl,
             queries,
             t,
             visible;
@@ -448,8 +447,9 @@ S3.search = {};
             if (visible) {
                 if (needs_reload) {
                     // reload immediately
-                    page_reload = true;
-                    break;
+                    queries = getCurrentFilters();
+                    url = filterURL(url, queries);
+                    window.location.href = url;
                 }
             } else {
                 // re-schedule for later
@@ -457,27 +457,20 @@ S3.search = {};
             }
         }
 
-        if (page_reload) {
-            // Need to reload the page now
-            queries = getCurrentFilters();
-            url = filterURL(url, queries);
-            window.location.href = url;
-        } else {
-            // Ajax-update all visible targets
-            for (target_id in targets) {
-                t = $('#' + target_id);
-                if (!t.is(':visible')) {
-                    continue
-                }
-                target_data = targets[target_id];
-                t = $('#' + target_id);
-                if (t.hasClass('dl')) {
-                    dlAjaxReload(target_id, target_data['queries']);
-                } else if (t.hasClass('dataTable')) {
-                    t.dataTable().fnReloadAjax(target_data['ajaxurl']);
-                } else if (t.hasClass('map_wrapper')) {
-                    S3.gis.refreshLayer('search_results');
-                }
+        // Ajax-update all visible targets
+        for (target_id in targets) {
+            t = $('#' + target_id);
+            if (!t.is(':visible')) {
+                continue
+            }
+            target_data = targets[target_id];
+            t = $('#' + target_id);
+            if (t.hasClass('dl')) {
+                dlAjaxReload(target_id, target_data['queries']);
+            } else if (t.hasClass('dataTable')) {
+                t.dataTable().fnReloadAjax(target_data['ajaxurl']);
+            } else if (t.hasClass('map_wrapper')) {
+                S3.gis.refreshLayer('search_results');
             }
         }
     }
@@ -495,13 +488,15 @@ S3.search = {};
         $('#summary-tabs').tabs({
             active: active_tab,
             activate: function(event, ui) {
+                // Unhide the section (.ui-tab's display: block overrides anyway but hey ;)
+                $(ui.newPanel).removeClass('hide');
                 // A New Tab has been selected
                 if (ui.newTab.length) {
                     // Update the Filter Query URL to show which tab is active
                     updateFilterSubmitURL(form, 't', $(ui.newTab).index());
                 }
                 // Find any Map widgets in this section
-                var maps = ui.newPanel.find('.map_wrapper');
+                var maps = $(ui.newPanel).find('.map_wrapper');
                 var gis = S3.gis;
                 for (var i=0; i < maps.length; i++) {
                     var map_id = maps[i].attributes['id'].value;
@@ -509,8 +504,6 @@ S3.search = {};
                         // Instantiate the map (can't be done when the DIV is hidden)
                         var options = gis.options[map_id];
                         gis.show_map(map_id, options);
-                        // Refresh the Search Layer with the current Filter options
-                        //gis.refreshLayer('search_results');
                     }
                 }
                 // Update all just-unhidden widgets which have pending updates
@@ -535,6 +528,7 @@ S3.search = {};
                     // Instantiate the map (can't be done when the DIV is hidden)
                     var options = gis.options[map_id];
                     gis.show_map(map_id, options);
+                    // @ToDo: Check for default filter status? (e.g. manually-typed vars)
                     // Refresh the Search Layer with the current Filter options
                     //gis.refreshLayer('search_results');
                 }
@@ -725,15 +719,14 @@ S3.search = {};
                 // Ajax-refresh the target objects
 
                 // Get the target IDs
-                var target = $(this)
-                             .nextAll('input.filter-submit-target[type="hidden"]')
-                             .val();
+                var target = $(this).nextAll('input.filter-submit-target[type="hidden"]')
+                                    .val();
 
                 // Clear the list
                 pendingTargets = {};
 
                 var targets = target.split(' '),
-                    page_reload = false, needs_reload,
+                    needs_reload,
                     dt_ajaxurl = {},
                     ajaxurl,
                     settings,
@@ -783,16 +776,17 @@ S3.search = {};
                         needs_reload = false;
                     } else {
                         // all other targets need page reload
-                        needs_reload = true;
+                        if (visible) {
+                            // reload immediately
+                            url = filterURL(url, queries);
+                            window.location.href = url;
+                        } else {
+                            // mark the need for a reload later
+                            needs_reload = true;
+                        }
                     }
 
-                    if (visible) {
-                        if (needs_reload) {
-                            // reload immediately
-                            page_reload = true;
-                            break;
-                        }
-                    } else {
+                    if (!visible) {
                         // schedule for later
                         pendingTargets[target_id] = {
                             needs_reload: needs_reload,
@@ -802,24 +796,18 @@ S3.search = {};
                     }
                 }
 
-                if (page_reload) {
-                    // Need to reload the page now
-                    url = filterURL(url, queries);
-                    window.location.href = url;
-                } else {
-                    // Ajax-update all visible targets
-                    for (i=0; i < targets.length; i++) {
-                        target_id = targets[i]
-                        t = $('#' + target_id);
-                        if (!t.is(':visible')) {
-                            continue;
-                        } else if (t.hasClass('dl')) {
-                            dlAjaxReload(target_id, queries);
-                        } else if (t.hasClass('dataTable')) {
-                            t.dataTable().fnReloadAjax(dt_ajaxurl[target_id]);
-                        } else if (t.hasClass('map_wrapper')) {
-                            S3.gis.refreshLayer('search_results', queries);
-                        }
+                // Ajax-update all visible targets
+                for (i=0; i < targets.length; i++) {
+                    target_id = targets[i]
+                    t = $('#' + target_id);
+                    if (!t.is(':visible')) {
+                        continue;
+                    } else if (t.hasClass('dl')) {
+                        dlAjaxReload(target_id, queries);
+                    } else if (t.hasClass('dataTable')) {
+                        t.dataTable().fnReloadAjax(dt_ajaxurl[target_id]);
+                    } else if (t.hasClass('map_wrapper')) {
+                        S3.gis.refreshLayer('search_results', queries);
                     }
                 }
             } else {

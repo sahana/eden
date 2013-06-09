@@ -127,7 +127,7 @@ input.btn.btn-primary.filter-submit.filter-ajax {
     margin-bottom: -15px;
 }
 
-button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
+button.ui-multiselect.ui-state-default.ui-corner-all {
     display: inline-block;
     *display: inline;
     margin-bottom: 0;
@@ -163,17 +163,17 @@ button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all:hover {
+button.ui-multiselect.ui-state-default.ui-corner-all:hover {
     color: #333333;
     background: #e6e6e6;
     *background: #d9d9d9;
 }
 
-button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
+button.ui-multiselect.ui-state-default.ui-corner-all {
     margin-bottom: 10px;
 }
 
-#datalist-filter-form table tbody tr td {
+#datalist-filter-form td {
     border: none;
 }
 

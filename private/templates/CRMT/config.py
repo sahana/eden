@@ -99,6 +99,12 @@ settings.L10n.thousands_separator = ","
 # e.g. Activities filtered to those of parent Project
 settings.gis.countries = ["US"]
 
+# Hide unnecessary Toolbar items
+settings.gis.nav_controls = False
+
+# Set Map to fill the container
+settings.gis.map_width = 1170
+
 # -----------------------------------------------------------------------------
 # Finance settings
 settings.fin.currencies = {

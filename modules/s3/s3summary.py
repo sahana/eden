@@ -114,7 +114,8 @@ class S3Summary(S3Method):
             tablist.append(LI(A(label, _href="#%s" % section_id)))
 
             # Section container
-            s = DIV(_class="section-container", _id=section_id)
+            # (initially hidden to avoid visible artefacts during slow page loads)
+            s = DIV(_class="section-container hide", _id=section_id)
 
             # Widgets
             widgets = section.get("widgets", [])
@@ -269,7 +270,8 @@ class S3Summary(S3Method):
         return None
 
     # -------------------------------------------------------------------------
-    def _get_config(self, resource):
+    @staticmethod
+    def _get_config(resource):
         """
             Get the summary page configuration
 

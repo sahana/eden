@@ -5230,7 +5230,7 @@ class GIS(object):
                  catalogue_layers = False,
                  legend = False,
                  toolbar = False,
-                 nav = True,
+                 nav = None,
                  area = False,
                  save = True,
                  search = False,
@@ -5630,7 +5630,10 @@ class MAP(DIV):
 
             # Show NAV controls?
             # e.g. removed within S3LocationSelectorWidget[2]
-            if opts.get("nav", True):
+            nav = opts.get("nav", None)
+            if nav is None:
+                nav = settings.get_gis_nav_controls()
+            if nav:
                 i18n["gis_pan"] = T("Pan Map: keep the left mouse button pressed and drag the map")
                 i18n["gis_navPrevious"] = T("Previous View")
                 i18n["gis_navNext"] = T("Next View")

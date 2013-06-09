@@ -1140,7 +1140,7 @@ $(document).ready(function() {
             for (var i=0, len=layers.length; i < len; i++) {
                 layer = layers[i];
                 if (layer.s3_layer_id == 'search_results') {
-                    // Set a new event when the layer is loaded
+                    // Set a new event to restore clustering when the layer is loaded
                     layer.events.on({
                         'loadend': S3.gis.search_layer_loadend
                     });

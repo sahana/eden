@@ -16,29 +16,23 @@ OpenLayers.IMAGE_RELOAD_ATTEMPTS = 3; // avoid pink tiles
 OpenLayers.Util.onImageLoadErrorColor = 'transparent';
 OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 S3.gis.maps = {}; // Array of all the maps in the page
-S3.gis.ajax_loader = S3.Ap.concat('/static/img/ajax-loader.gif');
-S3.gis.marker_url = S3.Ap.concat('/static/img/markers/');
-S3.gis.format_geojson = new OpenLayers.Format.GeoJSON();
-// See http://crschmidt.net/~crschmidt/spherical_mercator.html#reprojecting-points
 S3.gis.proj4326 = new OpenLayers.Projection('EPSG:4326');
-// Default values if not set by the layer
-// Also in modules/s3/s3gis.py
-// http://dev.openlayers.org/docs/files/OpenLayers/Strategy/Cluster-js.html
-//S3.gis.cluster_attribute = 'colour';
-S3.gis.cluster_distance = 20;   // pixels
-S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
 
 // Module pattern to hide internal vars
 (function () {
 
     // Module scope
-    // @ToDo: See if any of these can be removed from global scope
-    var ajax_loader = S3.gis.ajax_loader;
-    var cluster_distance_default = S3.gis.cluster_distance;   // pixels
-    var cluster_threshold_default = S3.gis.cluster_threshold;
-    var format_geojson = S3.gis.format_geojson;
-    var marker_url_path = S3.gis.marker_url;
+    var ajax_loader = S3.Ap.concat('/static/img/ajax-loader.gif');
+    var format_geojson = new OpenLayers.Format.GeoJSON();
+    var marker_url_path = S3.Ap.concat('/static/img/markers/');
     var proj4326 = S3.gis.proj4326;
+
+    // Default values if not set by the layer
+    // Also in modules/s3/s3gis.py
+    // http://dev.openlayers.org/docs/files/OpenLayers/Strategy/Cluster-js.html
+    //var cluster_attribute_default = 'colour';
+    var cluster_distance_default = 20;   // pixels
+    var cluster_threshold_default = 2;   // minimum # of features to form a cluster
 
     /**
      * Main Start Function
@@ -127,20 +121,18 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
         // Read Bounds for Zoom
         var bounds = layer.getDataExtent();
         // Re-enable Clustering
-        var strategies = layer.strategies;
-        var strategy;
+        var strategy,
+            strategies = layer.strategies;
         for (var i=0, len=strategies.length; i < len; i++) {
             strategy = strategies[i];
             if (strategy.CLASS_NAME == 'OpenLayers.Strategy.AttributeCluster') {
-                strategy.deactivate();
+                strategy.activate();
             }
         }
         // Zoom Out to Cluster
-        layer.map.zoomTo(0)
+        //layer.map.zoomTo(0)
         // Zoom to Bounds
-        if (bounds) {
-            layer.map.zoomToExtent(bounds);
-        }
+        layer.map.zoomToExtent(bounds);
         // Disable this event
         layer.events.un({
             'loadend': search_layer_loadend
@@ -169,7 +161,7 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
                     url = layer.protocol.url;
                     // Apply any URL filters
                     url = S3.search.filterURL(url, queries);
-                    layer.protocol.url = url;
+                    layer.protocol.options.url = url;
                     // If map is showing then refresh the layer
                     if (map.s3.mapWin.isVisible()) {
                         // Set an event to re-enable Clustering when the layer is loaded
@@ -183,13 +175,15 @@ S3.gis.cluster_threshold = 2;   // minimum # of features to form a cluster
                             strategy = strategies[j];
                             if (strategy.CLASS_NAME == 'OpenLayers.Strategy.AttributeCluster') {
                                 strategy.deactivate();
+                                break;
                             }
                         }
+                        // Reload the layer
                         for (j=0; j < jlen; j++) {
                             strategy = strategies[j];
                             if (strategy.CLASS_NAME == 'OpenLayers.Strategy.Refresh') {
-                                // Reload the layer
                                 strategy.refresh();
+                                break;
                             }
                         }
                     }

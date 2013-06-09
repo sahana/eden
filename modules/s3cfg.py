@@ -505,6 +505,12 @@ class S3Config(Storage):
         """
         return self.gis.get("mouse_position", "normal")
 
+    def get_gis_nav_controls(self):
+        """
+            Should the Map Toolbar display Navigation Controls?
+        """
+        return self.gis.get("nav_controls", True)
+
     def get_gis_overview(self):
         """
             Should the Map display an Overview Map?
