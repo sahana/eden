@@ -124,7 +124,7 @@ def update_check(settings):
     #
     # Currently, the minimum usable Web2py is determined by whether the
     # Scheduler is available
-    web2py_minimum_version = "Version 1.99.3 (2011-10-27 13:23:13)"
+    web2py_minimum_version = "Version 2.4.7-stable+timestamp.2013.05.27.11.49.44"
     # Offset of datetime in return value of parse_version.
     datetime_index = 4
     web2py_version_ok = True
@@ -133,22 +133,26 @@ def update_check(settings):
     except ImportError:
         web2py_version_ok = False
     if web2py_version_ok:
-        web2py_minimum_parsed = parse_version(web2py_minimum_version)
-        web2py_minimum_datetime = web2py_minimum_parsed[datetime_index]
-        # 2.4.2 & earlier style
-        web2py_installed_datetime = request.global_settings.web2py_version[datetime_index]
         try:
+            web2py_minimum_parsed = parse_version(web2py_minimum_version)
+            web2py_minimum_datetime = web2py_minimum_parsed[datetime_index]
+            web2py_installed_version = request.global_settings.web2py_version
+            if isinstance(web2py_installed_version, str):
+                # Post 2.4.2, request.global_settings.web2py_version is unparsed
+                web2py_installed_parsed = parse_version(web2py_installed_version)
+                web2py_installed_datetime = web2py_installed_parsed[datetime_index]
+            else:
+                # 2.4.2 & earlier style
+                web2py_installed_datetime = web2py_installed_version[datetime_index]
             web2py_version_ok = web2py_installed_datetime >= web2py_minimum_datetime
         except:
-            # Post 2.4.2
-            web2py_installed_parsed = parse_version(request.global_settings.web2py_version)
-            web2py_installed_datetime = web2py_installed_parsed[datetime_index]
-            web2py_version_ok = web2py_installed_datetime >= web2py_minimum_datetime
+            # Will get AttributeError if Web2py's parse_version is too old for
+            # its current version format, which changed in 2.3.2.
+            web2py_version_ok = False
     if not web2py_version_ok:
         warnings.append(
-            "The installed version of Web2py is too old to provide the Scheduler,"
-            "\nso scheduled tasks will not be available. If you need scheduled tasks,"
-            "\nplease upgrade Web2py to at least version: %s" % \
+            "The installed version of Web2py is too old to support the current version of Sahana Eden."
+            "\nPlease upgrade Web2py to at least version: %s" % \
             web2py_minimum_version)
 
     # -------------------------------------------------------------------------
