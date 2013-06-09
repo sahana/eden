@@ -1,4 +1,5 @@
 Name,Height,Width,Image
+"marker_red",34,20,"gis_marker.image.marker_red.png"
 "camera",12,16,"gis_marker.image.Camera.small.png"
 "hospital",25,25,"gis_marker.image.E_Med_Hospital_S1.small.png"
 "food",25,25,"gis_marker.image.Emergency_Food_Distribution_Centers_S1.small.png"

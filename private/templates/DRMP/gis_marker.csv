@@ -10,3 +10,4 @@ Name,Height,Width,Image
 "training",34,20,"gis_marker.image.DRMP_Training.png"
 "airport",40,40,"gis_marker.image.Logistics_Airport.png"
 "seaport",40,40,"gis_marker.image.Logistics_Port.png"
+"earthquake",50,50,"gis_marker.image.Geo_Earth_Quake_Epicenter.png"

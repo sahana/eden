@@ -11,12 +11,14 @@
  * - usage minimised
  * - per-map configuration & objects are in S3.gis.maps[map_id].s3.xxx
  */
+S3.gis.maps = {}; // Array of all the maps in the page
+S3.gis.proj4326 = new OpenLayers.Projection('EPSG:4326');
+
+// Configure OpenLayers
 OpenLayers.ImgPath = S3.Ap.concat('/static/img/gis/openlayers/'); // Path for OpenLayers to find it's Theme images
 OpenLayers.IMAGE_RELOAD_ATTEMPTS = 3; // avoid pink tiles
 OpenLayers.Util.onImageLoadErrorColor = 'transparent';
 OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
-S3.gis.maps = {}; // Array of all the maps in the page
-S3.gis.proj4326 = new OpenLayers.Projection('EPSG:4326');
 
 // Module pattern to hide internal vars
 (function () {
@@ -1169,76 +1171,83 @@ S3.gis.proj4326 = new OpenLayers.Projection('EPSG:4326');
         var cluster_options = {
             context: {
                 graphicWidth: function(feature) {
-                    var pix;
+                    // We get JS errors if we don't return a number
+                    var pix = 1;
                     if (feature.cluster) {
                         // Clustered Point
-                        // Doesn't usually use a Graphic, however we get JS errors if we don't return a number
-                        pix = marker_width;
+                        // Doesn't usually use a Graphic
                     } else if (feature.attributes.marker_width) {
                         // Use marker_width from feature
                         pix = feature.attributes.marker_width;
                     } else {
-                        // per-Layer Marker for Unclustered Point
-                        pix = marker_width;
+                        if (undefined != marker_width) {
+                            // per-Layer Marker for Unclustered Point
+                            pix = marker_width;
+                        }
                     }
                     return pix;
                 },
                 graphicHeight: function(feature) {
-                    var pix;
+                    // We get JS errors if we don't return a number
+                    var pix = 1;
                     if (feature.cluster) {
                         // Clustered Point
-                        // Doesn't usually use a Graphic, however we get JS errors if we don't return a number
-                        pix = marker_height;
+                        // Doesn't usually use a Graphic
                     } else if (feature.attributes.marker_height) {
                         // Use marker_height from feature (Query)
                         pix = feature.attributes.marker_height;
                     } else {
-                        // per-Layer Marker for Unclustered Point
-                        pix = marker_height;
+                        if (undefined != marker_height) {
+                            // per-Layer Marker for Unclustered Point
+                            pix = marker_height;
+                        }
                     }
                     return pix;
                 },
                 graphicXOffset: function(feature) {
-                    var pix;
+                    // We get JS errors if we don't return a number
+                    var pix = -1;
                     if (feature.cluster) {
                         // Clustered Point
-                        // Doesn't usually use a Graphic, however we get JS errors if we don't return a number
-                        pix = -(marker_width / 2);
+                        // Doesn't usually use a Graphic
                     } else if (feature.attributes.marker_width) {
                         // Use marker_width from feature (e.g. FeatureQuery)
                         pix = -(feature.attributes.marker_width / 2);
                     } else {
-                        // per-Layer Marker for Unclustered Point
-                        pix = -(marker_width / 2);
+                        if (undefined != marker_width) {
+                            // per-Layer Marker for Unclustered Point
+                            pix = -(marker_width / 2);
+                        }
                     }
                     return pix;
                 },
                 graphicYOffset: function(feature) {
-                    var pix;
+                    // We get JS errors if we don't return a number
+                    var pix = -1;
                     if (feature.cluster) {
                         // Clustered Point
-                        // Doesn't usually use a Graphic, however we get JS errors if we don't return a number
-                        pix = -marker_height;
+                        // Doesn't usually use a Graphic
                     } else if (feature.attributes.marker_height) {
                         // Use marker_height from feature (e.g. FeatureQuery)
                         pix = -feature.attributes.marker_height;
                     } else {
-                        // per-Layer Marker for Unclustered Point
-                        pix = -marker_height;
+                        if (undefined != marker_height) {
+                            // per-Layer Marker for Unclustered Point
+                            pix = -marker_height;
+                        }
                     }
                     return pix;
                 },
                 graphicName: function(feature) {
-                    var shape;
                     if (feature.cluster) {
                         // Clustered Point
-                        shape = 'circle';
+                        var shape = 'circle';
                     } else if (feature.attributes.shape) {
                         // Use shape from feature (e.g. FeatureQuery)
-                        shape = feature.attributes.shape;
+                        var shape = feature.attributes.shape;
                     } else {
                         // default to a Circle
-                        shape = 'circle';
+                        var shape = 'circle';
                     }
                     return shape;
                 },
@@ -1249,7 +1258,6 @@ S3.gis.proj4326 = new OpenLayers.Projection('EPSG:4326');
                         // Just show shape not marker
                         // @ToDo: Make this configurable per-Layer & within-Layer as to which gets shown
                         // e.g. http://openflights.org/blog/2009/10/21/customized-openlayers-cluster-strategies/
-                        url = '';
                     } else if (feature.attributes.marker_url) {
                         // Use marker from feature (Query)
                         url = feature.attributes.marker_url;
@@ -1274,13 +1282,17 @@ S3.gis.proj4326 = new OpenLayers.Projection('EPSG:4326');
                                 if (undefined != elem.cat) {
                                     // Category-based style
                                     if (value == elem.cat) {
-                                        url = S3.Ap.concat('/static/' + elem.external_graphic) || marker_url; // Fallback to Layer Marker
+                                        if (undefined != elem.external_graphic) {
+                                            url = S3.Ap.concat('/static/' + elem.external_graphic);
+                                        }
                                         return false;
                                     }
                                 } else {
                                     // Range-based style
                                     if ((value >= elem.low) && (value < elem.high)) {
-                                        url = S3.Ap.concat('/static/' + elem.external_graphic) || marker_url; // Fallback to Layer Marker
+                                        if (undefined != elem.external_graphic) {
+                                            url = S3.Ap.concat('/static/' + elem.external_graphic);
+                                        }
                                         return false;
                                     }
                                 }
@@ -1526,7 +1538,9 @@ S3.gis.proj4326 = new OpenLayers.Projection('EPSG:4326');
                         var style = feature.layer.s3_style;
                         if (Object.prototype.toString.call(style) !== '[object Array]') {
                             // Common Style for all features in layer
-                            label = style.label;
+                            if (style.show_label) {
+                                label = style.label;
+                            }
                         } else {
                             // Lookup from rule
                             var attrib, value;
@@ -1541,13 +1555,17 @@ S3.gis.proj4326 = new OpenLayers.Projection('EPSG:4326');
                                 if (undefined != elem.cat) {
                                     // Category-based style
                                     if (value == elem.cat) {
-                                        label = elem.label;
+                                        if (elem.show_label) {
+                                            label = elem.label;
+                                        }
                                         return false
                                     }
                                 } else {
                                     // Range-based style
                                     if ((value >= elem.low) && (value < elem.high)) {
-                                        label = elem.label;
+                                        if (elem.show_label) {
+                                            label = elem.label;
+                                        }
                                         return false
                                     }
                                 }
@@ -1566,7 +1584,7 @@ S3.gis.proj4326 = new OpenLayers.Projection('EPSG:4326');
         if (Object.prototype.toString.call(style) === '[object Array]') {
             // Style varies per Feature (currently Shapefile or Theme Layer)
             var rules = [];
-            var attrib, fill, filter, rule, symbolizer, title;
+            var attrib, fill, filter, rule, symbolizer, title, value;
             $.each(style, function(index, elem) {
                 if (undefined != elem.attrib) {
                     attrib = elem.attrib;
@@ -1576,11 +1594,12 @@ S3.gis.proj4326 = new OpenLayers.Projection('EPSG:4326');
                 }
                 if (undefined != elem.cat) {
                     // Category-based style
-                    title = elem.label || elem.cat;
+                    value = elem.cat;
+                    title = elem.label || value;
                     filter = new OpenLayers.Filter.Comparison({
                         type: OpenLayers.Filter.Comparison.EQUAL_TO,
                         property: attrib,
-                        value: title
+                        value: value
                     });
                 } else {
                     // Range-based Style
