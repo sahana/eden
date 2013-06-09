@@ -173,47 +173,54 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
     @staticmethod
     def hospital():
         """
-            Function to handle pagination for the hospitals list on the homepage
+            Function to handle pagination for the hospitals list
+            on the homepage
         """
 
         request = current.request
+        get_vars = request.get_vars
+
         resource = current.s3db.resource("hms_hospital")
         totalrows = resource.count()
-        table = resource.table
+        if "iDisplayLength" in get_vars:
+            display_length = int(request.get_vars["iDisplayLength"])
+        else:
+            display_length = 10
+        limit = 4 * display_length
 
         list_fields = ["id", "name"]
-        limit = int(request.get_vars["iDisplayLength"]) if request.extension == "aadata" else 1
-        rfields = resource.resolve_selectors(list_fields)[0]
-        (orderby, filter) = S3DataTable.getControlData(rfields, request.vars)
+        filter, orderby, left = resource.datatable_filter(list_fields,
+                                                          get_vars)
         resource.add_filter(filter)
-        filteredrows = resource.count()
-        if isinstance(orderby, bool):
-            orderby = table.name
-        rows = resource.select(list_fields,
-                               orderby=orderby,
-                               start=0,
-                               limit=limit,
-                               )
-        data = resource.extract(rows,
-                                list_fields,
-                                represent=True,
-                                )
+
+        data = resource.fast_select(list_fields,
+                                    start=0,
+                                    limit=limit,
+                                    orderby=orderby,
+                                    left=left,
+                                    count=True,
+                                    represent=True)
+        filteredrows = data["numrows"]
+        rfields = data["rfields"]
+        data = data["data"]
+
         dt = S3DataTable(rfields, data)
         dt.defaultActionButtons(resource)
         current.response.s3.no_formats = True
+
         if request.extension == "html":
             items = dt.html(totalrows,
-                            filteredrows,
+                            totalrows,
                             "hospital_list_1",
-                            dt_displayLength=10,
+                            dt_displayLength=display_length,
                             dt_ajax_url=URL(c="default",
                                             f="hospital",
                                             extension="aadata",
                                             vars={"id": "hospital_list_1"},
                                             ),
+                            dt_pagination="true",
                            )
         elif request.extension.lower() == "aadata":
-            limit = resource.count()
             if "sEcho" in request.vars:
                 echo = int(request.vars.sEcho)
             else:
@@ -224,7 +231,7 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
                             echo)
         else:
             from gluon.http import HTTP
-            raise HTTP(501, current.manager.ERROR.BAD_FORMAT)
+            raise HTTP(501, resource.ERROR.BAD_FORMAT)
         return items
 
 # END =========================================================================
