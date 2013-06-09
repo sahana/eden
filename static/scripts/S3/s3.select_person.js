@@ -96,6 +96,7 @@
                 var url = S3.Ap.concat('/' + controller + '/person/' + person_id + '.s3json?show_ids=True');
                 $.getJSONS3(url, function(data) {
                     try {
+                        var email = undefined, phone = undefined;
                         var person = data['$_pr_person'][0];
                         disable_person_fields();
                         $(addPerson_real_input).val(person['@id']);
@@ -117,18 +118,38 @@
                         if (person.hasOwnProperty('occupation')) {
                             $('#pr_person_occupation').val(person['occupation']);
                         }
+                        if (person.hasOwnProperty('$_pr_email_contact')) {
+                            var contact = person['$_pr_email_contact'][0];
+                            email = contact['value']['@value'];                            
+                        }
+                        if (person.hasOwnProperty('$_pr_phone_contact')) {
+                            var contact = person['$_pr_phone_contact'][0];
+                            phone = contact['value']['@value'];                            
+                        }                       
                         if (person.hasOwnProperty('$_pr_contact')) {
                             var contacts = person['$_pr_contact'];
                             var contact;
                             for (var i=0; i < contacts.length; i++) {
                                 contact = contacts[i];
-                                if (contact['contact_method']['@value'] == 'EMAIL') {
-                                    $('#pr_person_email').val(contact['value']['@value']);
-                                } else if (contact['contact_method']['@value'] == 'SMS') {
-                                    $('#pr_person_mobile_phone').val(contact['value']['@value']);
+                                if(email == undefined){
+                                    if (contact['contact_method']['@value'] == 'EMAIL') {
+                                        email = contact['value']['@value'];
+                                    }
+                                }
+                                if(phone == undefined){
+                                    if (contact['contact_method']['@value'] == 'SMS') {
+                                        phone = contact['value']['@value'];
+                                    }
                                 }
                             }
                         }
+                        if(email !== undefined){
+                            $('#pr_person_email').val(email);
+                        }
+                        if(phone !== undefined){
+                            $('#pr_person_mobile_phone').val(phone);
+                        }
+                                                
                     } catch(e) {
                         $(addPerson_real_input).val('');
                     }
