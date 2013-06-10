@@ -129,6 +129,7 @@ settings.project.organisation_roles = {
     #4: T("Customer"), # T("Beneficiary")?
     5: T("Partner")
 }
+settings.project.theme_percentages=True;
 
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([
