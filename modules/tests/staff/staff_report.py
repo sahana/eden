@@ -47,8 +47,8 @@ class StaffReport(SeleniumUnitTest):
                 self.settings.get_hrm_organisation_label(),
                 "County / District",
                 self.settings.get_hrm_organisation_label() + " (Count)",
-                ("Timor-Leste Red Cross Society (CVTL)", "Ainaro", 1),
-                ("Timor-Leste Red Cross Society (CVTL)", "Kuala Lumpur", 0),
+                ("Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste) (CVTL)", "Ainaro", 1),
+                ("Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste) (CVTL)", "Kuala Lumpur", 0),
             )
 
     def test_staff_report_filter(self):
@@ -84,7 +84,7 @@ class StaffReport(SeleniumUnitTest):
             self.settings.get_hrm_organisation_label(),
             "State / Province", 
             "Person (List)",
-            ("Timor-Leste Red Cross Society (CVTL)", "Dili",
+            ("Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste) (CVTL)", "Dili",
                 ("Duarte Botelheiro",
                 "Adriana Macedo",
                 "Quito Cromos",
