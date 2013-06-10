@@ -767,7 +767,7 @@ def customize_project_location(**attr):
     
     return attr
 
-settings.ui.customize_project_framework = customize_project_framework
+settings.ui.customize_project_location = customize_project_location
 
 # -----------------------------------------------------------------------------
 def customize_pr_person(**attr):

@@ -29,11 +29,11 @@
          FPMobilePhone........string..........Mobile Phone Number of Focal Person
 
          theme_percentages=True:
-         Theme:XXXX...........string..........% of the Project targeting Theme XXX (multiple allowed)
+         Theme:XXXX...........string..........% of the Project targetting Theme XXX (multiple allowed)
          theme_percentages=False:
          Themes...............comma-sep list..List of Theme names
 
-         Location:XXXX........string..........% of the Project targeting Location XXX (multiple allowed)
+         Location:XXXX........string..........% of the Project targetting Location XXX (multiple allowed)
          theme_percentages=False:
          Locations............comma-sep list..List of Location names
 

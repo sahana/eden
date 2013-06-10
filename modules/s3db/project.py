@@ -210,15 +210,18 @@ class S3ProjectModel(S3Model):
                                    label = T("Description")),
                              status_id(),
                              # NB There is additional client-side validation for start/end date in the Controller
-                             Field("duration",
-                                   label = T("Duration"),
-                                   ),
                              s3_date("start_date",
                                      label = T("Start Date")
                                      ),
                              s3_date("end_date",
                                      label = T("End Date")
                                      ),
+                             # Free-text field with no validation (used by OCHA template currently)
+                             Field("duration",
+                                   label = T("Duration"),
+                                   readable=False,
+                                   writable=False,
+                                   ),
                              Field("calendar",
                                    label = T("Calendar"),
                                    readable = mode_task,
