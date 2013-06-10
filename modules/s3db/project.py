@@ -210,6 +210,9 @@ class S3ProjectModel(S3Model):
                                    label = T("Description")),
                              status_id(),
                              # NB There is additional client-side validation for start/end date in the Controller
+                             Field("duration",
+                                   label = T("Duration"),
+                                   ),
                              s3_date("start_date",
                                      label = T("Start Date")
                                      ),
@@ -2603,7 +2606,6 @@ class S3ProjectLocationModel(S3Model):
                              self.super_link("doc_id", "doc_entity"),
                              # Populated onaccept - used for map popups
                              Field("name",
-                                   readable=False,
                                    writable=False),
                              self.project_project_id(),
                              self.gis_location_id(
@@ -2616,6 +2618,12 @@ class S3ProjectLocationModel(S3Model):
                                                             title=T("Location"),
                                                             tooltip=T("Enter some characters to bring up a list of possible matches")),
                                 ),
+                             # % breakdown by location
+                             Field("percentage", "decimal(3,2)",
+                                   label = T("Percentage"),
+                                   default = 0,
+                                   requires = IS_DECIMAL_IN_RANGE(0, 1),
+                                   ),
                              s3_comments(),
                              *s3_meta_fields())
 
