@@ -2980,7 +2980,10 @@ class S3CRUD(S3Method):
             # Delete it
             uid = None
             if UID in dresource.table:
-                rows = dresource.select([UID], start=0, limit=1)
+                rows = dresource.fast_select([UID],
+                                             start=0,
+                                             limit=1,
+                                             as_rows=True)
                 if rows:
                     uid = rows[0][UID]
             numrows = dresource.delete(ondelete=ondelete,
