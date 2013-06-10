@@ -72,9 +72,9 @@ class SearchMember(SeleniumUnitTest):
         # Wait for datatables script to complete
         elem = WebDriverWait(browser, 30).until(
                     lambda driver: \
-                           driver.find_element_by_id("list_length"))
+                           driver.find_element_by_id("datatable_length"))
 
-        htmlRowCount = len(browser.find_elements_by_xpath("//*[@id='list']/tbody/tr"))
+        htmlRowCount = len(browser.find_elements_by_xpath("//*[@id='datatable']/tbody/tr"))
 
         successMsg = "DB row count (%s)" \
                      " matches the HTML table row count (%s)." % \
@@ -121,7 +121,7 @@ class SearchMember(SeleniumUnitTest):
         rows = current.db((member.deleted != 'T')).select()
         dbRowCount = 0
         for row in rows:
-            if row.paid == "expired" or row.paid == "paid" :
+            if row.paid() == "expired" or row.paid() == "paid" :
                 dbRowCount = dbRowCount + 1
         self.compareRowCount(dbRowCount)
 
