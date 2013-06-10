@@ -1391,26 +1391,6 @@ class S3PivotTable(object):
 
         cells = self.cell
 
-        def sortdim(dim, items):
-            """ Sort a dimension """
-
-            rfield = rfields[dim]
-            if not rfield:
-                return
-            ftype = rfield.ftype
-            sortby = "value"
-            if ftype == "integer":
-                requires = rfield.requires
-                if isinstance(requires, (tuple, list)):
-                    requires = requires[0]
-                if isinstance(requires, IS_EMPTY_OR):
-                    requires = requires.other
-                if isinstance(requires, IS_IN_SET):
-                    sortby = "text"
-            elif ftype[:9] == "reference":
-                sortby = "text"
-            items.sort(key=lambda item: item[0][sortby])
-
         # Sort rows
         rvals = self.row
         rows_list = []
@@ -1419,7 +1399,7 @@ class S3PivotTable(object):
             # Add representation value of the row header
             row["text"] = rows_repr(row.value)
             rows_list.append((row, cells[i]))
-        sortdim(rows, rows_list)
+        self._sortdim(rows_list, rfields[rows], 0)
 
         # Sort columns
         cvals = self.col
@@ -1428,7 +1408,7 @@ class S3PivotTable(object):
             column = cvals[j]
             column["text"] = cols_repr(column.value)
             cols_list.append((column, j))
-        sortdim(cols, cols_list)
+        self._sortdim(cols_list, rfields[cols], 0)
 
         # Build the column headers:
 
@@ -1511,6 +1491,7 @@ class S3PivotTable(object):
                     layer_values = cell_lookup_table.get(layer_idx, {})
 
                     if m == "count":
+
                         rfield = rfields[f]
                         field = rfield.field
                         colname = rfield.colname
@@ -1612,7 +1593,9 @@ class S3PivotTable(object):
                                     y=row_label,
                                     r=self.rows,
                                     c=self.cols,
-                                    d=self.compact(n=50, represent=True),
+                                    d=self.compact(maxrows=50,
+                                                   maxcols=30,
+                                                   represent=True),
                                     u=url,
                                     f=filter_vars,
                                     h=hide_opts,
@@ -1625,7 +1608,316 @@ class S3PivotTable(object):
         return TABLE(components, **attributes)
 
     # -------------------------------------------------------------------------
-    def compact(self, n=50, layer=None, least=False, represent=False):
+    def json(self,
+             layer=None,
+             maxrows=None,
+             maxcols=None,
+             least=False,
+             represent=True,
+             show_totals=True):
+        """
+            Render the pivot table data as JSON-serializable dict
+
+            @param layer: the layer
+            @param maxrows: maximum number of rows (None for all)
+            @param maxcols: maximum number of columns (None for all)
+            @param least: render the least n rows/columns rather than
+                          the top n (with maxrows/maxcols)
+            @param represent: represent values
+            @param show_totals: render totals for rows/columns
+
+            {
+                labels: {
+                    layer:
+                    rows:
+                    cols:
+                    total:
+                },
+                cells: [rows[cols]],
+                rows: [rows[index, value, label, total]],
+                cols: [cols[index, value, label, total]],
+                
+                total: <grand total> # @todo
+            }
+        """
+
+        rfields = self.rfields
+        resource = self.resource
+
+        tablename = resource.tablename
+
+        OTHER = "__other__"
+
+        # The layer
+        if layer is None:
+            layer = self.layers[0]
+        field, method = layer
+        rows_dim = self.rows
+        cols_dim = self.cols
+
+        # The data
+        orows = []
+        ocols = []
+        ocells = []
+
+        if not self.empty:
+            
+            if method == "min":
+                least = not least
+            numeric = lambda x: isinstance(x, (int, long, float))
+
+            hmethod = "sum" if method in ("list", "count") else method
+
+            if represent:
+                row_repr = self._represent_method(rows_dim)
+                col_repr = self._represent_method(cols_dim)
+            else:
+                row_repr = col_repr = lambda v: s3_unicode(v)
+
+            others = s3_unicode(current.T("Others"))
+
+            irows = self.row
+            icols = self.col
+            rows = []
+            cols = []
+
+            # Group and sort the rows
+            is_numeric = None
+            for i in xrange(self.numrows):
+                irow = irows[i]
+                total = irow[layer]
+                if is_numeric is None:
+                    is_numeric = numeric(total)
+                if not is_numeric:
+                    total = len(irow.records)
+                header = Storage(value = irow.value,
+                                 text = irow.text if "text" in irow
+                                                  else row_repr(irow.value))
+                rows.append((i, total, header))
+            if maxrows is not None:
+                rows = self._top(rows, maxrows,
+                                 least=least, method=hmethod, other=OTHER)
+            last = rows.pop(-1) if rows[-1][0] == OTHER else None
+            self._sortdim(rows, rfields[rows_dim])
+            if last:
+                last = (last[0], last[1], Storage(value=None, text=others))
+                rows.append(last)
+            row_indices = [i[0] for i in rows]
+
+            # Group and sort the cols
+            is_numeric = None
+            for i in xrange(self.numcols):
+                icol = icols[i]
+                total = icol[layer]
+                if is_numeric is None:
+                    is_numeric = numeric(total)
+                if not is_numeric:
+                    total = len(icol["records"])
+                header = Storage(value = icol.value,
+                                text = icol.text if "text" in icol
+                                                 else col_repr(icol.value))
+                cols.append((i, total, header))
+            if maxcols is not None:
+                cols = self._top(cols, maxcols,
+                                 least=least, method=hmethod, other=OTHER)
+            last = cols.pop(-1) if cols[-1][0] == OTHER else None
+            self._sortdim(cols, rfields[cols_dim])
+            if last:
+                last = (last[0], last[1], Storage(value=None, text=others))
+                cols.append(last)
+            col_indices = [i[0] for i in cols]
+
+            # Group and sort the cells
+            icell = self.cell
+            cells = {}
+            for i in xrange(self.numrows):
+                irow = icell[i]
+                ridx = i if i in row_indices else OTHER
+                if ridx not in cells:
+                    orow = cells[ridx] = {}
+                else:
+                    orow = cells[ridx]
+                for j in xrange(self.numcols):
+                    cell = irow[j]
+                    cidx = j if j in col_indices else OTHER
+                    cell_records = cell["records"]
+                    items = cell[layer]
+                    value = items if is_numeric \
+                                  else len(cell_records)
+                    if cidx not in orow:
+                        if OTHER in (cidx, ridx):
+                            value = [value]
+                            items = [items]
+                        ocell = orow[cidx] = {"value": value,
+                                              "items": items,
+                                              "records": cell_records}
+                    else:
+                        ocell = orow[cidx]
+                        ocell["value"].append(value)
+                        ocell["items"].append(items)
+                        ocell["records"].extend(cell_records)
+
+            # Aggregate the grouped values
+            ctotals = True
+            lookup = {}
+            value_map = {}
+            rappend = orows.append
+            cappend = ocols.append
+            for rindex, rtotal, rtitle in rows:
+                orow = []
+                if represent:
+                    rappend((rindex,
+                             s3_unicode(rtitle.value),
+                             rtitle.text,
+                             rtotal))
+                else:
+                    rappend((rindex,
+                             s3_unicode(rtitle.value),
+                             rtotal))
+                for cindex, ctotal, ctitle in cols:
+                    cell = cells[rindex][cindex]
+                    items = cell["items"]
+                    value = cell["value"]
+                    cell_records = cell["records"]
+                    if type(value) is list:
+                        value = self._aggregate(value, hmethod)
+                    if method == "list":
+                        if type(items) is list:
+                            items = [item for item in s3_flatlist(items)
+                                          if item is not None]
+                    else:
+                        items = value
+                        
+                    # Build a lookup table for field values if counting
+                    if method == "count":
+                        keys = []
+                        rfield = rfields[field]
+                        f = rfield.field
+                        has_fk = f is not None and s3_has_foreign_key(f)
+                        if has_fk:
+                            represent = f.represent
+                        else:
+                            represent = self._represent_method(field)
+                        for record_id in cell_records:
+                            record = self.records[record_id]
+                            try:
+                                fvalue = record[rfield.colname]
+                            except AttributeError:
+                                continue
+                            if fvalue is None:
+                                continue
+                            if type(fvalue) is not list:
+                                fvalue = [fvalue]
+                            for v in fvalue:
+                                if v is None:
+                                    continue
+                                if has_fk:
+                                    if v not in keys:
+                                        keys.append(v)
+                                    if v not in lookup:
+                                        lookup[v] = s3_unicode(represent(v))
+                                else:
+                                    if v not in value_map:
+                                        next_id = len(value_map)
+                                        value_map[v] = next_id
+                                        keys.append(next_id)
+                                        lookup[next_id] = s3_unicode(represent(v))
+                                    else:
+                                        prev_id = value_map[v]
+                                        if prev_id not in keys:
+                                            keys.append(prev_id)
+                        keys.sort(key=lambda i: lookup[i])
+                    else:
+                        keys = None
+                        
+                    orow.append({"keys": keys,
+                                 "items": items,
+                                 "value": value})
+                    if ctotals:
+                        if represent:
+                            cappend((cindex,
+                                     s3_unicode(ctitle.value),
+                                     ctitle.text,
+                                     ctotal))
+                        else:
+                            cappend((cindex,
+                                     s3_unicode(ctitle.value),
+                                     ctotal))
+                ctotals = False
+                ocells.append(orow)
+
+        output = {"rows": orows,
+                  "cols": ocols,
+                  "cells": ocells,
+                  "lookup": lookup if lookup else None,
+                  "total": self._totals(self.totals, [layer])}
+
+        # Lookup labels
+        get_label = self._get_field_label
+        get_mname = self._get_method_label
+
+        labels = {"total": str(current.T("Total"))}
+
+        # Layer title
+        layer_title = None
+        report_options = resource.get_config("report_options", None)
+
+        # @todo: move this lookup into S3Report2
+        if report_options and "fact" in report_options:
+            # Custom label from report options?
+            for item in report_options["fact"]:
+                if isinstance(item, (tuple, list)) and len(item) == 3:
+                    selector = item[0]
+                    if not "." in selector.split("$")[0]:
+                        selector = "%s.%s" % (resource.alias, item[0])
+                    if selector == field and item[1] == method:
+                        layer_title= item[3]
+                        break
+        if layer_title is None:
+            # Construct label from field and method
+            fname = get_label(rfields, field, tablename, "fact")
+            mname = get_mname(method)
+            layer_title = "%s (%s)" % (fname, mname)
+        labels["layer"] = layer_title
+
+        # Rows title
+        if rows_dim:
+            labels["rows"] = str(get_label(rfields,
+                                           rows_dim,
+                                           tablename,
+                                           "rows"))
+        else:
+            labels["rows"] = ""
+
+        # Columns title
+        if cols_dim:
+            labels["cols"] = str(get_label(rfields,
+                                           cols_dim,
+                                           tablename,
+                                           "cols"))
+        else:
+            labels["cols"] = ""
+
+        output["labels"] = labels
+
+        # Options
+        options = {"show_totals": show_totals}
+
+        output["options"] = options
+
+        # @todo: add the grand total
+        # @todo: add the record layer
+        # @todo: add the cell lookup layer (expand lists)
+
+        return output
+        
+    # -------------------------------------------------------------------------
+    def compact(self,
+                maxrows=50,
+                maxcols=50,
+                layer=None,
+                least=False,
+                represent=False):
         """
             Get the top/least n numeric results for a layer, used to
             generate the input data for charts.
@@ -1654,42 +1946,6 @@ class S3PivotTable(object):
         rfields = self.rfields
         OTHER = "__other__"
 
-        def top(tl, length=10, least=False):
-            """ Find the top/least n rows/cols """
-            try:
-                if len(tl) > length:
-                    m = length - 1
-                    l = list(tl)
-                    l.sort(lambda x, y: int(y[1]-x[1]))
-                    if least:
-                        l.reverse()
-                    ts = (OTHER, self._aggregate([t[1] for t in l[m:]], method))
-                    l = l[:m] + [ts]
-                    return l
-            except (TypeError, ValueError):
-                pass
-            return tl
-
-        def sortdim(dim, items):
-            """ Sort a dimension """
-
-            rfield = rfields[dim]
-            if not rfield:
-                return
-            ftype = rfield.ftype
-            sortby = "value"
-            if ftype == "integer":
-                requires = rfield.requires
-                if isinstance(requires, (tuple, list)):
-                    requires = requires[0]
-                if isinstance(requires, IS_EMPTY_OR):
-                    requires = requires.other
-                if isinstance(requires, IS_IN_SET):
-                    sortby = "text"
-            elif ftype[:9] == "reference":
-                sortby = "text"
-            items.sort(key=lambda item: item[2][sortby])
-
         if represent:
             row_repr = self._represent_method(self.rows)
             col_repr = self._represent_method(self.cols)
@@ -1716,9 +1972,11 @@ class S3PivotTable(object):
                              text = r.text
                                     if "text" in r else row_repr(r.value))
             rows.append((i, total, header))
-        rows = top(rows, n, least=least)
+        if maxrows is not None:
+            rows = self._top(rows, maxrows,
+                             least=least, method=method, other=OTHER)
         last = rows.pop(-1) if rows[-1][0] == OTHER else None
-        sortdim(self.rows, rows)
+        self._sortdim(rows, rfields[self.rows])
         if last:
             last = (last[0], last[1], Storage(value=None, text=others))
             rows.append(last)
@@ -1737,9 +1995,11 @@ class S3PivotTable(object):
                              text = c.text
                                     if "text" in c else col_repr(c.value))
             cols.append((i, total, header))
-        cols = top(cols, n, least=least)
+        if maxcols is not None:
+            cols = self._top(cols, maxcols,
+                             least=least, method=method, other=OTHER)
         last = cols.pop(-1) if cols[-1][0] == OTHER else None
-        sortdim(self.cols, cols)
+        self._sortdim(cols, rfields[self.cols])
         if last:
             last = (last[0], last[1], Storage(value=None, text=others))
             cols.append(last)
@@ -2043,6 +2303,61 @@ class S3PivotTable(object):
             return None
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def _sortdim(items, rfield, index=2):
+        """
+            Sort a dimension (sorts items in-place)
+
+            @param items: the items as list of tuples
+                          (index, total, {value: value, text: text})
+            @param rfield: the dimension (S3ResourceField)
+            @param index: alternative index of the value/text dict
+                          within each item
+        """
+
+        if not rfield:
+            return
+        ftype = rfield.ftype
+        sortby = "value"
+        if ftype == "integer":
+            requires = rfield.requires
+            if isinstance(requires, (tuple, list)):
+                requires = requires[0]
+            if isinstance(requires, IS_EMPTY_OR):
+                requires = requires.other
+            if isinstance(requires, IS_IN_SET):
+                sortby = "text"
+        elif ftype[:9] == "reference":
+            sortby = "text"
+        items.sort(key=lambda item: item[index][sortby])
+        return
+
+    # -------------------------------------------------------------------------
+    def _top(self, items, length=10, least=False, method=None, other="__other__"):
+        """
+            Find the top/least <length> items (by total)
+
+            @param items: the items as list of tuples
+                          (index, total, {value: value, text: text})
+            @param length: the number of items
+            @param least: find least rather than top
+        """
+
+        try:
+            if len(items) > length:
+                m = length - 1
+                l = list(items)
+                l.sort(lambda x, y: int(y[1]-x[1]))
+                if least:
+                    l.reverse()
+                ts = (other, self._aggregate([t[1] for t in l[m:]], method))
+                l = l[:m] + [ts]
+                return l
+        except (TypeError, ValueError):
+            pass
+        return items
+
+    # -------------------------------------------------------------------------
     def _get_fields(self, fields=None):
         """
             Determine the fields needed to generate the report
@@ -2158,7 +2473,7 @@ class S3PivotTable(object):
                 value = value and len(value) or 0
             if not len(totals) and append is not None:
                 append(value)
-            totals.append(IS_NUMBER.represent(value))
+            totals.append(s3_unicode(IS_NUMBER.represent(value)))
         totals = " / ".join(totals)
         return totals
 
