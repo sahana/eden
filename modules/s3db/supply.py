@@ -33,6 +33,11 @@ __all__ = ["S3SupplyModel",
            "supply_item_controller",
            "supply_item_entity_controller",
            "supply_catalog_rheader",
+           "supply_item_entity_category",
+           "supply_item_entity_country",
+           "supply_item_entity_organisation",
+           "supply_item_entity_contacts",
+           "supply_item_entity_status",
            ]
 
 import re
@@ -1390,270 +1395,315 @@ class SupplyItemPackVirtualFields(dict, object):
             return None
 
 # =============================================================================
-# Virtual Fields for category, country, organisation & status
-class item_entity_virtualfields:
+def supply_item_entity_category(row):
+    """ Virtual field: category """
+
+    if hasattr(row, "supply_item_entity"):
+        row = row.supply_item_entity
+    else:
+        return None
+    try:
+        item_id = row.item_id
+    except AttributeError:
+        return None
+
+    table = current.s3db.supply_item
+    query = (table.id == item_id)
     
-    def category(self):
-        table = current.s3db.supply_item
-        try:
-            query = (table.id == self.supply_item_entity.item_id)
-        except:
-            # We are being instantiated inside one of the other methods
-            return None
-        record = current.db(query).select(table.item_category_id,
-                                          limitby=(0, 1)).first()
-        if record:
-            return table.item_category_id.represent(record.item_category_id)
-        else:
-            return current.messages["NONE"]
-
-    # -------------------------------------------------------------------------
-    def country(self):
-        country = None
-        s3db = current.s3db
-        etable = s3db.supply_item_entity
-        instance_type = self.supply_item_entity.instance_type
-        if instance_type == "inv_inv_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            otable = s3db.org_office
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
-                        (otable.site_id == itable.site_id)
-            except:
-                 # We are being instantiated inside one of the other methods
-                return None
-            record = current.db(query).select(otable.L0,
-                                              limitby=(0, 1)).first()
-            if record:
-                country = record.L0 or current.T("Unknown")
-        elif instance_type == "inv_track_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            rtable = s3db.inv_recv
-            otable = s3db.org_office
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
-                        (rtable.id == itable.recv_id) & \
-                        (otable.site_id == rtable.site_id)
-            except:
-                 # We are being instantiated inside one of the other methods
-                return None
-            record = current.db(query).select(otable.L0,
-                                              limitby=(0, 1)).first()
-            if record:
-                country = record.L0 or current.T("Unknown")
-        elif instance_type == "proc_plan_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            ptable = s3db.proc_plan
-            otable = s3db.org_office
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
-                        (ptable.id == itable.plan_id) & \
-                        (otable.site_id == ptable.site_id)
-            except:
-                 # We are being instantiated inside one of the other methods
-                return None
-            record = current.db(query).select(otable.L0,
-                                              limitby=(0, 1)).first()
-            if record:
-                country = record.L0 or current.T("Unknown")
-        else:
-            # @ToDo: Assets and req_items
-            return current.messages["NONE"]
-        return country or current.messages["NONE"]
-
-    # -------------------------------------------------------------------------
-    def organisation(self):
-        organisation = None
-        s3db = current.s3db
-        etable = s3db.supply_item_entity
-        instance_type = self.supply_item_entity.instance_type
-        if instance_type == "inv_inv_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            otable = s3db.org_office
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
-                        (otable.site_id == itable.site_id)
-            except:
-                 # We are being instantiated inside one of the other methods
-                return None
-            record = current.db(query).select(otable.organisation_id,
-                                              limitby=(0, 1)).first()
-            if record:
-                organisation = s3db.org_OrganisationRepresent(acronym=False)\
-                                                             (record.organisation_id)
-        elif instance_type == "proc_plan_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            rtable = s3db.proc_plan
-            otable = s3db.org_office
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
-                        (rtable.id == itable.plan_id) & \
-                        (otable.site_id == rtable.site_id)
-            except:
-                 # We are being instantiated inside one of the other methods
-                return None
-            record = current.db(query).select(otable.organisation_id,
-                                              limitby=(0, 1)).first()
-            if record:
-                organisation = organisation_represent(record.organisation_id,
-                                                      acronym=False)
-        elif instance_type == "inv_track_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            rtable = s3db.inv_recv
-            otable = s3db.org_office
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
-                        (rtable.id == itable.recv_id) & \
-                        (otable.site_id == rtable.site_id)
-            except:
-                 # We are being instantiated inside one of the other methods
-                return None
-            record = current.db(query).select(otable.organisation_id,
-                                              limitby=(0, 1)).first()
-            if record:
-                organisation = organisation_represent(record.organisation_id,
-                                                      acronym=False)
-        else:
-            # @ToDo: Assets and req_items
-            return current.messages["NONE"]
-        return organisation or current.messages["NONE"]
-
-    # -------------------------------------------------------------------------
-    #def site(self):
-    def contacts(self):
-        #site = current.messages["NONE"]
-        s3db = current.s3db
-        etable = s3db.supply_item_entity
-        instance_type = self.supply_item_entity.instance_type
-        if instance_type == "inv_inv_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name])
-            except:
-                 # We are being instantiated inside one of the other methods
-                return None
-            record = current.db(query).select(itable.site_id,
-                                              limitby=(0, 1)).first()
-        elif instance_type == "inv_track_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            rtable = s3db.inv_recv
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
-                        (rtable.id == itable.recv_id)
-            except:
-                 # We are being instantiated inside one of the other methods
-                return None
-            record = db(query).select(rtable.site_id,
+    record = current.db(query).select(table.item_category_id,
                                       limitby=(0, 1)).first()
-        elif instance_type == "proc_plan_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            ptable = s3db.proc_plan
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
-                        (ptable.id == itable.plan_id)
-            except:
-                 # We are being instantiated inside one of the other methods
-                return None
-            record = db(query).select(ptable.site_id,
-                                      limitby=(0, 1)).first()
-        else:
-            # @ToDo: Assets and req_items
-            return current.messages["NONE"]
+    if record:
+        return table.item_category_id.represent(record.item_category_id)
+    else:
+        return current.messages["NONE"]
 
-        #site = s3db.org_site_represent(record.site_id)
-        #return site
-        otable = s3db.org_office
-        query = (otable.site_id == record.site_id)
-        record = current.db(query).select(otable.id,
-                                          otable.comments,
+# -------------------------------------------------------------------------
+def supply_item_entity_country(row):
+    """ Virtual field: country """
+    
+    if hasattr(row, "supply_item_entity"):
+        row = row.supply_item_entity
+    else:
+        return None
+        
+    s3db = current.s3db
+    etable = s3db.supply_item_entity
+
+    ekey = etable._id.name
+    
+    try:
+        instance_type = row.instance_type
+    except AttributeError:
+        return None
+    try:
+        entity_id = row[ekey]
+    except AttributeError:
+        return None
+    
+    itable = s3db[instance_type]
+    ltable = s3db.gis_location
+    
+    if instance_type == "inv_inv_item":
+        
+        stable = s3db.org_site
+        query = (itable[ekey] == entity_id) & \
+                (stable.site_id == itable.site_id) & \
+                (ltable.id == stable.location_id)
+        record = current.db(query).select(ltable.L0,
                                           limitby=(0, 1)).first()
-        extension = current.request.extension
-        if extension == "xls" or \
-           extension == "pdf":
-            if record.comments:
-                return record.comments
+            
+    elif instance_type == "inv_track_item":
+        
+        rtable = s3db.inv_recv
+        stable = s3db.org_site
+        query = (itable[ekey] == entity_id) & \
+                (rtable.id == itable.recv_id) & \
+                (stable.site_id == rtable.site_id) & \
+                (ltable.id == stable.location_id)
+        record = current.db(query).select(ltable.L0,
+                                          limitby=(0, 1)).first()
+            
+    elif instance_type == "proc_plan_item":
+        
+        ptable = s3db.proc_plan
+        stable = s3db.org_site
+        query = (itable[ekey] == entity_id) & \
+                (ptable.id == itable.plan_id) & \
+                (stable.site_id == ptable.site_id) & \
+                (ltable.id == stable.location_id)
+        record = current.db(query).select(ltable.L0,
+                                          limitby=(0, 1)).first()
+           
+    else:
+        # @ToDo: Assets and req_items
+        record = None
+
+    if record:
+        return record.L0 or current.T("Unknown")
+    else:
+        return current.messages["NONE"]
+
+# -------------------------------------------------------------------------
+def supply_item_entity_organisation(row):
+    """ Virtual field: organisation """
+
+    if hasattr(row, "supply_item_entity"):
+        row = row.supply_item_entity
+    else:
+        return None
+
+    s3db = current.s3db
+    etable = s3db.supply_item_entity
+
+    ekey = etable._id.name
+
+    try:
+        instance_type = row.instance_type
+    except AttributeError:
+        return None
+    try:
+        entity_id = row[ekey]
+    except AttributeError:
+        return None
+
+    organisation_represent = s3db.org_OrganisationRepresent(acronym=False)
+    itable = s3db[instance_type]
+    
+    if instance_type == "inv_inv_item":
+
+        stable = s3db.org_site
+        query = (itable[ekey] == entity_id) & \
+                (stable.site_id == itable.site_id)
+        record = current.db(query).select(stable.organisation_id,
+                                          limitby=(0, 1)).first()
+                                          
+    elif instance_type == "proc_plan_item":
+        
+        rtable = s3db.proc_plan
+        stable = s3db.org_site
+        query = (itable[ekey] == entity_id) & \
+                (rtable.id == itable.plan_id) & \
+                (stable.site_id == rtable.site_id)
+        record = current.db(query).select(stable.organisation_id,
+                                          limitby=(0, 1)).first()
+                                          
+    elif instance_type == "inv_track_item":
+        
+        rtable = s3db.inv_recv
+        stable = s3db.org_site
+        query = (itable[ekey] == entity_id) & \
+                (rtable.id == itable.recv_id) & \
+                (stable.site_id == rtable.site_id)
+        record = current.db(query).select(stable.organisation_id,
+                                          limitby=(0, 1)).first()
+                                          
+    else:
+        # @ToDo: Assets and req_items
+        record = None
+
+    if record:
+        return organisation_represent(record.organisation_id)
+    else:
+        return current.messages["NONE"]
+
+# -------------------------------------------------------------------------
+def supply_item_entity_contacts(row):
+    """ Virtual field: contacts (site_id) """
+    
+    if hasattr(row, "supply_item_entity"):
+        row = row.supply_item_entity
+    else:
+        return None
+
+    db = current.db
+    s3db = current.s3db
+    etable = s3db.supply_item_entity
+
+    ekey = etable._id.name
+
+    try:
+        instance_type = row.instance_type
+    except AttributeError:
+        return None
+    try:
+        entity_id = row[ekey]
+    except AttributeError:
+        return None
+
+    itable = s3db[instance_type]
+
+    if instance_type == "inv_inv_item":
+
+        query = (itable[ekey] == entity_id)
+        record = db(query).select(itable.site_id,
+                                  limitby=(0, 1)).first()
+                                          
+    elif instance_type == "inv_track_item":
+        
+        rtable = s3db.inv_recv
+        query = (itable[ekey] == entity_id) & \
+                (rtable.id == itable.recv_id)
+        record = db(query).select(rtable.site_id,
+                                  limitby=(0, 1)).first()
+                                  
+    elif instance_type == "proc_plan_item":
+        
+        ptable = s3db.proc_plan
+        query = (itable[ekey] == entity_id) & \
+                (ptable.id == itable.plan_id)
+        record = db(query).select(ptable.site_id,
+                                  limitby=(0, 1)).first()
+    else:
+        # @ToDo: Assets and req_items
+        record = None
+
+    default = current.messages["NONE"]
+
+    if not record:
+        return default
+
+    otable = s3db.org_office
+    query = (otable.site_id == record.site_id)
+    office = db(query).select(otable.id,
+                              otable.comments,
+                              limitby=(0, 1)).first()
+
+    if office:
+
+        if current.request.extension in ("xls", "pdf"):
+            if office.comments:
+                return office.comments
             else:
-                return current.messages["NONE"]
-        elif record.comments:
-            comments = s3_comments_represent(record.comments,
+                return default
+                
+        elif office.comments:
+            comments = s3_comments_represent(office.comments,
                                              show_link=False)
         else:
-            comments = current.messages["NONE"]
+            comments = default
+            
         return A(comments,
-                 _href = URL(f="office",
-                             args = [record.id]))
+                 _href = URL(f="office", args = [office.id]))
+                 
+    else:
+        return default
+                                      
 
-    # -------------------------------------------------------------------------
-    def status(self):
-        status = None
-        s3db = current.s3db
-        etable = s3db.supply_item_entity
-        instance_type = self.supply_item_entity.instance_type
-        if instance_type == "inv_inv_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name])
-            except:
-                # We are being instantiated inside one of the other methods
-                return None
-            record = current.db(query).select(itable.expiry_date,
-                                              limitby=(0, 1)).first()
-            if record:
-                T = current.T
-                if record.expiry_date:
-                    status = T("Stock Expires %(date)s") % dict(date=record.expiry_date)
-                else:
-                   status = T("In Stock")
-        elif instance_type == "proc_plan_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            rtable = s3db.proc_plan
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
-                        (rtable.id == itable.plan_id)
-            except:
-                # We are being instantiated inside one of the other methods
-                return None
-            record = current.db(query).select(rtable.eta,
-                                              limitby=(0, 1)).first()
-            if record:
-                T = current.T
-                if record.eta:
-                    status = T("Planned %(date)s") % dict(date=record.eta)
-                else:
-                   status = T("Planned Procurement")
-        elif instance_type == "inv_track_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            rtable = s3db.inv_recv
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
-                        (rtable.id == itable.send_inv_item_id)
-            except:
-                # We are being instantiated inside one of the other methods
-                return None
-            record = current.db(query).select(rtable.eta,
-                                              limitby=(0, 1)).first()
-            if record:
-                T = current.T
-                if record.eta:
-                    status = T("Order Due %(date)s") % dict(date=record.eta)
-                else:
-                    status = T("On Order")
-        else:
-            # @ToDo: Assets and req_items
-            return current.messages["NONE"]
-        return status or current.messages["NONE"]
+# -------------------------------------------------------------------------
+def supply_item_entity_status(row):
+    """ Virtual field: status """
+    
+    if hasattr(row, "supply_item_entity"):
+        row = row.supply_item_entity
+    else:
+        return None
+
+    db = current.db
+    s3db = current.s3db
+    etable = s3db.supply_item_entity
+
+    ekey = etable._id.name
+
+    try:
+        instance_type = row.instance_type
+    except AttributeError:
+        return None
+    try:
+        entity_id = row[ekey]
+    except AttributeError:
+        return None
+
+    itable = s3db[instance_type]
+
+    status = None
+    
+    if instance_type == "inv_inv_item":
+        
+        query = (itable[ekey] == entity_id)
+        record = current.db(query).select(itable.expiry_date,
+                                          limitby=(0, 1)).first()
+        if record:
+            T = current.T
+            if record.expiry_date:
+                status = T("Stock Expires %(date)s") % \
+                          dict(date=record.expiry_date)
+            else:
+                status = T("In Stock")
+                
+    elif instance_type == "proc_plan_item":
+
+
+        rtable = s3db.proc_plan
+        query = (itable[ekey] == entity_id) & \
+                (rtable.id == itable.plan_id)
+        record = current.db(query).select(rtable.eta,
+                                          limitby=(0, 1)).first()
+        if record:
+            T = current.T
+            if record.eta:
+                status = T("Planned %(date)s") % dict(date=record.eta)
+            else:
+                status = T("Planned Procurement")
+                
+    elif instance_type == "inv_track_item":
+        
+        rtable = s3db.inv_recv
+        query = (itable[ekey] == entity_id) & \
+                (rtable.id == itable.send_inv_item_id)
+        record = current.db(query).select(rtable.eta,
+                                          limitby=(0, 1)).first()
+        if record:
+            T = current.T
+            if record.eta:
+                status = T("Order Due %(date)s") % dict(date=record.eta)
+            else:
+                status = T("On Order")
+                
+    else:
+        # @ToDo: Assets and req_items
+        return current.messages["NONE"]
+
+    return status or current.messages["NONE"]
 
 # =============================================================================
 def supply_item_controller():
@@ -1732,7 +1782,11 @@ def supply_item_entity_controller():
         name_nice = T("Item"),
         name_nice_plural = T("Items"))
 
-    table.virtualfields.append(item_entity_virtualfields())
+    table.category = Field.Lazy(supply_item_entity_category)
+    table.country = Field.Lazy(supply_item_entity_country)
+    table.organisation = Field.Lazy(supply_item_entity_organisation)
+    table.contacts = Field.Lazy(supply_item_entity_contacts)
+    table.status = Field.Lazy(supply_item_entity_status)
 
     # Allow VirtualFields to be sortable/searchable
     s3.no_sspag = True
@@ -1796,11 +1850,13 @@ def supply_item_entity_controller():
             # @ToDo: Other Site types (how to do this as a big Join?)
             table = s3db.org_office
             otable = s3db.org_organisation
-            fields = [table.L0,
+            ltable = s3db.gis_location
+            fields = [ltable.L0,
                       #table.name,
                       otable.name]
             query = (table.deleted == False) & \
-                    (table.organisation_id == otable.id)
+                    (table.organisation_id == otable.id) & \
+                    (ltable.id == table.location_id)
             isites = []
             rsites = []
             psites = []
