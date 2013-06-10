@@ -133,13 +133,14 @@ class SearchMember(SeleniumUnitTest):
             @description: Search Members - Advanced Search by Organisation
         """
         self.start()
-        self.advancedSearchTest(["Timor-Leste Red Cross Society"])
+        self.advancedSearchTest(["Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)"])
         member = current.s3db["member_membership"]
         org = current.s3db["org_organisation"]
-        dbRowCount = current.db((member.deleted != True) & (member.organisation_id == org.id) & (org.name == 'Timor-Leste Red Cross Society')).count()
+        dbRowCount = current.db((member.deleted != True) & (member.organisation_id == org.id) &
+                                (org.name == 'Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)')).count()
         self.compareRowCount(dbRowCount)
 
-      
+
     def test_mem004_04_member_search_advance_by_Country(self):
         #return 
         """
