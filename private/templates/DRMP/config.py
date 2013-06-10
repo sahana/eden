@@ -1654,6 +1654,189 @@ def customize_cms_post_fields():
     return table
     
 # -----------------------------------------------------------------------------
+def cms_post_popup(r):
+    """
+        Customized popup for cms_post resource
+    """
+
+    T = current.T
+    record = r.record
+    pkey = "cms_post.id"
+
+    # Construct the item ID
+    map_id = "default_map" # @ToDo: provide the map_id as a var in order to be able to support multiple maps
+    record_id = record[pkey]
+    item_id = "%s-%s" % (map_id, record_id)
+
+    item_class = "thumbnail"
+
+    db = current.db
+    table = db.cms_post
+
+    series = table.series_id.represent(record.series_id)
+    date = table.created_on.represent(record.created_on)
+    body = record.body
+    location_id = record.location_id
+    location = table.location_id.represent(location_id)
+    location_url = URL(c="gis", f="location", args=[location_id])
+    author_id = record.created_by
+    author = table.created_by.represent(author_id)
+
+    s3db = current.s3db
+    ltable = s3db.pr_person_user
+    ptable = db.pr_person
+    query = (ltable.user_id == author_id) & \
+            (ltable.pe_id == ptable.pe_id)
+    row = db(query).select(ptable.id,
+                           limitby=(0, 1)
+                           ).first()
+    if row:
+        person_url = URL(c="hrm", f="person", args=[row.id])
+    else:
+        person_url = "#"
+    author = A(author,
+               _href=person_url,
+               )
+
+    utable = db.auth_user
+    otable = db.org_organisation
+    query = (utable.id == author_id) & \
+            (otable.id == utable.organisation_id)
+    row = db(query).select(otable.id,
+                           otable.name,
+                           otable.logo,
+                           limitby=(0, 1)
+                           ).first()
+    if row:
+        organisation_id = row.id
+        organisation = row.name
+        org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
+        logo = URL(c="default", f="download", args=[row.logo])
+    else:
+        organisation_id = 0
+        organisation = ""
+        org_url = ""
+        logo = ""
+
+    avatar = IMG(_src=logo,
+                 _height=50,
+                 _width=50,
+                 _style="padding-right:5px;",
+                 _class="media-object")
+    avatar = A(avatar,
+               _href=org_url,
+               _class="pull-left",
+               )
+
+    # Edit Bar
+    permit = current.auth.s3_has_permission
+    if permit("update", table, record_id=record_id):
+        edit_btn = A(I(" ", _class="icon icon-edit"),
+                     _href=URL(c="cms", f="post",
+                               args=[record_id, "update.popup"],
+                               #vars={"refresh": listid,
+                               #      "record": record_id}
+                               ),
+                     _class="s3_modal",
+                     _title=T("Edit %(type)s") % dict(type=T(series)),
+                     )
+    else:
+        edit_btn = ""
+    if permit("delete", table, record_id=record_id):
+        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+                       _class="dl-item-delete",
+                       )
+    else:
+        delete_btn = ""
+    edit_bar = DIV(edit_btn,
+                   delete_btn,
+                   _class="edit-bar fright",
+                   )
+
+    # Dropdown of available documents
+    dtable = db.doc_document
+    query = (table.doc_id == dtable.doc_id) & \
+            (dtable.deleted == False)
+    documents = db(query).select(dtable.file) 
+    if documents:
+        doc_list = UL(_class="dropdown-menu",
+                      _role="menu",
+                      )
+        retrieve = db.doc_document.file.retrieve
+        for doc in documents:
+            filename = doc.file
+            try:
+                doc_name = retrieve(filename)[0]
+            except IOError:
+                doc_name = current.messages["NONE"]
+            doc_url = URL(c="default", f="download",
+                          args=[filename])
+            doc_item = LI(A(I(_class="icon-file"),
+                            " ",
+                            doc_name,
+                            _href=doc_url,
+                            ),
+                          _role="menuitem",
+                          )
+            doc_list.append(doc_item)
+        docs = DIV(A(I(_class="icon-paper-clip"),
+                     SPAN(_class="caret"),
+                     _class="btn dropdown-toggle",
+                     _href="#",
+                     **{"_data-toggle": "dropdown"}
+                     ),
+                   doc_list,
+                   _class="btn-group attachments dropdown pull-right",
+                   )
+    else:
+        docs = ""
+
+    icon = series.lower().replace(" ", "_")
+    card_label = TAG[""](I(_class="icon icon-%s" % icon),
+                         SPAN(" %s" % T(series),
+                              _class="card-title"))
+    # Type cards
+    if series == "Alert": 
+        # Apply additional highlighting for Alerts
+        item_class = "%s disaster" % item_class
+
+    # Render the item
+    item = DIV(DIV(card_label,
+                   SPAN(A(location,
+                          _href=location_url,
+                          ),
+                        _class="location-title",
+                        ),
+                   SPAN(date,
+                        _class="date-title",
+                        ),
+                   #edit_bar,
+                   _class="card-header",
+                   ),
+               DIV(avatar,
+                   DIV(DIV(body,
+                           DIV(author,
+                               " - ",
+                               A(organisation,
+                                 _href=org_url,
+                                 _class="card-organisation",
+                                 ),
+                               _class="card-person",
+                               ),
+                           _class="media",
+                           ),
+                       _class="media-body",
+                       ),
+                   _class="media",
+                   ),
+               docs,
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
+    
+# -----------------------------------------------------------------------------
 def customize_cms_post(**attr):
     """
         Customize cms_post controller
@@ -1769,6 +1952,13 @@ def customize_cms_post(**attr):
                            )
 
             s3.cancel = True
+        elif r.representation == "plain" and \
+             r.method != "search":
+            # Map Popups
+            table = r.table
+            table.created_by.represent = s3_auth_user_represent_name
+            table.created_on.represent = datetime_represent
+            table.location_id.represent = location_represent
 
         return True
     s3.prep = custom_prep
@@ -1785,6 +1975,10 @@ def customize_cms_post(**attr):
                 output["form"].add_class("cms_post")
             elif "item" in output and hasattr(output["item"], "add_class"):
                 output["item"].add_class("cms_post")
+        elif r.representation == "plain" and \
+             r.method != "search":
+            # Map Popups
+            output = cms_post_popup(r)
 
         return output
     s3.postp = custom_postp

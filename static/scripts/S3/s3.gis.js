@@ -3098,14 +3098,27 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     // Replace Cluster Popup contents with selected Feature Popup
     function loadClusterPopup(map_id, url, id) {
         // Show Throbber whilst waiting for Popup to show
+        var selector = '#' + id + '_contentDiv';
+        var div = $(selector);
         var contents = i18n.gis_loading + "...<img src='" + ajax_loader + "' border=0 />";
-        $('#' + id + '_contentDiv').html(contents);
+        div.html(contents);
         // Load data into Popup
         var map = S3.gis.maps[map_id];
         $.get(url,
               function(data) {
-                $('#' + id + '_contentDiv').html(data);
+                div.html(data);
                 map.popups[0].updateSize();
+                var dropdowns = $(selector + ' .dropdown-toggle');
+                if (dropdowns.length) {
+                    // We have Bootstrap dropdowns
+                    // Modify Overflow of containers
+                    div.parent()
+                       .css('overflow', 'visible')
+                       .parent()
+                       .css('overflow', 'visible');
+                    // Enable the Bootstrap dropdowns in the popups
+                    dropdowns.dropdown();
+                }
               },
               'html'
         );
@@ -3332,6 +3345,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             true,
             onPopupClose
         );
+        popup.disableFirefoxOverflowHack = true;
         if (undefined != popup_url) {
             // call AJAX to get the contentHTML
             loadDetails(popup_url, popup_id + '_contentDiv', popup);

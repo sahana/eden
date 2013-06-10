@@ -35,6 +35,14 @@
     margin-top: 2px;
 }
 
+/* Attachments button */
+.olFramedCloudPopupContent {
+    overflow: visible;
+}
+.olFramedCloudPopupContent .btn-group > .dropdown-toggle {
+    margin-top: -25px;
+}
+
 /* Layer Tree */
 /* Radio
 input.x-tree-node-cb {
