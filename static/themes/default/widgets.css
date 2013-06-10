@@ -348,6 +348,11 @@ table.importItem {
     display: none;
 }
 
+/* Pivot Tables */
+.pivot-table-contents {
+    overflow: auto;
+}
+
 /* Data Lists */
 #dl-container {
     clear: left;

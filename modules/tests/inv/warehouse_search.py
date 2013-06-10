@@ -69,7 +69,7 @@ class SearchWarehouse(SeleniumUnitTest):
         """
         w = current.s3db["inv_warehouse"]
         o = current.s3db["org_organisation"]
-        key="Timor-Leste Red Cross Society"
+        key="Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)"
         dbRowCount = current.db((w.deleted != "T") & (w.organisation_id == o.id) & (o.name == key)).count()
         self.search(self.search.advanced_form,
             True,

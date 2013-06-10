@@ -119,6 +119,7 @@ settings.project.codes = True
 #settings.project.community = True
 # Uncomment this to use multiple Budgets per project
 settings.project.multiple_budgets = True
+settings.project.theme_percentages = True
 # Uncomment this to use multiple Organisations per project
 settings.project.multiple_organisations = True
 # Uncomment this to customise
@@ -129,6 +130,35 @@ settings.project.organisation_roles = {
     #4: T("Customer"), # T("Beneficiary")?
     5: T("Partner")
 }
+
+# -----------------------------------------------------------------------------
+def customize_project_project(**attr):
+    """
+        Customize project_project controller
+    """
+
+    s3 = current.response.s3
+
+    # Custom PreP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+
+        if r.interactive  or r.representation == "aadata":
+            # Configure fields 
+            field = r.table.duration
+            field.readable = field.writable = True
+
+        return True
+    s3.prep = custom_prep
+
+    return attr
+
+settings.ui.customize_project_project = customize_project_project
 
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([

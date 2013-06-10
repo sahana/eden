@@ -15,11 +15,13 @@
          Objectives...........string..........Project objectives
          Comments.............string..........Project comments
          Status...............string..........Project status
+         Duration.............string..........Project duration
          Start Date...........YYYY-MM-DD......Start date of the project
          End Date.............YYYY-MM-DD......End date of the project
          Sectors..............comma-sep list..List of Organisation Sectors
          Hazards..............comma-sep list..List of Hazard names
          HFA..................comma-sep list..List of HFA priorities (integer numbers)
+         Budget...............double          Total Budget of project
          Budget:XXXX..........float...........Budget for year XXX (multiple allowed)
          FPFirstName..........string..........First Name of Focal Person
          FPLastName...........string..........Last Name of Focal Person
@@ -31,6 +33,10 @@
          theme_percentages=False:
          Themes...............comma-sep list..List of Theme names
 
+         Location:XXXX........string..........% of the Project targetting Location XXX (multiple allowed)
+         theme_percentages=False:
+         Locations............comma-sep list..List of Location names
+
     *********************************************************************** -->
 
     <xsl:output method="xml"/>
@@ -40,6 +46,7 @@
     <xsl:variable name="SectorPrefix" select="'Sector:'"/>
     <xsl:variable name="HazardPrefix" select="'Hazard:'"/>
     <xsl:variable name="ThemePrefix" select="'Theme:'"/>
+    <xsl:variable name="LocationPrefix" select="'Location:'"/>
 
     <!-- ****************************************************************** -->
     <xsl:key name="orgs" match="row" use="col[@field='Organisation']"/>
@@ -86,6 +93,11 @@
                 <xsl:call-template name="Theme"/>
             </xsl:for-each>
 
+            <!-- Locations -->
+            <xsl:for-each select="//row[1]/col[starts-with(@field, 'Location')]">
+                <xsl:call-template name="Location"/>
+            </xsl:for-each>
+
             <!-- Projects -->
             <xsl:apply-templates select="./table/row"/>
         </s3xml>
@@ -102,6 +114,7 @@
         <xsl:variable name="HFA" select="col[@field='HFA']"/>
         <xsl:variable name="Sectors" select="col[@field='Sectors']"/>
         <xsl:variable name="Themes" select="col[@field='Themes']"/>
+        <xsl:variable name="Locations" select="col[@field='Locations']"/>
 
         <xsl:variable name="FirstName" select="col[@field='FPFirstName']/text()"/>
         <xsl:variable name="LastName" select="col[@field='FPLastName']/text()"/>
@@ -111,6 +124,7 @@
             <data field="code"><xsl:value-of select="col[@field='Code']"/></data>
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
+            <data field="duration"><xsl:value-of select="col[@field='Duration']"/></data>
             <xsl:if test="col[@field='Start Date']!=''">
                 <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
             </xsl:if>
@@ -193,6 +207,36 @@
                 </xsl:choose>
             </xsl:for-each>
 
+            <!-- Project Locations -->
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list">
+                    <xsl:value-of select="$Locations"/>
+                </xsl:with-param>
+                <xsl:with-param name="arg">location_ref</xsl:with-param>
+            </xsl:call-template>
+            <xsl:for-each select="col[starts-with(@field, 'Location')]">
+                <xsl:choose>
+                    <xsl:when test="@field='Locations'">
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:variable name="Location" select="normalize-space(substring-after(@field, ':'))"/>
+                        <xsl:variable name="Percentage" select="text()"/>
+                        <xsl:if test="$Location!=''">
+                            <resource name="project_location">
+                                <reference field="location_id" resource="gis_location">
+                                    <xsl:attribute name="tuid">
+                                        <xsl:value-of select="concat($LocationPrefix, $Location)"/>
+                                    </xsl:attribute>
+                                </reference>
+                                <xsl:if test="$Percentage!=''">
+                                    <data field="percentage"><xsl:value-of select="$Percentage"/></data>
+                                </xsl:if>
+                            </resource>
+                        </xsl:if>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:for-each>
+
             <!-- Project Organisations -->
             <!-- Embedded within record -->
             <reference field="organisation_id" resource="org_organisation">
@@ -248,6 +292,11 @@
         <xsl:call-template name="splitList">
             <xsl:with-param name="list"><xsl:value-of select="$Themes"/></xsl:with-param>
             <xsl:with-param name="arg">theme_res</xsl:with-param>
+        </xsl:call-template>
+
+        <xsl:call-template name="splitList">
+            <xsl:with-param name="list"><xsl:value-of select="$Locations"/></xsl:with-param>
+            <xsl:with-param name="arg">location_res</xsl:with-param>
         </xsl:call-template>
 
     </xsl:template>
@@ -313,6 +362,24 @@
                     <data field="name"><xsl:value-of select="$item"/></data>
                 </resource>
             </xsl:when>
+            <!-- Locations -->
+            <xsl:when test="$arg='location_ref'">
+                <resource name="project_location">
+                    <reference field="location_id" resource="gis_location">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($LocationPrefix, $item)"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:when>
+            <xsl:when test="$arg='location_res'">
+                <resource name="gis_location">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat($LocationPrefix, $item)"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$item"/></data>
+                </resource>
+            </xsl:when>
         </xsl:choose>
     </xsl:template>
 
@@ -352,6 +419,21 @@
                     <xsl:value-of select="concat($ThemePrefix, $Theme)"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="$Theme"/></data>
+            </resource>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Location">
+        <xsl:variable name="Location" select="normalize-space(substring-after(@field, ':'))"/>
+
+        <xsl:if test="$Location!=''">
+            <resource name="gis_location">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat($LocationPrefix, $Location)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$Location"/></data>
             </resource>
         </xsl:if>
 
