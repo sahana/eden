@@ -99,7 +99,7 @@ def dt_row_cnt(reporter,
     config = current.test_config
     browser = config.browser
 
-    elem = browser.find_element_by_id("list_info")
+    elem = browser.find_element_by_id("datatable_info")
     details = elem.text
     if not quiet:
         reporter(details)
@@ -166,7 +166,7 @@ def dt_data(row_list = None,
 # -----------------------------------------------------------------------------
 def dt_data_item(row = 1,
                  column = 1,
-                 tableID = "list",
+                 tableID = "datatable",
                 ):
     """ Returns the data found in the cell of the dataTable """
 
@@ -185,7 +185,7 @@ def dt_find(search = "",
             row = None,
             column = None,
             cellList = None,
-            tableID = "list",
+            tableID = "datatable",
             first = False,
            ):
     """
@@ -297,7 +297,7 @@ def dt_find(search = "",
 # -----------------------------------------------------------------------------
 def dt_links(reporter,
              row = 1,
-             tableID = "list",
+             tableID = "datatable",
              quiet = True
             ):
     """ Returns a list of links in the given row of the dataTable """

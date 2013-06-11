@@ -289,7 +289,7 @@ class S3Report(S3CRUD):
                     items = report.html(show_totals=show_totals,
                                         filter_query=query,
                                         url=r.url(method=""),
-                                        _id="list",
+                                        _id="datatable",
                                         _class="dataTable display report")
                     report_data = report.report_data
                     json_data = report_data.json_data

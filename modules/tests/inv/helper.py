@@ -51,13 +51,13 @@ class InvTestFunctions(SeleniumUnitTest):
         """
 
         time.sleep(2) # give the browser time to execute all scripts
+        self.login(account=user, nexturl="inv/send/%s/track_item" % send_id)
         try:
             add_btn = self.browser.find_element_by_id("show-add-btn")
             if add_btn.is_displayed():
                 add_btn.click()
         except:
             pass
-        self.login(account=user, nexturl="inv/send/%s/track_item" % send_id)
         table = "inv_track_item"
         result = self.create(table, data, dbcallback = self.dbcallback_getStockLevels)
         # Get the last record in the before & after
@@ -183,13 +183,13 @@ class InvTestFunctions(SeleniumUnitTest):
             given recv_id
         """
 
+        self.login(account=user, nexturl="inv/recv/%s/track_item" % recv_id)
         try:
             add_btn = self.browser.find_element_by_id("show-add-btn")
             if add_btn.is_displayed():
                 add_btn.click()
         except:
             pass
-        self.login(account=user, nexturl="inv/recv/%s/track_item" % recv_id)
         table = "inv_track_item"
         result = self.create(table, data)
         return result
