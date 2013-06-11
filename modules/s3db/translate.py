@@ -58,7 +58,7 @@ class S3TranslateModel(S3Model):
         table = define_table(tablename,
                              Field("code", length=10, notnull=True,
                                    requires = IS_IN_SET(langlist),
-                                   label = T("Language code")),
+                                   label = T("Language Code")),
                              Field("file", "upload", notnull=True,
                                    label = T("Translated File")),
                              *s3_meta_fields())

@@ -98,7 +98,7 @@ tracking_status = {TRACK_STATUS_UNKNOWN   : T("Unknown"),
                    TRACK_STATUS_TRANSIT   : T("In transit"),
                    TRACK_STATUS_UNLOADING : T("Unloading"),
                    TRACK_STATUS_ARRIVED   : T("Arrived"),
-                   TRACK_STATUS_CANCELED  : T("Cancelled"),
+                   TRACK_STATUS_CANCELED  : T("Canceled"),
                    TRACK_STATUS_RETURNING : T("Returning"),
                    }
 

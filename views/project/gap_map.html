@@ -2,9 +2,9 @@
 {{=H1(title)}}
 {{=H3(subtitle)}}
 {{P(T("Select the overlays for Assessments and Activities relating to each Need to identify the gap."))}}
-{{=TABLE(TR( IMG(_src="/%s/static/img/gap_map_assess.gif" % appname),T("Assessments:") ),
-	     TR( IMG(_src="/%s/static/img/gap_map_act.gif" % appname), T("Activities:") ),
-	     TR( IMG(_src="/%s/static/img/gap_map_met.gif" % appname), T("Activities matching Assessments:") ),
+{{=TABLE(TR( IMG(_src="/%s/static/img/gap_map_assess.gif" % appname), "%s:" % T("Assessments") ),
+	     TR( IMG(_src="/%s/static/img/gap_map_act.gif" % appname), "%s:" % T("Activities") ),
+	     TR( IMG(_src="/%s/static/img/gap_map_met.gif" % appname), "%s:" % T("Activities matching Assessments") ),
 	  	 )}}
 	  	 &nbsp
 {{=XML(map)}}

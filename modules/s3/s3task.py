@@ -217,7 +217,7 @@ class S3Task(object):
                 label_list_button = T("List Jobs"),
                 label_create_button = T("Add Job"),
                 msg_record_created = T("Job added"),
-                msg_record_modified = T("Job updated updated"),
+                msg_record_modified = T("Job updated"),
                 msg_record_deleted = T("Job deleted"),
                 msg_list_empty = T("No jobs configured yet"),
                 msg_no_match = T("No jobs configured"))

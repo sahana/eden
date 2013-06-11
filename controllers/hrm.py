@@ -169,7 +169,7 @@ def staff():
                 table.site_id.comment = DIV(DIV(_class="tooltip",
                                                 _title="%s|%s" % (settings.get_org_site_label(),
                                                                   T("The facility where this position is based."),
-                                                                  #T("Enter some characters to bring up a list of possible matches.")
+                                                                  #T("Enter some characters to bring up a list of possible matches")
                                                                   )))
                 table.status.writable = table.status.readable = False
 

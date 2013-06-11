@@ -561,10 +561,10 @@ class admin():
                           A(T("Manage Administrators"),
                             _href = URL(c="admin", f = "role", args = [1,"users"])
                             ),
-                          A(T("Manage Organisation Contacts"),
+                          A(T("Manage Organization Contacts"),
                             _href = URL(c="admin", f = "role", args = [6,"users"])
                             ),
-                          A(T("Manage Organisations"),
+                          A(T("Manage Organizations"),
                             _href = URL(c="org", f = "organisation")
                             ),
                           A(T("Approve Projects"),

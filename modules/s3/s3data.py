@@ -502,8 +502,8 @@ class S3DataTable(object):
         if "map" in formats and "map" in export_formats:
             iconList.append(IMG(_src="/%s/static/img/map_icon.png" % application,
                                 _onclick="S3.dataTables.formatRequest('map','%s','%s');" % (id, formats.map),
-                                _alt=T("Show on map"),
-                                _title=T("Show on map"),
+                                _alt=T("Show on Map"),
+                                _title=T("Show on Map"),
                                 ))
 
         for icon in iconList:

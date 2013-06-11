@@ -1941,7 +1941,7 @@ class S3SurveySeriesModel(S3Model):
         table = TABLE()
 
         labelQstn = SELECT(lblQstns, _name="labelQuestion", value=labelQuestion)
-        table.append(TR(TH(T("Select Label Question:")), _class="survey_question"))
+        table.append(TR(TH("%s:" % T("Select Label Question")), _class="survey_question"))
         table.append(labelQstn)
 
         table.append(TR(TH(T("Select Numeric Questions (one or more):")), _class="survey_question"))
@@ -2699,10 +2699,10 @@ class S3SurveyCompleteModel(S3Model):
 
         vars = form.vars
         if "series_id" not in vars or vars.series_id == None:
-            form.errors.series_id = T("Series details missing.")
+            form.errors.series_id = T("Series details missing")
             return False
         if "answer_list" not in vars or vars.answer_list == None:
-            form.errors.answer_list = T("The answers are missing.")
+            form.errors.answer_list = T("The answers are missing")
             return False
         series_id = vars.series_id
         answer_list = vars.answer_list

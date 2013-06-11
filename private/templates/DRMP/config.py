@@ -3317,7 +3317,7 @@ def customize_project_project(**attr):
                     S3SQLInlineComponent(
                         "organisation",
                         name = "partner",
-                        label = T("Partner Organisations"),
+                        label = T("Partner Organizations"),
                         fields = ["organisation_id",
                                   ],
                         filterby = dict(field = "role",
@@ -3383,7 +3383,7 @@ def customize_project_project(**attr):
                     S3SQLInlineComponent(
                         "organisation",
                         name = "partner",
-                        label = T("Partner Organisations"),
+                        label = T("Partner Organizations"),
                         fields = ["organisation_id",
                                   ],
                         filterby = dict(field = "role",

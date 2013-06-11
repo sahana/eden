@@ -376,7 +376,7 @@ class SyncDataModel(S3Model):
                                             T("Under which conditions local records shall be updated")))
         table.conflict_policy.comment = DIV(_class="tooltip",
                                             _title="%s|%s" % (
-                                                T("Conflict policy"),
+                                                T("Conflict Policy"),
                                                 T("Under which condition a local record shall be updated if it also has been modified locally since the last synchronization")))
 
         # CRUD Strings
@@ -456,7 +456,7 @@ class SyncDataModel(S3Model):
             label_list_button = T("List Jobs"),
             label_create_button = ADD_JOB,
             msg_record_created = T("Job added"),
-            msg_record_modified = T("Job updated updated"),
+            msg_record_modified = T("Job updated"),
             msg_record_deleted = T("Job deleted"),
             msg_list_empty = T("No jobs configured yet"),
             msg_no_match = T("No jobs configured"))

@@ -222,7 +222,7 @@ class S3VolunteerClusterModel(S3Model):
 
         represent = S3Represent(lookup=tablename)
         vol_cluster_position_id = S3ReusableField("vol_cluster_position_id", table,
-                                                label = T("Volunteer Cluster Postion"),
+                                                label = T("Volunteer Cluster Position"),
                                                 requires = IS_NULL_OR(
                                                             IS_ONE_OF(db,
                                                                       "vol_cluster_position.id",

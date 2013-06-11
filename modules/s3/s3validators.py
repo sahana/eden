@@ -1856,7 +1856,7 @@ class IS_ADD_PERSON_WIDGET(Validator):
         def email_validate(value, person_id):
             """ Validate the email address """
 
-            error_message = T("Please enter a valid email address.")
+            error_message = T("Please enter a valid email address")
 
             if value is not None:
                 value = value.strip()

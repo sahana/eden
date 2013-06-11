@@ -387,7 +387,7 @@ def group():
         msg_record_created = T("Role added"),
         msg_record_modified = T("Role updated"),
         msg_record_deleted = T("Role deleted"),
-        msg_list_empty = T("No Roles currently defined"))
+        msg_list_empty = T("No Roles defined"))
 
     s3db.configure(tablename, main="role")
     return s3_rest_controller("auth", resourcename)
@@ -884,15 +884,15 @@ def translate():
                 lang_dropdown.append(lang)
             lang_col.append(lang_dropdown)
 
-            row = TR(TD(T("Select language code: ")), TD(lang_col))
-            row.append(TD(T(" Or add a new language code:")))
+            row = TR(TD("%s :" % T("Select language code")), TD(lang_col))
+            row.append(TD("%s :" % T("Or add a new language code")))
             row.append(TD(INPUT(_type="text", _name="new_code")))
             div.append(row)
             div.append(BR())
 
 
             div.append(BR())
-            div.append(INPUT(_type='submit',_value='Submit'))
+            div.append(INPUT(_type="submit", _value=T("Submit")))
             form.append(div)
             # Adding the custom form to the output
             output["title"] = T("Select the required modules")
@@ -969,7 +969,7 @@ def translate():
                 lang_col.append(lang_dropdown)
 
                 div = DIV()
-                row = TR(TD(T("Language code: ")), TD(lang_col))
+                row = TR(TD("%s:" % T("Language Code")), TD(lang_col))
                 div.append(row)
                 div.append(BR())
                 row = TR(TD(INPUT(_type="checkbox", _name="update_master")),
