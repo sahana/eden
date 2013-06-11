@@ -1530,7 +1530,7 @@ i18n.edit_saved_search="%s"
             dt_length_menu = attr.get("dt_lengthMenu")
             if dt_length_menu:
                 dt_config["dt_lengthMenu"] = dt_length_menu
-            datatable = dt.html(totalrows, displayrows, "list",
+            datatable = dt.html(totalrows, displayrows, "datatable",
                                 dt_pagination=dt_pagination,
                                 dt_displayLength=display_length,
                                 dt_permalink=search_url,

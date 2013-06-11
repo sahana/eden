@@ -562,7 +562,7 @@ class SeleniumUnitTest(Web2UnitTest):
             else:
                 row = row[0][0]
             col = 1
-            e = browser.find_element_by_xpath(".//*[@id='list']/thead/tr[2]/th[1]")
+            e = browser.find_element_by_xpath(".//*[@id='datatable']/thead/tr[2]/th[1]")
             while True:
                 if e.text.strip() == check[1]:
                     break
@@ -570,14 +570,14 @@ class SeleniumUnitTest(Web2UnitTest):
                     col += 1
                     try:
                         e = browser.find_element_by_xpath(
-                            ".//*[@id='list']/thead/tr[2]/th[{0}]".format(col))
+                            ".//*[@id='datatable']/thead/tr[2]/th[{0}]".format(col))
                     except NoSuchElementException:
                         raise self.InvalidReportOrGroupException()
 
             import collections
             if isinstance(check[2], collections.Iterable):
                 td = browser.find_element_by_xpath(
-                    ".//*[@id='list']/tbody/tr[{0}]/td[{1}]".format(row,
+                    ".//*[@id='datatable']/tbody/tr[{0}]/td[{1}]".format(row,
                         col))
                 shown_items = [item.text for item in td.find_elements_by_tag_name("li")]
 
@@ -590,7 +590,7 @@ class SeleniumUnitTest(Web2UnitTest):
 
         if 'row_count' in kwargs:
             self.assertEqual(kwargs['row_count'], len(browser.find_elements_by_xpath(
-                "//table[@id='list']/tbody/tr")))
+                "//table[@id='datatable']/tbody/tr")))
 
     # -------------------------------------------------------------------------
     def fill_fields(self, fields):
@@ -657,7 +657,7 @@ class SeleniumUnitTest(Web2UnitTest):
     def dt_data_item(self,
                      row = 1,
                      column = 1,
-                     tableID = "list",
+                     tableID = "datatable",
                      ):
         return dt_data_item(row, column, tableID)
 
@@ -667,7 +667,7 @@ class SeleniumUnitTest(Web2UnitTest):
                 row = None,
                 column = None,
                 cellList = None,
-                tableID = "list",
+                tableID = "datatable",
                 first = False,
                 ):
 
@@ -676,7 +676,7 @@ class SeleniumUnitTest(Web2UnitTest):
     # -------------------------------------------------------------------------
     def dt_links(self,
                  row = 1,
-                 tableID = "list",
+                 tableID = "datatable",
                  quiet = True
                  ):
 
