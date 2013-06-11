@@ -8,6 +8,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,FI,"Regional State Administrative Agency","Region","Sub-region","Municipality",,
 ,KE,"Province","District","Division","Location",
 ,MM,"State","District","Township","Village Tract","Village",
+,MV,"Atoll/City","Island",,,,
 ,MY,"State","District","Mukim",,,
 ,NZ,"Region","Territorial Authority",,,,
 ,PH,"Region","Province","City / Municipality","Barangay",,
