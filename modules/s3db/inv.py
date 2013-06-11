@@ -527,9 +527,7 @@ class S3InventoryModel(S3Model):
                                   *s3_meta_fields())
 
         table.total_value = Field.Lazy(self.inv_item_total_value)
-
-        # pack_quantity Virtual Field
-        table.virtualfields.append(self.supply_item_pack_virtualfields(tablename=tablename))
+        table.pack_quantity = Field.Lazy(self.supply_item_pack_quantity(tablename=tablename))
 
         # CRUD strings
         INV_ITEM = T("Warehouse Stock")
@@ -721,7 +719,7 @@ S3OptionsFilter({
                        search_method = inv_item_search,
                        report_options = report_options,
                        deduplicate = self.inv_item_duplicate,
-                       extra_fields = ["quantity", "pack_value"],
+                       extra_fields = ["quantity", "pack_value", "item_pack_id"],
                       )
 
         # ---------------------------------------------------------------------
@@ -1809,10 +1807,8 @@ S3OptionsFilter({
                              )
 
         table.total_value = Field.Lazy(self.inv_track_item_total_value)
+        table.pack_quantity = Field.Lazy(self.supply_item_pack_quantity(tablename=tablename))
                              
-        # pack_quantity virtual field
-        table.virtualfields.append(self.supply_item_pack_virtualfields(tablename=tablename))
-
         # CRUD strings
         ADD_TRACK_ITEM = T("Add Item to Shipment")
         crud_strings[tablename] = Storage(
@@ -1886,7 +1882,7 @@ S3OptionsFilter({
                   search_method = track_search,
                   onaccept = self.inv_track_item_onaccept,
                   onvalidation = self.inv_track_item_onvalidate,
-                  extra_fields = ["quantity", "pack_value"],
+                  extra_fields = ["quantity", "pack_value", "item_pack_id"],
                  )
  
         #---------------------------------------------------------------------
@@ -2309,15 +2305,15 @@ S3OptionsFilter({
                         for item in sitems:
                             item_pack_id = item.item_pack_id
                             if item_pack_id in fulfil_qty:
-                                fulfil_qty[item_pack_id] += (item.quantity * item.pack_quantity)
+                                fulfil_qty[item_pack_id] += (item.quantity * item.pack_quantity())
                             else:
-                                fulfil_qty[item_pack_id] = (item.quantity * item.pack_quantity)
+                                fulfil_qty[item_pack_id] = (item.quantity * item.pack_quantity())
                         complete = False
                         for item in ritems:
                             if item.item_pack_id in fulfil_qty:
                                 quantity_fulfil = fulfil_qty[item.item_pack_id]
                                 db(ritable.id == item.id).update(quantity_fulfil=quantity_fulfil)
-                                req_quantity = item.quantity * item.pack_quantity
+                                req_quantity = item.quantity * item.pack_quantity()
                                 if quantity_fulfil >= req_quantity:
                                     complete = True
                                 else:

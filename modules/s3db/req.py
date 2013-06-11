@@ -1170,9 +1170,9 @@ S3OptionsFilter({
         for item in inv_items:
             item_id = item.item_id
             if item_id in inv_items_dict:
-                inv_items_dict[item_id] += item.quantity * item.pack_quantity
+                inv_items_dict[item_id] += item.quantity * item.pack_quantity()
             else:
-                inv_items_dict[item_id] = item.quantity * item.pack_quantity
+                inv_items_dict[item_id] = item.quantity * item.pack_quantity()
 
         if len(req_items):
             row = TR(TH(table.item_id.label),
@@ -1184,7 +1184,7 @@ S3OptionsFilter({
                      TH(T("Match?"))
                      )
             if use_commit:
-                row.insert(TH(3, table.quantity_commit.label))
+                row.insert(3, TH(table.quantity_commit.label))
             items = TABLE(THEAD(row),
                           _id = "list",
                           _class = "dataTable display")
@@ -1196,7 +1196,7 @@ S3OptionsFilter({
                 # Convert inv item quantity to req item quantity
                 item_id = req_item.item_id
                 if item_id in inv_items_dict:
-                    inv_quantity = inv_items_dict[item_id] / req_item.pack_quantity
+                    inv_quantity = inv_items_dict[item_id] / req_item.pack_quantity()
                 else:
                     inv_quantity = NONE
 
@@ -1455,7 +1455,7 @@ class S3RequestItemModel(S3Model):
         table.site_id.label = T("Requested From")
 
         # pack_quantity virtual field
-        table.virtualfields.append(self.supply_item_pack_virtualfields(tablename=tablename))
+        table.pack_quantity = Field.Lazy(self.supply_item_pack_quantity(tablename=tablename))
 
         # CRUD strings
         ADD_REQUEST_ITEM = T("Add New Item to Request")
@@ -1531,6 +1531,7 @@ S3OptionsFilter({
                        deletable = settings.get_req_multiple_req_items(),
                        deduplicate = self.req_item_duplicate,
                        list_fields = list_fields,
+                       extra_fields = ["item_pack_id"],
                        )
 
         # ---------------------------------------------------------------------
@@ -2266,15 +2267,15 @@ class S3CommitModel(S3Model):
             for item in citems:
                 item_pack_id = item.item_pack_id
                 if item_pack_id in commit_qty:
-                    commit_qty[item_pack_id] += (item.quantity * item.pack_quantity)
+                    commit_qty[item_pack_id] += (item.quantity * item.pack_quantity())
                 else:
-                    commit_qty[item_pack_id] = (item.quantity * item.pack_quantity)
+                    commit_qty[item_pack_id] = (item.quantity * item.pack_quantity())
             complete = False
             for item in ritems:
                 if item.item_pack_id in commit_qty:
                     quantity_commit = commit_qty[item.item_pack_id]
                     db(ritable.id == item.id).update(quantity_commit=quantity_commit)
-                    req_quantity = item.quantity * item.pack_quantity
+                    req_quantity = item.quantity * item.pack_quantity()
                     if quantity_commit >= req_quantity:
                         complete = True
                     else:
@@ -2403,15 +2404,15 @@ class S3CommitModel(S3Model):
             for item in citems:
                 item_pack_id = item.item_pack_id
                 if item_pack_id in commit_qty:
-                    commit_qty[item_pack_id] += (item.quantity * item.pack_quantity)
+                    commit_qty[item_pack_id] += (item.quantity * item.pack_quantity())
                 else:
-                    commit_qty[item_pack_id] = (item.quantity * item.pack_quantity)
+                    commit_qty[item_pack_id] = (item.quantity * item.pack_quantity())
             complete = False
             for item in ritems:
                 if item.item_pack_id in commit_qty:
                     quantity_commit = commit_qty[item.item_pack_id]
                     db(ritable.id == item.id).update(quantity_commit=quantity_commit)
-                    req_quantity = item.quantity * item.pack_quantity
+                    req_quantity = item.quantity * item.pack_quantity()
                     if quantity_commit >= req_quantity:
                         complete = True
                     else:
@@ -2520,7 +2521,7 @@ class S3CommitItemModel(S3Model):
                                   *s3_meta_fields())
 
         # pack_quantity virtual field
-        table.virtualfields.append(self.supply_item_pack_virtualfields(tablename=tablename))
+        table.pack_quantity = Field.Lazy(self.supply_item_pack_quantity(tablename=tablename))
 
         # CRUD strings
         ADD_COMMIT_ITEM = T("Add Item to Commitment")
@@ -2540,7 +2541,8 @@ class S3CommitItemModel(S3Model):
             msg_list_empty = T("No Commitment Items currently registered"))
 
         self.configure(tablename,
-                       onaccept = self.commit_item_onaccept)
+                       onaccept = self.commit_item_onaccept,
+                       extra_fields = ["item_pack_id"])
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -2595,15 +2597,15 @@ class S3CommitItemModel(S3Model):
         for item in citems:
             item_pack_id = item.item_pack_id
             if item_pack_id in commit_qty:
-                commit_qty[item_pack_id] += (item.quantity * item.pack_quantity)
+                commit_qty[item_pack_id] += (item.quantity * item.pack_quantity())
             else:
-                commit_qty[item_pack_id] = (item.quantity * item.pack_quantity)
+                commit_qty[item_pack_id] = (item.quantity * item.pack_quantity())
         complete = False
         for item in ritems:
             if item.item_pack_id in commit_qty:
                 quantity_commit = commit_qty[item.item_pack_id]
                 db(ritable.id == item.id).update(quantity_commit=quantity_commit)
-                req_quantity = item.quantity * item.pack_quantity
+                req_quantity = item.quantity * item.pack_quantity()
                 if quantity_commit >= req_quantity:
                     complete = True
                 else:

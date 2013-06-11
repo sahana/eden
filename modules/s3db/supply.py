@@ -29,7 +29,6 @@
 
 __all__ = ["S3SupplyModel",
            "supply_item_rheader",
-           "SupplyItemPackVirtualFields",
            "supply_item_controller",
            "supply_item_entity_controller",
            "supply_catalog_rheader",
@@ -84,7 +83,7 @@ class S3SupplyModel(S3Model):
              "supply_item_represent",
              "supply_item_category_represent",
              "supply_item_add",
-             "supply_item_pack_virtualfields",
+             "supply_item_pack_quantity",
              ]
 
     def model(self):
@@ -861,7 +860,7 @@ S3OptionsFilter({
                 supply_item_pack_id = item_pack_id,
                 supply_item_represent = self.supply_item_represent,
                 supply_item_category_represent = self.item_category_represent,
-                supply_item_pack_virtualfields = SupplyItemPackVirtualFields,
+                supply_item_pack_quantity = SupplyItemPackQuantity,
                 supply_item_add = self.supply_item_add,
                 supply_item_pack_represent = self.item_pack_represent,
                 )
@@ -885,7 +884,7 @@ S3OptionsFilter({
                 supply_item_id = supply_item_id,
                 supply_item_entity_id = item_id,
                 supply_item_pack_id = item_pack_id,
-                supply_item_pack_virtualfields = None,
+                supply_item_pack_quantity = lambda tablename: lambda row: 0,
                 )
 
     # -------------------------------------------------------------------------
@@ -1368,31 +1367,28 @@ def supply_item_rheader(r):
     return None
 
 # =============================================================================
-class SupplyItemPackVirtualFields(dict, object):
+class SupplyItemPackQuantity(object):
     """ Virtual Field for pack_quantity """
 
     def __init__(self, tablename):
         self.tablename = tablename
 
-    def pack_quantity(self):
+    def __call__(self, row):
+
+        default = 0
+
         tablename = self.tablename
+        if hasattr(row, tablename):
+            row = object.__getattribute__(row, tablename)
         try:
-            if tablename == "inv_inv_item":
-                item_pack = self.inv_inv_item.item_pack_id
-            elif tablename == "req_req_item":
-                item_pack = self.req_req_item.item_pack_id
-            elif tablename == "req_commit_item":
-                item_pack = self.req_commit_item.item_pack_id
-            elif tablename == "inv_track_item":
-                item_pack = self.inv_track_item.item_pack_id
-            else:
-                item_pack = None
+            item_pack_id = row.item_pack_id
         except AttributeError:
-            item_pack = None
-        if item_pack:
-            return item_pack.quantity
+            return default
+            
+        if item_pack_id:
+            return item_pack_id.quantity
         else:
-            return None
+            return default
 
 # =============================================================================
 def supply_item_entity_category(row):

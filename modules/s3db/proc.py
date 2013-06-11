@@ -182,7 +182,7 @@ class S3ProcurementModel(S3Model):
                              s3_comments(),
                              *s3_meta_fields())
 
-        #table.virtualfields.append(self.supply_item_pack_virtualfields(tablename=tablename)
+        #table.pack_quantity = Field.Lazy(self.supply_item_pack_quantity(tablename=tablename))
 
         # CRUD strings
         crud_strings[tablename] = Storage(
