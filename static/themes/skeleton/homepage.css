@@ -45,15 +45,12 @@
 	float: right;
     margin-right: 9px;
 }
-
 #facility_box img {
 	margin: 0;
 }
-
 #manage_facility_box {
 	width: 450px;
 }
-
 #manage_facility_box a {
 	margin-left: 10px;
 }
@@ -62,15 +59,10 @@
 	width: 450px;
     clear: left;
 }
-
-#org_box #list_wrapper {
+#org_box #org_dt_wrapper {
     margin-top: 10px;
 }
-
-#org_box #list_filter {
-    margin: 0;
-}
-#org_box #list_processing {
+#org_box #org_dt_processing {
     margin-top: 5px;
 }
 

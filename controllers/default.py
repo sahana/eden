@@ -399,12 +399,12 @@ def organisation():
     if request.extension == "html":
         items = dt.html(totalrows,
                         totalrows,
-                        "org_list_1",
+                        "org_dt",
                         dt_displayLength=display_length,
                         dt_ajax_url=URL(c="default",
                                         f="organisation",
                                         extension="aadata",
-                                        vars={"id": "org_list_1"},
+                                        vars={"id": "org_dt"},
                                         ),
                         dt_pagination="true",
                         )
@@ -415,7 +415,7 @@ def organisation():
             echo = None
         items = dt.json(totalrows,
                         filteredrows,
-                        "org_list_1",
+                        "org_dt",
                         echo)
     else:
         from gluon.http import HTTP
