@@ -97,6 +97,13 @@ class S3Config(Storage):
         """
         return self.base.get("theme", "default")
 
+    def get_base_xtheme(self):
+        """
+            Whether there is a custom Ext theme or simply use the default xtheme-gray
+            - specified as <themefolder>/xtheme-<filename>.css
+        """
+        return self.base.get("xtheme", None)
+
     # -------------------------------------------------------------------------
     def is_cd_version(self):
         """

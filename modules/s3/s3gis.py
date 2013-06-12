@@ -79,7 +79,7 @@ from s3fields import s3_all_meta_field_names
 from s3rest import S3Method
 from s3search import S3Search
 from s3track import S3Trackable
-from s3utils import s3_debug, s3_fullname, s3_fullname_bulk, s3_has_foreign_key
+from s3utils import s3_debug, s3_fullname, s3_fullname_bulk, s3_has_foreign_key, s3_include_ext
 
 DEBUG = False
 if DEBUG:
@@ -1098,19 +1098,17 @@ class GIS(object):
 
         if not row:
             # No personal config or not logged in. Use site default.
-            config = db(ctable.uuid == "SITE_DEFAULT").select(*fields,
-                                                              limitby=(0, 1)
-                                                              ).first()
-            if not config:
-                # No configs found at all
-                _gis.config = cache
-                return cache
-            query = (ctable.id == config[ctable.id]) & \
+            query = (ctable.uuid == "SITE_DEFAULT") & \
                     (mtable.id == stable.marker_id) & \
                     (stable.id == ctable.symbology_id) & \
                     (ptable.id == ctable.projection_id)
             row = db(query).select(*fields,
                                    limitby=(0, 1)).first()
+
+            if not row:
+                # No configs found at all
+                _gis.config = cache
+                return cache
 
         if row and not cache:
             # We had a single row
@@ -5935,6 +5933,10 @@ class MAP(DIV):
 
         if not self.setup:
             self._setup()
+
+        # Add ExtJS
+        # @ToDo: Do this conditionally on whether Ext UI is used
+        s3_include_ext()
 
         s3 = current.response.s3
 
