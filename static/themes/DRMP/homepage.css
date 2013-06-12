@@ -4,7 +4,7 @@
 
 #myCarousel {
     margin-bottom: 0px;
-    margin-top: -50px; /* Temporary until the container issue fixed */
+	margin-top: -20px;
 }
 
 div.carousel-caption {

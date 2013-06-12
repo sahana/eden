@@ -48,10 +48,22 @@ h4.latest-updates {
     text-transform: none;
 }
 
+a.card-organisation {
+	font-size: 10px;v
+	color: #7b7b78;
+	text-transform: none;
+}
+
+p.citation small a {
+	font-size: 10px;
+	color: #7b7b78;
+	text-transform: none;
+}
+
 .card-organisation{
     font-size: 10px;
-    text-transform: uppercase;
 }
+
 .card-organisation:hover,
 .card-person a:hover {
     color: #26a0c3;
