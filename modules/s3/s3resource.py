@@ -6546,8 +6546,11 @@ class S3AxisFilter(object):
             if l["tablename"] in tablenames:
                 self.tablename = l["tablename"]
                 self.fieldname = l["fieldname"]
-                self.op = op
-                self.r = r
+                if isinstance(r, dict):
+                    self.op = None
+                else:
+                    self.op = op
+                    self.r = r
 
         elif op == "AND":
             self.l = S3AxisFilter(l, tablenames)
@@ -6607,6 +6610,11 @@ class S3AxisFilter(object):
             else:
                 return None
         elif l is None:
+            return None
+
+        if isinstance(r, S3AxisFilter):
+            r = r.query()
+        if r is None:
             return None
 
         if op == "LOWER":
