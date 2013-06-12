@@ -156,13 +156,13 @@ class project():
         if request.extension == "html":
             items = dt.html(totalrows,
                             totalrows,
-                            "project_list_1",
+                            "org_dt",
                             dt_displayLength=display_length,
                             dt_ajax_url=URL(c="default",
                                             f="index",
                                             args=["project"],
                                             extension="aadata",
-                                            vars={"id": "project_list_1"},
+                                            vars={"id": "org_dt"},
                                             ),
                             dt_pagination="true",
                            )
@@ -173,7 +173,7 @@ class project():
                 echo = None
             items = dt.json(totalrows,
                             filteredrows,
-                            "project_list_1",
+                            "org_dt",
                             echo)
         else:
             from gluon.http import HTTP
