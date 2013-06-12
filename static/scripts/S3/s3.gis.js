@@ -912,42 +912,37 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     var addArcRESTLayer = function(map, layer) {
         var name = layer.name;
         var url = [layer.url];
-        var layers;
         if (undefined != layer.layers) {
-            layers = layer.layers.join();
+            var layers = layer.layers.join();
         } else {
             // Default layer
-            layers = 0;
+            var layers = 0;
         }
-        var dir;
         if (undefined != layer.dir) {
-            dir = layer.dir;
+            var dir = layer.dir;
             if ( $.inArray(dir, map.s3.dirs) == -1 ) {
                 // Add this folder to the list of folders
                 map.s3.dirs.push(dir);
             }
         } else {
             // Default folder
-            dir = '';
+            var dir = '';
         }
-        var isBaseLayer;
         if (undefined != layer.base) {
-            isBaseLayer = layer.base;
+            var isBaseLayer = layer.base;
         } else {
-            isBaseLayer = false;
+            var isBaseLayer = false;
         }
-        var transparent;
         if (undefined != layer.transparent) {
-            transparent = layer.transparent;
+            var transparent = layer.transparent;
         } else {
-            transparent = true;
+            var transparent = true;
         }
-        var visibility;
         if (undefined != layer.visibility) {
-            visibility = layer.visibility;
+            var visibility = layer.visibility;
         } else {
             // Default to visible
-            visibility = true;
+            var visibility = true;
         }
 
         var arcRESTLayer = new OpenLayers.Layer.ArcGIS93Rest(
@@ -1078,581 +1073,103 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             // per-Feature Marker or Shape
             marker_url = '';
         }
-        var refresh;
         if (undefined != layer.refresh) {
-            refresh = layer.refresh;
+            var refresh = layer.refresh;
         } else {
-            refresh = 900; // seconds (so 15 mins)
+            var refresh = 900; // seconds (so 15 mins)
         }
-        var dir;
         if (undefined != layer.dir) {
-            dir = layer.dir;
+            var dir = layer.dir;
             if ($.inArray(dir, map.s3.dirs) == -1) {
                 // Add this folder to the list of folders
                 map.s3.dirs.push(dir);
             }
         } else {
             // Default folder
-            dir = '';
+            var dir = '';
         }
-        var visibility;
         if (undefined != layer.visibility) {
-            visibility = layer.visibility;
+            var visibility = layer.visibility;
         } else {
             // Default to visible
-            visibility = true;
+            var visibility = true;
         }
-        var opacity;
         if (undefined != layer.opacity) {
-            opacity = layer.opacity;
+            var opacity = layer.opacity;
         } else {
             // Default to opaque
-            opacity = 1;
+            var opacity = 1;
         }
-        var cluster_attribute;
         if (undefined != layer.cluster_attribute) {
-            cluster_attribute = layer.cluster_attribute;
+            var cluster_attribute = layer.cluster_attribute;
         } else {
             // Default to global settings
-            cluster_attribute = 'colour';
+            var cluster_attribute = 'colour';
         }
-        var cluster_distance;
         if (undefined != layer.cluster_distance) {
-            cluster_distance = layer.cluster_distance;
+            var cluster_distance = layer.cluster_distance;
         } else {
             // Default to global settings
-            cluster_distance = cluster_distance_default;
+            var cluster_distance = cluster_distance_default;
         }
-        var cluster_threshold;
         if (undefined != layer.cluster_threshold) {
-            cluster_threshold = layer.cluster_threshold;
+            var cluster_threshold = layer.cluster_threshold;
         } else {
             // Default to global settings
-            cluster_threshold = cluster_threshold_default;
+            var cluster_threshold = cluster_threshold_default;
         }
-        var projection;
         if (undefined != layer.projection) {
-            projection = layer.projection;
+            var projection = layer.projection;
         } else {
             // Feature Layers, GeoRSS & KML are always in 4326
-            projection = 4326;
+            var projection = 4326;
         }
         if (4326 == projection) {
             projection = proj4326;
         } else {
             projection = new OpenLayers.Projection('EPSG:' + projection);
         }
-        var layer_type;
         if (undefined != layer.type) {
-            layer_type = layer.type;
+            var layer_type = layer.type;
         } else {
             // Feature Layers
-            layer_type = 'feature';
+            var layer_type = 'feature';
         }
+
+        // Styling
         var style = layer.style;
         if (Object.prototype.toString.call(style) === '[object Array]') {
             var style_array = true;
         } else {
             var style_array = false;
         }
+        var DEFAULT_FILL = '#f5902e'; // color for unclustered Point
 
-        // Style Rule For Clusters
-        var cluster_style = {
-            label: '${label}',
-            labelAlign: 'cm',
-            pointRadius: '${radius}',
-            fillColor: '${fill}',
-            fillOpacity: '${fillOpacity}',
-            strokeColor: '${stroke}',
-            strokeWidth: '${strokeWidth}',
-            strokeOpacity: opacity,
-            graphicWidth: '${graphicWidth}',
-            graphicHeight: '${graphicHeight}',
-            graphicXOffset: '${graphicXOffset}',
-            graphicYOffset: '${graphicYOffset}',
-            graphicOpacity: opacity,
-            graphicName: '${graphicName}',
-            externalGraphic: '${externalGraphic}'
-        };
-        var cluster_options = {
-            context: {
-                graphicWidth: function(feature) {
-                    // We get JS errors if we don't return a number
-                    var pix = 1;
-                    if (feature.cluster) {
-                        // Clustered Point
-                        // Doesn't usually use a Graphic
-                    } else if (feature.attributes.marker_width) {
-                        // Use marker_width from feature
-                        pix = feature.attributes.marker_width;
-                    } else {
-                        if (undefined != marker_width) {
-                            // per-Layer Marker for Unclustered Point
-                            pix = marker_width;
-                        }
-                    }
-                    return pix;
-                },
-                graphicHeight: function(feature) {
-                    // We get JS errors if we don't return a number
-                    var pix = 1;
-                    if (feature.cluster) {
-                        // Clustered Point
-                        // Doesn't usually use a Graphic
-                    } else if (feature.attributes.marker_height) {
-                        // Use marker_height from feature (Query)
-                        pix = feature.attributes.marker_height;
-                    } else {
-                        if (undefined != marker_height) {
-                            // per-Layer Marker for Unclustered Point
-                            pix = marker_height;
-                        }
-                    }
-                    return pix;
-                },
-                graphicXOffset: function(feature) {
-                    // We get JS errors if we don't return a number
-                    var pix = -1;
-                    if (feature.cluster) {
-                        // Clustered Point
-                        // Doesn't usually use a Graphic
-                    } else if (feature.attributes.marker_width) {
-                        // Use marker_width from feature (e.g. FeatureQuery)
-                        pix = -(feature.attributes.marker_width / 2);
-                    } else {
-                        if (undefined != marker_width) {
-                            // per-Layer Marker for Unclustered Point
-                            pix = -(marker_width / 2);
-                        }
-                    }
-                    return pix;
-                },
-                graphicYOffset: function(feature) {
-                    // We get JS errors if we don't return a number
-                    var pix = -1;
-                    if (feature.cluster) {
-                        // Clustered Point
-                        // Doesn't usually use a Graphic
-                    } else if (feature.attributes.marker_height) {
-                        // Use marker_height from feature (e.g. FeatureQuery)
-                        pix = -feature.attributes.marker_height;
-                    } else {
-                        if (undefined != marker_height) {
-                            // per-Layer Marker for Unclustered Point
-                            pix = -marker_height;
-                        }
-                    }
-                    return pix;
-                },
-                graphicName: function(feature) {
-                    // default to a Circle
-                    var graphic = 'circle';
-                    if (feature.cluster) {
-                        // Clustered Point
-                        // use default circle
-                    } else if (feature.attributes.shape) {
-                        // Use graphic from feature (e.g. FeatureQuery)
-                        graphic = feature.attributes.shape;
-                    } else if (style) {
-                        if (!style_array) {
-                            // Common Style for all features in layer
-                            if (undefined != style.graphic) {
-                                graphic = style.graphic;
-                            }
-                        } else {
-                            // Lookup from rule
-                            /* Done within OpenLayers.Rule
-                            var attrib, value;
-                            $.each(style, function(index, elem) {
-                                if (undefined != elem.attrib) {
-                                    attrib = elem.attrib;
-                                } else {
-                                    // Default (e.g. for Theme Layers)
-                                    attrib = 'value';
-                                }
-                                value = feature.attributes[attrib];
-                                if (undefined != elem.cat) {
-                                    // Category-based style
-                                    if (value == elem.cat) {
-                                        if (undefined != elem.graphic) {
-                                            graphic = style.graphic;
-                                        }
-                                        return false;
-                                    }
-                                } else {
-                                    // Range-based style
-                                    if ((value >= elem.low) && (value < elem.high)) {
-                                        if (undefined != elem.graphic) {
-                                            graphic = style.graphic;
-                                        }
-                                        return false;
-                                    }
-                                }
-                            }); */
-                        }
-                    }
-                    return graphic;
-                },
-                externalGraphic: function(feature) {
-                    var url = '';
-                    if (feature.cluster) {
-                        // Clustered Point
-                        // Just show shape not marker
-                        // @ToDo: Make this configurable per-Layer & within-Layer as to which gets shown
-                        // e.g. http://openflights.org/blog/2009/10/21/customized-openlayers-cluster-strategies/
-                    } else if (feature.attributes.marker_url) {
-                        // Use marker from feature (Query)
-                        url = feature.attributes.marker_url;
-                    } else if (style) {
-                        if (!style_array) {
-                            // Common Style for all features in layer
-                            if (undefined != style.externalGraphic) {
-                                url = S3.Ap.concat('/static/' + style.externalGraphic);
-                            }
-                        } else {
-                            // Lookup from rule
-                            /* Done within OpenLayers.Rule
-                            var attrib, value;
-                            $.each(style, function(index, elem) {
-                                if (undefined != elem.attrib) {
-                                    attrib = elem.attrib;
-                                } else {
-                                    // Default (e.g. for Theme Layers)
-                                    attrib = 'value';
-                                }
-                                value = feature.attributes[attrib];
-                                if (undefined != elem.cat) {
-                                    // Category-based style
-                                    if (value == elem.cat) {
-                                        if (undefined != elem.externalGraphic) {
-                                            url = S3.Ap.concat('/static/' + elem.externalGraphic);
-                                        }
-                                        return false;
-                                    }
-                                } else {
-                                    // Range-based style
-                                    if ((value >= elem.low) && (value < elem.high)) {
-                                        if (undefined != elem.externalGraphic) {
-                                            url = S3.Ap.concat('/static/' + elem.externalGraphic);
-                                        }
-                                        return false;
-                                    }
-                                }
-                            }); */
-                        }
-                    } else {
-                        // Use Layer Marker
-                        return marker_url;
-                    }
-                    return url;
-                },
-                radius: function(feature) {
-                    // default Size for Unclustered Point
-                    var pix = 10;
-                    if (feature.cluster) {
-                        // Size for Clustered Point
-                        pix = Math.min(feature.attributes.count / 2, 8) + 10;
-                    } else if (feature.attributes.size) {
-                        // Use size from feature (e.g. FeatureQuery)
-                        pix = feature.attributes.size;
-                    } else if (style) {
-                        if (!style_array) {
-                            // Common Style for all features in layer
-                            pix = style.size;
-                        } else {
-                            // Lookup from rule
-                            /* Done within OpenLayers.Rule
-                            var attrib, value;
-                            $.each(style, function(index, elem) {
-                                if (undefined != elem.attrib) {
-                                    attrib = elem.attrib;
-                                } else {
-                                    // Default (e.g. for Theme Layers)
-                                    attrib = 'value';
-                                }
-                                value = feature.attributes[attrib];
-                                if (undefined != elem.cat) {
-                                    // Category-based style
-                                    if (value == elem.cat) {
-                                        pix = elem.size;
-                                        return false;
-                                    }
-                                } else {
-                                    // Range-based style
-                                    if ((value >= elem.low) && (value < elem.high)) {
-                                        pix = elem.size;
-                                        return false;
-                                    }
-                                }
-                            }); */
-                        }
-                    }
-                    return pix;
-                },
-                fill: function(feature) {
-                    var color;
-                    if (feature.cluster) {
-                        if (feature.cluster[0].attributes.colour) {
-                            // Use colour from features (e.g. FeatureQuery)
-                            color = feature.cluster[0].attributes.colour;
-                        } else {
-                            // default fillColor for Clustered Point
-                            color = '#8087ff';
-                        }
-                    } else if (feature.attributes.colour) {
-                        // Feature Query: Use colour from feature (e.g. FeatureQuery)
-                        color = feature.attributes.colour;
-                    } else if (style) {
-                        if (!style_array) {
-                            // Common Style for all features in layer
-                            color = style.fill;
-                        } else {
-                            // Lookup from rule
-                            /* Done within OpenLayers.Rule
-                            var attrib, value;
-                            $.each(style, function(index, elem) {
-                                if (undefined != elem.attrib) {
-                                    attrib = elem.attrib;
-                                } else {
-                                    // Default (e.g. for Theme Layers)
-                                    attrib = 'value';
-                                }
-                                value = feature.attributes[attrib];
-                                if (undefined != elem.cat) {
-                                    // Category-based style
-                                    if (value == elem.cat) {
-                                        color = elem.fill;
-                                        return false;
-                                    }
-                                } else {
-                                    // Range-based style
-                                    if ((value >= elem.low) && (value < elem.high)) {
-                                        color = elem.fill;
-                                        return false;
-                                    }
-                                }
-                            }); */
-                        }
-                        if (undefined != color) {
-                            color = '#' + color;
-                        } else {
-                            // default fillColor
-                            color = '#000000';
-                        }
-                    } else {
-                        // default fillColor for Unclustered Point
-                        color = '#f5902e';
-                    }
-                    return color;
-                },
-                fillOpacity: function(feature) {
-                    var fillOpacity;
-                    if (feature.cluster) {
-                        if (feature.cluster[0].attributes.opacity) {
-                            // Use opacity from features (e.g. FeatureQuery)
-                            fillOpacity = feature.cluster[0].attributes.opacity;
-                        } else {
-                            // default fillOpacity for Clustered Point
-                            fillOpacity = opacity;
-                        }
-                    } else if (feature.attributes.opacity) {
-                        // Use opacity from feature (e.g. FeatureQuery)
-                        fillOpacity = feature.attributes.opacity;
-                    } else if (style) {
-                        if (!style_array) {
-                            // Common Style for all features in layer
-                            fillOpacity = style.fillOpacity;
-                        } else {
-                            // Lookup from rule
-                            /* Done within OpenLayers.Rule
-                            var attrib, value;
-                            $.each(style, function(index, elem) {
-                                if (undefined != elem.attrib) {
-                                    attrib = elem.attrib;
-                                } else {
-                                    // Default (e.g. for Theme Layers)
-                                    attrib = 'value';
-                                }
-                                value = feature.attributes[attrib];
-                                if (undefined != elem.cat) {
-                                    // Category-based style
-                                    if (value == elem.cat) {
-                                        fillOpacity = elem.fillOpacity;
-                                        return false;
-                                    }
-                                } else {
-                                    // Range-based style
-                                    if ((value >= elem.low) && (value < elem.high)) {
-                                        fillOpacity = elem.fillOpacity;
-                                        return false;
-                                    }
-                                }
-                            }); */
-                        }
-                    }
-                    // default to layer's opacity
-                    return fillOpacity || opacity;
-                },
-                stroke: function(feature) {
-                    var color;
-                    if (feature.cluster) {
-                        if (feature.cluster[0].attributes.colour) {
-                            // Use colour from features (e.g. FeatureQuery)
-                            color = feature.cluster[0].attributes.colour;
-                        } else {
-                            // default strokeColor for Clustered Point
-                            color = '#2b2f76';
-                        }
-                    } else if (feature.attributes.colour) {
-                        // Use colour from feature (e.g. FeatureQuery)
-                        color = feature.attributes.colour;
-                    } else if (style) {
-                        if (!style_array) {
-                            // Common Style for all features in layer
-                            color = style.stroke || style.fill;
-                        } else {
-                            // Lookup from rule
-                            /* Done within OpenLayers.Rule
-                            var attrib, value;
-                            $.each(style, function(index, elem) {
-                                if (undefined != elem.attrib) {
-                                    attrib = elem.attrib;
-                                } else {
-                                    // Default (e.g. for Theme Layers)
-                                    attrib = 'value';
-                                }
-                                value = feature.attributes[attrib];
-                                if (undefined != elem.cat) {
-                                    // Category-based style
-                                    if (value == elem.cat) {
-                                        color = elem.stroke || elem.fill;
-                                        return false;
-                                    }
-                                } else {
-                                    // Range-based style
-                                    if ((value >= elem.low) && (value < elem.high)) {
-                                        color = elem.stroke || elem.fill;
-                                        return false;
-                                    }
-                                }
-                            }); */
-                        }
-                        if (undefined != color) {
-                            color = '#' + color;
-                        } else {
-                            // default fillColor
-                            color = '#000000';
-                        }
-                    } else {
-                        // default strokeColor for Unclustered Point
-                        color = '#f5902e';
-                    }
-                    return color;
-                },
-                strokeWidth: function(feature) {
-                    // default strokeWidth
-                    var width = 2;
-                    if (feature.cluster) {
-                        if (feature.cluster[0].attributes.strokeWidth) {
-                            // Use colour from features (e.g. FeatureQuery)
-                            width = feature.cluster[0].attributes.strokeWidth;
-                        }
-                    //} else if (feature.attributes.strokeWidth) {
-                    //    // Use strokeWidth from feature (e.g. FeatureQuery)
-                    //    width = feature.attributes.strokeWidth;
-                    } else if (style) {
-                        if (!style_array) {
-                            // Common Style for all features in layer
-                            width = style.strokeWidth;
-                        } else {
-                            // Lookup from rule
-                            /* Done within OpenLayers.Rule
-                            var attrib, value;
-                            $.each(style, function(index, elem) {
-                                if (undefined != elem.attrib) {
-                                    attrib = elem.attrib;
-                                } else {
-                                    // Default (e.g. for Theme Layers)
-                                    attrib = 'value';
-                                }
-                                value = feature.attributes[attrib];
-                                if (undefined != elem.cat) {
-                                    // Category-based style
-                                    if (value == elem.cat) {
-                                        width = elem.strokeWidth;
-                                        return false;
-                                    }
-                                } else {
-                                    // Range-based style
-                                    if ((value >= elem.low) && (value < elem.high)) {
-                                        width = elem.strokeWidth;
-                                        return false;
-                                    }
-                                }
-                            }); */
-                        }
-                    }
-                    // Defalt width: 2
-                    return width || 2;
-                },
-                label: function(feature) {
-                    // Label For Unclustered Point
-                    var label;
-                    // Label For Clustered Point
-                    if (feature.cluster) {
-                        if (feature.attributes.count > 1) {
-                            label = feature.attributes.count;
-                        }
-                    } else if (feature.layer && (undefined != feature.layer.s3_style)) {
-                        var style = feature.layer.s3_style;
-                        if (!style_array) {
-                            // Common Style for all features in layer
-                            if (style.show_label) {
-                                label = style.label;
-                            }
-                        } else {
-                            // Lookup from rule
-                            /* Done within OpenLayers.Rule
-                            var attrib, value;
-                            $.each(style, function(index, elem) {
-                                if (undefined != elem.attrib) {
-                                    attrib = elem.attrib;
-                                } else {
-                                    // Default (e.g. for Theme Layers)
-                                    attrib = 'value';
-                                }
-                                value = feature.attributes[attrib];
-                                if (undefined != elem.cat) {
-                                    // Category-based style
-                                    if (value == elem.cat) {
-                                        if (elem.show_label) {
-                                            label = elem.label;
-                                        }
-                                        return false
-                                    }
-                                } else {
-                                    // Range-based style
-                                    if ((value >= elem.low) && (value < elem.high)) {
-                                        if (elem.show_label) {
-                                            label = elem.label;
-                                        }
-                                        return false
-                                    }
-                                }
-                            }); */
-                        }
-                    }
-                    return label || '';
-                }
-            }
-        };
-        // Needs to be uniquely instantiated
-        var style_cluster = new OpenLayers.Style(
-            cluster_style,
-            cluster_options
-        );
         if (style_array) {
-            // Style varies per Feature (currently Shapefile or Theme Layer)
+            // Style Features according to rules in JSON style (currently Shapefile or Theme Layer)
+            // Needs to be uniquely instantiated
+            // Base Style isn't set per-feature
+            var styleArray = {
+                label: '',
+                labelAlign: 'cm',
+                pointRadius: 10,
+                fillColor: DEFAULT_FILL,
+                fillOpacity: opacity,
+                strokeColor: DEFAULT_FILL,
+                strokeWidth: 2,
+                strokeOpacity: opacity,
+                graphicWidth: 1,
+                graphicHeight: 1,
+                graphicXOffset: -1,
+                graphicYOffset: -1,
+                graphicOpacity: opacity,
+                graphicName: 'square',
+                externalGraphic: ''
+            };
+            var featureStyle = new OpenLayers.Style(
+                styleArray
+            );
+
             var rules = [];
             var attrib, externalGraphic, fill, fillOpacity, filter, rule, size, strokeWidth, symbolizer, title, value;
             $.each(style, function(index, elem) {
@@ -1730,17 +1247,514 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 });
                 rules.push(rule);
             });
-            style_cluster.addRules(rules);
+            featureStyle.addRules(rules);
+        } else {
+            // Features Styles based on either a common JSON style or per-Feature attributes (Queries)
+            var styleArray = {
+                label: '${label}',
+                labelAlign: 'cm',
+                pointRadius: '${radius}',
+                fillColor: '${fill}',
+                fillOpacity: '${fillOpacity}',
+                strokeColor: '${stroke}',
+                strokeWidth: '${strokeWidth}',
+                strokeOpacity: opacity,
+                graphicWidth: '${graphicWidth}',
+                graphicHeight: '${graphicHeight}',
+                graphicXOffset: '${graphicXOffset}',
+                graphicYOffset: '${graphicYOffset}',
+                graphicOpacity: opacity,
+                graphicName: '${graphicName}',
+                externalGraphic: '${externalGraphic}'
+            };
+            var styleOptions = {
+                context: {
+                    graphicWidth: function(feature) {
+                        // We get JS errors if we don't return a number
+                        var pix = 1;
+                        if (feature.cluster) {
+                            // Clustered Point
+                            // Doesn't usually use a Graphic
+                        } else if (feature.attributes.marker_width) {
+                            // Use marker_width from feature
+                            pix = feature.attributes.marker_width;
+                        } else {
+                            if (undefined != marker_width) {
+                                // per-Layer Marker for Unclustered Point
+                                pix = marker_width;
+                            }
+                        }
+                        return pix;
+                    },
+                    graphicHeight: function(feature) {
+                        // We get JS errors if we don't return a number
+                        var pix = 1;
+                        if (feature.cluster) {
+                            // Clustered Point
+                            // Doesn't usually use a Graphic
+                        } else if (feature.attributes.marker_height) {
+                            // Use marker_height from feature (Query)
+                            pix = feature.attributes.marker_height;
+                        } else {
+                            if (undefined != marker_height) {
+                                // per-Layer Marker for Unclustered Point
+                                pix = marker_height;
+                            }
+                        }
+                        return pix;
+                    },
+                    graphicXOffset: function(feature) {
+                        // We get JS errors if we don't return a number
+                        var pix = -1;
+                        if (feature.cluster) {
+                            // Clustered Point
+                            // Doesn't usually use a Graphic
+                        } else if (feature.attributes.marker_width) {
+                            // Use marker_width from feature (e.g. FeatureQuery)
+                            pix = -(feature.attributes.marker_width / 2);
+                        } else {
+                            if (undefined != marker_width) {
+                                // per-Layer Marker for Unclustered Point
+                                pix = -(marker_width / 2);
+                            }
+                        }
+                        return pix;
+                    },
+                    graphicYOffset: function(feature) {
+                        // We get JS errors if we don't return a number
+                        var pix = -1;
+                        if (feature.cluster) {
+                            // Clustered Point
+                            // Doesn't usually use a Graphic
+                        } else if (feature.attributes.marker_height) {
+                            // Use marker_height from feature (e.g. FeatureQuery)
+                            pix = -feature.attributes.marker_height;
+                        } else {
+                            if (undefined != marker_height) {
+                                // per-Layer Marker for Unclustered Point
+                                pix = -marker_height;
+                            }
+                        }
+                        return pix;
+                    },
+                    graphicName: function(feature) {
+                        // default to a Circle
+                        var graphic = 'circle';
+                        if (feature.cluster) {
+                            // Clustered Point
+                            // use default circle
+                        } else if (feature.attributes.shape) {
+                            // Use graphic from feature (e.g. FeatureQuery)
+                            graphic = feature.attributes.shape;
+                        } else if (style) {
+                            if (!style_array) {
+                                // Common Style for all features in layer
+                                if (undefined != style.graphic) {
+                                    graphic = style.graphic;
+                                }
+                            } else {
+                                // Lookup from rule
+                                /* Done within OpenLayers.Rule
+                                var attrib, value;
+                                $.each(style, function(index, elem) {
+                                    if (undefined != elem.attrib) {
+                                        attrib = elem.attrib;
+                                    } else {
+                                        // Default (e.g. for Theme Layers)
+                                        attrib = 'value';
+                                    }
+                                    value = feature.attributes[attrib];
+                                    if (undefined != elem.cat) {
+                                        // Category-based style
+                                        if (value == elem.cat) {
+                                            if (undefined != elem.graphic) {
+                                                graphic = style.graphic;
+                                            }
+                                            return false;
+                                        }
+                                    } else {
+                                        // Range-based style
+                                        if ((value >= elem.low) && (value < elem.high)) {
+                                            if (undefined != elem.graphic) {
+                                                graphic = style.graphic;
+                                            }
+                                            return false;
+                                        }
+                                    }
+                                }); */
+                            }
+                        }
+                        return graphic;
+                    },
+                    externalGraphic: function(feature) {
+                        var url = '';
+                        if (feature.cluster) {
+                            // Clustered Point
+                            // Just show shape not marker
+                            // @ToDo: Make this configurable per-Layer & within-Layer as to which gets shown
+                            // e.g. http://openflights.org/blog/2009/10/21/customized-openlayers-cluster-strategies/
+                        } else if (feature.attributes.marker_url) {
+                            // Use marker from feature (Query)
+                            url = feature.attributes.marker_url;
+                        } else if (style) {
+                            if (!style_array) {
+                                // Common Style for all features in layer
+                                if (undefined != style.externalGraphic) {
+                                    url = S3.Ap.concat('/static/' + style.externalGraphic);
+                                }
+                            } else {
+                                // Lookup from rule
+                                /* Done within OpenLayers.Rule
+                                var attrib, value;
+                                $.each(style, function(index, elem) {
+                                    if (undefined != elem.attrib) {
+                                        attrib = elem.attrib;
+                                    } else {
+                                        // Default (e.g. for Theme Layers)
+                                        attrib = 'value';
+                                    }
+                                    value = feature.attributes[attrib];
+                                    if (undefined != elem.cat) {
+                                        // Category-based style
+                                        if (value == elem.cat) {
+                                            if (undefined != elem.externalGraphic) {
+                                                url = S3.Ap.concat('/static/' + elem.externalGraphic);
+                                            }
+                                            return false;
+                                        }
+                                    } else {
+                                        // Range-based style
+                                        if ((value >= elem.low) && (value < elem.high)) {
+                                            if (undefined != elem.externalGraphic) {
+                                                url = S3.Ap.concat('/static/' + elem.externalGraphic);
+                                            }
+                                            return false;
+                                        }
+                                    }
+                                }); */
+                            }
+                        } else {
+                            // Use Layer Marker
+                            return marker_url;
+                        }
+                        return url;
+                    },
+                    radius: function(feature) {
+                        // default Size for Unclustered Point
+                        var pix = 10;
+                        if (feature.cluster) {
+                            // Size for Clustered Point
+                            pix = Math.min(feature.attributes.count / 2, 8) + 10;
+                        } else if (feature.attributes.size) {
+                            // Use size from feature (e.g. FeatureQuery)
+                            pix = feature.attributes.size;
+                        } else if (style) {
+                            if (!style_array) {
+                                // Common Style for all features in layer
+                                pix = style.size;
+                            } else {
+                                // Lookup from rule
+                                /* Done within OpenLayers.Rule
+                                var attrib, value;
+                                $.each(style, function(index, elem) {
+                                    if (undefined != elem.attrib) {
+                                        attrib = elem.attrib;
+                                    } else {
+                                        // Default (e.g. for Theme Layers)
+                                        attrib = 'value';
+                                    }
+                                    value = feature.attributes[attrib];
+                                    if (undefined != elem.cat) {
+                                        // Category-based style
+                                        if (value == elem.cat) {
+                                            pix = elem.size;
+                                            return false;
+                                        }
+                                    } else {
+                                        // Range-based style
+                                        if ((value >= elem.low) && (value < elem.high)) {
+                                            pix = elem.size;
+                                            return false;
+                                        }
+                                    }
+                                }); */
+                            }
+                        }
+                        return pix;
+                    },
+                    fill: function(feature) {
+                        var color;
+                        if (feature.cluster) {
+                            if (feature.cluster[0].attributes.colour) {
+                                // Use colour from features (e.g. FeatureQuery)
+                                color = feature.cluster[0].attributes.colour;
+                            } else {
+                                // default fillColor for Clustered Point
+                                color = '#8087ff';
+                            }
+                        } else if (feature.attributes.colour) {
+                            // Feature Query: Use colour from feature (e.g. FeatureQuery)
+                            color = feature.attributes.colour;
+                        } else if (style) {
+                            if (!style_array) {
+                                // Common Style for all features in layer
+                                color = style.fill;
+                            } else {
+                                // Lookup from rule
+                                /* Done within OpenLayers.Rule
+                                var attrib, value;
+                                $.each(style, function(index, elem) {
+                                    if (undefined != elem.attrib) {
+                                        attrib = elem.attrib;
+                                    } else {
+                                        // Default (e.g. for Theme Layers)
+                                        attrib = 'value';
+                                    }
+                                    value = feature.attributes[attrib];
+                                    if (undefined != elem.cat) {
+                                        // Category-based style
+                                        if (value == elem.cat) {
+                                            color = elem.fill;
+                                            return false;
+                                        }
+                                    } else {
+                                        // Range-based style
+                                        if ((value >= elem.low) && (value < elem.high)) {
+                                            color = elem.fill;
+                                            return false;
+                                        }
+                                    }
+                                }); */
+                            }
+                            if (undefined != color) {
+                                color = '#' + color;
+                            } else {
+                                // default fillColor
+                                color = '#000000';
+                            }
+                        } else {
+                            // default fillColor for Unclustered Point
+                            color = DEFAULT_FILL;
+                        }
+                        return color;
+                    },
+                    fillOpacity: function(feature) {
+                        var fillOpacity;
+                        if (feature.cluster) {
+                            if (feature.cluster[0].attributes.opacity) {
+                                // Use opacity from features (e.g. FeatureQuery)
+                                fillOpacity = feature.cluster[0].attributes.opacity;
+                            } else {
+                                // default fillOpacity for Clustered Point
+                                fillOpacity = opacity;
+                            }
+                        } else if (feature.attributes.opacity) {
+                            // Use opacity from feature (e.g. FeatureQuery)
+                            fillOpacity = feature.attributes.opacity;
+                        } else if (style) {
+                            if (!style_array) {
+                                // Common Style for all features in layer
+                                fillOpacity = style.fillOpacity;
+                            } else {
+                                // Lookup from rule
+                                /* Done within OpenLayers.Rule
+                                var attrib, value;
+                                $.each(style, function(index, elem) {
+                                    if (undefined != elem.attrib) {
+                                        attrib = elem.attrib;
+                                    } else {
+                                        // Default (e.g. for Theme Layers)
+                                        attrib = 'value';
+                                    }
+                                    value = feature.attributes[attrib];
+                                    if (undefined != elem.cat) {
+                                        // Category-based style
+                                        if (value == elem.cat) {
+                                            fillOpacity = elem.fillOpacity;
+                                            return false;
+                                        }
+                                    } else {
+                                        // Range-based style
+                                        if ((value >= elem.low) && (value < elem.high)) {
+                                            fillOpacity = elem.fillOpacity;
+                                            return false;
+                                        }
+                                    }
+                                }); */
+                            }
+                        }
+                        // default to layer's opacity
+                        return fillOpacity || opacity;
+                    },
+                    stroke: function(feature) {
+                        var color;
+                        if (feature.cluster) {
+                            if (feature.cluster[0].attributes.colour) {
+                                // Use colour from features (e.g. FeatureQuery)
+                                color = feature.cluster[0].attributes.colour;
+                            } else {
+                                // default strokeColor for Clustered Point
+                                color = '#2b2f76';
+                            }
+                        } else if (feature.attributes.colour) {
+                            // Use colour from feature (e.g. FeatureQuery)
+                            color = feature.attributes.colour;
+                        } else if (style) {
+                            if (!style_array) {
+                                // Common Style for all features in layer
+                                color = style.stroke || style.fill;
+                            } else {
+                                // Lookup from rule
+                                /* Done within OpenLayers.Rule
+                                var attrib, value;
+                                $.each(style, function(index, elem) {
+                                    if (undefined != elem.attrib) {
+                                        attrib = elem.attrib;
+                                    } else {
+                                        // Default (e.g. for Theme Layers)
+                                        attrib = 'value';
+                                    }
+                                    value = feature.attributes[attrib];
+                                    if (undefined != elem.cat) {
+                                        // Category-based style
+                                        if (value == elem.cat) {
+                                            color = elem.stroke || elem.fill;
+                                            return false;
+                                        }
+                                    } else {
+                                        // Range-based style
+                                        if ((value >= elem.low) && (value < elem.high)) {
+                                            color = elem.stroke || elem.fill;
+                                            return false;
+                                        }
+                                    }
+                                }); */
+                            }
+                            if (undefined != color) {
+                                color = '#' + color;
+                            } else {
+                                // default fillColor
+                                color = '#000000';
+                            }
+                        } else {
+                            // default strokeColor for Unclustered Point
+                            color = '#f5902e';
+                        }
+                        return color;
+                    },
+                    strokeWidth: function(feature) {
+                        // default strokeWidth
+                        var width = 2;
+                        if (feature.cluster) {
+                            if (feature.cluster[0].attributes.strokeWidth) {
+                                // Use colour from features (e.g. FeatureQuery)
+                                width = feature.cluster[0].attributes.strokeWidth;
+                            }
+                        //} else if (feature.attributes.strokeWidth) {
+                        //    // Use strokeWidth from feature (e.g. FeatureQuery)
+                        //    width = feature.attributes.strokeWidth;
+                        } else if (style) {
+                            if (!style_array) {
+                                // Common Style for all features in layer
+                                width = style.strokeWidth;
+                            } else {
+                                // Lookup from rule
+                                /* Done within OpenLayers.Rule
+                                var attrib, value;
+                                $.each(style, function(index, elem) {
+                                    if (undefined != elem.attrib) {
+                                        attrib = elem.attrib;
+                                    } else {
+                                        // Default (e.g. for Theme Layers)
+                                        attrib = 'value';
+                                    }
+                                    value = feature.attributes[attrib];
+                                    if (undefined != elem.cat) {
+                                        // Category-based style
+                                        if (value == elem.cat) {
+                                            width = elem.strokeWidth;
+                                            return false;
+                                        }
+                                    } else {
+                                        // Range-based style
+                                        if ((value >= elem.low) && (value < elem.high)) {
+                                            width = elem.strokeWidth;
+                                            return false;
+                                        }
+                                    }
+                                }); */
+                            }
+                        }
+                        // Defalt width: 2
+                        return width || 2;
+                    },
+                    label: function(feature) {
+                        // Label For Unclustered Point
+                        var label;
+                        // Label For Clustered Point
+                        if (feature.cluster) {
+                            if (feature.attributes.count > 1) {
+                                label = feature.attributes.count;
+                            }
+                        } else if (feature.layer && (undefined != feature.layer.s3_style)) {
+                            var style = feature.layer.s3_style;
+                            if (!style_array) {
+                                // Common Style for all features in layer
+                                if (style.show_label) {
+                                    label = style.label;
+                                }
+                            } else {
+                                // Lookup from rule
+                                /* Done within OpenLayers.Rule
+                                var attrib, value;
+                                $.each(style, function(index, elem) {
+                                    if (undefined != elem.attrib) {
+                                        attrib = elem.attrib;
+                                    } else {
+                                        // Default (e.g. for Theme Layers)
+                                        attrib = 'value';
+                                    }
+                                    value = feature.attributes[attrib];
+                                    if (undefined != elem.cat) {
+                                        // Category-based style
+                                        if (value == elem.cat) {
+                                            if (elem.show_label) {
+                                                label = elem.label;
+                                            }
+                                            return false
+                                        }
+                                    } else {
+                                        // Range-based style
+                                        if ((value >= elem.low) && (value < elem.high)) {
+                                            if (elem.show_label) {
+                                                label = elem.label;
+                                            }
+                                            return false
+                                        }
+                                    }
+                                }); */
+                            }
+                        }
+                        return label || '';
+                    }
+                }
+            };
+            // Needs to be uniquely instantiated
+            var featureStyle = new OpenLayers.Style(
+                styleArray,
+                styleOptions
+            );
         }
-        // Define StyleMap, Using 'style_cluster' rule for 'default' styling intent
-        var featureClusterStyleMap = new OpenLayers.StyleMap({
-            'default': style_cluster,
+        var featureStyleMap = new OpenLayers.StyleMap({
+            'default': featureStyle,
             // @ToDo: Customise the Select Style too
             'select': {
                 fillColor: '#ffdc33',
                 strokeColor: '#ff9933'
             }
         });
+
+        // Instantiate Layer
         var geojsonLayer = new OpenLayers.Layer.Vector(
             name, {
                 dir: dir,
@@ -1777,11 +1791,11 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 ],
                 // This gets picked up after mapPanel instantiates & copied to it's layerRecords
                 legendURL: marker_url,
-                // These are used to Save State & locate Layer to Activate/Refresh
+                // s3_* are used to Save State & locate Layer to Activate/Refresh
                 s3_layer_id: layer.id,
                 s3_layer_type: layer_type,
                 s3_style: style,
-                styleMap: featureClusterStyleMap,
+                styleMap: featureStyleMap,
                 protocol: new OpenLayers.Protocol.HTTP({
                     url: url,
                     format: format_geojson
@@ -1973,58 +1987,50 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var marker_url = marker_url_path + marker.i;
         var marker_height = marker.h;
         var marker_width = marker.w;
-        var waypoints;
         if (undefined != layer.waypoints) {
-            waypoints = layer.waypoints;
+            var waypoints = layer.waypoints;
         } else {
-            waypoints = true;
+            var waypoints = true;
         }
-        var tracks;
         if (undefined != layer.tracks) {
-            tracks = layer.tracks;
+            var tracks = layer.tracks;
         } else {
-            tracks = true;
+            var tracks = true;
         }
-        var routes;
         if (undefined != layer.routes) {
-            routes = layer.routes;
+            var routes = layer.routes;
         } else {
-            routes = true;
+            var routes = true;
         }
-        var visibility;
         if (undefined != layer.visibility) {
-            visibility = layer.visibility;
+            var visibility = layer.visibility;
         } else {
-            visibility = true;
+            var visibility = true;
         }
-        var dir;
         if (undefined != layer.dir) {
-            dir = layer.dir;
+            var dir = layer.dir;
             if ( $.inArray(dir, map.s3.dirs) == -1 ) {
                 // Add this folder to the list of folders
                 map.s3.dirs.push(dir);
             }
         } else {
             // Default folder
-            dir = '';
+            var dir = '';
         }
-        var opacity;
         if (undefined != layer.opacity) {
-            opacity = layer.opacity;
+            var opacity = layer.opacity;
         } else {
-            opacity = 1;
+            var opacity = 1;
         }
-        var cluster_distance;
         if (undefined != layer.cluster_distance) {
-            cluster_distance = layer.cluster_distance;
+            var cluster_distance = layer.cluster_distance;
         } else {
-            cluster_distance = cluster_distance_default;
+            var cluster_distance = cluster_distance_default;
         }
-        var cluster_threshold;
         if (undefined != layer.cluster_threshold) {
-            cluster_threshold = layer.cluster_threshold;
+            var cluster_threshold = layer.cluster_threshold;
         } else {
-            cluster_threshold = cluster_threshold_default;
+            var cluster_threshold = cluster_threshold_default;
         }
 
         // Needs to be uniquely instantiated
@@ -2116,59 +2122,51 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var marker_url = marker_url_path + marker.i;
         var marker_height = marker.h;
         var marker_width = marker.w;
-        var title;
         if (undefined != layer.title) {
-            title = layer.title;
+            var title = layer.title;
         } else {
-            title = 'name';
+            var title = 'name';
         }
-        var body;
         if (undefined != layer.body) {
-            body = layer.body;
+            var body = layer.body;
         } else {
-            body = 'description';
+            var body = 'description';
         }
-        var refresh;
         if (undefined != layer.refresh) {
-            refresh = layer.refresh;
+            var refresh = layer.refresh;
         } else {
-            refresh = 900; // seconds (so 15 mins)
+            var refresh = 900; // seconds (so 15 mins)
         }
-        var visibility;
         if (undefined != layer.visibility) {
-            visibility = layer.visibility;
+            var visibility = layer.visibility;
         } else {
             // Default to visible
-            visibility = true;
+            var visibility = true;
         }
-        var dir;
         if (undefined != layer.dir) {
-            dir = layer.dir;
+            var dir = layer.dir;
             if ($.inArray(dir, s3.dirs) == -1) {
                 // Add this folder to the list of folders
                 s3.dirs.push(dir);
             }
         } else {
             // Default folder
-            dir = '';
+            var dir = '';
         }
-        var opacity;
         if (undefined != layer.opacity) {
-            opacity = layer.opacity;
+            var opacity = layer.opacity;
         } else {
-            opacity = 1;
+            var opacity = 1;
         }
-        var cluster_distance;
         if (undefined != layer.cluster_distance) {
-            cluster_distance = layer.cluster_distance;
+            var cluster_distance = layer.cluster_distance;
         } else {
-            cluster_distance = cluster_distance_default;
+            var cluster_distance = cluster_distance_default;
         }
-        var cluster_threshold;
         if (undefined != layer.cluster_threshold) {
-            cluster_threshold = layer.cluster_threshold;
+            var cluster_threshold = layer.cluster_threshold;
         } else {
-            cluster_threshold = cluster_threshold_default;
+            var cluster_threshold = cluster_threshold_default;
         }
 
         // Pre-cache this image
@@ -2362,35 +2360,31 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         if (undefined != layer.url3) {
             url.push(layer.url3);
         }
-        var visibility;
         if (undefined != layer.visibility) {
-            visibility = layer.visibility;
+            var visibility = layer.visibility;
         } else {
             // Default to visible
-            visibility = true;
+            var visibility = true;
         }
-        var dir;
         if (undefined != layer.dir) {
-            dir = layer.dir;
+            var dir = layer.dir;
             if ( $.inArray(dir, map.s3.dirs) == -1 ) {
                 // Add this folder to the list of folders
                 map.s3.dirs.push(dir);
             }
         } else {
             // Default folder
-            dir = '';
+            var dir = '';
         }
-        var isBaseLayer;
         if (undefined != layer.base) {
-            isBaseLayer = layer.base;
+            var isBaseLayer = layer.base;
         } else {
-            isBaseLayer = true;
+            var isBaseLayer = true;
         }
-        var numZoomLevels;
         if (undefined != layer.zoomLevels) {
-            numZoomLevels = layer.zoomLevels;
+            var numZoomLevels = layer.zoomLevels;
         } else {
-            numZoomLevels = 19;
+            var numZoomLevels = 19;
         }
 
         var osmLayer = new OpenLayers.Layer.TMS(
@@ -2502,28 +2496,25 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             url.push(layer.url3);
         }
         var layername = layer.layername;
-        var numZoomLevels;
         if (undefined != layer.zoomLevels) {
-            numZoomLevels = layer.zoomLevels;
+            var numZoomLevels = layer.zoomLevels;
         } else {
-            numZoomLevels = 19;
+            var numZoomLevels = 19;
         }
-        var dir;
         if (undefined != layer.dir) {
-            dir = layer.dir;
+            var dir = layer.dir;
             if ( $.inArray(dir, map.s3.dirs) == -1 ) {
                 // Add this folder to the list of folders
                 map.s3.dirs.push(dir);
             }
         } else {
             // Default folder
-            dir = '';
+            var dir = '';
         }
-        var format;
         if (undefined != layer.format) {
-            format = layer.format;
+            var format = layer.format;
         } else {
-            format = 'png';
+            var format = 'png';
         }
 
         var tmsLayer = new OpenLayers.Layer.TMS(
@@ -2562,75 +2553,64 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var featureNS = layer.featureNS;
         var schema = layer.schema;
         //var editable = layer.editable;
-        var version;
         if (undefined != layer.version) {
-            version = layer.version;
+            var version = layer.version;
         } else {
-            version = '1.1.0';
+            var version = '1.1.0';
         }
-        var geometryName;
         if (undefined != layer.geometryName) {
-            geometryName = layer.geometryName;
+            var geometryName = layer.geometryName;
         } else {
-            geometryName = 'the_geom';
+            var geometryName = 'the_geom';
         }
         // @ToDo: Replace with Style JSON
-        var styleField;
         if (undefined != layer.styleField) {
-            styleField = layer.styleField;
+            var styleField = layer.styleField;
         } else {
-            styleField = '';
+            var styleField = '';
         }
-        var styleValues;
         if (undefined != layer.styleValues) {
-            styleValues = layer.styleValues;
+            var styleValues = layer.styleValues;
         } else {
-            styleValues = {};
+            var styleValues = {};
         }
-        var visibility;
         if (undefined != layer.visibility) {
-            visibility = layer.visibility;
+            var visibility = layer.visibility;
         } else {
             // Default to visible
-            visibility = true;
+            var visibility = true;
         }
-        var dir;
         if (undefined != layer.dir) {
-            dir = layer.dir;
+            var dir = layer.dir;
             if ( $.inArray(dir, map.s3.dirs) == -1 ) {
                 // Add this folder to the list of folders
                 map.s3.dirs.push(dir);
             }
         } else {
             // Default folder
-            dir = '';
+            var dir = '';
         }
-        var opacity;
         if (undefined != layer.opacity) {
-            opacity = layer.opacity;
+            var opacity = layer.opacity;
         } else {
-            opacity = 1;
+            var opacity = 1;
         }
-        var cluster_distance;
         if (undefined != layer.cluster_distance) {
-            cluster_distance = layer.cluster_distance;
+            var cluster_distance = layer.cluster_distance;
         } else {
-            cluster_distance = cluster_distance_default;
+            var cluster_distance = cluster_distance_default;
         }
-        var cluster_threshold;
         if (undefined != layer.cluster_threshold) {
-            cluster_threshold = layer.cluster_threshold;
+            var cluster_threshold = layer.cluster_threshold;
         } else {
-            cluster_threshold = cluster_threshold_default;
+            var cluster_threshold = cluster_threshold_default;
         }
-        var projection;
-        var srsName;
         if (undefined != layer.projection) {
-            projection = layer.projection;
-            srsName = 'EPSG:' + projection;
+            var projection = layer.projection;
+            var srsName = 'EPSG:' + projection;
         } else {
-            projection = '4326';
-            srsName = 'EPSG:4326';
+            var projection = '4326';
+            var srsName = 'EPSG:4326';
         }
         var protocol = new OpenLayers.Protocol.WFS({
             version: version,
@@ -2824,92 +2804,81 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             url = url.replace('://', '://' + username + ':' + password + '@');
         }
         var layers = layer.layers;
-        var visibility;
         if (undefined != layer.visibility) {
-            visibility = layer.visibility;
+            var visibility = layer.visibility;
         } else {
-            visibility = true;
+            var visibility = true;
         }
-        var dir;
         if (undefined != layer.dir) {
-            dir = layer.dir;
+            var dir = layer.dir;
             if ( $.inArray(dir, map.s3.dirs) == -1 ) {
                 // Add this folder to the list of folders
                 map.s3.dirs.push(dir);
             }
         } else {
             // Default folder
-            dir = '';
+            var dir = '';
         }
-        var isBaseLayer;
         if (undefined != layer.base) {
-            isBaseLayer = layer.base;
+            var isBaseLayer = layer.base;
         } else {
-            isBaseLayer = false;
+            var isBaseLayer = false;
         }
-        var transparent;
         if (undefined != layer.transparent) {
-            transparent = layer.transparent;
+            var transparent = layer.transparent;
         } else {
-            transparent = true;
+            var transparent = true;
         }
-        var format;
         if (undefined != layer.format) {
-            format = layer.format;
+            var format = layer.format;
         } else {
-            format = 'image/png';
+            var format = 'image/png';
         }
-        var version;
         if (undefined != layer.version) {
-            version = layer.version;
+            var version = layer.version;
         } else {
-            version = '1.1.1';
+            var version = '1.1.1';
         }
-        var wms_map;
         if (undefined != layer.map) {
-            wms_map = layer.map;
+            var wms_map = layer.map;
         } else {
-            wms_map = '';
+            var wms_map = '';
         }
-        var style;
+        // Server-side style NOT an internal JSON one
         if (undefined != layer.style) {
-            style = layer.style;
+            var style = layer.style;
         } else {
-            style = '';
+            var style = '';
         }
-        var bgcolor;
         if (undefined != layer.bgcolor) {
-            bgcolor = '0x' + layer.bgcolor;
+            var bgcolor = '0x' + layer.bgcolor;
         } else {
-            bgcolor = '';
+            var bgcolor = '';
         }
-        var buffer;
         if (undefined != layer.buffer) {
-            buffer = layer.buffer;
+            var buffer = layer.buffer;
         } else {
-            buffer = 0;
+            var buffer = 0;
         }
-        var tiled;
         if (undefined != layer.tiled) {
-            tiled = layer.tiled;
+            var tiled = layer.tiled;
         } else {
-            tiled = false;
+            var tiled = false;
         }
-        var opacity;
         if (undefined != layer.opacity) {
-            opacity = layer.opacity;
+            var opacity = layer.opacity;
         } else {
-            opacity = 1;
+            var opacity = 1;
         }
-        var queryable;
         if (undefined != layer.queryable) {
-            queryable = layer.queryable;
+            var queryable = layer.queryable;
         } else {
-            queryable = 1;
+            var queryable = 1;
         }
-        var legendURL;
         if (undefined != layer.legendURL) {
-            legendURL = layer.legendURL;
+            var legendURL = layer.legendURL;
+        } else{
+            var legendURL;
         }
 
         var wmsLayer = new OpenLayers.Layer.WMS(
@@ -2977,28 +2946,25 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             url.push(layer.url3);
         }
         var layername = layer.layername;
-        var numZoomLevels;
         if (undefined != layer.zoomLevels) {
-            numZoomLevels = layer.zoomLevels;
+            var numZoomLevels = layer.zoomLevels;
         } else {
-            numZoomLevels = 19;
+            var numZoomLevels = 19;
         }
-        var dir;
         if (undefined != layer.dir) {
-            dir = layer.dir;
+            var dir = layer.dir;
             if ( $.inArray(dir, map.s3.dirs) == -1 ) {
                 // Add this folder to the list of folders
                 map.s3.dirs.push(dir);
             }
         } else {
             // Default folder
-            dir = '';
+            var dir = '';
         }
-        var format;
         if (undefined != layer.format) {
-            format = layer.format;
+            var format = layer.format;
         } else {
-            format = 'png';
+            var format = 'png';
         }
 
         var xyzLayer = new OpenLayers.Layer.XYZ(

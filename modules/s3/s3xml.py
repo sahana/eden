@@ -798,69 +798,58 @@ class S3XML(S3Codec):
         if len(tablename) > 19 and \
            tablename.startswith("gis_layer_shapefile"):
             # Shapefile data
-            # @ToDo: Look these up in Bulk rather than processing 1 by 1
             attr = element.attrib
-            query = (table._id == record.id)
-            fields = []
-            fappend = fields.append
-            for f in table.fields:
-                if f not in ("id", "layer_id", "wkt"):
-                    fappend(f)
-            if settings.get_gis_spatialdb():
-                fields.remove("the_geom")
-                _fields = [table[f] for f in fields]
-                if format == "geojson":
-                    # Do the Simplify & GeoJSON direct from the DB
-                    row = db(query).select(table.the_geom.st_simplify(0.01).st_asgeojson(precision=4).with_alias("geojson"),
-                                           *_fields,
-                                           limitby=(0, 1)).first()
-                    if row:
-                        # Output the GeoJSON directly into the XML, so that XSLT can simply drop in
-                        geometry = etree.SubElement(element, "geometry")
-                        geometry.set("value", row.geojson)
-                else:
+            if format == "geojson":
+                # These have been looked-up in bulk
+                id = record.id
+                geojson = geojsons[tablename].get(id, None)
+                if geojson:
+                    geometry = etree.SubElement(element, "geometry")
+                    geometry.set("value", geojson)
+                    # Add Attributes
+                    _attr = ""
+                    attrs = attributes[tablename][id]
+                    for a in attrs:
+                        if _attr:
+                            _attr = "%s,[%s]=[%s]" % (_attr, a, attrs[a])
+                        else:
+                            _attr = "[%s]=[%s]" % (a, attrs[a])
+                    if _attr:
+                        attr[ATTRIBUTE.attributes] = _attr
+            else:
+                # Lookup record by record :/
+                query = (table._id == record.id)
+                fields = []
+                fappend = fields.append
+                for f in table.fields:
+                    if f not in ("id", "layer_id", "lat", "lon", "wkt"):
+                        fappend(f)
+                if settings.get_gis_spatialdb():
                     # Do the Simplify direct from the DB
+                    fields.remove("the_geom")
+                    _fields = [table[f] for f in fields]
                     row = db(query).select(table.the_geom.st_simplify(0.01).st_astext().with_alias("wkt"),
                                            *_fields,
                                            limitby=(0, 1)).first()
                     if row:
                         # Convert the WKT in XSLT
                         attr[ATTRIBUTE.wkt] = row.wkt
-                if row:
-                    # Locate the attributes
-                    row = row[tablename]
-            else:
-                _fields = [table[f] for f in fields]
-                row = db(query).select(table[WKTFIELD],
-                                       *_fields,
-                                       limitby=(0, 1)).first()
-                if row:
-                    wkt = row[WKTFIELD]
-                    if wkt:
-                        if format == "geojson":
-                            # Simplify the polygon to reduce download size
-                            geojson = gis.simplify(wkt, output="geojson")
-                            # Output the GeoJSON directly into the XML, so that XSLT can simply drop in
-                            geometry = etree.SubElement(element, "geometry")
-                            geometry.set("value", geojson)
-                        else:
+                        # Locate the attributes
+                        #row = row[tablename]
+                else:
+                    _fields = [table[f] for f in fields]
+                    row = db(query).select(table[WKTFIELD],
+                                           *_fields,
+                                           limitby=(0, 1)).first()
+                    if row:
+                        wkt = row[WKTFIELD]
+                        if wkt:
                             # Simplify the polygon to reduce download size
                             # & also to work around the recursion limit in libxslt
                             # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
                             wkt = gis.simplify(wkt)
                             # Convert the WKT in XSLT
                             attr[ATTRIBUTE.wkt] = wkt
-
-            if row and format == "geojson":
-                # Add Attributes
-                _attr = ""
-                for a in fields:
-                    if _attr:
-                        _attr = "%s,[%s]=[%s]" % (_attr, a, row[a])
-                    else:
-                        _attr = "[%s]=[%s]" % (a, row[a])
-                if _attr:
-                    attr[ATTRIBUTE.attributes] = _attr
 
         for r in rmap:
             if r.element is None:

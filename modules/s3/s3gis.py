@@ -2299,14 +2299,76 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def get_shapefile_geojson(resource):
+        """
+            Lookup Shapefile Layer polygons once per layer and not per-record
+
+            Called by S3REST: S3Resource.export_tree()
+
+            @ToDo: Vary simplification level & precision by Zoom level
+                   - store this in the style?
+        """
+
+        c = resource.components.items()[0][1]
+        tablename = c.tablename
+        table = c.table
+        query = resource.rfilter.query
+        fields = []
+        fappend = fields.append
+        for f in table.fields:
+            if f not in ("layer_id", "lat", "lon"):
+                fappend(f)
+
+        attributes = {}
+        geojsons = {}
+        if current.deployment_settings.get_gis_spatialdb():
+            # Do the Simplify & GeoJSON direct from the DB
+            fields.remove("the_geom")
+            fields.remove("wkt")
+            _fields = [table[f] for f in fields]
+            rows = current.db(query).select(table.the_geom.st_simplify(0.01).st_asgeojson(precision=4).with_alias("geojson")
+                                            *_fields)
+            for row in rows:
+                geojsons[row.id] = row.geojson
+                _attributes = {}
+                for f in fields:
+                    if f not in ("id"):
+                        _attributes[f] = row[f]
+                attributes[row.id] = _attributes
+        else:
+            _fields = [table[f] for f in fields]
+            rows = current.db(query).select(*_fields)
+            simplify = GIS.simplify
+            for row in rows:
+                # Simplify the polygon to reduce download size
+                geojson = simplify(row.wkt, tolerance=0.01, output="geojson")
+                if geojson:
+                    geojsons[row.id] = geojson
+                _attributes = {}
+                for f in fields:
+                    if f not in ("id", "wkt"):
+                        _attributes[f] = row[f]
+                attributes[row.id] = _attributes
+
+        _attributes = {}
+        _attributes[tablename] = attributes
+        _geojsons = {}
+        _geojsons[tablename] = geojsons
+
+        # return 'locations'
+        return dict(attributes = _attributes,
+                    geojsons = _geojsons)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def get_theme_geojson(resource):
         """
             Lookup Theme Layer polygons once per layer and not per-record
 
             Called by S3REST: S3Resource.export_tree()
 
-            @ToDo: Vary simplification level & precision by Lx
-            - store this in the style?
+            @ToDo: Vary precision by Lx
+                   - store this (& tolerance map) in the style?
         """
 
         s3db = current.s3db
@@ -7286,6 +7348,8 @@ class LayerShapefile(Layer):
                       "type": "shapefile",
                       "name": self.safe_name,
                       "url": url,
+                      # Shapefile layers don't alter their contents, so don't refresh
+                      "refresh": 0,
                       }
             
             # Attributes which are defaulted client-side if not set

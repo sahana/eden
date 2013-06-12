@@ -3728,6 +3728,10 @@ class S3MapModel(S3Model):
                 fname = field_defn.GetName()
                 if fname.lower() == "id":
                     fname = "id_orig"
+                elif fname.lower() == "lat":
+                    fname = "lat_orig"
+                elif fname.lower() == "lon":
+                    fname = "lon_orig"
                 else:
                     try:
                         db.check_reserved_keyword(fname)
@@ -3766,20 +3770,23 @@ class S3MapModel(S3Model):
 
                 # Get the Geometry
                 geom = feature.GetGeometryRef()
-                if reproject:
-                    geom.Transform(coordTransform)
                 if geom is None:
                     lat = lon = wkt = None
-                if geom_type == wkbPoint:
-                    lon = geom.GetX()
-                    lat = geom.GetY()
-                    wkt = "POINT(%f %f)" % (lon, lat)
                 else:
-                    wkt = geom.ExportToWkt()
-                    # @ToDo: Centroids?
-                    #lat = 
-                    #lon = 
-                    # @ToDo: Bounds?
+                    if reproject:
+                        geom.Transform(coordTransform)
+                    if geom_type == wkbPoint:
+                        lon = geom.GetX()
+                        lat = geom.GetY()
+                        wkt = "POINT(%f %f)" % (lon, lat)
+                    else:
+                        wkt = geom.ExportToWkt()
+                        centroid = geom.Centroid()
+                        lon = centroid.GetX()
+                        lat = centroid.GetY()
+                        # @ToDo: Bounds?
+                f["lat"] = lat
+                f["lon"] = lon
                 f["wkt"] = wkt
                 if spatialdb:
                     f["the_geom"] = wkt
@@ -3799,7 +3806,9 @@ class S3MapModel(S3Model):
                                       data = data)
 
             # Create Database table to store these features in
-            Fields = [Field("wkt", "text"),
+            Fields = [Field("lat", "float"),
+                      Field("lon", "float"),
+                      Field("wkt", "text"),
                       Field("layer_id", table),
                       ]
             append = Fields.append
@@ -3814,7 +3823,6 @@ class S3MapModel(S3Model):
             # Clear old data if-any
             dtable.truncate()
             # Populate table with data
-            # @ToDo: PostGIS when-available
             for feature in features:
                 dtable.insert(**feature)
 

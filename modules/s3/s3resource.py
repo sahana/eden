@@ -2797,7 +2797,10 @@ class S3Resource(object):
             if layer_id:
                 # GIS Feature Layer
                 locations = current.gis.get_locations_and_popups(self, layer_id)
-            elif self.tablename == "gis_theme_data":
+            elif tablename == "gis_layer_shapefile":
+                # GIS Shapefile Layer
+                locations = current.gis.get_shapefile_geojson(self)
+            elif tablename == "gis_theme_data":
                 # GIS Theme Layer
                 locations = current.gis.get_theme_geojson(self)
             else:
@@ -3097,7 +3100,8 @@ class S3Resource(object):
                                              lazy=lazy,
                                              url=crecord_url,
                                              msince=msince,
-                                             master=False)
+                                             master=False,
+                                             locations=locations)
                     if celement is not None:
                         add = True # keep the parent record
 
@@ -7267,8 +7271,7 @@ class S3ResourceFilter(object):
                     fname = None
                     if k.find(".") != -1:
                         fname = k.split(".")[1]
-                    elif tablename not in ("gis_location",
-                                           "gis_feature_query"):
+                    elif not tablename in ("gis_location", "gis_feature_query", "gis_layer_shapefile"):
                         for f in fields:
                             if str(table[f].type) == "reference gis_location":
                                 fname = f
@@ -7283,9 +7286,10 @@ class S3ResourceFilter(object):
                         continue
                     else:
                         bbox_filter = None
-                        if tablename == "gis_feature_query" or \
-                           tablename == "gis_cache":
+                        if tablename in ("gis_location", "gis_feature_query"):
                             gtable = table
+                        elif tablename == "gis_layer_shapefile":
+                            gtable = resource.components.items()[0][1].table
                         else:
                             gtable = current.s3db.gis_location
                             if current.deployment_settings.get_gis_spatialdb():
