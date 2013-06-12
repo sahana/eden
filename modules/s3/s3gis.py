@@ -1105,7 +1105,7 @@ class GIS(object):
                 # No configs found at all
                 _gis.config = cache
                 return cache
-            query = (ctable.id == config.id) & \
+            query = (ctable.id == config[ctable.id]) & \
                     (mtable.id == stable.marker_id) & \
                     (stable.id == ctable.symbology_id) & \
                     (ptable.id == ctable.projection_id)
