@@ -5,7 +5,13 @@
 <link href="/{{=appname}}/static/styles/gis/gis.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 <link href="/{{=appname}}/static/styles/gis/style.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{include "jquery.html"}}
-{{include "ext.html"}}
+{{s3base.s3_include_ext()}}
+{{for sheet in s3.external_stylesheets:}}
+ <link href="{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+{{pass}}
+{{for sheet in s3.stylesheets:}}
+ <link href="/{{=appname}}/static/styles/{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+{{pass}}
 <script type="text/javascript">//<![CDATA[
 {{ # Global variable to store all of our variables inside }}
 var S3={}
@@ -15,3 +21,6 @@ i18n={}
 function s3_debug(message, value) {}
 //]]></script>
 {{=XML(map)}}
+{{for script in s3.scripts:}}
+ {{=SCRIPT(_src=script)}}
+{{pass}}

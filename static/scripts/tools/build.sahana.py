@@ -518,33 +518,98 @@ def docss():
     shutil.move(outputFilenameCSS, "../../themes/%s" % theme)
 
     # Bootstrap
-    print "Bootstrap CSS"
-    listCSS = []
-    for file in ["bootstrap.css",
-                 "bootstrap-responsive.css",
-                 "font-awesome.css",
-                 #"bootstrap-multiselect.css",
-                 ]:
-        listCSS.append("../../styles/bootstrap/%s" % file)
+    # - enable as-needed
+    bootstrap = False
+    if bootstrap:
+        print "Bootstrap CSS"
+        listCSS = []
+        for file in ["bootstrap.css",
+                     "bootstrap-responsive.css",
+                     "font-awesome.css",
+                     #"bootstrap-multiselect.css",
+                     ]:
+            listCSS.append("../../styles/bootstrap/%s" % file)
 
-    outputFilenameCSS = "bootstrap-combined.min.css"
+        outputFilenameCSS = "bootstrap-combined.min.css"
 
-    # Merge CSS files
-    print "Merging Bootstrap styles."
-    mergedCSS = mergeCSS(listCSS, outputFilenameCSS)
+        # Merge CSS files
+        print "Merging Bootstrap styles."
+        mergedCSS = mergeCSS(listCSS, outputFilenameCSS)
 
-    # Compress CSS files
-    print "Writing to %s." % outputFilenameCSS
-    compressCSS(mergedCSS, outputFilenameCSS)
+        # Compress CSS files
+        print "Writing to %s." % outputFilenameCSS
+        compressCSS(mergedCSS, outputFilenameCSS)
 
-    # Move files to correct locations
-    print "Deleting %s." % outputFilenameCSS
-    try:
-        os.remove("../../styles/bootstrap/%s" % outputFilenameCSS)
-    except:
-        pass
-    print "Moving new %s." % outputFilenameCSS
-    shutil.move(outputFilenameCSS, "../../styles/bootstrap")
+        # Move files to correct locations
+        print "Deleting %s." % outputFilenameCSS
+        try:
+            os.remove("../../styles/bootstrap/%s" % outputFilenameCSS)
+        except:
+            pass
+        print "Moving new %s." % outputFilenameCSS
+        shutil.move(outputFilenameCSS, "../../styles/bootstrap")
+
+    # Ext
+    # - enable as-needed
+    ext = False
+    if ext:
+        print "Ext Gray CSS"
+        listCSS = []
+        for file in ["ext-all-notheme.css",
+                     "xtheme-gray.css",
+                     ]:
+            listCSS.append("../ext/resources/css/%s" % file)
+
+        outputFilenameCSS = "ext-gray.min.css"
+
+        # Merge CSS files
+        print "Merging Ext styles."
+        mergedCSS = mergeCSS(listCSS, outputFilenameCSS)
+
+        # Compress CSS file
+        print "Writing to %s." % outputFilenameCSS
+        compressCSS(mergedCSS, outputFilenameCSS)
+
+        # Move files to correct locations
+        print "Deleting %s." % outputFilenameCSS
+        try:
+            os.remove("../ext/resources/css/%s" % outputFilenameCSS)
+        except:
+            pass
+        print "Moving new %s." % outputFilenameCSS
+        shutil.move(outputFilenameCSS, "../ext/resources/css")
+
+        print "Ext no-Theme CSS"
+        outputFilenameCSS = "ext-notheme.min.css"
+
+        # Compress CSS file
+        print "Writing to %s." % outputFilenameCSS
+        compressCSS("../ext/resources/css/ext-all-notheme.css", outputFilenameCSS)
+
+        # Move files to correct locations
+        print "Deleting %s." % outputFilenameCSS
+        try:
+            os.remove("../ext/resources/css/%s" % outputFilenameCSS)
+        except:
+            pass
+        print "Moving new %s." % outputFilenameCSS
+        shutil.move(outputFilenameCSS, "../ext/resources/css")
+
+        print "Ext Themes CSS"
+        outputFilenameCSS = "xtheme-ifrc.min.css"
+
+        # Compress CSS file
+        print "Writing to %s." % outputFilenameCSS
+        compressCSS("../../themes/IFRC/xtheme-ifrc.css", outputFilenameCSS)
+
+        # Move files to correct locations
+        print "Deleting %s." % outputFilenameCSS
+        try:
+            os.remove("../../themes/IFRC/%s" % outputFilenameCSS)
+        except:
+            pass
+        print "Moving new %s." % outputFilenameCSS
+        shutil.move(outputFilenameCSS, "../../themes/IFRC")
 
 def main(argv):
     try:

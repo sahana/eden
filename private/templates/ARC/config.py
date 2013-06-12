@@ -165,6 +165,7 @@ settings.base.system_name_short = T("RMS")
 # -----------------------------------------------------------------------------
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "ARC"
+settings.base.xtheme = "IFRC/xtheme-ifrc.css"
 settings.gis.map_height = 600
 settings.gis.map_width = 854
 # Display Resources recorded to Admin-Level Locations on the map

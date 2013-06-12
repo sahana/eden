@@ -695,6 +695,65 @@ def s3_include_debug_js():
     return XML(include)
 
 # =============================================================================
+def s3_include_ext():
+    """
+        Add ExtJS CSS & JS into a page for a Map
+        - since this is normally run from MAP.xml() it is too late to insert into
+          s3.[external_]stylesheets, so must inject sheets into correct order
+    """
+
+    s3 = current.response.s3
+    if s3.ext_included:
+        # Ext already included
+        return
+    appname = current.request.application
+
+    xtheme = current.deployment_settings.get_base_xtheme()
+    if xtheme:
+        xtheme = "%smin.css" % xtheme[:-3]
+        xtheme = \
+    "<link href='/%s/static/themes/%s' rel='stylesheet' type='text/css' media='screen' charset='utf-8' />" % \
+        (appname, xtheme)
+
+    if s3.cdn:
+        # For Sites Hosted on the Public Internet, using a CDN may provide better performance
+        PATH = "http://cdn.sencha.com/ext/gpl/3.4.1.1"
+    else:
+        PATH = "/%s/static/scripts/ext" % appname
+        
+    if s3.debug:
+        # Provide debug versions of CSS / JS
+        adapter = "%s/adapter/jquery/ext-jquery-adapter-debug.js" % PATH
+        main_js = "%s/ext-all-debug.js" % PATH
+        main_css = \
+    "<link href='%s/resources/css/ext-all-notheme.css' rel='stylesheet' type='text/css' media='screen' charset='utf-8' />" % PATH
+        if not xtheme:
+            xtheme = \
+    "<link href='%s/resources/css/xtheme-gray.css' rel='stylesheet' type='text/css' media='screen' charset='utf-8' />" % PATH
+    else:
+        adapter = "%s/adapter/jquery/ext-jquery-adapter.js" % PATH
+        main_js = "%s/ext-all.js" % PATH
+        if xtheme:
+            main_css = \
+    "<link href='/%s/static/scripts/ext/resources/css/ext-notheme.min.css' rel='stylesheet' type='text/css' media='screen' charset='utf-8' />" % appname
+        else:
+            main_css = \
+    "<link href='/%s/static/scripts/ext/resources/css/ext-gray.min.css' rel='stylesheet' type='text/css' media='screen' charset='utf-8' />" % appname
+    locale = "%s/src/locale/ext-lang-%s.js" % (PATH, s3.language)
+
+    scripts = s3.scripts
+    scripts_append = scripts.append
+    scripts_append(adapter)
+    scripts_append(main_js)
+    scripts_append(locale)
+
+    if xtheme:
+        s3.jquery_ready.append('''$('style:first').after("%s").after("%s")''' % (xtheme, main_css))
+    else:
+        s3.jquery_ready.append('''$('style:first').after("%s")''' % main_css)
+    s3.ext_included = True
+
+# =============================================================================
 def s3_is_mobile_client(request):
     """
         Simple UA Test whether client is a mobile device

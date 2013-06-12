@@ -1124,12 +1124,11 @@ $(document).ready(function() {
 
     // Add Events to any Map Buttons present
     // S3Search Results
-    var s3_dataTables_mapButton = Ext.get('gis_datatables_map-btn');
-    if (s3_dataTables_mapButton) {
-        s3_dataTables_mapButton.on('click', function() {
+    var dt_mapButton = $('#gis_datatables_map-btn');
+    if (dt_mapButton) {
+        dt_mapButton.on('click', function() {
             // Find the map
-            var map_button = $('#gis_datatables_map-btn');
-            var map_id = map_button.attr('map');
+            var map_id = dt_mapButton.attr('map');
             if (undefined == map_id) {
                 map_id = 'default_map';
             }
@@ -1163,8 +1162,8 @@ $(document).ready(function() {
             // Disable the crosshair on the Map Selector
             $('.olMapViewport').removeClass('crosshair');
             // Set the Tab to show as active
-            map_button.parent()
-                      .addClass('tab_here');
+            dt_mapButton.parent()
+                        .addClass('tab_here');
             // Deactivate the list Tab
             $('#gis_datatables_list_tab').parent()
                                          .removeClass('tab_here')
@@ -1172,9 +1171,9 @@ $(document).ready(function() {
             // Set to revert if Map closed
             $('div.x-tool-close').click(function(evt) {
                 // Set the Tab to show as inactive
-                map_button.parent()
-                          .removeClass('tab_here')
-                          .addClass('tab_other');
+                dt_mapButton.parent()
+                            .removeClass('tab_here')
+                            .addClass('tab_other');
                 // Activate the list Tab
                 $('#gis_datatables_list_tab').parent()
                                              .removeClass('tab_other')
@@ -1185,14 +1184,13 @@ $(document).ready(function() {
     }
 
     // S3Search Widget
-    var s3_search_mapButton = Ext.get('gis_search_map-btn');
-    if (s3_search_mapButton) {
-        s3_search_mapButton.on('click', function(evt) {
+    var search_mapButton = $('#gis_search_map-btn');
+    if (search_mapButton) {
+        search_mapButton.on('click', function(evt) {
             // Prevent button submitting the form
             evt.preventDefault();
             // Find the map
-            var map_button = $('#gis_search_map-btn');
-            var map_id = map_button.attr('map');
+            var map_id = search_mapButton.attr('map');
             if (undefined == map_id) {
                 map_id = 'default_map';
             }
