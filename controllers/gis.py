@@ -1925,6 +1925,11 @@ def layer_shapefile():
             s3db.add_component(_tablename,
                                gis_layer_shapefile="layer_id")
             # @ToDo: onaccept to write any modified data back to the attached shapefile
+            # If we need to reproject, then we need to write a .prj file out:
+            #outSpatialRef.MorphToESRI()
+            #file = open(outfilepath + '\\'+ outfileshortname + '.prj', 'w')
+            #file.write(outSpatialRef.ExportToWkt())
+            #file.close()
 
     # Pre-processor
     def prep(r):
@@ -2821,7 +2826,7 @@ def maps():
         Map Save/Publish Handler for GeoExplorer
 
         NB
-            The models for this are currently not enabled in 03_gis.py
+            The models for this are currently not enabled in modules/s3db/gis.py
             This hasn't been tested at all with the new version of GeoExplorer
     """
 
@@ -2851,7 +2856,6 @@ def maps():
         map["projection"] = "EPSG:900913"
         map["units"] = "m"
         map["maxResolution"] = 156543.0339
-        map["maxExtent"] = [ -20037508.34, -20037508.34, 20037508.34, 20037508.34 ]
         # @ToDo: Read Layers
         map["layers"] = []
         #map["layers"].append(dict(source="google", title="Google Terrain", name="TERRAIN", group="background"))

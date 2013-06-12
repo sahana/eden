@@ -16,7 +16,7 @@
 'Add Organization Type': 'Add Organisation Type',
 'Add Partner Organization': 'Add Partner Organisation',
 'Add Partner Organizations': 'Add Partner Organisations',
-'Canceled','Cancelled',
+'Canceled': 'Cancelled',
 'Cannot make an Organization a branch of itself!': 'Cannot make an Organisation a branch of itself!',
 'Capturing the projects each organization is providing and where': 'Capturing the projects each organisation is providing and where',
 'Catalog': 'Catalogue',
@@ -31,7 +31,7 @@
 'Catalogs': 'Catalogues',
 'Certificate Catalog': 'Certificate Catalogue',
 'Certifying Organization': 'Certifying Organisation',
-'Commitment Canceled','Commitment Cancelled'
+'Commitment Canceled': 'Commitment Cancelled',
 'Competency Rating Catalog': 'Competency Rating Catalogue',
 'Configure/Monitor Synchronization': 'Configure/Monitor Synchronisation',
 'Configure resources to synchronize, update methods and policies': 'Configure resources to synchronise, update methods and policies',
@@ -78,7 +78,7 @@
 'Item Catalogues': 'Item Catalogues',
 'Job Role Catalog': 'Job Role Catalogue',
 'Job Title Catalog': 'Job Title Catalogue',
-'Kit canceled','Kit cancelled'
+'Kit canceled': 'Kit cancelled',
 'Last Synchronization': 'Last Synchronisation',
 'Last synchronized on': 'Last synchronised on',
 'Lead Organization': 'Lead Organisation',
@@ -103,7 +103,7 @@
 'No Organizations currently registered': 'No Organisations currently registered',
 'No Organizations for this Project': 'No Organisations for this Project',
 'No Partner Organizations currently registered': 'No Partner Organisations currently registered',
-'Order canceled','Order cancelled'
+'Order canceled': 'Order cancelled',
 'Organization': 'Organisation',
 'Organization added': 'Organisation added',
 'Organization added to Project': 'Organisation added to Project',
@@ -147,10 +147,10 @@
 'Project Organization Details': 'Project Organisation Details',
 'Project Organization updated': 'Project Organisation updated',
 'Project Organizations': 'Project Organisations',
-'Received Shipment canceled','Received Shipment cancelled'
-'Request Canceled','Request Cancelled'
-'Request for Donations Canceled','Request for Donations Cancelled'
-'Request for Volunteers Canceled','Request for Volunteers Cancelled'
+'Received Shipment canceled': 'Received Shipment cancelled',
+'Request Canceled': 'Request Cancelled',
+'Request for Donations Canceled': 'Request for Donations Cancelled',
+'Request for Volunteers Canceled': 'Request for Volunteers Cancelled',
 'Schedule synchronization jobs': 'Schedule synchronisation jobs',
 'Search by organization.': 'Search by organisation.',
 'Search for an Organization by name or acronym': 'Search for an Organisation by name or acronym',
@@ -162,8 +162,8 @@
 'Search Organizations': 'Search Organisations',
 'Search Partner Organizations': 'Search Partner Organisations',
 'Search Project Organizations': 'Search Project Organisations',
-'Sent Shipment canceled and items returned to Warehouse','Sent Shipment cancelled and items returned to Warehouse'
-'Sent Shipment canceled','Sent Shipment cancelled'
+'Sent Shipment canceled and items returned to Warehouse': 'Sent Shipment cancelled and items returned to Warehouse',
+'Sent Shipment canceled': 'Sent Shipment cancelled',
 'Shipping Organization': 'Shipping Organisation',
 'Specialized Hospital': 'Specialised Hospital',
 'Synchronization': 'Synchronisation',
@@ -178,9 +178,9 @@
 'The default Organization for whom you are acting.': 'The default Organisation for whom you are acting.',
 'The Organization Registry keeps track of all the relief organizations working in the area.': 'The Organisation Registry keeps track of all the relief organisations working in the area.',
 'The synchronization module allows the synchronization of data resources between Sahana Eden instances.': 'The synchronisation module allows the synchronisation of data resources between Sahana Eden instances.',
-'This shipment has already been received & subsequently canceled.','This shipment has already been received & subsequently cancelled.'
-'This shipment has not been received - it has NOT been canceled because can still be edited.','This shipment has not been received - it has NOT been cancelled because can still be edited.'
-'This shipment has not been sent - it has NOT been canceled because can still be edited.','This shipment has not been sent - it has NOT been cancelled because can still be edited.'
+'This shipment has already been received & subsequently canceled.': 'This shipment has already been received & subsequently cancelled.',
+'This shipment has not been received - it has NOT been canceled because can still be edited.': 'This shipment has not been received - it has NOT been cancelled because can still be edited.',
+'This shipment has not been sent - it has NOT been canceled because can still be edited.': 'This shipment has not been sent - it has NOT been cancelled because can still be edited.',
 'To Organization': 'To Organisation',
 'Training Course Catalog': 'Training Course Catalogue',
 'Transfer Ownership To (Organization/Branch)': 'Transfer Ownership To (Organisation/Branch)',

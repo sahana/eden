@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2008-2011 The Open Source Geospatial Foundation
+ * Copyright (c) 2008-2012 The Open Source Geospatial Foundation
  * 
  * Published under the BSD license.
  * See http://svn.geoext.org/core/trunk/geoext/license.txt for the full text
@@ -312,7 +312,25 @@ GeoExt.data.PrintProvider = Ext.extend(Ext.util.Observable, {
              *    PrintProvider
              *  * url - ``String`` the url of the print document
              */
-            "beforedownload"
+            "beforedownload",
+
+            /** api: event[beforeencodelegend]
+             *  Triggered before the legend is encoded. If the listener
+             *  returns false, the default encoding based on GeoExt.LegendPanel
+             *  will not be executed. This provides an option for application
+             *  to get legend info from a custom component other than
+             *  GeoExt.LegendPanel.
+             *
+             *  Listener arguments:
+             *
+             *  * printProvider - :class:`GeoExt.data.PrintProvider` this
+             *    PrintProvider
+             *  * jsonData - ``Object`` The data that will be sent to the print
+             *    server. Can be used to populate jsonData.legends.
+             *  * legend - ``Object`` The legend supplied in the options which were
+             *    sent to the print function.
+             */
+            "beforeencodelegend"
 
         );
         
@@ -452,7 +470,7 @@ GeoExt.data.PrintProvider = Ext.extend(Ext.util.Observable, {
             jsonData.overviewLayers = encodedOverviewLayers;
         }
 
-        if(options.legend) {
+        if(options.legend && !(this.fireEvent("beforeencodelegend", this, jsonData, options.legend) === false)) {
             var legend = options.legend;
             var rendered = legend.rendered;
             if (!rendered) {
@@ -584,8 +602,12 @@ GeoExt.data.PrintProvider = Ext.extend(Ext.util.Observable, {
      *  Converts the provided url to an absolute url.
      */
     getAbsoluteUrl: function(url) {
+        if (Ext.isSafari) {
+            url = url.replace(/{/g, '%7B');
+            url = url.replace(/}/g, '%7D');
+        }
         var a;
-        if(Ext.isIE6 || Ext.isIE7 || Ext.isIE8) {
+        if (Ext.isIE6 || Ext.isIE7 || Ext.isIE8) {
             a = document.createElement("<a href='" + url + "'/>");
             a.style.display = "none";
             document.body.appendChild(a);
@@ -615,16 +637,18 @@ GeoExt.data.PrintProvider = Ext.extend(Ext.util.Observable, {
             },
             "WMS": function(layer) {
                 var enc = this.encoders.layers.HTTPRequest.call(this, layer);
+                enc.singleTile = layer.singleTile;
                 Ext.apply(enc, {
                     type: 'WMS',
                     layers: [layer.params.LAYERS].join(",").split(","),
                     format: layer.params.FORMAT,
-                    styles: [layer.params.STYLES].join(",").split(",")
+                    styles: [layer.params.STYLES].join(",").split(","),
+                    singleTile: layer.singleTile
                 });
                 var param;
                 for(var p in layer.params) {
                     param = p.toLowerCase();
-                    if(!layer.DEFAULT_PARAMS[param] &&
+                    if(layer.params[p] != null && !layer.DEFAULT_PARAMS[param] &&
                     "layers,styles,width,height,srs".indexOf(param) == -1) {
                         if(!enc.customParams) {
                             enc.customParams = {};
@@ -662,22 +686,46 @@ GeoExt.data.PrintProvider = Ext.extend(Ext.util.Observable, {
             },
             "WMTS": function(layer) {
                 var enc = this.encoders.layers.HTTPRequest.call(this, layer);
-                return Ext.apply(enc, {
+                enc = Ext.apply(enc, {
                     type: 'WMTS',
                     layer: layer.layer,
                     version: layer.version,
                     requestEncoding: layer.requestEncoding,
-                    tileOrigin: [layer.tileOrigin.lon, layer.tileOrigin.lat],
-                    tileSize: [layer.tileSize.w, layer.tileSize.h],
                     style: layer.style,
-                    formatSuffix: layer.formatSuffix,
                     dimensions: layer.dimensions,
                     params: layer.params,
-                    maxExtent: (layer.tileFullExtent != null) ? layer.tileFullExtent.toArray() : layer.maxExtent.toArray(),
-                    matrixSet: layer.matrixSet,
-                    zoomOffset: layer.zoomOffset,
-                    resolutions: layer.serverResolutions || layer.resolutions
+                    matrixSet: layer.matrixSet
                 });
+                if (layer.matrixIds) {
+                    if (layer.requestEncoding == "KVP") {
+                        enc.format = layer.format;
+                    }
+                    enc.matrixIds = []
+                    Ext.each(layer.matrixIds, function(matrixId) {
+                        enc.matrixIds.push({
+                            identifier: matrixId.identifier,
+                            matrixSize: [matrixId.matrixWidth, 
+                                    matrixId.matrixHeight],
+                            resolution: matrixId.scaleDenominator * 0.28E-3
+                                    / OpenLayers.METERS_PER_INCH
+                                    / OpenLayers.INCHES_PER_UNIT[layer.units],
+                            tileSize: [matrixId.tileWidth, matrixId.tileHeight],
+                            topLeftCorner: [matrixId.topLeftCorner.lon, 
+                                    matrixId.topLeftCorner.lat]
+                        });
+                    })
+                    return enc;
+                }
+                else {
+                    return Ext.apply(enc, {
+                        formatSuffix: layer.formatSuffix,
+                        tileOrigin: [layer.tileOrigin.lon, layer.tileOrigin.lat],
+                        tileSize: [layer.tileSize.w, layer.tileSize.h],
+                        maxExtent: (layer.tileFullExtent != null) ? layer.tileFullExtent.toArray() : layer.maxExtent.toArray(),
+                        zoomOffset: layer.zoomOffset,
+                        resolutions: layer.serverResolutions || layer.resolutions
+                    });
+                }
             },
             "KaMapCache": function(layer) {
                 var enc = this.encoders.layers.KaMap.call(this, layer);
@@ -707,8 +755,7 @@ GeoExt.data.PrintProvider = Ext.extend(Ext.util.Observable, {
                 return Ext.apply(enc, {
                     baseURL: this.getAbsoluteUrl(layer.url instanceof Array ?
                         layer.url[0] : layer.url),
-                    opacity: (layer.opacity != null) ? layer.opacity : 1.0,
-                    singleTile: layer.singleTile
+                    opacity: (layer.opacity != null) ? layer.opacity : 1.0
                 });
             },
             "Image": function(layer) {
@@ -740,6 +787,12 @@ GeoExt.data.PrintProvider = Ext.extend(Ext.util.Observable, {
                     style = feature.style || layer.style ||
                     layer.styleMap.createSymbolizer(feature,
                         feature.renderIntent);
+
+                    // don't send unvisible features
+                    if (style.display == 'none') {
+                        continue;
+                    }
+
                     dictKey = styleFormat.write(style);
                     dictItem = styleDict[dictKey];
                     if(dictItem) {

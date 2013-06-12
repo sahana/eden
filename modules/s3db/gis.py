@@ -1165,6 +1165,7 @@ class S3GISConfigModel(S3Model):
         # =====================================================================
         # GIS Projections
         tablename = "gis_projection"
+        proj4js = T("%(proj4js)s definition") % dict(proj4js="Proj4js")
         table = define_table(tablename,
                              Field("name", length=64, notnull=True, unique=True,
                                    label = T("Name")),
@@ -1172,13 +1173,20 @@ class S3GISConfigModel(S3Model):
                                    label="EPSG",
                                    requires = IS_NOT_EMPTY()),
                              Field("maxExtent", length=64, notnull=True,
-                                   label = T("maxExtent"),
+                                   label = T("Maximum Extent"),
+                                   comment = DIV(_class="tooltip",
+                                                 _title="%s|%s" % (T("Maximum Extent"),
+                                                                   T("The Maximum valid bounds, in projected coordinates"))),
                                    # @ToDo: Add a specialised validator
                                    requires = IS_NOT_EMPTY()),
-                             Field("maxResolution", "double", notnull=True,
-                                   label = T("maxResolution"),
-                                   # @ToDo: Add a specialised validator
-                                   requires = IS_NOT_EMPTY()),
+                             Field("proj4js",
+                                   label = proj4js,
+                                   comment = DIV(_class="stickytip",
+                                                 _title="%s|%s" % (proj4js,
+                                                                   T("String used to configure Proj4js. Can be found from %(url)s") % dict(url=A("http://spatialreference.org",
+                                                                                                                                                 _href="http://spatialreference.org",
+                                                                                                                                                 _target="_blank")))),
+                                   ),
                              Field("units", notnull=True,
                                    label = T("Units"),
                                    requires = IS_IN_SET(["m", "degrees"],
@@ -1372,7 +1380,6 @@ class S3GISConfigModel(S3Model):
                              symbology_id(),
                              Field("wmsbrowser_url"),
                              Field("wmsbrowser_name",
-                                   # @ToDo: Remove default once we have cascading working
                                    default="Web Map Service"),
                              # Note: This hasn't yet been changed for any instance
                              # Do we really need it to be configurable?
@@ -1999,7 +2006,7 @@ class S3LayerEntityModel(S3Model):
 
         # Style is a JSON object with the following structure
         # (only the starred elements are currently parsed)
-        # @ToDo: Support elements in a common section (such as attrib)
+        # @ToDo: Support elements in a common section (such as attrib, graphic)
         # @ToDo: Popup style
         # @ToDo: Import/Export SLD
         # @ToDo: Be able to reuse Styles across Layers/Configs (separate gis_style table)
@@ -2009,14 +2016,15 @@ class S3LayerEntityModel(S3Model):
         #   low: float,     //* Low value of the range of values used for this colour rule
         #   high: float,    //* High value of the range of values used for this colour rule
         #   label: string,  //* Optional label for the Category/Range (fallas back to cat or 'low - high')
-        #   external_graphic: string, //* Marker to load from /static/path/to/marker.png
+        #   externalGraphic: string, //* Marker to load from /static/path/to/marker.png
         #   fill: string,   //*
-        #   fill_opacity: float, //*
+        #   fillOpacity: float, //*
         #   stroke: string, //* (will default to fill, if not set)
-        #   stroke_opacity: float,
-        #   stroke_width: float or int, //* OpenLayers wants int, SLD wants float
+        #   strokeOpacity: float,
+        #   strokeWidth: float or int, //* OpenLayers wants int, SLD wants float
         #   label: string,  //* Attribute used to label the element
-        #   shape: string,
+        #   graphic: string, //* Shape: "circle", "square", "star", "x", "cross", "triangle"
+        #   size: integer,, //* Radius of the Shape
         #   popup: {},
         #}]
 
@@ -2033,10 +2041,10 @@ class S3LayerEntityModel(S3Model):
                              Field("base", "boolean", default=False,
                                    represent = s3_yes_no_represent,
                                    label=T("Default Base layer?")),
+                             # @ToDo: Move to style_id
                              Field("style", "text",
                                    # Used by Layers: Shapefile & Theme (@ToDo: Features should move here)
-                                   readable=False,
-                                   writable=False,
+                                   readable=False, writable=False,
                                    comment = DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("Style"),
                                                                    T("This is normally edited using the Widget in the Style Tab in the Layer Properties on the Map."))),
@@ -3081,7 +3089,7 @@ class S3MapModel(S3Model):
                                    label = T("Feature Type"),
                                    ),
                              # @ToDo: Can we auto-populate this from the layer?
-                             projection_id(# Nice if we could get this set to epsg field
+                             projection_id(# Nice if we could get this set to epsg field without having to do a DB lookup
                                            #default=4326,
                                            empty=False,
                                            ),
@@ -3109,7 +3117,8 @@ class S3MapModel(S3Model):
                              *s3_meta_fields())  
         configure(tablename,
                   super_entity="gis_layer_entity",
-                  onaccept=self.gis_layer_shapefile_onaccept,
+                  create_onaccept=self.gis_layer_shapefile_onaccept,
+                  #update_onaccept=self.gis_layer_shapefile_onaccept_update,
                   deduplicate = self.gis_layer_shapefile_deduplicate,
                   )
 
@@ -3490,16 +3499,18 @@ class S3MapModel(S3Model):
         # ---------------------------------------------------------------------
         # GIS Styles: SLD
         #
-        # We store XML which can be configured using a GUI client
-        #
-        # We also store a pointer to the resource on a GeoServer co-app:
+        # @ToDo: Move Styles here
+        # JSON for use internally (as-above)
+        # XML which can be used by a GeoServer co-app:
         # http://docs.geoserver.org/stable/en/user/restconfig/rest-config-api.html#styles
+        # Can we convert between JSON <> XML as-appropriate? (without losing details)
 
         #tablename = "gis_style"
         #table = define_table(tablename,
-        #                     Field("name", notnull=True, unique=True)
+        #                     Field("name", notnull=True, unique=True),
+        #                     Field("json", "text"),
+        #                     Field("xml", "text"),
         #                     *s3_meta_fields())
-        #db.gis_style.name.requires = [IS_NOT_EMPTY(), IS_NOT_ONE_OF(db, "gis_style.name")]
 
         # ---------------------------------------------------------------------
         return Storage(
@@ -3604,8 +3615,6 @@ class S3MapModel(S3Model):
     def gis_layer_shapefile_onaccept(form):
         """
             Convert the Uploaded Shapefile to GeoJSON for display on the map
-
-            @ToDo: update_onacept should only run this when uploaded file is changed
         """
 
         id = form.vars.id
@@ -3618,13 +3627,18 @@ class S3MapModel(S3Model):
             from osgeo import ogr
         except ImportError:
             current.response.error = current.T("Python GDAL required for Shapefile support!")
+            # NB We could include this instead: https://code.google.com/p/pyshp/
         else:
-            # Retrieve the file
+            # Retrieve the file & projection
             table = db.gis_layer_shapefile
-            row = db(table.id == id).select(table.shape,
-                                            limitby=(0, 1)).first()
+            ptable = db.gis_projection
+            query = (table.id == id) & \
+                    (ptable.id == table.projection_id)
+            row = db(query).select(table.shape,
+                                   ptable.epsg,
+                                   limitby=(0, 1)).first()
             try:
-                shapefile = table.shape.retrieve(row.shape)
+                shapefile = table.shape.retrieve(row.gis_layer_shapefile.shape)
             except:
                 s3_debug("No Shapefile found in layer %s!" % id)
                 return
@@ -3663,6 +3677,26 @@ class S3MapModel(S3Model):
             myfile.close()
             fp.close()
 
+            projection = row["gis_projection.epsg"]
+            # @ToDo:
+            #if !projection:
+            #     # Read from .prj file (if-present)
+            if projection != 4326:
+                # Set up reprojections
+                reproject = True
+                from osgeo import osr
+                inSpatialRef = osr.SpatialReference()
+                inSpatialRef.ImportFromEPSG(projection)
+                outSpatialRef = osr.SpatialReference()
+                outSpatialRef.ImportFromEPSG(4326)
+                coordTransform = osr.CoordinateTransformation(inSpatialRef, outSpatialRef)
+            else:
+                reproject = False
+
+            # Handle dates
+            from dateutil import parser
+            parse_date = parser.parse
+
             # Use OGR to read Shapefile
             shapefile = "%s.shp" % layerName
             ds = ogr.Open(shapefile)
@@ -3694,6 +3728,11 @@ class S3MapModel(S3Model):
                 fname = field_defn.GetName()
                 if fname.lower() == "id":
                     fname = "id_orig"
+                else:
+                    try:
+                        db.check_reserved_keyword(fname)
+                    except SyntaxError, e:
+                        fname = "%s_orig" % fname
                 ftype = field_defn.GetType()
                 if ftype == OFTInteger:
                     ftype = "integer"
@@ -3718,11 +3757,17 @@ class S3MapModel(S3Model):
                 # Get the Attributes
                 for i in range(nFields):
                     fname = fields[i][0]
+                    ftype = fields[i][1]
                     value = feature.GetField(i)
-                    f[fname] = value
+                    if ftype in ("date", "datetime"):
+                        f[fname] = parse_date(value)
+                    else:
+                        f[fname] = value
 
                 # Get the Geometry
                 geom = feature.GetGeometryRef()
+                if reproject:
+                    geom.Transform(coordTransform)
                 if geom is None:
                     lat = lon = wkt = None
                 if geom_type == wkbPoint:
@@ -3776,7 +3821,15 @@ class S3MapModel(S3Model):
         # Normal Layer onaccept
         gis_layer_onaccept(form)
 
-        return
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_layer_shapefile_onaccept_update(form):
+        """
+            @ToDo: Check if the file has changed & run the normal onaccept if-so
+        """
+
+        shape = form.vars.shape
+        S3MapModel.gis_layer_shapefile_onaccept(form)
 
 # =============================================================================
 class S3GISThemeModel(S3Model):

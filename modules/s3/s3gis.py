@@ -977,7 +977,28 @@ class GIS(object):
         ptable = s3db.gis_projection
         stable = s3db.gis_symbology
         ltable = s3db.gis_layer_config
-        all_meta_field_names = s3_all_meta_field_names()
+        fields = [ctable.id,
+                  ctable.default_location_id,
+                  ctable.geocoder,
+                  ctable.lat_min,
+                  ctable.lat_max,
+                  ctable.lon_min,
+                  ctable.lon_max,
+                  ctable.zoom,
+                  ctable.lat,
+                  ctable.lon,
+                  ctable.symbology_id,
+                  ctable.wmsbrowser_url,
+                  ctable.wmsbrowser_name,
+                  ctable.zoom_levels,
+                  mtable.image,
+                  mtable.height,
+                  mtable.width,
+                  ptable.epsg,
+                  ptable.proj4js,
+                  ptable.maxExtent,
+                  ptable.units,
+                  ]
 
         cache = Storage()
         row = None
@@ -991,9 +1012,7 @@ class GIS(object):
                     stable.on(stable.id == ctable.symbology_id),
                     mtable.on(mtable.id == stable.marker_id),
                     ]
-            rows = db(query).select(ctable.ALL,
-                                    mtable.ALL,
-                                    ptable.ALL,
+            rows = db(query).select(*fields,
                                     left=left,
                                     limitby=(0, 2))
             if len(rows) == 1:
@@ -1005,7 +1024,8 @@ class GIS(object):
                     (mtable.id == stable.marker_id) & \
                     (stable.id == ctable.symbology_id) & \
                     (ptable.id == ctable.projection_id)
-            row = db(query).select(limitby=(0, 1)).first()
+            row = db(query).select(*fields,
+                                   limitby=(0, 1)).first()
             if not row:
                 # No configs found at all
                 _gis.config = cache
@@ -1041,35 +1061,26 @@ class GIS(object):
                         ]
                 # Order by pe_type (defined in gis_config)
                 # @ToDo: Do this purely from the hierarchy
-                rows = db(query).select(ctable.ALL,
-                                        mtable.ALL,
-                                        ptable.ALL,
+                rows = db(query).select(*fields,
                                         left=left,
                                         orderby=ctable.pe_type)
 
         if rows and not row:
             # Merge Configs
             cache["ids"] = []
-            exclude = list(all_meta_field_names)
-            append = exclude.append
-            for fieldname in ["delete_record", "update_record",
-                              "pe_path",
-                              "gis_layer_config", "gis_menu"]:
-                append(fieldname)
             for row in rows:
                 config = row["gis_config"]
                 if not config_id:
                     config_id = config.id
                 cache["ids"].append(config.id)
-                fields = filter(lambda key: key not in exclude,
-                                config)
-                for key in fields:
+                for key in config:
+                    if key in ["delete_record", "gis_layer_config", "gis_menu", "update_record"]:
+                        continue
                     if key not in cache or cache[key] is None:
                         cache[key] = config[key]
                 if "epsg" not in cache or cache["epsg"] is None:
                     projection = row["gis_projection"]
-                    for key in ["epsg", "units", "maxResolution",
-                                "maxExtent"]:
+                    for key in ["epsg", "units", "maxExtent", "proj4js"]:
                         cache[key] = projection[key] if key in projection \
                                                      else None
                 if "marker_image" not in cache or \
@@ -1078,25 +1089,17 @@ class GIS(object):
                     for key in ["image", "height", "width"]:
                         cache["marker_%s" % key] = marker[key] if key in marker \
                                                                else None
-                #if "base" not in cache:
-                #    # Default Base Layer?
-                #    query = (ltable.config_id == config.id) & \
-                #            (ltable.base == True) & \
-                #            (ltable.enabled == True)
-                #    base = db(query).select(ltable.layer_id,
-                #                            limitby=(0, 1)).first()
-                #    if base:
-                #        cache["base"] = base.layer_id
             # Add NULL values for any that aren't defined, to avoid KeyErrors
-            for key in ["epsg", "units", "maxResolution", "maxExtent",
+            for key in ["epsg", "units", "proj4js", "maxExtent",
                         "marker_image", "marker_height", "marker_width",
-                        "base"]:
+                        ]:
                 if key not in cache:
                     cache[key] = None
 
         if not row:
             # No personal config or not logged in. Use site default.
-            config = db(ctable.uuid == "SITE_DEFAULT").select(limitby=(0, 1)
+            config = db(ctable.uuid == "SITE_DEFAULT").select(*fields,
+                                                              limitby=(0, 1)
                                                               ).first()
             if not config:
                 # No configs found at all
@@ -1106,7 +1109,8 @@ class GIS(object):
                     (mtable.id == stable.marker_id) & \
                     (stable.id == ctable.symbology_id) & \
                     (ptable.id == ctable.projection_id)
-            row = db(query).select(limitby=(0, 1)).first()
+            row = db(query).select(*fields,
+                                   limitby=(0, 1)).first()
 
         if row and not cache:
             # We had a single row
@@ -1115,25 +1119,13 @@ class GIS(object):
             cache["ids"] = [config_id]
             projection = row["gis_projection"]
             marker = row["gis_marker"]
-            fields = filter(lambda key: key not in all_meta_field_names,
-                            config)
-            for key in fields:
+            for key in config:
                 cache[key] = config[key]
-            for key in ["epsg", "units", "maxResolution", "maxExtent"]:
+            for key in ["epsg", "maxExtent", "proj4js", "units"]:
                 cache[key] = projection[key] if key in projection else None
             for key in ["image", "height", "width"]:
                 cache["marker_%s" % key] = marker[key] if key in marker \
                                                        else None
-            # Default Base Layer?
-            #query = (ltable.config_id == config_id) & \
-            #        (ltable.base == True) & \
-            #        (ltable.enabled == True)
-            #base = db(query).select(ltable.layer_id,
-            #                        limitby=(0, 1)).first()
-            #if base:
-            #    cache["base"] = base.layer_id
-            #else:
-            #    cache["base"] = None
 
         # Store the values
         _gis.config = cache
@@ -1486,6 +1478,13 @@ class GIS(object):
 
         from shapely.geos import ReadingError
         from shapely.wkt import loads as wkt_loads
+
+        try:
+            # Enable C-based speedups available from 1.2.10+
+            from shapely import speedups
+            speedups.enable()
+        except:
+            s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
 
         db = current.db
         s3db = current.s3db
@@ -2402,13 +2401,19 @@ class GIS(object):
 
         from shapely.wkt import loads as wkt_loads
 
+        try:
+            # Enable C-based speedups available from 1.2.10+
+            from shapely import speedups
+            speedups.enable()
+        except:
+            s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
+
         name = feature.name
 
         if "wkt" in feature:
             wkt = feature.wkt
         else:
             # WKT not included by default in feature, so retrieve this now
-            table = current.s3db.gis_location
             wkt = current.db(table.id == feature.id).select(table.wkt,
                                                             limitby=(0, 1)
                                                             ).first().wkt
@@ -2501,6 +2506,12 @@ class GIS(object):
             else:
                 from shapely.wkt import loads as wkt_loads
                 from ..geojson import dumps
+                try:
+                    # Enable C-based speedups available from 1.2.10+
+                    from shapely import speedups
+                    speedups.enable()
+                except:
+                    s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
 
         folder = os.path.join(current.request.folder, "static", "cache")
 
@@ -3577,6 +3588,13 @@ class GIS(object):
         from shapely.geometry import point
         from shapely.geos import ReadingError
         from shapely.wkt import loads as wkt_loads
+
+        try:
+            # Enable C-based speedups available from 1.2.10+
+            from shapely import speedups
+            speedups.enable()
+        except:
+            s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
 
         db = current.db
         s3db = current.s3db
@@ -5025,6 +5043,13 @@ class GIS(object):
         from shapely.geos import ReadingError
         from shapely.wkt import loads as wkt_loads
 
+        try:
+            # Enable C-based speedups available from 1.2.10+
+            from shapely import speedups
+            speedups.enable()
+        except:
+            s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
+
         table = current.s3db.gis_location
         in_bbox = current.gis.query_features_by_bbox(*shape.bounds)
         has_wkt = (table.wkt != None) & (table.wkt != "")
@@ -5554,18 +5579,28 @@ class MAP(DIV):
                 f.close()
             except:
                 if projection:
-                    response.warning =  \
-                        T("Map not available: Projection %(projection)s not supported - please add definition to %(path)s") % \
-                            dict(projection = "'%s'" % projection,
-                                 path= "/static/scripts/gis/proj4js/lib/defs")
+                    proj4js = config.proj4js
+                    if proj4js:
+                        # Create it
+                        try:
+                            f = open(projpath, "w")
+                        except IOError, e:
+                            response.error =  \
+                        T("Map not available: Cannot write projection file - %s") % e
+                        else:
+                            f.write('''Proj4js.defs["EPSG:4326"]="%s"''' % proj4js)
+                            f.close()
+                    else:
+                        response.warning =  \
+    T("Map not available: Projection %(projection)s not supported - please add definition to %(path)s") % \
+        dict(projection = "'%s'" % projection,
+             path= "/static/scripts/gis/proj4js/lib/defs")
                 else:
-                    response.warning =  \
+                    response.error =  \
                         T("Map not available: No Projection configured")
                 return None
-            options["units"] = config.units
-            options["maxResolution"] = config.maxResolution
-            # @ToDo: Check
             options["maxExtent"] = config.maxExtent
+            options["units"] = config.units
 
         ########
         # Marker
@@ -5773,25 +5808,25 @@ class MAP(DIV):
 
         if opts.get("catalogue_layers", False):
             # Add all Layers from the Catalogue
-            layer_types = [ArcRESTLayer,
-                           BingLayer,
-                           EmptyLayer,
-                           GoogleLayer,
-                           OSMLayer,
-                           TMSLayer,
-                           WMSLayer,
-                           XYZLayer,
-                           JSLayer,
-                           ThemeLayer,
-                           GeoJSONLayer,
-                           GPXLayer,
-                           CoordinateLayer,
-                           GeoRSSLayer,
-                           KMLLayer,
-                           OpenWeatherMapLayer,
-                           ShapefileLayer,
-                           WFSLayer,
-                           FeatureLayer,
+            layer_types = [LayerArcREST,
+                           LayerBing,
+                           LayerEmpty,
+                           LayerGoogle,
+                           LayerOSM,
+                           LayerTMS,
+                           LayerWMS,
+                           LayerXYZ,
+                           LayerJS,
+                           LayerTheme,
+                           LayerGeoJSON,
+                           LayerGPX,
+                           LayerCoordinate,
+                           LayerGeoRSS,
+                           LayerKML,
+                           LayerOpenWeatherMap,
+                           LayerShapefile,
+                           LayerWFS,
+                           LayerFeature,
                            ]
         else:
             # Add just the default Base Layer
@@ -5819,25 +5854,25 @@ class MAP(DIV):
             if layer:
                 layer_type = layer.instance_type
                 if layer_type == "gis_layer_openstreetmap":
-                    layer_types = [OSMLayer]
+                    layer_types = [LayerOSM]
                 elif layer_type == "gis_layer_google":
                     # NB v3 doesn't work when initially hidden
-                    layer_types = [GoogleLayer]
+                    layer_types = [LayerGoogle]
                 elif layer_type == "gis_layer_arcrest":
-                    layer_types = [ArcRESTLayer]
+                    layer_types = [LayerArcREST]
                 elif layer_type == "gis_layer_bing":
-                    layer_types = [BingLayer]
+                    layer_types = [LayerBing]
                 elif layer_type == "gis_layer_tms":
-                    layer_types = [TMSLayer]
+                    layer_types = [LayerTMS]
                 elif layer_type == "gis_layer_wms":
-                    layer_types = [WMSLayer]
+                    layer_types = [LayerWMS]
                 elif layer_type == "gis_layer_xyz":
-                    layer_types = [XYZLayer]
+                    layer_types = [LayerXYZ]
                 elif layer_type == "gis_layer_empty":
-                    layer_types = [EmptyLayer]
+                    layer_types = [LayerEmpty]
 
             if not layer_types:
-                layer_types = [EmptyLayer]
+                layer_types = [LayerEmpty]
 
         scripts = []
         scripts_append = scripts.append
@@ -6568,7 +6603,7 @@ class Layer(object):
                     output[key] = value
 
 # -----------------------------------------------------------------------------
-class ArcRESTLayer(Layer):
+class LayerArcREST(Layer):
     """
         ArcGIS REST Layers from Catalogue
     """
@@ -6599,7 +6634,7 @@ class ArcRESTLayer(Layer):
             return output
 
 # -----------------------------------------------------------------------------
-class BingLayer(Layer):
+class LayerBing(Layer):
     """
         Bing Layers from Catalogue
     """
@@ -6642,7 +6677,7 @@ class BingLayer(Layer):
                 return ldict
 
 # -----------------------------------------------------------------------------
-class CoordinateLayer(Layer):
+class LayerCoordinate(Layer):
     """
         Coordinate Layer from Catalogue
         - there should only be one of these
@@ -6672,7 +6707,7 @@ class CoordinateLayer(Layer):
                 return ldict
 
 # -----------------------------------------------------------------------------
-class EmptyLayer(Layer):
+class LayerEmpty(Layer):
     """
         Empty Layer from Catalogue
         - there should only be one of these
@@ -6700,7 +6735,7 @@ class EmptyLayer(Layer):
                 return ldict
 
 # -----------------------------------------------------------------------------
-class FeatureLayer(Layer):
+class LayerFeature(Layer):
     """
         Feature Layers from Catalogue
     """
@@ -6723,8 +6758,8 @@ class FeatureLayer(Layer):
                     # User has no permission to this resource (in ACL)
                     self.skip = True
             else:
-                raise Exception("FeatureLayer Record '%s' has no controller" % record.name)
-            super(FeatureLayer.SubLayer, self).__init__(tablename, record)
+                raise Exception("Feature Layer Record '%s' has no controller" % record.name)
+            super(LayerFeature.SubLayer, self).__init__(tablename, record)
 
         def as_dict(self):
             if self.skip:
@@ -6770,7 +6805,7 @@ class FeatureLayer(Layer):
             return output
 
 # -----------------------------------------------------------------------------
-class GeoJSONLayer(Layer):
+class LayerGeoJSON(Layer):
     """
         GeoJSON Layers from Catalogue
     """
@@ -6799,7 +6834,7 @@ class GeoJSONLayer(Layer):
             return output
 
 # -----------------------------------------------------------------------------
-class GeoRSSLayer(Layer):
+class LayerGeoRSS(Layer):
     """
         GeoRSS Layers from Catalogue
     """
@@ -6808,8 +6843,8 @@ class GeoRSSLayer(Layer):
     dictname = "layers_georss"
 
     def __init__(self):
-        super(GeoRSSLayer, self).__init__()
-        GeoRSSLayer.SubLayer.cachetable = current.s3db.gis_cache
+        super(LayerGeoRSS, self).__init__()
+        LayerGeoRSS.SubLayer.cachetable = current.s3db.gis_cache
 
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
@@ -6895,7 +6930,7 @@ class GeoRSSLayer(Layer):
             return output
 
 # -----------------------------------------------------------------------------
-class GoogleLayer(Layer):
+class LayerGoogle(Layer):
     """
         Google Layers/Tools from Catalogue
     """
@@ -6983,7 +7018,7 @@ class GoogleLayer(Layer):
                 return ldict
 
 # -----------------------------------------------------------------------------
-class GPXLayer(Layer):
+class LayerGPX(Layer):
     """
         GPX Layers from Catalogue
     """
@@ -7016,7 +7051,7 @@ class GPXLayer(Layer):
             return output
 
 # -----------------------------------------------------------------------------
-class JSLayer(Layer):
+class LayerJS(Layer):
     """
         JS Layers from Catalogue
         - these are raw Javascript layers for use by expert OpenLayers people
@@ -7043,7 +7078,7 @@ class JSLayer(Layer):
                 return sublayer_dicts
 
 # -----------------------------------------------------------------------------
-class KMLLayer(Layer):
+class LayerKML(Layer):
     """
         KML Layers from Catalogue
     """
@@ -7055,7 +7090,7 @@ class KMLLayer(Layer):
     def __init__(self, init=True):
         "Set up the KML cache, should be done once per request"
 
-        super(KMLLayer, self).__init__()
+        super(LayerKML, self).__init__()
 
         # Can we cache downloaded KML feeds?
         # Needed for unzipping & filtering as well
@@ -7078,9 +7113,9 @@ class KMLLayer(Layer):
             else:
                 cacheable = True
         # @ToDo: Migrate to gis_cache
-        KMLLayer.cachetable = current.s3db.gis_cache2
-        KMLLayer.cacheable = cacheable
-        KMLLayer.cachepath = cachepath
+        LayerKML.cachetable = current.s3db.gis_cache2
+        LayerKML.cacheable = cacheable
+        LayerKML.cachepath = cachepath
 
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
@@ -7088,9 +7123,9 @@ class KMLLayer(Layer):
             db = current.db
             request = current.request
 
-            cachetable = KMLLayer.cachetable
-            cacheable = KMLLayer.cacheable
-            cachepath = KMLLayer.cachepath
+            cachetable = LayerKML.cachetable
+            cacheable = LayerKML.cacheable
+            cachepath = LayerKML.cachepath
 
             name = self.name
             if cacheable:
@@ -7150,7 +7185,7 @@ class KMLLayer(Layer):
             return output
 
 # -----------------------------------------------------------------------------
-class OSMLayer(Layer):
+class LayerOSM(Layer):
     """
         OpenStreetMap Layers from Catalogue
 
@@ -7190,7 +7225,7 @@ class OSMLayer(Layer):
             return output
 
 # -----------------------------------------------------------------------------
-class OpenWeatherMapLayer(Layer):
+class LayerOpenWeatherMap(Layer):
     """
        OpenWeatherMap Layers from Catalogue
     """
@@ -7228,7 +7263,7 @@ class OpenWeatherMapLayer(Layer):
                 return ldict
 
 # -----------------------------------------------------------------------------
-class ShapefileLayer(Layer):
+class LayerShapefile(Layer):
     """
         Shapefile Layers from Catalogue
     """
@@ -7252,21 +7287,23 @@ class ShapefileLayer(Layer):
                       }
             
             # Attributes which are defaulted client-side if not set
-            projection = self.projection
-            if projection.epsg != 4326:
-                output["projection"] = projection.epsg
-            self.marker.add_attributes_to_output(output)
+            # We convert on-upload to have BBOX handling work properly
+            #projection = self.projection
+            #if projection.epsg != 4326:
+            #    output["projection"] = projection.epsg
             self.setup_folder_visibility_and_opacity(output)
             self.setup_clustering(output)
             style = self.style
             if style:
                 style = json.loads(style)
                 output["style"] = style
+            else:
+                self.marker.add_attributes_to_output(output)
 
             return output
 
 # -----------------------------------------------------------------------------
-class ThemeLayer(Layer):
+class LayerTheme(Layer):
     """
         Theme Layers from Catalogue
     """
@@ -7298,7 +7335,7 @@ class ThemeLayer(Layer):
             return output
 
 # -----------------------------------------------------------------------------
-class TMSLayer(Layer):
+class LayerTMS(Layer):
     """
         TMS Layers from Catalogue
     """
@@ -7331,7 +7368,7 @@ class TMSLayer(Layer):
             return output
 
 # -----------------------------------------------------------------------------
-class WFSLayer(Layer):
+class LayerWFS(Layer):
     """
         WFS Layers from Catalogue
     """
@@ -7369,7 +7406,7 @@ class WFSLayer(Layer):
             return output
 
 # -----------------------------------------------------------------------------
-class WMSLayer(Layer):
+class LayerWMS(Layer):
     """
         WMS Layers from Catalogue
     """
@@ -7379,7 +7416,7 @@ class WMSLayer(Layer):
 
     # -------------------------------------------------------------------------
     def __init__(self):
-        super(WMSLayer, self).__init__()
+        super(LayerWMS, self).__init__()
         if self.sublayers:
             if current.response.s3.debug:
                 self.scripts.append("gis/gxp/plugins/WMSGetFeatureInfo.js")
@@ -7426,7 +7463,7 @@ class WMSLayer(Layer):
             return output
 
 # -----------------------------------------------------------------------------
-class XYZLayer(Layer):
+class LayerXYZ(Layer):
     """
         XYZ Layers from Catalogue
     """

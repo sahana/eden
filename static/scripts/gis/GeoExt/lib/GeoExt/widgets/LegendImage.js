@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2008-2011 The Open Source Geospatial Foundation
+ * Copyright (c) 2008-2012 The Open Source Geospatial Foundation
  * 
  * Published under the BSD license.
  * See http://svn.geoext.org/core/trunk/geoext/license.txt for the full text
@@ -38,6 +38,12 @@ GeoExt.LegendImage = Ext.extend(Ext.BoxComponent, {
      */
     imgCls: null,
     
+    /** private: config[noImgCls]
+     *  ``String`` CSS class applied to img tag when no image is available or
+     *  the default image was loaded.
+     */
+    noImgCls: "gx-legend-noimage",
+    
     /** private: method[initComponent]
      *  Initializes the legend image component. 
      */
@@ -48,9 +54,19 @@ GeoExt.LegendImage = Ext.extend(Ext.BoxComponent, {
         }
         this.autoEl = {
             tag: "img",
-            "class": (this.imgCls ? this.imgCls : ""),
+            "class": (this.imgCls ? this.imgCls + " " + this.noImgCls : this.noImgCls),
             src: this.defaultImgSrc
         };
+    },
+
+    /** api: method[getImgEl]
+     *  :return:  ``Ext.Element`` The image element.
+     *
+     *  Returns the image element.
+     *  This method is supposed to be overriden in subclasses.
+     */
+    getImgEl: function() {
+        return this.getEl();
     },
 
     /** api: method[setUrl]
@@ -60,8 +76,10 @@ GeoExt.LegendImage = Ext.extend(Ext.BoxComponent, {
      */
     setUrl: function(url) {
         this.url = url;
-        var el = this.getEl();
+        var el = this.getImgEl();
         if (el) {
+            el.un("load", this.onImageLoad, this);
+            el.on("load", this.onImageLoad, this, {single: true});
             el.un("error", this.onImageLoadError, this);
             el.on("error", this.onImageLoadError, this, {single: true});
             el.dom.src = url;
@@ -83,8 +101,9 @@ GeoExt.LegendImage = Ext.extend(Ext.BoxComponent, {
      *  Private method called during the destroy sequence.
      */
     onDestroy: function() {
-        var el = this.getEl();
+        var el = this.getImgEl();
         if(el) {
+            el.un("load", this.onImageLoad, this);
             el.un("error", this.onImageLoadError, this);
         }
         GeoExt.LegendImage.superclass.onDestroy.apply(this, arguments);
@@ -94,7 +113,19 @@ GeoExt.LegendImage = Ext.extend(Ext.BoxComponent, {
      *  Private method called if the legend image fails loading.
      */
     onImageLoadError: function() {
-        this.getEl().dom.src = this.defaultImgSrc;
+        var el = this.getImgEl();
+        el.addClass(this.noImgCls);
+        el.dom.src = this.defaultImgSrc;
+    },
+    
+    /** private: method[onImageLoad]
+     *  Private method called after the legend image finished loading.
+     */
+    onImageLoad: function() {
+        var el = this.getImgEl();
+        if (!OpenLayers.Util.isEquivalentUrl(el.dom.src, this.defaultImgSrc)) {
+            el.removeClass(this.noImgCls);
+        }
     }
 
 });

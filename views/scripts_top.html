@@ -15,11 +15,11 @@ function s3_debug(message, value) {
  <script src="http://code.jquery.com/jquery-migrate-1.2.1.js" type="text/javascript"></script>
  <!--<script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.3.js" type="text/javascript"></script>-->
  <!-- For Sites Hosted on the Public Internet, using Cachefly CDN's version of ExtJS should provide better performance -->
- <script src="http://extjs.cachefly.net/ext-3.4.0/adapter/jquery/ext-jquery-adapter-debug.js" type="text/javascript"></script>
- <script src="http://extjs.cachefly.net/ext-3.4.0/ext-all-debug.js" type="text/javascript"></script>
- <script src="http://extjs.cachefly.net/ext-3.4.0/src/locale/ext-lang-{{=s3.language}}.js" type="text/javascript"></script>
- <link href="http://extjs.cachefly.net/ext-3.4.0/resources/css/ext-all.css" rel="stylesheet" type="text/css" />
- <link href="http://extjs.cachefly.net/ext-3.4.0/resources/css/xtheme-gray.css" rel="stylesheet" type="text/css" />
+ <script src="http://cdn.sencha.com/ext/gpl/3.4.1.1/adapter/jquery/ext-jquery-adapter-debug.js" type="text/javascript"></script>
+ <script src="http://cdn.sencha.com/ext/gpl/3.4.1.1/ext-all-debug.js" type="text/javascript"></script>
+ <script src="http://cdn.sencha.com/ext/gpl/3.4.1.1/src/locale/ext-lang-{{=s3.language}}.js" type="text/javascript"></script>
+ <link href="http://cdn.sencha.com/ext/gpl/3.4.1.1/resources/css/ext-all.css" rel="stylesheet" type="text/css" />
+ <link href="http://cdn.sencha.com/ext/gpl/3.4.1.1/resources/css/xtheme-gray.css" rel="stylesheet" type="text/css" />
 {{else:}}
  <script src="/{{=appname}}/static/scripts/jquery-1.10.1.js" type="text/javascript"></script>
  <script src="/{{=appname}}/static/scripts/jquery-migrate-1.2.1.js" type="text/javascript"></script>
@@ -33,9 +33,9 @@ function s3_debug(message, value) {
 {{if s3.cdn:}}{{# For Sites Hosted on the Public Internet, using a CDN should provide better performance}}
  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js" type="text/javascript"></script>
  <script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js" type="text/javascript"></script>
- <script src="http://extjs.cachefly.net/ext-3.4.0/adapter/jquery/ext-jquery-adapter.js" type="text/javascript"></script>
- <script src="http://extjs.cachefly.net/ext-3.4.0/ext-all.js" type="text/javascript"></script>
- <script src="http://extjs.cachefly.net/ext-3.4.0/src/locale/ext-lang-{{=s3.language}}.js" type="text/javascript"></script>
+ <script src="http://cdn.sencha.com/ext/gpl/3.4.1.1/adapter/jquery/ext-jquery-adapter.js" type="text/javascript"></script>
+ <script src="http://cdn.sencha.com/ext/gpl/3.4.1.1/ext-all.js" type="text/javascript"></script>
+ <script src="http://cdn.sencha.com/ext/gpl/3.4.1.1/src/locale/ext-lang-{{=s3.language}}.js" type="text/javascript"></script>
 {{else:}}
  <script src="/{{=appname}}/static/scripts/jquery-1.10.1.min.js" type="text/javascript"></script>
  <script src="/{{=appname}}/static/scripts/jquery-migrate-1.2.1.min.js" type="text/javascript"></script>

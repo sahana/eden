@@ -11,7 +11,7 @@
          Name.................string..........Projection Name
          EPSG.................integer.........Projection EPSG
          maxExtent............string..........Projection maxExtent
-         maxResolution........float...........Projection maxResolution
+         proj4js..............string..........Proj4js settings
          units................string..........Projection units
 
     *********************************************************************** -->
@@ -33,7 +33,7 @@
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="epsg"><xsl:value-of select="col[@field='EPSG']"/></data>
             <data field="maxExtent"><xsl:value-of select="col[@field='maxExtent']"/></data>
-            <data field="maxResolution"><xsl:value-of select="col[@field='maxResolution']"/></data>
+            <data field="proj4js"><xsl:value-of select="col[@field='proj4js']"/></data>
             <data field="units"><xsl:value-of select="col[@field='units']"/></data>
         </resource>
     </xsl:template>
