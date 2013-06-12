@@ -1098,19 +1098,17 @@ class GIS(object):
 
         if not row:
             # No personal config or not logged in. Use site default.
-            config = db(ctable.uuid == "SITE_DEFAULT").select(*fields,
-                                                              limitby=(0, 1)
-                                                              ).first()
-            if not config:
-                # No configs found at all
-                _gis.config = cache
-                return cache
-            query = (ctable.id == config[ctable.id]) & \
+            query = (ctable.uuid == "SITE_DEFAULT") & \
                     (mtable.id == stable.marker_id) & \
                     (stable.id == ctable.symbology_id) & \
                     (ptable.id == ctable.projection_id)
             row = db(query).select(*fields,
                                    limitby=(0, 1)).first()
+
+            if not row:
+                # No configs found at all
+                _gis.config = cache
+                return cache
 
         if row and not cache:
             # We had a single row
