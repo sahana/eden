@@ -111,9 +111,8 @@ class S3CRUD(S3Method):
             output = self.update(r, **attr)
             
         # Standard list view: list-type and hide-filter set by controller
-        # (default: list_type="datatable", hide_filter=False)
+        # (default: list_type="datatable", hide_filter=True)
         elif method == "list":
-            #output = self.select(r, **attr)
             output = self.select_filter(r, **attr)
 
         # URL Methods to explicitly choose list-type and hide-filter in the URL
@@ -1123,7 +1122,7 @@ class S3CRUD(S3Method):
                 else:
                     raise HTTP(404, body="Record not Found")
             else:
-                rows = resource.select(list_fields)
+                rows = resource.fast_select(list_fields, as_rows=True)
                 if rows:
                     items = rows.as_list()
                 else:
@@ -1215,7 +1214,7 @@ class S3CRUD(S3Method):
             output["title"] = title
 
             # Filter-form
-            hide_filter = attr.get("hide_filter", False)
+            hide_filter = attr.get("hide_filter", True)
             filter_widgets = get_config("filter_widgets", None)
             if filter_widgets and not hide_filter:
 
@@ -1306,7 +1305,7 @@ class S3CRUD(S3Method):
                 else:
                     raise HTTP(404, body="Record not Found")
             else:
-                rows = resource.select(list_fields)
+                rows = resource.fast_select(list_fields, as_rows=True)
                 if rows:
                     items = rows.as_list()
                 else:
