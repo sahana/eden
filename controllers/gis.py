@@ -653,14 +653,10 @@ def config():
                     type = db(query).select(table.instance_type,
                                             limitby=(0, 1)).first().instance_type
                     if type in ("gis_layer_coordinate",
-                                "gis_layer_feature", # @ToDo: Move down once style moved to link table
-                                "gis_layer_geojson",
                                 "gis_layer_georss",
                                 "gis_layer_gpx",
-                                "gis_layer_kml",
                                 "gis_layer_mgrs",
                                 "gis_layer_openweathermap",
-                                "gis_layer_wfs",
                                 ):
                         ltable.base.readable = ltable.base.writable = False
                     elif type in ("gis_layer_bing",
@@ -668,9 +664,12 @@ def config():
                                   "gis_layer_tms",
                                   ):
                         ltable.visible.readable = ltable.visible.writable = False
-                    elif type in (#"gis_layer_feature",
+                    elif type in ("gis_layer_feature"
+                                  "gis_layer_geojson",
+                                  "gis_layer_kml",
                                   "gis_layer_shapefile",
                                   "gis_layer_theme",
+                                  "gis_layer_wfs",
                                   ):
                         ltable.base.readable = ltable.base.writable = False
                         ltable.style.readable = ltable.style.writable = True
@@ -1065,6 +1064,7 @@ def layer_feature():
             if r.component_name == "config":
                 ltable = s3db.gis_layer_config
                 ltable.base.writable = ltable.base.readable = False
+                ltable.style.readable = ltable.style.writable = True
                 # @ToDo: Move style to layer_config
                 #ltable.style.writable = ltable.style.readable = True
                 if r.method != "update":
@@ -1490,6 +1490,7 @@ def layer_geojson():
             if r.component_name == "config":
                 ltable = s3db.gis_layer_config
                 ltable.base.writable = ltable.base.readable = False
+                ltable.style.readable = ltable.style.writable = True
                 if r.method != "update":
                     # Only show Configs with no definition yet for this layer
                     table = r.table
@@ -1729,6 +1730,7 @@ def layer_kml():
             if r.component_name == "config":
                 ltable = s3db.gis_layer_config
                 ltable.base.writable = ltable.base.readable = False
+                ltable.style.readable = ltable.style.writable = True
                 if r.method != "update":
                     # Only show Configs with no definition yet for this layer
                     table = r.table
@@ -2183,6 +2185,7 @@ def layer_wfs():
             if r.component_name == "config":
                 ltable = s3db.gis_layer_config
                 ltable.base.writable = ltable.base.readable = False
+                ltable.style.readable = ltable.style.writable = True
                 if r.method != "update":
                     # Only show Configs with no definition yet for this layer
                     table = r.table

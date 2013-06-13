@@ -1,4 +1,4 @@
-"Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Filter Field","Filter Value","Trackable","Folder","Visible","Enabled"
-"Hospitals","All Active Medical Facilities","hms","hospital","US","hospital","Medical Facility","Hospital","name","hospital.obsolete=False&hospital.facility_type__ne=31",facility_type,!31,,,"False",
-"Long-term care","","hms","ltc","US","special_needs","Medical Facility","LTC","name","hospital.obsolete=False",facility_type,31,,,"False",
-"Shelters","All Active Shelters","cr","shelter","US","shelter","Campground","Shelter","name/population/capacity_day","shelter.status__ne=1","status",2,,,"False",
+"Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Trackable","Folder","Visible","Enabled"
+"Hospitals","All Active Medical Facilities","hms","hospital","US","hospital","Medical Facility","Hospital","name","~.obsolete=False&~.facility_type__ne=31",,,"False",
+"Long-term care","","hms","ltc","US","special_needs","Medical Facility","LTC","name","~.obsolete=False",,,"False",
+"Shelters","All Active Shelters","cr","shelter","US","shelter","Campground","Shelter","name/population/capacity_day","~.status__ne=1",,,"False",

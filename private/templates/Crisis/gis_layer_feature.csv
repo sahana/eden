@@ -1,3 +1,3 @@
-"Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Filter Field","Filter Value","Trackable","Polygons","Folder","Visible","Enabled"
-"Security-rel Staff",,"security","staff","US","staff","Contact, Dreadlocks","Staff","human_resource_id/staff_type",,,,,,,"False",
-"Security Zones",,"security","zone","US","","","Zone","name/zone_type_id",,,,,"True",,"False",
+"Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Trackable","Polygons","Folder","Visible","Enabled"
+"Security-rel Staff",,"security","staff","US","staff","Contact, Dreadlocks","Staff","human_resource_id/staff_type",,,,,"False",
+"Security Zones",,"security","zone","US","","","Zone","name/zone_type_id",,,"True",,"False",

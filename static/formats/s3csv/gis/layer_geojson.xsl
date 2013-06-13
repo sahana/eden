@@ -3,17 +3,18 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         GeoRSS Layers - CSV Import Stylesheet
+         GeoJSON Layers - CSV Import Stylesheet
 
          CSV column...........Format..........Content
 
          Name.................string..........Layer Name
          Description..........string..........Layer Description
          URL..................string..........Layer URL
+         Projection...........string..........Projection EPSG (required)
          Symbology............string..........Symbology Name
          Marker...............string..........Layer Symbology Marker Name
+         Style................string..........Layer Config Style
          Folder...............string..........Layer Folder
-         Image................string..........Layer Image
          Config...............string..........Configuration Name
          Enabled..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
          Visible..............boolean.........Layer Visible in config? (SITE_DEFAULT if not-specified)
@@ -30,6 +31,7 @@
     <xsl:key name="configs" match="row" use="col[@field='Config']/text()"/>
     <xsl:key name="layers" match="row" use="col[@field='Name']/text()"/>
     <xsl:key name="markers" match="row" use="col[@field='Marker']/text()"/>
+    <xsl:key name="projections" match="row" use="col[@field='Projection']/text()"/>
     <xsl:key name="symbologies" match="row" use="col[@field='Symbology']/text()"/>
 
     <!-- ****************************************************************** -->
@@ -53,6 +55,12 @@
                 <xsl:call-template name="Marker"/>
             </xsl:for-each>
 
+            <!-- Projections -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('projections',
+                                                                   col[@field='Projection'])[1])]">
+                <xsl:call-template name="Projection"/>
+            </xsl:for-each>
+
             <!-- Symbologies -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('symbologies',
                                                                    col[@field='Symbology'])[1])]">
@@ -71,7 +79,7 @@
 
         <xsl:if test="$Symbology!=''">
             <resource name="gis_layer_symbology">
-                <reference field="layer_id" resource="gis_layer_georss">
+                <reference field="layer_id" resource="gis_layer_geojson">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="col[@field='Name']"/>
                     </xsl:attribute>
@@ -92,7 +100,6 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-
     <xsl:template name="Config">
 
         <xsl:variable name="Config" select="col[@field='Config']/text()"/>
@@ -108,13 +115,12 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-
     <xsl:template name="Layer">
 
         <xsl:variable name="Layer" select="col[@field='Name']/text()"/>
         <xsl:variable name="Config" select="col[@field='Config']/text()"/>
 
-        <resource name="gis_layer_georss">
+        <resource name="gis_layer_geojson">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$Layer"/>
             </xsl:attribute>
@@ -122,11 +128,15 @@
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
             <data field="url"><xsl:value-of select="col[@field='URL']"/></data>
             <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
-            <data field="image"><xsl:value-of select="col[@field='Image']"/></data>
+            <reference field="projection_id" resource="gis_projection">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="col[@field='Projection']"/>
+                </xsl:attribute>
+            </reference>
         </resource>
 
         <resource name="gis_layer_config">
-            <reference field="layer_id" resource="gis_layer_georss">
+            <reference field="layer_id" resource="gis_layer_geojson">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$Layer"/>
                 </xsl:attribute>
@@ -147,12 +157,12 @@
             </reference>
             <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
             <data field="visible"><xsl:value-of select="col[@field='Visible']"/></data>
+            <data field="style"><xsl:value-of select="col[@field='Style']"/></data>
         </resource>
 
     </xsl:template>
 
     <!-- ****************************************************************** -->
-
     <xsl:template name="Marker">
 
         <xsl:variable name="Marker" select="col[@field='Marker']/text()"/>
@@ -168,7 +178,19 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="Projection">
 
+        <xsl:variable name="Projection" select="col[@field='Projection']/text()"/>
+    
+        <resource name="gis_projection">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$Projection"/>
+            </xsl:attribute>
+            <data field="epsg"><xsl:value-of select="$Projection"/></data>
+        </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="Symbology">
 
         <xsl:variable name="Symbology" select="col[@field='Symbology']/text()"/>
