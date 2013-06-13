@@ -2043,7 +2043,8 @@ class S3LayerEntityModel(S3Model):
                                    label=T("Default Base layer?")),
                              # @ToDo: Move to style_id
                              Field("style", "text",
-                                   # Used by Layers: Shapefile & Theme (@ToDo: Features should move here)
+                                   # Used by Layers: Feature, Shapefile & Theme
+                                   # @ToDo: Move WFS here
                                    readable=False, writable=False,
                                    comment = DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("Style"),
@@ -2243,7 +2244,7 @@ class S3FeatureLayerModel(S3Model):
                                                       _title="%s|%s" % (T("Popup Fields"),
                                                                         T("Used to build onHover Tooltip & 1st field also used in Cluster Popups to differentiate between records."))),
                                         ),
-                                  Field("use_site",
+                                  Field("use_site", "boolean",
                                         default = False,
                                         label = T("Use Site?"),
                                         comment = DIV(_class="tooltip",
@@ -2254,14 +2255,6 @@ class S3FeatureLayerModel(S3Model):
                                   Field("polygons", "boolean", default=False,
                                         represent = s3_yes_no_represent,
                                         label=T("Display Polygons?")),
-                                  # @ToDo: Move this to the layer_config link table
-                                  Field("style",
-                                        label=T("Style"),
-                                        comment = DIV(_class="tooltip",
-                                                      _title="%s|%s" % (T("Style"),
-                                                                        #T("Either a JSON style to apply to all features or a field to lookup the style from."))),
-                                                                        T("A JSON style to apply to features (normally used for Polygons)."))),
-                                        ),
                                   gis_opacity()(),
                                   # @ToDo: Expose the Graphic options
                                   gis_refresh()(),
@@ -2291,7 +2284,6 @@ class S3FeatureLayerModel(S3Model):
 
         self.configure(tablename,
                         onaccept=gis_layer_onaccept,
-                        onvalidation=self.gis_layer_feature_onvalidation,
                         super_entity="gis_layer_entity",
                         deduplicate=self.gis_layer_feature_deduplicate,
                         list_fields=["id",
@@ -2333,17 +2325,6 @@ class S3FeatureLayerModel(S3Model):
         # ---------------------------------------------------------------------
         return Storage(
             )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def gis_layer_feature_onvalidation(form):
-        """
-            Ensure that Style JSON can be loaded by json.loads()
-        """
-
-        vars = form.vars
-        if "style" in vars and vars.style:
-            vars.style = vars.style.replace("'", "\"")
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3351,6 +3332,7 @@ class S3MapModel(S3Model):
                                    label=FORMAT,
                                    requires=IS_NULL_OR(IS_IN_SET(wms_img_formats)),
                                    default="image/png"),
+                             # NB This is a WMS-server-side style NOT an internal JSON style
                              Field("style", length=32,
                                    label=T("Style"),
                                    comment=DIV(_class="tooltip",

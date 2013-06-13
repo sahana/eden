@@ -22,7 +22,7 @@
          Site.................boolean.........Layer Site (use Site for location)
          Trackable............boolean.........Layer Trackable
          Polygons.............boolean.........Layer Polygons
-         Style................string..........Layer Style (@ToDo: Move to layer_config)
+         Style................string..........Layer Style
          Folder...............string..........Layer Folder
          Config...............string..........Configuration Name
          Enabled..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
@@ -141,8 +141,6 @@
             <data field="filter_value"><xsl:value-of select="col[@field='Filter Value']"/></data>
             <data field="popup_label"><xsl:value-of select="col[@field='Popup Label']"/></data>
             <data field="popup_fields"><xsl:value-of select="col[@field='Popup Fields']"/></data>
-            <!-- @ToDo: This should move to layer_config -->
-            <data field="style"><xsl:value-of select="col[@field='Style']"/></data>
             <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
             <xsl:if test="col[@field='Cluster Distance']!=''">
                 <data field="cluster_distance"><xsl:value-of select="col[@field='Cluster Distance']"/></data>
@@ -172,6 +170,7 @@
                     </xsl:otherwise>
                 </xsl:choose>
             </reference>
+            <data field="style"><xsl:value-of select="col[@field='Style']"/></data>
             <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
             <data field="visible"><xsl:value-of select="col[@field='Visible']"/></data>
         </resource>

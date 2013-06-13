@@ -9,6 +9,9 @@
          Name....................event_event.name
          Type....................event_event.event_type_id
          Description.............event_event.comments
+         Exercise................event_event.exercise
+         Zero Hour...............event_event.zero_hour
+         Closed..................event_event.closed
          Country.................optional.....event_event_location.Country
          L1......................optional.....event_event_location.L1
          L2......................optional.....event_event_location.L2

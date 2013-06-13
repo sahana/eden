@@ -6,13 +6,18 @@
  * @ToDo: Support more than 1/page by not using fixed ids but varying with fieldname (see locationselector.widget2)
  */
 
-// Main jQuery function
+// Document.onReady
 $(function() {
     // Moved to sub-function to be able to fire on inserted form
-    s3_gis_locationselector_jQuery_onReady();
+    s3_gis_locationselector_onReady();
 });
 
-function s3_gis_locationselector_jQuery_onReady() {
+function s3_gis_locationselector_activate() {
+    // Called after form is inserted into page to activate
+    s3_gis_locationselector_onReady();
+}
+
+function s3_gis_locationselector_onReady() {
     if (typeof(S3.gis.location_id) != 'undefined') {
         // This page includes the Location Selector Widget
         // Hide the Label row
@@ -128,15 +133,7 @@ function s3_gis_locationselector_jQuery_onReady() {
             }
         });
     }
-}
 
-// Main Ext function
-Ext.onReady(function(){
-    // Moved to sub-function to be able to fire on inserted form
-    s3_gis_locationselector_Ext_onReady();
-});
-
-function s3_gis_locationselector_Ext_onReady() {
     // Map Popup
     var mapButton = Ext.get('gis_location_map-btn');
     if (mapButton) {
@@ -169,12 +166,6 @@ function s3_gis_locationselector_Ext_onReady() {
             }
         });
     }
-}
-
-function s3_gis_locationselector_activate() {
-    // Called after form is inserted into page to activate
-    s3_gis_locationselector_jQuery_onReady();
-    s3_gis_locationselector_Ext_onReady();
 }
 
 function s3_gis_autocompletes() {

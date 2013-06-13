@@ -106,6 +106,13 @@ RADIUS_EARTH = 6371.01
 # Compact JSON encoding
 SEPARATORS = (",", ":")
 
+# Map Defaults
+# Also in static/S3/s3.gis.js
+# http://dev.openlayers.org/docs/files/OpenLayers/Strategy/Cluster-js.html
+CLUSTER_ATTRIBUTE = "colour"
+CLUSTER_DISTANCE = 20   # pixels
+CLUSTER_THRESHOLD = 2   # minimum # of features to form a cluster
+
 # Garmin GPS Symbols
 GPS_SYMBOLS = ["Airport",
                "Amusement Park"
@@ -250,13 +257,6 @@ class GIS(object):
         self.hierarchy_level_keys = ["L0", "L1", "L2", "L3", "L4", "L5"]
         self.hierarchy_levels = {}
         self.max_allowed_level_num = 4
-
-        # Map Defaults
-        # Also in static/S3/s3.gis.js
-        # http://dev.openlayers.org/docs/files/OpenLayers/Strategy/Cluster-js.html
-        self.cluster_attribute = 'colour'
-        self.cluster_distance = 20   # pixels
-        self.cluster_threshold = 2   # minimum # of features to form a cluster
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2309,9 +2309,10 @@ class GIS(object):
                    - store this in the style?
         """
 
-        c = resource.components.items()[0][1]
-        tablename = c.tablename
-        table = c.table
+        db = current.db
+        id = resource._ids[0]
+        tablename = "gis_layer_shapefile_%s" % id
+        table = db[tablename]
         query = resource.rfilter.query
         fields = []
         fappend = fields.append
@@ -2326,29 +2327,32 @@ class GIS(object):
             fields.remove("the_geom")
             fields.remove("wkt")
             _fields = [table[f] for f in fields]
-            rows = current.db(query).select(table.the_geom.st_simplify(0.01).st_asgeojson(precision=4).with_alias("geojson")
-                                            *_fields)
+            rows = db(query).select(table.the_geom.st_simplify(0.01).st_asgeojson(precision=4).with_alias("geojson"),
+                                    *_fields)
             for row in rows:
-                geojsons[row.id] = row.geojson
+                _row = row[tablename]
+                id = _row.id
+                geojsons[id] = row.geojson
                 _attributes = {}
                 for f in fields:
                     if f not in ("id"):
-                        _attributes[f] = row[f]
-                attributes[row.id] = _attributes
+                        _attributes[f] = _row[f]
+                attributes[id] = _attributes
         else:
             _fields = [table[f] for f in fields]
-            rows = current.db(query).select(*_fields)
+            rows = db(query).select(*_fields)
             simplify = GIS.simplify
             for row in rows:
                 # Simplify the polygon to reduce download size
                 geojson = simplify(row.wkt, tolerance=0.01, output="geojson")
+                id = row.id
                 if geojson:
-                    geojsons[row.id] = geojson
+                    geojsons[id] = geojson
                 _attributes = {}
                 for f in fields:
                     if f not in ("id", "wkt"):
                         _attributes[f] = row[f]
-                attributes[row.id] = _attributes
+                attributes[id] = _attributes
 
         _attributes = {}
         _attributes[tablename] = attributes
@@ -2379,13 +2383,14 @@ class GIS(object):
                 (table.location_id == gtable.id)
 
         geojsons = {}
-        # Broken: row["gis_location"] doesn't exist :-?
+        # @ToDo: How to get the tolerance to vary by level?
+        #        - add Stored Procedure?
         #if current.deployment_settings.get_gis_spatialdb():
         #    # Do the Simplify & GeoJSON direct from the DB
         #    rows = current.db(query).select(table.id,
         #                                    gtable.the_geom.st_simplify(0.01).st_asgeojson(precision=4).with_alias("geojson"))
         #    for row in rows:
-        #        geojsons[row[tablename].id] = row["gis_location"].geojson
+        #        geojsons[row["gis_theme_data.id"]] = row.geojson
         #else:
         rows = current.db(query).select(table.id,
                                         gtable.level,
@@ -2399,12 +2404,13 @@ class GIS(object):
                      "L5":0.00015625,
                      }
         for row in rows:
+            grow = row.gis_location
             # Simplify the polygon to reduce download size
-            geojson = simplify(row.gis_location.wkt,
-                               tolerance=tolerance[row.gis_location.level],
+            geojson = simplify(grow.wkt,
+                               tolerance=tolerance[grow.level],
                                output="geojson")
             if geojson:
-                geojsons[row.gis_theme_data.id] = geojson
+                geojsons[row["gis_theme_data.id"]] = geojson
 
         _geojsons = {}
         _geojsons[tablename] = geojsons
@@ -6098,7 +6104,6 @@ def addFeatureQueries(feature_queries):
     db = current.db
     s3db = current.s3db
     cache = s3db.cache
-    gis = current.gis
     request = current.request
     controller = request.controller
     function = request.function
@@ -6207,13 +6212,13 @@ def addFeatureQueries(feature_queries):
         if "opacity" in layer and layer["opacity"] != 1:
             _layer["opacity"] = "%.1f" % layer["opacity"]
         if "cluster_attribute" in layer and \
-           layer["cluster_attribute"] != gis.cluster_attribute:
+           layer["cluster_attribute"] != CLUSTER_ATTRIBUTE:
             _layer["cluster_attribute"] = layer["cluster_attribute"]
         if "cluster_distance" in layer and \
-           layer["cluster_distance"] != gis.cluster_distance:
+           layer["cluster_distance"] != CLUSTER_DISTANCE:
             _layer["cluster_distance"] = layer["cluster_distance"]
         if "cluster_threshold" in layer and \
-           layer["cluster_threshold"] != gis.cluster_threshold:
+           layer["cluster_threshold"] != CLUSTER_THRESHOLD:
             _layer["cluster_threshold"] = layer["cluster_threshold"]
         append(_layer)
 
@@ -6228,7 +6233,6 @@ def addFeatureResources(feature_resources):
 
     db = current.db
     s3db = current.s3db
-    gis = current.gis
     ftable = s3db.gis_layer_feature
 
     layers_feature_resource = []
@@ -6309,11 +6313,11 @@ def addFeatureResources(feature_resources):
                 url = "%s?%s" % (url, options)
             opacity = layer.get("opacity", 1)
             cluster_attribute = layer.get("cluster_attribute",
-                                          gis.cluster_attribute)
+                                          CLUSTER_ATTRIBUTE)
             cluster_distance = layer.get("cluster_distance",
-                                         gis.cluster_distance)
+                                         CLUSTER_DISTANCE)
             cluster_threshold = layer.get("cluster_threshold",
-                                          gis.cluster_threshold)
+                                          CLUSTER_THRESHOLD)
             dir = layer.get("dir", None)
             marker = layer.get("marker", None)
 
@@ -6321,11 +6325,11 @@ def addFeatureResources(feature_resources):
             _layer["visibility"] = False
         if opacity != 1:
             _layer["opacity"] = "%.1f" % opacity
-        if cluster_attribute != gis.cluster_attribute:
+        if cluster_attribute != CLUSTER_ATTRIBUTE:
             _layer["cluster_attribute"] = cluster_attribute
-        if cluster_distance != gis.cluster_distance:
+        if cluster_distance != CLUSTER_DISTANCE:
             _layer["cluster_distance"] = cluster_distance
-        if cluster_threshold != gis.cluster_threshold:
+        if cluster_threshold != CLUSTER_THRESHOLD:
             _layer["cluster_threshold"] = cluster_threshold
         if dir:
             _layer["dir"] = dir
@@ -6484,12 +6488,12 @@ class Layer(object):
         fields = table.fields
         metafields = s3_all_meta_field_names()
         fields = [table[f] for f in fields if f not in metafields]
-        fappend = fields.append
-        fappend(ltable.enabled)
-        fappend(ltable.visible)
-        fappend(ltable.base)
-        fappend(ltable.style)
-        fappend(ctable.pe_type)
+        fields += [ltable.enabled,
+                   ltable.visible,
+                   ltable.base,
+                   ltable.style,
+                   ctable.pe_type,
+                   ]
         query = (table.layer_id == ltable.layer_id) & \
                 (ltable.config_id == ctable.id) & \
                 (ltable.config_id.belongs(gis.config.ids))
@@ -6624,7 +6628,6 @@ class Layer(object):
                 self.projection = Projection(self.projection_id)
 
         def setup_clustering(self, output):
-            gis = current.gis
             if hasattr(self, "cluster_attribute"):
                 cluster_attribute = self.cluster_attribute
             else:
@@ -6632,11 +6635,11 @@ class Layer(object):
             cluster_distance = self.cluster_distance
             cluster_threshold = self.cluster_threshold
             if cluster_attribute and \
-               cluster_attribute != gis.cluster_attribute:
+               cluster_attribute != CLUSTER_ATTRIBUTE:
                 output["cluster_attribute"] = cluster_attribute
-            if cluster_distance != gis.cluster_distance:
+            if cluster_distance != CLUSTER_DISTANCE:
                 output["cluster_distance"] = cluster_distance
-            if cluster_threshold != gis.cluster_threshold:
+            if cluster_threshold != CLUSTER_THRESHOLD:
                 output["cluster_threshold"] = cluster_threshold
 
         def setup_folder(self, output):
@@ -6860,11 +6863,14 @@ class LayerFeature(Layer):
                       }
 
             # Attributes which are defaulted client-side if not set
-            self.marker.add_attributes_to_output(output)
             self.setup_folder_visibility_and_opacity(output)
             self.setup_clustering(output)
+            style = self.style
             if style:
+                style = json.loads(style)
                 output["style"] = style
+            else:
+                self.marker.add_attributes_to_output(output)
 
             return output
 
