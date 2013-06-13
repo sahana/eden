@@ -196,6 +196,7 @@ class S3ReportForm(object):
             empty = ""
         else:
             # @todo: fall back to datatable
+            hidden["pivotdata"] = """null"""
             empty = current.T("Please select report options.")
             
         throbber = "/%s/static/img/indicator.gif" % current.request.application

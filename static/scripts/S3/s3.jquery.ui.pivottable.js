@@ -59,7 +59,9 @@
             var pivotdata = $(el).find('input[type="hidden"][name="pivotdata"]');
             if (pivotdata.length) {
                 data = JSON.parse($(pivotdata).first().val());
+            }
 
+            if (data) {
                 var cells = data['cells'],
                     cols = data['cols'],
                     rows = data['rows'],
@@ -84,6 +86,7 @@
                 $(el).find('.pt-table').first()
                                        .empty()
                                        .append(this.table);
+                $(el).find('.pt-empty').hide();
             } else {
                 data = {};
             }
