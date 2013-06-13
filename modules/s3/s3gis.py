@@ -6894,12 +6894,17 @@ class LayerGeoJSON(Layer):
                       }
 
             # Attributes which are defaulted client-side if not set
-            self.marker.add_attributes_to_output(output)
             projection = self.projection
             if projection.epsg != 4326:
                 output["projection"] = projection.epsg
             self.setup_folder_visibility_and_opacity(output)
             self.setup_clustering(output)
+            style = self.style
+            if style:
+                style = json.loads(style)
+                output["style"] = style
+            else:
+                self.marker.add_attributes_to_output(output)
 
             return output
 
@@ -7251,7 +7256,13 @@ class LayerKML(Layer):
             )
             self.setup_folder_visibility_and_opacity(output)
             self.setup_clustering(output)
-            self.marker.add_attributes_to_output(output)
+            style = self.style
+            if style:
+                style = json.loads(style)
+                output["style"] = style
+            else:
+                self.marker.add_attributes_to_output(output)
+
             return output
 
 # -----------------------------------------------------------------------------
@@ -7468,13 +7479,18 @@ class LayerWFS(Layer):
                 geometryName = (self.geometryName, ("the_geom",)),
                 username = (self.username, (None, "")),
                 password = (self.password, (None, "")),
-                styleField = (self.style_field, (None,)),
-                styleValues = (self.style_values, ("{}", None)),
                 projection = (self.projection.epsg, (4326,)),
                 #editable
             )
             self.setup_folder_visibility_and_opacity(output)
             self.setup_clustering(output)
+            style = self.style
+            if style:
+                style = json.loads(style)
+                output["style"] = style
+            else:
+                self.marker.add_attributes_to_output(output)
+
             return output
 
 # -----------------------------------------------------------------------------

@@ -17,8 +17,6 @@
          Popup Label..........string..........Layer Popup Label
          Popup Fields.........string..........Layer Popup Fields (Fields to build feature.popup)
          REST Filter..........string..........Layer Filter (for Map JS calling back to server)
-         Filter Field.........string..........Layer Filter Field (for exports to determine Marker)
-         Filter Value.........string..........Layer Filter Value (for exports to determine Marker)
          Site.................boolean.........Layer Site (use Site for location)
          Trackable............boolean.........Layer Trackable
          Polygons.............boolean.........Layer Polygons
@@ -29,6 +27,7 @@
          Visible..............boolean.........Layer Visible in config? (SITE_DEFAULT if not-specified)
          Cluster Distance.....integer.........Layer Cluster Distance: The number of pixels apart that features need to be before they are clustered (default=20)
          Cluster Threshold....integer.........Layer Cluster Threshold: The minimum number of features to form a cluster (default=2)
+         Refresh..............integer.........layer Refresh (Number of seconds between refreshes: 0 to disable)
 
          Needs Importing twice:
             layer_config
@@ -78,24 +77,29 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
-        <resource name="gis_layer_symbology">
-            <reference field="layer_id" resource="gis_layer_feature">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="col[@field='Name']"/>
-                </xsl:attribute>
-            </reference>
-            <reference field="symbology_id" resource="gis_symbology">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="col[@field='Symbology']"/>
-                </xsl:attribute>
-            </reference>
-            <reference field="marker_id" resource="gis_marker">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="col[@field='Marker']"/>
-                </xsl:attribute>
-            </reference>
-            <data field="gps_marker"><xsl:value-of select="col[@field='GPS Marker']"/></data>
-        </resource>
+
+        <xsl:variable name="Symbology" select="col[@field='Symbology']/text()"/>
+
+        <xsl:if test="$Symbology!=''">
+            <resource name="gis_layer_symbology">
+                <reference field="layer_id" resource="gis_layer_feature">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="col[@field='Name']"/>
+                    </xsl:attribute>
+                </reference>
+                <reference field="symbology_id" resource="gis_symbology">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$Symbology"/>
+                    </xsl:attribute>
+                </reference>
+                <reference field="marker_id" resource="gis_marker">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="col[@field='Marker']"/>
+                    </xsl:attribute>
+                </reference>
+                <data field="gps_marker"><xsl:value-of select="col[@field='GPS Marker']"/></data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -137,11 +141,10 @@
             <data field="controller"><xsl:value-of select="col[@field='Controller']"/></data>
             <data field="function"><xsl:value-of select="col[@field='Function']"/></data>
             <data field="filter"><xsl:value-of select="col[@field='REST Filter']"/></data>
-            <data field="filter_field"><xsl:value-of select="col[@field='Filter Field']"/></data>
-            <data field="filter_value"><xsl:value-of select="col[@field='Filter Value']"/></data>
             <data field="popup_label"><xsl:value-of select="col[@field='Popup Label']"/></data>
             <data field="popup_fields"><xsl:value-of select="col[@field='Popup Fields']"/></data>
             <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
+            <data field="refresh"><xsl:value-of select="col[@field='Refresh']"/></data>
             <xsl:if test="col[@field='Cluster Distance']!=''">
                 <data field="cluster_distance"><xsl:value-of select="col[@field='Cluster Distance']"/></data>
             </xsl:if>
@@ -182,12 +185,14 @@
 
         <xsl:variable name="Marker" select="col[@field='Marker']/text()"/>
     
-        <resource name="gis_marker">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$Marker"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$Marker"/></data>
-        </resource>
+        <xsl:if test="$Marker!=''">
+            <resource name="gis_marker">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$Marker"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$Marker"/></data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -195,12 +200,14 @@
 
         <xsl:variable name="Symbology" select="col[@field='Symbology']/text()"/>
     
-        <resource name="gis_symbology">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$Symbology"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$Symbology"/></data>
-        </resource>
+        <xsl:if test="$Symbology!=''">
+            <resource name="gis_symbology">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$Symbology"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$Symbology"/></data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->

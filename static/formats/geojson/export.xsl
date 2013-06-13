@@ -95,7 +95,7 @@
                 </geometry>
                 <properties>
                     <id>
-                        <xsl:value-of select="$uid"/>
+                        <xsl:value-of select="substring-after($uid, 'urn:uuid:')"/>
                     </id>
                     <name>
                         <xsl:value-of select="data[@field='name']"/>
@@ -254,7 +254,7 @@
         </geometry>
         <properties>
             <id>
-                <xsl:value-of select="@uuid"/>
+                <xsl:value-of select="substring-after(@uuid, 'urn:uuid:')"/>
             </id>
             <name>
                 <xsl:value-of select="$name"/>
@@ -358,7 +358,7 @@
 
         <id>
             <!-- We want the Resource's UUID here, not the associated Location's or Site's -->
-            <xsl:value-of select="$uuid"/>
+            <xsl:value-of select="substring-after($uuid, 'urn:uuid:')"/>
         </id>
         <!--<xsl:choose>
             <xsl:when test="data[@field='name']!=''">

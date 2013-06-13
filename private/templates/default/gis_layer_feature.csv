@@ -1,16 +1,16 @@
-"Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Filter Field","Filter Value","Site","Trackable","Folder","Visible","Enabled"
-"Airports","All Active Airports","transport","airport","US","airport","Airport","Airport","name","airport.obsolete=False","obsolete","False",,,,"False",
-"Heliports","All Active Heliports","transport","heliport","US","helicopter","Heliport","Heliport","name","heliport.obsolete=False","obsolete","False",,,,"False",
-"Hospitals","All Active Medical Facilities","hms","hospital","US","hospital","Medical Facility","Hospital","name","hospital.obsolete=False","obsolete","False",,,,"False",
-"Incident Reports",,"irs","ireport","US","incident","Danger Area","Incident","name/category",,,,,,,"False",
-"Offices","All Active Offices","org","office","US","office","Building","Office","name/organisation_id","office.obsolete=False","obsolete","False",,,,"False",
-"Projects",,"project","location","US","project",,"Project","name/location_id/multi_activity_type_id",,,,,,,"False",
-"Requests","All Open Requests","req","req","US","request","Navaid, Red","Request","req_ref/site_id","req.fulfil_status__ne=2","fulfil_status",0,"True",,,"False",
-"Seaports","All Active Seaports","transport","seaport","US","port","Marina","Seaport","name","seaport.obsolete=False","obsolete","False",,,,"False",
-"Shelters","All Active Shelters","cr","shelter","US","shelter","Campground","Shelter","name/population/capacity_day","shelter.status__ne=1","status",2,,,,"False",
-"Staff","All Active Staff","hrm","staff","US","staff","Contact, Dreadlocks","Staff","person_id/job_title_id/organisation_id","human_resource.status=1","type",1,,"True",,"False",
-"Stock Items","Used for Search Results","inv","inv_item","US",,,"Stock Item","item_id/site_id/quantity/item_pack_id/expiry_date",,,,,,,"False","False"
-"Training Events","Used for Search Results","hrm","training_event","US",,,"Training Event","course_id/site_id/start_date",,,,,,,"False","False"
-"Vehicles",,"vehicle","vehicle","US","vehicle","Car","Vehicle","number/person_id","asset.type=1","type",1,,"True",,"False",
-"Volunteers","All Active Volunteers","vol","volunteer","US","volunteer","Contact, Dreadlocks","Volunteer","person_id/organisation_id","human_resource.status=1","type",2,,"True",,"False",
-"Warehouses","All Active Warehouses","inv","warehouse","US","warehouse","Building","Office","name/organisation_id","warehouse.obsolete=False","obsolete","False",,,,"False",
+"Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Site","Trackable","Folder","Visible","Enabled"
+"Airports","All Active Airports","transport","airport","US","airport","Airport","Airport","name","~.obsolete=False",,,,"False",
+"Heliports","All Active Heliports","transport","heliport","US","helicopter","Heliport","Heliport","name","~.obsolete=False",,,,"False",
+"Hospitals","All Active Medical Facilities","hms","hospital","US","hospital","Medical Facility","Hospital","name","~.obsolete=False",,,,"False",
+"Incident Reports",,"irs","ireport","US","incident","Danger Area","Incident","name/category",,,,,"False",
+"Offices","All Active Offices","org","office","US","office","Building","Office","name/organisation_id","~.obsolete=False",,,,"False",
+"Projects",,"project","location","US","project",,"Project","name/location_id/multi_activity_type_id",,,,,"False",
+"Requests","All Open Requests","req","req","US","request","Navaid, Red","Request","req_ref/site_id","~.fulfil_status__ne=2","True",,,"False",
+"Seaports","All Active Seaports","transport","seaport","US","port","Marina","Seaport","name","~.obsolete=False",,,,"False",
+"Shelters","All Active Shelters","cr","shelter","US","shelter","Campground","Shelter","name/population/capacity_day","~.status__ne=1",,,,"False",
+"Staff","All Active Staff","hrm","staff","US","staff","Contact, Dreadlocks","Staff","person_id/job_title_id/organisation_id","~.status=1",,"True",,"False",
+"Stock Items","Used for Search Results","inv","inv_item","US",,,"Stock Item","item_id/site_id/quantity/item_pack_id/expiry_date",,,,,"False","False"
+"Training Events","Used for Search Results","hrm","training_event","US",,,"Training Event","course_id/site_id/start_date",,,,,"False","False"
+"Vehicles",,"vehicle","vehicle","US","vehicle","Car","Vehicle","number/person_id","asset.type=1",,"True",,"False",
+"Volunteers","All Active Volunteers","vol","volunteer","US","volunteer","Contact, Dreadlocks","Volunteer","person_id/organisation_id","~.status=1",,"True",,"False",
+"Warehouses","All Active Warehouses","inv","warehouse","US","warehouse","Building","Office","name/organisation_id","~.obsolete=False",,,,"False",
