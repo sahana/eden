@@ -4927,6 +4927,24 @@ class S3Resource(object):
             raise RuntimeError("circular left-join dependency")
 
     # -------------------------------------------------------------------------
+    def prefix_selector(self, selector):
+        """
+            Helper method to ensure consistent prefixing of field selectors
+
+            @param selector: the selector
+        """
+
+        head = selector.split("$", 1)[0]
+        if "." in head:
+            prefix = head.split(".", 1)[0]
+            if prefix == self.alias:
+                return selector.replace("%s." % prefix, "~.")
+            else:
+                return selector
+        else:
+            return "~.%s" % selector
+
+    # -------------------------------------------------------------------------
     def list_fields(self, key="list_fields"):
         """
             Get the list_fields for this resource

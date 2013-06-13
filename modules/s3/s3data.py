@@ -1613,8 +1613,7 @@ class S3PivotTable(object):
              maxrows=None,
              maxcols=None,
              least=False,
-             represent=True,
-             show_totals=True):
+             represent=True):
         """
             Render the pivot table data as JSON-serializable dict
 
@@ -1624,7 +1623,6 @@ class S3PivotTable(object):
             @param least: render the least n rows/columns rather than
                           the top n (with maxrows/maxcols)
             @param represent: represent values
-            @param show_totals: render totals for rows/columns
 
             {
                 labels: {
@@ -1856,7 +1854,10 @@ class S3PivotTable(object):
         get_label = self._get_field_label
         get_mname = self._get_method_label
 
-        labels = {"total": str(current.T("Total"))}
+        labels = {
+                  "total": str(current.T("Total")),
+                  "none": str(current.messages["NONE"])
+                 }
 
         # Layer title
         layer_title = None
@@ -1900,14 +1901,7 @@ class S3PivotTable(object):
 
         output["labels"] = labels
 
-        # Options
-        options = {"show_totals": show_totals}
-
-        output["options"] = options
-
-        # @todo: add the grand total
         # @todo: add the record layer
-        # @todo: add the cell lookup layer (expand lists)
 
         return output
         
