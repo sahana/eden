@@ -25,34 +25,32 @@
         $.ajax({
             type: 'POST',
             url: S3.search.saveOptions.url,
-            data: S3.search.saveOptions.data,
-            success: function(data) {
-                // If successful this will be the new record ID
-                var recordId = data.created[0];
+            data: S3.search.saveOptions.data
+        }).done(function(data) {
+            // If successful this will be the new record ID
+            var recordId = data.created[0];
 
-                // Set the id of the new hyperlink to the id the button had
-                var id = (btn.attr('id') != undefined) ? btn.attr('id') : '';
+            // Set the id of the new hyperlink to the id the button had
+            var id = (btn.attr('id') != undefined) ? btn.attr('id') : '';
 
-                // Create a new hyperlink pointing to the new record
-                // under the current users' profile
-                var link = $('<a/>').attr('id', id)
-                                    .attr('href', S3.search.saveOptions.url_detail.replace('%3Cid%3E', recordId))
-                                    .text(i18n.edit_saved_search);
+            // Create a new hyperlink pointing to the new record
+            // under the current users' profile
+            var link = $('<a/>').attr('id', id)
+                                .attr('href', S3.search.saveOptions.url_detail.replace('%3Cid%3E', recordId))
+                                .text(i18n.edit_saved_search);
 
-                // replace the Save button with the hyperlink
-                btn.replaceWith(link);
+            // replace the Save button with the hyperlink
+            btn.replaceWith(link);
 
-                // change indicator to 'success' icon
-                link.next().attr('src', S3.Ap.concat('/static/img/tick.png'));
-            },
-            error: function(data) {
-                // If the request fails, change the indicator icon
-                btn.next().attr('src', S3.Ap.concat('/static/img/cross2.png'));
+            // change indicator to 'success' icon
+            link.next().attr('src', S3.Ap.concat('/static/img/tick.png'));
+        }).fail(function(data) {
+            // If the request fails, change the indicator icon
+            btn.next().attr('src', S3.Ap.concat('/static/img/cross2.png'));
 
-                // show the response text
-                $('<span/>').text(data.statusText)
-                            .insertAfter(btn);
-            }
+            // show the response text
+            $('<span/>').text(data.statusText)
+                        .insertAfter(btn);
         });
         //event.preventDefault();
         return false;
@@ -126,55 +124,54 @@
         var data;
 
         // Save JSON Request by element id
-        S3.JSONRequest[selSearchDiv.attr('id')] = $.ajax( {
+        S3.JSONRequest[selSearchDiv.attr('id')] = $.ajax({
             url: url,
-            dataType: 'json',
-            success: function(data) {
-                if (data.length == 1) {
-                    /* Populate Field with Result */
-                    var represent =  $(data[0].represent).text();
-                    selInput.val(represent);
-                    //selInput.attr('_value', represent);
-                    selHiddenInput.val(data[0].id);
-                    selHiddenInput.change(); // Trigger other events
-                } else {
-                    /* Create Table Element */
-                    var table = '<UL id = "' + Fieldname + '_result_list"' +
-                                'class = "search_autocomplete_result_list" ' +
-                                'style = "display:inline;">';
+            dataType: 'json'
+        }).done(function(data) {
+            if (data.length == 1) {
+                /* Populate Field with Result */
+                var represent =  $(data[0].represent).text();
+                selInput.val(represent);
+                //selInput.attr('_value', represent);
+                selHiddenInput.val(data[0].id);
+                selHiddenInput.change(); // Trigger other events
+            } else {
+                /* Create Table Element */
+                var table = '<UL id = "' + Fieldname + '_result_list"' +
+                            'class = "search_autocomplete_result_list" ' +
+                            'style = "display:inline;">';
 
-                    if (data.length === 0) {
-                        table += '<LI class = "search_autocomplete_result_item" ' +
-                                 'style = "border:1px solid;list-style-type:none;">' +
-                                 i18n.no_match + '</LI>';
-                    } else {
-                        for (var i = 0; i < data.length; i++) {
-                            table += '<LI id="' +  data[i].id + '"' +
-                                    'class = "search_autocomplete_result_item" ' +
-                                    'style = "border:1px solid;list-style-type:none;">';
-                            var selRepresent = $(data[i].represent);
-                            table += '<SPAN style = "cursor:pointer;">' + selRepresent.text() + '</SPAN>' +
-                                     '<A href="' + selRepresent.attr("href") + '" ' +
-                                     'target = "blank" ' +
-                                     'style = "font-size:0.8em;margin-right:10px;float:right;">' +
-                                     'Details</A>' +
-                                    '</LI>';
-                        }
-                        if (data.length > 10 ) {
-                            table += '<LI ' +
-                                     'class = "search_autocomplete_result_item" ' +
-                                     'style = "border:1px solid;list-style-type:none;"><I>' +
-                                     i18n.ac_widget_more_results +
-                                     '</I></LI>';
-                        }
+                if (data.length === 0) {
+                    table += '<LI class = "search_autocomplete_result_item" ' +
+                             'style = "border:1px solid;list-style-type:none;">' +
+                             i18n.no_match + '</LI>';
+                } else {
+                    for (var i = 0; i < data.length; i++) {
+                        table += '<LI id="' +  data[i].id + '"' +
+                                'class = "search_autocomplete_result_item" ' +
+                                'style = "border:1px solid;list-style-type:none;">';
+                        var selRepresent = $(data[i].represent);
+                        table += '<SPAN style = "cursor:pointer;">' + selRepresent.text() + '</SPAN>' +
+                                 '<A href="' + selRepresent.attr("href") + '" ' +
+                                 'target = "blank" ' +
+                                 'style = "font-size:0.8em;margin-right:10px;float:right;">' +
+                                 'Details</A>' +
+                                '</LI>';
                     }
-                    table += '</UL>';
-                    selSearchForm.append(table);
+                    if (data.length > 10 ) {
+                        table += '<LI ' +
+                                 'class = "search_autocomplete_result_item" ' +
+                                 'style = "border:1px solid;list-style-type:none;"><I>' +
+                                 i18n.ac_widget_more_results +
+                                 '</I></LI>';
+                    }
                 }
-                selThrobber.remove();
-                // Prevents the search being re-triggered
-                $('[name ^= "' + Fieldname + '_search_simple"]').blur();
+                table += '</UL>';
+                selSearchForm.append(table);
             }
+            selThrobber.remove();
+            // Prevents the search being re-triggered
+            $('[name ^= "' + Fieldname + '_search_simple"]').blur();
         });
     };
 

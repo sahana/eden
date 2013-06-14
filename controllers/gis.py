@@ -3134,23 +3134,37 @@ def proxy():
     import urllib2
     import cgi
 
-    # @ToDo: Link to map_service_catalogue to prevent Open Proxy abuse
-    # (although less-critical since we restrict content type)
-    allowedHosts = []
-    #allowedHosts = ["www.openlayers.org", "demo.opengeo.org"]
+    if auth.is_logged_in():
+        # Authenticated users can use our Proxy
+        allowedHosts = None
+        allowed_content_types = None
+    else:
+        # @ToDo: Link to map_service_catalogue to prevent Open Proxy abuse
+        # (although less-critical since we restrict content type)
+        allowedHosts = []
+        #append = allowedHosts.append
+        #letable = s3db.gis_layer_entity
+        #rows = db(letable.deleted == False).select(letable.layer_id, letable.instance_type)
+        # @ToDo: Better query (single query by instance_type)
+        #for row in rows:
+        #   table = db[row.instance_type]
+        #   @ToDo: Check url2/url3 for relevant instance_types
+        #   r = db(table.layer_id == row.layer_id).select(table.url, limitby=(0, 1)).first()
+        #   if r:
+        #       append(r.url)
 
-    allowed_content_types = (
-        "application/json", "text/json", "text/x-json",
-        "application/xml", "text/xml",
-        "application/vnd.ogc.se_xml",           # OGC Service Exception
-        "application/vnd.ogc.se+xml",           # OGC Service Exception
-        "application/vnd.ogc.success+xml",      # OGC Success (SLD Put)
-        "application/vnd.ogc.wms_xml",          # WMS Capabilities
-        "application/vnd.ogc.context+xml",      # WMC
-        "application/vnd.ogc.gml",              # GML
-        "application/vnd.ogc.sld+xml",          # SLD
-        "application/vnd.google-earth.kml+xml", # KML
-    )
+        allowed_content_types = (
+            "application/json", "text/json", "text/x-json",
+            "application/xml", "text/xml",
+            "application/vnd.ogc.se_xml",           # OGC Service Exception
+            "application/vnd.ogc.se+xml",           # OGC Service Exception
+            "application/vnd.ogc.success+xml",      # OGC Success (SLD Put)
+            "application/vnd.ogc.wms_xml",          # WMS Capabilities
+            "application/vnd.ogc.context+xml",      # WMC
+            "application/vnd.ogc.gml",              # GML
+            "application/vnd.ogc.sld+xml",          # SLD
+            "application/vnd.google-earth.kml+xml", # KML
+        )
 
     method = request["wsgi"].environ["REQUEST_METHOD"]
 
@@ -3195,22 +3209,26 @@ def proxy():
                 except urllib2.URLError:
                     raise(HTTP(504, "Unable to reach host %s" % url))
 
-            # Check for allowed content types
             i = y.info()
             if i.has_key("Content-Type"):
                 ct = i["Content-Type"]
-                if not ct.split(";")[0] in allowed_content_types:
+            else:
+                ct = None
+            if allowed_content_types:
+                # Check for allowed content types
+                if not ct:
+                    raise(HTTP(406, "Unknown Content"))
+                elif not ct.split(";")[0] in allowed_content_types:
                     # @ToDo?: Allow any content type from allowed hosts (any port)
                     #if allowedHosts and not host in allowedHosts:
                     raise(HTTP(403, "Content-Type not permitted"))
-            else:
-                raise(HTTP(406, "Unknown Content"))
 
             msg = y.read()
             y.close()
 
-            # Maintain the incoming Content-Type
-            response.headers["Content-Type"] = ct
+            if ct:
+                # Maintain the incoming Content-Type
+                response.headers["Content-Type"] = ct
             return msg
 
         else:

@@ -737,7 +737,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             // Only load Google layers if GoogleAPI downloaded ok
             // - allow rest of map to work offline
             google & addGoogleLayers(map);
-        } catch(err) {}
+        } catch(e) {}
 
         // Bing
         if (options.Bing) {
@@ -2276,6 +2276,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         $.get(url,
               function(data) {
                 div.html(data);
+                // @ToDo: Don't assume we're the only popup on this map
                 map.popups[0].updateSize();
                 var dropdowns = $(selector + ' .dropdown-toggle');
                 if (dropdowns.length) {
@@ -2316,24 +2317,41 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     // Used by onFeatureSelect
     function loadDetails(url, id, popup) {
         // Load the Popup Details asynchronously
+        if (url.indexOf('http://') === 0) {
+            // Use Proxy for remote popups
+            url = OpenLayers.ProxyHost + encodeURIComponent(url);
+        }
+        // @ToDo: Support option to load just a section of the page
+        // e.g. USGS would just load '#main'
+        /*
+        url_parts = url.split('?', 1);
+        url = url_parts[0];
+        url = url + ' #main';
+        $('#' + id).load(url, url_parts[1], function() {
+            popup.updateSize();
+        });*/
         $.ajax({
             'url': url,
-            'success': function(data) {
-                $('#' + id).html(data);
-                popup.updateSize();
-                // Resize when images are loaded
-                //popup.registerImageListeners();
-            },
-            'error': function(request, status, error) {
-                if (error == 'UNAUTHORIZED') {
-                    msg = i18n.gis_requires_login;
-                } else {
-                    msg = request.responseText;
-                }
-                $('#' + id + '_contentDiv').html(msg);
-                popup.updateSize();
-            },
             'dataType': 'html'
+        }).done(function(data) {
+            try {
+                // Load response into page
+                $('#' + id).html(data);
+            } catch(e) {
+                // Page is probably trying to load 'local' resources from us
+                // @ToDo: Load in iframe instead...
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            if (errorThrown == 'UNAUTHORIZED') {
+                msg = i18n.gis_requires_login;
+            } else {
+                msg = jqXHR.responseText;
+            }
+            $('#' + id + '_contentDiv').html(msg);
+        }).always(function() {
+            popup.updateSize();
+            // Resize when images are loaded
+            //popup.registerImageListeners();
         });
     }
 
@@ -2766,7 +2784,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             if (options.Google.Earth) {
                 google & addGoogleEarthControl(toolbar);
             }
-        } catch(err) {}
+        } catch(e) {}
         
         // Search box
         if (i18n.gis_search) {
@@ -3305,8 +3323,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             handler: function() {
                 // Read current settings from map
                 var state = getState(map);
-                var layersStr = Ext.util.JSON.encode(state.layers);
-                var pluginsStr = Ext.util.JSON.encode(state.plugins);
+                var encode = Ext.util.JSON.encode;
+                var layersStr = encode(state.layers);
+                var pluginsStr = encode(state.plugins);
                 // Use AJAX to send back
                 var url;
                 if (config_id) {
@@ -3671,10 +3690,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                                     $.ajax({
                                         type: 'POST',
                                         url: update_url,
-                                        data: query,
-                                        success: function(msg) {
-                                            $('#plain').html(msg);
-                                        }
+                                        data: query
+                                    }).done(function(msg) {
+                                        $('#plain').html(msg);
                                     });
                                 }
                                 return false;

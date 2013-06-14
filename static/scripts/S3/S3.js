@@ -323,11 +323,11 @@ S3.deduplication = function() {
                 type: 'POST',
                 url: url,
                 data: {},
+                dataType: 'JSON',
+                // gets moved to .done() inside .ajaxS3
                 success: function(data) {
                     $('.mark-deduplicate, .unmark-deduplicate, .deduplicate').toggleClass('hide');
-                    return;
-                },
-                dataType: 'JSON'
+                }
             });
         }
     });
@@ -338,11 +338,11 @@ S3.deduplication = function() {
                 type: 'POST',
                 url: url + '?remove=1',
                 data: {},
+                dataType: 'JSON',
+                // gets moved to .done() inside .ajaxS3
                 success: function(data) {
                     $('.mark-deduplicate, .unmark-deduplicate, .deduplicate').toggleClass('hide');
-                    return;
-                },
-                dataType: 'JSON'
+                }
             });
         }
     });
@@ -439,18 +439,31 @@ function S3EnableNavigateAwayConfirm() {
  */
 
 (function($) {
+    // Default AJAX settings
+    $.ajaxS3Settings = {
+        timeout : 10000,
+        msgTimeout: 2000,
+        retryLimit : 10,
+        dataType: 'json',
+        async: true,
+        type: 'GET'
+    };
+
+    // Wrapper for jQuery's .ajax to provide notifications on errors
     $.ajaxS3 = function(s) {
         var options = $.extend( {}, $.ajaxS3Settings, s );
         options.tryCount = 0;
         if (s.message) {
             s3_showStatus(i18n.ajax_get + ' ' + (s.message ? s.message : i18n.ajax_fmd) + '...', this.ajaxS3Settings.msgTimeout);
         }
-        options.success = function(data, status) {
+        $.ajax(
+            options
+        ).done(function(data, status) {
             s3_hideStatus();
-            if (s.success)
+            if (s.success) {
                 s.success(data, status);
-        };
-        options.error = function(xhr, textStatus, errorThrown ) {
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
             if (textStatus == 'timeout') {
                 this.tryCount++;
                 if (this.tryCount <= this.retryLimit) {
@@ -464,25 +477,15 @@ function S3EnableNavigateAwayConfirm() {
                     $.ajaxS3Settings.msgTimeout, false, true);
                 return;
             }
-            if (xhr.status == 500) {
+            if (jqXHR.status == 500) {
                 s3_showStatus(i18n.ajax_500, $.ajaxS3Settings.msgTimeout, false, true);
             } else {
                 s3_showStatus(i18n.ajax_dwn, $.ajaxS3Settings.msgTimeout, false, true);
             }
-        };
-        $.ajax(options);
-    };
-
-    $.postS3 = function(url, data, callback, type) {
-        return $.ajaxS3({
-            type: "POST",
-            url: url,
-            data: data,
-            success: callback,
-            dataType: type
         });
     };
 
+    // Simplified wrappers for .ajaxS3
     $.getS3 = function(url, data, callback, type, message, sync) {
         // shift arguments if data argument was omitted
         if ( $.isFunction( data ) ) {
@@ -500,9 +503,10 @@ function S3EnableNavigateAwayConfirm() {
             url: url,
             async: async,
             data: data,
-            success: callback,
             dataType: type,
-            message: message
+            message: message,
+            // gets moved to .done() inside .ajaxS3
+            success: callback
         });
     };
 
@@ -518,19 +522,6 @@ function S3EnableNavigateAwayConfirm() {
             sync = false;
         }
         return $.getS3(url, data, callback, 'json', message, sync);
-    };
-
-    $.ajaxS3Settings = {
-        timeout : 10000,
-        msgTimeout: 2000,
-        retryLimit : 10,
-        dataType: 'json',
-        async: true,
-        type: 'GET'
-    };
-
-    $.ajaxS3Setup = function(settings) {
-        $.extend($.ajaxS3Settings, settings);
     };
 
 })($);
@@ -924,95 +915,93 @@ function S3OptionsFilter(settings) {
             S3.JSONRequest[targetField.attr('id')] = $.ajax({
                 url: url,
                 dataType: 'json',
-                context: context,
-                success: function(data) {
+                context: context
+            }).done(function(data) {
+                // Pre-process the data
+                var fncPrep = this.fncPrep;
+                var prepResult;
+                try {
+                    prepResult = fncPrep(data);
+                } catch (e) {
+                    prepResult = null;
+                }
 
-                    // Pre-process the data
-                    var fncPrep = this.fncPrep;
-                    var prepResult;
-                    try {
-                        prepResult = fncPrep(data);
-                    } catch (e) {
-                        prepResult = null;
+                // Render options list
+                var fncRepresent = this.fncRepresent;
+                var FilterField = this.FilterField;
+                var FieldResource = this.FieldResource;
+                var triggerField = $('[name = "' + FilterField + '"]');
+                var options = '';
+                var currentValue;
+                if (data.length === 0) {
+                    // No options available
+                    if (this.showEmptyField) {
+                        currentValue = 0;
+                        options += '<option value="">' + this.msgNoRecords + '</options>';
                     }
-
-                    // Render options list
-                    var fncRepresent = this.fncRepresent;
-                    var FilterField = this.FilterField;
-                    var FieldResource = this.FieldResource;
-                    var triggerField = $('[name = "' + FilterField + '"]');
-                    var options = '';
-                    var currentValue;
-                    if (data.length === 0) {
-                        // No options available
-                        if (this.showEmptyField) {
-                            currentValue = 0;
-                            options += '<option value="">' + this.msgNoRecords + '</options>';
+                } else {
+                    // Render the options
+                    var lookupField = this.lookupField;
+                    for (var i = 0; i < data.length; i++) {
+                        if (i === 0) {
+                            currentValue = data[i][lookupField];
                         }
+                        options += '<option value="' + data[i][lookupField] + '">';
+                        options += fncRepresent(data[i], prepResult);
+                        options += '</option>';
+                    }
+                    if (this.optional) {
+                        currentValue = 0;
+                        options = '<option value=""></option>' + options;
+                    }
+                    if (this.currentValue) {
+                        currentValue = this.currentValue;
+                    }
+                }
+
+                var targetField = $('[name = "' + this.targetSelector + '"]');
+                // Convert IS_ONE_OF_EMPTY INPUT to a SELECT
+                var html = targetField.parent().html().replace('<input', '<select');
+                targetField.parent().html(html);
+                // reselect since it may have changed
+                targetField = $('[name = "' + this.targetSelector + '"]');
+                if (options !== '') {
+                    targetField.html(options)
+                               // Set the current field value
+                               .val(currentValue)
+                               .change()
+                               .prop('disabled', false)
+                               .show();
+                } else {
+                    // No options available => disable the target field
+                    targetField.prop('disabled', true)
+                               .show();
+                }
+
+                // Modify URL for Add-link and show the Add-link
+                var lookupResource = this.lookupResource;
+                var targetFieldAdd = $('#' + lookupResource + '_add');
+                if (targetFieldAdd.length !== 0) {
+                    var href = targetFieldAdd.attr('href');
+                    triggerField = $('[name = "' + this.triggerSelector + '"]');
+                    var triggerName = this.triggerName;
+                    if (href.indexOf(triggerName) == -1) {
+                        // Add to URL
+                        href += '&' + triggerName + '=' + triggerField.val();
                     } else {
-                        // Render the options
-                        var lookupField = this.lookupField;
-                        for (var i = 0; i < data.length; i++) {
-                            if (i === 0) {
-                                currentValue = data[i][lookupField];
-                            }
-                            options += '<option value="' + data[i][lookupField] + '">';
-                            options += fncRepresent(data[i], prepResult);
-                            options += '</option>';
-                        }
-                        if (this.optional) {
-                            currentValue = 0;
-                            options = '<option value=""></option>' + options;
-                        }
-                        if (this.currentValue) {
-                            currentValue = this.currentValue;
-                        }
+                        // Update URL
+                        var re = new RegExp(triggerName + '=.*', 'g');
+                        href = href.replace(re, triggerName + '=' + triggerField.val());
                     }
+                    targetFieldAdd.attr('href', href).show();
+                }
 
-                    var targetField = $('[name = "' + this.targetSelector + '"]');
-                    // Convert IS_ONE_OF_EMPTY INPUT to a SELECT
-                    var html = targetField.parent().html().replace('<input', '<select');
-                    targetField.parent().html(html);
-                    // reselect since it may have changed
-                    targetField = $('[name = "' + this.targetSelector + '"]');
-                    if (options !== '') {
-                        targetField.html(options)
-                                   // Set the current field value
-                                   .val(currentValue)
-                                   .change()
-                                   .prop('disabled', false)
-                                   .show();
-                    } else {
-                        // No options available => disable the target field
-                        targetField.prop('disabled', true)
-                                   .show();
-                    }
-
-                    // Modify URL for Add-link and show the Add-link
-                    var lookupResource = this.lookupResource;
-                    var targetFieldAdd = $('#' + lookupResource + '_add');
-                    if (targetFieldAdd.length !== 0) {
-                        var href = targetFieldAdd.attr('href');
-                        triggerField = $('[name = "' + this.triggerSelector + '"]');
-                        var triggerName = this.triggerName;
-                        if (href.indexOf(triggerName) == -1) {
-                            // Add to URL
-                            href += '&' + triggerName + '=' + triggerField.val();
-                        } else {
-                            // Update URL
-                            var re = new RegExp(triggerName + '=.*', 'g');
-                            href = href.replace(re, triggerName + '=' + triggerField.val());
-                        }
-                        targetFieldAdd.attr('href', href).show();
-                    }
-
-                    // Remove the throbber
-                    $('#' + lookupResource + '_ajax_throbber').remove();
-                    if (first) {
-                        // Don't include this change in the deliberate changes
-                        S3ClearNavigateAwayConfirm();
-                        first = false;
-                    }
+                // Remove the throbber
+                $('#' + lookupResource + '_ajax_throbber').remove();
+                if (first) {
+                    // Don't include this change in the deliberate changes
+                    S3ClearNavigateAwayConfirm();
+                    first = false;
                 }
             });
         } else {
@@ -1020,29 +1009,27 @@ function S3OptionsFilter(settings) {
             S3.JSONRequest[targetField.attr('id')] = $.ajax({
                 url: url,
                 dataType: 'html',
-                context: context,
-                success: function(data) {
-                    var targetWidget = $('[name = "' + this.targetWidget + '"]');
-                    if (data !== '') {
-                        // Replace the target field with the HTML returned
-                        targetWidget.html(data)
-                                    .change()
-                                    .prop('disabled', false)
-                                    .show();
-                    } else {
-                        // Disable the target field
-                        targetWidget.prop('disabled', true);
-                    }
-                    // Remove Throbber
-                    $('#' + this.lookupResource + '_ajax_throbber').remove();
-                    if (first) {
-                        // Don't include this change in the deliberate changes
-                        S3ClearNavigateAwayConfirm();
-                        first = false;
-                    }
+                context: context
+            }).done(function(data) {
+                var targetWidget = $('[name = "' + this.targetWidget + '"]');
+                if (data !== '') {
+                    // Replace the target field with the HTML returned
+                    targetWidget.html(data)
+                                .change()
+                                .prop('disabled', false)
+                                .show();
+                } else {
+                    // Disable the target field
+                    targetWidget.prop('disabled', true);
+                }
+                // Remove Throbber
+                $('#' + this.lookupResource + '_ajax_throbber').remove();
+                if (first) {
+                    // Don't include this change in the deliberate changes
+                    S3ClearNavigateAwayConfirm();
+                    first = false;
                 }
             });
-
         }
     });
 

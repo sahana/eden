@@ -174,31 +174,30 @@ $(document).ready(function() {
 			$.ajax( {
 				url: url,
 				dataType: 'json',
-				context: DIV,
-				success: function(data) {
-					RecvTable = '<table class="recv_table">';
-					for (i=0; i<data.length; i++) {
-						RecvTable += '<tr><td>';
-						if (i===0) {
-							// Header Row
-							RecvTable += data[0].id;
-						} else {
-							RecvURL = S3.Ap.concat('/', App, '/', ShipmentType, '/',  data[i].id, '/track_item');
-							RecvTable += "<a href='" + RecvURL + "'>";
-							if (data[i].date !== null) {
-								RecvTable += data[i].date.substring(0, 10) + ' - ';
-								RecvTable += data[i].name + '</a>';
-							} else {
-								RecvTable +=  ' - </a>';
-							}
-						}
-						RecvTable += '</td><td>' + data[i].quantity + '</td></tr>';
-					}
-					RecvTable += '</table>';
-					$('.quantity_req_ajax_throbber', this.parent()).remove();
-					this.parent().after(RecvTable);
-				}
-			});
+				context: DIV
+			}).done(function(data) {
+                RecvTable = '<table class="recv_table">';
+                for (i=0; i<data.length; i++) {
+                    RecvTable += '<tr><td>';
+                    if (i===0) {
+                        // Header Row
+                        RecvTable += data[0].id;
+                    } else {
+                        RecvURL = S3.Ap.concat('/', App, '/', ShipmentType, '/',  data[i].id, '/track_item');
+                        RecvTable += "<a href='" + RecvURL + "'>";
+                        if (data[i].date !== null) {
+                            RecvTable += data[i].date.substring(0, 10) + ' - ';
+                            RecvTable += data[i].name + '</a>';
+                        } else {
+                            RecvTable +=  ' - </a>';
+                        }
+                    }
+                    RecvTable += '</td><td>' + data[i].quantity + '</td></tr>';
+                }
+                RecvTable += '</table>';
+                $('.quantity_req_ajax_throbber', this.parent()).remove();
+                this.parent().after(RecvTable);
+            });
 		} else {
 			DIV.removeClass('expanded')
 			   .addClass('collapsed');
@@ -266,23 +265,22 @@ $(document).ready(function() {
 				// Save JSON Request by element id
 				S3.JSONRequest[$(this).attr('id')] = $.ajax( { 
 					url: url,
-					dataType: 'json',
-					success: function(data) {
-						$('#organisation_ajax_throbber').remove();
-						if (data.length > 0) {
-							$('#dummy_asset_log_organisation_id').show()
-																 .val(data[0].name)
-																 .prop('disabled', true);
-							$('#asset_log_organisation_id').val(data[0].id);
-						} else {
-							$('#dummy_asset_log_organisation_id').show()
-																 .val('')
-																 .prop('disabled', false);
-							$('#asset_log_organisation_id').val('');
-						}
-						
-					}
-				});
+					dataType: 'json'
+				}).done(function(data) {
+                    $('#organisation_ajax_throbber').remove();
+                    if (data.length > 0) {
+                        $('#dummy_asset_log_organisation_id').show()
+                                                             .val(data[0].name)
+                                                             .prop('disabled', true);
+                        $('#asset_log_organisation_id').val(data[0].id);
+                    } else {
+                        $('#dummy_asset_log_organisation_id').show()
+                                                             .val('')
+                                                             .prop('disabled', false);
+                        $('#asset_log_organisation_id').val('');
+                    }
+                    
+                });
 			} else {
 				$('#dummy_asset_log_organisation_id').val('')
 													 .prop('disabled', false);
@@ -310,34 +308,33 @@ $(document).ready(function() {
 			var url = S3.Ap.concat('/hrm/staff_org_site_json/', person_id);	
 			
 			// Save JSON Request by element id
-			S3.JSONRequest[$(this).attr('id')] = $.ajax( { 
+			S3.JSONRequest[$(this).attr('id')] = $.ajax({ 
 				url: url,
-				dataType: 'json',
-				success: function(data) {
-					$('#site_ajax_throbber').remove();
-					$('#organisation_ajax_throbber').remove();
-					if (data.length > 0) {
-						$('#dummy_asset_log_organisation_id').show()
-						 .val(data[0].name)
-						 .prop('disabled', true);
-						$('#asset_log_organisation_id').val(data[0].id);
-						$('#asset_log_site_id').show()
-											   .val(data[0].site_id)
-											   .prop('disabled', true)
-											   .change();
-					} else {
-						$('#dummy_asset_log_organisation_id').show()
-						 .val('')
-						 .prop('disabled', false);
-						$('#asset_log_organisation_id').val('');
-						$('#asset_log_site_id').show()
-											   .val('')
-											   .prop('disabled', false)
-											   .change();
-					}
-					
-				}
-			});
+				dataType: 'json'
+			}).done(function(data) {
+                $('#site_ajax_throbber').remove();
+                $('#organisation_ajax_throbber').remove();
+                if (data.length > 0) {
+                    $('#dummy_asset_log_organisation_id').show()
+                     .val(data[0].name)
+                     .prop('disabled', true);
+                    $('#asset_log_organisation_id').val(data[0].id);
+                    $('#asset_log_site_id').show()
+                                           .val(data[0].site_id)
+                                           .prop('disabled', true)
+                                           .change();
+                } else {
+                    $('#dummy_asset_log_organisation_id').show()
+                     .val('')
+                     .prop('disabled', false);
+                    $('#asset_log_organisation_id').val('');
+                    $('#asset_log_site_id').show()
+                                           .val('')
+                                           .prop('disabled', false)
+                                           .change();
+                }
+                
+            });
 		} else {
 			$('#asset_log_site_id').show()
 								   .val('')

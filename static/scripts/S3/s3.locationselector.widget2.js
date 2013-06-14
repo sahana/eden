@@ -260,24 +260,22 @@
         $.ajax({
             'async': false,
             'url': url,
-            'success': function(data) {
-                // Copy the elements across
-                for (var prop in n) {
-                    l[prop] = n[prop];
-                }
-                // Clear the memory
-                n = null;
-                // Hide Throbber
-                throbber.hide();
-            },
-            'error': function(request, status, error) {
-                if (error == 'UNAUTHORIZED') {
-                    msg = i18n.gis_requires_login;
-                } else {
-                    msg = request.responseText;
-                }
-            },
             'dataType': 'script'
+        }).done(function(data) {
+            // Copy the elements across
+            for (var prop in n) {
+                l[prop] = n[prop];
+            }
+            // Clear the memory
+            n = null;
+            // Hide Throbber
+            throbber.hide();
+        }).fail(function(request, status, error) {
+            if (error == 'UNAUTHORIZED') {
+                msg = i18n.gis_requires_login;
+            } else {
+                msg = request.responseText;
+            }
         });
     }
 

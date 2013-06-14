@@ -192,14 +192,15 @@ $(function() {
         var row_json = JSON.stringify(row);
         var response = null;
         $.ajaxS3({
+            async: false,
             type: 'POST',
             url: url,
             data: row_json,
             dataType: 'json',
+            // gets moved to .done() inside .ajaxS3
             success: function(data) {
                 response = data;
-            },
-            async: false
+            }
         });
 
         // Check and report errors

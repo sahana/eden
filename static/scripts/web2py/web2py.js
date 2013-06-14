@@ -9,18 +9,30 @@ function collapse(id) { jQuery('#' + id).slideToggle(); }
 function fade(id,value) { if(value>0) jQuery('#' + id).hide().fadeIn('slow'); else jQuery('#' + id).show().fadeOut('slow'); }
 function ajax(u,s,t) {
     query = '';
-    if (typeof s == "string") {
+    if (typeof s == 'string') {
         d = jQuery(s).serialize();
         if(d){ query = d; }
     } else {
         pcs = [];
         for(i=0; i<s.length; i++) {
-            q = jQuery("#"+s[i]).serialize();
+            q = jQuery('#' + s[i]).serialize();
             if(q){pcs.push(q);}
         }
-        if (pcs.length>0){query = pcs.join("&");}
+        if (pcs.length>0){query = pcs.join('&');}
     }
-    jQuery.ajax({type: "POST", url: u, data: query, success: function(msg) { if(t) { if(t==':eval') eval(msg); else jQuery("#" + t).html(msg); } } }); 
+    jQuery.ajax({
+        type: 'POST',
+        url: u,
+        data: query
+    }).done(function(msg) {
+        if (t) {
+            if (t==':eval') {
+                eval(msg);
+            } else {
+                jQuery('#' + t).html(msg);
+            }
+        }
+    }); 
 }
 String.prototype.reverse = function () { return this.split('').reverse().join('');};
 function web2py_ajax_init() {
@@ -72,10 +84,11 @@ function web2py_ajax_page(method, action, data, target) {
     'type': method,
     'url': action,
     'data': data,
-    'beforeSend':function(xhr) {
+    'beforeSend': function(xhr) {
       xhr.setRequestHeader('web2py-component-location', document.location);
-      xhr.setRequestHeader('web2py-component-element', target);},
-    'complete': function(xhr, text) {
+      xhr.setRequestHeader('web2py-component-element', target);
+    }
+    }).always(function(xhr, text) {
       var html=xhr.responseText;
       var content=xhr.getResponseHeader('web2py-component-content'); 
       var command=xhr.getResponseHeader('web2py-component-command');
@@ -88,7 +101,6 @@ function web2py_ajax_page(method, action, data, target) {
       web2py_ajax_init();      
       if(command) eval(command);
       if(flash) jQuery('.flash').html(flash).slideDown();
-      }
     });
 }
 function web2py_component(action, target) {

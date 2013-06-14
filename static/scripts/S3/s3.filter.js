@@ -396,18 +396,16 @@ S3.search = {};
         }
         $.ajax({
             'url': ajaxurl,
-            'success': function(data) {
-                updateOptions(data);
-            },
-            'error': function(request, status, error) {
-                if (error == 'UNAUTHORIZED') {
-                    msg = i18n.gis_requires_login;
-                } else {
-                    msg = request.responseText;
-                }
-                console.log(msg);
-            },
             'dataType': 'json'
+        }).done(function(data) {
+            updateOptions(data);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            if (errorThrown == 'UNAUTHORIZED') {
+                msg = i18n.gis_requires_login;
+            } else {
+                msg = jqXHR.responseText;
+            }
+            console.log(msg);
         });
     };
 
