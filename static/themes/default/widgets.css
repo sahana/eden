@@ -1094,10 +1094,12 @@ table.report td {
     padding-right: 16px;
     white-space: nowrap;
 }
-table.report .report-cell-value {
+table.report .report-cell-value,
+table.report .pt-cell-value {
     float: left;
 }
-table.report .report-cell-zoom {
+table.report .report-cell-zoom,
+table.report .pt-cell-zoom {
     width: 16px;
     height: 16px;
     float: right;
@@ -1105,10 +1107,12 @@ table.report .report-cell-zoom {
     background: url(../../img/silk/magnifier_zoom_in.png) no-repeat top right;
     cursor: pointer;
 }
-table.report .report-cell-records {
+table.report .report-cell-records,
+table.report .pt-cell-records {
     clear: left;
 }
-table.report .report-cell-zoom.opened {
+table.report .report-cell-zoom.opened,
+table.report .pt-cell-zoom.opened {
     background-image: url(../../img/silk/magnifier_zoom_out.png);
 }
 

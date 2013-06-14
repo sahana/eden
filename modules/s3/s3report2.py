@@ -77,6 +77,8 @@ class S3Report2(S3Method):
         output = {}
         
         resource = self.resource
+        get_config = resource.get_config
+
         widget_id = "pivottable"
 
         # Extract the relevant GET vars
@@ -92,27 +94,31 @@ class S3Report2(S3Method):
             
             rows = get_vars.get("rows", None)
             cols = get_vars.get("cols", None)
-            layer = get_vars.get("fact", None)
+            layer = get_vars.get("fact", "id")
 
             # Backward-compatiblity: alternative "aggregate" option
-            m = layer_pattern.match(layer)
-            if m is None:
-                selector = layer
-                if get_vars and "aggregate" in get_vars:
-                    method = get_vars["aggregate"]
+            if layer is not None:
+                m = layer_pattern.match(layer)
+                if m is None:
+                    selector = layer
+                    if get_vars and "aggregate" in get_vars:
+                        method = get_vars["aggregate"]
+                    else:
+                        method = "count"
                 else:
-                    method = "list"
+                    selector, method = m.group(2), m.group(1)
+                    
+            if not all([rows, cols, layer]):
+                pivottable = None
             else:
-                selector, method = m.group(2), m.group(1)
+                prefix = resource.prefix_selector
+                selector = prefix(selector)
+                layer = (selector, method)
+                get_vars["rows"] = prefix(rows) if rows else None
+                get_vars["cols"] = prefix(cols) if cols else None
+                get_vars["fact"] = "%s(%s)" % (method, selector)
 
-            prefix = resource.prefix_selector
-            selector = prefix(selector)
-            layer = (selector, method)
-            get_vars["rows"] = prefix(rows) if rows else None
-            get_vars["cols"] = prefix(cols) if cols else None
-            get_vars["fact"] = "%s(%s)" % (method, selector)
-
-            pivottable = resource.pivottable(rows, cols, [layer])
+                pivottable = resource.pivottable(rows, cols, [layer])
         else:
             pivottable = None
 
@@ -122,9 +128,30 @@ class S3Report2(S3Method):
 
             # Fall back to report options defaults
             if not get_vars:
-                report_options = resource.get_config("report_options")
+                report_options = get_config("report_options")
                 if report_options and "defaults" in report_options:
                     get_vars = report_options["defaults"]
+
+            # Filter widgets
+            hide_filter = attr.get("hide_filter", False)
+            filter_widgets = get_config("filter_widgets", None)
+            if filter_widgets and not hide_filter:
+
+                from s3filter import S3FilterForm
+                filter_formstyle = get_config("filter_formstyle", None)
+                filter_form = S3FilterForm(filter_widgets,
+                                           formstyle=filter_formstyle,
+                                           submit=False,
+                                           _class="filter-form",
+                                           _id="%s-filter-form" % widget_id)
+                fresource = current.s3db.resource(resource.tablename)
+                alias = resource.alias if r.component else None
+                filter_widgets = filter_form.fields(fresource,
+                                                    r.get_vars,
+                                                    alias=alias)
+            else:
+                # Render as empty string to avoid the exception in the view
+                filter_widgets = None
 
             # Generate the report form
             ajax_vars = Storage(r.get_vars)
@@ -133,8 +160,11 @@ class S3Report2(S3Method):
             output["form"] = S3ReportForm(resource) \
                                     .html(pivottable,
                                           get_vars = get_vars,
+                                          filter_widgets = filter_widgets,
                                           ajaxurl = ajaxurl,
                                           widget_id = widget_id)
+
+            # @todo: if pivottable is None: render a datatable instead
 
             # View
             current.response.view = self._view(r, "report2.html")
@@ -144,7 +174,7 @@ class S3Report2(S3Method):
             if pivottable:
                 output = json.dumps(pivottable.json())
             else:
-                output = {}
+                output = "null"
             
         elif r.representation == "aadata":
             r.error(501, r.ERROR.BAD_FORMAT)
@@ -178,6 +208,7 @@ class S3ReportForm(object):
     # -------------------------------------------------------------------------
     def html(self,
              pivottable,
+             filter_widgets=None,
              get_vars=None,
              ajaxurl=None,
              widget_id=None):
@@ -195,16 +226,43 @@ class S3ReportForm(object):
             hidden["pivotdata"] = json.dumps(pivottable.json())
             empty = ""
         else:
-            # @todo: fall back to datatable
             hidden["pivotdata"] = """null"""
             empty = current.T("Please select report options.")
             
         throbber = "/%s/static/img/indicator.gif" % current.request.application
 
+
+        if filter_widgets is not None:
+            filter_options = self._fieldset(current.T("Filter Options"),
+                                            filter_widgets,
+                                            _id="%s-filters" % widget_id)
+        else:
+            filter_options = ""
+
+        resource = self.resource
+        submit = resource.get_config("report_submit", True)
+        if submit:
+            _class = "pt-submit"
+            if submit is True:
+                label = current.T("Update Report")
+            elif isinstance(submit, (list, tuple)):
+                label = submit[0]
+                _class = "%s %s" % (submit[1], _class)
+            else:
+                label = submit
+            submit = TAG[""](
+                        INPUT(_type="button",
+                              _value=label,
+                              _class=_class))
+        else:
+            submit = ""
+
         # @todo: move CSS into static .css
         form = DIV(
                  DIV(
-                   FORM(report_options,
+                   FORM(filter_options,
+                        report_options,
+                        submit,
                         hidden = hidden,
                         _class = "pt-controls"
                    ),
@@ -256,14 +314,10 @@ $("#%(widget_id)s").pivottable({
 
         T = current.T
 
-        SHOW = T("Show")
-        HIDE = T("Hide")
         SHOW_TOTALS = T("Show totals")
         FACT = T("Report of")
         ROWS = T("Grouped by")
         COLS = T("and")
-        TITLE = T("Report Options")
-        SUBMIT = T("Submit")
 
         resource = self.resource
         options = resource.get_config("report_options")
@@ -329,36 +383,10 @@ $("#%(widget_id)s").pivottable({
                            )
                          )
 
-        resource = self.resource
-        submit = resource.get_config("report_submit", True)
-        if submit:
-            _class = "pt-submit"
-            if submit is True:
-                label = SUBMIT
-            elif isinstance(submit, (list, tuple)):
-                label = submit[0]
-                _class = "%s %s" % (submit[1], _class)
-            else:
-                label = submit
-            submit = TAG[""](
-                        INPUT(_type="button",
-                              _value=label,
-                              _class=_class))
-            selectors.append(TR(TD(), submit))
-
         # Render field set
-        fieldset = FIELDSET(LEGEND(TITLE,
-                                   BUTTON(SHOW,
-                                          _type="button",
-                                          _class="toggle-text",
-                                          _style="display:none"),
-                                   BUTTON(HIDE,
-                                          _type="button",
-                                          _class="toggle-text")
-                                   ),
-                            selectors,
-                            _id="%s-options" % widget_id
-                           )
+        fieldset = self._fieldset(T("Report Options"),
+                                  selectors,
+                                  _id="%s-options" % widget_id)
 
         return fieldset, hidden
 
@@ -567,5 +595,25 @@ $("#%(widget_id)s").pivottable({
                                       _name="fact",
                                       _class="pt-fact")
         return widget, {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _fieldset(title, widgets, **attr):
+
+        T = current.T
+        SHOW = T("Show")
+        HIDE = T("Hide")
+        
+        return FIELDSET(LEGEND(title,
+                               BUTTON(SHOW,
+                                      _type="button",
+                                      _class="toggle-text",
+                                      _style="display:none"),
+                               BUTTON(HIDE,
+                                      _type="button",
+                                      _class="toggle-text")
+                        ),
+                        widgets,
+                        **attr)
 
 # END =========================================================================

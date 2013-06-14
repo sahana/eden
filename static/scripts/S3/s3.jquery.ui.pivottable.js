@@ -142,7 +142,7 @@
 
             var cell, items, keys,
                 none = labels.none,
-                c = "report-cell-value",
+                c = "pt-cell-value",
                 row = [], column, value;
             
             for (var i = 0; i < cells.length; i++) {
@@ -169,7 +169,7 @@
                 keys = cell.keys;
                 if (items && keys && keys.length) {
                     column.data('records', keys)
-                          .append($('<div class="report-cell-zoom"></div>'));
+                          .append($('<div class="pt-cell-zoom"></div>'));
                 }
                 row.push(column);
             }
@@ -208,13 +208,35 @@
                 fact: $(widget_id + '-fact').val(),
                 totals: $(widget_id + '-totals').is(':checked') ? 1 : 0
             };
-
             return options;
         },
 
-        _updateAjaxURL: function(options) {
+        _getFilters: function() {
 
-            var ajaxURL = this.options.ajaxURL, needs_reload = false;
+            var widget_id = '#' + $(this.element).attr('id');
+
+            var filters = $(widget_id + '-filters'), filter_options = [];
+            try {
+                if (filters.length) {
+                    filter_options = S3.search.getCurrentFilters(filters.first());
+                } else {
+                    return null;
+                }
+            } catch (e) {}
+
+            var options = {};
+            for (var i=0, len=filter_options.length, opt; i < len; i++) {
+                opt = filter_options[i].split('=');
+                if (opt.length > 1) {
+                    options[opt[0]] = opt[1];
+                }
+            }
+            return options;
+        },
+
+        _updateAjaxURL: function(options, filters) {
+
+            var ajaxURL = this.options.ajaxURL;
 
             // Construct the URL
             var url_parts = ajaxURL.split('?'), query = {};
@@ -232,21 +254,45 @@
                 }
             }
 
-            for (option in options) {
-                if (option == 'totals') {
-                    this.options.showTotals = options[option] ? true : false;
-                }
-                if (option == 'rows' || option == 'cols' || option == 'fact') {
-                    if (query[option] != options[option]) {
+            var newopt, needs_reload = false;
+
+            if (options) {
+                for (option in options) {
+                    newopt = options[option];
+                    if (option == 'totals') {
+                        this.options.showTotals = newopt ? true : false;
+                    } else if (query[option] != newopt) {
                         needs_reload = true;
                     }
+                    query[option] = newopt ? newopt : null;
                 }
-                query[option] = options[option];
+            }
+            
+            if (filters) {
+                for (option in filters) {
+                    newopt = filters[option];
+                    if (query[option] != newopt) {
+                        needs_reload = true;
+                    }
+                    query[option] = newopt ? newopt : null;
+                }
+                for (option in query) {
+                    if (options.hasOwnProperty(option)) {
+                        continue;
+                    }
+                    newopt = filters[option];
+                    if (query[option] != newopt) {
+                        needs_reload = true;
+                    }
+                    query[option] = newopt ? newopt : null;
+                }
             }
             
             var url_queries = [], url_query;
-            for (v in query) {
-                url_queries.push(v + '=' + query[v]);
+            for (option in query) {
+                if (query[option] !== null) {
+                    url_queries.push(option + '=' + query[option]);
+                }
             }
             url_query = url_queries.join('&');
 
@@ -258,9 +304,14 @@
             return needs_reload;
         },
 
-        reload: function(options, force) {
+        reload: function(options, filters, force) {
 
-            force = typeof force !== 'undefined' ? force : true;
+            force = typeof force != 'undefined' ? force : true;
+
+            if (typeof filters == 'undefined') {
+                // extract filters
+                filters = this._getFilters();
+            }
 
             var pt = this, el = this.element, needs_reload;
             
@@ -269,8 +320,8 @@
                 return;
             }
 
-            if (options) {
-                needs_reload = this._updateAjaxURL(options);
+            if (options || filters) {
+                needs_reload = this._updateAjaxURL(options, filters);
             }
 
             if (needs_reload || force) {
@@ -308,34 +359,39 @@
                 $(this).siblings().toggle();
                 $(this).children().toggle();
             });
+            $('#' + widget_id + '-filters legend').click(function() {
+                $(this).siblings().toggle();
+                $(this).children().toggle();
+            });
             
             $('#' + widget_id + '-totals').click(function() {
                 var show_totals = $(this).is(':checked');
                 if (pt.options.showTotals != show_totals) {
-                    pt.reload({totals: show_totals}, false);
+                    pt.reload({totals: show_totals}, null, false);
                 }
             });
             
             // Submit
             $(el).find('input.pt-submit').click(function() {
-                var options = pt._getOptions();
-                pt.reload(options, false);
+                var options = pt._getOptions(),
+                    filters = pt._getFilters();
+                pt.reload(options, filters, false);
             });
 
             // Zoom in
-            $('#' + widget_id + ' div.pt-table div.report-cell-zoom').click(function(event) {
+            $('#' + widget_id + ' div.pt-table div.pt-cell-zoom').click(function(event) {
                 
                 var zoom = $(event.currentTarget);
                 var cell = zoom.closest('td'); //parent();
             
-                var values = cell.find('.report-cell-records');
+                var values = cell.find('.pt-cell-records');
                 if (values.length > 0) {
                     values.remove();
                     zoom.removeClass('opened');
                 } else {
                     var keys = cell.data('records');
 
-                    values = $('<div/>').addClass('report-cell-records');
+                    values = $('<div/>').addClass('pt-cell-records');
                     
                     var list = $('<ul/>');
                     for (var i=0; i < keys.length; i++) {
@@ -355,8 +411,9 @@
             var widget_id = $(el).attr('id');
 
             $(el).find('input.pt-submit').unbind('click');
-            $('#' + widget_id + ' div.pt-table div.report-cell-zoom').unbind('click');
+            $('#' + widget_id + ' div.pt-table div.pt-cell-zoom').unbind('click');
             $('#' + widget_id + '-options legend').unbind('click');
+            $('#' + widget_id + '-filters legend').unbind('click');
             $(widget_id + '-totals').unbind('click');
         }
     });

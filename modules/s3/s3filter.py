@@ -1188,7 +1188,7 @@ class S3FilterForm(object):
     # -------------------------------------------------------------------------
     def html(self, resource, get_vars=None, target=None, alias=None):
         """
-            Render this filter form as HTML
+            Render this filter form as HTML form.
 
             @param resource: the S3Resource
             @param get_vars: the request GET vars (URL query dict)
@@ -1201,27 +1201,10 @@ class S3FilterForm(object):
         if not formstyle:
             formstyle = self._formstyle
 
-        rows = []
-        rappend = rows.append
-        for f in self.widgets:
-            widget = f(resource, get_vars, alias=alias)
-            label = f.opts["label"]
-            comment = f.opts["comment"]
-            hidden = f.opts["hidden"]
-            widget_id = f.attr["_id"]
-            if widget_id:
-                row_id = "%s__row" % widget_id
-                label_id = "%s__label" % widget_id
-            else:
-                row_id = None
-                label_id = None
-            if label:
-                label = LABEL("%s :" % label, _id=label_id, _for=widget_id)
-            else:
-                label = ""
-            if not comment:
-                comment = ""
-            rappend(formstyle(row_id, label, widget, comment, hidden=hidden))
+        rows = self._render_widgets(resource,
+                                    get_vars=get_vars,
+                                    alias=alias,
+                                    formstyle=formstyle)
 
         submit = self.opts.get("submit", False)
         if submit:
@@ -1256,7 +1239,7 @@ class S3FilterForm(object):
                                     _class="filter-submit-target",
                                     _value=target))
 
-            rappend(formstyle(None, "", submit, ""))
+            rows.append(formstyle(None, "", submit, ""))
 
         # Adapt to formstyle: only render a TABLE if formstyle returns TRs
         if rows:
@@ -1272,6 +1255,80 @@ class S3FilterForm(object):
 
         return form
 
+    # -------------------------------------------------------------------------
+    def fields(self, resource, get_vars=None, alias=None):
+        """
+            Render the filter widgets without FORM wrapper, e.g. to
+            embed them as fieldset in another form.
+
+            @param resource: the S3Resource
+            @param get_vars: the request GET vars (URL query dict)
+            @param alias: the resource alias to use in widgets
+        """
+
+        formstyle = self.opts.get("formstyle", None)
+        if not formstyle:
+            formstyle = self._formstyle
+
+        rows = self._render_widgets(resource,
+                                    get_vars=get_vars,
+                                    alias=alias,
+                                    formstyle=formstyle)
+
+        # Adapt to formstyle: only render a TABLE if formstyle returns TRs
+        if rows:
+            elements = rows[0]
+            if not isinstance(elements, (list, tuple)):
+                elements = elements.elements()
+            n = len(elements)
+            if n > 0 and elements[0].tag == "tr" or \
+               n > 1 and elements[0].tag == "" and elements[1].tag == "tr":
+                fields = TABLE(TBODY(rows))
+            else:
+                fields = DIV(rows)
+
+        return fields
+
+    # -------------------------------------------------------------------------
+    def _render_widgets(self,
+                        resource,
+                        get_vars=None,
+                        alias=None,
+                        formstyle=None):
+        """
+            Render the filter widgets
+    
+            @param resource: the S3Resource
+            @param get_vars: the request GET vars (URL query dict)
+            @param alias: the resource alias to use in widgets
+            @param formstyle: the formstyle to use
+
+            @return: a list of form rows
+        """
+        
+        rows = []
+        rappend = rows.append
+        for f in self.widgets:
+            widget = f(resource, get_vars, alias=alias)
+            label = f.opts["label"]
+            comment = f.opts["comment"]
+            hidden = f.opts["hidden"]
+            widget_id = f.attr["_id"]
+            if widget_id:
+                row_id = "%s__row" % widget_id
+                label_id = "%s__label" % widget_id
+            else:
+                row_id = None
+                label_id = None
+            if label:
+                label = LABEL("%s :" % label, _id=label_id, _for=widget_id)
+            else:
+                label = ""
+            if not comment:
+                comment = ""
+            rappend(formstyle(row_id, label, widget, comment, hidden=hidden))
+        return rows
+            
     # -------------------------------------------------------------------------
     def json(self, resource, get_vars=None):
         """

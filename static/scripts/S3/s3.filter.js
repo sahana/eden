@@ -30,14 +30,16 @@ S3.search = {};
     /**
      * getCurrentFilters: retrieve all current filters
      */
-    var getCurrentFilters = function() {
+    var getCurrentFilters = function(form) {
+
+        form = typeof form !== 'undefined' ? form : $('body');
 
         // @todo: allow form selection (=support multiple filter forms per page)
 
         var queries = [];
 
         // Text widgets
-        $('.text-filter:visible').each(function() {
+        form.find('.text-filter:visible').each(function() {
 
             var id = $(this).attr('id');
 
@@ -53,14 +55,14 @@ S3.search = {};
         });
 
         // Options widgets
-        $('.ui-multiselect:visible').prev(
-          '.options-filter.multiselect-filter-widget,' +
-          '.options-filter.groupedopts-filter-widget')
+        form.find('.ui-multiselect:visible').prev(
+                  '.options-filter.multiselect-filter-widget,' +
+                  '.options-filter.groupedopts-filter-widget')
         .add(
-        $('.options-filter:visible,' +
-          '.options-filter.groupedopts-filter-widget.active,' +
-          '.options-filter.multiselect-filter-widget.active,' +
-          '.options-filter.multiselect-filter-bootstrap.active'))
+        form.find('.options-filter:visible,' +
+                  '.options-filter.groupedopts-filter-widget.active,' +
+                  '.options-filter.multiselect-filter-widget.active,' +
+                  '.options-filter.multiselect-filter-bootstrap.active'))
         .each(function() {
             var id = $(this).attr('id');
             var url_var = $('#' + id + '-data').val();
@@ -103,7 +105,7 @@ S3.search = {};
         });
 
         // Numerical range widgets -- each widget has two inputs.
-        $('.range-filter-input:visible').each(function() {
+        form.find('.range-filter-input:visible').each(function() {
             var id = $(this).attr('id');
             var url_var = $('#' + id + '-data').val();
             var value = $(this).val();
@@ -113,7 +115,7 @@ S3.search = {};
         });
 
         // Date(time) range widgets -- each widget has two inputs.
-        $('.date-filter-input:visible').each(function() {
+        form.find('.date-filter-input:visible').each(function() {
             var id = $(this).attr('id'), value = $(this).val();
             var url_var = $('#' + id + '-data').val(), dt, dtstr;
             var pad = function (val, len) {
@@ -160,11 +162,11 @@ S3.search = {};
         });
 
         // Location widgets
-        $('.ui-multiselect:visible').prev(
+        form.find('.ui-multiselect:visible').prev(
           '.location-filter.multiselect-filter-widget,' +
           '.location-filter.groupedopts-filter-widget')
         .add(
-        $('.location-filter:visible,' +
+        form.find('.location-filter:visible,' +
           '.location-filter.multiselect-filter-widget.active,' +
           '.location-filter.multiselect-filter-bootstrap.active'))
         .each(function() {
@@ -206,6 +208,8 @@ S3.search = {};
         // return queries to caller
         return queries;
     };
+    // Pass to global scope to be called by s3.jquery.ui.pivottable.js
+    S3.search.getCurrentFilters = getCurrentFilters;
 
     /**
      * Update a variable in the query part of the filter-submit URL
