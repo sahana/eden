@@ -57,9 +57,12 @@ class S3Migration(object):
         migrate.prep(foreigns=[],
                      uniques=[],
                      strints=[],
+                     strbools=[],
                      )
         #migrate.migrate()
-        migrate.post(strints=[])
+        migrate.post(strints=[],
+                     strbools=[],
+                     )
 
         FYI: If you need to access a filename in eden/databases/ then here is how:
         import hashlib
@@ -112,7 +115,7 @@ class S3Migration(object):
                       )
 
     # -------------------------------------------------------------------------
-    def prep(self, foreigns=[], uniques=[], strints=[]):
+    def prep(self, foreigns=[], uniques=[], strints=[], strbools=[]):
         """
             Preparation before migration
 
@@ -120,6 +123,7 @@ class S3Migration(object):
                               - if tablename == "all" then all tables are checked
             @param uniques  : List of tuples (tablename, fieldname) to have the unique indices removed,
             @param strints  : List of tuples (tablename, fieldname) to convert from string to integer
+            @param strbools : List of tuples (tablename, fieldname) to convert from string/integer to bools
         """
 
         # Backup current database
@@ -135,6 +139,8 @@ class S3Migration(object):
 
         # Remove fields which need to be altered in next code
         for tablename, fieldname in strints:
+            self.drop(tablename, fieldname)
+        for tablename, fieldname in strbools:
             self.drop(tablename, fieldname)
 
         self.db.commit()
@@ -155,11 +161,12 @@ class S3Migration(object):
         pass
 
     # -------------------------------------------------------------------------
-    def post(self, strints=[]):
+    def post(self, strints=[], strbools=[]):
         """
             Cleanup after migration
 
             @param strints : List of tuples (tablename, fieldname) to convert from string to integer
+            @param strbools : List of tuples (tablename, fieldname) to convert from string/integer to bools
         """
 
         db = self.db
@@ -192,7 +199,42 @@ class S3Migration(object):
                 else:
                     db(newtable.id == id).update(**vars)
 
+        for tablename, fieldname in strbools:
+            to_bool = self.to_bool
+            newtable = db[tablename]
+            newrows = db(newtable.id > 0).select(newtable.id)
+            oldtable = db_bak[tablename]
+            oldrows = db_bak(oldtable.id > 0).select(oldtable.id,
+                                                     oldtable[fieldname])
+            oldvals = oldrows.as_dict()
+            for row in newrows:
+                id = row.id
+                val = oldvals[id][fieldname]
+                if not val:
+                    continue
+                val = to_bool(val)
+                if val:
+                    vars = {fieldname : val}
+                    db(newtable.id == id).update(**vars)
+
         db.commit()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def to_bool(value):
+        """
+           Converts 'something' to boolean. Raises exception for invalid formats
+            Possible True  values: 1, True, "1", "TRue", "yes", "y", "t"
+            Possible False values: 0, False, "0", "faLse", "no", "n", "f", 0.0
+        """
+
+        val = str(value).lower()
+        if val in ("yes", "y", "true",  "t", "1"):
+            return True
+        elif val in ("no",  "n", "false", "f", "0", "0.0"):
+            return False
+        else:
+            return None
 
     # -------------------------------------------------------------------------
     def backup(self):
