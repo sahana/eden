@@ -34,8 +34,6 @@ S3.search = {};
 
         form = typeof form !== 'undefined' ? form : $('body');
 
-        // @todo: allow form selection (=support multiple filter forms per page)
-
         var queries = [];
 
         // Text widgets
