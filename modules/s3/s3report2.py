@@ -226,19 +226,19 @@ class S3ReportForm(object):
 
         # Settings
         settings = current.deployment_settings
-        hide_report_options = settings.get_ui_hide_report_options()
+        collapse = settings.get_ui_hide_report_options()
 
         # jQuery-ready script
         script = """
 $("#%(widget_id)s").pivottable({
   showTotals: %(totals)s,
-  hideReportOptions: %(hide)s,
+  collapseForm: %(collapse)s,
   ajaxURL: %(ajaxurl)s
 });""" % {
             "widget_id": widget_id,
             "totals": "true" if self.show_totals else "false",
-            "hide": "true" if hide_report_options else "false",
-            "ajaxurl": '"%s"' % ajaxurl if ajaxurl else "null",
+            "collapse": "true" if collapse else "false",
+            "ajaxurl": "'%s'" % ajaxurl if ajaxurl else "null",
          }
          
         current.response.s3.jquery_ready.append(script)

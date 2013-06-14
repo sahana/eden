@@ -18,7 +18,7 @@
         // default options
         options: {
             showTotals: true,
-            hideReportOptions: true,
+            collapseForm: true,
             ajaxURL: null
         },
 
@@ -38,7 +38,7 @@
             var el = this.element;
 
             // Hide report options initially?
-            if (this.options.hideReportOptions) {
+            if (this.options.collapseForm) {
                 var widget_id = $(el).attr('id');
                 $('#' + widget_id + '-options legend').siblings().toggle();
                 $('#' + widget_id + '-options legend').children().toggle();
@@ -97,13 +97,14 @@
 
         _renderHeader: function(cols, labels) {
 
-            var colspan = this.options.showTotals ? cols.length + 1 : colspan = cols.length;
-            
             var header = $('<tr>');
 
             header.append($('<th scope="col">' + labels['layer'] + '</th>'))
-                  .append($('<th scope="col" colspan="' + colspan + '">' + labels['cols'] + '</th>'));
+                  .append($('<th scope="col" colspan="' + cols.length + '">' + labels['cols'] + '</th>'));
 
+            if (this.options.showTotals) {
+                header.append($('<th class="totals_header row_totals" scope="col" rowspan="2">' + labels.total + '</th>'));
+            }
             return $('<thead>').append(header);
         },
 
@@ -117,9 +118,6 @@
                 columns.append($('<th scope="col">' + cols[i][2] + '</th>'));
             }
 
-            if (this.options.showTotals) {
-                columns.append($('<th class="totals_header row_totals" scope="col">' + labels.total + '</th>'));
-            }
             return columns;
         },
 
@@ -280,19 +278,17 @@
                 $(el).find('.pt-throbber').show();
                 $.ajax({
                     'url': ajaxURL,
-                    'success': function(data) {
-                        pivotdata.first().val(JSON.stringify(data));
-                        pt.refresh();
-                    },
-                    'error': function(request, status, error) {
-                        if (error == 'UNAUTHORIZED') {
-                            msg = i18n.gis_requires_login;
-                        } else {
-                            msg = request.responseText;
-                        }
-                        console.log(msg);
-                    },
                     'dataType': 'json'
+                }).done(function(data) {
+                    pivotdata.first().val(JSON.stringify(data));
+                    pt.refresh();
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    if (errorThrown == 'UNAUTHORIZED') {
+                        msg = i18n.gis_requires_login;
+                    } else {
+                        msg = jqXHR.responseText;
+                    }
+                    console.log(msg);
                 });
             } else {
                 $(el).find('.pt-throbber').show();
