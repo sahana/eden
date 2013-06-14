@@ -89,6 +89,7 @@ from s3filter import *
 
 # Reporting
 from s3report import *
+from s3report2 import *
 
 # Profiles
 from s3profile import *
