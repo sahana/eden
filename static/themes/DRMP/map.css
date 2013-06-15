@@ -6,12 +6,6 @@
     max-width: none;
 }
 
-/* Map DIV */
-/* Doesn't seem to do anything
-.x-border-layout-ct {
-    border: 1px solid #cbcaca;
-} */
-
 /* West Panel */
 .x-panel-body {
     background-color: #f5f6f5;
@@ -31,36 +25,32 @@
 }
 
 /* Collapse arrow in section headers */
+
 .x-tool {
     margin-top: 2px;
 }
 
-/* Attachments button */
 .olFramedCloudPopupContent {
-    overflow: visible;
-}
-.olFramedCloudPopupContent .btn-group > .dropdown-toggle {
-    margin-top: -25px;
+	font-size: 12px;
 }
 
-/* Layer Tree */
-/* Radio
-input.x-tree-node-cb {
-    margin-left: 6px;
-} */
+.olFramedCloudPopupContent ul {
+	display: block;
+	list-style-type: disc;
+	padding: 0 5px 5px 20px;
 
-/*
-.x-tree-node {
-    padding: 2px;
-} */
+}
 
-/* Toolbar */
-/*
-.x-toolbar.x-small-editor.x-toolbar-layout-ct {
-    display: none;
-}*/
+#activetooltip_GroupDiv {
+	background-color: #fff;
+	border: 1px solid #aaa7a7;
+	border-radius: 4px;
+	font-size: 12px;
+	padding: 0 3px 0 0;
+}
 
-/* ext-gen IDs assigned dynamically, so need to fins another way to identify this
-div#ext-gen19 {
-    border-style: none;
-} */
+.x-form-text.x-form-field {
+	margin-bottom: -2px;
+	margin-top: 2px;
+	margin-left: 10px;
+}
