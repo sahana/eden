@@ -117,14 +117,14 @@ div.dl {
 
 /* Push down below Nav */
 #alert-space {
-	position: fixed;
-	left: 0;
-	right: 0;
-	z-index: 7000;
+    position: fixed;
+    left: 0;
+    right: 0;
+    z-index: 7000;
 }
 
 #home {
-	margin-top: 55px;
+    margin-top: 55px;
 }
 
 .alert.alert-error, 
@@ -134,25 +134,25 @@ div.dl {
     position: relative;
     margin-left: auto;
     margin-right: auto;
-	z-index: 7000;
-	-moz-box-shadow: 0 -1px 3px #d7d7d6;
-	-webkit-box-shadow: 0 -1px 3px #d7d7d6;
-	box-shadow: 0 -1px 3px #d7d7d6;
-	-moz-box-shadow: 0 1px 1px #aaaaa7;
-	-webkit-box-shadow: 0 1px 1px #aaaaa7;
-	box-shadow: 0 1px 1px #aaaaa7;
+    z-index: 7000;
+    -moz-box-shadow: 0 -1px 3px #d7d7d6;
+    -webkit-box-shadow: 0 -1px 3px #d7d7d6;
+    box-shadow: 0 -1px 3px #d7d7d6;
+    -moz-box-shadow: 0 1px 1px #aaaaa7;
+    -webkit-box-shadow: 0 1px 1px #aaaaa7;
+    box-shadow: 0 1px 1px #aaaaa7;
 }
 
 #email__error,
 #password__error {
-	margin-left: 15px;
-	padding: 5px;
-	border-radius: 4px;
-	border: 1px solid #b2b2b2;
-	font-weight: normal;
-	font-style: normal;
-	color: #b84947;
-	background-color: #f2dedd;
+    margin-left: 15px;
+    padding: 5px;
+    border-radius: 4px;
+    border: 1px solid #b2b2b2;
+    font-weight: normal;
+    font-style: normal;
+    color: #b84947;
+    background-color: #f2dedd;
 }
 
 a.btn.btn-primary.main-add {
@@ -291,7 +291,7 @@ form.pr_person table.embeddedComponent td,
 
 table#datatable.dataTable.display {
     background-color: #fff;
-	margin-top: 10px;
+    margin-top: 10px;
 }
 
 #datatable_wrapper {
@@ -317,10 +317,9 @@ table#datatable.dataTable.display {
     position: relative;
     padding-right: 25px;
     margin-bottom: -37px;
-
     font-weight: bold;
-	margin-top: 7px;
-	margin-left: 13px;
+    margin-top: 7px;
+    margin-left: 13px;
 }
 
 #datatable_length label select {
@@ -330,8 +329,8 @@ table#datatable.dataTable.display {
 #datatable_length label {
     font-size: 12px;
     margin-bottom: -1px;
-	position: relative;
-	top: 17px;
+    position: relative;
+    top: 17px;
 }
 
 #datatable_info.dataTables_info {
@@ -339,9 +338,9 @@ table#datatable.dataTable.display {
     padding-right: 15px;
     color: #D35400;
     line-height: 16px;
-	position: relative;
-	padding-top: 5px;
-	top: 11px;
+    position: relative;
+    padding-top: 5px;
+    top: 11px;
 }
 
 #datatable thead tr {
@@ -378,22 +377,22 @@ table#datatable.dataTable.display {
 }
 
 #datatable_paginate {
-	margin-top: 15px;
+    margin-top: 15px;
 }
 
 #datatable_paginate span a.paginate_button {
-	background-color: #fff;
-	border: 1px solid #b7b7b7;
-	border-radius: 4px;
-	font-size: 13px;
-	color: #666;
-	
+    background-color: #fff;
+    border: 1px solid #b7b7b7;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #666;
+    
 }
 
 #datatable_paginate span a.paginate_active {
-	background: #b0cee6;
-	font-size: 13px;
-	color: #666;
+    background: #b0cee6;
+    font-size: 13px;
+    color: #666;
 }
 
 
@@ -401,20 +400,20 @@ a#datatable_previous.previous.paginate_button,
 a#datatable_first.first.paginate_button,
 a#datatable_last.last.paginate_button,
 a#datatable_next.next.paginate_button  {
-	background-color: #fff;
-	border: 1px solid #b7b7b7;
-	border-radius: 4px;
-	font-size: 13px;
-	color: #666;
+    background-color: #fff;
+    border: 1px solid #b7b7b7;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #666;
 }
 
 #datatable_wrapper div.dataTables_info {
-	position: relative;
-	top: 9px;
-	margin-right: 15px;
-	font-size: 13px;
-	color: #666;
-	margin-bottom: 15px;
+    position: relative;
+    top: 9px;
+    margin-right: 15px;
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 15px;
 }
 
 h2 {
@@ -423,7 +422,7 @@ h2 {
 }
 
 #last_update {
-	color: #D35400;
+    color: #D35400;
 }
 
 #markDuplicate {
@@ -700,7 +699,4 @@ form.form-horizontal {  /*temporary we need to pass another class to the form so
     padding-top: 15px;
     padding-left: 12px;
 }
-
-
-
 

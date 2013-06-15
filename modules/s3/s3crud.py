@@ -549,7 +549,7 @@ class S3CRUD(S3Method):
 
                 # Details Link
                 popup_url = _config("popup_url", None)
-                if not popup_url:
+                if popup_url is None:
                     popup_url = r.url(method="read", representation="html")
                 if popup_url:
                     details_btn = A(T("Show Details"),

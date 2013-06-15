@@ -148,6 +148,7 @@ def currency_represent(v):
     """
         Custom Representation of Currencies
     """
+
     if v == "USD":
         return "$"
     elif v == "AUD":
@@ -1656,7 +1657,9 @@ def customize_cms_post_fields():
 # -----------------------------------------------------------------------------
 def cms_post_popup(r):
     """
-        Customized popup for cms_post resource
+        Customized Map popup for cms_post resource
+        - style like the cards
+        - currently unused
     """
 
     T = current.T
@@ -1956,9 +1959,20 @@ def customize_cms_post(**attr):
              r.method != "search":
             # Map Popups
             table = r.table
-            table.created_by.represent = s3_auth_user_represent_name
-            table.created_on.represent = datetime_represent
             table.location_id.represent = location_represent
+            table.created_by.represent = s3_auth_user_represent_name
+            # Used by default popups
+            series = T(table.series_id.represent(r.record.series_id))
+            s3.crud_strings["cms_post"].title_display = "%(series)s Details" % dict(series=series)
+            current.s3db.configure("cms_post", popup_url="")
+            table.avatar.readable = False
+            table.body.label = ""
+            table.expired.readable = False
+            table.replies.readable = False
+            table.created_by.readable = True
+            table.created_by.label = T("Author")
+            # Used by cms_post_popup
+            #table.created_on.represent = datetime_represent
 
         return True
     s3.prep = custom_prep
@@ -1978,7 +1992,8 @@ def customize_cms_post(**attr):
         elif r.representation == "plain" and \
              r.method != "search":
             # Map Popups
-            output = cms_post_popup(r)
+            #output = cms_post_popup(r)
+            pass
 
         return output
     s3.postp = custom_postp

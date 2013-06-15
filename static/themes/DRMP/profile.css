@@ -101,18 +101,18 @@ h4.profile-sub-header {
     text-decoration: none;
     text-transform: none;
     color: #999;
-	border-left-style: none;
+    border-left-style: none;
 }
 .card-holder .location-title {
     font: bold 13px "Helvetica Neue", Arial, sans-serif;
     color: #333333;
     padding-left: 50px;
     border-left: 0;
-	margin-left: 0px;
+    margin-left: 0px;
 }
 
 .card-holder .location-title a {
-	color: #626261;
+    color: #626261;
 }
 
 .card-holder .card_comments {
@@ -181,8 +181,8 @@ h4.profile-sub-header {
 }
 
 div.more_profile {
-	text-align: center;
-	padding: 5px;	
+    text-align: center;
+    padding: 5px;	
 }
 
 .s3_modal button.btn.btn-mini {
@@ -218,21 +218,16 @@ div.more_profile {
 }
 
 .card-header-select span a.media-heading {
-	font-size: 14px;
-	font-weight: bold;
-	color: #656665;
+    font-size: 14px;
+    font-weight: bold;
+    color: #656665;
 }
 
 .card-header-select span a.media-heading:hover{
-	color: #0187cc;
-	text-decoration: none;
-	
+    color: #0187cc;
+    text-decoration: none;
 }
 
 .card-header-select span.date-title {
-	border-left-style: none;
-
+    border-left-style: none;
 }
-
-
-

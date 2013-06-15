@@ -25,32 +25,38 @@
 }
 
 /* Collapse arrow in section headers */
-
 .x-tool {
     margin-top: 2px;
 }
 
+/* Popups */
 .olFramedCloudPopupContent {
-	font-size: 12px;
+    font-size: 12px;
+    /* Needed if using Attachments button
+    overflow: visible;*/
 }
+/* Attachments button
+.olFramedCloudPopupContent .btn-group > .dropdown-toggle {
+    margin-top: -25px;
+    font-size: 12px;
+}*/
 
 .olFramedCloudPopupContent ul {
-	display: block;
-	list-style-type: disc;
-	padding: 0 5px 5px 20px;
-
+    display: block;
+    list-style-type: disc;
+    padding: 0 5px 5px 20px;
 }
 
 #activetooltip_GroupDiv {
-	background-color: #fff;
-	border: 1px solid #aaa7a7;
-	border-radius: 4px;
-	font-size: 12px;
-	padding: 0 3px 0 0;
+    background-color: #fff;
+    border: 1px solid #aaa7a7;
+    border-radius: 4px;
+    font-size: 12px;
+    padding: 0 3px 0 0;
 }
 
 .x-form-text.x-form-field {
-	margin-bottom: -2px;
-	margin-top: 2px;
-	margin-left: 10px;
+    margin-bottom: -2px;
+    margin-top: 2px;
+    margin-left: 10px;
 }
