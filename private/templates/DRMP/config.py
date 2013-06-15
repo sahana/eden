@@ -175,17 +175,20 @@ def location_represent(id, row=None):
                                                 table.L3,
                                                 limitby=(0, 1)).first()
 
-    if row.L3:
-        represent = "%s | %s | %s" % (s3_unicode(row.L1) if row.L1 else "",
-                                      s3_unicode(row.L2) if row.L2 else "",
-                                      s3_unicode(row.L3) if row.L3 else "",
+    L1 = row.L2
+    L2 = row.L2
+    L3 = row.L3
+    if L3:
+        represent = "%s | %s | %s" % (s3_unicode(L1) if L1 else "",
+                                      s3_unicode(L2) if L2 else "",
+                                      s3_unicode(L3) if L3 else "",
                                       )
-    elif row.L2:
-        represent = "%s | %s" % (s3_unicode(row.L1) if row.L1 else "",
-                                 s3_unicode(row.L2) if row.L2 else "",
+    elif L2:
+        represent = "%s | %s" % (s3_unicode(L1) if L1 else "",
+                                 s3_unicode(L2) if L2 else "",
                                  )
-    elif row.L1:
-        represent = row.L1
+    elif L1:
+        represent = s3_unicode(L1)
     else:
         represent = current.messages["NONE"]
 
@@ -605,10 +608,12 @@ def render_locations(listid, resource, rfields, record, **attr):
             tally_reports += 1
     
     # Render the item
+    import urllib
     item = DIV(DIV(A(IMG(_class="media-object",
-                         _src=URL(c="static",
-                                  f="themes",
-                                  args=["DRMP", "img", "%s.png" % s3_unicode(name)]),
+                         _src="%s/%s.png" % (URL(c="static",
+                                                 f="themes",
+                                                 args=["DRMP", "img"]),
+                                             urllib.quote(s3_unicode(name))),
                          ),
                      _class="pull-left",
                      _href=location_url,
