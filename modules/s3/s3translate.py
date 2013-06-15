@@ -95,7 +95,7 @@ class TranslateAPI:
             """ Return a list of modules """
 
             return self.grp.modlist
-
+        
         # ---------------------------------------------------------------------
         def get_files_by_module(self, module):
             """ Return a list of files corresponding to a module """
@@ -201,7 +201,7 @@ class TranslateGetFiles:
 
             # Directories which are not required to be searched
             self.rest_dirs = ["languages", "docs", "tests",
-                              "test", ".git", "uploads"]
+                              "test", ".git", "uploads", "private"]
 
         # ---------------------------------------------------------------------
         def get_module_list(self):
@@ -226,7 +226,7 @@ class TranslateGetFiles:
             """
                 Recursive function to group Eden files into respective modules
             """
-
+            
             appname = current.request.application
 
             path = os.path
@@ -1055,7 +1055,7 @@ class StringsToExcel:
             """
 
             uniq = {}
-            appname = request.application
+            appname = current.request.application
 
             for (loc, data) in Strings:
                 uniq[data] = ""
@@ -1135,7 +1135,7 @@ class StringsToExcel:
             return output.read()
 
         # ---------------------------------------------------------------------
-        def convert_to_xls(self, langfile, modlist, filelist, filetype):
+        def convert_to_xls(self, langfile, modlist, filelist, filetype, all_template_flag):
             """
                 Function to get the strings by module(s)/file(s), merge with
                 those strings from existing w2p language file which are already
@@ -1145,6 +1145,7 @@ class StringsToExcel:
             """
 
             request = current.request
+            settings = current.deployment_settings
             appname = request.application
             langfile = os.path.join(request.folder, "languages", langfile)
 
@@ -1156,6 +1157,14 @@ class StringsToExcel:
 
             NewStrings = []
             A = TranslateAPI()
+
+            # If all templates are selected
+            if all_template_flag == 1:
+                A.grp.group_files(os.path.join(current.request.folder, "private", "templates"), "", 0)
+            # if some particular template is selected
+            else:
+                template_folder = os.path.join(current.request.folder, "private", "templates", settings.base.template)
+                A.grp.group_files(template_folder, "", 0)
             R = TranslateReadFiles()
 
             # Retrieve strings for a module
