@@ -780,6 +780,7 @@ def translate():
 
         opt = request.vars.opt
         if opt == "1":
+
             # Select modules for Translation
             if form.accepts(request.vars, session):
 
@@ -794,9 +795,11 @@ def translate():
                 # If no module is selected
                 if modlist is None:
                     modlist = []
-
+                
                 # If "Select All" option is chosen
+                all_template_flag = 0
                 if "all" in modlist:
+                    all_template_flag = 1
                     A = TranslateAPI()
                     modlist = A.get_modules()
                     if "core" in form.request_vars.module_list:
@@ -818,7 +821,7 @@ def translate():
 
                 # Generating the xls file for download
                 X = StringsToExcel()
-                output = X.convert_to_xls(code, modlist, [], filetype)
+                output = X.convert_to_xls(code, modlist, [], filetype, all_template_flag)
                 return output
 
             # Creating a form with checkboxes for list of modules
@@ -826,6 +829,9 @@ def translate():
             modlist = A.get_modules()
             modlist.sort()
             modcount = len(modlist)
+            
+            # Retreiving list of active modules
+            activemodlist = settings.modules.keys()
 
             langlist = A.get_langcodes()
             langlist.sort()
@@ -841,9 +847,12 @@ def translate():
             max_rows = int(ceil(modcount / float(NO_OF_COLUMNS)))
 
             while num < max_rows:
+                check = None
+                if modlist[num] in activemodlist:
+                    check = "yes"
                 row = TR(TD(num + 1),
                          TD(INPUT(_type="checkbox", _name="module_list",
-                                  _value=modlist[num])),
+                                  _value=modlist[num], _checked = check)),
                          TD(modlist[num]))
                 for c in range(1, NO_OF_COLUMNS):
                     cmax_rows = num + c*max_rows
@@ -851,7 +860,8 @@ def translate():
                         row.append(TD(cmax_rows + 1))
                         row.append(TD(INPUT(_type="checkbox",
                                             _name="module_list",
-                                            _value=modlist[cmax_rows])))
+                                            _value=modlist[cmax_rows],
+                                            _checked = check)))
                         row.append(TD(modlist[cmax_rows]))
                 num += 1
                 table.append(row)
@@ -866,7 +876,7 @@ def translate():
             div.append(BR())
             row = TR(TD(INPUT(_type="checkbox", _name="module_list",
                               _value="all")),
-                     TD(T("Select all modules")))
+                     TD(T("Select all templates (All modules included)")))
             div.append(row)
             div.append(BR())
 
