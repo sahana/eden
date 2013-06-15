@@ -100,13 +100,19 @@ h4.profile-sub-header {
     list-style: none outside none;
     text-decoration: none;
     text-transform: none;
-    color: #999;	
+    color: #999;
+	border-left-style: none;
 }
 .card-holder .location-title {
     font: bold 13px "Helvetica Neue", Arial, sans-serif;
     color: #333333;
     padding-left: 50px;
     border-left: 0;
+	margin-left: 0px;
+}
+
+.card-holder .location-title a {
+	color: #626261;
 }
 
 .card-holder .card_comments {
@@ -154,6 +160,7 @@ h4.profile-sub-header {
     height: 12px; /* Height needs to be same with or without contents */
     font-size: 12px;
     padding-top: 4px;
+    color: #666;
 }
 
 .person_pos {
@@ -173,9 +180,12 @@ h4.profile-sub-header {
     box-shadow: 0 -1px 3px #cccccb;
 }
 
+div.more_profile {
+	text-align: center;
+	padding: 5px;	
+}
+
 .s3_modal button.btn.btn-mini {
-    margin-left: auto;
-    margin-right: auto;
     margin-top: 15px;
 }
 
@@ -185,7 +195,7 @@ h4.profile-sub-header {
     border-radius: 2px;
     margin-left: 3px;
     margin-right: 5px;
-    background-color: #d2d3d3;
+    background-color: #c9caca;
     text-shadow: 0 0 2px #7b7b7b;
     border: 1px solid #b0b0ac;
     display: inline-block;
@@ -206,3 +216,23 @@ h4.profile-sub-header {
     padding-top: 7px;
     padding-bottom: 4px;
 }
+
+.card-header-select span a.media-heading {
+	font-size: 14px;
+	font-weight: bold;
+	color: #656665;
+}
+
+.card-header-select span a.media-heading:hover{
+	color: #0187cc;
+	text-decoration: none;
+	
+}
+
+.card-header-select span.date-title {
+	border-left-style: none;
+
+}
+
+
+
