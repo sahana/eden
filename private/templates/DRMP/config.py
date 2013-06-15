@@ -504,6 +504,21 @@ def render_events(listid, resource, rfields, record, **attr):
     return item
 
 # -----------------------------------------------------------------------------
+def quote_unicode(s):
+    """
+        Quote unicode strings for URLs for Rocket
+    """
+
+    chars = []
+    for char in s:
+        o = ord(char)
+        if o < 128:
+            chars.append(char)
+        else:
+            chars.append(hex(o).replace("0x", "%").upper())
+    return "".join(chars)
+
+# -----------------------------------------------------------------------------
 def render_locations(listid, resource, rfields, record, **attr):
     """
         Custom dataList item renderer for Locations on the Selection Page
@@ -606,14 +621,22 @@ def render_locations(listid, resource, rfields, record, **attr):
             tally_activities += 1
         elif series == "Report":
             tally_reports += 1
-    
+
+    # https://code.google.com/p/web2py/issues/detail?id=1533
+    public_url = current.deployment_settings.get_base_public_url()
+    if public_url.startswith("http://127.0.0.1"):
+        # Assume Rocket
+        image = quote_unicode(s3_unicode(name))
+    else:
+        # Assume Apache or Cherokee
+        image = s3_unicode(name)
+
     # Render the item
-    import urllib
     item = DIV(DIV(A(IMG(_class="media-object",
                          _src="%s/%s.png" % (URL(c="static",
                                                  f="themes",
                                                  args=["DRMP", "img"]),
-                                             urllib.quote(s3_unicode(name))),
+                                             image),
                          ),
                      _class="pull-left",
                      _href=location_url,
