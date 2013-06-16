@@ -380,7 +380,7 @@ class SeleniumUnitTest(Web2UnitTest):
                     options_list = el.find_elements_by_tag_name("option")
                     # Find the Longest Word Trimmed Match that matches with el_value
                     option = self.find_max_match(options_list, el_value)
-                    if option == None:
+                    if option is None:
                         raise NoSuchElementException("Option could not be found")
                     option.click()
                     raw_value = option.get_attribute("value")
@@ -792,7 +792,7 @@ class SeleniumUnitTest(Web2UnitTest):
         options_list = el.find_elements_by_tag_name("option")
         # Find the Longest Word Trimmed Match that matches with item_repr
         option = self.find_max_match(options_list, item_repr)
-        if option == None:
+        if option is None:
             raise NoSuchElementException("Option could not be found")
         option.click()
         raw_value = int(option.get_attribute("value"))
@@ -818,7 +818,7 @@ class SeleniumUnitTest(Web2UnitTest):
             options_list = el.find_elements_by_tag_name("option")
             # Find the Longest Word Trimmed Match that matches with item_repr
             option = self.find_max_match(options_list, item_repr)
-            if option == None:
+            if option is None:
                 raise NoSuchElementException("Option could not be found")
             option.click()
             raw_value = int(option.get_attribute("value"))
