@@ -1653,8 +1653,12 @@ def customize_cms_post_fields():
     """
 
     s3db = current.s3db
-    table = s3db.cms_post
 
+    # Hide Labels when just 1 column in inline form
+    s3db.doc_document.file.label = ""
+    s3db.event_event_post.event_id.label = ""
+
+    table = s3db.cms_post
     field = table.location_id
     field.label = ""
     field.represent = location_represent
@@ -3335,6 +3339,8 @@ def customize_project_project(**attr):
             table.budget.label = "%s (USD)" % T("Budget")
             # Better in column label & otherwise this construction loses thousands separators
             #table.budget.represent = lambda value: "%d USD" % value
+
+            s3db.doc_document.file.label = ""
 
             # Filter from a Profile page?
             # If so, then default the fields we know
