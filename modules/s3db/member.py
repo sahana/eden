@@ -340,7 +340,8 @@ class S3MembersModel(S3Model):
                                "location_id$L4",
                                ],
                   update_realm=True,
-                  create_next=URL(f="person", vars={"membership.id": "[id]"}),
+                  create_next=URL(f="person", args="address",
+                                  vars={"membership.id": "[id]"}),
                   extra_fields = ["start_date", "membership_paid"],
                  )
 
