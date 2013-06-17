@@ -56,6 +56,7 @@ def ifrc_realm_entity(table, row):
                      "hrm_job_title",
                      "hrm_course",
                      "hrm_programme",
+                     "member_membership_type",
                      ]:
         return None
 
