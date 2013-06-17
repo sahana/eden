@@ -11,11 +11,10 @@
     // Needs to be in global scope as called from jquery_ready
     S3.addPersonWidget = function() {
         var fieldname = $('#select_from_registry_row').attr('field');
-        var dummyname = 'dummy_' + fieldname;
-        var dummy_input = '#' + dummyname;
-        $(dummy_input).addClass('hide');
-        addPerson_real_input = '#' + fieldname;
-        var person_id = $(addPerson_real_input).val();
+        var dummy_input = $('#dummy_' + fieldname);
+        dummy_input.addClass('hide');
+        addPerson_real_input = $('#' + fieldname);
+        var person_id = addPerson_real_input.val();
         if (person_id > 0) {
             // If an ID present then disable input fields
             $('#clear_form_link').removeClass('hide');
@@ -26,13 +25,13 @@
         $('#select_from_registry').click(function() {
             $('#select_from_registry_row').addClass('hide');
             $('#person_autocomplete_row').removeClass('hide');
-            $(dummy_input).removeClass('hide');
             $('#person_autocomplete_label').removeClass('hide');
-            $(dummy_input).focus();
+            dummy_input.removeClass('hide')
+                       .focus();
         });
-        $(dummy_input).focusout(function() {
-            var person_id = $(addPerson_real_input).val();
-            $(dummy_input).addClass('hide');
+        dummy_input.focusout(function() {
+            var person_id = addPerson_real_input.val();
+            dummy_input.addClass('hide');
             $('#person_autocomplete_label').addClass('hide');
             $('#select_from_registry_row').removeClass('hide');
             if (person_id > 0) {
@@ -41,7 +40,7 @@
         });
         var value = $('#select_from_registry_row').attr('value');
         if (value != 'None') {
-            $(addPerson_real_input).val(value);
+            addPerson_real_input.val(value);
             select_person(value);
         }
         $('form').submit(function() {
@@ -63,7 +62,7 @@
 
     var select_person_clear_form = function() {
         enable_person_fields();
-        $(addPerson_real_input).val('');
+        addPerson_real_input.val('');
         $('#pr_person_first_name').val('');
         $('#pr_person_middle_name').val('');
         $('#pr_person_last_name').val('');
@@ -86,25 +85,25 @@
 
     // Called on post-process by the Autocomplete Widget
     var select_person = function(person_id) {
+        select_person_clear_form();
         if (person_id) {
             var controller = $('#select_from_registry_row').attr('controller');
             if (controller) {
                 $('#select_from_registry').addClass('hide');
                 $('#clear_form_link').addClass('hide');
                 $('#person_load_throbber').removeClass('hide');
-                select_person_clear_form();
                 var url = S3.Ap.concat('/' + controller + '/person/' + person_id + '.s3json?show_ids=True');
                 $.getJSONS3(url, function(data) {
                     try {
                         var email = undefined, phone = undefined;
                         var person = data['$_pr_person'][0];
                         disable_person_fields();
-                        $(addPerson_real_input).val(person['@id']);
+                        addPerson_real_input.val(person['@id']);
                         if (person.hasOwnProperty('first_name')) {
                             $('#pr_person_first_name').val(person['first_name']);
                         }
                         if (person.hasOwnProperty('middle_name')) {
-                            $('#pr_person_middle_name').val(person['middle_name']);
+                            $('#pr_person_middle_name').val(person['middle_name']['@value']);
                         }
                         if (person.hasOwnProperty('last_name')) {
                             $('#pr_person_last_name').val(person['last_name']['@value']);
@@ -116,7 +115,7 @@
                             $('#pr_person_date_of_birth').val(person['date_of_birth']['@value']);
                         }
                         if (person.hasOwnProperty('occupation')) {
-                            $('#pr_person_occupation').val(person['occupation']);
+                            $('#pr_person_occupation').val(person['occupation']['@value']);
                         }
                         if (person.hasOwnProperty('$_pr_email_contact')) {
                             var contact = person['$_pr_email_contact'][0];
@@ -151,7 +150,7 @@
                         }
                                                 
                     } catch(e) {
-                        $(addPerson_real_input).val('');
+                        addPerson_real_input.val('');
                     }
                     $('#person_load_throbber').addClass('hide');
                     $('#select_from_registry').removeClass('hide');

@@ -63,6 +63,7 @@ def site():
         if r.representation != "json":
             return False
         if "address" in request.args:
+            # S3SiteAddressAutocompleteWidget
             s3db.configure("org_site",
                            search_method=s3base.S3SiteAddressSearch()
                            )
