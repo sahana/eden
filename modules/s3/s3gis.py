@@ -6247,6 +6247,7 @@ def addFeatureResources(feature_resources):
         # Are we loading a Catalogue Layer or a simple URL?
         layer_id = layer.get("layer_id", None)
         if layer_id:
+            # @ToDo: Lookup Style
             query = (ftable.layer_id == layer_id)
             flayer = db(query).select(ftable.id,
                                       ftable.controller,
@@ -6259,7 +6260,6 @@ def addFeatureResources(feature_resources):
                                       ftable.cluster_distance,
                                       ftable.cluster_threshold,
                                       ftable.dir,
-                                      ftable.style, # @ToDo: Move to gis_layer_config link table
                                       limitby=(0, 1)).first()
             if flayer.use_site:
                 maxdepth = 1

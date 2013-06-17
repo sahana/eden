@@ -104,6 +104,13 @@ div.dl {
     margin-bottom: 0;
 }
 
+.export_xls {
+    background-image: url(img/icon-xls.png);
+}
+.loading {
+    background: url(img/ajax-loader.gif) center no-repeat !important;
+}
+
 /* Match .btn.btn-primary */
 .delete-btn {
     background-color: #006DCC;

@@ -30,6 +30,9 @@
 }
 
 /* Popups */
+.olPopupCloseBox {
+  background: url(img/close.gif) no-repeat;
+}
 .olFramedCloudPopupContent {
     font-size: 12px;
     /* Needed if using Attachments button

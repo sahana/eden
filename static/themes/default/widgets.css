@@ -187,9 +187,34 @@ textarea.richtext {
     float: right;
     padding-top: 5px;
 }
-.list_formats img {
+.list_formats div {
     padding: 1px;
     cursor: pointer;
+    height: 16px;
+    width: 16px;
+    float: right;
+    background-repeat: no-repeat;
+}
+.export_have {
+    background-image: url(../../img/have_16.png);
+}
+.export_kml {
+    background-image: url(../../img/kml_icon.png);
+}
+.export_map {
+    background-image: url(../../img/map_icon.png);
+}
+.export_pdf {
+    background-image: url(../../img/pdficon_small.gif);
+}
+.export_rss {
+    background-image: url(../../img/RSS_16.png);
+}
+.export_xls {
+    background-image: url(../../img/icon-xls.png);
+}
+.export_xml {
+    background-image: url(../../img/icon-xml.png);
 }
 /* msg_list_empty */
 .empty {
