@@ -239,6 +239,7 @@ form.pr_person table.embeddedComponent td,
 
 #list-add div.form-container form.form-horizontal fieldset {
     border: none;
+	font-size: 13px;
 }
 
 /* Add New form */
@@ -637,6 +638,61 @@ form.form-horizontal {  /*temporary we need to pass another class to the form so
 #sub-donororganisation table.embeddedComponent thead td label {
     font-size: 12px;
     color: #7b7b77;
+}
+
+#project_project_human_resource_id__row div.controls span.help-block div, 
+#project_project_organisation_id__row div.controls span.help-block div {
+	position: relative;
+	top: -8px;
+	margin-bottom: -12px;
+}
+
+#project_project_human_resource_id__row div.controls span.help-block div div.tooltip,
+#project_project_organisation_id__row div.controls span.help-block div div.tooltip {
+	margin-top: 4px;
+}
+
+#project_project_end_date__row div.controls img.ui-datepicker-trigger,
+#project_project_start_date__row div.controls img.ui-datepicker-trigger {
+	margin-left: 10px;
+}
+
+#read-row-donororganisation-0 td,
+#read-row-donororganisation-1 td,
+#read-row-donororganisation-2 td,
+#read-row-donororganisation-3 td,
+#read-row-donororganisation-4 td,
+#read-row-donororganisation-5 td,
+#read-row-defaultlocation-0 td,
+#read-row-defaultlocation-1 td,
+#read-row-defaultlocation-2 td,
+#read-row-defaultlocation-3 td,
+#read-row-defaultlocation-4 td,
+#read-row-defaultlocation-5 td,
+#read-row-partnerorganisation-0 td,
+#read-row-partnerorganisation-1 td,
+#read-row-partnerorganisation-2 td, 
+#read-row-partnerorganisation-3 td, 
+#read-row-partnerorganisation-4 td,
+#read-row-partnerorganisation-5 td {
+	border-bottom: none;
+	padding: 3px;
+}
+
+#list-add div b.red {
+	position: absolute;
+	z-index: 1;
+	margin-top: 10px;
+	margin-left: 7px;
+	font-size: 12px;
+}
+
+
+#add-partnerorganisation-none img, 
+#add-donororganisation-none img {
+	position: relative;
+	top: -6px;
+	
 }
 
 /* Login & Registration Screens */
