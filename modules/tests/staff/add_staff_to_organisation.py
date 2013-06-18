@@ -51,10 +51,11 @@ class AddStaffToOrganisation(SeleniumUnitTest):
             org_id = int(url_parts[-1])
         browser.get("%s/org/organisation/%s/human_resource" % (config.url, org_id))
 
-        select_from_registry_btn = self.browser.find_element_by_id("select_from_registry")
-        if not select_from_registry_btn.is_displayed():
-            self.browser.find_element_by_id("show-add-btn").click()
-	    
+        # Check if add button is present on the page. Click it if found.
+        add_btn = self.browser.find_elements_by_id("show-add-btn")
+        if len(add_btn) > 0:
+            add_btn[0].click()
+        
         self.create("hrm_human_resource", 
                     [( "site_id",
                        "Lori (Facility)",

@@ -557,15 +557,20 @@ class SeleniumUnitTest(Web2UnitTest):
 
         browser.find_element_by_xpath("//a[text()='Reset all filters']").click()
 
+        # Open the filter options fieldset, if not done so.
+        filter_options = browser.find_elements_by_css_selector("#filter_options button")
+        if filter_options[0].is_displayed():
+            # Click the 'Show' button
+            filter_options[0].click()
+
         if fields:
             self.fill_fields(fields)
 
-        # Open the report options fieldset:
+        # Open the report options fieldset, if not done so.
         report_options = browser.find_elements_by_css_selector("#report_options button")
         if report_options[0].is_displayed():
+            # Click the 'Show' button
             report_options[0].click()
-        else:
-            report_options[1].click()
 
         # Select the item to make a report of:
         rows_select = browser.find_element_by_id("report-rows")

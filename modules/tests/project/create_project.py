@@ -54,7 +54,7 @@ class CreateProject(SeleniumUnitTest):
         
         self.create("project_project", 
                     [("organisation_id", 
-                      "International Federation of Red Cross and Red Crescent Societies (IFRC)", 
+                      "International Federation of Red Cross and Red Crescent Societies", 
                       "automatic"),
                      ( "name",
                        "Community Strengthening through Dancing" ),
