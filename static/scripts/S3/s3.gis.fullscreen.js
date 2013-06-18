@@ -9,7 +9,7 @@
 
     function enable_fullscreen(map) {
         // Remove map elements
-        map.s3.mapWestPanelContainer.removeAll(false);
+        map.s3.westPanelContainer.removeAll(false);
         map.s3.mapPanelContainer.removeAll(false);
         var mapWin = map.s3.mapWin;
         mapWin.items.items = [];
@@ -29,7 +29,7 @@
 
     function disable_fullscreen(map) {
         // Remove map elements
-        map.s3.mapWestPanelContainer.removeAll(false);
+        map.s3.westPanelContainer.removeAll(false);
         map.s3.mapPanelContainer.removeAll(false);
         var mapWin = map.s3.mapWin;
         mapWin.items.items = [];
@@ -41,7 +41,7 @@
 
     $('.gis_fullscreen_map-btn').click(function(evt) {
         if (navigator.appVersion.indexOf('MSIE') != -1) {
-            // Not supported on IE
+            // Not supported on IE => do full-page reload instead
             return;
         } else {
             // Read map_id from the Button to determine which Map to make fullscreen
