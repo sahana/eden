@@ -880,13 +880,9 @@ class S3Importer(S3CRUD):
         if self.ajax:
             resource = self.resource
             resource.add_filter(s3.filter)
-            rows = resource.select(["id", "element", "error"],
-                                   start=0,
-                                   limit=resource.count(),
-                                   )
-            data = resource.extract(rows,
-                                    ["id", "element", "error"],
-                                    )
+            data = resource.fast_select(["id", "element", "error"],
+                                        start=None,
+                                        limit=None)["data"]
             return (upload_id, select_list, data)
 
         s3.actions = [dict(label=str(self.messages.item_show_details),
@@ -1254,12 +1250,13 @@ class S3Importer(S3CRUD):
         representation = request.representation
 
         # Datatable Filter
-        totalrows = displayrows = resource.count()
+        totalrows = displayrows = None
         if representation == "aadata":
-            searchq, orderby, left = resource.datatable_filter(list_fields, request.get_vars)
+            searchq, orderby, left = resource.datatable_filter(
+                                        list_fields, request.get_vars)
             if searchq is not None:
+                totalrows = resource.count()
                 resource.add_filter(searchq)
-                displayrows = resource.count(left=left, distinct=True)
         else:
             orderby, left = None, None
 
@@ -1285,15 +1282,17 @@ class S3Importer(S3CRUD):
         if not orderby:
             orderby = ~(resource.table.error)
 
-        # Retrieve the items
-        rows = resource.select(list_fields,
-                               start=start,
-                               limit=limit,
-                               orderby=orderby,
-                               left=left)
-
-        # Extract the data
-        data = resource.extract(rows, list_fields)
+        rows = resource.fast_select(list_fields,
+                                    start=start,
+                                    limit=limit,
+                                    count=True,
+                                    orderby=orderby,
+                                    left=left)
+        data = rows["data"]
+        
+        displayrows = rows["numrows"]
+        if totalrows is None:
+            totalrows = displayrows
 
         # Represent the data
         _represent = represent.items()
