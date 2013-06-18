@@ -1218,9 +1218,17 @@ class S3Resource(object):
                 if limit and start is None:
                     start = 0
                 if start is not None and limit is not None:
-                    rows = rows[start:start+limit]
+                    #rows = rows[start:start+limit]
+                    rows = Rows(db,
+                                records=rows.records[start:start+limit],
+                                colnames=rows.colnames,
+                                compact=False)
                 elif start is not None:
-                    rows = rows[start:]
+                    #rows = rows[start:]
+                    rows = Rows(db,
+                                records=rows.records[start:],
+                                colnames=rows.colnames,
+                                compact=False)
                     
             else:
                 rows = rfilter(rows, start=start, limit=limit)
@@ -7386,6 +7394,7 @@ class S3ResourceFilter(object):
                 i += 1
         return Rows(rows.db, result,
                     colnames=rows.colnames, compact=False)
+                    
 
     # -------------------------------------------------------------------------
     def count(self, left=None, distinct=False):
