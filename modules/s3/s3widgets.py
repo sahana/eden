@@ -887,7 +887,7 @@ if(item.level=="L0"){return item.name+" (%(country)s)"
             field,
             value,
             attributes,
-            source = repr(url),
+            source = url,
             name_getter = name_getter,
         )
 
@@ -933,11 +933,9 @@ class S3OrganisationAutocompleteWidget(FormWidget):
             transform_value = transform_value,
             new_items = self.new_items,
             tablename = "org_organisation",
-            source = repr(
-                URL(c="org", f="org_search",
+            source = URL(c="org", f="org_search",
                     args="search.json",
                     vars={"filter":"~"})
-            )
         )
 
 # =============================================================================

@@ -138,12 +138,12 @@ S3.autocomplete.generic = function(url, input, name_getter, id_getter, postproce
     var throbber = $('#' + dummy + '_throbber');
 
     // Optional args
-    if (name_getter == 'undefined') {
+    if (!name_getter) {
         name_getter = function(item) {
             return item.name;
         }
     }
-    if (id_getter == 'undefined') {
+    if (!id_getter) {
         id_getter = function(item) {
             return item.id;
         }
