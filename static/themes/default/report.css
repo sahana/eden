@@ -1,5 +1,76 @@
 @charset "UTF-8";
 
+.pt-chart-icon {
+    width: 16px;
+    height: 16px;
+    float: left;
+    margin-right: 5px;
+    cursor: pointer;
+}
+.pt-chart-icon:hover {
+    cursor: pointer;
+}
+.pt-chart-label {
+    float: left;
+    margin-right: 5px;
+}
+.pt-pchart {
+    background: url(../../img/report/pchart.png) center no-repeat;
+}
+.pt-vchart {
+    background: url(../../img/report/vchart.png) center no-repeat;
+}
+.pt-hchart {
+    background: url(../../img/report/hchart.png) center no-repeat;
+}
+.pt-chart-controls,
+.pt-chart-contents,
+.pt-table-controls,
+.pt-table-contents {
+    clear: left;
+}
+.pt-chart-contents {
+    background-color: #FFFDF6;
+    padding: 8px;
+    border: 1px solid #999;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    position: relative;
+}
+.pt-chart-title {
+    position: absolute;
+    margin-bottom: 5px;
+    left: 8;
+    top: 0;
+}
+.pt-chart-title h4 {
+    border-bottom: 0 !important;
+}
+.pt-hide-chart {
+    font-size: 10px;
+    cursor: pointer;
+    color: #003399;
+    text-decoration: underline;
+    margin-bottom: 3px;
+    min-height: 16px;
+    min-width: 16px;
+    background: url(../../img/cross.png) right top no-repeat;
+}
+.pt-chart {
+    margin-top: 20px;
+}
+.pt-table,
+.pt-table-contents {
+    position: relative;
+    left: 0;
+    top: 0;
+}
+.pt-throbber {
+    position: absolute;
+    left: 8;
+    top: 8;
+}
+
 .chart-icon {
     cursor: default;
 }

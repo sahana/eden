@@ -174,12 +174,10 @@ class S3HRModel(S3Model):
                                         represent = lambda v: \
                                             v or messages["NONE"],
                                         label=T("Staff ID")),
-                                  self.hrm_job_title_id(
-                                                        #readable = False if group == "volunteer" else True,
+                                  self.hrm_job_title_id(#readable = False if group == "volunteer" else True,
                                                         #writable = False if group == "volunteer" else True,
                                                         ),
-                                  self.hrm_multi_job_role_id(
-                                                             readable = job_roles,
+                                  self.hrm_multi_job_role_id(readable = job_roles,
                                                              writable = job_roles,
                                                              ),
                                   self.hrm_department_id(),

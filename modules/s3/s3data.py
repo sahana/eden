@@ -1672,6 +1672,9 @@ class S3PivotTable(object):
             rows = []
             cols = []
 
+            rtail = (None, None)
+            ctail = (None, None)
+            
             # Group and sort the rows
             is_numeric = None
             for i in xrange(self.numrows):
@@ -1685,14 +1688,18 @@ class S3PivotTable(object):
                                  text = irow.text if "text" in irow
                                                   else row_repr(irow.value))
                 rows.append((i, total, header))
+                
             if maxrows is not None:
-                rows = self._top(rows, maxrows,
-                                 least=least, method=hmethod, other=OTHER)
-            last = rows.pop(-1) if rows[-1][0] == OTHER else None
+                rtail = self._tail(rows, maxrows, least=least, method=hmethod)
+                #rows = self._top(rows, maxrows,
+                                 #least=least, method=hmethod, other=OTHER)
+            #last = rows.pop(-1) if rows[-1][0] == OTHER else None
             self._sortdim(rows, rfields[rows_dim])
-            if last:
-                last = (last[0], last[1], Storage(value=None, text=others))
-                rows.append(last)
+            #if last:
+                #last = (last[0], last[1], Storage(value=None, text=others))
+                #rows.append(last)
+            if rtail[1]:
+                rows.append((OTHER, rtail[1], Storage(value=None, text=others)))
             row_indices = [i[0] for i in rows]
 
             # Group and sort the cols
@@ -1709,44 +1716,57 @@ class S3PivotTable(object):
                                                  else col_repr(icol.value))
                 cols.append((i, total, header))
             if maxcols is not None:
-                cols = self._top(cols, maxcols,
-                                 least=least, method=hmethod, other=OTHER)
-            last = cols.pop(-1) if cols[-1][0] == OTHER else None
+                ctail = self._tail(cols, maxcols, least=least, method=hmethod)
+                #cols = self._top(cols, maxcols,
+                                 #least=least, method=hmethod, other=OTHER)
+            #last = cols.pop(-1) if cols[-1][0] == OTHER else None
             self._sortdim(cols, rfields[cols_dim])
-            if last:
-                last = (last[0], last[1], Storage(value=None, text=others))
-                cols.append(last)
+            if ctail[1]:
+                cols.append((OTHER, ctail[1], Storage(value=None, text=others)))
+            #if last:
+                #last = (last[0], last[1], Storage(value=None, text=others))
+                #cols.append(last)
             col_indices = [i[0] for i in cols]
+
+            rothers = rtail[0]
+            cothers = ctail[0]
 
             # Group and sort the cells
             icell = self.cell
             cells = {}
             for i in xrange(self.numrows):
                 irow = icell[i]
-                ridx = i if i in row_indices else OTHER
-                if ridx not in cells:
-                    orow = cells[ridx] = {}
-                else:
-                    orow = cells[ridx]
+                ridx = (i, OTHER) if rothers and i in rothers else (i,)
+                    
                 for j in xrange(self.numcols):
                     cell = irow[j]
-                    cidx = j if j in col_indices else OTHER
+                    cidx = (j, OTHER) if cothers and j in cothers else (j,)
+
                     cell_records = cell["records"]
                     items = cell[layer]
                     value = items if is_numeric \
                                   else len(cell_records)
-                    if cidx not in orow:
-                        if OTHER in (cidx, ridx):
-                            value = [value]
-                            items = [items]
-                        ocell = orow[cidx] = {"value": value,
-                                              "items": items,
-                                              "records": cell_records}
-                    else:
-                        ocell = orow[cidx]
-                        ocell["value"].append(value)
-                        ocell["items"].append(items)
-                        ocell["records"].extend(cell_records)
+                                  
+                    for ri in ridx:
+                        if ri not in cells:
+                            orow = cells[ri] = {}
+                        else:
+                            orow = cells[ri]
+                        for ci in cidx:
+                            if ci not in orow:
+                                ocell = orow[ci] = {}
+                                if OTHER in (ci, ri):
+                                    ocell["value"] = [value]
+                                    ocell["items"] = [items]
+                                else:
+                                    ocell["value"] = value
+                                    ocell["items"] = items
+                                ocell["records"] = cell_records
+                            else:
+                                ocell = orow[ci]
+                                ocell["value"].append(value)
+                                ocell["items"].append(items)
+                                ocell["records"].extend(cell_records)
 
             # Aggregate the grouped values
             ctotals = True
@@ -1756,14 +1776,15 @@ class S3PivotTable(object):
             cappend = ocols.append
             for rindex, rtotal, rtitle in rows:
                 orow = []
+                rval = s3_unicode(rtitle.value) if rindex != OTHER else None
                 if represent:
                     rappend((rindex,
-                             s3_unicode(rtitle.value),
+                             rval,
                              rtitle.text,
                              rtotal))
                 else:
                     rappend((rindex,
-                             s3_unicode(rtitle.value),
+                             rval,
                              rtotal))
                 for cindex, ctotal, ctitle in cols:
                     cell = cells[rindex][cindex]
@@ -1825,14 +1846,15 @@ class S3PivotTable(object):
                                  "items": items,
                                  "value": value})
                     if ctotals:
+                        cval = s3_unicode(ctitle.value) if cindex != OTHER else None
                         if represent:
                             cappend((cindex,
-                                     s3_unicode(ctitle.value),
+                                     cval,
                                      ctitle.text,
                                      ctotal))
                         else:
                             cappend((cindex,
-                                     s3_unicode(ctitle.value),
+                                     cval,
                                      ctotal))
                 ctotals = False
                 ocells.append(orow)
@@ -1849,7 +1871,8 @@ class S3PivotTable(object):
 
         labels = {
                   "total": str(current.T("Total")),
-                  "none": str(current.messages["NONE"])
+                  "none": str(current.messages["NONE"]),
+                  "per": str(current.T("per")),
                  }
 
         # Layer title
@@ -2343,6 +2366,31 @@ class S3PivotTable(object):
         except (TypeError, ValueError):
             pass
         return items
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def _tail(cls, items, length=10, least=False, method=None):
+        """
+            Find the top/least <length> items (by total)
+
+            @param items: the items as list of tuples
+                          (index, total, {value: value, text: text})
+            @param length: the number of items
+            @param least: find least rather than top
+        """
+
+        try:
+            if len(items) > length:
+                l = list(items)
+                l.sort(lambda x, y: int(y[1]-x[1]))
+                if least:
+                    l.reverse()
+                tail = dict((item[0], item[1]) for item in l[length-1:])
+                return (tail.keys(),
+                        cls._aggregate(tail.values(), method))
+        except (TypeError, ValueError):
+            pass
+        return (None, None)
 
     # -------------------------------------------------------------------------
     def _get_fields(self, fields=None):

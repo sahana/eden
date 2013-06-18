@@ -59,7 +59,7 @@ class S3Report2(S3Method):
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
-            Pivot table report page
+            Page-render entry point for REST interface.
 
             @param r: the S3Request instance
             @param attr: controller attributes for the request
@@ -73,6 +73,13 @@ class S3Report2(S3Method):
 
     # -------------------------------------------------------------------------
     def report(self, r, **attr):
+        """
+            Pivot table report page
+
+            @param r: the S3Request instance
+            @param attr: controller attributes for the request
+        """
+
 
         output = {}
         
@@ -80,6 +87,10 @@ class S3Report2(S3Method):
         get_config = resource.get_config
 
         widget_id = "pivottable"
+
+        # @todo: make configurable:
+        maxrows = 20
+        maxcols = 20
 
         # Extract the relevant GET vars
         get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
@@ -157,25 +168,29 @@ class S3Report2(S3Method):
             ajax_vars = Storage(r.get_vars)
             ajax_vars.update(get_vars)
             ajaxurl = r.url(representation="json", vars=ajax_vars)
+
             output["form"] = S3ReportForm(resource) \
                                     .html(pivottable,
+                                          maxrows=maxrows,
+                                          maxcols=maxcols,
                                           get_vars = get_vars,
                                           filter_widgets = filter_widgets,
                                           ajaxurl = ajaxurl,
                                           widget_id = widget_id)
 
-            # @todo: if pivottable is None: render a datatable instead
+            # @todo: if pivottable is None: render a datatable instead?
 
             # View
             current.response.view = self._view(r, "report2.html")
 
         elif r.representation == "json":
 
-            if pivottable:
-                output = json.dumps(pivottable.json())
+            if pivottable is not None:
+                output = json.dumps(pivottable.json(maxrows=maxrows,
+                                                    maxcols=maxcols))
             else:
-                output = "null"
-            
+                output = """null"""
+
         elif r.representation == "aadata":
             r.error(501, r.ERROR.BAD_FORMAT)
             
@@ -208,6 +223,8 @@ class S3ReportForm(object):
     # -------------------------------------------------------------------------
     def html(self,
              pivottable,
+             maxrows=None,
+             maxcols=None,
              filter_widgets=None,
              get_vars=None,
              ajaxurl=None,
@@ -219,19 +236,26 @@ class S3ReportForm(object):
             @param widget_id: the HTML element base ID for the widgets
         """
 
+        # Report options
         report_options, hidden = self.report_options(get_vars = get_vars,
                                                      widget_id = widget_id)
 
-        if pivottable:
-            hidden["pivotdata"] = json.dumps(pivottable.json())
+        # Pivot data
+        if pivottable is not None:
+            pivotdata = pivottable.json(maxrows=maxrows,
+                                        maxcols=maxcols)
+            labels = pivotdata["labels"]
+            hidden["pivotdata"] = json.dumps(pivotdata)
             empty = ""
         else:
+            labels = None
             hidden["pivotdata"] = """null"""
             empty = current.T("Please select report options.")
-            
+
         throbber = "/%s/static/img/indicator.gif" % current.request.application
 
 
+        # Filter options
         if filter_widgets is not None:
             filter_options = self._fieldset(current.T("Filter Options"),
                                             filter_widgets,
@@ -239,6 +263,7 @@ class S3ReportForm(object):
         else:
             filter_options = ""
 
+        # Report form submit element
         resource = self.resource
         submit = resource.get_config("report_submit", True)
         if submit:
@@ -257,29 +282,35 @@ class S3ReportForm(object):
         else:
             submit = ""
 
-        # @todo: move CSS into static .css
-        form = DIV(
-                 DIV(
-                   FORM(filter_options,
-                        report_options,
-                        submit,
-                        hidden = hidden,
-                        _class = "pt-controls"
+        # General layout (@todo: make configurable)
+        form = DIV(DIV(FORM(filter_options,
+                            report_options,
+                            submit,
+                            hidden = hidden,
+                            _class = "pt-form"
+                        ),
+                        _class="pt-form-container form-container"
                    ),
-                   _class="form-container"
-                 ),
-                 DIV(
-                    IMG(_src=throbber,
-                        _alt=current.T("Processing"),
-                        _class="pt-throbber",
-                        _style="position: absolute; left: 8; top: 8;"),
-                    DIV(_class="pt-table",
-                        _style="position: relative; left: 0; top: 0;"),
-                    _style="position: relative; left: 0; top: 0;"
-                 ),
-                 DIV(empty, _class="pt-empty"),
-                 _class="pt-container",
-                 _id=widget_id
+                   DIV(DIV(_class="pt-chart-controls"),
+                       DIV(DIV(_class="pt-hide-chart"),
+                           DIV(_class="pt-chart-title"),
+                           DIV(_class="pt-chart"),
+                           _class="pt-chart-contents"
+                       ),
+                       _class="pt-chart-container"
+                   ),
+                   DIV(DIV(_class="pt-table-controls"),
+                       DIV(IMG(_src=throbber,
+                               _alt=current.T("Processing"),
+                               _class="pt-throbber"),
+                           DIV(_class="pt-table"),
+                           _class="pt-table-contents"
+                       ),
+                       _class="pt-table-container"
+                   ),
+                   DIV(empty,_class="pt-empty"),
+                   _class="pt-container",
+                   _id=widget_id
                )
 
         # Settings
@@ -599,6 +630,14 @@ $("#%(widget_id)s").pivottable({
     # -------------------------------------------------------------------------
     @staticmethod
     def _fieldset(title, widgets, **attr):
+        """
+            Helper method to wrap widgets in a FIELDSET container with
+            show/hide option
+
+            @param title: the title for the field set
+            @param widgets: the widgets
+            @param attr: HTML attributes for the field set
+        """
 
         T = current.T
         SHOW = T("Show")
