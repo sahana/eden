@@ -3839,33 +3839,34 @@ class HRMActiveVirtualField:
         return current.messages["NONE"]
 
 # =============================================================================
-class HRMTrainingVirtualFields:
-    """ Virtual fields as dimension classes for reports """
+def hrm_training_month(row):
+    """ Year/Month of the start date of the training event """
+    if hasattr(row, "hrm_training"):
+        row = row.hrm_training
+    try:
+        date = row.date
+    except AttributeError:
+        # not available
+        date = None
+    if date:
+        return "%s/%02d" % (date.year, date.month)
+    else:
+        return current.messages["NONE"]
 
-    def month(self):
-        """ Year/Month of the start date of the training event """
-        try:
-            date = self.hrm_training.date
-        except AttributeError:
-            # not available
-            date = None
-        if date:
-            return "%s/%02d" % (date.year, date.month)
-        else:
-            return current.messages["NONE"]
-
-    # -------------------------------------------------------------------------
-    def year(self):
-        """ The Year of the training event """
-        try:
-            date = self.hrm_training.date
-        except AttributeError:
-            # not available
-            date = None
-        if date:
-            return date.year
-        else:
-            return current.messages["NONE"]
+# -------------------------------------------------------------------------
+def hrm_training_year(row):
+    """ The Year of the training event """
+    if hasattr(row, "hrm_training"):
+        row = row.hrm_training
+    try:
+        date = row.date
+    except AttributeError:
+        # not available
+        date = None
+    if date:
+        return date.year
+    else:
+        return current.messages["NONE"]
 
 # =============================================================================
 def hrm_training_job_title(row):
@@ -4350,7 +4351,9 @@ def hrm_training_controller():
                            list_fields=list_fields)
             if r.method == "report":
                 s3db.configure("hrm_training", extra_fields=["date"])
-                s3db.hrm_training.virtualfields.append(HRMTrainingVirtualFields())
+                table = s3db.hrm_training
+                table.year = Field.Lazy(hrm_training_year)
+                table.month = Field.Lazy(hrm_training_month)
         return True
     current.response.s3.prep = prep
 

@@ -316,8 +316,8 @@ class S3RequestModel(S3Model):
                                   *s3_meta_fields())
 
         # Virtual Fields
-        #table.details = Field.Lazy(req_details_field)
-        table.virtualfields.append(ReqVirtualFields())
+        table.details = Field.Lazy(req_req_details)
+        table.drivers = Field.Lazy(req_req_drivers)
 
         if len(req_type_opts) == 1:
             k, v = req_type_opts.items()[0]
@@ -3128,110 +3128,77 @@ def req_skill_onaccept(form):
                          req_id = req_id)
 
 # =============================================================================
-def req_details_field(row):
-    """
-        Lazy VirtualField
-    """
+def req_req_details(row):
+    """ Show the requested items/skills """
 
-    type = row.type
+    if hasattr(row, "req_req"):
+        row = row.req_req
+    try:
+        id = row.id
+        type = row.type
+    except AttributeError:
+        return None
+
     if type == 1:
         s3db = current.s3db
         itable = s3db.supply_item
         ltable = s3db.req_req_item
         query = (ltable.deleted != True) & \
-                (ltable.req_id == row.id) & \
-                (ltable.item_id == itable.name)
-        items = current.db(query).select(itable.name)
+                (ltable.req_id == id) & \
+                (ltable.item_id == itable.id)
+        items = current.db(query).select(itable.name,
+                                         ltable.quantity)
         if items:
-            return ",".join([item.name for item in items])
+            items = ["%s %s" % (int(item.req_req_item.quantity),
+                                item.supply_item.name)
+                     for item in items]
+            return ",".join(items)
 
     elif type == 3:
         s3db = current.s3db
         ltable = s3db.req_req_skill
         query = (ltable.deleted != True) & \
-                (ltable.req_id == row.id)
-        skills = current.db(query).select(ltable.skill_id)
+                (ltable.req_id == id)
+        skills = current.db(query).select(ltable.skill_id,
+                                          ltable.quantity)
         if skills:
-            represent = s3db.hrm_skill_multirepresent
-            return ",".join([represent(skill.skill_id) for skill in skills])
+            represent = S3Represent(lookup="hrm_skill",
+                                    multiple=True)
+            skills = ["%s %s" % (skill.quantity,
+                                 represent(skill.skill_id)) \
+                      for skill in skills]
+            return ",".join(skills)
 
     return current.messages["NONE"]
 
 # =============================================================================
-class ReqVirtualFields:
-    """
-        Virtual fields for Requests to show Item Details & Driver
-    """
+def req_req_drivers(row):
+    """ Show the driver(s) details """
 
-    def details(self):
-        """
-            Show the requested items/skills
-        """
+    if hasattr(row, "req_req"):
+        row = row.req_req
+    try:
+        req_ref = row.req_ref
+        type = row.type
+    except AttributeError:
+        return None
 
-        try:
-            id = self.req_req.id
-            type = self.req_req.type
-        except AttributeError:
-            return None
+    if type == 1:
+        s3db = current.s3db
+        stable = s3db.inv_send
+        query = (stable.deleted != True) & \
+                (stable.req_ref == req_ref)
+        drivers = current.db(query).select(stable.driver_name,
+                                           stable.driver_phone,
+                                           stable.vehicle_plate_no)
+        if drivers:
+            drivers = ["%s %s %s" % (driver.driver_name or "",
+                                     driver.driver_phone or "",
+                                     driver.vehicle_plate_no or "") \
+                       for driver in drivers]
+            return ",".join(drivers)
 
-        if type == 1:
-            s3db = current.s3db
-            itable = s3db.supply_item
-            ltable = s3db.req_req_item
-            query = (ltable.deleted != True) & \
-                    (ltable.req_id == id) & \
-                    (ltable.item_id == itable.id)
-            items = current.db(query).select(itable.name,
-                                             ltable.quantity)
-            if items:
-                items = ["%s %s" % (int(item.req_req_item.quantity), item.supply_item.name) for item in items]
-                return ",".join(items)
-
-        elif type == 3:
-            s3db = current.s3db
-            ltable = s3db.req_req_skill
-            query = (ltable.deleted != True) & \
-                    (ltable.req_id == id)
-            skills = current.db(query).select(ltable.skill_id,
-                                              ltable.quantity)
-            if skills:
-                represent = S3Represent(lookup="hrm_skill",
-                                        multiple=True)
-                skills = ["%s %s" % (skill.quantity,
-                                     represent(skill.skill_id)) \
-                          for skill in skills]
-                return ",".join(skills)
-
-        return current.messages["NONE"]
-
-    # -------------------------------------------------------------------------
-    def drivers(self):
-        """
-            Show the driver(s) details
-        """
-
-        try:
-            req_ref = self.req_req.req_ref
-            type = self.req_req.type
-        except AttributeError:
-            return None
-
-        if type == 1:
-            s3db = current.s3db
-            stable = s3db.inv_send
-            query = (stable.deleted != True) & \
-                    (stable.req_ref == req_ref)
-            drivers = current.db(query).select(stable.driver_name,
-                                               stable.driver_phone,
-                                               stable.vehicle_plate_no)
-            if drivers:
-                drivers = ["%s %s %s" % (driver.driver_name or "",
-                                         driver.driver_phone or "",
-                                         driver.vehicle_plate_no or "") \
-                           for driver in drivers]
-                return ",".join(drivers)
-
-        return current.messages["NONE"]
+    return current.messages["NONE"]
 
 # =============================================================================
 def req_rheader(r, check_page=False):
