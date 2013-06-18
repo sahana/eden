@@ -46,8 +46,8 @@ class CreateStaffCertificate(SeleniumUnitTest):
                        "Basics of First Aid ATEST"
                        ),
                      ( "organisation_id",
-                       "Timor-Leste Red Cross Society (CVTL)",
-                       "option"),
+                       "Timor-Leste Red Cross Society",
+                       "automatic"),
                      ( "expiry",
                        "12"
                        ),

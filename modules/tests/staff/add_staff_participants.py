@@ -50,8 +50,11 @@ class AddStaffParticipants(SeleniumUnitTest):
             org_id = int(url_parts[-1])
         browser.get("%s/hrm/training_event/%s/participant" % (config.url, org_id))
 	
-        self.browser.find_element_by_id("show-add-btn").click()
-
+        # Check if add button is present on the page. Click it if found.
+        add_btn = self.browser.find_elements_by_id("show-add-btn")
+        if len(add_btn) > 0:
+            add_btn[0].click()
+        
         self.create("hrm_training", 
                     [   
                     ( "person_id",
