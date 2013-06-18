@@ -30,7 +30,7 @@ def index():
 def human_resource():
     """
         HR Controller
-        - combined (unused, except for Imports)
+        - combined used only for Imports and for the service record
     """
 
     table = s3db.hrm_human_resource
@@ -40,7 +40,7 @@ def human_resource():
     # Custom method for Service Record
     s3db.set_method("hrm", "human_resource",
                     method="form",
-                    action=s3db.hrm_service_record
+                    action=s3db.vol_service_record
                    )
 
     def prep(r):

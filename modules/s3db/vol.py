@@ -31,6 +31,7 @@
 __all__ = ["S3VolunteerModel",
            "S3VolunteerClusterModel",
            "vol_active",
+           "vol_service_record",
            ]
 
 from gluon import *
@@ -328,5 +329,234 @@ def vol_active(person_id):
             return False
     else:
         return False
+
+# =============================================================================
+def vol_service_record(r, **attr):
+    """
+        Generate a Volunteer Service Record
+    """
+
+    record = r.record
+    if record.type != 2:
+        # Only relevant to volunteers
+        return None
+
+    T = current.T
+
+    vol_name = s3_fullname(record.person_id)
+
+    def callback(r):
+        db = current.db
+        s3db = current.s3db
+
+        person_id = record.person_id
+        organisation_id = record.organisation_id
+
+        # Person details
+        table = s3db.hrm_human_resource
+        ptable = db.pr_person
+        org_name = table.organisation_id.represent(organisation_id)
+        logo = s3db.org_organisation_logo(organisation_id)
+        #vol_name = table.person_id.represent(person_id)
+        pe_id = db(ptable.id == person_id).select(ptable.pe_id,
+                                                  limitby=(0, 1)
+                                                  ).first().pe_id
+
+        innerTable = TABLE(TR(TH(T("Volunteer Service Record"))),
+                           TR(TD(vol_name)),
+                           TR(TD(org_name)))
+        person_details = TABLE(TR(TD(logo),
+                                  TD(innerTable)
+                                  ))
+
+        # Photo
+        itable = s3db.pr_image
+        query = (itable.pe_id == pe_id) & \
+                (itable.profile == True)
+        image = db(query).select(itable.image,
+                                 limitby=(0, 1)).first()
+        if image:
+            image = image.image
+            size = (160, None)
+            image = s3db.pr_image_represent(image, size=size)
+            size = s3db.pr_image_size(image, size)
+            url = URL(c="default",
+                      f="download",
+                      args=image)
+            avatar = IMG(_src=url,
+                         _width=size[0],
+                         _height=size[1],
+                         )
+            person_details[0].append(TD(avatar))
+
+        # Contact Details
+        contact_details = DIV()
+        # Addresses
+        addrtable = s3db.pr_address
+        ltable = db.gis_location
+        query = (addrtable.pe_id == pe_id) & \
+                (addrtable.location_id == ltable.id)
+        addresses = db(query).select(addrtable.type,
+                                     ltable.addr_street,
+                                     ltable.L3,
+                                     ltable.L2,
+                                     ltable.L1,
+                                     orderby = addrtable.type,
+                                     limitby=(0, 2))
+        address_list = []
+        for address in addresses:
+            _location = address["gis_location"]
+            address = TABLE(TR(TH(addrtable.type.represent(address["pr_address"].type))),
+                            TR(_location.addr_street),
+                            TR(_location.L3),
+                            TR(_location.L2),
+                            TR(_location.L1),
+                            )
+            address_list.append(address)
+
+        # Contacts
+        ctable = s3db.pr_contact
+        contacts = db(ctable.pe_id == pe_id).select(ctable.contact_method,
+                                                    ctable.value,
+                                                    orderby = ctable.priority,
+                                                    limitby=(0, 3))
+        contact_list = TABLE()
+        contact_represent = ctable.contact_method.represent
+        for contact in contacts:
+            contact_list.append(TH(contact_represent(contact.contact_method)))
+            contact_list.append(contact.value)
+
+        # Emergency Contact
+        ectable = s3db.pr_contact_emergency
+        emergency = db(ectable.pe_id == pe_id).select(ectable.name,
+                                                      ectable.relationship,
+                                                      ectable.phone,
+                                                      limitby=(0, 1)).first()
+        if emergency:
+            econtact = TABLE(TR(TH(T("Emergency Contact"))),
+                             TR(emergency.name),
+                             TR(emergency.relationship),
+                             TR(emergency.phone),
+                             )
+        else:
+            econtact = TABLE()
+        contact_row = TR()
+        if len(address_list) > 0:
+            contact_row.append(TD(address_list[0]))
+        if len(address_list) > 1:
+            contact_row.append(TD(address_list[1]))
+        contact_row.append(contact_list)
+        contact_row.append(econtact)
+
+        # Identity
+        idtable = s3db.pr_identity
+        query = (idtable.person_id == person_id) & \
+                (idtable.deleted == False)
+        rows = db(query).select(idtable.type,
+                                idtable.value,
+                                idtable.valid_until)
+        id_row = TR()
+        for identity in rows:
+            id_row.append(TABLE(TR(TH(idtable.type.represent(identity.type))),
+                                TR(identity.value),
+                                TR(identity.valid_until),
+                                ))
+
+        # Programme Hours
+        hours = {}
+        hrstable = s3db.hrm_programme_hours
+        ptable = db.hrm_programme
+        query = (hrstable.person_id == person_id) & \
+                (hrstable.deleted == False) & \
+                (hrstable.training == False)
+        rows = db(query).select(hrstable.date,
+                                hrstable.hours,
+                                ptable.name,
+                                ptable.name_long,
+                                left=ptable.on(hrstable.programme_id == ptable.id),
+                                orderby = ~hrstable.date)
+        date_represent = hrstable.date.represent
+        for row in rows:
+            _row = row["hrm_programme_hours"]
+            _date = _row.date
+            prow = row["hrm_programme"]
+            if prow:
+                if prow.name_long:
+                    programme = prow.name_long
+                else:
+                    programme = prow.name
+            else:
+                programme = ""
+            hours[_date] = dict(programme = programme,
+                                course = "",
+                                date = date_represent(_date),
+                                hours = _row.hours or "",
+                                )
+
+        # Training Hours
+        ttable = s3db.hrm_training
+        ctable = s3db.hrm_course
+        query = (ttable.person_id == person_id) & \
+                (ttable.deleted == False)
+        rows = db(query).select(ctable.name,
+                                ttable.date,
+                                ttable.hours,
+                                left=ctable.on(ttable.course_id == ctable.id),
+                                orderby = ~ttable.date)
+        NONE = current.messages["NONE"]
+        date_represent = ttable.date.represent
+        for row in rows:
+            _row = row["hrm_training"]
+            _date = _row.date
+            hours[_date.date()] = dict(programme = "",
+                                       course = row["hrm_course"].name or NONE,
+                                       date = date_represent(_date),
+                                       hours = _row.hours or "",
+                                       )
+
+        # Combined Hours
+        _hours = {}
+        hour_list = TABLE(TR(TD(T("Programme")), TD(T("Course")), TD(T("Date")), TD(T("Hours"))))
+        for key in sorted(hours.iterkeys()):
+            _hours[key] = hours[key]
+        total = 0
+        for hour in hours:
+            _hour = hours[hour]
+            __hours = _hour["hours"] or 0
+            hour_list.append(TR(_hour["programme"],
+                                _hour["course"],
+                                _hour["date"],
+                                str(__hours)
+                                ))
+            total += __hours
+        if total > 0:
+            hour_list.append(TR(TD(""), TD(""), TD("Total"), TD("%d" % total)))
+
+        output = DIV(person_details,
+                     TABLE(contact_row),
+                     TABLE(id_row),
+                     hour_list
+                     )
+
+        return output
+
+    #list_fields = ["person_id$first_name"]
+    exporter = S3Exporter().pdf
+    return exporter(r.resource,
+                    request=r,
+                    method = "list",
+                    #pdf_componentname = "track_item",
+                    pdf_title = "%s - %s" % \
+                        (vol_name, T("Volunteer Service Record")),
+                    #pdf_filename = send_ref,
+                    #list_fields = list_fields,
+                    pdf_hide_comments = True,
+                    pdf_header_padding = 12,
+                    #pdf_footer = inv_send_pdf_footer,
+                    #pdf_paper_alignment = "Landscape",
+                    pdf_table_autogrow = "B",
+                    pdf_callback = callback,
+                    **attr
+                    )
 
 # END =========================================================================

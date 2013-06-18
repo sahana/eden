@@ -3747,9 +3747,7 @@ def pr_contacts(r, **attr):
 
     # address_wrapper = DIV(H2(T("Addresses")),
                           # DIV(A(T("Add"), _class="action-btn", _id="address-add"),
-                              # IMG(_src=URL(c="static", f="img", args="ajax-loader.gif"),
-                                  # _height=32, _width=32,
-                                  # _id="address-add_throbber",
+                              # DIV(_id="address-add_throbber",
                                   # _class="throbber hide"),
                               # _class="margin"))
 
@@ -3793,9 +3791,7 @@ def pr_contacts(r, **attr):
     r.component_id = None
     if crud._permitted(method="create"):
         add_btn = DIV(A(T("Add"), _class="action-btn", _id="contact-add"),
-                      IMG(_src=URL(c="static", f="img", args="ajax-loader.gif"),
-                          _height=32, _width=32,
-                          _id="contact-add_throbber",
+                      DIV(_id="contact-add_throbber",
                           _class="throbber hide"),
                       _class="margin")
         contacts_wrapper.append(add_btn)
@@ -3860,9 +3856,7 @@ def pr_contacts(r, **attr):
     r.component_id = None
     if crud._permitted(method="create"):
         add_btn = DIV(A(T("Add"), _class="action-btn", _id="emergency-add"),
-                      IMG(_src=URL(c="static", f="img", args="ajax-loader.gif"),
-                          _height=32, _width=32,
-                          _id="emergency-add_throbber",
+                      DIV(_id="emergency-add_throbber",
                           _class="throbber hide"),
                       _class="margin")
         emergency_wrapper.append(add_btn)
