@@ -109,6 +109,17 @@ div.dl {
 }
 .loading {
     background: url(img/ajax-loader.gif) center no-repeat !important;
+} /*
+.throbber {
+    background-image: url(img/ajax-loader.gif);
+    height: 48px;
+    width: 48px;
+} */
+
+/* Need long form to override widgets.css on margin */
+.form-container form button.ui-datepicker-trigger {
+    background-image: url(img/calendar.gif);
+    margin-left: 10px;
 }
 
 /* Match .btn.btn-primary */
@@ -149,18 +160,6 @@ div.dl {
     -moz-box-shadow: 0 1px 1px #aaaaa7;
     -webkit-box-shadow: 0 1px 1px #aaaaa7;
     box-shadow: 0 1px 1px #aaaaa7;
-}
-
-#email__error,
-#password__error {
-    margin-left: 15px;
-    padding: 5px;
-    border-radius: 4px;
-    border: 1px solid #b2b2b2;
-    font-weight: normal;
-    font-style: normal;
-    color: #b84947;
-    background-color: #f2dedd;
 }
 
 a.btn.btn-primary.main-add {
@@ -324,10 +323,6 @@ a.action-btn:hover {
     *background-color: #a9302a;
 }
 
-.ui-datepicker-trigger {
-    margin-left: 10px;
-}
-
 /* Required Fields */
 b.red {
     position: absolute;
@@ -381,7 +376,13 @@ table.embeddedComponent .add-row td {
     border-bottom: none;
     padding: 0 5px 0 0;
 }
-
+.inline-add {
+    background-image: url(img/add.png);
+}
+.inline-edt {
+    background-image: url(img/edit.png);
+    width: 18px;
+}
 .s3_inline_add_resource_link {
     margin-top: 5px;
 }
@@ -456,14 +457,16 @@ table.embeddedComponent .add-row td {
 /* Projects Page */
 
 /* Dropdown with AddResourceLink takes up more vertical space than an INPUT so center the INPUTS
-    and the + button
+    and the + button and throbber
  */
 #sub_donororganisation_donororganisation_i_currency_edit_none,
 #sub_donororganisation_donororganisation_i_currency_edit_0,
 #sub_donororganisation_donororganisation_i_amount_edit_none,
 #sub_donororganisation_donororganisation_i_amount_edit_0,
-#add-partnerorganisation-none img,
-#add-donororganisation-none img {
+#add-partnerorganisation-none,
+#add-donororganisation-none,
+#throbber-partnerorganisation-none,
+#throbber-donororganisation-none {
     position: relative;
     top: -10px;
 }
@@ -620,10 +623,10 @@ table.embeddedComponent .add-row td {
     color: #666;
 }
 
-a#datatable_previous.previous.paginate_button,
-a#datatable_first.first.paginate_button,
-a#datatable_last.last.paginate_button,
-a#datatable_next.next.paginate_button  {
+#datatable_previous.previous.paginate_button,
+#datatable_first.first.paginate_button,
+#datatable_last.last.paginate_button,
+#datatable_next.next.paginate_button  {
     background-color: #fff;
     border: 1px solid #b7b7b7;
     border-radius: 4px;
@@ -679,6 +682,23 @@ a#datatable_next.next.paginate_button  {
     margin-bottom: 10px;
 }
 
+#email__error,
+#password__error {
+    margin-left: 15px;
+    padding: 5px;
+    border-radius: 4px;
+    border: 1px solid #b2b2b2;
+    font-weight: normal;
+    font-style: normal;
+    color: #b84947;
+    background-color: #f2dedd;
+}
+
+#submit_record__row td.w2p_fw {
+    padding-top: 15px;
+    padding-left: 12px;
+}
+
 /* Registration Screen */
 #auth_user_first_name,
 #auth_user_last_name,
@@ -695,9 +715,3 @@ a#datatable_next.next.paginate_button  {
 #auth_user_utc_offset__row td.w2p_fc div.tooltip {
     margin-left: 15px;
 }
-
-#submit_record__row td.w2p_fw {
-    padding-top: 15px;
-    padding-left: 12px;
-}
-

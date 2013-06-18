@@ -251,6 +251,10 @@
     var readHierarchy = function(fieldname, level, id) {
         var selector = '#' + fieldname;
 
+        // Hide dropdown
+        var dropdown = $(selector + '_L' + level);
+        dropdown.hide();
+
         // Show Throbber
         var throbber = $(selector + '_L' + level + '__throbber');
         throbber.show();
@@ -270,6 +274,8 @@
             n = null;
             // Hide Throbber
             throbber.hide();
+            // Show dropdown
+            dropdown.show();
         }).fail(function(request, status, error) {
             if (error == 'UNAUTHORIZED') {
                 msg = i18n.gis_requires_login;

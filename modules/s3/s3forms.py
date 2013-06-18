@@ -2129,34 +2129,25 @@ class S3SQLInlineComponent(S3SQLSubForm):
             return THEAD(_class="hide")
 
     # -------------------------------------------------------------------------
-    def _action_icon(self, title, image, name, index, throbber=False):
+    def _action_icon(self, title, name, index, throbber=False):
         """
             Render an action icon for one of the form actions
 
             @param title: title for the icon
-            @param image: name of the image file in static/img/crud
             @param name: element name of the action icon
             @param index: the row index within the form
             @param throbber: True to render a hidden throbber (activity
                              indicator) for this icon
         """
 
-        appname = current.request.application
-        icon_path = "/%s/static/img/crud/%s" % (appname, image)
-        throbber_path = "/%s/static/img/indicator.gif" % appname
-
         formname = self._formname()
 
-        action = A(IMG(_src=icon_path, _title=title, _alt=title),
-                   _href="#",
-                   _id="%s-%s-%s" % (name, formname, index),
-                   _class="inline-%s" % name)
+        action = DIV(_id="%s-%s-%s" % (name, formname, index),
+                     _class="inline-%s" % name)
 
         if throbber:
             return DIV(action,
-                       IMG(_src=throbber_path,
-                           _alt=current.T("Processing"),
-                           _class="hide",
+                       DIV(_class="inline-throbber hide",
                            _id="throbber-%s-%s" % (formname, index)))
         else:
             return DIV(action)
@@ -2262,28 +2253,28 @@ class S3SQLInlineComponent(S3SQLSubForm):
         if readonly:
             if editable:
                 edt = action(T("Edit this entry"),
-                             "edit.png", "edt", index)
+                             "edt", index)
                 columns.append(edt)
             else:
                 columns.append(TD())
             if deletable:
                 rmv = action(T("Remove this entry"),
-                             "remove.png", "rmv", index)
+                             "rmv", index)
                 columns.append(rmv)
             else:
                 columns.append(TD())
         else:
             if index != "none" or item:
                 rdy = action(T("Update this entry"),
-                             "apply.png", "rdy", index, throbber=True)
+                             "rdy", index, throbber=True)
                 columns.append(rdy)
                 cnc = action(T("Cancel editing"),
-                             "cancel.png", "cnc", index)
+                             "cnc", index)
                 columns.append(cnc)
             elif multiple:
                 columns.append(TD())
                 add = action(T("Add this entry"),
-                             "add.png", "add", index, throbber=True)
+                             "add", index, throbber=True)
                 columns.append(add)
 
         return TR(columns, **attributes)

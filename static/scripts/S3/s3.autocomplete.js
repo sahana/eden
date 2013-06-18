@@ -51,26 +51,27 @@ S3.autocomplete.normal = function(fieldname, module, resourcename, input, filter
                 url: url,
                 data: {
                     term: request.term
-                },
-                success: function (data) {
-                    if (data.length == 0) {
-                        var no_matching_records = i18n.no_matching_records;
-                        data.push({
-                            id: 0,
-                            value: '',
-                            label: no_matching_records
-                        });
-                    }
-                    response(data);
                 }
+            }).done(function (data) {
+                if (data.length == 0) {
+                    var no_matching_records = i18n.no_matching_records;
+                    data.push({
+                        id: 0,
+                        value: '',
+                        label: no_matching_records
+                    });
+                }
+                response(data);
             });
         },
         search: function(event, ui) {
+            dummy_input.hide();
             throbber.removeClass('hide').show();
             return true;
         },
         response: function(event, ui, content) {
             throbber.hide();
+            dummy_input.show();
             return content;
         },
         focus: function(event, ui) {
@@ -138,12 +139,12 @@ S3.autocomplete.generic = function(url, input, name_getter, id_getter, postproce
     var throbber = $('#' + dummy + '_throbber');
 
     // Optional args
-    if (name_getter == 'undefined') {
+    if (!name_getter) {
         name_getter = function(item) {
             return item.name;
         }
     }
-    if (id_getter == 'undefined') {
+    if (!id_getter) {
         id_getter = function(item) {
             return item.id;
         }
@@ -170,26 +171,27 @@ S3.autocomplete.generic = function(url, input, name_getter, id_getter, postproce
                 url: url,
                 data: {
                     term: request.term
-                },
-                success: function (data) {
-                    if (data.length == 0) {
-                        var no_matching_records = i18n.no_matching_records;
-                        data.push({
-                            id: 0,
-                            value: '',
-                            label: no_matching_records
-                        });
-                    }
-                    response(data);
                 }
+            }).done(function (data) {
+                if (data.length == 0) {
+                    var no_matching_records = i18n.no_matching_records;
+                    data.push({
+                        id: 0,
+                        value: '',
+                        label: no_matching_records
+                    });
+                }
+                response(data);
             });
         },
         search: function(event, ui) {
+            dummy_input.hide();
             throbber.removeClass('hide').show();
             return true;
         },
         response: function(event, ui, content) {
             throbber.hide();
+            dummy_input.show();
             return content;
         },
         focus: function(event, ui) {
@@ -286,28 +288,29 @@ S3.autocomplete.person = function(module, resourcename, input, postprocess, dela
                 url: url,
                 data: {
                     term: request.term
-                },
-                success: function (data) {
-                    if (data.length == 0) {
-                        var no_matching_records = i18n.no_matching_records;
-                        data.push({
-                            id: 0,
-                            value: '',
-                            label: no_matching_records,
-                            // First Name
-                            first: no_matching_records
-                        });
-                    }
-                    response(data);
                 }
+            }).done(function (data) {
+                if (data.length == 0) {
+                    var no_matching_records = i18n.no_matching_records;
+                    data.push({
+                        id: 0,
+                        value: '',
+                        label: no_matching_records,
+                        // First Name
+                        first: no_matching_records
+                    });
+                }
+                response(data);
             });
         },
         search: function(event, ui) {
+            dummy_input.hide();
             throbber.removeClass('hide').show();
             return true;
         },
         response: function(event, ui, content) {
             throbber.hide();
+            dummy_input.show();
             return content;
         },
         focus: function(event, ui) {
@@ -425,28 +428,29 @@ S3.autocomplete.hrm = function(group, input, postprocess, delay, min_length) {
                 url: url,
                 data: {
                     term: request.term
-                },
-                success: function (data) {
-                    if (data.length == 0) {
-                        var no_matching_records = i18n.no_matching_records;
-                        data.push({
-                            id: 0,
-                            value: '',
-                            label: no_matching_records,
-                            // First Name
-                            first: no_matching_records
-                        });
-                    }
-                    response(data);
                 }
+            }).done(function (data) {
+                if (data.length == 0) {
+                    var no_matching_records = i18n.no_matching_records;
+                    data.push({
+                        id: 0,
+                        value: '',
+                        label: no_matching_records,
+                        // First Name
+                        first: no_matching_records
+                    });
+                }
+                response(data);
             });
         },
         search: function(event, ui) {
+            dummy_input.hide();
             throbber.removeClass('hide').show();
             return true;
         },
         response: function(event, ui, content) {
             throbber.hide();
+            dummy_input.show();
             return content;
         },
         focus: function(event, ui) {
@@ -594,27 +598,28 @@ S3.autocomplete.site = function(input, postprocess, delay, min_length) {
                 url: url,
                 data: {
                     term: request.term
-                },
-                success: function (data) {
-                    if (data.length == 0) {
-                        var no_matching_records = i18n.no_matching_records;
-                        data.push({
-                            id: 0,
-                            value: '',
-                            label: no_matching_records,
-                            name: no_matching_records
-                        });
-                    }
-                    response(data);
                 }
+            }).done(function (data) {
+                if (data.length == 0) {
+                    var no_matching_records = i18n.no_matching_records;
+                    data.push({
+                        id: 0,
+                        value: '',
+                        label: no_matching_records,
+                        name: no_matching_records
+                    });
+                }
+                response(data);
             });
         },
         search: function(event, ui) {
+            dummy_input.hide();
             throbber.removeClass('hide').show();
             return true;
         },
         response: function(event, ui, content) {
             throbber.hide();
+            dummy_input.show();
             return content;
         },
         focus: function(event, ui) {
@@ -715,27 +720,28 @@ S3.autocomplete.site_address = function(input, postprocess, delay, min_length) {
                 url: url,
                 data: {
                     term: request.term
-                },
-                success: function (data) {
-                    if (data.length == 0) {
-                        var no_matching_records = i18n.no_matching_records;
-                        data.push({
-                            id: 0,
-                            value: '',
-                            label: no_matching_records,
-                            name: no_matching_records
-                        });
-                    }
-                    response(data);
                 }
+            }).done(function (data) {
+                if (data.length == 0) {
+                    var no_matching_records = i18n.no_matching_records;
+                    data.push({
+                        id: 0,
+                        value: '',
+                        label: no_matching_records,
+                        name: no_matching_records
+                    });
+                }
+                response(data);
             });
         },
         search: function(event, ui) {
+            dummy_input.hide();
             throbber.removeClass('hide').show();
             return true;
         },
         response: function(event, ui, content) {
             throbber.hide();
+            dummy_input.show();
             return content;
         },
         focus: function(event, ui) {

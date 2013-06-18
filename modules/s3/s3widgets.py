@@ -782,10 +782,7 @@ class S3AutocompleteWidget(FormWidget):
         return TAG[""](INPUT(_id=dummy_input,
                              _class="string",
                              _value=represent.encode("utf-8")),
-                       IMG(_src="/%s/static/img/ajax-loader.gif" % \
-                                current.request.application,
-                           _height=32, _width=32,
-                           _id="%s_throbber" % dummy_input,
+                       DIV(_id="%s_throbber" % dummy_input,
                            _class="throbber hide"),
                        INPUT(**attr),
                        requires = field.requires
@@ -1058,10 +1055,7 @@ class S3PersonAutocompleteWidget(FormWidget):
         return TAG[""](INPUT(_id=dummy_input,
                              _class="string",
                              _value=represent),
-                       IMG(_src="/%s/static/img/ajax-loader.gif" % \
-                                current.request.application,
-                           _height=32, _width=32,
-                           _id="%s_throbber" % dummy_input,
+                       DIV(_id="%s_throbber" % dummy_input,
                            _class="throbber hide"),
                        INPUT(hideerror=self.hideerror, **attr),
                        requires = field.requires
@@ -1132,10 +1126,7 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
         return TAG[""](INPUT(_id=dummy_input,
                              _class="string",
                              _value=represent.encode("utf-8")),
-                       IMG(_src="/%s/static/img/ajax-loader.gif" % \
-                                current.request.application,
-                           _height=32, _width=32,
-                           _id="%s_throbber" % dummy_input,
+                       DIV(_id="%s_throbber" % dummy_input,
                            _class="throbber hide"),
                        INPUT(**attr),
                        requires = field.requires
@@ -1209,10 +1200,7 @@ class S3SiteAutocompleteWidget(FormWidget):
         return TAG[""](INPUT(_id=dummy_input,
                              _class="string",
                              _value=represent),
-                       IMG(_src="/%s/static/img/ajax-loader.gif" % \
-                                current.request.application,
-                           _height=32, _width=32,
-                           _id="%s_throbber" % dummy_input,
+                       DIV(_id="%s_throbber" % dummy_input,
                            _class="throbber hide"),
                        INPUT(**attr),
                        requires = field.requires
@@ -1276,10 +1264,7 @@ class S3SiteAddressAutocompleteWidget(FormWidget):
         return TAG[""](INPUT(_id=dummy_input,
                              _class="string",
                              _value=represent),
-                       IMG(_src="/%s/static/img/ajax-loader.gif" % \
-                                current.request.application,
-                           _height=32, _width=32,
-                           _id="%s_throbber" % dummy_input,
+                       DIV(_id="%s_throbber" % dummy_input,
                            _class="throbber hide"),
                        INPUT(**attr),
                        requires = field.requires
@@ -1347,10 +1332,7 @@ def S3GenericAutocompleteTemplate(post_process,
     return TAG[""](INPUT(_id=dummy_input,
                          _class="string",
                          value=represent),
-                   IMG(_src="/%s/static/img/ajax-loader.gif" % \
-                            current.request.application,
-                       _height=32, _width=32,
-                       _id="%s_throbber" % dummy_input,
+                   DIV(_id="%s_throbber" % dummy_input,
                        _class="throbber hide"),
                    INPUT(**attr),
                    requires = field.requires
@@ -1886,7 +1868,6 @@ S3.gis.tab="%s"''' % s3.gis.tab
                        _title="%s|%s|%s" % (label, AUTOCOMPLETE_HELP, NEW_HELP))
 
         hidden = ""
-        throbber = "/%s/static/img/ajax-loader.gif" % appname
         Lx_rows = DIV()
         if value:
             # Display Read-only Fields
@@ -1940,9 +1921,7 @@ S3.gis.tab="%s"''' % s3.gis.tab
                              INPUT(value=name,
                                    _id="gis_location_%s_ac" % level,
                                    _disabled="disabled"),
-                             IMG(_src=throbber,
-                                 _height=32, _width=32,
-                                 _id="gis_location_%s_throbber" % level,
+                             DIV(_id="gis_location_%s_throbber" % level,
                                  _class="throbber hide"))
                 row = TR(TD(widget), TD(),
                          _id="gis_location_%s__row" % level,
@@ -1991,9 +1970,7 @@ S3.gis.tab="%s"''' % s3.gis.tab
                                 INPUT(value=default_name,
                                       _id="gis_location_%s_ac" % level,
                                       _class="%s" % hidden),
-                                IMG(_src=throbber,
-                                    _height=32, _width=32,
-                                    _id="gis_location_%s_throbber" % level,
+                                DIV(_id="gis_location_%s_throbber" % level,
                                     _class="throbber hide"))
                 row = TR(TD(widget),
                          TD(ac_help_widget(level)),
@@ -2127,9 +2104,7 @@ S3.gis.geocoder=true'''
 
         # Search
         widget = DIV(INPUT(_id="gis_location_search_ac"),
-                           IMG(_src=throbber,
-                               _height=32, _width=32,
-                               _id="gis_location_search_throbber",
+                           DIV(_id="gis_location_search_throbber",
                                _class="throbber hide"),
                            _id="gis_location_search_div")
 
@@ -2293,8 +2268,6 @@ class S3LocationSelectorWidget2(FormWidget):
         location_selector_loaded = s3.gis.location_selector_loaded
         formstyle = s3.crud.formstyle # Currently only Bootstrap has been tested
         request = current.request
-        appname = request.application
-        throbber_img = "/%s/static/img/ajax-loader.gif" % appname
 
         default = field.default
         if not default:
@@ -2471,9 +2444,7 @@ class S3LocationSelectorWidget2(FormWidget):
                                    _value=""),
                             _id=id)
             #comment = T("Select this %(location)s") % dict(location = label)
-            throbber = IMG(_src=throbber_img,
-                           _height=32, _width=32,
-                           _id="%s__throbber" % id,
+            throbber = DIV(_id="%s__throbber" % id,
                            _class="throbber hide"
                            )
             if formstyle == "bootstrap":
@@ -2586,7 +2557,7 @@ class S3LocationSelectorWidget2(FormWidget):
         else:
             script = "s3.locationselector.widget2.min.js"
 
-        script = "/%s/static/scripts/S3/%s" % (appname, script)
+        script = "/%s/static/scripts/S3/%s" % (request.application, script)
         scripts = s3.scripts
         if script not in scripts:
             scripts.append(script)
@@ -3204,10 +3175,7 @@ class S3AddPersonWidget(FormWidget):
                                  _id="edit_selected_person_link",
                                  _class="action-btn hide",
                                  _style="padding-left:15px;"),
-                               IMG(_src="/%s/static/img/ajax-loader.gif" % appname,
-                                   _height=32,
-                                   _width=32,
-                                   _id="person_load_throbber",
+                               DIV(_id="person_load_throbber",
                                    _class="throbber hide",
                                    _style="padding-left:85px;"),
                                _class="w2p_fw"),
@@ -3227,10 +3195,7 @@ class S3AddPersonWidget(FormWidget):
                                  _id="edit_selected_person_link",
                                  _class="action-btn hide",
                                  _style="padding-left:15px;"),
-                               IMG(_src="/%s/static/img/ajax-loader.gif" % appname,
-                                   _height=32,
-                                   _width=32,
-                                   _id="person_load_throbber",
+                               DIV(_id="person_load_throbber",
                                    _class="throbber hide",
                                    _style="padding-left:85px;"),
                                _class="w2p_fw"),
@@ -3854,11 +3819,7 @@ class S3EmbedComponentWidget(FormWidget):
                              _id="edit_selected_link",
                              _class="action-btn hide",
                              _style="padding-left:15px;"),
-                           IMG(_src="/%s/static/img/ajax-loader.gif" % \
-                                    appname,
-                               _height=32,
-                               _width=32,
-                               _id="load_throbber",
+                           DIV(_id="load_throbber",
                                _class="throbber hide",
                                _style="padding-left:85px;"),
                            _class="w2p_fw"),

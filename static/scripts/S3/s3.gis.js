@@ -24,7 +24,6 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 (function () {
 
     // Module scope
-    var ajax_loader = S3.Ap.concat('/static/img/ajax-loader.gif');
     var format_geojson = new OpenLayers.Format.GeoJSON();
     // Silently ignore 3rd dimension (e.g. USGS Quakes feed)
     format_geojson.ignoreExtraDims = true;
@@ -2269,7 +2268,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         // Show Throbber whilst waiting for Popup to show
         var selector = '#' + id + '_contentDiv';
         var div = $(selector);
-        var contents = i18n.gis_loading + "...<img src='" + ajax_loader + "' border=0 />";
+        var contents = i18n.gis_loading + "...<div class='throbber'></div>";
         div.html(contents);
         // Load data into Popup
         var map = S3.gis.maps[map_id];
@@ -2480,7 +2479,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 if (undefined != feature.attributes.url) {
                     // Popup contents are pulled via AJAX
                     popup_url = feature.attributes.url;
-                    contents = i18n.gis_loading + "...<img src='" + ajax_loader + "' border=0 />";
+                    contents = i18n.gis_loading + "...<div class='throbber'></div>";
                 } else {
                     // Popup contents are built from the attributes
                     var attributes = feature.attributes;
@@ -2507,7 +2506,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     } else if (attributes.data.indexOf('http://') === 0) {
                         data_link = true;
                         var data_id = S3.uid();
-                        data = '<div id="' + data_id + '">' + i18n.gis_loading + "...<img src='" + ajax_loader + "' border=0 />" + '</div>';
+                        data = '<div id="' + data_id + '">' + i18n.gis_loading + "...<div class='throbber'></div>" + '</div>';
                     } else {
                         data = '<p>' + attributes.data + '</p>';
                     }
@@ -2812,10 +2811,6 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         
         // Throbber
         var throbber = new Ext.BoxComponent({
-            autoEl: {
-                tag: 'img',
-                src: ajax_loader
-            },
             cls: 'layer_throbber hide'
         });
         toolbar.add(throbber);

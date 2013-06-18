@@ -179,36 +179,68 @@ function s3_gis_autocompletes() {
 
 function s3_gis_autocomplete(level) {
     // Convert Input to an Autocomplete
-    if (undefined != $('#gis_location_L' + level + '_ac').val()) {
-        $('#gis_location_L' + level + '_ac').autocomplete({
-            source: s3_gis_ac_set_source(level),
+    var dummy_input = $('#gis_location_L' + level + '_ac');
+    if (undefined != dummy_input.val()) {
+        var real_input = $('#gis_location_L' + level);
+        var throbber = $('#gis_location_L' + level + '_throbber');
+        dummy_input.autocomplete({
             delay: 500,
             minLength: 2,
+            source: function(request, response) {
+                // Patch the source so that we can handle No Matches
+                $.ajax({
+                    url: s3_gis_ac_set_source(level),
+                    data: {
+                        term: request.term
+                    }
+                }).done(function (data) {
+                    if (data.length == 0) {
+                        var no_matching_records = i18n.no_matching_records;
+                        data.push({
+                            id: 0,
+                            value: '',
+                            label: no_matching_records,
+                            name: no_matching_records
+                        });
+                    }
+                    response(data);
+                });
+            },
             search: function(event, ui) {
-                $('#gis_location_L' + level + '_throbber').removeClass('hide').show();
+                dummy_input.hide();
+                throbber.removeClass('hide').show();
                 // Wipe the existing ID so that update forms can change the values to new ones
-                $('#gis_location_L' + level).val('');
+                real_input.val('');
                 return true;
             },
             response: function(event, ui, content) {
-                $('#gis_location_L' + level + '_throbber').hide();
+                throbber.hide();
+                dummy_input.show();
                 return content;
             },
-            focus: function( event, ui ) {
-                $('#gis_location_L' + level + '_ac').val( ui.item.name );
+            focus: function(event, ui) {
+                dummy_input.val(ui.item.name);
                 return false;
             },
-            select: function( event, ui ) {
-                $('#gis_location_L' + level + '_ac').val( ui.item.name );
-                $('#gis_location_L' + level).val( ui.item.id );
-                if ((ui.item.level == 'L1') && (ui.item.parent) && ($('#gis_location_L0').val() === '')) {
-                    // If no L0 set & we've just added an L1 with a parent then set the country accordingly
-                    $('#gis_location_L0').val(ui.item.parent);
+            select: function(event, ui) {
+                var item = ui.item;
+                if (item.id) {
+                    dummy_input.val(item.name);
+                    real_input.val(item.id);
+                    if ((item.level == 'L1') && (item.parent) && ($('#gis_location_L0').val() === '')) {
+                        // If no L0 set & we've just added an L1 with a parent then set the country accordingly
+                        $('#gis_location_L0').val(item.parent);
+                    }
+                    // Hide the search results
+                    $('ul.ui-autocomplete').hide();
+                    // Update autocompletes
+                    s3_gis_autocomplete(parseInt(item.level.replace('L', ''), 10) + 1);
+                } else {
+                    // No matching results
+                    dummy_input.val('');
+                    real_input.val('')
+                              .change();
                 }
-                // Hide the search results
-                $('ul.ui-autocomplete').hide();
-                // Update autocompletes
-                s3_gis_autocomplete(parseInt(ui.item.level.replace('L', ''), 10) + 1);
                 return false;
             }
         }).data('ui-autocomplete')._renderItem = function(ul, item) {
@@ -219,43 +251,74 @@ function s3_gis_autocomplete(level) {
         };
     }
     // OnChange invalidate all lower Lx
-    $('#gis_location_L' + level + '_ac').change(function() {
+    dummy_input.change(function() {
         for (var i = level + 1; i <= 5; i++) {
-            // Clear the Value
+            // Clear the Value in both real & dummy
             $('#gis_location_L' + i + ', #gis_location_L' + i + '_ac').val('');
         }
     });
 }
 
 function s3_gis_autocomplete_search() {
-    if (undefined != $('#gis_location_search_ac').val()) {
-        $('#gis_location_search_ac').autocomplete({
-            source: s3_gis_ac_set_search_source(),
+    var dummy_input = $('#gis_location_search_ac');
+    if (undefined != dummy_input.val()) {
+        var throbber = $('#gis_location_search_throbber');
+        dummy_input.autocomplete({
             delay: 500,
             minLength: 2,
+            source: function(request, response) {
+                // Patch the source so that we can handle No Matches
+                $.ajax({
+                    url: s3_gis_ac_set_search_source(),
+                    data: {
+                        term: request.term
+                    }
+                }).done(function (data) {
+                    if (data.length == 0) {
+                        var no_matching_records = i18n.no_matching_records;
+                        data.push({
+                            id: 0,
+                            value: '',
+                            label: no_matching_records,
+                            name: no_matching_records
+                        });
+                    }
+                    response(data);
+                });
+            },
             search: function(event, ui) {
-                $('#gis_location_search_throbber').removeClass('hide').show();
+                dummy_input.hide();
+                throbber.removeClass('hide').show();
                 // Hide the Select Button
                 $('#gis_location_search_select-btn').hide();
                 return true;
             },
             response: function(event, ui, content) {
-                $('#gis_location_search_throbber').hide();
+                throbber.hide();
+                dummy_input.show();
                 return content;
             },
-            focus: function( event, ui ) {
-                $('#gis_location_search_ac').val( ui.item.name );
+            focus: function(event, ui) {
+                dummy_input.val(ui.item.name);
                 return false;
             },
-            select: function( event, ui ) {
-                $('#gis_location_search_ac').val( ui.item.name );
-                // Hide the search results
-                $('ul.ui-autocomplete').hide();
-                // Show details
-                s3_gis_ac_search_selected(ui.item);
+            select: function(event, ui) {
+                var item = ui.item;
+                if (item.id) {
+                    dummy_input.val(item.name);
+                    // Hide the search results
+                    $('ul.ui-autocomplete').hide();
+                    // Show details
+                    s3_gis_ac_search_selected(item);
+                } else {
+                    // No matching results
+                    dummy_input.val('');
+                    real_input.val('')
+                              .change();
+                }
                 return false;
             }
-        }).data( 'ui-autocomplete' )._renderItem = function( ul, item ) {
+        }).data('ui-autocomplete')._renderItem = function(ul, item) {
         	var represent;
             if (item.name && item.addr_street) {
                 represent = '<a>' + item.name + ',  ' + item.addr_street.split(',')[0].split('\n')[0] + '</a>';
@@ -720,14 +783,20 @@ function s3_gis_l0_select() {
     });
 
     // Set the Autocompletes' filters
+    /* Not needed since now looked-up dynamically
     $('#gis_location_L1_ac').autocomplete('option', 'source', s3_gis_ac_set_source(1));
     $('#gis_location_L2_ac').autocomplete('option', 'source', s3_gis_ac_set_source(2));
     $('#gis_location_L3_ac').autocomplete('option', 'source', s3_gis_ac_set_source(3));
     $('#gis_location_L4_ac').autocomplete('option', 'source', s3_gis_ac_set_source(4));
-    $('#gis_location_L5_ac').autocomplete('option', 'source', s3_gis_ac_set_source(5));
+    $('#gis_location_L5_ac').autocomplete('option', 'source', s3_gis_ac_set_source(5));*/
 }
 
 function s3_gis_zoomMap(left, bottom, right, top) {
+    var maps = S3.gis.maps;
+    if (!maps) {
+        // Map JS not yet loaded - skip
+        return;
+    }
     // Zoom the Map to the specified bounds
     // @ToDo: Support non-default maps
     var map = S3.gis.maps['default_map'];
