@@ -54,7 +54,7 @@
    <p>Record the vulnerabilities, hazards, activities and resources which affects your community's resilience</p>
    {{for opt in response.menu:}}
      <p>
-       <a href='{{=opt["url"]}}' class="btn btn-info btn-large menu" type="button">
+       <a href='{{=opt["url"]}}/summary' class="btn btn-info btn-large menu" type="button">
         <i class='{{=opt["icon"]}}'></i> {{=opt["name"]}}
        </a>
        <a href='{{=opt["url"]}}/create' class="btn btn-info btn-large create" type="button"><i class='icon-plus'></i></a>

@@ -77,7 +77,7 @@
      <li><a class='home' href='/{{=appname}}/default/index'><img src="/{{=appname}}/static/img/sahanalarge_14.png" alt="Sahana"/></a></li>
      <li><a class='map' href='/{{=appname}}/gis/index'><i class='icon-globe'></i></a></li>
      {{for opt in response.menu:}}
-      <li><a href='{{=opt["url"]}}'> <i class='{{=opt["icon"]}}'></i> {{=opt["name"]}}</a></li>
+      <li><a href='{{=opt["url"]}}/summary'> <i class='{{=opt["icon"]}}'></i> {{=opt["name"]}}</a></li>
      {{pass}}
     </ul>
     {{if auth.is_logged_in():}}
