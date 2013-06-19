@@ -3,6 +3,21 @@
     padding-top: 20px;
 }
 
+/* Summary Page */
+
+h2.summary {
+    float: left;
+}
+
+.btn.summary-create {
+    background: linear-gradient(to bottom, #3788B3 0%, #235482 100%) repeat scroll 0 0 transparent;
+    margin: 15px;
+    padding: 4px 6px;
+}
+.ui-tabs {
+    clear: left;
+}
+
 /* Filter Forms */
 #filter-form td {
     border: none;
