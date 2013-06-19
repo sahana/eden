@@ -869,12 +869,12 @@ class S3LocationAutocompleteWidget(FormWidget):
 
         # @ToDo: Something nicer (i.e. server-side formatting within S3LocationSearch)
         name_getter = \
-'''function(item){
-if(item.level=="L0"){return item.name+" (%(country)s)"
-}else if(item.level=="L1"){return item.name+" ("+item.L0+")"
-}else if(item.level=="L2"){return item.name+" ("+item.L1+","+item.L0+")"
-}else if(item.level=="L3"){return item.name+" ("+item.L2+","+item.L1+","+item.L0+")"
-}else if(item.level=="L4"){return item.name+" ("+item.L3+","+item.L2+","+item.L1+","+item.L0+")"
+'''function(item){ \
+if(item.level=='L0'){return item.name+' (%(country)s)' \
+}else if(item.level=='L1'){return item.name+' ('+item.L0+')' \
+}else if(item.level=='L2'){return item.name+' ('+item.L1+','+item.L0+')' \
+}else if(item.level=='L3'){return item.name+' ('+item.L2+','+item.L1+','+item.L0+')' \
+}else if(item.level=='L4'){return item.name+' ('+item.L3+','+item.L2+','+item.L1+','+item.L0+')' \
 }else{return item.name}}''' % dict(country = current.messages.COUNTRY)
 
         return S3GenericAutocompleteTemplate(

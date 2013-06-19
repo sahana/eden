@@ -1,5 +1,5 @@
-{{try:}}{{=H2(title, _class = "summary")}}{{except:}}{{pass}}
-<a href='{{=URL(request.application,request.controller,request.function)}}/create' class="btn btn-info summary-create" type="button"><i class='icon-plus'></i></a>
+{{try:}}{{=H2(title, _class="summary")}}{{except:}}{{pass}}
+<a href='{{=URL(c=request.controller, f=request.function, args="create")}}' class="btn btn-info summary-create" type="button"><i class='icon-plus'></i></a>
 <div id='summary-tabs'>
 <div id='summary-tab-headers'>
 {{try:}}{{=tabs}}{{except:}}{{pass}}
