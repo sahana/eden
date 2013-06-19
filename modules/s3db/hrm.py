@@ -78,13 +78,14 @@ class S3HRModel(S3Model):
 
         T = current.T
         db = current.db
+        s3 = current.response.s3
         settings = current.deployment_settings
         messages = current.messages
         UNKNOWN_OPT = messages.UNKNOWN_OPT
         ORGANISATION = messages.ORGANISATION
 
         add_component = self.add_component
-        crud_strings = current.response.s3.crud_strings
+        crud_strings = s3.crud_strings
         super_link = self.super_link
 
         # =========================================================================
@@ -121,7 +122,7 @@ class S3HRModel(S3Model):
         job_roles = settings.get_hrm_job_roles()
         organisation_label = settings.get_hrm_organisation_label()
 
-        if group == "volunteer":
+        if group == "volunteer" or s3.bulk:
             default_site = None
         else:
             default_site = auth.user.site_id if auth.is_logged_in() else None

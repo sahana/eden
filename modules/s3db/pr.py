@@ -1333,6 +1333,7 @@ class S3ContactModel(S3Model):
 
         T = current.T
 
+        configure = self.configure
         define_table = self.define_table
         messages = current.messages
         super_link = self.super_link
@@ -1394,18 +1395,18 @@ class S3ContactModel(S3Model):
             msg_record_deleted = T("Contact Information Deleted"),
             msg_list_empty = T("No contact information available"))
 
-        # Resource configuration
-        self.configure(tablename,
-                       onvalidation=self.contact_onvalidation,
-                       deduplicate=self.contact_deduplicate,
-                       list_fields=["id",
-                                    "contact_method",
-                                    "value",
-                                    "priority",
-                                    ])
+        configure(tablename,
+                  onvalidation=self.pr_contact_onvalidation,
+                  deduplicate=self.pr_contact_deduplicate,
+                  list_fields=["id",
+                               "contact_method",
+                               "value",
+                               "priority",
+                               ])
 
         # ---------------------------------------------------------------------
         # Emergency Contact Information
+        # - currently only ever 1 of these expected
         #
         tablename = "pr_contact_emergency"
         table = define_table(tablename,
@@ -1420,6 +1421,9 @@ class S3ContactModel(S3Model):
                              s3_comments(),
                              *s3_meta_fields())
 
+        configure(tablename,
+                  deduplicate=self.pr_emergency_deduplicate)
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
@@ -1428,7 +1432,7 @@ class S3ContactModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def contact_onvalidation(form):
+    def pr_contact_onvalidation(form):
         """ Contact form validation """
 
         contact_method = form.vars.contact_method
@@ -1448,17 +1452,19 @@ class S3ContactModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def contact_deduplicate(item):
+    def pr_contact_deduplicate(item):
         """ Contact information de-duplication """
 
         if item.tablename == "pr_contact":
-            table = item.table
-            pe_id = item.data.get("pe_id", None)
-            contact_method = item.data.get("contact_method", None)
-            value = item.data.get("value", None)
+            data = item.data
+            pe_id = data.get("pe_id", None)
 
             if pe_id is None:
                 return
+
+            table = item.table
+            contact_method = data.get("contact_method", None)
+            value = data.get("value", None)
 
             query = (table.pe_id == pe_id) & \
                     (table.contact_method == contact_method) & \
@@ -1469,7 +1475,28 @@ class S3ContactModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pr_emergency_deduplicate(item):
+        """
+            Emergency Contact information de-duplication
+            - currently only 1 of these expected per person
+        """
+
+        if item.tablename == "pr_contact_emergency":
+            pe_id = item.data.get("pe_id", None)
+            if pe_id is None:
+                return
+
+            table = item.table
+            query = (table.pe_id == pe_id) & \
+                    (table.deleted != True)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3PersonAddressModel(S3Model):
@@ -1535,8 +1562,8 @@ class S3PersonAddressModel(S3Model):
 
         # Resource configuration
         self.configure(tablename,
-                       onaccept=self.address_onaccept,
-                       deduplicate=self.address_deduplicate,
+                       onaccept=self.pr_address_onaccept,
+                       deduplicate=self.pr_address_deduplicate,
                        list_fields = ["id",
                                       "type",
                                       (T("Address"), "location_id$addr_street"),
@@ -1557,7 +1584,7 @@ class S3PersonAddressModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def address_onaccept(form):
+    def pr_address_onaccept(form):
         """
             Updates the Base Location to be the same as the Address
 
@@ -1615,30 +1642,28 @@ class S3PersonAddressModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def address_deduplicate(item):
+    def pr_address_deduplicate(item):
         """ Address de-duplication """
 
         if item.tablename == "pr_address":
             data = item.data
             pe_id = data.get("pe_id", None)
-            address = data.get("address", None)
 
             if pe_id is None:
                 return
 
+            type = data.get("type", None)
+            location_id = data.get("location_id", None)
             table = item.table
-            db = current.db
-            ltable = db.gis_location
             query = (table.pe_id == pe_id) & \
-                    (ltable.id == table.location_id) & \
-                    (ltable.addr_street == address) & \
+                    (table.type == type) & \
+                    (table.location_id == location_id) & \
                     (table.deleted != True)
-            duplicate = db(query).select(table.id,
-                                         limitby=(0, 1)).first()
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-        return
 
 # =============================================================================
 class S3PersonImageModel(S3Model):
@@ -1829,7 +1854,6 @@ class S3PersonImageModel(S3Model):
         if not hasattr(image, "file") and not image and not url:
             form.errors.image = \
             form.errors.url = current.T("Either file upload or image URL required.")
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2010,9 +2034,8 @@ class S3PersonIdentityModel(S3Model):
             msg_record_deleted = T("Identity deleted"),
             msg_list_empty = T("No Identities currently registered"))
 
-        # Resource configuration
         self.configure(tablename,
-                       deduplicate=self.identity_deduplicate,
+                       deduplicate=self.pr_identity_deduplicate,
                        list_fields=["id",
                                     "type",
                                     "value",
@@ -2027,18 +2050,20 @@ class S3PersonIdentityModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def identity_deduplicate(item):
+    def pr_identity_deduplicate(item):
         """ Identity de-duplication """
 
         if item.tablename == "pr_identity":
-            table = item.table
-            person_id = item.data.get("person_id", None)
-            id_type = item.data.get("type", None)
-            id_value = item.data.get("value", None)
-
+            data = item.data
+            person_id = data.get("person_id", None)
             if person_id is None:
                 return
 
+            id_type = data.get("type", None)
+            # People can have 1 more than 1 'Other', or even Passport
+            # - so this cannot be used to update the Number, only update comments
+            id_value = data.get("value", None)
+            table = item.table
             query = (table.person_id == person_id) & \
                     (table.type == id_type) & \
                     (table.value == id_value) & \
@@ -2048,7 +2073,6 @@ class S3PersonIdentityModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-        return
 
 # =============================================================================
 class S3PersonEducationModel(S3Model):
@@ -2106,8 +2130,8 @@ class S3PersonEducationModel(S3Model):
             msg_record_deleted = T("Education details deleted"),
             msg_list_empty = T("No education details currently registered"))
 
-        # Resource configuration
         self.configure("pr_education",
+                       deduplicate=self.pr_education_deduplicate,
                        list_fields=["id",
                                     "person_id",
                                     "year",
@@ -2125,6 +2149,34 @@ class S3PersonEducationModel(S3Model):
         # Return model-global names to response.s3
         #
         return Storage()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pr_education_deduplicate(item):
+        """ Education de-duplication """
+
+        if item.tablename == "pr_education":
+            data = item.data
+            person_id = data.get("person_id", None)
+            if person_id is None:
+                return
+
+            level = data.get("level", None)
+            award = data.get("award", None)
+            year = data.get("year", None)
+            institute = data.get("institute", None)
+            table = item.table
+            query = (table.person_id == person_id) & \
+                    (table.level == level) & \
+                    (table.award == award) & \
+                    (table.year == year) & \
+                    (table.institute == institute) & \
+                    (table.deleted != True)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3PersonDetailsModel(S3Model):
@@ -2219,14 +2271,36 @@ class S3PersonDetailsModel(S3Model):
             msg_record_deleted = T("Person's Details deleted"),
             msg_list_empty = T("There are no details for this person yet. Add Person's Details."))
 
-        # Resource configuration
-        #self.configure(tablename,
-        #               )
+        self.configure(tablename,
+                       deduplicate=self.pr_person_details_deduplicate,
+                       )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
         return Storage()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pr_person_details_deduplicate(item):
+        """
+            Person Details de-duplication
+            - only 1 of these expected per person
+        """
+
+        if item.tablename == "pr_person_details":
+            person_id = item.data.get("person_id", None)
+            if person_id is None:
+                return
+
+            table = item.table
+            query = (table.person_id == person_id) & \
+                    (table.deleted != True)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3SavedSearch(S3Model):

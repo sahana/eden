@@ -226,7 +226,7 @@ def staff():
 def person():
     """
         Person Controller
-        - used for Personal Profile & Imports
+        - used for access to component Tabs, Personal Profile & Imports
         - includes components relevant to HRM
     """
 
@@ -261,8 +261,7 @@ def person():
         hr_id = None
 
     # Configure human resource table
-    tablename = "hrm_human_resource"
-    table = s3db[tablename]
+    table = s3db.hrm_human_resource
     table.type.default = 1
     request.get_vars.update(xsltmode="staff")
     if hr_id:
@@ -274,8 +273,8 @@ def person():
             request.get_vars["group"] = group
 
     # Configure person table
+    table = db.pr_person
     tablename = "pr_person"
-    table = s3db[tablename]
     configure(tablename,
               deletable=False)
 

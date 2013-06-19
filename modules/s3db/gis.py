@@ -550,7 +550,7 @@ class S3LocationModel(S3Model):
                                 error = T("Sorry location appears to be outside the area of parent %(parent)s.") % \
                                     dict(parent=parent_name)
                             current.response.error = error
-                            s3_debug(base_error)
+                            s3_debug(error)
                             return
 
                         # @ToDo: Precise (GIS function)

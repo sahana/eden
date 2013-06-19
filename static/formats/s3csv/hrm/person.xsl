@@ -16,8 +16,6 @@
          Office Lat.....................optional.....office latitude
          Office Lon.....................optional.....office longitude
          Office Street address..........optional.....office street address
-         Office Country.................optional.....office country
-         Office City....................optional.....office city
          Office Postcode................optional.....office postcode
          Department.....................optional.....human_resource department
          Job Title......................optional.....human_resource job title
