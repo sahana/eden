@@ -2697,6 +2697,7 @@ class S3SurveyCompleteModel(S3Model):
         """
         """
 
+        T = current.T
         vars = form.vars
         if "series_id" not in vars or vars.series_id == None:
             form.errors.series_id = T("Series details missing")
