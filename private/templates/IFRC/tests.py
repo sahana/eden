@@ -1,0 +1,48 @@
+# -*- coding: utf-8 -*-
+
+"""
+    This file specifies the tests which are to be run on the IFRC template.
+
+    modules/tests/suite.py runs this file to get the test_list which is to be loaded.
+    To add more tests which are to run on this template, simply add the class name
+    to the list below.
+"""
+
+from gluon import current
+settings = current.deployment_settings
+
+current.selenium_tests = ["CreateOrganisation",
+                          "CreateOffice",
+                          "CreateStaff",
+                          "CreateStaffJobRole",
+                          "CreateStaffCertificate",
+                          "SearchStaff",
+                          "StaffReport",
+                          "CreateVolunteer",
+                          "CreateVolunteerJobRole",
+                          "CreateVolunteerProgramme",
+                          "CreateVolunteerSkill",
+                          "CreateVolunteerCertificate",
+                          "VolunteerSearch",
+                          "CreateStaffTraining",
+                          "CreateVolunteerTraining",
+                          "SendItem",
+                          "ReceiveItem",
+                          "SendReceiveItem",
+                          "CreateProject",
+                          "CreateAsset",
+                          "AssetSearch",
+                          "AssetReport",
+                          "AddStaffParticipants",
+                          "AddStaffToOrganisation",
+                          "AddStaffToOffice",
+                          "AddStaffToWarehouse",
+                          "CreateWarehouse",
+                          "SearchWarehouse",
+                          "CreateItem",
+                          "CreateCatalog",
+                          "CreateCategory",
+                          "CreateMember",
+                          "SearchMember",
+                          "ReportTestHelper"
+                          ]
