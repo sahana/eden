@@ -28,81 +28,33 @@ from tests.helpers import *
 
 def loadAllTests():
 
-    # Create Organisation
+    # Run the file private/templates/<current_template>/tests.py to get tests list.
+    path = os.path.join(request.folder,
+                        "private", "templates",
+                        settings.get_template(),
+                        "tests.py")
+    if os.path.exists(path):
+        settings.exec_template(path)
+    else:
+        # Fallback to the default template tests.
+        path = os.path.join(request.folder,
+                            "private", "templates",
+                            "default",
+                            "tests.py")
+        settings.exec_template(path)
+
+    tests_list = current.selenium_tests
+
     loadTests = unittest.TestLoader().loadTestsFromTestCase
-    suite = loadTests(CreateOrganisation)
+    # Initialise the suite with the first test.
+    exec("suite = loadTests(%s)" % tests_list[0])
 
     # Shortcut
     addTests = suite.addTests
 
-    # Create Office
-    addTests(loadTests(CreateOffice))
-
-    # Setup Staff
-    addTests(loadTests(CreateStaff))
-    addTests(loadTests(CreateStaffJobRole))
-    addTests(loadTests(CreateStaffCertificate))
-    addTests(loadTests(SearchStaff))
-    addTests(loadTests(StaffReport))
-
-    # Setup Volunteer
-    addTests(loadTests(CreateVolunteer))
-    addTests(loadTests(CreateVolunteerJobRole))
-    addTests(loadTests(CreateVolunteerProgramme))
-    addTests(loadTests(CreateVolunteerSkill))
-    addTests(loadTests(CreateVolunteerCertificate))
-    addTests(loadTests(VolunteerSearch))
-
-    # Create Staff & Volunteer Training
-    addTests(loadTests(CreateStaffTraining))
-    addTests(loadTests(CreateVolunteerTraining))
-
-    # Inventory tests
-    addTests(loadTests(SendItem))
-    addTests(loadTests(ReceiveItem))
-    addTests(loadTests(SendReceiveItem))
-
-    # Project Tests
-    addTests(loadTests(CreateProject))
-
-    # Asset Tests
-    addTests(loadTests(CreateAsset))
-    addTests(loadTests(AssetSearch))
-    addTests(loadTests(AssetReport))
-    
-    # Assign Staff Participants
-    addTests(loadTests(AddStaffParticipants))
-    
-    # Assign Staff to Organisation
-    addTests(loadTests(AddStaffToOrganisation))
-
-    # Assign Staff to Office
-    addTests(loadTests(AddStaffToOffice))
-
-    # Assign Staff to Warehouse
-    addTests(loadTests(AddStaffToWarehouse))
-
-    # Warehouse Tests
-    addTests(loadTests(CreateWarehouse))
-    addTests(loadTests(SearchWarehouse))
-
-    # Create an Item
-    addTests(loadTests(CreateItem))
-
-    # Create a Catalog
-    addTests(loadTests(CreateCatalog))
-
-    # Create a Category
-    addTests(loadTests(CreateCategory))
-
-    # Create Members
-    addTests(loadTests(CreateMember))
-
-    # Search Members
-    addTests(loadTests(SearchMember))
-    
-    # Test helpers
-    addTests(loadTests(ReportTestHelper))
+    # Add all tests to the suite.
+    for i in range(1, len(tests_list)):
+        exec("addTests(loadTests(%s))" % tests_list[i])
 
     return suite
 

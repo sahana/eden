@@ -97,6 +97,7 @@ import time
 import unittest
 from xml.sax import saxutils
 
+from gluon import current
 
 # ------------------------------------------------------------------------
 # The redirectors below are used to capture output during testing. Output
@@ -655,6 +656,10 @@ class HTMLTestRunner(Template_mixin):
         Return report attributes as a list of (name, value).
         Override this to add custom attributes.
         """
+        # Get the current template
+        settings = current.deployment_settings
+        template = settings.get_template()
+        
         startTime = str(self.startTime)[:19]
         duration = str(self.stopTime - self.startTime)
         status = []
@@ -669,6 +674,7 @@ class HTMLTestRunner(Template_mixin):
             ('Start Time', startTime),
             ('Duration', duration),
             ('Status', status),
+            ('Template', template)
         ]
 
 
