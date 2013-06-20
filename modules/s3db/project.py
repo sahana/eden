@@ -3126,7 +3126,8 @@ class S3ProjectOrganisationModel(S3Model):
             row = db(query).select(otable.id,
                                    limitby=(0, 1)).first()
             if row:
-                form.errors.role = T("Lead Implementer for this project is already set, please choose another role.")
+                form.errors.role = \
+                    current.T("Lead Implementer for this project is already set, please choose another role.")
         return
 
     # -------------------------------------------------------------------------
@@ -3155,11 +3156,11 @@ class S3ProjectOrganisationModel(S3Model):
 
             # Set the Project's organisation_id to the new lead organisation
             organisation_id = vars.organisation_id
-            s3db = current.s3db
             db(ptable.id == project_id).update(
                                         organisation_id = organisation_id,
-                                        realm_entity = s3db.pr_get_pe_id("org_organisation",
-                                                                         organisation_id)
+                                        realm_entity = \
+                                            current.s3db.pr_get_pe_id("org_organisation",
+                                                                      organisation_id)
                                         )
 
     # -------------------------------------------------------------------------
