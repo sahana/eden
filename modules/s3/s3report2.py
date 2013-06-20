@@ -236,6 +236,8 @@ class S3ReportForm(object):
             @param widget_id: the HTML element base ID for the widgets
         """
 
+        T = current.T
+
         # Report options
         report_options, hidden = self.report_options(get_vars = get_vars,
                                                      widget_id = widget_id)
@@ -246,20 +248,23 @@ class S3ReportForm(object):
                                         maxcols=maxcols)
             labels = pivotdata["labels"]
             hidden["pivotdata"] = json.dumps(pivotdata)
-            empty = ""
         else:
             labels = None
             hidden["pivotdata"] = """null"""
-            empty = current.T("Please select report options.")
-
+            
+        empty = T("Please select report options.")
+        hide = T("Hide Table")
+        show = T("Show Table")
+        
         throbber = "/%s/static/img/indicator.gif" % current.request.application
 
 
         # Filter options
         if filter_widgets is not None:
-            filter_options = self._fieldset(current.T("Filter Options"),
+            filter_options = self._fieldset(T("Filter Options"),
                                             filter_widgets,
-                                            _id="%s-filters" % widget_id)
+                                            _id="%s-filters" % widget_id,
+                                            _class="filter-form")
         else:
             filter_options = ""
 
@@ -269,7 +274,7 @@ class S3ReportForm(object):
         if submit:
             _class = "pt-submit"
             if submit is True:
-                label = current.T("Update Report")
+                label = T("Update Report")
             elif isinstance(submit, (list, tuple)):
                 label = submit[0]
                 _class = "%s %s" % (submit[1], _class)
@@ -299,16 +304,21 @@ class S3ReportForm(object):
                        ),
                        _class="pt-chart-container"
                    ),
+                   DIV(hide,
+                       _class="pt-toggle-table pt-hide-table"),
+                   DIV(show,
+                       _class="pt-toggle-table pt-show-table",
+                       _style="display:none"),
                    DIV(DIV(_class="pt-table-controls"),
                        DIV(IMG(_src=throbber,
                                _alt=current.T("Processing"),
                                _class="pt-throbber"),
                            DIV(_class="pt-table"),
+                           DIV(empty, _class="pt-empty"),
                            _class="pt-table-contents"
                        ),
                        _class="pt-table-container"
                    ),
-                   DIV(empty,_class="pt-empty"),
                    _class="pt-container",
                    _id=widget_id
                )

@@ -49,7 +49,7 @@ from s3rest import S3Method
 from s3resource import S3ResourceField, S3URLQuery
 from s3utils import s3_unicode
 from s3validators import *
-from s3widgets import S3DateTimeWidget, S3MultiSelectWidget, S3OrganisationHierarchyWidget, S3GroupedOptionsWidget, s3_grouped_checkboxes_widget
+from s3widgets import S3DateWidget, S3DateTimeWidget, S3MultiSelectWidget, S3OrganisationHierarchyWidget, S3GroupedOptionsWidget, s3_grouped_checkboxes_widget
 
 # =============================================================================
 class S3FilterWidget(object):
@@ -510,7 +510,7 @@ class S3DateFilter(S3RangeFilter):
             dtformat = current.deployment_settings.get_L10n_date_format()
             field = Field(rfield.fname, "datetime",
                           requires = IS_DATE_IN_RANGE(format = dtformat))
-            field._tablename = rfield.tname
+            field.tablename = field._tablename = rfield.tname
         elif not rfield.field:
             # Unresolvable selector
             return ""

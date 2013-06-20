@@ -48,6 +48,10 @@
                 currentSeriesIndex: null
             };
 
+            this.table_options = {
+                hidden: false
+            };
+
             var chart = $(el).find('.pt-chart');
             if (chart.length) {
                 this.chart = chart.first();
@@ -89,6 +93,8 @@
             if (!data) {
                 data = {empty: true};
                 // Show the empty section
+                $(el).find('.pt-hide-table').hide();
+                $(el).find('.pt-show-table').hide();
                 $(el).find('.pt-empty').show();
             }
             this.data = data;
@@ -140,6 +146,14 @@
 
             // Hide the empty section
             $(el).find('.pt-empty').hide();
+
+            if (this.table_options.hidden) {
+                $(el).find('.pt-show-table').show();
+                $(el).find('.pt-hide-table').hide();
+            } else {
+                $(el).find('.pt-show-table').hide();
+                $(el).find('.pt-hide-table').show();
+            }
         },
 
         _renderHeader: function(cols, labels) {
@@ -171,7 +185,7 @@
 
             for (var i=0; i < cols.length; i++) {
                 if (cols[i][0] != '__other__') {
-                    columns.append($('<th scope="col">' + cols[i][2] + '</th>'));
+                    columns.append($('<th scope="col">' + cols[i][4] + '</th>'));
                 }
             }
 
@@ -187,10 +201,10 @@
             for (var i=0; i<cells.length; i++) {
                 row = rows[i];
                 if (row[0] != '__other__') {
-                    tr = $('<tr class="' + (i % 2 ? 'odd': 'even') + '">' + '<td>' + row[2] + '</td></tr>')
+                    tr = $('<tr class="' + (i % 2 ? 'odd': 'even') + '">' + '<td>' + row[4] + '</td></tr>')
                         .append(this._renderCells(cells[i], cols, labels));
                     if (show_totals) {
-                        tr.append($('<td>' + row[3] + '</td>'));
+                        tr.append($('<td>' + row[2] + '</td>'));
                     }
                     tbody.append(tr);
                 }
@@ -245,14 +259,20 @@
 
             if (this.options.showTotals) {
 
-                var c = rows.length % 2 ? 'odd' : 'even';
+                var i, n;
+                for (i = 0, n = 0, len=rows.length; i<len; i++) {
+                    if (rows[i][0] != '__other__') {
+                        n++;
+                    }
+                }
+                var c = n % 2 ? 'odd' : 'even';
                 var footer = $('<tr class="' + c + ' totals_row">' +
                                '<th class="totals_header" scope="row">' +
                                labels.total +
                                '</th></tr>');
-                for (var i = 0; i < cols.length; i++) {
+                for (i = 0; i < cols.length; i++) {
                     if (cols[i][0] != '__other__') {
-                        footer.append($('<td>' + cols[i][3] + '</td>'));
+                        footer.append($('<td>' + cols[i][2] + '</td>'));
                     }
                 }
                 footer.append($('<td>' + total + '</td>'));
@@ -280,7 +300,7 @@
                 rows_label = labels.rows,
                 cols_label = labels.cols,
                 chart_opts = $('<div class="pt-chart-opts">');
-
+                
             var pchart_rows = widget_id + '-pchart-rows',
                 vchart_rows = widget_id + '-vchart-rows',
                 hchart_rows = widget_id + '-hchart-rows',
@@ -314,9 +334,7 @@
             }
 
             // Show the chart options
-            $(el).find('.pt-chart-controls').first()
-                                            .empty()
-                                            .append(chart_opts);
+            $(container).append(chart_opts);
         },
         
         _renderChart: function(chart_options) {
@@ -406,10 +424,12 @@
             var items = [];
             for (var i=0; i<data.length; i++) {
                 var item = data[i];
-                items.push({
-                    label: item[2],
-                    data: item[3]
-                });
+                if (!item[1]) {
+                    items.push({
+                        label: item[4],
+                        data: item[2]
+                    });
+                }
             }
 
             if (title) {
@@ -471,12 +491,14 @@
             $(chart).closest('.pt-chart-contents').show().css({width: '96%'});
             $(chart).css({height: '360px'});
 
-            var items = [];
-            var labels = [];
+            var items = [], labels = [], idx=0;
             for (var i=0; i<data.length; i++) {
                 var item = data[i];
-                items.push({label: item[2], data: [[i+1, item[3]]]});
-                labels.push([i+1, item[2]]);
+                if (!item[1]) {
+                    items.push({label: item[4], data: [[idx+1, item[2]]]});
+                    labels.push([idx+1, item[4]]);
+                    idx++;
+                }
             }
 
             if (title) {
@@ -506,7 +528,7 @@
                     xaxis: {
                         ticks: labels,
                         min: 0,
-                        max: data.length+1,
+                        max: items.length+1,
                         tickLength: 0
                     }
                 }
@@ -544,19 +566,35 @@
             }
             $(chart).closest('.pt-chart-contents').show().css({width: '96%'});
 
-            var cells = data.cells, rdim, cdim, rows, cols, title, get_data;
+            var cells = data.cells, rdim, cdim, get_data, ridx = [], cidx = [];
             if (dim === 0) {
-                rows = data.rows;
-                cols = data.cols;
+                rdim = data.rows;
+                cdim = data.cols;
                 get_data = function(i, j) {
-                    return cells[i][j]['value'];
+                    var ri = ridx[i], ci = cidx[j];
+                    return cells[ri][ci]['value'];
                 };
             } else {
-                rows = data.cols;
-                cols = data.rows;
+                rdim = data.cols;
+                cdim = data.rows;
                 get_data = function(i, j) {
-                    return cells[j][i]['value'];
+                    var ri = ridx[i], ci = cidx[j];
+                    return cells[ci][ri]['value'];
                 };
+            }
+
+            var i, rows = [], cols = [];
+            for (i=0, len=rdim.length; i < len; i++) {
+                if (!rdim[i][1]) {
+                    rows.push(rdim[i]);
+                    ridx.push(i);
+                }
+            }
+            for (i=0, len=cdim.length; i < len; i++) {
+                if (!cdim[i][1]) {
+                    cols.push(cdim[i]);
+                    cidx.push(i);
+                }
             }
 
             var height = Math.max(rows.length * Math.max((cols.length + 1) * 16, 50) + 70, 360);
@@ -565,7 +603,7 @@
             var odata = [], xmax = 0;
             for (var c=0; c < cols.length; c++) {
                 // every col gives a series
-                var series = {label: cols[c][2]}, values = [], index, value;
+                var series = {label: cols[c][4]}, values = [], index, value;
                 for (var r=0; r < rows.length; r++) {
                     index = (rows.length - r) * (cols.length + 1) - c;
                     value = get_data(r, c);
@@ -580,7 +618,7 @@
 
             var yaxis_ticks = [], label;
             for (r=0; r < rows.length; r++) {
-                label = rows[r][2];
+                label = rows[r][4];
                 index = (rows.length - r) * (cols.length + 1) + 1;
                 yaxis_ticks.push([index, label]);
             }
@@ -637,7 +675,7 @@
                     pt.chart_options.currentDataIndex = item.dataIndex;
                     pt.chart_options.currentSeriesIndex = item.seriesIndex;
 
-                    var name = rows[item.dataIndex][2];
+                    var name = rows[item.dataIndex][4];
                     var value = item.datapoint[0];
                     var tooltip = '<div class="pt-tooltip-label">' + name + '</div>';
                     tooltip += '<div class="pt-tooltip-text">' + item.series.label + ' : <span class="pt-tooltip-value">' + value + '</span></div>';
@@ -849,7 +887,21 @@
                 $(this).siblings().toggle();
                 $(this).children().toggle();
             });
-            
+
+            // Show/hide pivot table
+            $(el).find('.pt-hide-table').click(function() {
+                pt.table_options.hidden = true;
+                $(el).find('.pt-table').hide();
+                $(this).siblings('.pt-show-table').show();
+                $(this).hide();
+            });
+            $(el).find('.pt-show-table').click(function() {
+                pt.table_options.hidden = false;
+                $(el).find('.pt-table').show();
+                $(this).siblings('.pt-hide-table').show();
+                $(this).hide();
+            });
+
             $('#' + widget_id + '-totals').click(function() {
                 var show_totals = $(this).is(':checked');
                 if (pt.options.showTotals != show_totals) {
@@ -929,6 +981,9 @@
             $('#' + widget_id + '-vchart-rows').unbind('click');
             $('#' + widget_id + '-pchart-cols').unbind('click');
             $('#' + widget_id + '-vchart-cols').unbind('click');
+            
+            $(el).find('.pt-hide-table').unbind('click');
+            $(el).find('.pt-show-table').unbind('click');
             
             $(el).find('.pt-hide-chart').unbind('click');
         }

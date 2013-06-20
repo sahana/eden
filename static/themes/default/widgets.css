@@ -1121,7 +1121,7 @@ ul.x-tree-root-ct {
     border-top: 0;
 }
 .filter-form table.s3-checkboxes-widget td,
-.filter-form table.s3-groupopts-widget td,
+.filter-form table.s3-groupedopts-widget td,
 .search_form table.s3-checkboxes-widget td,
 .search_form table.s3searchminmaxwidget td,
 #filter_options table.s3-checkboxes-widget td,

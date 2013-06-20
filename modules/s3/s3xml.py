@@ -1154,7 +1154,8 @@ class S3XML(S3Codec):
 
             if fieldtype == "datetime":
                 value = encode_iso_datetime(v).decode("utf-8")
-            elif fieldtype in ("date", "time"):
+            elif fieldtype in ("date", "time") or \
+                 fieldtype[:7] == "decimal":
                 value = str(formatter(v)).decode("utf-8")
 
             # Get the representation
