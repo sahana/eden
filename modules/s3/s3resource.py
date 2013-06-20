@@ -1059,7 +1059,7 @@ class S3Resource(object):
 
         if getids or count or left_joins:
             if not groupby and not vfltr and \
-               (limitby or vtables != ftables):
+               (count or limitby or vtables != ftables):
 
                 if getids or left_joins:
                     field = table._id
@@ -1208,7 +1208,6 @@ class S3Resource(object):
             osetattr(table, "virtualfields", vf)
 
         # Apply virtual fields filter :
-
         if rows and vfltr is not None:
 
             if count:
@@ -1830,6 +1829,7 @@ class S3Resource(object):
             @param approve: set to approved (False for reset to unapproved)
         """
 
+        db = current.db
         auth = current.auth
 
         if auth.s3_logged_in():
@@ -1840,22 +1840,26 @@ class S3Resource(object):
         tablename = self.tablename
         table = self.table
 
-        for record in self.select():
+        records = self.fast_select([self._id.name])
+        for record in records["data"]:
 
-            record_id = record[table._id]
+            record_id = record[str(self._id)]
 
             # Forget any cached permission for this record
             auth.permission.forget(table, record_id)
 
             if "approved_by" in table.fields:
-                success = record.update_record(approved_by=user_id)
+                dbset = db(table._id == record_id)
+                success = dbset.update(approved_by = user_id)
                 if not success:
                     current.db.rollback()
                     return False
                 else:
                     onapprove = self.get_config("onapprove", None)
                     if onapprove is not None:
-                        callback(onapprove, record, tablename=tablename)
+                        row = dbset.select(limitby=(0, 1)).first()
+                        if row:
+                            callback(onapprove, row, tablename=tablename)
             if components is None:
                 continue
             for alias in self.components:

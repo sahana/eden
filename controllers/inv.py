@@ -48,26 +48,28 @@ def index2():
         vars = request.get_vars
         if request.extension == "html" or request.vars.id == "warehouse_list_1":
             resource = s3db.resource("inv_warehouse")
-            totalrows = resource.count()
             list_fields = ["id",
                            "name",
                            "organisation_id",
                            ]
             start = int(vars.iDisplayStart) if vars.iDisplayStart else 0
             limit = int(vars.iDisplayLength) if vars.iDisplayLength else s3mgr.ROWSPERPAGE
-            rfields = resource.resolve_selectors(list_fields)[0]
-            (orderby, filter) = S3DataTable.getControlData(rfields, request.vars)
-            resource.add_filter(filter)
-            filteredrows = resource.count()
-            rows = resource.select(list_fields,
-                                   orderby="organisation_id",
-                                   start=start,
-                                   limit=limit,
-                                   )
-            data = resource.extract(rows,
-                                    list_fields,
-                                    represent=True,
-                                    )
+            searchq, orderby, left_joins = resource.datatable_filter(list_fields, request.get_vars)
+            if searchq:
+                totalrows = resource.count()
+                resource.add_filter(searchq)
+            else:
+                totalrows = None
+            rows = resource.fast_select(list_fields,
+                                        start=start,
+                                        limit=limit,
+                                        count=True,
+                                        represent=True)
+            filteredrows = rows["numrows"]
+            if totalrows is None:
+                totalrows = filteredrows
+            data = rows["data"]
+            rfields = rows["rfields"]
             dt = S3DataTable(rfields, data)
             dt.defaultActionButtons(resource)
             if request.extension == "html":
@@ -98,7 +100,6 @@ def index2():
                     inventory = "Adjustment not currently supported... :-) you selected the following items: %s" % request.post_vars.selected
             else:
                 resource = s3db.resource("inv_inv_item")
-                totalrows = resource.count()
                 table = resource.table
                 stable = s3db.supply_item
                 list_fields = ["id",
@@ -108,16 +109,23 @@ def index2():
                                "pack_value",
                                "total_value",
                                ]
-                rfields = resource.resolve_selectors(list_fields)[0]
-                (orderby, filter) = S3DataTable.getControlData(rfields, request.vars)
-                resource.add_filter(filter)
-                (rfields, joins, left, distinct) = resource.resolve_selectors(list_fields)
+                searchq, orderby, left_joins = resource.datatable_filter(list_fields, request.get_vars)
+                if searchq:
+                    totalrows = resource.count()
+                    resource.add_filter(searchq)
+                else:
+                    totalrows = None
                 site_list = {}
-                rows = resource.select(list_fields,
-                                       limit=resource.count())
-                filteredrows = len(rows.records)
-                for row in rows:
-                    site_id = row.inv_inv_item.site_id
+                rows = resource.fast_select(list_fields,
+                                            start=None,
+                                            limit=None,
+                                            count=True)
+                filteredrows = rows["numrows"]
+                if totalrows is None:
+                    totalrows = filteredrows
+                data = rows["data"]
+                for row in data:
+                    site_id = row["inv_inv_item.site_id"]
                     if site_id not in site_list:
                         site_list[site_id] = 1
                     else:
@@ -127,18 +135,16 @@ def index2():
                 for (key,value) in site_list.items():
                     formatted_site_list[str(repr(key))] = value
                 if isinstance(orderby, bool):
-                    orderby = table.site_id | stable.name | ~table.quantity
+                    orderby = [table.site_id, stable.name, ~table.quantity]
                 start = int(vars.iDisplayStart) if vars.iDisplayStart else 0
                 limit = int(vars.iDisplayLength) if vars.iDisplayLength else s3mgr.ROWSPERPAGE
-                rows = resource.select(list_fields,
-                                       orderby=orderby,
-                                       start=start,
-                                       limit=limit,
-                                       )
-                data = resource.extract(rows,
-                                        list_fields,
-                                        represent=True,
-                                        )
+                rows = resource.fast_select(list_fields,
+                                            orderby=orderby,
+                                            start=start,
+                                            limit=limit,
+                                            represent=True)
+                rfields = rows["rfields"]
+                data = rows["data"]
                 dt = S3DataTable(rfields,
                                  data,
                                  orderby=orderby,
@@ -218,27 +224,24 @@ def index2():
         # Third table
         if request.extension == "html" or request.vars.id == "supply_list_1":
             resource = s3db.resource("supply_item")
-            totalrows = displayrows = resource.count()
             list_fields = ["id",
                            "name",
                            "um",
                            "model",
                            ]
-            limit = int(vars.iDisplayLength) if vars.iDisplayLength else s3mgr.ROWSPERPAGE
-            rows = resource.select(list_fields,
-                                   start=0,
-                                   limit=resource.count(),
-                                   )
-            data = resource.extract(rows,
-                                    list_fields,
-                                    represent=True,
-                                    )
-            rfields = resource.resolve_selectors(list_fields)[0]
+            rows = resource.fast_select(list_fields,
+                                        start=None,
+                                        limit=None,
+                                        count=True,
+                                        represent=True)
+            data = rows["data"]
+            rfields = rows["rfields"]
+            numrows = rows["numrows"]
             dt = S3DataTable(rfields, data)
             dt.defaultActionButtons(resource)
             if request.extension == "html":
-                supply_items = dt.html(totalrows,
-                                       displayrows,
+                supply_items = dt.html(numrows,
+                                       numrows,
                                        "supply_list_1",
                                        dt_displayLength=10,
                                        dt_action_col=1,
@@ -249,8 +252,8 @@ def index2():
                                                        ),
                                        )
             else:
-                supply_items = dt.json(totalrows,
-                                       displayrows,
+                supply_items = dt.json(numrows,
+                                       numrows,
                                        "supply_list_1",
                                        int(request.vars.sEcho),
                                        dt_action_col=1,
