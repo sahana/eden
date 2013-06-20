@@ -453,6 +453,7 @@ function S3EnableNavigateAwayConfirm() {
     $.ajaxS3 = function(s) {
         var options = $.extend( {}, $.ajaxS3Settings, s );
         options.tryCount = 0;
+        options.success = null; // prevent callback from being executed twice
         if (s.message) {
             s3_showStatus(i18n.ajax_get + ' ' + (s.message ? s.message : i18n.ajax_fmd) + '...', this.ajaxS3Settings.msgTimeout);
         }
