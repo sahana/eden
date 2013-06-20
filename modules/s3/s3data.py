@@ -1691,14 +1691,8 @@ class S3PivotTable(object):
                 
             if maxrows is not None:
                 rtail = self._tail(rows, maxrows, least=least, method=hmethod)
-                #rows = self._top(rows, maxrows,
-                                 #least=least, method=hmethod, other=OTHER)
-            #last = rows.pop(-1) if rows[-1][0] == OTHER else None
             self._sortdim(rows, rfields[rows_dim])
-            #if last:
-                #last = (last[0], last[1], Storage(value=None, text=others))
-                #rows.append(last)
-            if rtail[1]:
+            if rtail[1] is not None:
                 rows.append((OTHER, rtail[1], Storage(value=None, text=others)))
             row_indices = [i[0] for i in rows]
 
@@ -1717,19 +1711,13 @@ class S3PivotTable(object):
                 cols.append((i, total, header))
             if maxcols is not None:
                 ctail = self._tail(cols, maxcols, least=least, method=hmethod)
-                #cols = self._top(cols, maxcols,
-                                 #least=least, method=hmethod, other=OTHER)
-            #last = cols.pop(-1) if cols[-1][0] == OTHER else None
             self._sortdim(cols, rfields[cols_dim])
-            if ctail[1]:
+            if ctail[1] is not None:
                 cols.append((OTHER, ctail[1], Storage(value=None, text=others)))
-            #if last:
-                #last = (last[0], last[1], Storage(value=None, text=others))
-                #cols.append(last)
             col_indices = [i[0] for i in cols]
 
-            rothers = rtail[0]
-            cothers = ctail[0]
+            rothers = rtail[0] or []
+            cothers = ctail[0] or []
 
             # Group and sort the cells
             icell = self.cell
@@ -1779,13 +1767,15 @@ class S3PivotTable(object):
                 rval = s3_unicode(rtitle.value) if rindex != OTHER else None
                 if represent:
                     rappend((rindex,
+                             rindex in rothers,
+                             rtotal,
                              rval,
-                             rtitle.text,
-                             rtotal))
+                             rtitle.text))
                 else:
                     rappend((rindex,
-                             rval,
-                             rtotal))
+                             rindex in rothers,
+                             rtotal,
+                             rval))
                 for cindex, ctotal, ctitle in cols:
                     cell = cells[rindex][cindex]
                     items = cell["items"]
@@ -1849,13 +1839,15 @@ class S3PivotTable(object):
                         cval = s3_unicode(ctitle.value) if cindex != OTHER else None
                         if represent:
                             cappend((cindex,
+                                     cindex in cothers,
+                                     ctotal,
                                      cval,
-                                     ctitle.text,
-                                     ctotal))
+                                     ctitle.text))
                         else:
                             cappend((cindex,
-                                     cval,
-                                     ctotal))
+                                     cindex in cothers,
+                                     ctotal,
+                                     cval))
                 ctotals = False
                 ocells.append(orow)
 

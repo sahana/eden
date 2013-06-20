@@ -29,6 +29,9 @@
 .pt-table-contents {
     clear: left;
 }
+.pt-table-contents {
+    min-height: 16px;
+}
 .pt-chart-contents {
     background-color: #FFFDF6;
     padding: 8px;
@@ -56,6 +59,15 @@
     min-width: 16px;
     background: url(../../img/cross.png) right top no-repeat;
 }
+.pt-toggle-table {
+    clear: left;
+    font-size: 10px;
+    cursor: pointer;
+    color: #003399;
+    text-decoration: underline;
+    margin-bottom: 3px;
+}
+
 .pt-chart {
     margin-top: 20px;
 }

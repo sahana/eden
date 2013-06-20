@@ -712,7 +712,7 @@ S3OptionsFilter({
                        #                    label=T("Owning organization"),
                        #                    comment=T("Search for items by owning organization."),
                        #                    represent="%(name)s",
-                       #                    cols=3)
+                       #                    cols=2)
                        #],
                        list_fields = list_fields,
                        onvalidation = self.inv_inv_item_onvalidate,
