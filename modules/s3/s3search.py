@@ -1566,13 +1566,23 @@ i18n.edit_saved_search="%s"
                     vars = None
                 url = URL(extension="geojson", args=None, vars=vars)
                 gis = current.gis
+                marker_fn = s3db.get_config(tablename, "marker_fn")
+                if marker_fn:
+                    # Per-feature markers added in get_location_data()
+                    marker = None
+                else:
+                    # Single Marker for the layer
+                    request = self.request
+                    marker = gis.get_marker(request.controller,
+                                            request.function)
+
                 feature_resources = [{
                         "name"      : T("Search Results"),
                         "id"        : "search_results",
                         "tablename" : tablename,
                         "url"       : url,
                         "active"    : False, # Gets activated when the Map is opened up
-                        "marker"    : gis.get_marker(request.controller, request.function)
+                        "marker"    : marker
                     }]
                 map_popup = gis.show_map(feature_resources=feature_resources,
                                          # Added by search widget onClick in s3.dataTables.js

@@ -5,7 +5,7 @@
     <!-- **********************************************************************
          S3CSV Common Templates
 
-         Copyright (c) 2010-12 Sahana Software Foundation
+         Copyright (c) 2010-13 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -29,7 +29,6 @@
          OTHER DEALINGS IN THE SOFTWARE.
 
     *********************************************************************** -->
-
     <!-- Resolve Column header
 
          Helper template to resolve column header variants, using both
@@ -63,7 +62,6 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-
     <!-- Get Column Value
 
          Extracts the value of a column in the current <row> and resolves
@@ -138,6 +136,46 @@
                             <xsl:with-param name="item" select="normalize-space($list)"/>
                             <xsl:with-param name="arg" select="$arg"/>
                         </xsl:call-template>
+                    </xsl:if>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- listString: split a string with a list into items
+
+         @param list: the string containing the list
+         @param sep: the list separator
+    -->
+    <xsl:template name="listString">
+
+        <xsl:param name="list"/>
+        <xsl:param name="listsep" select="','"/>
+
+        <xsl:if test="$listsep">
+            <xsl:choose>
+                <xsl:when test="contains($list, $listsep)">
+                    <xsl:variable name="head">
+                        <xsl:value-of select="substring-before($list, $listsep)"/>
+                    </xsl:variable>
+                    <xsl:variable name="tail">
+                        <xsl:value-of select="substring-after($list, $listsep)"/>
+                    </xsl:variable>
+                    <xsl:text>"</xsl:text>
+                    <xsl:value-of select="normalize-space($head)"/>
+                    <xsl:text>",</xsl:text>
+                    <xsl:call-template name="listString">
+                        <xsl:with-param name="list" select="$tail"/>
+                        <xsl:with-param name="listsep" select="$listsep"/>
+                    </xsl:call-template>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:if test="normalize-space($list)!=''">
+                        <xsl:text>"</xsl:text>
+                        <xsl:value-of select="normalize-space($list)"/>
+                        <xsl:text>"</xsl:text>
                     </xsl:if>
                 </xsl:otherwise>
             </xsl:choose>

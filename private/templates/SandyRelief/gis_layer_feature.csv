@@ -1,5 +1,5 @@
-"Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","REST Filter","Site","Trackable","Folder","Visible","Enabled"
+"Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","Filter","Site","Trackable","Folder","Visible","Enabled"
 "Building Assessments","Structural Assessments","assess","building","US","office","Building","Building","location_id","False",,,,"False",
 "Canvassing","Needs Assessments","assess","canvass","US","office","Building","Canvass","location_id","False",,,,"False",
-"Facilities","All Active Facilities","org","facility","US","asset","Building","Office","name/comments","~.obsolete=False",,,,"False",
-"Requests","All Open Requests","req","req","US","request","Navaid, Red","Request","req_ref/site_id","~.fulfil_status__ne=2","True",,,"False",
+"Facilities","All Active Facilities","org","facility","US","asset","Building","Office","name,comments","~.obsolete=False",,,,"False",
+"Requests","All Open Requests","req","req","US","request","Navaid, Red","Request","req_ref,site_id","~.fulfil_status__ne=2","True",,,"False",

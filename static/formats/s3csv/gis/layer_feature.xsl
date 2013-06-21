@@ -15,8 +15,9 @@
          Controller...........string..........Layer Controller
          Function.............string..........Layer Function
          Popup Label..........string..........Layer Popup Label
-         Popup Fields.........string..........Layer Popup Fields (Fields to build feature.popup)
-         REST Filter..........string..........Layer Filter (for Map JS calling back to server)
+         Popup Fields.........comma-sep list..Layer Popup Fields (Fields to build feature OnHover tooltip)
+         Attribute Fields.....comma-sep list..Layer Attribute Fields (Fields to put in feature attributes to be visible to Styler)
+         Filter...............string..........Layer Filter
          Site.................boolean.........Layer Site (use Site for location)
          Trackable............boolean.........Layer Trackable
          Polygons.............boolean.........Layer Polygons
@@ -35,6 +36,8 @@
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
+
+    <xsl:include href="../commons.xsl"/>
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
@@ -122,6 +125,8 @@
 
         <xsl:variable name="Layer" select="col[@field='Name']/text()"/>
         <xsl:variable name="Config" select="col[@field='Config']/text()"/>
+        <xsl:variable name="Attributes" select="col[@field='Attribute Fields']/text()"/>
+        <xsl:variable name="PopupFields" select="col[@field='Popup Fields']/text()"/>
 
         <resource name="gis_layer_feature">
             <xsl:attribute name="tuid">
@@ -140,9 +145,34 @@
             </xsl:if>
             <data field="controller"><xsl:value-of select="col[@field='Controller']"/></data>
             <data field="function"><xsl:value-of select="col[@field='Function']"/></data>
-            <data field="filter"><xsl:value-of select="col[@field='REST Filter']"/></data>
+            <data field="filter"><xsl:value-of select="col[@field='Filter']"/></data>
             <data field="popup_label"><xsl:value-of select="col[@field='Popup Label']"/></data>
-            <data field="popup_fields"><xsl:value-of select="col[@field='Popup Fields']"/></data>
+            <xsl:if test="$PopupFields!=''">
+                <data field="popup_fields">
+                    <xsl:attribute name="value">
+                        <xsl:text>[</xsl:text>
+                        <xsl:call-template name="listString">
+                            <xsl:with-param name="list">
+                                <xsl:value-of select="$PopupFields"/>
+                            </xsl:with-param>
+                        </xsl:call-template>
+                        <xsl:text>]</xsl:text>
+                    </xsl:attribute>
+                </data>
+            </xsl:if>
+            <xsl:if test="$Attributes!=''">
+                <data field="attr_fields">
+                    <xsl:attribute name="value">
+                        <xsl:text>[</xsl:text>
+                        <xsl:call-template name="listString">
+                            <xsl:with-param name="list">
+                                <xsl:value-of select="$Attributes"/>
+                            </xsl:with-param>
+                        </xsl:call-template>
+                        <xsl:text>]</xsl:text>
+                    </xsl:attribute>
+                </data>
+            </xsl:if>
             <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
             <data field="refresh"><xsl:value-of select="col[@field='Refresh']"/></data>
             <xsl:if test="col[@field='Cluster Distance']!=''">
