@@ -144,10 +144,16 @@ S3.autocomplete.generic = function(url, input, name_getter, id_getter, postproce
             return item.name;
         }
     }
+    else{
+        eval("name_getter = " + name_getter);
+    }
     if (!id_getter) {
         id_getter = function(item) {
             return item.id;
         }
+    }
+    else{
+        eval("id_getter = " + id_getter);    
     }
     if (postprocess == 'undefined') {
         postprocess = '';
