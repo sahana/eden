@@ -46,6 +46,22 @@ from s3.s3resource import S3FieldSelector
 
 from tests.core import *
 
+current.data = Storage()
+current.data["auth"] = {
+        "normal" : {
+                "email": "test@example.com",
+                "password": "eden",
+                "first_name": "Test",
+                "last_name": "User",
+            },
+        "admin" : {
+                "email": "admin@example.com",
+                "password": "testing",
+                "first_name": "Admin",
+                "last_name": "User",
+            },
+    }
+
 # =============================================================================
 class Web2UnitTest(unittest.TestCase):
     """ Web2Py Unit Test """
@@ -119,9 +135,148 @@ class SeleniumUnitTest(Web2UnitTest):
     # -------------------------------------------------------------------------
     def login(self, account=None, nexturl=None):
 
-        if account == None:
+        if account is None:
             account = self.user
-        login(self.reporter, account, nexturl)
+        config = current.test_config
+        browser = config.browser
+        data = current.data["auth"]
+
+        if account in data:
+            email = data[account]["email"]
+            password = data[account]["password"]
+        elif isinstance(account, (tuple, list)):
+            email = account[0]
+            password = account[1]
+        else:
+            raise NotImplementedError
+
+        # If the user is already logged in no need to do anything so return
+        # We'd like to be able to access current.auth, however these are different threads
+        #user = current.auth.user
+        #if user and user.email == email:
+        #    # If the URL is different then move to the new URL
+        #    if not browser.current_url.endswith(nexturl):
+        #        url = "%s/%s" % (config.url, nexturl)
+        #        browser.get(url)
+        #    return
+        # auth_menu_email is used by the default template
+        # username fright is used by the IFRC template
+        if browser.page_source is not None and \
+           (browser.page_source.find("<a id=\"auth_menu_email\">%s</a>" % email) > 0 or
+            browser.page_source.find("<div class=\"username fright\">%s</div>" % email) > 0):
+            # If the URL is different then move to the new URL
+            if not browser.current_url.endswith(nexturl):
+                url = "%s/%s" % (config.url, nexturl)
+                browser.get(url)
+            return
+
+        if nexturl:
+            url = "%s/default/user/login?_next=/%s/%s" % \
+                (config.url, current.request.application, nexturl)
+        else:
+            url = "%s/default/user/login" % config.url
+        browser.get(url)
+
+        # Login
+        elem = browser.find_element_by_id("auth_user_email")
+        elem.send_keys(email)
+        elem = browser.find_element_by_id("auth_user_password")
+        elem.send_keys(password)
+        elem = browser.find_element_by_xpath("//input[contains(@value,'Login')]")
+        elem.click()
+
+        # Check the result
+        try:
+            elem = self.get_confirmation()
+        except NoSuchElementException:
+            self.reporter("Login failed.. so registering account")
+            # Try registering
+            self.register(account)
+        else:
+            self.reporter(elem.text)
+            return True
+
+    # -------------------------------------------------------------------------
+    def logout(self):
+        """ Logout """
+
+        config = current.test_config
+        browser = config.browser
+
+        url = "%s/default/user/login" % config.url
+        browser.get(url)
+
+        browser.find_element_by_id("auth_menu_email").click()
+
+        try:
+            elem = browser.find_element_by_id("auth_menu_logout")
+        except NoSuchElementException:
+            self.reporter("Logged-out already")
+            return True
+
+        elem.click()
+
+        # Check the result
+        try:
+            elem = self.get_confirmation()
+        except NoSuchElementException:
+            assert 0, "Logout unsuccesful"
+        else:
+            self.reporter(elem.text)
+            return True
+
+    # -----------------------------------------------------------------------------
+    def register(self, account="normal"):
+        """ Register on the system """
+
+        config = current.test_config
+        browser = config.browser
+        data = current.data["auth"]
+
+        if account in data:
+            email = data[account]["email"]
+            first_name = data[account]["first_name"]
+            last_name = data[account]["last_name"]
+            password = data[account]["password"]
+        else:
+            raise NotImplementedError
+
+        # Load homepage
+        homepage()
+
+        # Register user
+        elem = browser.find_element_by_id("auth_user_first_name")
+        elem.send_keys(first_name)
+        elem = browser.find_element_by_id("auth_user_last_name")
+        elem.send_keys(last_name)
+        elem = browser.find_element_by_id("auth_user_email")
+        elem.send_keys(email)
+        elem = browser.find_element_by_id("auth_user_password")
+        elem.send_keys(password)
+        elem = browser.find_element_by_id("auth_user_password_two")
+        elem.send_keys(password)
+        elem = browser.find_element_by_xpath("//input[contains(@value,'Register')]")
+        elem.click()
+
+        # Check the result
+        try:
+            elem = self.get_confirmation()
+        except NoSuchElementException:
+            assert 0, "Registration unsuccesful"
+        else:
+            self.reporter(elem.text)
+            return True
+
+    # -------------------------------------------------------------------------
+    def get_confirmation(self):
+
+        if current.deployment_settings.get_ui_formstyle() == "bootstrap":
+            confirmation_class = "alert alert-success"
+        else:
+            confirmation_class = "confirmation"
+        return WebDriverWait(self.browser, 30).until(
+                    lambda driver:
+                                driver.find_element_by_xpath("//div[@class='%s']" % confirmation_class))
 
     # -------------------------------------------------------------------------
     def getRows (self, table, data, dbcallback):
@@ -336,7 +491,7 @@ class SeleniumUnitTest(Web2UnitTest):
         datetime_format = str(settings.get_L10n_datetime_format())
         # If a confirmation is shown then clear it so that it doesn't give a false positive later
         try:
-            elem = browser.find_element_by_xpath("//div[@class='confirmation']")
+            elem = self.get_confirmation()
             elem.click()
             time.sleep(1) # Give it time to dissolve
         except:
@@ -465,9 +620,7 @@ class SeleniumUnitTest(Web2UnitTest):
         # Check & Report the results
         confirm = True
         try:
-            elem = WebDriverWait(browser, 30).until(
-                        lambda driver: \
-                               driver.find_element_by_xpath("//div[@class='confirmation']"))
+            elem = self.get_confirmation()
             self.reporter(elem.text)
         except (NoSuchElementException, TimeoutException):
             confirm = False
@@ -603,7 +756,7 @@ class SeleniumUnitTest(Web2UnitTest):
             col = 1
             e = browser.find_element_by_xpath(".//*[@id='datatable']/thead/tr[2]/th[1]")
             while True:
-                if e.text.strip() == check[1]:
+                if e.text.strip().lower() == check[1].lower():
                     break
                 else:
                     col += 1
@@ -618,10 +771,9 @@ class SeleniumUnitTest(Web2UnitTest):
                 td = browser.find_element_by_xpath(
                     ".//*[@id='datatable']/tbody/tr[{0}]/td[{1}]".format(row,
                         col))
-                shown_items = [item.text for item in td.find_elements_by_tag_name("li")]
-
+                shown_items = [item.text.lower() for item in td.find_elements_by_tag_name("li")]
                 for item in check[2]:
-                    self.assertTrue(item in shown_items,
+                    self.assertTrue(item.lower() in shown_items,
                         u"Report check failed.")
             else:
                 self.assertTrue(str(dt_data_item(row, col)) == str(check[2]),
