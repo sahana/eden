@@ -18,9 +18,9 @@
          Region..................org_organisation.region
          Country.................org_organisation.country (ISO Code)
          Website.................org_organisation.website
-         Twitter.................org_organisation.twitter
          Phone...................org_organisation.phone
-         Donation Phone..........org_organisation.donation_phone
+         Phone2..................pr_contact.value
+         Twitter.................pr_contact.value
          Logo....................org_organisation.logo
          Comments................org_organisation.comments
          Approved................org_organisation.approved_by
@@ -149,14 +149,20 @@
             <xsl:if test="col[@field='Website']!=''">
                 <data field="website"><xsl:value-of select="col[@field='Website']"/></data>
             </xsl:if>
-            <xsl:if test="col[@field='Twitter']!=''">
-                <data field="twitter"><xsl:value-of select="col[@field='Twitter']"/></data>
-            </xsl:if>
             <xsl:if test="col[@field='Phone']!=''">
                 <data field="phone"><xsl:value-of select="col[@field='Phone']"/></data>
             </xsl:if>
-            <xsl:if test="col[@field='Donation Phone']!=''">
-                <data field="donation_phone"><xsl:value-of select="col[@field='Donation Phone']"/></data>
+            <xsl:if test="col[@field='Phone2']!=''">
+                <resource name="pr_contact">
+                    <data field="contact_method">WORK_PHONE</data>
+                    <data field="value"><xsl:value-of select="col[@field='Phone2']"/></data>
+                </resource>
+            </xsl:if>
+            <xsl:if test="col[@field='Twitter']!=''">
+                <resource name="pr_contact">
+                    <data field="contact_method">TWITTER</data>
+                    <data field="value"><xsl:value-of select="col[@field='Twitter']"/></data>
+                </resource>
             </xsl:if>
             <xsl:if test="col[@field='Comments']!=''">
                 <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>

@@ -117,15 +117,17 @@ class S3Msg(object):
         # Full range of contact options
         self.CONTACT_OPTS = {
                 "EMAIL":       T("Email"),
-                "SMS":         MOBILE,
-                "HOME_PHONE":  T("Home phone"),
-                "WORK_PHONE":  T("Work phone"),
-                "FAX":         T("Fax"),
-                "SKYPE":       T("Skype"),
-                "TWITTER":     T("Twitter"),
                 "FACEBOOK":    T("Facebook"),
+                "FAX":         T("Fax"),
+                "HOME_PHONE":  T("Home phone"),
                 "RADIO":       T("Radio Callsign"),
+                "RSS":         T("RSS Feed"),
+                "SKYPE":       T("Skype"),
+                "SMS":         MOBILE,
+                "TWITTER":     T("Twitter"),
                 #"XMPP":       "XMPP",
+                #"WEB":        T("Website"),
+                "WORK_PHONE":  T("Work phone"),
                 "OTHER":       T("other")
             }
 

@@ -748,14 +748,14 @@ s3uuid = SQLCustomType(type = "string",
                                     else str(x.encode("utf-8"))),
                        decoder = lambda x: x)
 
-if db and current.db._adapter.represent("X", s3uuid) != "'X'":
-    # Old web2py DAL, must add quotes in encoder
-    s3uuid = SQLCustomType(type = "string",
-                           native = "VARCHAR(128)",
-                           encoder = (lambda x: "'%s'" % (uuid4().urn
-                                        if x == ""
-                                        else str(x.encode("utf-8")).replace("'", "''"))),
-                           decoder = (lambda x: x))
+#if db and current.db._adapter.represent("X", s3uuid) != "'X'":
+#    # Old web2py DAL, must add quotes in encoder
+#    s3uuid = SQLCustomType(type = "string",
+#                           native = "VARCHAR(128)",
+#                           encoder = (lambda x: "'%s'" % (uuid4().urn
+#                                        if x == ""
+#                                        else str(x.encode("utf-8")).replace("'", "''"))),
+#                           decoder = (lambda x: x))
 
 # Universally unique identifier for a record
 s3_meta_uuid = S3ReusableField("uuid", type=s3uuid,
@@ -897,14 +897,14 @@ def s3_ownerstamp():
 
     # Person Entity controlling access to this record
     s3_meta_realm_entity = S3ReusableField("realm_entity", "integer",
-                                              readable=False,
-                                              writable=False,
-                                              requires=None,
-                                              default=None,
-                                              # use a lambda here as we don't
-                                              # want the model to be loaded yet
-                                              represent=lambda val: \
-                                                current.s3db.pr_pentity_represent(val))
+                                           readable=False,
+                                           writable=False,
+                                           requires=None,
+                                           default=None,
+                                           # use a lambda here as we don't
+                                           # want the model to be loaded yet
+                                           represent=lambda val: \
+                                            current.s3db.pr_pentity_represent(val))
     return (s3_meta_owned_by_user(),
             s3_meta_owned_by_group(),
             s3_meta_realm_entity())

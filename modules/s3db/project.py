@@ -2614,7 +2614,7 @@ class S3ProjectLocationModel(S3Model):
                              self.gis_location_id(
                                 widget = S3LocationAutocompleteWidget(),
                                 requires = IS_LOCATION(),
-                                represent = self.gis_location_lx_represent,
+                                represent = self.gis_LocationRepresent(format=", "),
                                 comment = S3AddResourceLink(c="gis",
                                                             f="location",
                                                             label = T("Add Location"),
@@ -5349,7 +5349,7 @@ def project_location_represent(id, row=None):
                                         table.project_id,
                                         limitby=(0, 1)).first()
     try:
-        location = current.s3db.gis_location_lx_represent(row.location_id)
+        location = current.s3db.gis_LocationRepresent(format=", ")(row.location_id)
     except:
         return current.messages.UNKNOWN_OPT
 
@@ -5595,7 +5595,7 @@ def project_rheader(r):
                           ]
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 
-    elif resourcename in ["location","demographic_data"]:
+    elif resourcename in ["location", "demographic_data"]:
         tabs = [(T("Details"), None),
                 (T("Beneficiaries"), "beneficiary"),
                 (T("Demographics"), "demographic_data/"),

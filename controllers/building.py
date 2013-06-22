@@ -608,10 +608,11 @@ def nzseel1_rheader(r, tabs=[]):
         if r.name == "nzseel1":
             assess = r.record
             if assess:
+                table = r.table
                 rheader_tabs = s3_rheader_tabs(r, tabs)
                 location = assess.location_id
                 if location:
-                    location = gis_location_represent(location)
+                    location = table.location_id.represent(location)
                 person = assess.person_id
                 if person:
                     query = (db.pr_person.id == person)
@@ -631,7 +632,7 @@ def nzseel1_rheader(r, tabs=[]):
                                   ),
                                 TR(
                                     TH("%s: " % T("Location")), location,
-                                    TH("%s: " % T("Date")), assess.date
+                                    TH("%s: " % T("Date")), table.date.represent(assess.date)
                                   ),
                                 TR(
                                     TH(""), "",
@@ -686,10 +687,11 @@ def nzseel2_rheader(r, tabs=[]):
         if r.name == "nzseel2":
             assess = r.record
             if assess:
+                table = r.table
                 rheader_tabs = s3_rheader_tabs(r, tabs)
                 location = assess.location_id
                 if location:
-                    location = gis_location_represent(location)
+                    location = table.location_id.represent(location)
                 person = assess.person_id
                 if person:
                     query = (db.pr_person.id == person)
@@ -709,7 +711,7 @@ def nzseel2_rheader(r, tabs=[]):
                                   ),
                                 TR(
                                     TH("%s: " % T("Location")), location,
-                                    TH("%s: " % T("Date")), assess.date
+                                    TH("%s: " % T("Date")), table.date.represent(assess.date)
                                   ),
                                 TR(
                                     TH(""), "",

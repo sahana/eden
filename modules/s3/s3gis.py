@@ -1974,8 +1974,8 @@ class GIS(object):
                     fields.insert(0, pkey)
 
                 records = resource.fast_select(fields,
+                                               # Override default limit=PAGESIZE
                                                start=None,
-                                               limit=None,
                                                represent=True)
 
                 rfields = records["rfields"]
@@ -7472,9 +7472,9 @@ class S3Map(S3Search):
 
         output = {}
 
-        search = self.resource.search
-        if r.component and self != search:
-            output = search(r, **attr)
+        search_method = self.resource.search_method()
+        if r.component and self != search_method:
+            output = search_method(r, **attr)
 
         # Save search
         elif "save" in r.vars :
@@ -7483,11 +7483,11 @@ class S3Map(S3Search):
 
         # Interactive or saved search
         elif "load" in r.vars or r.interactive and \
-             search._S3Search__interactive:
+             search_method._S3Search__interactive:
                 # Put shortcuts where other methods expect them
-                self.advanced = search.advanced
+                self.advanced = search_method.advanced
                 # We want advanced open by default
-                #self.simple = search.simple
+                #self.simple = search_method.simple
                 output = self.search_interactive(r, **attr)
 
         if not output:

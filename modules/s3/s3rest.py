@@ -926,7 +926,7 @@ class S3Request(object):
                     self.resource.load()
                     self.record = self.resource._rows[0]
                 else:
-                    if hasattr(self.resource.search, "search_interactive"):
+                    if hasattr(self.resource.search_method(), "search_interactive"):
                         redirect(URL(r=self, f=self.name, args="search",
                                      vars={"_next": self.url(id="[id]")}))
                     else:
@@ -991,7 +991,7 @@ class S3Request(object):
             if handler is not None:
                 output = handler(self, **attr)
             elif self.method == "search":
-                output = self.resource.search(self, **attr)
+                output = self.resource.search_method()(self, **attr)
             else:
                 # Fall back to CRUD
                 output = self.resource.crud(self, **attr)
@@ -1082,7 +1082,7 @@ class S3Request(object):
             else:
                 request_vars = {}
             if self.representation == "html" and \
-               self.resource.search.search_interactive:
+               self.resource.search_method().search_interactive:
                 self.next = URL(r=self,
                                 f=self.name,
                                 args="search",

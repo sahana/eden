@@ -666,7 +666,8 @@ class S3AssessBuildingModel(S3Model):
             msg_list_empty = T("No Assessments found")
         )
 
-        building_search = S3Search(
+        search_method = S3Search(
+            simple=(),
             advanced=(S3SearchSimpleWidget(
                         name="building_search_advanced",
                         label=T("Name, and/or ID"),
@@ -708,7 +709,7 @@ class S3AssessBuildingModel(S3Model):
 
         self.configure(tablename,
                        onvalidation = self.assess_building_onvalidation,
-                       search_method = building_search,
+                       search_method = search_method,
                        subheadings = {
                         T("Damages"): "electricity",
                         }

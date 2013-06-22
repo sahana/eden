@@ -1012,11 +1012,12 @@ class S3XML(S3Codec):
                     # Feature Layer / Resource
                     # Retrieve the HTML for the onHover Tooltip
                     tooltip = tooltips[tablename][id]
-                    try:
-                        # encode suitable for use as XML attribute
-                        tooltip = tooltip.decode("utf-8")
-                    except:
-                        pass
+                    if type(tooltip) is not unicode:
+                        try:
+                            # encode suitable for use as XML attribute
+                            tooltip = tooltip.decode("utf-8")
+                        except:
+                            pass
                     else:
                         attr[ATTRIBUTE.popup] = tooltip
 

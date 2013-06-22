@@ -438,7 +438,7 @@ class S3Parsing(object):
                 (s3_accessible_query("read", table))
         rows = db(query).select(table.id,
                                 table.name,
-                                table.donation_phone,
+                                table.phone,
                                 table.acronym)
         _name = soundex(str(name))
         for row in rows:
@@ -458,7 +458,7 @@ class S3Parsing(object):
             reply = "%s %s (%s) " % (reply, org.name,
                                      T("Organization"))
             if "phone" in pquery:
-                reply = reply + "Phone->" + str(org.donation_phone)
+                reply = reply + "Phone->" + str(org.phone)
             if "office" in pquery:
                 otable = s3db.org_office
                 query = (otable.organisation_id == org.id) & \

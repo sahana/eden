@@ -46,6 +46,7 @@ from gluon.validators import Validator
 
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
+from s3resource import S3FieldSelector
 from s3utils import s3_mark_required, s3_unicode
 
 # =============================================================================
@@ -1505,7 +1506,6 @@ class S3SQLInlineComponent(S3SQLSubForm):
         """
 
         self.resource = resource
-
         component_name = self.selector
         if component_name in resource.components:
 
@@ -1529,7 +1529,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             headers = [{"name": f,
                         "label": s3_unicode(table[f].label)} for f in fields]
 
-            qfields = [f for f in fields if f in table.fields]
+            qfields = [f for f in fields]
             if pkey not in qfields:
                 qfields.insert(0, pkey)
             qfields = [table[f] for f in qfields]
@@ -1933,23 +1933,20 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         if fname in form.vars:
 
-            db = current.db
-            s3db = current.s3db
-            auth = current.auth
-            manager = current.manager
-
-            resource = self.resource
-
             # Retrieve the data
             try:
                 data = json.loads(form.vars[fname])
             except ValueError:
                 return
-            if "component" not in data:
+            component_name = data.get("component", None)
+            if not component_name:
+                return
+            data = data.get("data", None)
+            if not data:
                 return
 
             # Get the component
-            component_name = data["component"]
+            resource = self.resource
             if component_name in resource.components:
                 component = resource.components[component_name]
             else:
@@ -1958,22 +1955,23 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 # Use the link table
                 component = component.link
 
-            # Check the data
-            if "data" not in data:
-                return
-
             # Table, tablename, prefix and name of the component
             prefix = component.prefix
             name = component.name
             tablename = component.tablename
             table = component.table
 
+            db = current.db
+            s3db = current.s3db
+            auth = current.auth
+            manager = current.manager
+
             # Process each item
             permit = component.permit
             audit = component.audit
             validate = manager.validate
             onaccept = manager.onaccept
-            for item in data["data"]:
+            for item in data:
 
                 if not "_changed" in item and not "_delete" in item:
                     # No changes made to this item - skip
@@ -2368,7 +2366,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 continue
 
             if default is not None:
-                defaults[fieldname] = {"value":default}
+                defaults[fieldname] = {"value": default}
 
         return defaults
 
@@ -2638,6 +2636,7 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
             raise SyntaxError("No resource structure information")
 
         T = current.T
+        s3db = current.s3db
         opts = self.options
 
         cols = opts.get("cols", 1)
@@ -2646,8 +2645,6 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
         if script:
             current.response.s3.jquery_ready.append(script)
         
-        field_name = field.name
-
         # Get the component resource
         resource = self.resource
         component_name = data["component"]
@@ -2661,18 +2658,15 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
         # Get the list of available options
         # @ToDo: Support lookups to tables which don't use 'name' (e.g. 'tag')
         table = component.table
-        query = (table.deleted == False) & \
-                current.auth.s3_accessible_query("read", table)
 
         option_help = opts.get("option_help", None)
         if option_help:
-            fields = [table.id, table.name, table[option_help]]
+            fields = ["id", "name", option_help]
         else:
-            fields = [table.id, table.name]
+            fields = ["id", "name"]
 
         filter = opts.get("filter", None)
         if filter:
-            s3db = current.s3db
             linktable = s3db[filter["linktable"]]
             lkey = filter["lkey"]
             rkey = filter["rkey"]
@@ -2734,7 +2728,10 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
             rows = []
             rappend = rows.append
             # All rows, whether or not in the link table
+            fields = [table[f] for f in fields]
             fields.append(linktable[rkey])
+            query = (table.deleted == False) & \
+                    current.auth.s3_accessible_query("read", table)
             srows = current.db(query).select(left=linktable.on(linktable[lkey] == table.id),
                                              orderby=table.name,
                                              *fields)
@@ -2750,8 +2747,24 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                         record[option_help] = _r[option_help]
                     rappend(record)
         else:
-            rows = current.db(query).select(orderby=table.name,
-                                            *fields)
+            _resource = s3db.resource(component.tablename)
+
+            # Currently we only support filterby or filter, not both
+            filterby = opts.get("filterby", None)
+            if filterby:
+                options = filterby["options"]
+                filter_field = filterby["field"]
+                if isinstance(options, list):
+                    _resource.add_filter(S3FieldSelector(filter_field).belongs(options))
+                else:
+                    _resource.add_filter(S3FieldSelector(filter_field) == options)
+
+            rows = _resource.fast_select(fields=fields,
+                                         # Override default limit=PAGESIZE
+                                         start=None,
+                                         orderby=table.name,
+                                         as_rows=True,
+                                         )
         if not rows:
             widget = T("No options currently available")
         else:

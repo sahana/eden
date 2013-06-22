@@ -39,8 +39,7 @@ __all__ = ["S3LocationModel",
            "S3GISThemeModel",
            "S3POIFeedModel",
            "gis_location_filter",
-           "gis_location_represent",
-           "gis_location_lx_represent",
+           "gis_LocationRepresent",
            "gis_layer_represent",
            "gis_rheader",
            ]
@@ -71,7 +70,6 @@ class S3LocationModel(S3Model):
              #"gis_location_error",
              "gis_location_id",
              "gis_country_id",
-             "gis_countries_id",
              "gis_country_requires",
              "gis_country_code_represent",
              "gis_location_onvalidation",
@@ -109,9 +107,12 @@ class S3LocationModel(S3Model):
         if current.deployment_settings.get_gis_spatialdb():
             # Add a spatial field
             # Should we do a test to confirm this? Ideally that would be done only in eden_update_check
-            meta_spatial_fields = (s3_meta_fields() + (Field("the_geom", "geometry()", readable=False, writable=False),))
+            meta_spatial_fields = (s3_meta_fields() + (Field("the_geom", "geometry()",
+                                                             readable=False, writable=False),))
         else:
             meta_spatial_fields = (s3_meta_fields())
+
+        gis_location_represent = gis_LocationRepresent()
 
         tablename = "gis_location"
         table = self.define_table(tablename,
@@ -119,11 +120,13 @@ class S3LocationModel(S3Model):
                                    # Placenames don't have to be unique.
                                    # Waypoints don't need to have a name at all.
                                    #requires = IS_NOT_EMPTY()
-                                   label = T("Name")),
+                                   label = T("Name"),
+                                   ),
                              Field("level", length=2,
                                    label = T("Level"),
                                    requires = IS_NULL_OR(IS_IN_SET(hierarchy_level_keys)),
-                                   represent = self.gis_level_represent),
+                                   represent = self.gis_level_represent,
+                                   ),
                              Field("parent", "reference gis_location", # This form of hierarchy may not work on all Databases
                                    label = T("Parent"),
                                    represent = gis_location_represent,
@@ -260,7 +263,9 @@ class S3LocationModel(S3Model):
                                       sortby = "name",
                                       label = T("Location"),
                                       represent = gis_location_represent,
-                                      requires = IS_NULL_OR(IS_LOCATION_SELECTOR()),
+                                      requires = IS_NULL_OR(
+                                                    IS_LOCATION_SELECTOR()
+                                                    ),
                                       widget = S3LocationSelectorWidget(),
                                       # Alternate simple Autocomplete (e.g. used by pr_person_presence)
                                       #requires = IS_NULL_OR(IS_LOCATION()),
@@ -278,18 +283,6 @@ class S3LocationModel(S3Model):
                                      requires = country_requires,
                                      represent = self.gis_country_represent,
                                      ondelete = "RESTRICT")
-
-        countries_id = S3ReusableField("countries_id", "list:reference gis_location",
-                                       label = T("Countries"),
-                                       requires = IS_NULL_OR(
-                                                    IS_ONE_OF(db, "gis_location.id",
-                                                              self.gis_country_represent,
-                                                              filterby = "level",
-                                                              filter_opts = ["L0"],
-                                                              sort=True,
-                                                              multiple=True)),
-                                       represent = self.gis_countries_represent,
-                                       ondelete = "RESTRICT")
 
         self.configure(tablename,
                        onvalidation=self.gis_location_onvalidation,
@@ -354,7 +347,6 @@ class S3LocationModel(S3Model):
         return Storage(
                 gis_location_id = location_id,
                 gis_country_id = country_id,
-                gis_countries_id = countries_id,
                 gis_country_requires = country_requires,
                 gis_country_code_represent = self.gis_country_code_represent,
                 gis_location_onvalidation = self.gis_location_onvalidation,
@@ -4128,46 +4120,82 @@ def gis_location_filter(r):
                                        limitby=(0, 1)).first()
                 code = tag.value
             filter = (S3FieldSelector(selector) == code)
-            resource.add_filter(filter)
         elif resource.name == "project":
-            selector = "project.countries_id"
-            if row.level != "L0":
-                id = current.gis.get_parent_country(row)
-            else:
-                id = lfilter
-            filter = (S3FieldSelector(selector).contains(id))
-            resource.add_filter(filter)
+            # Go via project_location link table
+            selector = "location.location_id$%s" % row.level
+            filter = (S3FieldSelector(selector) == row.name)
         else:
             # Normal case: resource with location_id
             selector = "%s.location_id$%s" % (resource.name, row.level)
             filter = (S3FieldSelector(selector) == row.name)
-            resource.add_filter(filter)
+        resource.add_filter(filter)
 
 # =============================================================================
-def gis_location_represent(id, row=None, show_link=True, simpletext=False):
-    """ FK representation """
+class gis_LocationRepresent(S3Represent):
+    """ Representation of Locations """
 
-    if row:
-        db = current.db
-        table = db.gis_location
-    elif not id:
-        return current.messages["NONE"]
-    else:
-        db = current.db
-        table = db.gis_location
-        row = db(table.id == id).select(table.id,
-                                        table.name,
-                                        table.level,
-                                        table.parent,
-                                        table.addr_street,
-                                        table.inherited,
-                                        table.lat,
-                                        table.lon,
-                                        limitby=(0, 1)).first()
-    if not row:
-        return current.messages.UNKNOWN_OPT
+    def __init__(self,
+                 translate=False,
+                 show_link=False,
+                 multiple=False,
+                 format=None
+                 ):
+
+        if format:
+            # Format is a separator to place between all elements in the hierarchy
+            fields = ["name",
+                      "level",
+                      "L0",
+                      "L1",
+                      "L2",
+                      "L3",
+                      "L4",
+                      "L5",
+                      ]
+            self.multi_country = len(current.deployment_settings.get_gis_countries()) != 1
+        else:
+            fields = ["id",
+                      "name",
+                      "level",
+                      "parent",
+                      "path",
+                      "L0",
+                      "L1",
+                      "L2",
+                      "L3",
+                      "L4",
+                      "L5",
+                      "addr_street",
+                      "inherited",
+                      "lat",
+                      "lon",
+                      ]
+
+        super(gis_LocationRepresent,
+              self).__init__(lookup="gis_location",
+                             fields=fields,
+                             show_link=show_link,
+                             translate=translate,
+                             multiple=multiple)
+
+        self.format = format
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def link(k, v):
+        """
+            Represent a (key, value) as hypertext link.
+
+            @param k: the key
+            @param v: the representation of the key
+        """
+
+        return A(v,
+                 _style="cursor:pointer;cursor:hand",
+                 _onclick="s3_showMap(%i);return false" % k)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def lat_lon_format(coord):
         """
             Represent a coordinate (latitude or longitude) according to a
@@ -4189,6 +4217,7 @@ def gis_location_represent(id, row=None, show_link=True, simpletext=False):
         return formatted
 
     # -------------------------------------------------------------------------
+    @staticmethod
     def lat_lon_represent(row):
         lat = row.lat
         lon = row.lon
@@ -4210,172 +4239,133 @@ def gis_location_represent(id, row=None, show_link=True, simpletext=False):
             return text
 
     # -------------------------------------------------------------------------
-    def parent_represent(row):
-        parent = db(table.id == row.parent).select(table.name,
-                                                   cache=cache,
-                                                   limitby=(0, 1)).first()
-        if parent:
-            return parent.name
-        else:
-            return ""
+    def represent_row(self, row):
+        """
+            Represent a single Row
+            - assumes that Path & Lx have been populated correctly by
+              gis.update_location_tree()
 
-    request = current.request
-    if (request.raw_args and ".plain" in request.raw_args) or \
-       (row.lat == None and row.lon == None or \
-        row.parent == None):
-        # Map popups don't support iframes (& meaningless anyway), and if there
-        # is no lat, lon or parent, there's no way to place this on a map.
-        show_link = False
+            @param row: the gis_location Row
+        """
 
-    if show_link and simpletext:
-        # We aren't going to use the represent, so skip making it.
-        represent_text = current.T("Show on Map")
-    elif row.level == "L0":
-        represent_text = "%s (%s)" % (row.name, current.messages.COUNTRY)
-    else:
-        s3db = current.s3db
-        cache = s3db.cache
-        if row.level in ["L1", "L2", "L3", "L4", "L5"]:
-            level_name = None
-            # Find the L0 Ancestor to lookup the hierarchy
-            gis = current.gis
-            L0 = gis.get_parent_country(row)
-            if L0:
-                htable = s3db.gis_hierarchy
-                query = (htable.location_id == L0)
-                config = db(query).select(htable.L1,
-                                          htable.L2,
-                                          htable.L3,
-                                          htable.L4,
-                                          htable.L5,
-                                          cache=cache,
-                                          limitby=(0, 1)).first()
-                if config:
-                    level_name = config[row.level]
-            if level_name is None:
-                # Fallback to system default
-                level_name = gis.get_all_current_levels(row.level)
-            parent_info = parent_represent(row)
-            if parent_info:
-                extra = "(%s), %s" % (level_name, parent_info)
-            else:
-                extra = level_name
-            represent_text = "%s %s" % (row.name, extra)
-        else:
-            # Specific location:
-            # Don't duplicate the Resource Name
-            # Street address or lat/lon as base
-            represent_text = ""
-            if row.addr_street:
-                # Get the 1st line of the street address.
-                represent_text = row.addr_street.splitlines()[0]
-            if (not represent_text) and \
-               (row.inherited == False) and \
-               (row.lat != None) and \
-               (row.lon != None):
-                represent_text = lat_lon_represent(row)
-            if row.parent:
-                if represent_text:
-                    parent_repr = parent_represent(row)
-                    if parent_repr:
-                        represent_text = "%s, %s" % \
-                            (represent_text, parent_repr)
+        format = self.format
+        name = row.name
+        level = row.level
+        if format:
+            if level == "L0":
+                return name
+            locations = [name]
+            lappend = locations.append
+            matched = False
+            L5 = row.L5
+            if L5:
+                if L5 == name:
+                    matched = True
                 else:
-                    represent_text = parent_represent(row)
-            if not represent_text:
-                represent_text = row.name or row.id
-
-    if show_link:
-        # ToDo: Convert to popup? (HTML again!)
-        represent = A(represent_text,
-                      _style="cursor:pointer;cursor:hand",
-                      _onclick="s3_showMap(%i);return false" % row.id)
-    else:
-        represent = represent_text
-
-    return represent
-
-
-# =============================================================================
-def gis_location_lx_represent(id):
-    """
-        Represent a location as a hierarchical string
-
-        Assumes that the Location Hierarchy has been updated
-
-        @param id: location_id
-        @returns: string
-    """
-
-    if not id:
-        return current.messages["NONE"]
-
-    table = current.s3db.gis_location
-    location = current.db(table.id == id).select(table.name,
-                                                 table.L0,
-                                                 table.L1,
-                                                 table.L2,
-                                                 table.L3,
-                                                 table.L4,
-                                                 table.L5,
-                                                 limitby=(0, 1)).first()
-
-    if not location:
-        return current.messages["NONE"]
-
-    name = location.name
-    location_list = [name]
-    lappend = location_list.append
-    matched = False
-    L5 = location.L5
-    if L5:
-        if L5 == name:
-            matched = True
+                    lappend(L5)
+            L4 = row.L4
+            if L4:
+                if L4 == name:
+                    if matched:
+                        lappend(L4)
+                    matched = True
+                else:
+                    lappend(L4)
+            L3 = row.L3
+            if L3:
+                if L3 == name:
+                    if matched:
+                        lappend(L3)
+                    matched = True
+                else:
+                    lappend(L3)
+            L2 = row.L2
+            if L2:
+                if L2 == name:
+                    if matched:
+                        lappend(L2)
+                    matched = True
+                else:
+                    lappend(L2)
+            L1 = row.L1
+            if L1:
+                if L1 == name:
+                    if matched:
+                        lappend(L1)
+                    matched = True
+                else:
+                    lappend(L1)
+            if self.multi_country:
+                L0 = row.L0
+                if L0:
+                    if L0 == name:
+                        if matched:
+                            lappend(L0)
+                        matched = True
+                    else:
+                        lappend(L0)
+            represent = format.join(locations)
         else:
-            lappend(L5)
-    L4 = location.L4
-    if L4:
-        if L4 == name:
-            if matched:
-                lappend(L4)
-            matched = True
-        else:
-            lappend(L4)
-    L3 = location.L3
-    if L3:
-        if L3 == name:
-            if matched:
-                lappend(L3)
-            matched = True
-        else:
-            lappend(L3)
-    L2 = location.L2
-    if L2:
-        if L2 == name:
-            if matched:
-                lappend(L2)
-            matched = True
-        else:
-            lappend(L2)
-    L1 = location.L1
-    if L1:
-        if L1 == name:
-            if matched:
-                lappend(L1)
-            matched = True
-        else:
-            lappend(L1)
-    L0 = location.L0
-    if L0:
-        if L0 == name:
-            if matched:
-                lappend(L0)
-            matched = True
-        else:
-            lappend(L0)
+            if level == "L0":
+                represent = "%s (%s)" % (name, current.messages.COUNTRY)
+            else:
+                if level in ["L1", "L2", "L3", "L4", "L5"]:
+                    # Lookup the hierarchy for labels
+                    s3db = current.s3db
+                    htable = s3db.gis_hierarchy
+                    L0_name = row.L0
+                    if L0_name:
+                        path = row.path.split("/")
+                        L0_id = path[0]
+                        query = (htable.location_id == L0_id)
+                    else:
+                        # Fallback to system default
+                        query = (htable.uuid == "SITE_DEFAULT")
+                    config = current.db(query).select(htable.L1,
+                                                      htable.L2,
+                                                      htable.L3,
+                                                      htable.L4,
+                                                      htable.L5,
+                                                      cache=s3db.cache,
+                                                      limitby=(0, 1)).first()
+                    level_name = config[row.level]
 
-    return ", ".join(location_list)
+                    if row.parent:
+                        parent_level = "L%s" % (int(level[1]) - 1)
+                        parent_name = row[parent_level]
+                        represent = "%s (%s), %s" % (name,
+                                                     level_name,
+                                                     parent_name)
+                    else:
+                        represent = "%s %s" % (name, level_name)
+                else:
+                    # Specific location:
+                    # Don't duplicate the Resource Name
+                    # Street address or lat/lon as base
+                    represent = ""
+                    if row.addr_street:
+                        # Get the 1st line of the street address.
+                        represent = row.addr_street.splitlines()[0]
+                    if (not represent) and \
+                       (row.inherited == False) and \
+                       (row.lat is not None) and \
+                       (row.lon is not None):
+                        represent = self.lat_lon_represent(row)
+                    if row.parent:
+                        # @ToDo: Assumes no missing levels in PATH
+                        path = row.path.split("/")
+                        parent_level = "L%s" % (len(path) - 2)
+                        parent_name = row[parent_level]
+                        if parent_name:
+                            if represent:
+                                represent = "%s, %s" % (represent, parent_name)
+                            else:
+                                represent = parent_name
+                    if not represent:
+                        represent = name or row.id
 
+        return s3_unicode(represent)
+        
 # =============================================================================
 def gis_layer_represent(id, row=None, show_link=True):
     """ Represent a Layer  """
@@ -4476,7 +4466,7 @@ def gis_rheader(r, tabs=[]):
 
             region_location_id = record.region_location_id
             if region_location_id:
-                location_represent = gis_location_represent(region_location_id)
+                location_represent = gis_LocationRepresent()(region_location_id)
                 if context:
                     T("%(pe)s in %(location)s") % \
                         dict(pe=context,

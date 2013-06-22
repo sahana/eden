@@ -320,14 +320,15 @@ textarea.richtext {
     height: 100px;
 }
 
-/* Styling for Form Inline Components */
+/* Styling for Form Inline Components
 table.embeddedComponent {
     border: 1px solid #B3B3B3;
     border-top: 0;
     border-right: 0;
-}
+} */
 form table.embeddedComponent td {
-    border: 1px solid #B3B3B3;
+    /*
+    border: 1px solid #B3B3B3; */
     padding: 0 5px;
     border-bottom: 0;
     border-left: 0;
@@ -339,6 +340,48 @@ table.embeddedComponent tr.label-row td {
 div.form-container form .embeddedComponent input.string,
 div.form-container form .embeddedComponent  textarea  {
     width: auto;
+}
+
+.inline-throbber {
+    background-image: url(../../img/indicator.gif);
+    background-repeat: no-repeat;
+    height: 16px;
+    width: 16px;
+}
+.inline-add {
+    background-image: url(../../img/crud/add.png);
+    background-repeat: no-repeat;
+    height: 23px;
+    width: 23px;
+}
+.inline-cnc {
+    background-image: url(../../img/crud/cancel.png);
+    background-repeat: no-repeat;
+    height: 16px;
+    width: 16px;
+}
+.inline-edt {
+    background-image: url(../../img/crud/edit.png);
+    background-repeat: no-repeat;
+    height: 22px;
+    width: 22px;
+}
+.inline-rdy {
+    background-image: url(../../img/crud/apply.png);
+    background-repeat: no-repeat;
+    height: 16px;
+    width: 16px;
+}
+.inline-rmv {
+    background-image: url(../../img/crud/remove.png);
+    background-repeat: no-repeat;
+    height: 23px;
+    width: 23px;
+}
+
+.s3_inline_add_resource_link a {
+    margin-left: 2px;
+    padding-left: 2px;
 }
 
 /* Subheadings */
@@ -477,9 +520,38 @@ div#table-container td.totals_header {
 
 .list_formats {
     float: right;
+    padding-top: 5px;
 }
-.list_formats img {
+.list_formats div {
+    padding: 1px;
+    cursor: pointer;
+    height: 16px;
+    width: 16px;
+    float: right;
+    background-repeat: no-repeat;
 }
+.export_have {
+    background-image: url(../../img/have_16.png);
+}
+.export_kml {
+    background-image: url(../../img/kml_icon.png);
+}
+.export_map {
+    background-image: url(../../img/map_icon.png);
+}
+.export_pdf {
+    background-image: url(../../img/pdficon_small.gif);
+}
+.export_rss {
+    background-image: url(../../img/RSS_16.png);
+}
+.export_xls {
+    background-image: url(../../img/icon-xls.png);
+}
+.export_xml {
+    background-image: url(../../img/icon-xml.png);
+}
+
 /* msg_list_empty */
 .empty {
 }

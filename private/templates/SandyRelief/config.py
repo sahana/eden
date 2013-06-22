@@ -265,6 +265,8 @@ def customize_org_organisation(**attr):
             
         if r.interactive:
             from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
+            s3db.pr_address.comments.label = ""
+            s3db.pr_contact.value.label = ""
             crud_form = S3SQLCustomForm(
                 "name",
                 "acronym",
@@ -273,7 +275,7 @@ def customize_org_organisation(**attr):
                     "service",
                     label = T("Services"),
                     field = "service_id",
-                    cols = 3,
+                    cols = 4,
                 ),
                 #S3SQLInlineComponentCheckbox(
                 #    "network",
@@ -281,24 +283,71 @@ def customize_org_organisation(**attr):
                 #    field = "network_id",
                 #    cols = 3,
                 #),
-                #"address",
+                S3SQLInlineComponent(
+                    "address",
+                    label = T("Address"),
+                    multiple = False,
+                    # This is just Text - put into the Comments box for now
+                    # Ultimately should go into location_id$addr_street
+                    fields = ["comments"],
+                ),
                 S3SQLInlineComponentCheckbox(
                     "location",
                     label = T("Neighborhoods Served"),
                     field = "location_id",
-                    cols = 3,
+                    filterby = dict(field = "level",
+                                    options = "L4"
+                                    ),
+                    cols = 5,
                 ),
                 "phone",
-                #"phone2",
-                #"email",
+                S3SQLInlineComponent(
+                    "contact",
+                    name = "phone2",
+                    label = T("Phone2"),
+                    multiple = False,
+                    fields = ["value"],
+                    filterby = dict(field = "contact_method",
+                                    options = "WORK_PHONE"
+                                    )
+                ),
+                S3SQLInlineComponent(
+                    "contact",
+                    name = "email",
+                    label = T("Email"),
+                    multiple = False,
+                    fields = ["value"],
+                    filterby = dict(field = "contact_method",
+                                    options = "EMAIL"
+                                    )
+                ),
                 "website",
-                #"rss",
-                "twitter",
+                S3SQLInlineComponent(
+                    "contact",
+                    name = "rss",
+                    label = T("RSS"),
+                    multiple = False,
+                    fields = ["value"],
+                    filterby = dict(field = "contact_method",
+                                    options = "RSS"
+                                    )
+                ),
+                S3SQLInlineComponent(
+                    "contact",
+                    name = "twitter",
+                    label = T("Twitter"),
+                    multiple = False,
+                    fields = ["value"],
+                    filterby = dict(field = "contact_method",
+                                    options = "TWITTER"
+                                    )
+                ),
                 "comments",
             )
             
             from s3.s3search import S3OrganisationSearch, S3SearchSimpleWidget, S3SearchOptionsWidget
             search_method = S3OrganisationSearch(
+                simple=(),
                 advanced=(
                     S3SearchSimpleWidget(
                         name="org_search_text_advanced",
@@ -309,19 +358,20 @@ def customize_org_organisation(**attr):
                     #S3SearchOptionsWidget(
                     #    name="org_search_network",
                     #    label=T("Network"),
-                    #    field="network",
-                    #    cols=2
-                    #),
-                    #S3SearchOptionsWidget(
-                    #    name="org_search_location",
-                    #    label=T("Neighborhood"),
-                    #    field="location",
+                    #    field="network.name",
                     #    cols=2
                     #),
                     S3SearchOptionsWidget(
+                        name="org_search_location",
+                        label=T("Neighborhood"),
+                        field="location.L4",
+                        location_level="L4",
+                        cols=2
+                    ),
+                    S3SearchOptionsWidget(
                         name="org_search_service",
                         label=T("Services"),
-                        field="service",
+                        field="service.name",
                         cols=2
                     ),
                     S3SearchOptionsWidget(

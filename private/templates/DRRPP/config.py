@@ -3,8 +3,6 @@
 from gluon import current, A, DIV, H3, TAG, SQLFORM, IS_NOT_EMPTY, IS_EMAIL
 from gluon.storage import Storage
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
-from s3 import s3search
-from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
 
 T = current.T
 settings = current.deployment_settings
@@ -333,9 +331,7 @@ def customize_project_project(**attr):
                    ]
 
     # Custom Search Fields
-    S3SearchSimpleWidget = s3search.S3SearchSimpleWidget
-    S3SearchOptionsWidget = s3search.S3SearchOptionsWidget
-
+    from s3.s3search import S3Search, S3SearchSimpleWidget, S3SearchOptionsWidget
     simple = [
         S3SearchSimpleWidget(name = "project_search_text_simple",
                              label = T("Search Projects"),
@@ -466,8 +462,8 @@ def customize_project_project(**attr):
                              cols = 3,
                              )
      ]
-    search_method = s3search.S3Search(simple = simple,
-                                      advanced = advanced)
+    search_method = S3Search(simple = simple,
+                             advanced = advanced)
 
     # Custom Report Fields
     report_fields = ["name",
@@ -502,6 +498,7 @@ def customize_project_project(**attr):
                              )
 
     # Custom Crud Form
+    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
     crud_form = S3SQLCustomForm(
         "name",
         "code",
@@ -679,8 +676,7 @@ def customize_project_location(**attr):
         T("Project Map")
 
     # Custom Search Fields
-    S3SearchSimpleWidget = s3search.S3SearchSimpleWidget
-    S3SearchOptionsWidget = s3search.S3SearchOptionsWidget
+    from s3.s3search import S3Search, S3SearchSimpleWidget, S3SearchOptionsWidget
     simple = [
         S3SearchSimpleWidget(name = "project_search_text_advanced",
                              label = T("Search Projects"),
@@ -758,8 +754,8 @@ def customize_project_location(**attr):
                              cols = 3,
                              )
      ]
-    search_method = s3search.S3Search(simple = simple,
-                                      advanced = simple + advanced)
+    search_method = S3Search(simple = simple,
+                             advanced = simple + advanced)
 
     s3db.configure("project_location",
                    search_method = search_method,

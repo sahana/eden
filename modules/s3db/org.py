@@ -191,6 +191,7 @@ class S3OrganisationModel(S3Model):
                                                                   zero=messages.SELECT_LOCATION)),
                                    represent=self.gis_country_code_represent,
                                    ),
+                             # @ToDo: Deprecate with Contact component
                              Field("phone",
                                    label=T("Phone #"),
                                    #readable = False,
@@ -214,23 +215,6 @@ class S3OrganisationModel(S3Model):
                                                _title="%s|%s" % (T("Year"),
                                                                  T("Year that the organization was founded"))),
                                    ),
-                             # @ToDo: Deprecate with Contact component
-                             Field("twitter",
-                                   #readable = False,
-                                   #writable = False,
-                                   represent=lambda v: v or NONE,
-                                   comment=DIV(_class="tooltip",
-                                               _title="%s|%s" % (T("Twitter"),
-                                                                 T("Twitter ID or #hashtag")))),
-                             Field("donation_phone",
-                                   label=T("Donation Phone #"),
-                                   readable = False,
-                                   writable = False,
-                                   requires=IS_NULL_OR(s3_phone_requires),
-                                   represent=lambda v: v or NONE,
-                                   comment=DIV(_class="tooltip",
-                                                 _title="%s|%s" % (T("Donation Phone #"),
-                                                                   T("Phone number to donate to this organization's relief efforts.")))),
                              Field("logo", "upload",
                                    label=T("Logo"),
                                    requires=[IS_EMPTY_OR(IS_IMAGE(maxsize=(400, 400),
@@ -302,21 +286,6 @@ class S3OrganisationModel(S3Model):
                                           widget = widget,
                                           )
 
-        organisations_id = S3ReusableField("organisations_id",
-                                           "list:reference org_organisation",
-                                           sortby="name",
-                                           requires=IS_NULL_OR(
-                                                        IS_ONE_OF(db, "org_organisation.id",
-                                                                  org_organisation_represent,
-                                                                  multiple=True,
-                                                                  #filterby="acronym",
-                                                                  #filter_opts=vol_orgs,
-                                                                  orderby="org_organisation.name",
-                                                                  sort=True)),
-                                           represent=self.organisation_multi_represent,
-                                           label=T("Organizations"),
-                                           ondelete="SET NULL")
-
         utablename = current.auth.settings.table_user_name
         configure(tablename,
                   super_entity="pr_pentity",
@@ -371,6 +340,9 @@ class S3OrganisationModel(S3Model):
                                                joinby="organisation_id",
                                                key="location_id",
                                                actuate="hide"))
+        # Format needed for S3SQLInlineComponent
+        #add_component("org_location_organisation",
+        #              org_organisation="organisation_id")
 
         # Resources
         add_component("org_resource",
@@ -382,6 +354,9 @@ class S3OrganisationModel(S3Model):
                                                joinby="organisation_id",
                                                key="sector_id",
                                                actuate="hide"))
+        # Format needed for S3SQLInlineComponent
+        #add_component("org_sector_organisation",
+        #              org_organisation="organisation_id")
 
         # Services
         add_component("org_service",
@@ -389,6 +364,9 @@ class S3OrganisationModel(S3Model):
                                                joinby="organisation_id",
                                                key="service_id",
                                                actuate="hide"))
+        # Format needed for S3SQLInlineComponent
+        #add_component("org_service_organisation",
+        #              org_organisation="organisation_id")
 
         # Projects
         if settings.get_project_mode_3w():
@@ -875,7 +853,11 @@ class S3OrganisationLocationModel(S3Model):
         #
         tablename = "org_location_organisation"
         self.define_table(tablename,
-                          self.gis_location_id(),
+                          self.gis_location_id(
+                            requires = IS_LOCATION(),
+                            #represent = self.gis_LocationRepresent(format=", "),
+                            widget = S3LocationAutocompleteWidget()
+                          ),
                           self.org_organisation_id(),
                           *s3_meta_fields()
                           )
@@ -1069,7 +1051,8 @@ class S3OrganisationSectorModel(S3Model):
         Organisation Service Model
     """
 
-    names = ["org_sector_id",
+    names = ["org_sector",
+             "org_sector_id",
              "org_sector_opts",
              #"org_subsector",
              "org_sector_organisation",
@@ -2138,7 +2121,8 @@ class S3FacilityModel(S3Model):
                   deduplicate = self.org_facility_duplicate,
                   onaccept = self.org_facility_onaccept,
                   filter_widgets = filter_widgets,
-                  search_method=S3Search(advanced=org_facility_search),
+                  search_method=S3Search(simple=(),
+                                         advanced=org_facility_search),
                   report_options = Storage(
                     search=org_facility_search,
                     rows=report_fields,
@@ -2671,7 +2655,8 @@ class S3OfficeModel(S3Model):
         else:
             ORGANISATION = T("Organization")
             comment = T("Search for office by organization.")
-        office_search = S3Search(
+        search_method = S3Search(
+            simple=(),
             advanced=(S3SearchSimpleWidget(
                         name="office_search_text",
                         label=T("Search"),
@@ -2715,7 +2700,7 @@ class S3OfficeModel(S3Model):
                   super_entity=("pr_pentity", "org_site"),
                   onaccept=self.org_office_onaccept,
                   deduplicate=self.org_office_duplicate,
-                  search_method=office_search,
+                  search_method=search_method,
                   ## Experimental: filter form
                   #filter_widgets=[
                        #S3TextFilter(["name", "email", "comments"],
@@ -2953,15 +2938,13 @@ class S3OfficeTypeTagModel(S3Model):
 def org_organisation_address(row):
     """ The address of the first office """
 
-    default = current.messages["NONE"]
-
     if hasattr(row, "org_organisation"):
         row = row.org_organisation
     try:
         organisation_id = row.id
     except:
         # not available
-        return default
+        return current.messages["NONE"]
 
     db = current.db
     s3db = current.s3db
@@ -2971,12 +2954,12 @@ def org_organisation_address(row):
     query = (otable.deleted != True) & \
             (otable.organisation_id == organisation_id) & \
             (otable.location_id == gtable.id)
-    row = db(query).select(gtable.id, limitby=(0, 1)).first()
+    row = db(query).select(gtable.addr_street, limitby=(0, 1)).first()
 
     if row:
-        return s3db.gis_location_represent(row.id)
+        row.addr_street
     else:
-        return default
+        return current.messages["NONE"]
 
 # =============================================================================
 def org_organisation_logo(id, type="png"):
@@ -3522,6 +3505,7 @@ def org_organisation_controller():
                             # field = search_fields
                             # )
                         # ),
+                        simple=(),
                         advanced=(
                             S3SearchSimpleWidget(
                                 name="org_search_text_advanced",

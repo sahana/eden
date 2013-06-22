@@ -3,7 +3,7 @@
 from gluon import current, IS_EMPTY_OR
 from gluon.storage import Storage
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
-from s3 import IS_ONE_OF, s3forms
+from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
 
 T = current.T
 settings = current.deployment_settings
@@ -288,6 +288,7 @@ def ns_only(f, required=True, branches=True, updateable=True):
         not_filterby = "id"
         not_filter_opts = branches
 
+    from s3.s3validators import IS_ONE_OF
     requires = IS_ONE_OF(db, "org_organisation.id",
                          current.s3db.org_OrganisationRepresent(),
                          filterby="organisation_type_id",
@@ -576,7 +577,7 @@ def customize_project_project(**attr):
     f.label = T("Host National Society")
 
     # Custom Crud Form
-    crud_form = s3forms.S3SQLCustomForm(
+    crud_form = S3SQLCustomForm(
         "organisation_id",
         "name",
         "code",
@@ -584,31 +585,31 @@ def customize_project_project(**attr):
         "status_id",
         "start_date",
         "end_date",
-        #s3forms.S3SQLInlineComponent(
+        #S3SQLInlineComponent(
         #    "location",
         #    label = T("Countries"),
         #    fields = ["location_id"],
         #),
         # Outputs
-        s3forms.S3SQLInlineComponent(
+        S3SQLInlineComponent(
             "output",
             label = T("Outputs"),
             #comment = "Bob",
             fields = ["name", "status"],
         ),
-        s3forms.S3SQLInlineComponentCheckbox(
+        S3SQLInlineComponentCheckbox(
             "hazard",
             label = T("Hazards"),
             field = "hazard_id",
             cols = 4,
         ),
-        s3forms.S3SQLInlineComponentCheckbox(
+        S3SQLInlineComponentCheckbox(
             "sector",
             label = T("Sectors"),
             field = "sector_id",
             cols = 4,
         ),
-        s3forms.S3SQLInlineComponentCheckbox(
+        S3SQLInlineComponentCheckbox(
             "theme",
             label = T("Themes"),
             field = "theme_id",
@@ -632,10 +633,10 @@ S3OptionsFilter({
         "drr.hfa",
         "objectives",
         "human_resource_id",
-        # Disabled since we need organisation_id filtering to either organsiation_type_id == RC or NOT
+        # Disabled since we need organisation_id filtering to either organisation_type_id == RC or NOT
         # & also hiding Branches from RCs
         # Partner NS
-        # s3forms.S3SQLInlineComponent(
+        # S3SQLInlineComponent(
             # "organisation",
             # name = "partnerns",
             # label = T("Partner National Societies"),
@@ -650,7 +651,7 @@ S3OptionsFilter({
                             # options = [9])
         # ),
         # Partner Orgs
-        # s3forms.S3SQLInlineComponent(
+        # S3SQLInlineComponent(
             # "organisation",
             # name = "partner",
             # label = T("Partner Organizations"),
@@ -665,7 +666,7 @@ S3OptionsFilter({
                             # options = [2])
         # ),
         # Donors
-        # s3forms.S3SQLInlineComponent(
+        # S3SQLInlineComponent(
             # "organisation",
             # name = "donor",
             # label = T("Donor(s)"),
@@ -691,11 +692,11 @@ S3OptionsFilter({
 
 settings.ui.customize_project_project = customize_project_project
 
-settings.ui.crud_form_project_location = s3forms.S3SQLCustomForm(
+settings.ui.crud_form_project_location = S3SQLCustomForm(
         "project_id",
         "location_id",
         # @ToDo: Grouped Checkboxes
-        s3forms.S3SQLInlineComponentCheckbox(
+        S3SQLInlineComponentCheckbox(
             "activity_type",
             label = T("Activity Types"),
             field = "activity_type_id",

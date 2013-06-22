@@ -1070,8 +1070,10 @@ class S3Search(S3CRUD):
         format = r.representation
         output = dict()
 
-        if r.component and self != self.resource.search:
-            output = self.resource.search(r, **attr)
+        if r.component:
+            search_method = self.resource.search_method()
+            if self != search_method:
+                output = search_method(r, **attr)
 
         # Autocomplete-Widget
         elif "is_autocomplete" in attr:

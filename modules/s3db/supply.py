@@ -429,47 +429,49 @@ S3OptionsFilter({
         # ---------------------------------------------------------------------
         # Item Search Method
         #
+        search_widgets = [
+            S3SearchSimpleWidget(
+                name="item_search_text",
+                label=T("Search"),
+                comment=T("Search for an item by its code, name, model and/or comment."),
+                field=["code",
+                       "name",
+                       "model",
+                       #"item_category_id$name",
+                       "comments" ]
+              ),
+            S3SearchOptionsWidget(
+                name="item_search_brand",
+                label=T("Brand"),
+                comment=T("Search for an item by brand."),
+                field="brand_id",
+                represent ="%(name)s",
+                cols = 3
+            ),
+            S3SearchOptionsWidget(
+                name="item_search_year",
+                label=T("Year"),
+                comment=T("Search for an item by Year of Manufacture."),
+                field="year",
+                cols = 1
+            ),
+            ]
         report_options = Storage(
-            search=[S3SearchSimpleWidget(
-                        name="item_search_text",
-                        label=T("Search"),
-                        comment=T("Search for an item by its code, name, model and/or comment."),
-                        field=["code",
-                               "name",
-                               "model",
-                               #"item_category_id$name",
-                               "comments" ]
-                      ),
-                      S3SearchOptionsWidget(
-                        name="item_search_brand",
-                        label=T("Brand"),
-                        comment=T("Search for an item by brand."),
-                        field="brand_id",
-                        represent ="%(name)s",
-                        cols = 3
-                      ),
-                      S3SearchOptionsWidget(
-                        name="item_search_year",
-                        label=T("Year"),
-                        comment=T("Search for an item by Year of Manufacture."),
-                        field="year",
-                        cols = 1
-                      ),
-                   ],
-
+            search=search_widgets,
             defaults=Storage(rows="item.name",
                              cols="item.item_category_id",
                              fact="count:item.brand_id",
                              ),
             hide_comments=True,
         )
-        item_search = S3Search(advanced=report_options.get("search"))
+        search_method = S3Search(simple=(),
+                                 advanced=search_widgets)
 
         configure(tablename,
                   deduplicate = self.supply_item_duplicate,
                   onaccept = self.supply_item_onaccept,
                   orderby = table.name,
-                  search_method = item_search,
+                  search_method = search_method,
                   report_options = report_options,
                   )
 
@@ -559,7 +561,7 @@ S3OptionsFilter({
                        ],
                 )
 
-        catalog_item_search = S3Search(
+        search_method = S3Search(
             simple=(catalog_item_search_simple_widget("simple")),
             advanced=(catalog_item_search_simple_widget("advanced"),
                       S3SearchOptionsWidget(
@@ -592,7 +594,7 @@ S3OptionsFilter({
 
         configure(tablename,
                   deduplicate = self.supply_catalog_item_duplicate,
-                  search_method = catalog_item_search,
+                  search_method = search_method,
                   )
 
         # =====================================================================
@@ -817,8 +819,9 @@ S3OptionsFilter({
         # ---------------------------------------------------------------------
         # Item Search Method
         #
-        item_entity_search = S3Search(
+        search_method = S3Search(
             # Advanced Search only
+            simple=(),
             advanced=(S3SearchSimpleWidget(
                         name="item_entity_search_text",
                         label=T("Search"),
@@ -848,7 +851,7 @@ S3OptionsFilter({
 
         # ---------------------------------------------------------------------
         configure(tablename,
-                  search_method = item_entity_search)
+                  search_method = search_method)
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

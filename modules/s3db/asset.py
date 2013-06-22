@@ -298,8 +298,9 @@ S3OptionsFilter({
                                             label=T("Map"),
                                             )]
         
-        asset_search = S3Search(
+        search_method = S3Search(
             # Advanced Search only
+            simple=(),
             advanced = advanced_search
             )
 
@@ -321,7 +322,7 @@ S3OptionsFilter({
                   create_next = URL(c="asset", f="asset",
                                     args=["[id]"]),
                   onaccept=self.asset_onaccept,
-                  search_method=asset_search,
+                  search_method=search_method,
                   report_options=Storage(
                         search=report_search,
                         rows=report_fields,

@@ -329,18 +329,26 @@ class S3Resource(object):
         self.crud = manager.crud()
         self.crud.resource = self
 
-        # Search
-        self.search = s3db.get_config(self.tablename, "search_method", None)
-        if not self.search:
+    # -------------------------------------------------------------------------
+    def search_method(self):
+        """
+            Return a Search method
+        """
+
+        tablename = self.tablename
+        search = current.s3db.get_config(tablename, "search_method")
+        if not search:
             if "name" in self.table:
                 T = current.T
-                self.search = manager.search(
-                                name="search_simple",
-                                label=T("Name"),
-                                comment=T("Enter a name to search for. You may use % as wildcard. Press 'Search' without input to list all items."),
-                                field=["name"])
+                search = current.manager.search(
+                    name="%s_search_simple" % tablename,
+                    label=T("Name"),
+                    comment=T("Enter a name to search for. You may use % as wildcard. Press 'Search' without input to list all items."),
+                    field=["name"])
             else:
-                self.search = manager.search()
+                search = current.manager.search()
+
+        return search
 
     # -------------------------------------------------------------------------
     def _attach(self, alias, hook):

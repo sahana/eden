@@ -2515,7 +2515,7 @@ def feature_query():
 def display_feature():
     """
         Cut-down version of the Map Viewing Client.
-        Used by gis_location_represent() to show just this feature on the map.
+        Used by gis_LocationRepresent() to show just this feature on the map.
         Called by the s3_viewMap() JavaScript
     """
 

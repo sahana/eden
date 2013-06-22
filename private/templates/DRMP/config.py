@@ -7,8 +7,6 @@ from gluon.validators import IS_NULL_OR
 
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
-from s3layouts import S3AddResourceLink
-from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
 from s3.s3fields import S3Represent
 from s3.s3resource import S3FieldSelector
 from s3.s3utils import S3DateTime, s3_auth_user_represent_name, s3_avatar_represent, s3_unicode
@@ -81,8 +79,6 @@ settings.L10n.decimal_separator = "."
 settings.L10n.thousands_separator = ","
 
 # Restrict the Location Selector to just certain countries
-# NB This can also be over-ridden for specific contexts later
-# e.g. Activities filtered to those of parent Project
 settings.gis.countries = ["TL"]
 
 # Until we add support to LocationSelector2 to set dropdowns from LatLons
@@ -159,40 +155,6 @@ def currency_represent(v):
         return "£"
     else:
         return current.messages["NONE"]
-
-# -----------------------------------------------------------------------------
-def location_represent(id, row=None):
-    """
-        Custom Representation of Locations
-    """
-
-    if not row:
-        if not id:
-            return current.messages["NONE"]
-        table = current.s3db.gis_location
-        row = current.db(table.id == id).select(table.L1,
-                                                table.L2,
-                                                table.L3,
-                                                limitby=(0, 1)).first()
-
-    L1 = row.L2
-    L2 = row.L2
-    L3 = row.L3
-    if L3:
-        represent = "%s | %s | %s" % (s3_unicode(L1) if L1 else "",
-                                      s3_unicode(L2) if L2 else "",
-                                      s3_unicode(L3) if L3 else "",
-                                      )
-    elif L2:
-        represent = "%s | %s" % (s3_unicode(L1) if L1 else "",
-                                 s3_unicode(L2) if L2 else "",
-                                 )
-    elif L1:
-        represent = s3_unicode(L1)
-    else:
-        represent = current.messages["NONE"]
-
-    return represent
 
 # -----------------------------------------------------------------------------
 def render_contacts(listid, resource, rfields, record, **attr):
@@ -1660,7 +1622,7 @@ def customize_cms_post_fields():
     table = s3db.cms_post
     field = table.location_id
     field.label = ""
-    field.represent = location_represent
+    field.represent = s3db.gis_LocationRepresent(format=" | ")
     field.requires = IS_NULL_OR(
                         IS_LOCATION_SELECTOR2(levels=["L1", "L2", "L3"])
                      )
@@ -1888,6 +1850,7 @@ def customize_cms_post(**attr):
                 return False
 
         if r.interactive:
+            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
             table = customize_cms_post_fields()
 
             get_vars = current.request.get_vars
@@ -1989,7 +1952,7 @@ def customize_cms_post(**attr):
              r.method != "search":
             # Map Popups
             table = r.table
-            table.location_id.represent = location_represent
+            table.location_id.represent = s3db.gis_LocationRepresent(format=" | ")
             table.created_by.represent = s3_auth_user_represent_name
             # Used by default popups
             series = T(table.series_id.represent(r.record.series_id))
@@ -2321,7 +2284,7 @@ def customize_gis_location(**attr):
                 customize_project_project_fields()
 
                 # gis_location table (Sub-Locations)
-                table.parent.represent = location_represent
+                table.parent.represent = s3db.gis_LocationRepresent(format=" | ")
 
                 list_fields = ["name",
                                "id",
@@ -2461,7 +2424,7 @@ def customize_hrm_human_resource_fields():
     s3db = current.s3db
     table = s3db.hrm_human_resource
     table.site_id.represent = S3Represent(lookup="org_site")
-    s3db.org_site.location_id.represent = location_represent
+    s3db.org_site.location_id.represent = s3db.gis_LocationRepresent(format=" | ")
     #table.modified_by.represent = s3_auth_user_represent_name
     table.modified_on.represent = datetime_represent
 
@@ -2575,7 +2538,7 @@ def customize_org_office_fields():
 
     s3db = current.s3db
     table = s3db.org_office
-    table.location_id.represent = location_represent
+    table.location_id.represent = s3db.gis_LocationRepresent(format=" | ")
     table.modified_by.represent = s3_auth_user_represent_name
     table.modified_on.represent = datetime_represent
 
@@ -2864,8 +2827,6 @@ def customize_org_organisation(**attr):
             table.region.readable = table.region.writable = False
             table.country.readable = table.country.writable = False
             table.year.readable = table.year.writable = False
-            table.twitter.readable = table.twitter.writable = False
-            table.donation_phone.readable = table.donation_phone.writable = False
             
             # Return to List view after create/update/delete (unless done via Modal)
             url_next = URL(c="org", f="organisation", args="datalist")
@@ -2934,7 +2895,7 @@ def customize_org_resource_fields(method):
     s3db = current.s3db
 
     table = s3db.org_resource
-    table.location_id.represent = location_represent
+    table.location_id.represent = s3db.gis_LocationRepresent(format=" | ")
 
     list_fields = ["organisation_id",
                    "location_id",
@@ -3088,6 +3049,7 @@ def customize_pr_person(**attr):
             image_field.requires = None
 
         if r.interactive or r.representation == "aadata":
+            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
             # CRUD Strings
             ADD_CONTACT = T("Add New Contact")
             s3.crud_strings[tablename] = Storage(
@@ -3116,6 +3078,7 @@ def customize_pr_person(**attr):
             site_field.requires = IS_ONE_OF(current.db, "org_site.site_id",
                                             represent,
                                             orderby = "org_site.name")
+            from s3layouts import S3AddResourceLink
             site_field.comment = S3AddResourceLink(c="org", f="office",
                                                    vars={"child": "site_id"},
                                                    label=T("Add New Office"),
@@ -3273,7 +3236,7 @@ def customize_project_project_fields():
 
     s3db = current.s3db
 
-    s3db.project_location.location_id.represent = location_represent
+    s3db.project_location.location_id.represent = s3db.gis_LocationRepresent(format=" | ")
     table = s3db.project_project
     table.start_date.represent = date_represent
     table.end_date.represent = date_represent
@@ -3331,6 +3294,7 @@ def customize_project_project(**attr):
                            list_layout = render_projects,
                            )
         elif r.interactive  or r.representation == "aadata":
+            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
             # Configure fields 
             table.human_resource_id.label = T("Focal Person")
             table.budget.label = "%s (USD)" % T("Budget")

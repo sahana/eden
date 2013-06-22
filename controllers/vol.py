@@ -620,8 +620,7 @@ def person_search():
     s3.filter = (s3db.hrm_human_resource.type == 2)
 
     s3db.configure("hrm_human_resource",
-                   # S3HRSearch
-                   search_method = s3db.hrm_autocomplete_search,
+                   search_method = s3base.S3HRSearch(),
                    )
     s3.prep = lambda r: r.representation == "json" and \
                         r.method == "search"

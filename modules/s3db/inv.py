@@ -250,7 +250,8 @@ class S3WarehouseModel(S3Model):
             msg_list_empty = T("No Warehouses currently registered"))
 
         # Search Method
-        warehouse_search = S3Search(
+        search_method = S3Search(
+            simple=(),
             advanced=(S3SearchSimpleWidget(
                         name="warehouse_search_text",
                         label=T("Search"),
@@ -279,7 +280,7 @@ class S3WarehouseModel(S3Model):
 
         configure(tablename,
                   super_entity=("pr_pentity", "org_site"),
-                  search_method = warehouse_search,
+                  search_method = search_method,
                   deduplicate = self.inv_warehouse_duplicate,
                   onaccept = self.inv_warehouse_onaccept,
                   list_fields=["id",
@@ -581,8 +582,7 @@ S3OptionsFilter({
             rows = ["item_id", "item_id$item_category_id"]
             cols = ["site_id", "owner_org_id", "supply_org_id"]
             fact = ["quantity"]
-        report_options = Storage(
-            search=[
+        search_widgets = [
                 S3SearchSimpleWidget(
                     name="inv_item_search_text",
                     label=T("Search"),
@@ -640,8 +640,9 @@ S3OptionsFilter({
                     label=T("Expiry Date"),
                     field="expiry_date"
                 )
-            ],
-
+            ]
+        report_options = Storage(
+            search=search_widgets,
             rows=rows,
             cols=cols,
             fact=fact,
@@ -655,7 +656,8 @@ S3OptionsFilter({
         )
 
         # Item Search Method (Advanced Search only)
-        inv_item_search = S3Search(advanced=report_options.get("search"))
+        search_method = S3Search(simple=(),
+                                 advanced=search_widgets)
 
         direct_stock_edits = settings.get_inv_direct_stock_edits()
         if track_pack_values:
@@ -716,7 +718,7 @@ S3OptionsFilter({
                        #],
                        list_fields = list_fields,
                        onvalidation = self.inv_inv_item_onvalidate,
-                       search_method = inv_item_search,
+                       search_method = search_method,
                        report_options = report_options,
                        deduplicate = self.inv_item_duplicate,
                        extra_fields = ["quantity", "pack_value", "item_pack_id"],
@@ -1173,7 +1175,7 @@ class S3TrackingModel(S3Model):
 
 
         # Search Method
-        send_search = S3Search(
+        search_method = S3Search(
                 simple=(S3SearchSimpleWidget(
                           name="send_search_text_simple",
                           label=T("Search"),
@@ -1316,7 +1318,7 @@ class S3TrackingModel(S3Model):
                   # It shouldn't be possible for the user to delete a send item
                   # unless *maybe* if it is pending and has no items referencing it
                   deletable=False,
-                  search_method = send_search,
+                  search_method = search_method,
                   onaccept = self.inv_send_onaccept,
                   onvalidation = self.inv_send_onvalidation,
                   create_next = send_item_url,
@@ -1478,7 +1480,7 @@ class S3TrackingModel(S3Model):
             recv_search_comment = T("Search for a shipment by looking for text in any field.")
             recv_search_date_field = "date"
             recv_search_date_comment = T("Search for a shipment received between these dates")
-        recv_search = S3Search(
+        search_method = S3Search(
             simple=(S3SearchSimpleWidget(
                         name="recv_search_text_simple",
                         label=T("Search"),
@@ -1569,7 +1571,7 @@ class S3TrackingModel(S3Model):
                   mark_required = ["from_site_id", "organisation_id"],
                   onvalidation = self.inv_recv_onvalidation,
                   onaccept = self.inv_recv_onaccept,
-                  search_method = recv_search,
+                  search_method = search_method,
                   create_next = recv_item_url,
                   update_next = recv_item_url,
                   orderby=~table.date,
@@ -1826,7 +1828,7 @@ S3OptionsFilter({
             msg_record_deleted = T("Shipment Item deleted"),
             msg_list_empty = T("No Shipment Items"))
 
-        track_search = S3Search(
+        search_method = S3Search(
             simple=(S3SearchSimpleWidget(
                         name="track_search_text_simple",
                         label=T("Search"),
@@ -1879,7 +1881,7 @@ S3OptionsFilter({
                                  "owner_org_id",
                                  "supply_org_id",
                                  ],
-                  search_method = track_search,
+                  search_method = search_method,
                   onaccept = self.inv_track_item_onaccept,
                   onvalidation = self.inv_track_item_onvalidate,
                   extra_fields = ["quantity", "pack_value", "item_pack_id"],

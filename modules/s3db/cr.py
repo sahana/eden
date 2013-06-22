@@ -668,7 +668,7 @@ def cr_shelter_rheader(r, tabs=[]):
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             if r.name == "shelter":
-                location = s3db.gis_location_represent(record.location_id)
+                location = r.table.location_id.represent(record.location_id)
 
                 rheader = DIV(TABLE(
                                     TR(

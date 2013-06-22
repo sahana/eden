@@ -70,7 +70,6 @@ class S3HRModel(S3Model):
 
     names = ["hrm_human_resource",
              "hrm_human_resource_id",
-             "hrm_autocomplete_search",
              "hrm_type_opts",
              ]
 
@@ -603,7 +602,6 @@ class S3HRModel(S3Model):
         #
         return Storage(
                     hrm_human_resource_id = human_resource_id,
-                    hrm_autocomplete_search = S3HRSearch(),
                     hrm_type_opts = hrm_type_opts,
                 )
 
@@ -1192,7 +1190,7 @@ class S3HRJobModel(S3Model):
                                    #Field("hours_end", "time"),
                                    ##location_id(label=T("Available for Location"),
                                                ##requires=IS_ONE_OF(db, "gis_location.id",
-                                                                  ##gis_location_represent,
+                                                                  ##gis_LocationRepresent(),
                                                                   ##filterby="level",
                                                                   ### @ToDo Should this change per config?
                                                                   ##filter_opts=gis.region_level_keys,
