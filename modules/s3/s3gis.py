@@ -1968,38 +1968,60 @@ class GIS(object):
                     else:
                         _tooltip = ""
                 attr = {}
-                fields = set(popup_fields + attr_fields)
-                lfields, joins, left, distinct = resource.resolve_selectors(fields)
+
+                #fields = set(popup_fields + attr_fields)
+                #lfields, joins, left, distinct = resource.resolve_selectors(fields)
+                #popup_cols = []
+                #attr_cols = []
+                #for f in lfields:
+                    #colname = f.colname
+                    #fname = f.fname
+                    #selector = f.selector
+                    #if fname in popup_fields:
+                        #popup_cols.append(colname)
+                    #elif selector in popup_fields:
+                        #popup_cols.append(colname)
+                    #if fname in attr_fields:
+                        #attr_cols.append(colname)
+                    #elif selector in attr_fields:
+                        #attr_cols.append(colname)
+                #if pkey not in lfields:
+                    #lfields.insert(0, pkey)
+                ## Deactivate pagination
+                #manager = current.manager
+                #ROWSPERPAGE = manager.ROWSPERPAGE
+                #manager.ROWSPERPAGE = None
+                ## Extract/Represent the relevant data
+                #data = resource.fast_select(lfields,
+                                            ## These seem to be in a different format
+                                            ##left=left,
+                                            #distinct=distinct,
+                                            #represent=True,
+                                            #)["data"]
+                ## Restore pagination
+                #manager.ROWSPERPAGE = ROWSPERPAGE
+
+                fields = list(set(popup_fields + attr_fields))
+                if pkey not in fields:
+                    fields.insert(0, pkey)
+                    
+                records = resource.fast_select(fields,
+                                               start=None,
+                                               limit=None,
+                                               represent=True)
+                                               
+                rfields = records["rfields"]
                 popup_cols = []
                 attr_cols = []
-                for f in lfields:
-                    colname = f.colname
+                for f in rfields:
                     fname = f.fname
                     selector = f.selector
-                    if fname in popup_fields:
-                        popup_cols.append(colname)
-                    elif selector in popup_fields:
-                        popup_cols.append(colname)
-                    if fname in attr_fields:
-                        attr_cols.append(colname)
-                    elif selector in attr_fields:
-                        attr_cols.append(colname)
-                if pkey not in lfields:
-                    lfields.insert(0, pkey)
-
-                # Deactivate pagination
-                manager = current.manager
-                ROWSPERPAGE = manager.ROWSPERPAGE
-                manager.ROWSPERPAGE = None
-                # Extract/Represent the relevant data
-                data = resource.fast_select(lfields,
-                                            # These seem to be in a different format
-                                            #left=left,
-                                            distinct=distinct,
-                                            represent=True,
-                                            )["data"]
-                # Restore pagination
-                manager.ROWSPERPAGE = ROWSPERPAGE
+                    if fname in popup_fields or selector in popup_fields:
+                        popup_cols.append(f.colname)
+                    if fname in attr_fields or selector in attr_fields:
+                        attr_cols.append(f.colname)
+                        
+                data = records["data"]
                 for record in data:
                     record_id = int(record[str(table[pkey])])
                     if attr_cols:

@@ -10,6 +10,49 @@ import unittest
 from gluon import *
 
 # =============================================================================
+class ListStringImportTests(unittest.TestCase):
+
+    def setUp(self):
+
+        xmlstr = """
+<s3xml>
+    <resource name="gis_layer_feature" uuid="TestLayerFeature">
+        <data field="name">TestLayerFeature</data>
+        <data field="controller">gis</data>
+        <data field="function">location</data>
+        <data field="popup_fields" value="[&quot;test1&quot;, &quot;test2&quot;]"/>
+    </resource>
+</s3xml>"""
+
+        from lxml import etree
+        self.tree = etree.ElementTree(etree.fromstring(xmlstr))
+        current.auth.override = True
+
+    def testListStringImport(self):
+        """ Test import with list:string """
+
+        db = current.db
+        s3db = current.s3db
+
+        resource = s3db.resource("gis_layer_feature")
+
+        # Import the elements
+        resource.import_xml(self.tree)
+
+        # Check the record
+        table = resource.table
+        query = (table.uuid == "TestLayerFeature")
+        row = db(query).select(table.popup_fields,
+                               limitby=(0, 1)).first()
+        self.assertTrue(isinstance(row.popup_fields, list))
+        self.assertEqual(row.popup_fields, ['test1', 'test2'])
+
+    def tearDown(self):
+
+        current.auth.override = False
+        current.db.rollback()
+    
+# =============================================================================
 class DefaultApproverOverrideTests(unittest.TestCase):
     """ Test ability to override default approver in imports """
 
@@ -226,6 +269,7 @@ def run_suite(*test_classes):
 if __name__ == "__main__":
 
     run_suite(
+        ListStringImportTests,
         DefaultApproverOverrideTests,
         ComponentDisambiguationTests,
         PostParseTests,
