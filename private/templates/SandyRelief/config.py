@@ -259,7 +259,7 @@ def customize_org_organisation(**attr):
                            "acronym",
                            "organisation_type_id",
                            (T("Services"), "service.name"),
-                           (T("Neighborhoods Served"), "location"),
+                           (T("Neighborhoods Served"), "location.name"),
                            ]
             s3db.configure("org_organisation", list_fields=list_fields)
             

@@ -364,31 +364,31 @@ class S3XML(S3Codec):
             root = etree.Element(self.TAG.root)
         if elements is not None or len(root):
             success = True
-        set = root.set
-        set(ATTRIBUTE.success, json.dumps(success))
+        set_attribute = root.set
+        set_attribute(ATTRIBUTE.success, json.dumps(success))
         if start is not None:
-            set(ATTRIBUTE.start, str(start))
+            set_attribute(ATTRIBUTE.start, str(start))
         if limit is not None:
-            set(ATTRIBUTE.limit, str(limit))
+            set_attribute(ATTRIBUTE.limit, str(limit))
         if results is not None:
-            set(ATTRIBUTE.results, str(results))
+            set_attribute(ATTRIBUTE.results, str(results))
         if elements is not None:
             root.extend(elements)
         if domain:
-            set(ATTRIBUTE.domain, self.domain)
+            set_attribute(ATTRIBUTE.domain, self.domain)
         if url:
-            set(ATTRIBUTE.url, current.response.s3.base_url)
+            set_attribute(ATTRIBUTE.url, current.response.s3.base_url)
         if maxbounds:
             # @ToDo: This should be done based on the features, not just the config
             bounds = current.gis.get_bounds()
-            set(ATTRIBUTE.latmin,
-                str(bounds["lat_min"]))
-            set(ATTRIBUTE.latmax,
-                str(bounds["lat_max"]))
-            set(ATTRIBUTE.lonmin,
-                str(bounds["lon_min"]))
-            set(ATTRIBUTE.lonmax,
-                str(bounds["lon_max"]))
+            set_attribute(ATTRIBUTE.latmin,
+                          str(bounds["lat_min"]))
+            set_attribute(ATTRIBUTE.latmax,
+                          str(bounds["lat_max"]))
+            set_attribute(ATTRIBUTE.lonmin,
+                          str(bounds["lon_min"]))
+            set_attribute(ATTRIBUTE.lonmax,
+                          str(bounds["lon_max"]))
         return etree.ElementTree(root)
 
     # -------------------------------------------------------------------------
@@ -1453,30 +1453,27 @@ class S3XML(S3Codec):
                     value = field.store(upload, filename)
                 elif download_url != "local":
                     continue
-            elif field_type == "list:string":
-                value = child.get(VALUE, None)
-                if value:
-                    try:
-                        value = json.loads(value)
-                    except:
-                        error = sys.exc_info()[1]
             else:
                 value = child.get(VALUE, None)
 
             skip_validation = False
+            is_text = field_type in ("string", "text")
 
             if value is None:
+                #decode_value = not is_text
                 if field_type == "password":
                     value = child.text
-                    # Do not encrypt the password if it already
+                    # Do not re-encrypt the password if it already
                     # comes encrypted:
                     skip_validation = True
                 else:
                     value = xml_decode(child.text)
+            #else:
+            #    decode_value = True
 
-            if value is None and field_type in ("string", "text"):
+            if value is None and is_text:
                 value = ""
-            elif value == "" and not field_type in ("string", "text"):
+            elif value == "" and not is_text:
                 value = None
 
             if value is not None:
@@ -1485,14 +1482,18 @@ class S3XML(S3Codec):
                                                   field_type=field_type)
                     skip_validation = True
                     v = value
-                elif isinstance(value, basestring) and len(value):
+                elif field_type == "upload":
+                    pass
+                elif isinstance(value, basestring) \
+                     and len(value) \
+                     and not is_text:
                     try:
                         _value = json.loads(value)
                         if _value != float("inf"):
                             # e.g. an HTML_COLOUR of 98E600
                             value = _value
                     except:
-                        pass
+                        error = sys.exc_info()[1]
 
                 if validate is not None and not skip_validation:
                     if not isinstance(value, (basestring, list, tuple)):
@@ -1727,17 +1728,17 @@ class S3XML(S3Codec):
                 else:
                     p = None
                 opts = self.get_field_options(table, f, parent=p)
-                set = field.set
-                set(ATTRIBUTE.name, f)
-                set(ATTRIBUTE.type, ftype)
-                set(ATTRIBUTE.readable, str(readable))
-                set(ATTRIBUTE.writable, str(writable))
+                set_attribute = field.set
+                set_attribute(ATTRIBUTE.name, f)
+                set_attribute(ATTRIBUTE.type, ftype)
+                set_attribute(ATTRIBUTE.readable, str(readable))
+                set_attribute(ATTRIBUTE.writable, str(writable))
                 has_options = str(opts is not None and
                                   len(opts) and True or False)
-                set(ATTRIBUTE.has_options, has_options)
+                set_attribute(ATTRIBUTE.has_options, has_options)
                 if labels:
                     label = s3_unicode(table[f].label)
-                    set(ATTRIBUTE.label, label)
+                    set_attribute(ATTRIBUTE.label, label)
                     comment = table[f].comment
                     if comment:
                         comment = s3_unicode(comment)
@@ -1750,7 +1751,7 @@ class S3XML(S3Codec):
                             from s3utils import s3_debug
                             s3_debug("S3XML.get_fields()", e)
                     if comment:
-                        set(ATTRIBUTE.comment, comment)
+                        set_attribute(ATTRIBUTE.comment, comment)
         return fields
 
     # -------------------------------------------------------------------------
