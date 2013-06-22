@@ -46,7 +46,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                  ADMIN in s3.roles
         settings = current.deployment_settings
         job_roles = lambda i: settings.get_hrm_job_roles()
-        use_teams = lambda i: settings.get_hrm_use_teams()
+        teams = settings.get_hrm_teams()
+        use_teams = lambda i: teams
 
         return M(c="hrm")(
                     M("Staff", f="staff",
@@ -57,7 +58,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Import", f="person", m="import",
                           vars={"group":"staff"}, p="create"),
                     ),
-                    M("Teams", f="group",
+                    M(teams, f="group",
                       check=[manager_mode, use_teams])(
                         M("New", m="create"),
                         M("List All"),
@@ -135,7 +136,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
         show_programmes = lambda i: settings.get_hrm_vol_experience() == "programme"
         show_tasks = lambda i: settings.has_module("project") and \
                                settings.get_project_mode_task()
-        use_teams = lambda i: settings.get_hrm_use_teams()
+        teams = settings.get_hrm_teams()
+        use_teams = lambda i: teams
 
         if job_roles(""):
             jt_catalog_label = "Job Title Catalog"
@@ -151,7 +153,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Import", f="person", m="import",
                           vars={"group":"volunteer"}, p="create"),
                     ),
-                    M("Teams", f="group",
+                    M(teams, f="group",
                       check=[manager_mode, use_teams])(
                         M("New", m="create"),
                         M("List All"),

@@ -13,7 +13,8 @@
          all of the following are for the branch, unless the branch field is empty:
          Acronym.................org_organisation.acronym
          Type....................org_organisation$organisation_type_id
-         Sector..................org_organisation$sector_id
+         Sectors.................org_sector_organisation$sector_id
+         Services................org_service_organisation$service_id
          Region..................org_organisation.region
          Country.................org_organisation.country (ISO Code)
          Website.................org_organisation.website
@@ -82,11 +83,8 @@
         <xsl:param name="OrgName"/>
         <xsl:param name="BranchName"/>
 
-        <!-- Create the sectors -->
-        <xsl:variable name="sector" select="col[@field='Sector']"/>
-        <xsl:call-template name="splitList">
-            <xsl:with-param name="list" select="$sector"/>
-        </xsl:call-template>
+        <xsl:variable name="Sectors" select="col[@field='Sectors']/text()"/>
+        <xsl:variable name="Services" select="col[@field='Services']/text()"/>
 
         <!-- Create the Organisation/Branch -->
         <resource name="org_organisation">
@@ -164,17 +162,18 @@
                 <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
             </xsl:if>
 
-            <xsl:if test="$sector!=''">
-                <reference field="multi_sector_id" resource="org_sector">
-                    <xsl:variable name="qlist">
-                        <xsl:call-template name="quoteList">
-                            <xsl:with-param name="list" select="$sector"/>
-                        </xsl:call-template>
-                    </xsl:variable>
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat('[', $qlist, ']')"/>
-                    </xsl:attribute>
-                </reference>
+            <xsl:if test="$Sectors!=''">
+                <xsl:call-template name="splitList">
+                    <xsl:with-param name="list" select="$Sectors"/>
+                    <xsl:with-param name="arg" select="sector"/>
+                </xsl:call-template>
+            </xsl:if>
+
+            <xsl:if test="$Services!=''">
+                <xsl:call-template name="splitList">
+                    <xsl:with-param name="list" select="$Services"/>
+                    <xsl:with-param name="arg" select="service"/>
+                </xsl:call-template>
             </xsl:if>
 
             <!-- Logo -->
@@ -231,17 +230,29 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <!-- Template to create an org_sector resource from the value passed in -->
     <xsl:template name="resource">
         <xsl:param name="item"/>
+        <xsl:param name="arg"/>
 
-        <resource name="org_sector">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$item"/>
-            </xsl:attribute>
-            <data field="abrv"><xsl:value-of select="$item"/></data>
-            <data field="name"><xsl:value-of select="$item"/></data>
-        </resource>
+        <xsl:choose>
+            <!-- Sectors -->
+            <xsl:when test="$arg='sector'">
+                <resource name="org_sector_organisation">
+                    <resource name="org_sector">
+                        <data field="abrv"><xsl:value-of select="$item"/></data>
+                        <data field="name"><xsl:value-of select="$item"/></data>
+                    </resource>
+                </resource>
+            </xsl:when>
+            <!-- Services -->
+            <xsl:when test="$arg='service'">
+                <resource name="org_service_organisation">
+                    <resource name="org_service">
+                        <data field="name"><xsl:value-of select="$item"/></data>
+                    </resource>
+                </resource>
+            </xsl:when>
+        </xsl:choose>
 
     </xsl:template>
 

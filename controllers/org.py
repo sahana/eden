@@ -87,15 +87,19 @@ def sites_for_org():
     except:
         result = current.xml.json_message(False, 400, "No Org provided!")
     else:
-        # Find all branches for this Organisation
-        btable = s3db.org_organisation_branch
-        query = (btable.organisation_id == org) & \
-                (btable.deleted != True)
-        rows = db(query).select(btable.branch_id)
-        org_ids = [row.branch_id for row in rows] + [org]
         stable = s3db.org_site
-        query = (stable.organisation_id.belongs(org_ids)) & \
-                (stable.deleted != True)
+        if settings.get_org_branches():
+            # Find all branches for this Organisation
+            btable = s3db.org_organisation_branch
+            query = (btable.organisation_id == org) & \
+                    (btable.deleted != True)
+            rows = db(query).select(btable.branch_id)
+            org_ids = [row.branch_id for row in rows] + [org]
+            query = (stable.organisation_id.belongs(org_ids)) & \
+                    (stable.deleted != True)
+        else:
+            query = (stable.organisation_id == org) & \
+                    (stable.deleted != True)
         rows = db(query).select(stable.site_id,
                                 stable.name,
                                 orderby=stable.name)
@@ -105,74 +109,8 @@ def sites_for_org():
         return result
 
 # -----------------------------------------------------------------------------
-def facility_marker_fn(record):
-    """
-        Function to decide which Marker to use for Facilities Map
-        @ToDo: Legend
-        @ToDo: Move to Templates
-        @ToDo: Use Symbology
-    """
-
-    table = db.org_facility_type
-    types = record.facility_type_id
-    if isinstance(types, list):
-        rows = db(table.id.belongs(types)).select(table.name)
-    else:
-        rows = db(table.id == types).select(table.name)
-    types = [row.name for row in rows]
-
-    # Use Marker in preferential order
-    if "Hub" in types:
-        marker = "warehouse"
-    elif "Medical Clinic" in types:
-        marker = "hospital"
-    elif "Food" in types:
-        marker = "food"
-    elif "Relief Site" in types:
-        marker = "asset"
-    elif "Residential Building" in types:
-        marker = "residence"
-    #elif "Shelter" in types:
-    #    marker = "shelter"
-    else:
-        # Unknown
-        marker = "office"
-    if settings.has_module("req"):
-        # Colour code by open/priority requests
-        reqs = record.reqs
-        if reqs == 3:
-            # High
-            marker = "%s_red" % marker
-        elif reqs == 2:
-            # Medium
-            marker = "%s_yellow" % marker
-        elif reqs == 1:
-            # Low
-            marker = "%s_green" % marker
-
-    mtable = db.gis_marker
-    try:
-        marker = db(mtable.name == marker).select(mtable.image,
-                                                  mtable.height,
-                                                  mtable.width,
-                                                  cache=s3db.cache,
-                                                  limitby=(0, 1)
-                                                  ).first()
-    except:
-        marker = db(mtable.name == "office").select(mtable.image,
-                                                    mtable.height,
-                                                    mtable.width,
-                                                    cache=s3db.cache,
-                                                    limitby=(0, 1)
-                                                    ).first()
-    return marker
-
-# -----------------------------------------------------------------------------
 def facility():
     """ RESTful CRUD controller """
-
-    # Tell the client to request per-feature markers
-    s3db.configure("org_facility", marker_fn=facility_marker_fn)
 
     # Pre-processor
     def prep(r):

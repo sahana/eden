@@ -6,8 +6,8 @@ from gluon.contrib.simplejson.ordered_dict import OrderedDict
 from s3 import s3search
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
 
-settings = current.deployment_settings
 T = current.T
+settings = current.deployment_settings
 
 """
     Template settings for DRRPP
@@ -234,7 +234,7 @@ def customize_project_project(**attr):
     attr["rheader"] = None
     
     # Only show 10 Project by default to improve load time
-    attr["dt_lengthMenu"] = [[ 10, 50, -1], [ 10, 50, current.T("All")]]
+    attr["dt_lengthMenu"] = [[ 10, 50, -1], [ 10, 50, T("All")]]
     s3.dataTable_iDisplayLength = 10
     
     # Custom PreP

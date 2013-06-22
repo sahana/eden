@@ -528,6 +528,10 @@ def person():
                 r.component_id = hr_id
             configure("hrm_human_resource",
                       insertable = False)
+
+        elif r.component_name == "group_membership" and r.representation == "aadata":
+            s3db.hrm_configure_pr_group_membership()
+
         return True
     s3.prep = prep
 

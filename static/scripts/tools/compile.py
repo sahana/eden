@@ -19,13 +19,19 @@ if theme != "default":
     exists = os.path.exists
     folder = request.folder
     for view in ["create.html",
+                 #"delete.html",
                  "display.html",
                  "list.html",
                  "list_create.html",
+                 "list_filter.html",
                  "map.html",
                  "popup.html",
+                 "profile.html",
                  "report.html",
+                 "report2.html",
+                 #"review.html",
                  "search.html",
+                 "summary.html",
                  "update.html",
                  ]:
         if exists(join(folder, "private", "templates", theme, "views", "_%s" % view)):

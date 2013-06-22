@@ -1,9 +1,9 @@
-+ACI-Organisation+ACI-,+ACI-Branch+ACI-,+ACI-Acronym+ACI-,+ACI-Type+ACI-,+ACI-Region+ACI-,+ACI-Country+ACI-,+ACI-Website+ACI-,+ACI-Twitter+ACI-,+ACI-Domain+ACI-
-+ACI-American Red Cross+ACI-,,+ACI-ARC+ACI-,+ACI-Red Cross / Red Crescent+ACI-,,,+ACI-http://redcross.org+ACI-,+ACI-redcross+ACI-,+ACI-redcross.org+ACI-
-+ACI-Doctors Without Borders+ACI-,,+ACI-DWB+ACI-,+ACI-NGO+ACI-,,,+ACI-http://dwb.org+ACI-,+ACI-msf+AF8-usa+ACI-,+ACI-dwb.org+ACI-
-+ACI-Federal Emergency Management Agency+ACI-,,+ACI-FEMA+ACI-,+ACI-Government+ACI-,,,+ACI-http://www.fema.gov+ACI-,+ACI-FEMA+ACI-,+ACI-fema.dhs.gov+ACI-
-+ACI-New York City Fire Department+ACI-,,+ACI-FDNY+ACI-,+ACI-Government+ACI-,,,+ACI-http://www.nyc.gov/fdny+ACI-,+ACI-fdny+ACI-,
-+ACI-Occupy+ACI-,,,+ACI-NGO+ACI-,,,+ACI-http://occupy.net+ACI-,,+ACI-occupy.net+ACI-
-+ACI-Humanity Road+ACI-,,+ACI-HR+ACI-,+ACI-NGO+ACI-,,,+ACI-http://humanityroad.org+ACI-,+ACI-HumanityRoad+ACI-,+ACI-humanityroad.org+ACI-
-+ACI-Hope NYC+ACI-,,,+ACI-NGO+ACI-,,,,,
-+ACI-Third Wave Volunteers Network+ACI-,,,+ACI-NGO+ACI-,,,,,
+"Organisation","Acronym","Type","Services","Region","Country","Website","Twitter","Domain"
+"American Red Cross","ARC","Nonprofit",,,,"http://redcross.org","redcross","redcross.org"
+"Doctors Without Borders","DWB","Nonprofit",,,,"http://dwb.org","msf+AF8-usa","dwb.org"
+"Federal Emergency Management Agency","FEMA","Government",,,,"http://www.fema.gov","FEMA","fema.dhs.gov"
+"New York City Fire Department","FDNY","Government",,,,"http://www.nyc.gov/fdny","fdny",
+"Occupy",,"Nonprofit",,,,"http://occupy.net",,"occupy.net"
+"Humanity Road","HR","Nonprofit",,,,"http://humanityroad.org","HumanityRoad","humanityroad.org"
+"Hope NYC",,"Nonprofit",,,,,,
+"Third Wave Volunteers Network",,"Nonprofit",,,,,,

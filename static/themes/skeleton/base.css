@@ -94,6 +94,10 @@ div.item-container {
 div#map {
 }
 /* Form Popup */
+body.popup {
+    min-width: auto;
+    height: auto;
+}
 div#popup {
 }
 
@@ -226,7 +230,7 @@ div#last_update {
 }
 
 /* Popup text for represents of Long text fields */
-.popup {
+.showall {
     display: none;
     position: absolute;
 }
@@ -357,6 +361,12 @@ input[disabled='disabled'] {
 
 /* AutoCompletes */
 .throbber {
+    background-image: url(../../img/ajax-loader.gif);
+    background-repeat: no-repeat;
+    height: 32px;
+    width: 32px;
+    margin-bottom: -16px;
+    padding: 0 0 0 10px;
 }
 ul.ui-autocomplete {
 }
@@ -422,6 +432,21 @@ tr.box_bottom {
 }
 .widget-org-hierarchy-crumbs li.selected a {
 }
+
+.form-container form button.ui-datepicker-trigger {
+	background-image: url(../../img/jquery-ui/calendar.gif);
+    background-repeat: no-repeat;
+    height: 15px;
+    width: 16px;
+    margin-left: 3px;
+    /* Make it not like a button */
+    border: 0;
+    padding: 0;
+    -moz-box-sizing: content-box;
+    -webkit-box-sizing: content-box;
+    box-sizing: content-box;
+}
+
 /* ========================================================================= */
 /* TABLE */
 div#table-container {

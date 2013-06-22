@@ -1132,7 +1132,8 @@ class S3GroupModel(S3Model):
                   )
 
         # Reusable field
-        if current.request.controller in ("hrm", "vol"):
+        if current.request.controller in ("hrm", "vol") and \
+           current.deployment_settings.get_hrm_teams() == "Team":
             label = T("Add Team")
             title = T("Create Team")
             tooltip = T("Create a new Team.")

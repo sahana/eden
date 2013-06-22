@@ -279,7 +279,10 @@ settings.L10n.decimal_separator = "."
 #settings.pr.request_gender = False
 #settings.pr.select_existing = False
 
-# Organisation Management
+# -----------------------------------------------------------------------------
+# Organisations
+# Disable the use of Organisation Branches
+#settings.org.branches = False
 # Set the length of the auto-generated org/site code the default is 10
 #settings.org.site_code_len = 3
 # Set the label for Sites
@@ -309,6 +312,7 @@ settings.L10n.decimal_separator = "."
 #     "vol_volunteer_cluster.vol_cluster_position_id" : [],
 #     }
 
+# -----------------------------------------------------------------------------
 # Human Resource Management
 # Uncomment to chage the label for 'Staff'
 #settings.hrm.staff_label = "Contacts"
@@ -345,10 +349,11 @@ settings.L10n.decimal_separator = "."
 # Uncomment to disable the use of HR Skills
 #settings.hrm.use_skills = False
 # Uncomment to disable the use of HR Teams
-#settings.hrm.use_teams = False
+#settings.hrm.teams = False
 # Uncomment to disable the use of HR Trainings
 #settings.hrm.use_trainings = False
 
+# -----------------------------------------------------------------------------
 # Inventory Management
 #settings.inv.collapse_tabs = False
 # Uncomment to customise the label for Facilities in Inventory Management
@@ -394,6 +399,7 @@ settings.L10n.decimal_separator = "."
 #        4: T("Surplus")
 #   }
 
+# -----------------------------------------------------------------------------
 # Requests Management
 # Uncomment to disable Inline Forms in Requests module
 #settings.req.inline_forms = False
@@ -469,11 +475,13 @@ settings.L10n.decimal_separator = "."
 #    msg_record_deleted = T("Request for Volunteers Canceled"),
 #    msg_list_empty = T("No Requests for Volunteers"))
 
+# -----------------------------------------------------------------------------
 # Supply
 #settings.supply.use_alt_name = False
 # Do not edit after deployment
 #settings.supply.catalog_default = T("Default")
 
+# -----------------------------------------------------------------------------
 # Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
 #settings.project.mode_3w = True
@@ -508,10 +516,12 @@ settings.L10n.decimal_separator = "."
 #}
 #settings.project.organisation_lead_role = 1
 
+# -----------------------------------------------------------------------------
 # Incidents
 # Uncomment this to use vehicles when responding to Incident Reports
 #settings.irs.vehicle = True
 
+# -----------------------------------------------------------------------------
 # Save Search Widget
 #settings.save_search.widget = False
 

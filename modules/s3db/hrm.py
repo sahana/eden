@@ -391,7 +391,16 @@ class S3HRModel(S3Model):
                        "end_date",
                        "status",
                        ]
-
+        teams = settings.get_hrm_teams()
+        if teams:
+            team_search = S3SearchOptionsWidget(
+                            name="human_resource_search_teams",
+                            label=T(teams),
+                            field="person_id$group_membership.group_id",
+                            cols=3,
+                            )
+        else:
+            team_search = None
         search_widgets = [# @ToDo: Use this only in new common view
                           #S3SearchOptionsWidget(
                           # name="human_resource_search_type",
@@ -456,12 +465,7 @@ class S3HRModel(S3Model):
                             cols = 3,
                             options = self.hrm_course_opts,
                           ),
-                          S3SearchOptionsWidget(
-                            name="human_resource_search_teams",
-                            label=T("Teams"),
-                            field="person_id$group_membership.group_id",
-                            cols=3,
-                            ),
+                          team_search,
                           # Widget needs updating
                           # S3SearchSkillsWidget(
                           #  name="human_resource_search_skills",
@@ -4119,8 +4123,9 @@ def hrm_rheader(r, tabs=[],
         else:
             skills_tab = None
 
-        if settings.get_hrm_use_teams():
-            teams_tab = (T("Teams"), "group_membership")
+        teams = settings.get_hrm_teams()
+        if teams:
+            teams_tab = (T(teams), "group_membership")
         else:
             teams_tab = None
 
@@ -4455,50 +4460,79 @@ def hrm_skill_simple_search_widget(type):
 def hrm_configure_pr_group_membership():
     """
         Configures the labels and CRUD Strings of pr_group_membership
-        for "Team"
     """
 
     T = current.T
     s3db = current.s3db
+    settings = current.deployment_settings
+    request = current.request
+    function = request.function
 
     table = s3db.pr_group_membership
-    table.group_id.label = T("Team Name")
-    table.group_head.label = T("Team Leader")
+    if settings.get_hrm_teams() == "Team":
+        table.group_id.label = T("Team Name")
+        table.group_head.label = T("Team Leader")
 
-    current.response.s3.crud_strings["pr_group_membership"] = Storage(
-        title_create = T("Add Member"),
-        title_display = T("Membership Details"),
-        title_list = T("Team Members"),
-        title_update = T("Edit Membership"),
-        title_search = T("Search Members"),
-        subtitle_create = T("Add New Team Member"),
-        label_list_button = T("List Members"),
-        label_create_button = T("Add Team Member"),
-        label_delete_button = T("Delete Membership"),
-        msg_record_created = T("Team Member added"),
-        msg_record_modified = T("Membership updated"),
-        msg_record_deleted = T("Membership deleted"),
-        msg_list_empty = T("No Members currently registered"))
+        if function == "group":
+            current.response.s3.crud_strings["pr_group_membership"] = Storage(
+                title_create = T("Add Member"),
+                title_display = T("Membership Details"),
+                title_list = T("Team Members"),
+                title_update = T("Edit Membership"),
+                title_search = T("Search Members"),
+                subtitle_create = T("Add New Team Member"),
+                label_list_button = T("List Members"),
+                label_create_button = T("Add Team Member"),
+                label_delete_button = T("Delete Membership"),
+                msg_record_created = T("Team Member added"),
+                msg_record_modified = T("Membership updated"),
+                msg_record_deleted = T("Membership deleted"),
+                msg_list_empty = T("No Members currently registered"))
+    else:
+        table.group_head.label = T("Group Leader")
 
-    settings = current.deployment_settings
     phone_label = settings.get_ui_label_mobile_phone()
     site_label = settings.get_org_site_label()
-    list_fields = ["id",
-                   "group_id$description",
-                   "group_head",
-                   "person_id$first_name",
-                   "person_id$middle_name",
-                   "person_id$last_name",
-                   (T("Email"), "person_id$email.value"),
-                   (phone_label, "person_id$phone.value"),
-                   (current.messages.ORGANISATION,
-                    "person_id$hrm_human_resource:organisation_id$name"),
-                   (site_label, "person_id$hrm_human_resource:site_id$name"),
-                   ]
-    if current.request.function == "group_membership":
-        list_fields.insert(1, "group_id")
+    if function == "group":
+        db = current.db
+        ptable = db.pr_person
+        controller = request.controller
+        def hrm_person_represent(id, row=None):
+            if row:
+                id = row.id
+            elif id:
+                row = db(ptable.id == id).select(ptable.first_name,
+                                                 limitby=(0, 1)
+                                                 ).first()
+            else:
+                return current.messages["NONE"]
+
+            return A(row.first_name,
+                     _href=URL(c=controller, f="person", args=id))
+
+        table.person_id.represent = hrm_person_represent
+        list_fields = ["id",
+                       (T("First Name"), "person_id"),
+                       "person_id$middle_name",
+                       "person_id$last_name",
+                       "group_head",
+                       (T("Email"), "person_id$email.value"),
+                       (phone_label, "person_id$phone.value"),
+                       (current.messages.ORGANISATION,
+                        "person_id$human_resource.organisation_id"),
+                       (site_label, "person_id$human_resource.site_id"),
+                       ]
+        orderby = "pr_person.first_name"
+    else:
+        list_fields = ["id",
+                       "group_id",
+                       "group_head",
+                       "group_id$description",
+                       ]
+        orderby = table.group_id
     s3db.configure("pr_group_membership",
-                   list_fields=list_fields)
+                   list_fields=list_fields,
+                   orderby=orderby)
 
 # =============================================================================
 def hrm_group_controller():
@@ -4510,14 +4544,21 @@ def hrm_group_controller():
     T = current.T
     s3db = current.s3db
     s3 = current.response.s3
+    team_name = current.deployment_settings.get_hrm_teams()
 
     tablename = "pr_group"
     table = s3db[tablename]
 
     _group_type = table.group_type
-    _group_type.label = T("Team Type")
-    table.description.label = T("Team Description")
-    table.name.label = T("Team Name")
+    if team_name == "Team":
+        _group_type.label = T("Team Type")
+        table.description.label = T("Team Description")
+        table.name.label = T("Team Name")
+    # Default anyway
+    #elif team_name == "Group":
+    #    _group_type.label = T("Group Type")
+    #    table.description.label = T("Group Description")
+    #    table.name.label = T("Group Name")
 
     # Set Defaults
     _group_type.default = 3  # 'Relief Team'
@@ -4528,22 +4569,23 @@ def hrm_group_controller():
     s3.filter = (table.system == False) & \
                 (_group_type == 3)
 
-    # CRUD Strings
-    ADD_TEAM = T("Add Team")
-    s3.crud_strings[tablename] = Storage(
-        title_create = ADD_TEAM,
-        title_display = T("Team Details"),
-        title_list = T("Teams"),
-        title_update = T("Edit Team"),
-        title_search = T("Search Teams"),
-        subtitle_create = T("Add New Team"),
-        label_list_button = T("List Teams"),
-        label_create_button = T("Add New Team"),
-        label_search_button = T("Search Teams"),
-        msg_record_created = T("Team added"),
-        msg_record_modified = T("Team updated"),
-        msg_record_deleted = T("Team deleted"),
-        msg_list_empty = T("No Teams currently registered"))
+    if team_name == "Team":
+        # CRUD Strings
+        ADD_TEAM = T("Add Team")
+        s3.crud_strings[tablename] = Storage(
+            title_create = ADD_TEAM,
+            title_display = T("Team Details"),
+            title_list = T("Teams"),
+            title_update = T("Edit Team"),
+            title_search = T("Search Teams"),
+            subtitle_create = T("Add New Team"),
+            label_list_button = T("List Teams"),
+            label_create_button = T("Add New Team"),
+            label_search_button = T("Search Teams"),
+            msg_record_created = T("Team added"),
+            msg_record_modified = T("Team updated"),
+            msg_record_deleted = T("Team deleted"),
+            msg_list_empty = T("No Teams currently registered"))
 
     s3db.configure(tablename, main="name", extra="description",
                    # Redirect to member list when a new group has been created
@@ -4552,7 +4594,7 @@ def hrm_group_controller():
 
     # Pre-process
     def prep(r):
-        if r.interactive or r.representation == "xls":
+        if r.interactive or r.representation in ("aadata", "xls"):
             if r.component_name == "group_membership":
                 hrm_configure_pr_group_membership()
                 if r.representation == "xls":
@@ -4581,7 +4623,14 @@ def hrm_group_controller():
         return output
     s3.postp = postp
 
-    tabs = [(T("Team Details"), None),
+    if team_name == "Team":
+        label = T("Team Details")
+    elif team_name == "Group":
+        label = T("Group Details")
+    else:
+        label = T("Basic Details")
+    
+    tabs = [(label, None),
             # Team should be contacted either via the Leader or
             # simply by sending a message to the group as a whole.
             #(T("Contact Data"), "contact"),

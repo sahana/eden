@@ -575,22 +575,31 @@ class S3LocationModel(S3Model):
                             lon_max = config.lon_max
                         else:
                             lon_max = 180
-                        if name:
-                            error = T("Sorry location %(location)s appears to be outside the area supported by this deployment.") % \
-                                dict(location=name)
-                        else:
-                            error = T("Sorry location appears to be outside the area supported by this deployment.")
-                        current.response.error = error
-                        s3_debug(error)
-                        lat_error =  "%s: %s & %s" % (T("Latitude should be between"),
-                                                      str(lat_min), str(lat_max))
-                        lon_error = "%s: %s & %s" % (T("Longitude should be between"),
-                                                     str(lon_min), str(lon_max))
                         if (lat > lat_max) or (lat < lat_min):
+                            if name:
+                                error = T("Sorry location %(location)s appears to be outside the area supported by this deployment.") % \
+                                    dict(location=name)
+                            else:
+                                error = T("Sorry location appears to be outside the area supported by this deployment.")
+                            current.response.error = error
+                            s3_debug(error)
+                            lat_error =  "%s: %s & %s" % (T("Latitude should be between"),
+                                                          str(lat_min), str(lat_max))
                             form.errors["lat"] = lat_error
+                            s3_debug(lat_error)
                             return
                         elif (lon > lon_max) or (lon < lon_min):
+                            if name:
+                                error = T("Sorry location %(location)s appears to be outside the area supported by this deployment.") % \
+                                    dict(location=name)
+                            else:
+                                error = T("Sorry location appears to be outside the area supported by this deployment.")
+                            current.response.error = error
+                            s3_debug(error)
+                            lon_error = "%s: %s & %s" % (T("Longitude should be between"),
+                                                         str(lon_min), str(lon_max))
                             form.errors["lon"] = lon_error
+                            s3_debug(lon_error)
                             return
 
         # Add the bounds (& Centroid for Polygons)
@@ -1660,15 +1669,18 @@ class S3GISConfigModel(S3Model):
                     elif pe_type == "org_office":
                         vars.pe_type = 4
                     elif pe_type == "org_organisation":
-                        # Check if we're a branch
-                        otable = s3db.org_organisation
-                        btable = s3db.org_organisation_branch
-                        query = (otable.pe_id == pe_id) & \
-                                (btable.branch_id == otable.id)
-                        branch = db(query).select(btable.id,
-                                                  limitby=(0, 1)).first()
-                        if branch:
-                            vars.pe_type = 6
+                        if current.deployment_settings.get_org_branches():
+                            # Check if we're a branch
+                            otable = s3db.org_organisation
+                            btable = s3db.org_organisation_branch
+                            query = (otable.pe_id == pe_id) & \
+                                    (btable.branch_id == otable.id)
+                            branch = db(query).select(btable.id,
+                                                      limitby=(0, 1)).first()
+                            if branch:
+                                vars.pe_type = 6
+                            else:
+                                vars.pe_type = 7
                         else:
                             vars.pe_type = 7
         elif "config" in current.request.args:

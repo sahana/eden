@@ -784,8 +784,9 @@ def person():
     else:
         skills_tab = None
 
-    if settings.get_hrm_use_teams():
-        teams_tab = (T("Teams"), "group_membership")
+    teams = settings.get_hrm_teams()
+    if teams:
+        teams_tab = (T(teams), "group_membership")
     else:
         teams_tab = None
 

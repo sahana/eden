@@ -1121,11 +1121,12 @@ class S3Config(Storage):
         """
         return self.hrm.get("show_organisation", False)
 
-    def get_hrm_use_teams(self):
+    def get_hrm_teams(self):
         """
             Whether Human Resources should use Teams
+            & what to call them
         """
-        return self.hrm.get("use_teams", True)
+        return self.hrm.get("teams", "Team")
 
     def get_hrm_use_certificates(self):
         """
@@ -1293,6 +1294,12 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # Organisation
+    def get_org_branches(self):
+        """
+            Whether to support Organisation branches or not
+        """
+        return self.org.get("branches", True)
+
     def get_org_site_code_len(self):
         """
             Length of auto-generated Codes for Facilities (org_site)

@@ -132,7 +132,7 @@ settings.hrm.use_credentials = False
 # Uncomment to disable the use of HR Skills
 settings.hrm.use_skills = False
 # Uncomment to disable the use of HR Teams
-settings.hrm.use_teams = False
+settings.hrm.teams = False
 
 # -----------------------------------------------------------------------------
 def location_represent(id, row=None):

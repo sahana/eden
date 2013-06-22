@@ -257,8 +257,6 @@ settings.hrm.use_credentials = False
 settings.hrm.use_education = False
 # Uncomment to disable the use of HR Skills
 settings.hrm.use_skills = True
-# Uncomment to disable the use of HR Teams
-#settings.hrm.use_teams = False
 # Custom label for Organisations in HR module
 #settings.hrm.organisation_label = "National Society / Branch"
 settings.hrm.organisation_label = "Organization"

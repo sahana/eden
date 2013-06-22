@@ -180,7 +180,7 @@ settings.hrm.use_credentials = False
 # Uncomment to disable the use of HR Skills
 settings.hrm.use_skills = False
 # Uncomment to disable the use of HR Teams
-settings.hrm.use_teams = False
+settings.hrm.teams = False
 
 # -----------------------------------------------------------------------------
 # Activity
@@ -244,7 +244,12 @@ def customize_org_organisation(**attr):
     crud_form = S3SQLCustomForm(
         "name",
         "logo",
-        "multi_sector_id",
+        S3SQLInlineComponentCheckbox(
+            "sector",
+            label = T("Sectors"),
+            field = "sector_id",
+            cols = 4,
+        ),
         S3SQLInlineComponentCheckbox(
             "service",
             label = T("Services"),
@@ -281,11 +286,11 @@ def customize_org_organisation(**attr):
         "comments",
     ) 
 
-    filter_widgets = [S3OptionsFilter("multi_sector_id",
-                                      label=T("Sector"),
-                                      represent="%(name)s",
-                                      widget="multiselect",
-                                      ),
+    filter_widgets = [#S3OptionsFilter("sector.sector_id",
+                      #                label=T("Sector"),
+                      #                represent="%(name)s",
+                      #                widget="multiselect",
+                      #                ),
                       #S3OptionsFilter("service.service_type_id",
                       #                label=T("Service Type"),
                       #                represent="%(name)s",

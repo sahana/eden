@@ -132,7 +132,7 @@ settings.hrm.use_credentials = False
 # Uncomment to disable the use of HR Skills
 settings.hrm.use_skills = False
 # Uncomment to disable the use of HR Teams
-settings.hrm.use_teams = False
+settings.hrm.teams = False
 
 # -----------------------------------------------------------------------------
 # Org
@@ -1054,7 +1054,6 @@ def render_posts(listid, resource, rfields, record, **attr):
         @param attr: additional HTML attributes for the item
     """
 
-    T = current.T
     pkey = "cms_post.id"
 
     # Construct the item ID
@@ -1694,7 +1693,6 @@ def cms_post_popup(r):
         - currently unused
     """
 
-    T = current.T
     record = r.record
     pkey = "cms_post.id"
 
@@ -2863,7 +2861,6 @@ def customize_org_organisation(**attr):
 
             # Hide fields
             table.organisation_type_id.readable = table.organisation_type_id.writable = False
-            table.multi_sector_id.readable = table.multi_sector_id.writable = False
             table.region.readable = table.region.writable = False
             table.country.readable = table.country.writable = False
             table.year.readable = table.year.writable = False

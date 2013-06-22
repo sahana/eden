@@ -3,8 +3,9 @@
 from gluon import current, TR, TD, DIV
 from gluon.storage import Storage
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
-settings = current.deployment_settings
+
 T = current.T
+settings = current.deployment_settings
 
 """
     Template settings for US
@@ -93,6 +94,7 @@ settings.ui.label_attachments = "Media"
 # Uncomment to disable that LatLons are within boundaries of their parent
 settings.gis.check_within_parent_boundaries = False
 
+# -----------------------------------------------------------------------------
 # Inventory Management
 # Uncomment to customise the label for Facilities in Inventory Management
 settings.inv.facility_label = "Facility"
@@ -119,7 +121,8 @@ settings.inv.item_status = {
         #4: T("Surplus")
    }
 
-# Request Management
+# -----------------------------------------------------------------------------
+# Requests Management
 settings.req.req_type = ["People", "Stock"]#, "Summary"]
 settings.req.prompt_match = False
 #settings.req.use_commit = False
@@ -138,6 +141,10 @@ settings.req.type_inv_label = "Supplies"
 # Uncomment to enable Summary 'Site Needs' tab for Offices/Facilities
 settings.req.summary = True
 
+# -----------------------------------------------------------------------------
+# Organisations
+# Disable the use of Organisation Branches
+settings.org.branches = False
 settings.org.site_label = "Facility"
 # Uncomment to show the date when a Site (Facilities-only for now) was last contacted
 settings.org.site_last_contacted = True
@@ -159,6 +166,202 @@ settings.org.site_autocomplete = True
 settings.org.site_address_autocomplete = True
 # Uncomment to hide inv & req tabs from Sites
 #settings.org.site_inv_req_tabs = True
+
+# -----------------------------------------------------------------------------
+def facility_marker_fn(record):
+    """
+        Function to decide which Marker to use for Facilities Map
+        @ToDo: Legend
+        @ToDo: Use Symbology
+    """
+
+    db = current.db
+    s3db = current.s3db
+    table = db.org_facility_type
+    types = record.facility_type_id
+    if isinstance(types, list):
+        rows = db(table.id.belongs(types)).select(table.name)
+    else:
+        rows = db(table.id == types).select(table.name)
+    types = [row.name for row in rows]
+
+    # Use Marker in preferential order
+    if "Hub" in types:
+        marker = "warehouse"
+    elif "Medical Clinic" in types:
+        marker = "hospital"
+    elif "Food" in types:
+        marker = "food"
+    elif "Relief Site" in types:
+        marker = "asset"
+    elif "Residential Building" in types:
+        marker = "residence"
+    #elif "Shelter" in types:
+    #    marker = "shelter"
+    else:
+        # Unknown
+        marker = "office"
+    if settings.has_module("req"):
+        # Colour code by open/priority requests
+        reqs = record.reqs
+        if reqs == 3:
+            # High
+            marker = "%s_red" % marker
+        elif reqs == 2:
+            # Medium
+            marker = "%s_yellow" % marker
+        elif reqs == 1:
+            # Low
+            marker = "%s_green" % marker
+
+    mtable = db.gis_marker
+    try:
+        marker = db(mtable.name == marker).select(mtable.image,
+                                                  mtable.height,
+                                                  mtable.width,
+                                                  cache=s3db.cache,
+                                                  limitby=(0, 1)
+                                                  ).first()
+    except:
+        marker = db(mtable.name == "office").select(mtable.image,
+                                                    mtable.height,
+                                                    mtable.width,
+                                                    cache=s3db.cache,
+                                                    limitby=(0, 1)
+                                                    ).first()
+    return marker
+
+def customize_org_facility(**attr):
+    # Tell the client to request per-feature markers
+    current.s3db.configure("org_facility", marker_fn=facility_marker_fn)
+
+    return attr
+
+settings.ui.customize_org_facility = customize_org_facility
+
+def customize_org_organisation(**attr):
+
+    s3db = current.s3db
+    s3 = current.response.s3
+
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        if r.interactive or r.representation.lower() == "aadata":
+            list_fields = ["id",
+                           "name",
+                           "acronym",
+                           "organisation_type_id",
+                           (T("Services"), "service.name"),
+                           (T("Neighborhoods Served"), "location"),
+                           ]
+            s3db.configure("org_organisation", list_fields=list_fields)
+            
+        if r.interactive:
+            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
+            crud_form = S3SQLCustomForm(
+                "name",
+                "acronym",
+                "organisation_type_id",
+                S3SQLInlineComponentCheckbox(
+                    "service",
+                    label = T("Services"),
+                    field = "service_id",
+                    cols = 3,
+                ),
+                #S3SQLInlineComponentCheckbox(
+                #    "network",
+                #    label = T("Network"),
+                #    field = "network_id",
+                #    cols = 3,
+                #),
+                #"address",
+                #S3SQLInlineComponentCheckbox(
+                #    "location",
+                #    label = T("neighborhoods Served"),
+                #    field = "location_id",
+                #    cols = 3,
+                #),
+                "phone",
+                #"phone2",
+                #"email",
+                "website",
+                #"rss",
+                "twitter",
+                "comments",
+            )
+            
+            from s3.s3search import S3OrganisationSearch, S3SearchSimpleWidget, S3SearchOptionsWidget
+            search_method = S3OrganisationSearch(
+                advanced=(
+                    S3SearchSimpleWidget(
+                        name="org_search_text_advanced",
+                        label=T("Name"),
+                        comment=T("Search for an Organization by name or acronym"),
+                        field=["name", "acronym"]
+                    ),
+                    #S3SearchOptionsWidget(
+                    #    name="org_search_network",
+                    #    label=T("Network"),
+                    #    field="network",
+                    #    cols=2
+                    #),
+                    #S3SearchOptionsWidget(
+                    #    name="org_search_location",
+                    #    label=T("Neighborhood"),
+                    #    field="location",
+                    #    cols=2
+                    #),
+                    S3SearchOptionsWidget(
+                        name="org_search_service",
+                        label=T("Services"),
+                        field="service",
+                        cols=2
+                    ),
+                    S3SearchOptionsWidget(
+                        name="org_search_type",
+                        label=T("Type"),
+                        field="organisation_type_id",
+                        cols=2
+                    ),
+                ))
+            s3db.configure("org_organisation",
+                           crud_form=crud_form,
+                           search_method=search_method,
+                           )
+
+        return result
+    s3.prep = custom_prep
+
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        if r.interactive and isinstance(output, dict):
+            if "rheader" in output:
+                # Custom Tabs
+                tabs = [(T("Basic Details"), None),
+                        (T("Contacts"), "human_resource"),
+                        (T("Facilities"), "facility"),
+                        (T("Projects"), "project"),
+                        (T("Assets"), "asset"),
+                        ]
+                output["rheader"] = s3db.org_rheader(r, tabs=tabs)
+        return output
+    s3.postp = custom_postp
+
+    return attr
+
+settings.ui.customize_org_organisation = customize_org_organisation
 
 # -----------------------------------------------------------------------------
 # Persons
@@ -192,12 +395,51 @@ settings.hrm.use_education = False
 settings.hrm.use_trainings = False
 # Uncomment to disable the use of HR Description
 settings.hrm.use_description = False
-# Uncomment to disable the use of HR Teams
-#settings.hrm.use_teams = False
+# Change the label of "Teams" to "Groups"
+settings.hrm.teams = "Groups"
 # Custom label for Organisations in HR module
 #settings.hrm.organisation_label = "National Society / Branch"
 settings.hrm.organisation_label = "Organization"
 
+def customize_hrm_human_resource(**attr):
+
+    s3 = current.response.s3
+
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        if r.interactive or r.representation == "aadata":
+            s3db = current.s3db
+            table = r.table
+            table.department_id.readable = table.department_id.writable = False
+            table.end_date.readable = table.end_date.writable = False
+            list_fields = ["id",
+                           "person_id",
+                           "job_title_id",
+                           "organisation_id",
+                           (T("Groups"), "person_id$group_membership.group_id"),
+                           "site_id",
+                           #"site_contact",
+                           (T("Email"), "email.value"),
+                           (settings.get_ui_label_mobile_phone(), "phone.value"),
+                           ]
+
+            s3db.configure("hrm_human_resource", list_fields=list_fields)
+
+        return result
+    s3.prep = custom_prep
+
+    return attr
+
+settings.ui.customize_hrm_human_resource = customize_hrm_human_resource
+
+# -----------------------------------------------------------------------------
 # Projects
 # Use codes for projects
 settings.project.codes = True
@@ -213,90 +455,97 @@ settings.project.sectors = False
 settings.project.multiple_organisations = True
 
 def customize_project_project(**attr):
-    s3db = current.s3db
+
     s3 = current.response.s3
 
-    tablename = "project_project"
-    
-    s3db.project_project.code.label = T("Project blurb (max. 100 characters)")
-    s3db.project_project.code.max_length = 100 
-    s3db.project_project.comments.label = T("How people can help")
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
 
-    location_id = s3db.project_location.location_id
-    # Limit to just Countries
-    location_id.requires = s3db.gis_location_id
-    # Use dropdown, not AC
-    #location_id.widget = s3.s3widgets.S3LocationAutocompleteWidget()
+        if r.interactive or r.representation == "aadata":
+            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
+            s3db = current.s3db
 
-    script = '''$('#project_project_code').attr('maxlength','100')'''
-    
-    s3.jquery_ready.append(script)
+            table = r.table
+            table.code.label = T("Project blurb (max. 100 characters)")
+            table.code.max_length = 100 
+            table.comments.label = T("How people can help")
 
-    from s3 import s3forms
+            script = '''$('#project_project_code').attr('maxlength','100')'''
+            s3.jquery_ready.append(script)
 
-    crud_form = s3forms.S3SQLCustomForm(
-        "organisation_id",
-        "name",
-        "code",        
-        "description",
-        "status_id",
-        "start_date",
-        "end_date",
-        "calendar",
-        #"drr.hfa",
-        #"objectives",
-        "human_resource_id",
-        # Activities
-       s3forms.S3SQLInlineComponent(
-            "location",
-            label = T("Location"),
-            fields = ["location_id"],
-        ),
-        # Partner Orgs
-        s3forms.S3SQLInlineComponent(
-         "organisation",
-         name = "partner",
-         label = T("Partner Organizations"),
-         fields = ["organisation_id",
-         "comments", # NB This is labelled 'Role' in DRRPP
-         ],
-         filterby = dict(field = "role",
-         options = "2"
-         )
-        ),
-        s3forms.S3SQLInlineComponent(
-         "document",
-         name = "media",
-         label = T("URLs (media, fundraising, website, social media, etc."),
-         fields = ["document_id",
-         "name",
-         "url",
-         "comments",
-         ],
-         filterby = dict(field = "name")
-        ),                                                                
-        s3forms.S3SQLInlineComponentCheckbox(
-            "activity_type",
-            label = T("Categories"),
-            field = "activity_type_id",
-            cols = 3,
-            # Filter Activity Type by Project
-            filter = {"linktable": "project_activity_type_project",
-                      "lkey": "project_id",
-                      "rkey": "activity_type_id",
-                      },
-        ),
-        #"budget",
-        #"currency",
-        "comments",
-    )
-    
-    s3db.configure(tablename, crud_form = crud_form)
-    
+            crud_form = S3SQLCustomForm(
+                "organisation_id",
+                "name",
+                "code",        
+                "description",
+                "status_id",
+                "start_date",
+                "end_date",
+                "calendar",
+                #"drr.hfa",
+                #"objectives",
+                "human_resource_id",
+                # Activities
+               S3SQLInlineComponent(
+                    "location",
+                    label = T("Location"),
+                    fields = ["location_id"],
+                ),
+                # Partner Orgs
+                S3SQLInlineComponent(
+                    "organisation",
+                    name = "partner",
+                    label = T("Partner Organizations"),
+                    fields = ["organisation_id",
+                              "comments", # NB This is labelled 'Role' in DRRPP
+                              ],
+                    filterby = dict(field = "role",
+                    options = "2"
+                    )
+                ),
+                S3SQLInlineComponent(
+                    "document",
+                    name = "media",
+                    label = T("URLs (media, fundraising, website, social media, etc."),
+                    fields = ["document_id",
+                              "name",
+                              "url",
+                              "comments",
+                              ],
+                    filterby = dict(field = "name")
+                ),                                                                
+                S3SQLInlineComponentCheckbox(
+                    "activity_type",
+                    label = T("Categories"),
+                    field = "activity_type_id",
+                    cols = 3,
+                    # Filter Activity Type by Project
+                    filter = {"linktable": "project_activity_type_project",
+                              "lkey": "project_id",
+                              "rkey": "activity_type_id",
+                              },
+                ),
+                #"budget",
+                #"currency",
+                "comments",
+            )
+            
+            s3db.configure("project_project", crud_form=crud_form)
+
+        return result
+    s3.prep = custom_prep
+
     return attr
 
 settings.ui.customize_project_project = customize_project_project
 
+# -----------------------------------------------------------------------------
 # Uncomment to show created_by/modified_by using Names not Emails
 settings.ui.auth_user_represent = "name"
 # Formstyle
