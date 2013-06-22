@@ -3146,18 +3146,18 @@ class S3AddPersonWidget(FormWidget):
             select = '''S3.select_person($('#%s').val())''' % real_input
             widget = S3PersonAutocompleteWidget(post_process=select,
                                                 hideerror=True)
-            ac_row = TR(TD(LABEL("%s: " % T("Name"),
+            ac_row = DIV(DIV(LABEL("%s: " % T("Name"),
                                  _class="hide",
                                  _id="person_autocomplete_label"),
                            widget(field,
                                   None,
                                   _class="hide")),
-                        TD(),
+                        DIV(),
                         _id="person_autocomplete_row",
                         _class="box_top")
             # Select from registry buttons
             _class ="box_top"
-            select_row = TR(TD(A(T("Select from registry"),
+            select_row = DIV(DIV(A(T("Select from registry"),
                                  _href="#",
                                  _id="select_from_registry",
                                  _class="action-btn"),
@@ -3177,7 +3177,7 @@ class S3AddPersonWidget(FormWidget):
                                    _class="throbber hide",
                                    _style="padding-left:85px;"),
                                _class="w2p_fw"),
-                            TD(),
+                            DIV(),
                             _id="select_from_registry_row",
                             _class=_class,
                             _controller=controller,
@@ -3187,7 +3187,7 @@ class S3AddPersonWidget(FormWidget):
         else:
             _class = "hide"
             ac_row = ""
-            select_row = TR(TD(A(T("Edit Details"),
+            select_row = DIV(DIV(A(T("Edit Details"),
                                  _href="#",
                                  _onclick='''S3.select_person_edit_form();''',
                                  _id="edit_selected_person_link",
@@ -3197,7 +3197,7 @@ class S3AddPersonWidget(FormWidget):
                                    _class="throbber hide",
                                    _style="padding-left:85px;"),
                                _class="w2p_fw"),
-                            TD(),
+                            DIV(),
                             _id="select_from_registry_row",
                             _class=_class,
                             _controller=controller,
