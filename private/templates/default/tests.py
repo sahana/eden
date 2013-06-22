@@ -9,7 +9,6 @@
 """
 
 from gluon import current
-settings = current.deployment_settings
 
 current.selenium_tests = ["CreateOrganisation",
                           "CreateOffice",
