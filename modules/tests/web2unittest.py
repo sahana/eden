@@ -274,7 +274,7 @@ class SeleniumUnitTest(Web2UnitTest):
             confirmation_class = "alert alert-success"
         else:
             confirmation_class = "confirmation"
-        return WebDriverWait(self.browser, 30).until(
+        return WebDriverWait(self.browser, 3).until(
                     lambda driver:
                                 driver.find_element_by_xpath("//div[@class='%s']" % confirmation_class))
 
