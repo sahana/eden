@@ -18,6 +18,98 @@ def crop_image(path, x1, y1, x2, y2, width):
 
 tasks["crop_image"] = crop_image
 
+# -----------------------------------------------------------------------------
+def document_create_index(document, user_id=None):
+    
+    import os
+    from xlrd import open_workbook
+    from pyth.plugins.rtf15.reader import Rtf15Reader
+    from pyth.plugins.plaintext.writer import PlaintextWriter
+    import sunburnt
+    
+    document = json.loads(document)
+    table = s3db.doc_document
+    id = document["id"]
+
+    name = document["name"]
+    filename = document["filename"]
+    index_id = filename.split(".")[2]
+
+    filename = "%s/%s/uploads/%s" % (os.path.abspath("applications"), \
+                                    request.application, filename)
+    
+    si = sunburnt.SolrInterface(settings.get_base_solr_url())
+
+    extension = os.path.splitext(filename)[1][1:]
+
+    if extension == "pdf":
+        data = os.popen("pdf2txt.py " + filename).read()
+    elif extension == "doc":
+        data = os.popen("antiword " + filename).read()
+    elif extension == "xls":
+        wb = open_workbook(filename)
+        data=" "
+        for s in wb.sheets():
+            for row in range(s.nrows):
+                values = []
+                for col in range(s.ncols):
+                    values.append(str(s.cell(row, col).value))
+                data = data + ",".join(values) + "\n"
+    elif extension == "rtf":
+        doct = Rtf15Reader.read(open(filename))
+        data = PlaintextWriter.write(doct).getvalue()
+    else:
+        data = os.popen("strings " + filename).read()
+
+
+    # The text needs to be in unicode or ascii, with no contol characters
+    data = str(unicode(data, errors="ignore"))
+    data = "".join(c if ord(c) >= 32 else " " for c in data)
+    
+    # Put the data according to the Multiple Fields
+    # @ToDo: Also, would change this according to requirement of Eden
+    document = {
+                "id": str(index_id), # doc_document.file.xxxxxxxxxx.nnnnnn.cpp -> xxxxxxxxxx
+                "name": data, # the data of the file
+                "url": filename, # the encoded file name stored in uploads/
+                "filename": name, # the filename actually uploaded by the user
+                "filetype": extension  # x.pdf -> pdf is the extension of the file
+                }
+
+    # Add and commit Indices
+    si.add(document)
+    si.commit()  
+    # After Indexing, set the value for has_been_indexed to True in the database
+    db(table.id == id).update(has_been_indexed = True)
+
+    db.commit()
+
+tasks["document_create_index"] = document_create_index
+
+# -----------------------------------------------------------------------------
+def document_delete_index(document, user_id=None):
+    
+    import sunburnt
+
+    document = json.loads(document)
+    table = s3db.doc_document
+    id = document["id"]
+    filename = document["filename"]
+
+    index_id = filename.split(".")[2]
+
+    si = sunburnt.SolrInterface(settings.get_base_solr_url())
+    
+    # Delete and Commit the indicies of the deleted document 
+    si.delete(index_id)
+    si.commit()
+    # After removing the index, set has_been_indexed value to False in the databse 
+    db(table.id == id).update(has_been_indexed = False)
+
+    db.commit()
+
+tasks["document_delete_index"] = document_delete_index
+
 # -----------------------------------------------------------------------------)
 def gis_download_kml(record_id, filename, session_id_name, session_id,
                      user_id=None):
