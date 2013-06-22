@@ -282,12 +282,12 @@ def customize_org_organisation(**attr):
                 #    cols = 3,
                 #),
                 #"address",
-                #S3SQLInlineComponentCheckbox(
-                #    "location",
-                #    label = T("neighborhoods Served"),
-                #    field = "location_id",
-                #    cols = 3,
-                #),
+                S3SQLInlineComponentCheckbox(
+                    "location",
+                    label = T("Neighborhoods Served"),
+                    field = "location_id",
+                    cols = 3,
+                ),
                 "phone",
                 #"phone2",
                 #"email",

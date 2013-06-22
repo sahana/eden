@@ -28,6 +28,7 @@
 """
 
 __all__ = ["S3OrganisationModel",
+           "S3OrganisationLocationModel",
            "S3OrganisationResourceModel",
            "S3OrganisationSectorModel",
            "S3OrganisationServiceModel",
@@ -363,6 +364,13 @@ class S3OrganisationModel(S3Model):
         # Members
         add_component("member_membership",
                       org_organisation="organisation_id")
+
+        # Locations served
+        add_component("gis_location",
+                      org_organisation=Storage(link="org_location_organisation",
+                                               joinby="organisation_id",
+                                               key="location_id",
+                                               actuate="hide"))
 
         # Resources
         add_component("org_resource",
@@ -847,6 +855,78 @@ class S3OrganisationModel(S3Model):
                                                limitby=(0, 1)).first()
         if record:
             current.s3db.pr_update_affiliations(table, record)
+        return
+
+# =============================================================================
+class S3OrganisationLocationModel(S3Model):
+    """
+        Organisation Location Model
+    """
+
+    names = ["org_location_organisation",
+             ]
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Organizations <> Locations Link Table
+        #
+        tablename = "org_location_organisation"
+        self.define_table(tablename,
+                          self.gis_location_id(),
+                          self.org_organisation_id(),
+                          *s3_meta_fields()
+                          )
+
+        # CRUD Strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            title_create = T("New Location"),
+            title_display = T("Location"),
+            title_list = T("Locations"),
+            title_update = T("Edit Location"),
+            title_search = T("Search Locations"),
+            title_upload = T("Import Location data"),
+            subtitle_create = T("Add New Location"),
+            label_list_button = T("List Locations"),
+            label_create_button = T("Add Location to Organization"),
+            msg_record_created = T("Location added to Organization"),
+            msg_record_modified = T("Location updated"),
+            msg_record_deleted = T("Location removed from Organization"),
+            msg_list_empty = T("No Locations found for this Organization"))
+
+        self.configure(tablename,
+                       deduplicate=self.org_location_organisation_deduplicate,
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return dict(
+            )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_location_organisation_deduplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename != "org_location_organisation":
+            return
+
+        data = item.data
+        if "organisation_id" in data and \
+           "location_id" in data:
+            organisation_id = data.organisation_id
+            location_id = data.location_id
+            table = item.table
+            query = (table.organisation_id == organisation_id) & \
+                    (table.location_id == location_id)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+
         return
 
 # =============================================================================

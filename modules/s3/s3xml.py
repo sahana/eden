@@ -1460,7 +1460,7 @@ class S3XML(S3Codec):
             is_text = field_type in ("string", "text")
 
             if value is None:
-                #decode_value = not is_text
+                decode_value = not is_text
                 if field_type == "password":
                     value = child.text
                     # Do not re-encrypt the password if it already
@@ -1468,8 +1468,8 @@ class S3XML(S3Codec):
                     skip_validation = True
                 else:
                     value = xml_decode(child.text)
-            #else:
-            #    decode_value = True
+            else:
+                decode_value = True
 
             if value is None and is_text:
                 value = ""
@@ -1486,7 +1486,7 @@ class S3XML(S3Codec):
                     pass
                 elif isinstance(value, basestring) \
                      and len(value) \
-                     and not is_text:
+                     and decode_value:
                     try:
                         _value = json.loads(value)
                         if _value != float("inf"):

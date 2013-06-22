@@ -32,7 +32,7 @@ __all__ = ["S3PersonEntity",
            "S3PersonModel",
            "S3GroupModel",
            "S3ContactModel",
-           "S3PersonAddressModel",
+           "S3AddressModel",
            "S3PersonImageModel",
            "S3PersonIdentityModel",
            "S3PersonEducationModel",
@@ -1324,7 +1324,7 @@ class S3GroupModel(S3Model):
 
 # =============================================================================
 class S3ContactModel(S3Model):
-    """ Person Contacts """
+    """ Person Entity Contacts - for Persons & Organisations """
 
     names = ["pr_contact",
              "pr_contact_emergency"
@@ -1377,8 +1377,9 @@ class S3ContactModel(S3Model):
         table.pe_id.requires = IS_ONE_OF(current.db, "pr_pentity.pe_id",
                                          pr_pentity_represent,
                                          orderby="instance_type",
-                                         filterby="instance_type",
-                                         filter_opts=("pr_person", "pr_group"))
+                                         #filterby="instance_type",
+                                         #filter_opts=("pr_person", "pr_group"),
+                                         )
 
         # CRUD Strings
         current.response.s3.crud_strings[tablename] = Storage(
@@ -1500,8 +1501,8 @@ class S3ContactModel(S3Model):
                 item.method = item.METHOD.UPDATE
 
 # =============================================================================
-class S3PersonAddressModel(S3Model):
-    """ Addresses for Persons """
+class S3AddressModel(S3Model):
+    """ Addresses for Person Entities: Persons and Organisations """
 
     names = ["pr_address",
              "pr_address_type_opts"
@@ -1542,8 +1543,9 @@ class S3PersonAddressModel(S3Model):
         table.pe_id.requires = IS_ONE_OF(current.db, "pr_pentity.pe_id",
                                          pr_pentity_represent,
                                          orderby="instance_type",
-                                         filterby="instance_type",
-                                         filter_opts=("pr_person", "pr_group"))
+                                         #filterby="instance_type",
+                                         #filter_opts=("pr_person", "pr_group"),
+                                         )
 
         # CRUD Strings
         ADD_ADDRESS = T("Add Address")
