@@ -527,6 +527,19 @@ def customize_org_organisation(**attr):
         else:
             result = True
 
+        if r.interactive or r.representation.lower() == "aadata":
+            s3db = current.s3db
+            list_fields = ["id",
+                           "name",
+                           "acronym",
+                           "organisation_type_id",
+                           #(T("Sectors"), "sector.name"),
+                           "country",
+                           "website"
+                           ]
+            
+            s3db.configure("org_organisation", list_fields=list_fields)
+        
         if r.interactive:
             crud_form = S3SQLCustomForm(
                 "name",
@@ -534,12 +547,12 @@ def customize_org_organisation(**attr):
                 "organisation_type_id",
                 "region",
                 "country",
-                S3SQLInlineComponentCheckbox(
-                    "sector",
-                    label = T("Sectors"),
-                    field = "sector_id",
-                    cols = 3,
-                ),
+                #S3SQLInlineComponentCheckbox(
+                #    "sector",
+                #    label = T("Sectors"),
+                #    field = "sector_id",
+                #    cols = 3,
+                #),
                 "phone",
                 "website",
                 "logo",

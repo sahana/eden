@@ -132,6 +132,61 @@ settings.project.organisation_roles = {
 }
 
 # -----------------------------------------------------------------------------
+def customize_org_organisation(**attr):
+
+    s3 = current.response.s3
+
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        if r.interactive or r.representation.lower() == "aadata":
+            s3db = current.s3db
+            list_fields = ["id",
+                           "name",
+                           "acronym",
+                           "organisation_type_id",
+                           (T("Clusters"), "sector.name"),
+                           "country",
+                           "website"
+                           ]
+            
+            s3db.configure("org_organisation", list_fields=list_fields)
+        
+        if r.interactive:
+            crud_form = S3SQLCustomForm(
+                "name",
+                "acronym",
+                "organisation_type_id",
+                "region",
+                "country",
+                S3SQLInlineComponentCheckbox(
+                    "sector",
+                    label = T("Clusters"),
+                    field = "sector_id",
+                    cols = 3,
+                ),
+                "phone",
+                "website",
+                "year",
+                "logo",
+                "comments",
+            )
+            s3db.configure("org_organisation", crud_form=crud_form)
+            
+        return result
+    s3.prep = custom_prep
+
+    return attr
+
+settings.ui.customize_org_organisation = customize_org_organisation
+
+# -----------------------------------------------------------------------------
 def customize_project_project(**attr):
     """
         Customize project_project controller
@@ -160,6 +215,7 @@ def customize_project_project(**attr):
 
 settings.ui.customize_project_project = customize_project_project
 
+# -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([
     # Core modules which shouldn't be disabled

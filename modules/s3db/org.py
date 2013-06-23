@@ -301,8 +301,6 @@ class S3OrganisationModel(S3Model):
                                "name",
                                "acronym",
                                "organisation_type_id",
-                               "sector.name",
-                               "country",
                                "website"
                                ])
 
