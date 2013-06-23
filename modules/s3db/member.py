@@ -462,7 +462,8 @@ class S3MembersModel(S3Model):
         data = Storage()
 
         # Affiliation, record ownership and component ownership
-        s3db.pr_update_affiliations(mtable, record)
+        # @ToDo
+        #s3db.pr_update_affiliations(mtable, record)
 
         # realm_entity for the pr_person record
         person_id = record.person_id

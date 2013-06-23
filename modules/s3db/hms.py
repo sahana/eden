@@ -970,8 +970,7 @@ class HospitalDataModel(S3Model):
             Update Affiliation, record ownership and component ownership
         """
 
-        s3db = current.s3db
-        s3db.pr_update_affiliations(s3db.hms_hospital, form.vars)
+        current.s3db.org_update_affiliations("hms_hospital", form.vars)
 
     # -------------------------------------------------------------------------
     @staticmethod

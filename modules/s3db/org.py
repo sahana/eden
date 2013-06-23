@@ -28,6 +28,7 @@
 """
 
 __all__ = ["S3OrganisationModel",
+           "S3OrganisationGroupModel",
            "S3OrganisationLocationModel",
            "S3OrganisationResourceModel",
            "S3OrganisationSectorModel",
@@ -50,6 +51,7 @@ __all__ = ["S3OrganisationModel",
            "org_rheader",
            "org_organisation_controller",
            "org_office_controller",
+           "org_update_affiliations",
            "org_OrganisationRepresent"
            ]
 
@@ -160,8 +162,6 @@ class S3OrganisationModel(S3Model):
         tablename = "org_organisation"
         table = define_table(tablename,
                              self.super_link("pe_id", "pr_pentity"),
-                             #Field("privacy", "integer", default=0),
-                             #Field("archived", "boolean", default=False),
                              Field("name", notnull=True, unique=True,
                                    length=128, # Mayon Compatibility
                                    label=T("Name")),
@@ -229,6 +229,8 @@ class S3OrganisationModel(S3Model):
                                    ),
                              s3_comments(),
                              #document_id(), # Better to have multiple Documents on a Tab
+                             #Field("privacy", "integer", default=0),
+                             #Field("archived", "boolean", default=False),
                              * s3_meta_fields())
 
         # CRUD strings
@@ -304,32 +306,25 @@ class S3OrganisationModel(S3Model):
                                "website"
                                ])
 
-        # -----------------------------------------------------------------------------
-        # Donors are a type of Organization
-        #
-        # ADD_DONOR = T("Add Donor")
-        # ADD_DONOR_HELP = T("The Donor(s) for this project. Multiple values can be selected by holding down the 'Control' key.")
-        # donor_id = S3ReusableField("donor_id", "list:reference org_organisation",
-                                   # sortby="name",
-                                   # requires = IS_NULL_OR(IS_ONE_OF(db, "org_organisation.id",
-                                                                   # org_organisation_represent,
-                                                                   # multiple=True,
-                                                                   # filterby="type",
-                                                                   # filter_opts=[4])),
-                                   # represent = self.donor_represent,
-                                   # label = T("Funding Organization"),
-                                   # comment=S3AddResourceLink(c="org",
-                                                             # f="organisation",
-                                                             # vars=dict(child="donor_id"),
-                                                             # label=ADD_DONOR,
-                                                             # tooltip=ADD_DONOR_HELP),
-                                   # ondelete = "SET NULL")
-
-
         # Components
+
+        # Documents
+        add_component("doc_document", org_organisation="organisation_id")
+        add_component("doc_image", org_organisation="organisation_id")
+
+        # Groups
+        add_component("org_group",
+                      org_organisation=Storage(link="org_group_membership",
+                                               joinby="organisation_id",
+                                               key="group_id",
+                                               actuate="hide"))
 
         # Sites
         add_component("org_site",
+                      org_organisation="organisation_id")
+
+        # Facilities
+        add_component("org_facility",
                       org_organisation="organisation_id")
 
         # Offices
@@ -340,15 +335,7 @@ class S3OrganisationModel(S3Model):
         add_component("inv_warehouse",
                       org_organisation="organisation_id")
 
-        # Catalogs
-        add_component("supply_catalog",
-                      org_organisation="organisation_id")
-
-        # Facilities
-        add_component("org_facility",
-                      org_organisation="organisation_id")
-
-        # Staff
+        # Staff/Volunteers
         add_component("hrm_human_resource",
                       org_organisation="organisation_id")
 
@@ -358,13 +345,14 @@ class S3OrganisationModel(S3Model):
 
         # Locations served
         add_component("gis_location",
-                      org_organisation=Storage(link="org_location_organisation",
+                      org_organisation=Storage(link="org_organisation_location",
                                                joinby="organisation_id",
                                                key="location_id",
                                                actuate="hide"))
-        # Format needed for S3SQLInlineComponent
-        #add_component("org_location_organisation",
-        #              org_organisation="organisation_id")
+
+        # Catalogs
+        add_component("supply_catalog",
+                      org_organisation="organisation_id")
 
         # Resources
         add_component("org_resource",
@@ -376,9 +364,6 @@ class S3OrganisationModel(S3Model):
                                                joinby="organisation_id",
                                                key="sector_id",
                                                actuate="hide"))
-        # Format needed for S3SQLInlineComponent
-        #add_component("org_sector_organisation",
-        #              org_organisation="organisation_id")
 
         # Services
         add_component("org_service",
@@ -386,9 +371,10 @@ class S3OrganisationModel(S3Model):
                                                joinby="organisation_id",
                                                key="service_id",
                                                actuate="hide"))
-        # Format needed for S3SQLInlineComponent
-        #add_component("org_service_organisation",
-        #              org_organisation="organisation_id")
+
+        # Assets
+        add_component("asset_asset",
+                      org_organisation="organisation_id")
 
         # Projects
         if settings.get_project_mode_3w():
@@ -411,17 +397,6 @@ class S3OrganisationModel(S3Model):
             add_component("org_organisation_summary",
                           org_organisation=dict(name="summary",
                                                 joinby="organisation_id"))
-
-        # Assets
-        add_component("asset_asset",
-                      org_organisation="organisation_id")
-        # @ToDo
-        #add_component("asset_asset",
-        #              org_organisation = "donated_by_id")
-
-        # Documents
-        add_component("doc_document", org_organisation="organisation_id")
-        add_component("doc_image", org_organisation="organisation_id")
 
         # Requests
         #add_component("req_req",
@@ -569,6 +544,7 @@ class S3OrganisationModel(S3Model):
     @staticmethod
     def org_organisation_ondelete(row):
         """
+            If an Org is deleted then remove Logo
         """
 
         db = current.db
@@ -659,58 +635,6 @@ class S3OrganisationModel(S3Model):
 
     # -----------------------------------------------------------------------------
     @staticmethod
-    def organisation_multi_represent(opt):
-        """
-            Organisation representation
-            for multiple=True options
-        """
-
-        db = current.db
-        table = db.org_organisation
-        set = db(table.deleted == False).select(table.id,
-                                                table.name).as_dict()
-
-        if isinstance(opt, (list, tuple)):
-            opts = opt
-            vals = [str(set.get(o)["name"]) for o in opts]
-        elif isinstance(opt, int):
-            opts = [opt]
-            vals = str(set.get(opt)["name"])
-        else:
-            return current.messages["NONE"]
-
-        if len(opts) > 1:
-            vals = ", ".join(vals)
-        else:
-            vals = len(vals) and vals[0] or ""
-        return vals
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def donor_represent(donor_ids):
-        """ Representation of donor record IDs """
-
-        if not donor_ids:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.org_organisation
-
-        if isinstance(donor_ids, (list, tuple)):
-            query = (table.id.belongs(donor_ids))
-            donors = db(query).select(table.name)
-            return ", ".join([donor.name for donor in donors])
-        else:
-            query = (table.id == donor_ids)
-            donor = db(query).select(table.name,
-                                     limitby=(0, 1)).first()
-            try:
-                return donor.name
-            except:
-                return current.messages.UNKNOWN_OPT
-
-    # -----------------------------------------------------------------------------
-    @staticmethod
     def org_branch_duplicate(item):
         """
             An Organisation can only be a branch of one Organisation
@@ -750,10 +674,9 @@ class S3OrganisationModel(S3Model):
             Remove any duplicate memberships and update affiliations
         """
 
-        s3db = current.s3db
-        
         id = form.vars.id
         db = current.db
+        s3db = current.s3db
 
         # Fields a branch organisation inherits from its parent organisation
         inherit = ["organisation_type_id",
@@ -763,9 +686,9 @@ class S3OrganisationModel(S3Model):
                    "country",
                    ]
 
-        ltable = s3db.org_organisation_branch
         otable = s3db.org_organisation
-        btable = s3db.org_organisation.with_alias("org_branch_organisation")
+        ltable = db.org_organisation_branch
+        btable = db.org_organisation.with_alias("org_branch_organisation")
 
         ifields = [otable[fn] for fn in inherit]  + \
                   [btable[fn] for fn in inherit]
@@ -812,7 +735,7 @@ class S3OrganisationModel(S3Model):
                                     organisation_id=None,
                                     deleted_fk=json.dumps(deleted_fk))
 
-                current.s3db.pr_update_affiliations(ltable, link)
+                org_update_affiliations("org_organisation_branch", link)
             except:
                 pass
         return
@@ -831,7 +754,117 @@ class S3OrganisationModel(S3Model):
                                                table.deleted_fk,
                                                limitby=(0, 1)).first()
         if record:
-            current.s3db.pr_update_affiliations(table, record)
+            org_update_affiliations("org_organisation_branch", record)
+        return
+
+# =============================================================================
+class S3OrganisationGroupModel(S3Model):
+    """
+        Organisation Group Model
+        - 'Coalitions' or 'Networks'
+    """
+
+    names = ["org_group",
+             "org_group_membership",
+             "org_group_id",
+             ]
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        configure = self.configure
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        # Organization Groups
+        #
+        tablename = "org_group"
+        table = define_table(tablename,
+                             self.super_link("pe_id", "pr_pentity"),
+                             Field("name", notnull=True, unique=True,
+                                   length=128,
+                                   label=T("Name")),
+                             #self.gis_location_id(),
+                             s3_comments(),
+                             *s3_meta_fields()
+                             )
+
+        # CRUD Strings not defined to allow each template to define as-required
+
+        configure(tablename,
+                  super_entity="pr_pentity",
+                  )
+
+        represent = S3Represent(lookup=tablename)
+        group_id = S3ReusableField("group_id", table,
+                                   sortby="name",
+                                   requires=IS_NULL_OR(
+                                                IS_ONE_OF(db, "org_group.id",
+                                                          represent,
+                                                          sort=True,
+                                                          )),
+                                   represent=represent,
+                                   # Always links via Link Tables
+                                   ondelete="CASCADE",
+                                   )
+
+        # ---------------------------------------------------------------------
+        # Group membership
+        #
+        tablename = "org_group_membership"
+        define_table(tablename,
+                     group_id(),
+                     self.org_organisation_id(),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  onaccept = self.group_membership_onaccept,
+                  ondelete = self.group_membership_onaccept,
+                  )
+
+        # Pass names back to global scope (s3.*)
+        return dict(
+                org_group_id = group_id,
+            )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def group_membership_onaccept(form):
+        """
+            Remove any duplicate memberships and update affiliations
+        """
+
+        if hasattr(form, "vars"):
+            _id = form.vars.id
+        elif isinstance(form, Row) and "id" in form:
+            _id = form.id
+        else:
+            return
+
+        db = current.db
+        mtable = db.org_group_membership
+
+        if _id:
+            record = db(mtable.id == _id).select(limitby=(0, 1)).first()
+        else:
+            return
+        if record:
+            organisation_id = record.organisation_id
+            group_id = record.group_id
+            if organisation_id and group_id and not record.deleted:
+                query = (mtable.organisation_id == organisation_id) & \
+                        (mtable.group_id == group_id) & \
+                        (mtable.id != record.id) & \
+                        (mtable.deleted != True)
+                deleted_fk = {"organisation_id": organisation_id,
+                              "group_id": group_id}
+                db(query).update(deleted = True,
+                                 organisation_id = None,
+                                 group_id = None,
+                                 deleted_fk = json.dumps(deleted_fk))
+            org_update_affiliations("org_group_membership", record)
         return
 
 # =============================================================================
@@ -840,8 +873,7 @@ class S3OrganisationLocationModel(S3Model):
         Organisation Location Model
     """
 
-    names = ["org_location_organisation",
-             ]
+    names = ["org_organisation_location"]
 
     def model(self):
 
@@ -850,14 +882,14 @@ class S3OrganisationLocationModel(S3Model):
         # ---------------------------------------------------------------------
         # Organizations <> Locations Link Table
         #
-        tablename = "org_location_organisation"
+        tablename = "org_organisation_location"
         self.define_table(tablename,
+                          self.org_organisation_id(),
                           self.gis_location_id(
                             requires = IS_LOCATION(),
                             #represent = self.gis_LocationRepresent(format=", "),
                             widget = S3LocationAutocompleteWidget()
                           ),
-                          self.org_organisation_id(),
                           *s3_meta_fields()
                           )
 
@@ -878,7 +910,7 @@ class S3OrganisationLocationModel(S3Model):
             msg_list_empty = T("No Locations found for this Organization"))
 
         self.configure(tablename,
-                       deduplicate=self.org_location_organisation_deduplicate,
+                       deduplicate=self.org_organisation_location_deduplicate,
                        )
 
         # Pass names back to global scope (s3.*)
@@ -887,10 +919,10 @@ class S3OrganisationLocationModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def org_location_organisation_deduplicate(item):
+    def org_organisation_location_deduplicate(item):
         """ Import item de-duplication """
 
-        if item.tablename != "org_location_organisation":
+        if item.tablename != "org_organisation_location":
             return
 
         data = item.data
@@ -1863,6 +1895,7 @@ class S3FacilityModel(S3Model):
 
     names = ["org_facility_type",
              "org_facility",
+             "org_facility_group",
              "org_facility_geojson",
              ]
 
@@ -2155,6 +2188,27 @@ class S3FacilityModel(S3Model):
                   update_realm = True,
                   )
 
+        # Groups
+        self.add_component("org_group",
+                           org_facility=Storage(link="org_facility_group",
+                                                joinby="facility_id",
+                                                key="group_id",
+                                                actuate="hide"))
+
+        # ---------------------------------------------------------------------
+        # Facilities <> Organisation Groups Link Table
+        #
+        tablename = "org_facility_group"
+        define_table(tablename,
+                     Field("facility_id", table),
+                     self.org_group_id(),
+                     *s3_meta_fields()
+                     )
+
+        configure(tablename,
+                  deduplicate=self.org_facility_group_deduplicate,
+                  )
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
@@ -2169,7 +2223,7 @@ class S3FacilityModel(S3Model):
             Update Affiliation, record ownership and component ownership
         """
 
-        current.s3db.pr_update_affiliations("org_facility", form.vars)
+        org_update_affiliations("org_facility", form.vars)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2373,6 +2427,31 @@ class S3FacilityModel(S3Model):
         File = open(path, "w")
         File.write(output)
         File.close()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_facility_group_deduplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename != "org_facility_group":
+            return
+
+        data = item.data
+        if "facility_id" in data and \
+           "group_id" in data:
+            facility_id = data.facility_id
+            group_id = data.group_id
+            table = item.table
+            query = (table.facility_id == facility_id) & \
+                    (table.group_id == group_id)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+
+        return
 
 # -----------------------------------------------------------------------------
 def org_facility_rheader(r, tabs=[]):
@@ -2787,18 +2866,15 @@ class S3OfficeModel(S3Model):
             * Process injected fields
         """
 
-        auth = current.auth
-        s3db = current.s3db
-        otable = s3db.org_office
         vars = form.vars
 
         # Affiliation, record ownership and component ownership
-        s3db.pr_update_affiliations(otable, vars)
+        org_update_affiliations("org_office", vars)
 
         if current.deployment_settings.get_org_summary():
 
             db = current.db
-            id = form.vars.id
+            id = vars.id
             table = current.s3db.org_office_summary
             query = (table.office_id == id)
             existing = db(query).select(table.id,
@@ -3977,5 +4053,238 @@ def org_office_controller():
                                      native=False,
                                      rheader=org_rheader)
     return output
+
+# =============================================================================
+# Hierarchy Manipulation
+# =============================================================================
+#
+def org_update_affiliations(table, record):
+    """
+        Update OU affiliations related to this record
+
+        @param table: the table
+        @param record: the record
+    """
+
+    if hasattr(table, "_tablename"):
+        rtype = table._tablename
+    else:
+        rtype = table
+
+    if rtype == "org_organisation_branch":
+
+        ltable = current.s3db.org_organisation_branch
+        if not isinstance(record, Row):
+            record = current.db(ltable.id == record).select(ltable.ALL,
+                                                            limitby=(0, 1)
+                                                            ).first()
+        if not record:
+            return
+        organisation_update_affiliations(record)
+
+    elif rtype == "org_group_membership":
+
+        mtable = current.s3db.org_group_membership
+        if not isinstance(record, Row):
+            record = current.db(mtable.id == record).select(mtable.ALL,
+                                                            limitby=(0, 1)
+                                                            ).first()
+        if not record:
+            return
+        org_group_update_affiliations(record)
+
+    elif rtype == "org_site" or rtype in current.auth.org_site_types:
+
+        org_site_update_affiliations(record)
+
+    return
+
+# =============================================================================
+def organisation_update_affiliations(record):
+    """
+        Update affiliations for a branch organisation
+
+        @param record: the org_organisation_branch record
+    """
+
+    if record.deleted and record.deleted_fk:
+        try:
+            fk = json.loads(record.deleted_fk)
+            branch_id = fk["branch_id"]
+        except:
+            return
+    else:
+        branch_id = record.branch_id
+
+    from pr import OU
+    BRANCHES = "Branches"
+
+    db = current.db
+    s3db = current.s3db
+    otable = s3db.org_organisation
+    btable = otable.with_alias("branch")
+    ltable = db.org_organisation_branch
+    etable = s3db.pr_pentity
+    rtable = db.pr_role
+    atable = db.pr_affiliation
+
+    o = otable._tablename
+    b = btable._tablename
+    r = rtable._tablename
+
+    # Get current memberships
+    query = (ltable.branch_id == branch_id) & \
+            (ltable.deleted != True)
+    left = [otable.on(ltable.organisation_id == otable.id),
+            btable.on(ltable.branch_id == btable.id)]
+    rows = db(query).select(otable.pe_id, btable.pe_id, left=left)
+    current_memberships = [(row[o].pe_id, row[b].pe_id) for row in rows]
+
+    # Get current affiliations
+    query = (rtable.deleted != True) & \
+            (rtable.role == BRANCHES) & \
+            (rtable.pe_id == etable.pe_id) & \
+            (etable.instance_type == o) & \
+            (atable.deleted != True) & \
+            (atable.role_id == rtable.id) & \
+            (atable.pe_id == btable.pe_id) & \
+            (btable.id == branch_id)
+    rows = db(query).select(rtable.pe_id, btable.pe_id)
+    current_affiliations = [(row[r].pe_id, row[b].pe_id) for row in rows]
+
+    # Remove all affiliations which are not current memberships
+    remove_affiliation = s3db.pr_remove_affiliation
+    for a in current_affiliations:
+        org, branch = a
+        if a not in current_memberships:
+            remove_affiliation(org, branch, role=BRANCHES)
+        else:
+            current_memberships.remove(a)
+
+    # Add affiliations for all new memberships
+    add_affiliation = s3db.pr_add_affiliation
+    for m in current_memberships:
+        org, branch = m
+        add_affiliation(org, branch, role=BRANCHES, role_type=OU)
+    return
+
+# =============================================================================
+def org_group_update_affiliations(record):
+    """
+        Update affiliations for organisation group memberships
+
+        @param record: the org_group_membership record
+    """
+
+    if record.deleted and record.deleted_fk:
+        try:
+            fk = json.loads(record.deleted_fk)
+            organisation_id = fk["organisation_id"]
+        except:
+            return
+    else:
+        organisation_id = record.organisation_id
+
+    MEMBER = 2 # role_type == "Member"
+    MEMBERS = "Members"
+
+    db = current.db
+    s3db = current.s3db
+    mtable = s3db.org_group_membership
+    otable = db.org_organisation
+    gtable = db.org_group
+    etable = s3db.pr_pentity
+    rtable = db.pr_role
+    atable = db.pr_affiliation
+
+    g = gtable._tablename
+    r = rtable._tablename
+    o = otable._tablename
+
+    # Get current memberships
+    query = (mtable.organisation_id == organisation_id) & \
+            (mtable.deleted != True)
+    left = [otable.on(mtable.organisation_id == otable.id),
+            gtable.on(mtable.group_id == gtable.id)]
+    rows = db(query).select(otable.pe_id, gtable.pe_id, left=left)
+    current_memberships = [(row[g].pe_id, row[o].pe_id) for row in rows]
+
+    # Get current affiliations
+    query = (rtable.deleted != True) & \
+            (rtable.role == MEMBERS) & \
+            (rtable.pe_id == etable.pe_id) & \
+            (etable.instance_type == g) & \
+            (atable.deleted != True) & \
+            (atable.role_id == rtable.id) & \
+            (atable.pe_id == otable.pe_id) & \
+            (otable.id == organisation_id)
+    rows = db(query).select(otable.pe_id, rtable.pe_id)
+    current_affiliations = [(row[r].pe_id, row[o].pe_id) for row in rows]
+
+    # Remove all affiliations which are not current memberships
+    remove_affiliation = s3db.pr_remove_affiliation
+    for a in current_affiliations:
+        group, org = a
+        if a not in current_memberships:
+            remove_affiliation(group, org, role=MEMBERS)
+        else:
+            current_memberships.remove(a)
+
+    # Add affiliations for all new memberships
+    add_affiliation = s3db.pr_add_affiliation
+    for m in current_memberships:
+        group, org = m
+        add_affiliation(group, org, role=MEMBERS, role_type=MEMBER)
+    return
+
+# =============================================================================
+def org_site_update_affiliations(record):
+    """
+        Update the affiliations of an org_site instance
+
+        @param record: the org_site instance record
+    """
+
+    from pr import OU
+    SITES = "Sites"
+
+    db = current.db
+    s3db = current.s3db
+    stable = s3db.org_site
+    otable = db.org_organisation
+    ptable = s3db.pr_pentity
+    rtable = db.pr_role
+    atable = db.pr_affiliation
+
+    o_pe_id = None
+    s_pe_id = record.pe_id
+
+    organisation_id = record.organisation_id
+    if organisation_id:
+        org = db(otable.id == organisation_id).select(otable.pe_id,
+                                                      limitby=(0, 1)).first()
+        if org:
+            o_pe_id = org.pe_id
+    if s_pe_id:
+        query = (atable.deleted != True) & \
+                (atable.pe_id == s_pe_id) & \
+                (rtable.deleted != True) & \
+                (rtable.id == atable.role_id) & \
+                (rtable.role == SITES) & \
+                (ptable.pe_id == rtable.pe_id) & \
+                (ptable.instance_type == str(otable))
+        rows = db(query).select(rtable.pe_id)
+        seen = False
+        
+        remove_affiliation = s3db.pr_remove_affiliation
+        for row in rows:
+            if o_pe_id == None or o_pe_id != row.pe_id:
+                remove_affiliation(row.pe_id, s_pe_id, role=SITES)
+            elif o_pe_id == row.pe_id:
+                seen = True
+        if o_pe_id and not seen:
+            s3db.pr_add_affiliation(o_pe_id, s_pe_id, role=SITES,
+                                    role_type=OU)
+    return
 
 # END =========================================================================

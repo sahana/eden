@@ -299,6 +299,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("New", m="create"),
                         M("List All"),
                     ),
+                    M("Networks", f="group",
+                      #restrict=[ADMIN]
+                      )(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
                     M("Organization Types", f="organisation_type",
                       #restrict=[ADMIN]
                       )(

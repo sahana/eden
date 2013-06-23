@@ -142,21 +142,22 @@ class S3PersonEntity(S3Model):
         # Person Super-Entity
         #
         if current.deployment_settings.get_ui_label_camp():
-            shelter = T("Camp")
+            SHELTER = T("Camp")
         else:
-            shelter = T("Shelter")
-        pe_types = Storage(pr_person = T("Person"),
-                           pr_group = T("Group"),
-                           org_organisation = messages.ORGANISATION,
-                           org_office = T("Office"),
-                           inv_warehouse = T("Warehouse"),
+            SHELTER = T("Shelter")
+        pe_types = Storage(cr_shelter = SHELTER,
+                           dvi_body = T("Body"),
+                           dvi_morgue = T("Morgue"),
                            # If we want these, then pe_id needs adding to their
                            # tables & configuring as a super-entity
                            #fire_station = T("Fire Station"),
-                           cr_shelter = shelter,
-                           dvi_morgue = T("Morgue"),
                            hms_hospital = T("Hospital"),
-                           dvi_body = T("Body")
+                           inv_warehouse = T("Warehouse"),
+                           org_organisation = messages.ORGANISATION,
+                           org_group = T("Organization group"),
+                           org_office = T("Office"),
+                           pr_person = T("Person"),
+                           pr_group = T("Group"),
                            )
 
         tablename = "pr_pentity"
@@ -433,7 +434,7 @@ class S3PersonEntity(S3Model):
                                         itable.organisation_id,
                                         limitby=(0, 1)).first()
                 if instance:
-                    pr_update_affiliations("org_site", instance)
+                    s3db.org_update_affiliations("org_site", instance)
         return
 
     # -------------------------------------------------------------------------
@@ -475,7 +476,7 @@ class S3PersonEntity(S3Model):
             Clear descendant paths, also called indirectly via
             ondelete-CASCADE when a role gets deleted.
 
-            @param row: the deleted row
+            @param row: the deleted Row
         """
 
         if row and row.id:
@@ -509,7 +510,7 @@ class S3OrgAuthModel(S3Model):
         gtable = current.auth.settings.table_group
         tablename = "pr_delegation"
         table = self.define_table(tablename,
-                                  current.s3db.pr_role_id(),
+                                  self.pr_role_id(),
                                   Field("group_id", gtable,
                                         ondelete="CASCADE"),
                                   *s3_meta_fields())
@@ -1021,7 +1022,6 @@ class S3GroupModel(S3Model):
 
     names = ["pr_group",
              "pr_group_id",
-             "pr_group_represent",
              "pr_group_membership"
              ]
 
@@ -1124,14 +1124,15 @@ class S3GroupModel(S3Model):
             label = crud_strings.pr_group.label_create_button
             title = T("Create Group")
             tooltip = T("Create a new Group.")
+        represent = S3Represent(lookup=tablename)
         group_id = S3ReusableField("group_id", table,
                                    sortby="name",
                                    requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "pr_group.id",
-                                                          self.group_represent,
+                                                          represent,
                                                           filterby="system",
                                                           filter_opts=(False,))),
-                                   represent = self.group_represent,
+                                   represent = represent,
                                    comment=S3AddResourceLink(#c="pr",
                                                              f="group",
                                                              label=label,
@@ -1209,7 +1210,6 @@ class S3GroupModel(S3Model):
                    ]
             )
 
-        # Resource configuration
         configure(tablename,
                   onaccept = self.group_membership_onaccept,
                   ondelete = self.group_membership_onaccept,
@@ -1226,28 +1226,8 @@ class S3GroupModel(S3Model):
         #
         return Storage(
             pr_group_id = group_id,
-            pr_group_represent = self.group_represent,
             pr_mailing_list_crud_strings = mailing_list_crud_strings
         )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def group_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.pr_group
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
-        except:
-            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3999,16 +3979,14 @@ def pr_update_affiliations(table, record):
     else:
         rtype = table
 
-    db = current.db
-    s3db = current.s3db
-
     if rtype == "hrm_human_resource":
 
         # Get the HR record
-        htable = s3db.hrm_human_resource
+        htable = current.s3db.hrm_human_resource
         if not isinstance(record, Row):
-            record = db(htable.id == record).select(htable.ALL,
-                                                    limitby=(0, 1)).first()
+            record = current.db(htable.id == record).select(htable.ALL,
+                                                            limitby=(0, 1)
+                                                            ).first()
         if not record:
             return
 
@@ -4029,93 +4007,27 @@ def pr_update_affiliations(table, record):
 
     elif rtype == "pr_group_membership":
 
-        mtable = s3db.pr_group_membership
+        mtable = current.s3db.pr_group_membership
         if not isinstance(record, Row):
-            record = db(mtable.id == record).select(mtable.ALL,
-                                                    limitby=(0, 1)).first()
+            record = current.db(mtable.id == record).select(mtable.ALL,
+                                                            limitby=(0, 1)
+                                                            ).first()
         if not record:
             return
         pr_group_update_affiliations(record)
 
-    elif rtype == "org_organisation_branch":
+    # @ToDo
+    #elif rtype == "member_membership":
 
-        ltable = s3db.org_organisation_branch
-        if not isinstance(record, Row):
-            record = db(ltable.id == record).select(ltable.ALL,
-                                                    limitby=(0, 1)).first()
-        if not record:
-            return
-        pr_organisation_update_affiliations(record)
+    #    mtable = current.s3db.member_membership
+    #    if not isinstance(record, Row):
+    #        record = current.db(mtable.id == record).select(mtable.ALL,
+    #                                                        limitby=(0, 1)
+    #                                                        ).first()
+    #    if not record:
+    #        return
+    #    pr_member_update_affiliations(record)
 
-    elif rtype == "org_site" or rtype in current.auth.org_site_types:
-
-        pr_site_update_affiliations(record)
-
-    return
-
-# =============================================================================
-def pr_organisation_update_affiliations(record):
-    """
-        Update affiliations for a branch organisation
-
-        @param record: the org_organisation_branch record
-    """
-
-    if record.deleted and record.deleted_fk:
-        try:
-            fk = json.loads(record.deleted_fk)
-            branch_id = fk["branch_id"]
-        except:
-            return
-    else:
-        branch_id = record.branch_id
-
-    BRANCHES = "Branches"
-
-    db = current.db
-    s3db = current.s3db
-    otable = s3db.org_organisation
-    btable = otable.with_alias("branch")
-    ltable = s3db.org_organisation_branch
-    rtable = s3db.pr_role
-    atable = s3db.pr_affiliation
-    etable = s3db.pr_pentity
-
-    o = otable._tablename
-    b = btable._tablename
-    r = rtable._tablename
-
-    # Get current memberships
-    query = (ltable.branch_id == branch_id) & \
-            (ltable.deleted != True)
-    left = [otable.on(ltable.organisation_id == otable.id),
-            btable.on(ltable.branch_id == btable.id)]
-    rows = db(query).select(otable.pe_id, btable.pe_id, left=left)
-    current_memberships = [(row[o].pe_id, row[b].pe_id) for row in rows]
-
-    # Get current affiliations
-    query = (rtable.deleted != True) & \
-            (rtable.role == BRANCHES) & \
-            (rtable.pe_id == etable.pe_id) & \
-            (etable.instance_type == o) & \
-            (atable.deleted != True) & \
-            (atable.role_id == rtable.id) & \
-            (atable.pe_id == btable.pe_id) & \
-            (btable.id == branch_id)
-    rows = db(query).select(rtable.pe_id, btable.pe_id)
-    current_affiliations = [(row[r].pe_id, row[b].pe_id) for row in rows]
-
-    # Remove all affiliations which are not current memberships
-    for a in current_affiliations:
-        org, branch = a
-        if a not in current_memberships:
-            pr_remove_affiliation(org, branch, role=BRANCHES)
-        else:
-            current_memberships.remove(a)
-    # Add affiliations for all new memberships
-    for m in current_memberships:
-        org, branch = m
-        pr_add_affiliation(org, branch, role=BRANCHES, role_type=OU)
     return
 
 # =============================================================================
@@ -4124,7 +4036,7 @@ def pr_group_update_affiliations(record):
         Update affiliations for group memberships, currently this makes
         all members of a group organisational units of the group.
 
-        @param record: the pr_membership record
+        @param record: the pr_group_membership record
     """
 
     if record.deleted and record.deleted_fk:
@@ -4140,12 +4052,12 @@ def pr_group_update_affiliations(record):
 
     db = current.db
     s3db = current.s3db
-    ptable = s3db.pr_person
     gtable = s3db.pr_group
-    mtable = s3db.pr_group_membership
-    rtable = s3db.pr_role
-    atable = s3db.pr_affiliation
+    mtable = db.pr_group_membership
+    ptable = db.pr_person
     etable = s3db.pr_pentity
+    rtable = db.pr_role
+    atable = db.pr_affiliation
 
     g = gtable._tablename
     r = rtable._tablename
@@ -4178,57 +4090,11 @@ def pr_group_update_affiliations(record):
             pr_remove_affiliation(group, person, role=MEMBERS)
         else:
             current_memberships.remove(a)
+
     # Add affiliations for all new memberships
     for m in current_memberships:
         group, person = m
         pr_add_affiliation(group, person, role=MEMBERS, role_type=OU)
-    return
-
-# =============================================================================
-def pr_site_update_affiliations(record):
-    """
-        Update the affiliations of an org_site instance
-
-        @param record: the org_site instance record
-    """
-
-    db = current.db
-    s3db = current.s3db
-
-    SITES = "Sites"
-
-    otable = s3db.org_organisation
-    stable = s3db.org_site
-    rtable = s3db.pr_role
-    ptable = s3db.pr_pentity
-    atable = s3db.pr_affiliation
-
-    o_pe_id = None
-    s_pe_id = record.pe_id
-
-    organisation_id = record.organisation_id
-    if organisation_id:
-        org = db(otable.id == organisation_id).select(otable.pe_id,
-                                                      limitby=(0, 1)).first()
-        if org:
-            o_pe_id = org.pe_id
-    if s_pe_id:
-        query = (atable.deleted != True) & \
-                (atable.pe_id == s_pe_id) & \
-                (rtable.deleted != True) & \
-                (rtable.id == atable.role_id) & \
-                (rtable.role == SITES) & \
-                (ptable.pe_id == rtable.pe_id) & \
-                (ptable.instance_type == str(otable))
-        rows = db(query).select(rtable.pe_id)
-        seen = False
-        for row in rows:
-            if o_pe_id == None or o_pe_id != row.pe_id:
-                pr_remove_affiliation(row.pe_id, s_pe_id, role=SITES)
-            elif o_pe_id == row.pe_id:
-                seen = True
-        if o_pe_id and not seen:
-            pr_add_affiliation(o_pe_id, s_pe_id, role=SITES, role_type=OU)
     return
 
 # =============================================================================
@@ -4247,12 +4113,12 @@ def pr_human_resource_update_affiliations(person_id):
     db = current.db
     s3db = current.s3db
     etable = s3db.pr_pentity
-    ptable = s3db.pr_person
-    rtable = s3db.pr_role
-    atable = s3db.pr_affiliation
+    rtable = db.pr_role
+    atable = db.pr_affiliation
     htable = s3db.hrm_human_resource
-    otable = s3db.org_organisation
+    ptable = db.pr_person
     stable = s3db.org_site
+    otable = db.org_organisation
 
     h = htable._tablename
     s = stable._tablename

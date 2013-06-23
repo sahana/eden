@@ -886,11 +886,13 @@ def s3_register_validation():
     js_global = []
     js_append = js_global.append
     if request.cookies.has_key("registered"):
-        # .password:first
-        js_append('''S3.password_position=1''')
-    else:
+        # If we have already registered on this site from this PC then the login form is default
         # .password:last
         js_append('''S3.password_position=2''')
+    else:
+        # If we haven't already registered on this site from this PC then the registration form is default
+        # .password:first
+        js_append('''S3.password_position=1''')
 
     if settings.get_auth_registration_mobile_phone_mandatory():
         js_append('''S3.auth_registration_mobile_phone_mandatory=1''')

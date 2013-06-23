@@ -368,6 +368,7 @@ class S3CampDataModel(S3Model):
 
         configure(tablename,
                   super_entity=("org_site", "doc_entity", "pr_pentity"),
+                  onaccept=self.cr_shelter_onaccept,
                   search_method=cr_shelter_search,
                   deduplicate = self.cr_shelter_duplicate,
                   report_options = Storage(
@@ -536,7 +537,9 @@ class S3CampDataModel(S3Model):
 
         # @ToDo: Update/Create a cr_shelter_status record
         # Status & Population
-        pass
+
+        # Update Affiliation, record ownership and component ownership
+        current.s3db.org_update_affiliations("cr_shelter", form.vars)
 
     # -------------------------------------------------------------------------
     @staticmethod

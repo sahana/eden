@@ -362,8 +362,7 @@ class S3WarehouseModel(S3Model):
             Update Affiliation, record ownership and component ownership
         """
 
-        s3db = current.s3db
-        s3db.pr_update_affiliations(s3db.inv_warehouse, form.vars)
+        current.s3db.org_update_affiliations("inv_warehouse", form.vars)
 
     # ---------------------------------------------------------------------
     @staticmethod

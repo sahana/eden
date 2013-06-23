@@ -3,7 +3,6 @@
 from gluon import current, IS_NULL_OR
 from gluon.html import *
 from gluon.storage import Storage
-
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3.s3fields import S3Represent
@@ -130,7 +129,8 @@ settings.ui.summary = [{"name": "map",
 # =============================================================================
 # View Settings
 
-current.response.menu = [{"name": T("Residents"),
+current.response.menu = [
+                {"name": T("Residents"),
                  "url": URL(c="stats", f="resident"),
                  "icon": "icon-group"
                  },
@@ -245,6 +245,12 @@ def customize_org_organisation(**attr):
         "name",
         "logo",
         S3SQLInlineComponentCheckbox(
+            "group",
+            label = T("Coalition"),
+            field = "group_id",
+            cols = 3,
+        ),
+        S3SQLInlineComponentCheckbox(
             "sector",
             label = T("Sectors"),
             field = "sector_id",
@@ -286,7 +292,12 @@ def customize_org_organisation(**attr):
         "comments",
     ) 
 
-    filter_widgets = [#S3OptionsFilter("sector.sector_id",
+    filter_widgets = [#S3OptionsFilter("group.group_id",
+                      #                label=T("Coalition"),
+                      #                represent="%(name)s",
+                      #                widget="multiselect",
+                      #                ),
+                      #S3OptionsFilter("sector.sector_id",
                       #                label=T("Sector"),
                       #                represent="%(name)s",
                       #                widget="multiselect",
@@ -340,6 +351,12 @@ def customize_org_facility(**attr):
         "facility_type_id",
         "organisation_id",
         "location_id",
+        S3SQLInlineComponentCheckbox(
+            "group",
+            label = T("Coalition"),
+            field = "group_id",
+            cols = 3,
+        ),
         S3SQLInlineComponent(
             "human_resource",
             label = T("Location's Contacts"),

@@ -239,6 +239,7 @@ def customize_org_facility(**attr):
 
 settings.ui.customize_org_facility = customize_org_facility
 
+# -----------------------------------------------------------------------------
 def customize_org_organisation(**attr):
 
     s3db = current.s3db
@@ -277,12 +278,12 @@ def customize_org_organisation(**attr):
                     field = "service_id",
                     cols = 4,
                 ),
-                #S3SQLInlineComponentCheckbox(
-                #    "network",
-                #    label = T("Network"),
-                #    field = "network_id",
-                #    cols = 3,
-                #),
+                S3SQLInlineComponentCheckbox(
+                    "group",
+                    label = T("Network"),
+                    field = "group_id",
+                    cols = 3,
+                ),
                 S3SQLInlineComponent(
                     "address",
                     label = T("Address"),
@@ -355,12 +356,12 @@ def customize_org_organisation(**attr):
                         comment=T("Search for an Organization by name or acronym"),
                         field=["name", "acronym"]
                     ),
-                    #S3SearchOptionsWidget(
-                    #    name="org_search_network",
-                    #    label=T("Network"),
-                    #    field="network.name",
-                    #    cols=2
-                    #),
+                    S3SearchOptionsWidget(
+                        name="org_search_network",
+                        label=T("Network"),
+                        field="group.name",
+                        cols=2
+                    ),
                     S3SearchOptionsWidget(
                         name="org_search_location",
                         label=T("Neighborhood"),

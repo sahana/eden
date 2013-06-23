@@ -32,6 +32,12 @@ def index_alt():
         redirect(URL(f="organisation"))
 
 # -----------------------------------------------------------------------------
+def group():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def sector():
     """ RESTful CRUD controller """
 
