@@ -88,7 +88,7 @@ function web2py_ajax_page(method, action, data, target) {
       xhr.setRequestHeader('web2py-component-location', document.location);
       xhr.setRequestHeader('web2py-component-element', target);
     }
-    }).always(function(xhr, text) {
+    }).always(function(data, text, xhr) {
       var html=xhr.responseText;
       var content=xhr.getResponseHeader('web2py-component-content'); 
       var command=xhr.getResponseHeader('web2py-component-command');
