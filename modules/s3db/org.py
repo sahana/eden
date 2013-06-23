@@ -1091,7 +1091,7 @@ class S3OrganisationResourceModel(S3Model):
 # =============================================================================
 class S3OrganisationSectorModel(S3Model):
     """
-        Organisation Service Model
+        Organisation Sector Model
     """
 
     names = ["org_sector",
@@ -1916,6 +1916,7 @@ class S3FacilityModel(S3Model):
         T = current.T
         db = current.db
 
+        add_component = self.add_component
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -2201,11 +2202,14 @@ class S3FacilityModel(S3Model):
                   )
 
         # Groups
-        self.add_component("org_group",
-                           org_facility=Storage(link="org_facility_group",
-                                                joinby="facility_id",
-                                                key="group_id",
-                                                actuate="hide"))
+        add_component("org_group",
+                      org_facility=Storage(link="org_facility_group",
+                                           joinby="facility_id",
+                                           key="group_id",
+                                           actuate="hide"))
+        # Format for filter_widgets
+        add_component("org_facility_group",
+                      org_facility="facility_id")
 
         # ---------------------------------------------------------------------
         # Facilities <> Organisation Groups Link Table

@@ -2765,6 +2765,10 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                                          orderby=table.name,
                                          as_rows=True,
                                          )
+        fieldname = data["field"]
+        formname = self._formname()
+        field_name = "%s-%s" % (formname, fieldname)
+
         if not rows:
             widget = T("No options currently available")
         else:
@@ -2783,7 +2787,6 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
 
             # Which ones are currently selected?
             items = data["data"]
-            fieldname = data["field"]
             prefix = component.prefix
             name = component.name
             audit = component.audit
@@ -2808,9 +2811,6 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                             redirect(URL(args=None, vars=None))
 
             # Render the options
-            formname = self._formname()
-            field_name = "%s-%s" % (formname, fieldname)
-            
             count = len(options)
             num_of_rows = count / cols
             if count % cols:
