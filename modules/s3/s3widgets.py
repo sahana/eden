@@ -4513,7 +4513,7 @@ def s3_checkboxes_widget(field,
 def s3_comments_widget(field, value, **attr):
     """
         A smaller-than-normal textarea
-        to be used by the s3.comments() Reusable field
+        to be used by the s3.comments() & gis.desc_field Reusable fields
     """
 
     if "_id" not in attr:

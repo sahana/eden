@@ -1940,7 +1940,7 @@ class S3LayerEntityModel(S3Model):
         tablename = "gis_layer_entity"
         table = self.super_entity(tablename, "layer_id", layer_types,
                                   name_field()(),
-                                  Field("description", label=T("Description")),
+                                  desc_field()(),
                                   #role_required(),       # Single Role
                                   ##roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
                                   )
@@ -2177,8 +2177,7 @@ class S3FeatureLayerModel(S3Model):
         table = self.define_table(tablename,
                                   self.super_link("layer_id", "gis_layer_entity"),
                                   name_field()(),
-                                  Field("description",
-                                        label=T("Description")),
+                                  desc_field()(),
                                   Field("trackable", "boolean",
                                         label = T("Trackable"),
                                         represent = s3_yes_no_represent,
@@ -2386,7 +2385,6 @@ class S3MapModel(S3Model):
 
         messages = current.messages
         NONE  = messages["NONE"]
-        DESCRIPTION = T("Description")
         TRANSPARENT = T("Transparent?")
         BASE_LAYER = T("Base Layer?")
         LOCATION = T("Location")
@@ -2457,9 +2455,7 @@ class S3MapModel(S3Model):
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
-                             Field("description",
-                                   represent = lambda v: v or NONE,
-                                   label=DESCRIPTION),
+                             desc_field()(),
                              Field("url",
                                    label=LOCATION,
                                    requires=IS_NOT_EMPTY(),
@@ -2510,9 +2506,7 @@ class S3MapModel(S3Model):
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
-                             Field("description",
-                                   represent = lambda v: v or NONE,
-                                   label=DESCRIPTION),
+                             desc_field()(),
                              Field("type", length=16,
                                    label=TYPE,
                                    requires=IS_IN_SET(bing_layer_types)),
@@ -2542,9 +2536,7 @@ class S3MapModel(S3Model):
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
-                             Field("description",
-                                   represent = lambda v: v or NONE,
-                                   label=DESCRIPTION),
+                             desc_field()(),
                              gis_layer_folder()(),
                              s3_role_required(),       # Single Role
                              #s3_roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
@@ -2572,9 +2564,7 @@ class S3MapModel(S3Model):
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
-                             Field("description",
-                                   represent = lambda v: v or NONE,
-                                   label=DESCRIPTION),
+                             desc_field()(),
                              gis_layer_folder()(),
                              s3_role_required(),       # Single Role
                              #s3_roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
@@ -2602,9 +2592,7 @@ class S3MapModel(S3Model):
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
-                             Field("description",
-                                   represent = lambda v: v or NONE,
-                                   label=DESCRIPTION),
+                             desc_field()(),
                              Field("url",
                                    label=LOCATION,
                                    requires=IS_NOT_EMPTY()),
@@ -2654,9 +2642,7 @@ class S3MapModel(S3Model):
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
-                             Field("description",
-                                   represent = lambda v: v or NONE,
-                                   label=DESCRIPTION),
+                             desc_field()(),
                              Field("url",
                                    label=LOCATION,
                                    requires = IS_NOT_EMPTY()),
@@ -2717,9 +2703,7 @@ class S3MapModel(S3Model):
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
-                             Field("description",
-                                   represent = lambda v: v or NONE,
-                                   label=DESCRIPTION),
+                             desc_field()(),
                              Field("type", length=16,
                                    label=TYPE,
                                    requires=IS_IN_SET(google_layer_types)),
@@ -2749,9 +2733,7 @@ class S3MapModel(S3Model):
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
-                             Field("description",
-                                   represent = lambda v: v or NONE,
-                                   label=DESCRIPTION),
+                             desc_field()(),
                              Field("track", "upload", autodelete=True,
                                    label = T("GPS Track File"),
                                    requires = IS_UPLOAD_FILENAME(extension="gpx"),
@@ -2806,9 +2788,7 @@ class S3MapModel(S3Model):
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
-                             Field("description",
-                                   represent = lambda v: v or NONE,
-                                   label=DESCRIPTION),
+                             desc_field()(),
                              Field("url",
                                    label=LOCATION,
                                    requires=IS_NOT_EMPTY(),
@@ -2868,9 +2848,7 @@ class S3MapModel(S3Model):
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
-                             Field("description",
-                                   represent = lambda v: v or NONE,
-                                   label=DESCRIPTION),
+                             desc_field()(),
                              Field("code", "text",
                                    label=T("Code"),
                                    default="var myNewLayer = new OpenLayers.Layer.XYZ();\nmap.addLayer(myNewLayer);"),
@@ -2901,9 +2879,7 @@ class S3MapModel(S3Model):
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
-                             Field("description",
-                                   represent = lambda v: v or NONE,
-                                   label=DESCRIPTION),
+                             desc_field()(),
                              Field("url",
                                    label=LOCATION,
                                    comment=DIV(_class="tooltip",
@@ -2939,9 +2915,7 @@ class S3MapModel(S3Model):
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
-                             Field("description",
-                                   represent = lambda v: v or NONE,
-                                   label=DESCRIPTION),
+                             desc_field()(),
                              Field("url1",
                                    label=LOCATION,
                                    requires=IS_NOT_EMPTY(),
@@ -2991,9 +2965,7 @@ class S3MapModel(S3Model):
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
-                             Field("description",
-                                   represent = lambda v: v or NONE,
-                                   label=DESCRIPTION),
+                             desc_field()(),
                              Field("type", length=16,
                                    label=TYPE,
                                    requires=IS_IN_SET(openweathermap_layer_types)),
@@ -3026,9 +2998,7 @@ class S3MapModel(S3Model):
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
-                             Field("description",
-                                   represent = lambda v: v or NONE,
-                                   label=DESCRIPTION),
+                             desc_field()(),
                              Field("shape", "upload", autodelete=True,
                                    label = T("ESRI Shape File"),
                                    requires = IS_UPLOAD_FILENAME(extension="zip"),
@@ -3113,9 +3083,7 @@ class S3MapModel(S3Model):
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
-                             Field("description",
-                                   represent = lambda v: v or NONE,
-                                   label=DESCRIPTION),
+                             desc_field()(),
                              Field("url",
                                    label=LOCATION,
                                    requires=IS_NOT_EMPTY(),
@@ -3164,9 +3132,7 @@ class S3MapModel(S3Model):
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
-                             Field("description",
-                                   represent = lambda v: v or NONE,
-                                   label=DESCRIPTION),
+                             desc_field()(),
                              Field("url",
                                    label=LOCATION,
                                    requires = IS_NOT_EMPTY(),
@@ -3258,9 +3224,7 @@ class S3MapModel(S3Model):
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
-                             Field("description",
-                                   represent = lambda v: v or NONE,
-                                   label=DESCRIPTION),
+                             desc_field()(),
                              Field("url",
                                    label=LOCATION,
                                    requires = IS_NOT_EMPTY(),
@@ -3370,9 +3334,7 @@ class S3MapModel(S3Model):
         table = define_table(tablename,
                              layer_id,
                              name_field()(),
-                             Field("description",
-                                   represent = lambda v: v or NONE,
-                                   label=DESCRIPTION),
+                             desc_field()(),
                              Field("url",
                                    label=LOCATION,
                                    requires=IS_NOT_EMPTY(),
@@ -3821,8 +3783,7 @@ class S3GISThemeModel(S3Model):
         table = define_table(tablename,
                              layer_id,
                              name_field()(unique = True),
-                             Field("description",
-                                   label=T("Description")),
+                             desc_field()(),
                              # @ToDo:
                              #self.stats_parameter_id(),
                              Field("date", "datetime",
@@ -3945,10 +3906,17 @@ class S3POIFeedModel(S3Model):
 
 # =============================================================================
 def name_field():
-    T = current.T
     return S3ReusableField("name", length=64, notnull=True,
                            #unique=True,
-                           label=T("Name"))
+                           label=current.T("Name"))
+
+# =============================================================================
+def desc_field():
+    return S3ReusableField("description", "text",
+                           label=current.T("Description"),
+                           represent = lambda v: v or current.messages["NONE"],
+                           widget = s3_comments_widget,
+                           )
 
 # =============================================================================
 def gis_layer_folder():
@@ -3974,10 +3942,9 @@ def gis_opacity():
 
 # =============================================================================
 def gis_refresh():
-    T = current.T
     return S3ReusableField("refresh", "integer", default=900,       # 15 minutes
                            requires = IS_INT_IN_RANGE(0, 86400),    # 0 seconds - 24 hours
-                           label = T("Refresh Rate (seconds)"))
+                           label = current.T("Refresh Rate (seconds)"))
 
 # =============================================================================
 def cluster_attribute():
