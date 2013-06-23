@@ -217,6 +217,8 @@ class S3OrganisationModel(S3Model):
                                    ),
                              Field("logo", "upload",
                                    label=T("Logo"),
+                                   uploadfolder = os.path.join(
+                                    current.request.folder, "uploads"),
                                    requires=[IS_EMPTY_OR(IS_IMAGE(maxsize=(400, 400),
                                                                   error_message=T("Upload an image file (png or jpeg), max. 400x400 pixels!"))),
                                              IS_EMPTY_OR(IS_UPLOAD_FILENAME())],
@@ -224,7 +226,7 @@ class S3OrganisationModel(S3Model):
                                    comment=DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("Logo"),
                                                                    T("Logo of the organization. This should be a png or jpeg file and it should be no larger than 400x400")))
-                                  ),
+                                   ),
                              s3_comments(),
                              #document_id(), # Better to have multiple Documents on a Tab
                              * s3_meta_fields())
@@ -286,7 +288,7 @@ class S3OrganisationModel(S3Model):
                                           widget = widget,
                                           )
 
-        utablename = current.auth.settings.table_user_name
+        utablename = auth.settings.table_user_name
         configure(tablename,
                   super_entity="pr_pentity",
                   deduplicate=self.organisation_duplicate,
@@ -303,6 +305,28 @@ class S3OrganisationModel(S3Model):
                                "country",
                                "website"
                                ])
+
+        # -----------------------------------------------------------------------------
+        # Donors are a type of Organization
+        #
+        # ADD_DONOR = T("Add Donor")
+        # ADD_DONOR_HELP = T("The Donor(s) for this project. Multiple values can be selected by holding down the 'Control' key.")
+        # donor_id = S3ReusableField("donor_id", "list:reference org_organisation",
+                                   # sortby="name",
+                                   # requires = IS_NULL_OR(IS_ONE_OF(db, "org_organisation.id",
+                                                                   # org_organisation_represent,
+                                                                   # multiple=True,
+                                                                   # filterby="type",
+                                                                   # filter_opts=[4])),
+                                   # represent = self.donor_represent,
+                                   # label = T("Funding Organization"),
+                                   # comment=S3AddResourceLink(c="org",
+                                                             # f="organisation",
+                                                             # vars=dict(child="donor_id"),
+                                                             # label=ADD_DONOR,
+                                                             # tooltip=ADD_DONOR_HELP),
+                                   # ondelete = "SET NULL")
+
 
         # Components
 
@@ -401,6 +425,15 @@ class S3OrganisationModel(S3Model):
         add_component("doc_document", org_organisation="organisation_id")
         add_component("doc_image", org_organisation="organisation_id")
 
+        # Requests
+        #add_component("req_req",
+        #              org_organisation = "donated_by_id")
+
+        # -----------------------------------------------------------------------------
+        # Enable this to allow migration of users between instances
+        #add_component(db.auth_user,
+        #              org_organisation="organisation_id")
+
         if use_branches:
             # Branches
             add_component("org_organisation",
@@ -424,38 +457,6 @@ class S3OrganisationModel(S3Model):
                                         autocomplete="name",
                                         autodelete=False))
 
-        # Requests
-        #add_component("req_req",
-        #              org_organisation = "donated_by_id")
-
-        # -----------------------------------------------------------------------------
-        # Enable this to allow migration of users between instances
-        #add_component(db.auth_user,
-        #              org_organisation="organisation_id")
-
-        # -----------------------------------------------------------------------------
-        # Donors are a type of Organization
-        #
-        # ADD_DONOR = T("Add Donor")
-        # ADD_DONOR_HELP = T("The Donor(s) for this project. Multiple values can be selected by holding down the 'Control' key.")
-        # donor_id = S3ReusableField("donor_id", "list:reference org_organisation",
-                                   # sortby="name",
-                                   # requires = IS_NULL_OR(IS_ONE_OF(db, "org_organisation.id",
-                                                                   # org_organisation_represent,
-                                                                   # multiple=True,
-                                                                   # filterby="type",
-                                                                   # filter_opts=[4])),
-                                   # represent = self.donor_represent,
-                                   # label = T("Funding Organization"),
-                                   # comment=S3AddResourceLink(c="org",
-                                                             # f="organisation",
-                                                             # vars=dict(child="donor_id"),
-                                                             # label=ADD_DONOR,
-                                                             # tooltip=ADD_DONOR_HELP),
-                                   # ondelete = "SET NULL")
-
-
-        if use_branches:
             # ---------------------------------------------------------------------
             # Organisation Branches
             #
@@ -496,7 +497,7 @@ class S3OrganisationModel(S3Model):
         # ---------------------------------------------------------------------
         # Organisation <-> User
         #
-        utable = current.auth.settings.table_user
+        utable = auth.settings.table_user
         tablename = "org_organisation_user"
         table = define_table(tablename,
                              Field("user_id", utable),
@@ -2982,7 +2983,10 @@ def org_organisation_logo(id, type="png"):
     else:
         table = s3db.org_organisation
         query = (table.id == id)
-        record = current.db(query).select(limitby=(0, 1)).first()
+        record = current.db(query).select(table.name,
+                                          table.acronym,
+                                          table.logo,
+                                          limitby=(0, 1)).first()
 
     format = None
     if type == "bmp":
@@ -3550,10 +3554,10 @@ def org_organisation_controller():
                     otable = r.table
                     record = r.record
                     otable.organisation_type_id.default = record.organisation_type_id
-                    # @ToDo: Update for components
-                    #otable.sector_id.default = record.sector_id
                     otable.region.default = record.region
                     otable.country.default = record.country
+                    # @ToDo: Update for components
+                    #otable.sector_id.default = record.sector_id
                     # Represent orgs without the parent prefix as we have that context already
                     s3db.org_organisation_branch.branch_id.represent = \
                         org_OrganisationRepresent(parent=False)

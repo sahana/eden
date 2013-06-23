@@ -342,31 +342,48 @@ def vol_service_record(r, **attr):
         return None
 
     T = current.T
-
-    vol_name = s3_fullname(record.person_id)
+    db = current.db
+    ptable = db.pr_person
+    person_id = record.person_id
+    person = db(ptable.id == person_id).select(ptable.pe_id,
+                                               ptable.first_name,
+                                               ptable.middle_name,
+                                               ptable.last_name,
+                                               ptable.comments,
+                                               limitby=(0, 1),
+                                               ).first()
+    vol_name = s3_fullname(person)
 
     def callback(r):
-        db = current.db
+
+        # Header
         s3db = current.s3db
-
-        person_id = record.person_id
-        organisation_id = record.organisation_id
-
-        # Person details
-        table = s3db.hrm_human_resource
-        ptable = db.pr_person
-        org_name = table.organisation_id.represent(organisation_id)
-        logo = s3db.org_organisation_logo(organisation_id)
-        innerTable = TABLE(TR(TH(T("Volunteer Service Record"))),
-                           TR(TD(vol_name)),
+        otable = db.org_organisation
+        org_id = record.organisation_id
+        org = db(otable.id == org_id).select(otable.name,
+                                             otable.acronym,
+                                             otable.logo,
+                                             limitby=(0, 1),
+                                             ).first()
+        org_name = org.name
+        logo = org.logo
+        if logo:
+            logo = s3db.org_organisation_logo(org)
+        else:
+            root_org = current.cache.ram(
+                # Common key with auth.root_org
+                "root_org_%s" % org_id,
+                lambda: s3db.org_root_organisation(organisation_id=org_id)[0],
+                time_expire=120
+                )
+            logo = s3db.org_organisation_logo(root_org)
+        innerTable = TABLE(TR(TH(vol_name)),
                            TR(TD(org_name)))
         person_details = TABLE(TR(TD(logo),
                                   TD(innerTable)
                                   ))
 
-        pe_id = db(ptable.id == person_id).select(ptable.pe_id,
-                                                  limitby=(0, 1)
-                                                  ).first().pe_id
+        pe_id = person.pe_id
 
         # Photo
         itable = s3db.pr_image
@@ -461,6 +478,50 @@ def vol_service_record(r, **attr):
                                 TR(identity.valid_until),
                                 ))
 
+        # Comments:
+        comments = person.comments or ""
+        if comments:
+            comments = TABLE(TR(TH(T("Comments"))),
+                             TR(comments))
+
+        # Training Courses
+        hours = {}
+        ttable = s3db.hrm_training
+        ctable = s3db.hrm_course
+        query = (ttable.person_id == person_id) & \
+                (ttable.deleted == False)
+        rows = db(query).select(ctable.name,
+                                ttable.date,
+                                ttable.hours,
+                                left=ctable.on(ttable.course_id == ctable.id),
+                                orderby = ~ttable.date)
+        NONE = current.messages["NONE"]
+        date_represent = ttable.date.represent
+        for row in rows:
+            _row = row["hrm_training"]
+            _date = _row.date
+            hours[_date.date()] = dict(course = row["hrm_course"].name or NONE,
+                                       date = date_represent(_date),
+                                       hours = _row.hours or "",
+                                       )
+        courses = TABLE(TR(TH(T("Training")),
+                           TH(T("Date")),
+                           TH(T("Hours"))))
+        _hours = {}
+        for key in sorted(hours.iterkeys()):
+            _hours[key] = hours[key]
+        total = 0
+        for hour in hours:
+            _hour = hours[hour]
+            __hours = _hour["hours"] or 0
+            courses.append(TR(_hour["course"],
+                              _hour["date"],
+                              str(__hours)
+                              ))
+            total += __hours
+        if total > 0:
+            courses.append(TR(TD(""), TD("Total"), TD("%d" % total)))
+
         # Programme Hours
         hours = {}
         hrstable = s3db.hrm_programme_hours
@@ -487,72 +548,54 @@ def vol_service_record(r, **attr):
             else:
                 programme = ""
             hours[_date] = dict(programme = programme,
-                                course = "",
                                 date = date_represent(_date),
                                 hours = _row.hours or "",
                                 )
-
-        # Training Hours
-        ttable = s3db.hrm_training
-        ctable = s3db.hrm_course
-        query = (ttable.person_id == person_id) & \
-                (ttable.deleted == False)
-        rows = db(query).select(ctable.name,
-                                ttable.date,
-                                ttable.hours,
-                                left=ctable.on(ttable.course_id == ctable.id),
-                                orderby = ~ttable.date)
-        NONE = current.messages["NONE"]
-        date_represent = ttable.date.represent
-        for row in rows:
-            _row = row["hrm_training"]
-            _date = _row.date
-            hours[_date.date()] = dict(programme = "",
-                                       course = row["hrm_course"].name or NONE,
-                                       date = date_represent(_date),
-                                       hours = _row.hours or "",
-                                       )
-
-        # Combined Hours
+        programme = TABLE(TR(TH(T("Work on Programme")),
+                             TH(T("Date")),
+                             TH(T("Hours"))))
         _hours = {}
-        hour_list = TABLE(TR(TD(T("Programme")), TD(T("Course")), TD(T("Date")), TD(T("Hours"))))
         for key in sorted(hours.iterkeys()):
             _hours[key] = hours[key]
         total = 0
         for hour in hours:
             _hour = hours[hour]
             __hours = _hour["hours"] or 0
-            hour_list.append(TR(_hour["programme"],
-                                _hour["course"],
+            programme.append(TR(_hour["programme"],
                                 _hour["date"],
                                 str(__hours)
                                 ))
             total += __hours
         if total > 0:
-            hour_list.append(TR(TD(""), TD(""), TD("Total"), TD("%d" % total)))
+            programme.append(TR(TD(""), TD("Total"), TD("%d" % total)))
 
-        output = DIV(person_details,
+        # Space for the printed document to be signed
+        datestamp = S3DateTime.date_represent(current.request.now)
+        datestamp = "%s: %s" % (T("Date Printed"), datestamp)
+        manager = T("Branch Coordinator")
+        signature = TABLE(TR(TH(T("Signature"))),
+                          TR(TD()),
+                          TR(TD(manager)),
+                          TR(TD(datestamp)))
+
+        output = DIV(TABLE(TR(TH(T("Volunteer Service Record")))),
+                     person_details,
                      TABLE(contact_row),
                      TABLE(id_row),
-                     hour_list
+                     TABLE(comments),
+                     TABLE(courses),
+                     TABLE(programme),
+                     TABLE(signature),
                      )
 
         return output
 
-    #list_fields = ["person_id$first_name"]
     exporter = S3Exporter().pdf
     return exporter(r.resource,
-                    request=r,
+                    request = r,
                     method = "list",
-                    #pdf_componentname = "track_item",
                     pdf_title = "%s - %s" % \
                         (vol_name, T("Volunteer Service Record")),
-                    #pdf_filename = send_ref,
-                    #list_fields = list_fields,
-                    pdf_hide_comments = True,
-                    pdf_header_padding = 12,
-                    #pdf_footer = inv_send_pdf_footer,
-                    #pdf_paper_alignment = "Landscape",
                     pdf_table_autogrow = "B",
                     pdf_callback = callback,
                     **attr

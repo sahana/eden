@@ -331,6 +331,8 @@ def org_search():
         - allows differential access permissions
     """
 
+    search_method = s3base.S3OrganisationSearch()
+    s3db.configure("org_organisation", search_method=search_method)
     s3.prep = lambda r: r.representation == "json" and \
                         r.method == "search"
     return s3_rest_controller(module, "organisation")

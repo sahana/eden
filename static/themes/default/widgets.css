@@ -548,6 +548,12 @@ body.popup {
 }
 
 /* Message Flash styles */
+#_statusbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    z-index: 7000;
+}
 .confirmation {
     color: #070;
     font-weight: bold;

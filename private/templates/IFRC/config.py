@@ -514,6 +514,47 @@ def customize_survey_series(**attr):
 settings.ui.customize_survey_series = customize_survey_series
 
 # -----------------------------------------------------------------------------
+def customize_org_organisation(**attr):
+
+    s3 = current.response.s3
+
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        if r.interactive:
+            crud_form = S3SQLCustomForm(
+                "name",
+                "acronym",
+                "organisation_type_id",
+                "region",
+                "country",
+                S3SQLInlineComponentCheckbox(
+                    "sector",
+                    label = T("Sectors"),
+                    field = "sector_id",
+                    cols = 3,
+                ),
+                "phone",
+                "website",
+                "logo",
+                "comments",
+            )
+            current.s3db.configure("org_organisation", crud_form=crud_form)
+            
+        return result
+    s3.prep = custom_prep
+
+    return attr
+
+settings.ui.customize_org_organisation = customize_org_organisation
+
+# -----------------------------------------------------------------------------
 # Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
 settings.project.mode_3w = True

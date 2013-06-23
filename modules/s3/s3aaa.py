@@ -4114,7 +4114,7 @@ S3OptionsFilter({
         if not org_id:
             return None
         return current.cache.ram(
-                    # Common key for all users of this org
+                    # Common key for all users of this org & vol_service_record()
                     "root_org_%s" % org_id,
                     lambda: current.s3db.org_root_organisation(organisation_id=org_id)[0],
                     time_expire=120

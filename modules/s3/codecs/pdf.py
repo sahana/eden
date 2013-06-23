@@ -297,8 +297,6 @@ class S3RL_PDF(S3Codec):
             use the list of readable fields.
         """
 
-        from s3.s3data import S3DataTable
-
         fields = self.list_fields
         if fields:
             list_fields = [f for f in fields if f != "id"]
@@ -363,8 +361,7 @@ class EdenDocTemplate(BaseDocTemplate):
         if paper_size:
             self.paper_size = paper_size
         else:
-            settings = current.deployment_settings
-            if settings.get_paper_size() == "Letter":
+            if current.deployment_settings.get_paper_size() == "Letter":
                 self.paper_size = LETTER
             else:
                 self.paper_size = A4

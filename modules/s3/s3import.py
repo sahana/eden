@@ -3876,15 +3876,15 @@ class S3BulkImporter(object):
     def import_image(self,
                      filename,
                      tablename,
-                     idname,
-                     imagename):
+                     idfield,
+                     imagefield):
         """
             Import images, such as a logo or person image
             
             filename     a CSV list of records and filenames
             tablename    the name of the table
-            idname       the field used to identify the record
-            imagename    the field to where the image will be added
+            idfield      the field used to identify the record
+            imagefield   the field to where the image will be added
             
             Example:
             bi.import_image ("org_logos.csv", "org_organisation", "name", "logo")
@@ -3893,48 +3893,52 @@ class S3BulkImporter(object):
             Sahana Software Foundation    sahanalogo.jpg
             American Red Cross            icrc.gif
         """
+
          # Check if the source file is accessible
         try:
             openFile = open(filename, "r")
         except IOError:
             return "Unable to open file %s" % filename
         reader = self.csv.DictReader(openFile)
+        db = current.db
         table = current.s3db[tablename]
+        idfield = table[idfield]
+        base_query = (table.deleted != True)
         for row in reader:
             if row != None:
                 id = row["id"]
                 image = row["file"]
                 # Open the file
                 try:
-                    # Extract the path to the CSV file, image should bi in
+                    # Extract the path to the CSV file, image should be in
                     # this directory, or relative to it
                     (path, file) = os.path.split(filename)
                     imagepath= os.path.join(path, image)
-                    openFile = open(imagepath, "r")
+                    openFile = open(imagepath, "rb")
                 except IOError:
                     s3_debug("Unable to open image file %s" % image)
                     continue
                 image_source = StringIO(openFile.read())
-                # get the id of the resource
+                # Get the id of the resource
                 try:
-                    record = current.db((table.deleted != True) & \
-                                        (table[idname] == id)).select(limitby=(0, 1)).first()
+                    query = base_query & (idfield == id)
+                    record = db(query).select(limitby=(0, 1)
+                                              ).first()
                 except:
-                    s3_debug("Unable get %s of the resource %s to attach the image file to" % (id, tablename))
+                    s3_debug("Unable to get record %s of the resource %s to attach the image file to" % (id, tablename))
                     continue
-                # create and accept the form
-                image_form = SQLFORM(table, record, fields=["id", imagename])
+                # Create and accept the form
+                image_form = SQLFORM(table, record, fields=["id", imagefield])
                 form_vars = Storage()
                 form_vars._formname = "%s/%s" % (tablename, record.id)
                 form_vars.id = record.id
                 source = Storage()
                 source.filename = imagepath
                 source.file = image_source
-                form_vars[imagename] = source
+                form_vars[imagefield] = source
                 if not image_form.accepts(form_vars):
-                    for (key,error) in image_form.errors.items():
+                    for (key, error) in image_form.errors.items():
                         s3_debug("error importing logo %s: %s %s" % (image, key, error))
-
 
     # -------------------------------------------------------------------------
     def perform_tasks(self, path):

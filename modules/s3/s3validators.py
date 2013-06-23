@@ -2056,20 +2056,20 @@ class IS_PROCESSED_IMAGE(Validator):
 
         if current.response.s3.bulk:
             # Pointless in imports
-            return value, None
+            return (value, None)
         
         r = current.request
         vars = r.post_vars
 
         if r.env.request_method == "GET":
-            return value, None
+            return (value, None)
 
         # If there's a newly uploaded file, accept it. It'll be processed in
         # the update form.
         # NOTE: A FieldStorage with data evaluates as False (odd!)
         file = vars.get(self.field_name)
         if file not in ("", None):
-            return file, None
+            return (file, None)
 
         encoded_file = vars.get("imagecrop-data")
         file = self.file_cb()
@@ -2095,7 +2095,7 @@ class IS_PROCESSED_IMAGE(Validator):
 
             f.file = StringIO(base64.decodestring(encoded_file))
 
-            return f, None
+            return (f, None)
 
         # Crop the image, if we've got the crop points.
         points = vars.get("imagecrop-points")
@@ -2111,7 +2111,7 @@ class IS_PROCESSED_IMAGE(Validator):
             current.s3task.async("crop_image",
                 args=[path] + points + [self.image_bounds[0]])
 
-            return None, None
+        return (None, None)
 
 # =============================================================================
 class IS_UTC_OFFSET(Validator):

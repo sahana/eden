@@ -458,6 +458,7 @@ def cms_index(module, alt_function=None):
             request = current.request
             environment = build_environment(request, response, current.session)
             environment["settings"] = settings
+            environment["s3db"] = current.s3db
             page = run_controller_in(request.controller, alt_function, environment)
             if isinstance(page, dict):
                 response._vars = page
