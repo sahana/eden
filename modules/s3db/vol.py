@@ -357,17 +357,16 @@ def vol_service_record(r, **attr):
         ptable = db.pr_person
         org_name = table.organisation_id.represent(organisation_id)
         logo = s3db.org_organisation_logo(organisation_id)
-        #vol_name = table.person_id.represent(person_id)
-        pe_id = db(ptable.id == person_id).select(ptable.pe_id,
-                                                  limitby=(0, 1)
-                                                  ).first().pe_id
-
         innerTable = TABLE(TR(TH(T("Volunteer Service Record"))),
                            TR(TD(vol_name)),
                            TR(TD(org_name)))
         person_details = TABLE(TR(TD(logo),
                                   TD(innerTable)
                                   ))
+
+        pe_id = db(ptable.id == person_id).select(ptable.pe_id,
+                                                  limitby=(0, 1)
+                                                  ).first().pe_id
 
         # Photo
         itable = s3db.pr_image
@@ -427,26 +426,26 @@ def vol_service_record(r, **attr):
             contact_list.append(contact.value)
 
         # Emergency Contact
-        ectable = s3db.pr_contact_emergency
-        emergency = db(ectable.pe_id == pe_id).select(ectable.name,
-                                                      ectable.relationship,
-                                                      ectable.phone,
-                                                      limitby=(0, 1)).first()
-        if emergency:
-            econtact = TABLE(TR(TH(T("Emergency Contact"))),
-                             TR(emergency.name),
-                             TR(emergency.relationship),
-                             TR(emergency.phone),
-                             )
-        else:
-            econtact = TABLE()
+        #ectable = s3db.pr_contact_emergency
+        #emergency = db(ectable.pe_id == pe_id).select(ectable.name,
+        #                                              ectable.relationship,
+        #                                              ectable.phone,
+        #                                              limitby=(0, 1)).first()
+        #if emergency:
+        #    econtact = TABLE(TR(TH(T("Emergency Contact"))),
+        #                     TR(emergency.name),
+        #                     TR(emergency.relationship),
+        #                     TR(emergency.phone),
+        #                     )
+        #else:
+        #    econtact = TABLE()
         contact_row = TR()
         if len(address_list) > 0:
             contact_row.append(TD(address_list[0]))
         if len(address_list) > 1:
             contact_row.append(TD(address_list[1]))
         contact_row.append(contact_list)
-        contact_row.append(econtact)
+        #contact_row.append(econtact)
 
         # Identity
         idtable = s3db.pr_identity

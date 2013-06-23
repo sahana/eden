@@ -4217,8 +4217,7 @@ class gis_LocationRepresent(S3Represent):
         return formatted
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def lat_lon_represent(row):
+    def lat_lon_represent(self, row):
         lat = row.lat
         lon = row.lon
         if lat is not None and lon is not None:
@@ -4232,9 +4231,9 @@ class gis_LocationRepresent(S3Represent):
             else:
                 lon_suffix = "W"
                 lon = -lon
-            text = "%s %s, %s %s" % (lat_lon_format(lat),
+            text = "%s %s, %s %s" % (self.lat_lon_format(lat),
                                      lat_suffix,
-                                     lat_lon_format(lon),
+                                     self.lat_lon_format(lon),
                                      lon_suffix)
             return text
 
