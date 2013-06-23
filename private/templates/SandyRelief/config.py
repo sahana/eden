@@ -346,6 +346,41 @@ def customize_org_organisation(**attr):
                 "comments",
             )
             
+            from s3.s3filter import S3LocationFilter, S3OptionsFilter, S3TextFilter
+            filter_widgets = [
+                S3TextFilter(["name", "acronym"],
+                             label=T("Name"),
+                             _class="filter-search",
+                             ),
+                S3OptionsFilter("group_membership.group_id",
+                                label=T("Network"),
+                                represent="%(name)s",
+                                widget="multiselect",
+                                cols=3,
+                                #hidden=True,
+                                ),
+                S3LocationFilter("organisation_location.location_id",
+                                 label=T("Neighborhood"),
+                                 levels=["L3", "L4"],
+                                 widget="multiselect",
+                                 cols=3,
+                                 #hidden=True,
+                                 ),
+                S3OptionsFilter("service_organisation.service_id",
+                                label=T("Service"),
+                                represent="%(name)s",
+                                widget="multiselect",
+                                cols=3,
+                                #hidden=True,
+                                ),
+                S3OptionsFilter("organisation_type_id",
+                                label=T("Type"),
+                                represent="%(name)s",
+                                widget="multiselect",
+                                cols=3,
+                                #hidden=True,
+                                ),
+                ]
             from s3.s3search import S3OrganisationSearch, S3SearchSimpleWidget, S3SearchOptionsWidget
             search_method = S3OrganisationSearch(
                 simple=(),
@@ -384,6 +419,8 @@ def customize_org_organisation(**attr):
                 ))
             s3db.configure("org_organisation",
                            crud_form=crud_form,
+                           # @ToDo: Style & Enable
+                           #filter_widgets = filter_widgets,
                            search_method=search_method,
                            )
 
@@ -599,6 +636,8 @@ settings.ui.customize_project_project = customize_project_project
 # -----------------------------------------------------------------------------
 # Uncomment to show created_by/modified_by using Names not Emails
 settings.ui.auth_user_represent = "name"
+
+# -----------------------------------------------------------------------------
 # Formstyle
 def formstyle_row(id, label, widget, comment, hidden=False):
     if hidden:
@@ -606,16 +645,17 @@ def formstyle_row(id, label, widget, comment, hidden=False):
     else:
         hide = ""
     row = TR(TD(DIV(label,
-                _id=id + "1",
-                _class="w2p_fl %s" % hide),
-            DIV(widget,
-                _id=id,
-                _class="w2p_fw %s" % hide),
-            DIV(comment,
-                _id=id, 
-                _class="w2p_fc %s" % hide),
-           ))
+                    _id=id + "1",
+                    _class="w2p_fl %s" % hide),
+                DIV(widget,
+                    _id=id,
+                    _class="w2p_fw %s" % hide),
+                DIV(comment,
+                    _id=id, 
+                    _class="w2p_fc %s" % hide),
+                ))
     return row
+
 def form_style(self, xfields):
     """
         @ToDo: Requires further changes to code to use
@@ -631,9 +671,11 @@ def form_style(self, xfields):
         form.append(formstyle_row(id, a, b, c))
 
     return form
+
 settings.ui.formstyle_row = formstyle_row
 settings.ui.formstyle = formstyle_row
 
+# -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([
     # Core modules which shouldn't be disabled

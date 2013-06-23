@@ -206,7 +206,6 @@ def _updates():
                       S3LocationFilter("location_id",
                                        label=T("Filter by Location"),
                                        levels=["L1", "L2", "L3"],
-                                       #represent="%(name)s",
                                        widget="multiselect",
                                        cols=3,
                                        hidden=True,

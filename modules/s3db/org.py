@@ -318,6 +318,9 @@ class S3OrganisationModel(S3Model):
                                                joinby="organisation_id",
                                                key="group_id",
                                                actuate="hide"))
+        # Format for filter_widget
+        add_component("org_group_membership",
+                      org_organisation="organisation_id")
 
         # Sites
         add_component("org_site",
@@ -349,6 +352,9 @@ class S3OrganisationModel(S3Model):
                                                joinby="organisation_id",
                                                key="location_id",
                                                actuate="hide"))
+        # Format for filter_widget
+        add_component("org_organisation_location",
+                      org_organisation="organisation_id")
 
         # Catalogs
         add_component("supply_catalog",
@@ -364,6 +370,9 @@ class S3OrganisationModel(S3Model):
                                                joinby="organisation_id",
                                                key="sector_id",
                                                actuate="hide"))
+        # Format for filter_widget
+        add_component("org_sector_organisation",
+                      org_organisation="organisation_id")
 
         # Services
         add_component("org_service",
@@ -371,6 +380,9 @@ class S3OrganisationModel(S3Model):
                                                joinby="organisation_id",
                                                key="service_id",
                                                actuate="hide"))
+        # Format for filter_widget
+        add_component("org_service_organisation",
+                      org_organisation="organisation_id")
 
         # Assets
         add_component("asset_asset",
@@ -3852,6 +3864,7 @@ def org_organisation_controller():
     s3.postp = postp
 
     output = current.rest_controller("org", "organisation",
+                                     hide_filter = False,
                                      # Don't allow components with components (such as document) to breakout from tabs
                                      native=False,
                                      rheader=org_rheader,
