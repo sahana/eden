@@ -1948,6 +1948,29 @@ def customize_cms_post(**attr):
                            )
 
             s3.cancel = True
+        elif r.representation == "xls":
+            s3db = current.s3db
+            table = r.table
+            table.created_by.represent = s3_auth_user_represent_name
+            #table.created_on.represent = datetime_represent
+            utable = current.auth.settings.table_user
+            utable.organisation_id.represent = s3db.org_organisation_represent
+
+            list_fields = [
+                (T("Date"), "created_on"),
+                (T("Disaster"), "event_post.event_id"),
+                (T("Type"), "series_id"),
+                (T("Details"), "body"),
+                (T("District"), "location_id$L1"),
+                (T("Sub-District"), "location_id$L2"),
+                (T("Suco"), "location_id$L3"),
+                (T("Author"), "created_by"),
+                (T("Organization"), "created_by$organisation_id"),
+                ]
+            s3db.configure("cms_post",
+                           list_fields = list_fields,
+                           )
+
         elif r.representation == "plain" and \
              r.method != "search":
             # Map Popups

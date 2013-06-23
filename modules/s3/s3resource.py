@@ -4750,7 +4750,7 @@ class S3Resource(object):
                     iSortCol = int(vars["iSortCol_%s" % i])
                     # for every non-sortable column to the left of sortable column subtract 1
                     for j in xrange(iSortCol):
-                        if vars.get("bSortable_%s" % j, 'true') == 'false' :
+                        if vars.get("bSortable_%s" % j, "true") == "false":
                             iSortCol -= 1
                     rfield = rfields[iSortCol + 1]
                 except:
