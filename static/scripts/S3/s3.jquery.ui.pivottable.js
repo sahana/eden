@@ -99,9 +99,21 @@
             }
             this.data = data;
 
-            this._renderTable();
-            this._renderChartOptions();
-            this._renderChart();
+            if (data.nodata) {
+                $(el).find('.pt-table')
+                     .first()
+                     .empty()
+                     .append($('<div class="pt-no-data">' + data.nodata + '</div>'));
+                $(el).find('.pt-hide-table').hide();
+                $(el).find('.pt-show-table').hide();
+                $(el).find('.pt-empty').hide();
+                this._renderChart();
+
+            } else {
+                this._renderTable();
+                this._renderChartOptions();
+                this._renderChart();
+            }
             
             this._bindEvents();
 
@@ -124,7 +136,8 @@
                 cols = data.cols,
                 rows = data.rows,
                 total = data.total,
-                labels = data.labels;
+                labels = data.labels,
+                nodata = data.nodata;
 
             // Render the table
             var thead = this._renderHeader(cols, labels);
@@ -143,7 +156,7 @@
 
             // Show the table
             $(container).append(this.table);
-
+            
             // Hide the empty section
             $(el).find('.pt-empty').hide();
 

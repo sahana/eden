@@ -1639,6 +1639,7 @@ class S3PivotTable(object):
 
         tablename = resource.tablename
 
+        T = current.T
         OTHER = "__other__"
 
         # The layer
@@ -1652,6 +1653,7 @@ class S3PivotTable(object):
         orows = []
         ocols = []
         ocells = []
+        lookup = {}
 
         if not self.empty:
             
@@ -1760,7 +1762,6 @@ class S3PivotTable(object):
 
             # Aggregate the grouped values
             ctotals = True
-            lookup = {}
             value_map = {}
             rappend = orows.append
             cappend = ocols.append
@@ -1859,16 +1860,17 @@ class S3PivotTable(object):
                   "cols": ocols,
                   "cells": ocells,
                   "lookup": lookup if lookup else None,
-                  "total": self._totals(self.totals, [layer])}
+                  "total": self._totals(self.totals, [layer]),
+                  "nodata": None if not self.empty else str(T("No data available"))}
 
         # Lookup labels
         get_label = self._get_field_label
         get_mname = self._get_method_label
 
         labels = {
-                  "total": str(current.T("Total")),
+                  "total": str(T("Total")),
                   "none": str(current.messages["NONE"]),
-                  "per": str(current.T("per")),
+                  "per": str(T("per")),
                  }
 
         # Layer title

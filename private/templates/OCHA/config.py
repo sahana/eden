@@ -252,10 +252,9 @@ def customize_project_location(**attr):
                 rows=report_fields,
                 cols=report_fields,
                 fact=report_fields,
-                defaults=Storage(rows="location.location_id$L1",
-                                 cols="location.project_id",
-                                 fact="activity_type.activity_type_id",
-                                 aggregate="list",
+                defaults=Storage(rows="location_id$L1",
+                                 cols="project_id",
+                                 fact="list(activity_type.activity_type_id)",
                                  totals=True
                                  )
                 )
@@ -301,10 +300,9 @@ def customize_project_organisation(**attr):
                     rows=report_fields,
                     cols=report_fields,
                     fact=report_fields,
-                    defaults=Storage(rows = "organisation.organisation_id",
-                                     cols = "organisation.currency",
-                                     fact = "organisation.amount",
-                                     aggregate = "sum",
+                    defaults=Storage(rows = "organisation_id",
+                                     cols = "currency",
+                                     fact = "sum(amount)",
                                      totals = False
                                      )
                     )
@@ -356,10 +354,9 @@ def customize_project_beneficiary(**attr):
                     rows=report_fields,
                     cols=report_fields,
                     fact=report_fields,
-                    defaults=Storage(rows="beneficiary.project_id",
-                                     cols="beneficiary.parameter_id",
-                                     fact="beneficiary.value",
-                                     aggregate="sum",
+                    defaults=Storage(rows="project_id",
+                                     cols="parameter_id",
+                                     fact="sum(value)",
                                      totals=True
                                      )
                     )
