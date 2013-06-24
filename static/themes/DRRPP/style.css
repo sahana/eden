@@ -65,3 +65,7 @@ tr.report-fact-single-option,
 tr.report-show-totals-option {
     display: none;
 }
+
+.map_home {
+    margin: 0;
+}

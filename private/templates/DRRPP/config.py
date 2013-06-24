@@ -80,7 +80,7 @@ settings.fin.currencies = {
 # GIS Deployment Settings
 # Theme
 settings.gis.map_height = 600
-settings.gis.map_width = 854
+settings.gis.map_width = 960 # container_12
 
 # Display Resources recorded to Admin-Level Locations on the map
 # @ToDo: Move into gis_config?

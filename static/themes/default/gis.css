@@ -1,5 +1,13 @@
 /* GIS module */
 
+.map_home {
+    margin: 0 0 0 -12px;
+}
+
+.x-form-item-label {
+    margin: 0 0 0 4px;
+}
+
 /* Location Selector Widget */
 .gis_coord_wrap .decimal {
     width: 174px;

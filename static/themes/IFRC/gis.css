@@ -1,5 +1,9 @@
 @charset "UTF-8";
 
+.map_home {
+    margin: 10px 0 0 -16px;
+}
+
 /* Over-ride Ext */
 .map_wrapper ol, ul {
     list-style: disc inside none;
