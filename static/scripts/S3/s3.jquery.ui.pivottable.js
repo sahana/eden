@@ -99,9 +99,21 @@
             }
             this.data = data;
 
-            this._renderTable();
-            this._renderChartOptions();
-            this._renderChart();
+            if (data.nodata) {
+                $(el).find('.pt-table')
+                     .first()
+                     .empty()
+                     .append($('<div class="pt-no-data">' + data.nodata + '</div>'));
+                $(el).find('.pt-hide-table').hide();
+                $(el).find('.pt-show-table').hide();
+                $(el).find('.pt-empty').hide();
+                this._renderChart();
+
+            } else {
+                this._renderTable();
+                this._renderChartOptions();
+                this._renderChart();
+            }
             
             this._bindEvents();
 
@@ -124,7 +136,8 @@
                 cols = data.cols,
                 rows = data.rows,
                 total = data.total,
-                labels = data.labels;
+                labels = data.labels,
+                nodata = data.nodata;
 
             // Render the table
             var thead = this._renderHeader(cols, labels);
@@ -143,7 +156,7 @@
 
             // Show the table
             $(container).append(this.table);
-
+            
             // Hide the empty section
             $(el).find('.pt-empty').hide();
 
@@ -167,8 +180,11 @@
                 colspan = cols.length;
             }
 
-            header.append($('<th scope="col">' + labels['layer'] + '</th>'))
-                  .append($('<th scope="col" colspan="' + colspan + '">' + labels['cols'] + '</th>'));
+            header.append($('<th scope="col">' + labels['layer'] + '</th>'));
+
+            if (cols.length > 1 || cols[0][4]) {
+                header.append($('<th scope="col" colspan="' + colspan + '">' + labels['cols'] + '</th>'));
+            }
 
             if (this.options.showTotals) {
                 header.append($('<th class="totals_header row_totals" scope="col" rowspan="2">' + labels.total + '</th>'));
@@ -179,13 +195,16 @@
         _renderColumns: function(cols, labels) {
             // Render the pivot table column headers
 
-            var columns = $('<tr>');
+            var columns = $('<tr>'), clabel;
 
             columns.append($('<th scope="col">' + labels['rows'] + '</th>'));
 
+            var single_col = cols.length == 1 && cols[0][4] === null ? true : false;
+
             for (var i=0; i < cols.length; i++) {
-                if (cols[i][0] != '__other__') {
-                    columns.append($('<th scope="col">' + cols[i][4] + '</th>'));
+                if (cols[i][0] != '__other__' && !(single_col && this.options.showTotals)) {
+                    clabel = single_col ? "": cols[i][4];
+                    columns.append($('<th scope="col">' + clabel + '</th>'));
                 }
             }
 
@@ -197,11 +216,14 @@
 
             var tbody = $('<tbody>'),
                 show_totals = this.options.showTotals,
-                row, tr;
+                single_row = rows.length == 1 && rows[0][4] === null ? true : false,
+                row, tr, rlabel;
+            
             for (var i=0; i<cells.length; i++) {
                 row = rows[i];
-                if (row[0] != '__other__') {
-                    tr = $('<tr class="' + (i % 2 ? 'odd': 'even') + '">' + '<td>' + row[4] + '</td></tr>')
+                if (row[0] != '__other__' && !(single_row && this.options.showTotals)) {
+                    rlabel = single_row ? "": rows[i][4];
+                    tr = $('<tr class="' + (i % 2 ? 'odd': 'even') + '">' + '<td>' + rlabel + '</td></tr>')
                         .append(this._renderCells(cells[i], cols, labels));
                     if (show_totals) {
                         tr.append($('<td>' + row[2] + '</td>'));
@@ -218,11 +240,13 @@
             var cell, items, keys,
                 none = labels.none,
                 c = "pt-cell-value",
+                single_col = cols.length == 1 && cols[0][4] === null ? true : false,
                 row = [], column, value;
 
+            
             for (var i = 0; i < cells.length; i++) {
 
-                if (cols[i][0] == '__other__') {
+                if (cols[i][0] == '__other__' || (single_col && this.options.showTotals)) {
                     continue;
                 }
                 cell = cells[i];
@@ -257,6 +281,7 @@
         _renderFooter: function(rows, cols, labels, total) {
             // Render the pivot table footer
 
+            var single_col = cols.length == 1 && cols[0][4] === null ? true : false;
             if (this.options.showTotals) {
 
                 var i, n;
@@ -271,7 +296,7 @@
                                labels.total +
                                '</th></tr>');
                 for (i = 0; i < cols.length; i++) {
-                    if (cols[i][0] != '__other__') {
+                    if (cols[i][0] != '__other__' && !single_col) {
                         footer.append($('<td>' + cols[i][2] + '</td>'));
                     }
                 }

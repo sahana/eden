@@ -100,6 +100,12 @@ class S3Report2(S3Method):
                                  "aggregate",
                                  "totals"))
 
+        # Fall back to report options defaults
+        if not get_vars:
+            report_options = get_config("report_options")
+            if report_options and "defaults" in report_options:
+                get_vars = report_options["defaults"]
+
         # Generate the pivot table
         if get_vars:
             
@@ -119,7 +125,7 @@ class S3Report2(S3Method):
                 else:
                     selector, method = m.group(2), m.group(1)
                     
-            if not all([rows, cols, layer]):
+            if not layer or not any([rows, cols]):
                 pivottable = None
             else:
                 prefix = resource.prefix_selector
@@ -136,12 +142,6 @@ class S3Report2(S3Method):
         if r.representation in ("html", "iframe"):
 
             output["title"] = current.T("Report")
-
-            # Fall back to report options defaults
-            if not get_vars:
-                report_options = get_config("report_options")
-                if report_options and "defaults" in report_options:
-                    get_vars = report_options["defaults"]
 
             # Filter widgets
             hide_filter = attr.get("hide_filter", False)
@@ -252,7 +252,7 @@ class S3ReportForm(object):
             labels = None
             hidden["pivotdata"] = """null"""
             
-        empty = T("Please select report options.")
+        empty = T("No report specified.")
         hide = T("Hide Table")
         show = T("Show Table")
         
