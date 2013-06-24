@@ -82,6 +82,7 @@ class S3Summary(S3Method):
         # Tabs
         tablist = UL()
         sections = []
+        commons = []
 
         # Active tab
         if "t" in r.get_vars:
@@ -92,14 +93,12 @@ class S3Summary(S3Method):
         active_map = None
 
         # Render sections
-        section_idx = 0
+        tab_idx = 0
         widget_idx = 0
         targets = []
         for section in config:
 
-            # Active tab?
-            if active and active == str(section_idx):
-                active_tab = section_idx
+            common = section.get("common")
 
             # Label
             label = section["label"]
@@ -109,13 +108,16 @@ class S3Summary(S3Method):
             else:
                 self.label = label
 
-            # Tab
-            section_id = section["name"]
-            tablist.append(LI(A(label, _href="#%s" % section_id)))
-
             # Section container
-            # (initially hidden to avoid visible artefacts during slow page loads)
-            s = DIV(_class="section-container hide", _id=section_id)
+            section_id = section["name"]
+            s = DIV(_class="section-container", _id=section_id)
+            
+            if not common:
+                # Add tab
+                tablist.append(LI(A(label, _href="#%s" % section_id)))
+                # Active tab?
+                if active and active == str(tab_idx):
+                    active_tab = tab_idx
 
             # Widgets
             widgets = section.get("widgets", [])
@@ -153,23 +155,34 @@ class S3Summary(S3Method):
                         if k not in ("tabs", "sections", "widget"):
                             output[k] = v
                     content = content.get("widget", "EMPTY")
-                elif active_tab == section_idx and isinstance(content, MAP):
+                elif active_tab == tab_idx and isinstance(content, MAP):
                     active_map = content
                 s.append(DIV(content,
                              _id="%s-container" % widget_id,
                              _class="widget-container"))
                 widget_idx += 1
 
-            sections.append(s)
-            section_idx += 1
+            if common:
+                commons.append(s)
+            else:
+                sections.append(s)
+                tab_idx += 1
 
         # Add tabs + sections to output
         if len(sections) > 1:
             output["tabs"] = tablist
+            # Hide tabbed sections initially to avoid visible artifacts
+            # in slow page loads (tabs-script will un-hide the active one):
+            for s in sections:
+                s.add_class("hide")
         else:
-            # hide tabs if there's only one section
+            # Hide tabs if there's only one section (but then don't hide
+            # the section!)
             output["tabs"] = ""
         output["sections"] = sections
+
+        # Add common sections to output
+        output["common"] = commons
 
         # Filter targets
         target = " ".join(targets)

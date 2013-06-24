@@ -855,21 +855,23 @@ class S3Config(Storage):
 
             settings.ui.summary = [
                 {
-                    "name": "table"     # the section name
+                    "name": "table",    # the section name
                     
-                    "label": "Table"    # the section label, will
+                    "label": "Table",   # the section label, will
                                         # automatically be translated
-                                        
-                    "translate": True   # turn automatic label translation on/off
+
+                    "common": False,    # show this section on all tabs
+
+                    "translate": True,  # turn automatic label translation on/off
 
                     "widgets": [        # list of widgets for this section
                         {
-                            "method": "datatable"   # widget method, either a
+                            "method": "datatable",  # widget method, either a
                                                     # name that resolves into
                                                     # a S3Method, or a callable
                                                     # to render the widget
 
-                            "filterable": True      # Whether the widget can
+                            "filterable": True,     # Whether the widget can
                                                     # be filtered by the summary
                                                     # filter form
                         }
