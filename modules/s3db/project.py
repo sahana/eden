@@ -46,7 +46,6 @@ __all__ = ["S3ProjectModel",
            "S3ProjectTaskModel",
            "S3ProjectTaskHRMModel",
            "S3ProjectTaskIReportModel",
-           "project_location_represent",
            "project_rheader",
            "project_task_form_inject",
            "project_task_controller",
@@ -92,6 +91,7 @@ class S3ProjectModel(S3Model):
     names = ["project_status",
              "project_project",
              "project_project_id",
+             "project_project_represent",
              "project_human_resource",
              "project_hfa_opts",
              "project_jnap_opts",
@@ -464,16 +464,20 @@ class S3ProjectModel(S3Model):
                   )
 
         # Reusable Field
+        if use_codes:
+            project_represent = S3Represent(lookup=tablename,
+                                            field_sep = ": ",
+                                            fields=["code", "name"])
+        else:
+            project_represent = S3Represent(lookup=tablename)
         project_id = S3ReusableField("project_id", table,
             sortby="name",
             requires = IS_NULL_OR(
                             IS_ONE_OF(db(auth.s3_accessible_query("update",
                                                                   table)),
                                       "project_project.id",
-                                      lambda id, row:
-                                        project_project_represent(id, row, show_link=False)
-                                      )),
-            represent = project_project_represent,
+                                      project_represent)),
+            represent = project_represent,
             comment = S3AddResourceLink(c="project", f="project",
                                         tooltip=T("If you don't see the project in the list, you can add a new one by clicking link 'Add Project'.")),
             label = T("Project"),
@@ -601,6 +605,7 @@ class S3ProjectModel(S3Model):
         #
         return dict(
             project_project_id = project_id,
+            project_project_represent = project_represent,
             project_hfa_opts = self.project_hfa_opts,
             project_jnap_opts = self.project_jnap_opts,
             project_pifacc_opts = self.project_pifacc_opts,
@@ -1563,8 +1568,7 @@ class S3ProjectAnnualBudgetModel(S3Model):
         This model holds the annual budget entries for projects
     """
 
-    names = ["project_annual_budget",
-             ]
+    names = ["project_annual_budget"]
 
     def model(self):
 
@@ -1577,12 +1581,11 @@ class S3ProjectAnnualBudgetModel(S3Model):
         tablename = "project_annual_budget"
         self.define_table(tablename,
                           self.project_project_id(
-                            requires=IS_ONE_OF(db, "project_project.id",
-                                               lambda id, row:
-                                                project_project_represent(id, row,
-                                                                          show_link=False)
-                                               )
-                            ),
+                                # Override requires so that update access to the projects isn't required
+                                requires = IS_ONE_OF(db, "project_project.id",
+                                                     self.project_project_represent
+                                                     )
+                                ),
                           Field("year", "integer", notnull=True,
                                 default=None, # make it current year
                                 requires=IS_INT_IN_RANGE(1950, 3000),
@@ -2582,6 +2585,7 @@ class S3ProjectLocationModel(S3Model):
     names = ["project_location",
              "project_location_id",
              "project_location_contact",
+             "project_location_represent",
              ]
 
     def model(self):
@@ -2614,7 +2618,7 @@ class S3ProjectLocationModel(S3Model):
                              self.gis_location_id(
                                 widget = S3LocationAutocompleteWidget(),
                                 requires = IS_LOCATION(),
-                                represent = self.gis_LocationRepresent(format=", "),
+                                represent = self.gis_LocationRepresent(sep=", "),
                                 comment = S3AddResourceLink(c="gis",
                                                             f="location",
                                                             label = T("Add Location"),
@@ -2807,6 +2811,7 @@ class S3ProjectLocationModel(S3Model):
                   )
 
         # Reusable Field
+        project_location_represent = project_LocationRepresent()
         project_location_id = S3ReusableField("project_location_id", table,
             requires = IS_NULL_OR(
                         IS_ONE_OF(db(current.auth.s3_accessible_query("update",
@@ -2948,6 +2953,7 @@ class S3ProjectLocationModel(S3Model):
         #
         return dict(
                 project_location_id = project_location_id,
+                project_location_represent = project_location_represent,
             )
 
     # -------------------------------------------------------------------------
@@ -2960,9 +2966,9 @@ class S3ProjectLocationModel(S3Model):
         vars = form.vars
         id = vars.id
         if vars.location_id and vars.project_id:
-            name = project_location_represent(None, vars)
+            name = current.s3db.project_location_represent(None, vars)
         elif id:
-            name = project_location_represent(id)
+            name = current.s3db.project_location_represent(id)
         else:
             return None
         if len(name) > 512:
@@ -3235,11 +3241,10 @@ class S3ProjectOutputModel(S3Model):
         tablename = "project_output"
         self.define_table(tablename,
                           self.project_project_id(
-                            requires=IS_ONE_OF(db, "project_project.id",
-                                               lambda id, row:
-                                                project_project_represent(id, row,
-                                                                          show_link=False)
-                                               )
+                            # Override requires so that update access to the projects isn't required
+                            requires = IS_ONE_OF(db, "project_project.id",
+                                                 self.project_project_represent
+                                                 )
                             ),
                           Field("name",
                                 represent = lambda v: v or NONE,
@@ -3680,12 +3685,11 @@ class S3ProjectDRRPPModel(S3Model):
         tablename = "project_drrpp"
         self.define_table(tablename,
                           self.project_project_id(
-                            requires=IS_ONE_OF(db, "project_project.id",
-                                               lambda id, row:
-                                                project_project_represent(id, row,
-                                                                          show_link=False)
-                                               )
-                            ),
+                                # Override requires so that update access to the projects isn't required
+                                requires = IS_ONE_OF(db, "project_project.id",
+                                                     self.project_project_represent
+                                                     )
+                                ),
                           Field("parent_project",
                                 represent = lambda v: v or NONE,
                                 label =  T("Name of a programme or another project which this project is implemented as part of"),
@@ -4343,10 +4347,7 @@ class S3ProjectTaskModel(S3Model):
                              project_id(
                                 # Override requires so that update access to the projects isn't required
                                 requires = IS_ONE_OF(db, "project_project.id",
-                                                     lambda id, row:
-                                                        project_project_represent(id, row,
-                                                                                  show_link=False)
-
+                                                     self.project_project_represent
                                                      )
                                 ),
                              *s3_meta_fields())
@@ -5273,32 +5274,6 @@ class S3ProjectTaskIReportModel(S3Model):
         return
 
 # =============================================================================
-def project_project_represent(id, row=None, show_link=True):
-    """ FK representation """
-
-    if row:
-        id = row.id
-    else:
-        if not id:
-            return current.messages["NONE"]
-        db = current.db
-        table = db.project_project
-        row = db(table.id == id).select(table.name,
-                                        table.code,
-                                        limitby=(0, 1)).first()
-
-    try:
-        if current.deployment_settings.get_project_codes():
-            repr = "%s: %s" % (row.code, row.name)
-        else:
-            repr = row.name
-        if not show_link:
-            return repr
-        return A(repr, _href = URL(c="project", f="project", args=[id]))
-    except:
-        return current.messages.UNKNOWN_OPT
-
-# =============================================================================
 def multi_theme_percentage_represent(id):
     """
         Representation for Theme Percentages
@@ -5335,31 +5310,163 @@ def multi_theme_percentage_represent(id):
             return current.messages.UNKNOWN_OPT
 
 # =============================================================================
-def project_location_represent(id, row=None):
-    """
-        Represent a Project Location (Community)
-    """
+class project_LocationRepresent(S3Represent):
+    """ Representation of Project Locations """
 
-    if not row:
-        if not id:
-            return current.messages["NONE"]
+    def __init__(self,
+                 translate=False,
+                 show_link=False,
+                 multiple=False,
+                 ):
+
+        settings = current.deployment_settings
+        if settings.get_project_community():
+            # Community is the primary resource
+            self.community = True
+        else:
+            # Location is just a way to display Projects on a map
+            self.community = False
+        if settings.get_project_codes():
+            self.use_codes = True
+        else:
+            self.use_codes = False
+        if settings.get_gis_countries() == 1:
+            self.multi_country = False
+        else:
+            self.multi_country = True
+
+        self.lookup_rows = self.custom_lookup_rows
+
+        super(project_LocationRepresent,
+              self).__init__(lookup="project_location",
+                             show_link=show_link,
+                             translate=translate,
+                             multiple=multiple)
+
+    # -------------------------------------------------------------------------
+    def custom_lookup_rows(self, key, values, fields=None):
+        """
+            Custom lookup method for organisation rows, does a
+            join with the projects and locations. Parameters
+            key and fields are not used, but are kept for API
+            compatiblity reasons.
+
+            @param values: the project_location IDs
+        """
+
         db = current.db
-        table = db.project_location
-        row = db(table.id == id).select(table.location_id,
-                                        table.project_id,
-                                        limitby=(0, 1)).first()
-    try:
-        location = current.s3db.gis_LocationRepresent(format=", ")(row.location_id)
-    except:
-        return current.messages.UNKNOWN_OPT
+        ltable = current.s3db.project_location
+        gtable = db.gis_location
+        fields = [ltable.id,    # pkey is needed for the cache
+                  gtable.name,
+                  gtable.level,
+                  gtable.L0,
+                  gtable.L1,
+                  gtable.L2,
+                  gtable.L3,
+                  gtable.L4,
+                  gtable.L5,
+                  ]
 
-    if current.deployment_settings.get_project_community():
-        # Community is the primary resource
-        return location
-    else:
-        # Location is just a way to display Projects on a map
-        project = project_project_represent(row.project_id, show_link=False)
-        return "%s (%s)" % (project, location)
+        if len(values) == 1:
+            query = (ltable.id == values[0]) & \
+                    (ltable.location_id == gtable.id)
+            limitby = (0, 1)
+        else:
+            query = (ltable.id.belongs(values)) & \
+                    (ltable.location_id == gtable.id)
+            limitby = None
+
+        if not self.community:
+            ptable = db.project_project
+            query &= (ltable.project_id == ptable.id)
+            fields.append(ptable.name)
+            if self.use_codes:
+                fields.append(ptable.code)
+
+        rows = db(query).select(*fields,
+                                limitby=limitby)
+        self.queries += 1
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a single Row
+
+            @param row: the joined Row
+        """
+
+        community = self.community
+        if not self.community:
+            prow = row["project_project"]
+        row = row["gis_location"]
+
+        name = row.name
+        level = row.level
+        if level == "L0":
+            return name
+        locations = [name]
+        lappend = locations.append
+        matched = False
+        L5 = row.L5
+        if L5:
+            if L5 == name:
+                matched = True
+            else:
+                lappend(L5)
+        L4 = row.L4
+        if L4:
+            if L4 == name:
+                if matched:
+                    lappend(L4)
+                matched = True
+            else:
+                lappend(L4)
+        L3 = row.L3
+        if L3:
+            if L3 == name:
+                if matched:
+                    lappend(L3)
+                matched = True
+            else:
+                lappend(L3)
+        L2 = row.L2
+        if L2:
+            if L2 == name:
+                if matched:
+                    lappend(L2)
+                matched = True
+            else:
+                lappend(L2)
+        L1 = row.L1
+        if L1:
+            if L1 == name:
+                if matched:
+                    lappend(L1)
+                matched = True
+            else:
+                lappend(L1)
+        if self.multi_country:
+            L0 = row.L0
+            if L0:
+                if L0 == name:
+                    if matched:
+                        lappend(L0)
+                    matched = True
+                else:
+                    lappend(L0)
+        location = ", ".join(locations)
+
+        if community:
+            return s3_unicode(location)
+        else:
+            if self.use_codes and prow.code:
+                project =  "%s: %s" % (prow.code, prow.name)
+            else:
+                project = prow.name
+            name = "%s (%s)" % (project, location)
+            return s3_unicode(name)
 
 # =============================================================================
 def task_notify(form):

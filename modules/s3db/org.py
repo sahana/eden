@@ -899,7 +899,7 @@ class S3OrganisationLocationModel(S3Model):
                           self.org_organisation_id(),
                           self.gis_location_id(
                             requires = IS_LOCATION(),
-                            #represent = self.gis_LocationRepresent(format=", "),
+                            #represent = self.gis_LocationRepresent(sep=", "),
                             widget = S3LocationAutocompleteWidget()
                           ),
                           *s3_meta_fields()
@@ -3186,6 +3186,8 @@ class org_OrganisationRepresent(S3Represent):
                  acronym=True,
                  multiple=False):
 
+        self.acronym = acronym
+
         if parent and current.deployment_settings.get_org_branches():
             # Need a custom lookup
             self.parent = True
@@ -3205,8 +3207,6 @@ class org_OrganisationRepresent(S3Represent):
                              show_link=show_link,
                              translate=translate,
                              multiple=multiple)
-
-        self.acronym = acronym
 
     # -------------------------------------------------------------------------
     def custom_lookup_rows(self, key, values, fields=[]):
@@ -3229,13 +3229,16 @@ class org_OrganisationRepresent(S3Represent):
 
         if len(values) == 1:
             query = (otable.id == values[0])
+            limitby = (0, 1)
         else:
             query = (otable.id.belongs(values))
+            limitby = None
         rows = db(query).select(otable.id,
                                 otable.name,
                                 otable.acronym,
                                 ptable.name,
-                                left=left)
+                                left=left,
+                                limitby=limitby)
         self.queries += 1
         return rows
 

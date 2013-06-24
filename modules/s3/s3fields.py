@@ -218,7 +218,9 @@ class S3Represent(object):
                  show_link=False,
                  multiple=False,
                  default=None,
-                 none=None):
+                 none=None,
+                 field_sep=" "
+                 ):
         """
             Constructor
 
@@ -238,6 +240,7 @@ class S3Represent(object):
             @param show_link: whether to add a URL to representations
             @param default: default representation for unknown options
             @param none: representation for empty fields (None or empty list)
+            @param field_sep: separator to use to join fields
         """
 
         self.tablename = lookup
@@ -252,6 +255,7 @@ class S3Represent(object):
         self.show_link = show_link
         self.default = default
         self.none = none
+        self.field_sep = field_sep
         self.setup = False
         self.theset = None
         self.queries = 0
@@ -313,7 +317,8 @@ class S3Represent(object):
             # Default
             values = [row[f] for f in self.fields if row[f] not in (None, "")]
             if values:
-                v = " ".join([s3_unicode(v) for v in values])
+                sep = self.field_sep
+                v = sep.join([s3_unicode(v) for v in values])
             else:
                 v = self.none
         if self.translate and not type(v) is lazyT:

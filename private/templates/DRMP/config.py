@@ -1622,7 +1622,7 @@ def customize_cms_post_fields():
     table = s3db.cms_post
     field = table.location_id
     field.label = ""
-    field.represent = s3db.gis_LocationRepresent(format=" | ")
+    field.represent = s3db.gis_LocationRepresent(sep=" | ")
     field.requires = IS_NULL_OR(
                         IS_LOCATION_SELECTOR2(levels=["L1", "L2", "L3"])
                      )
@@ -1975,7 +1975,7 @@ def customize_cms_post(**attr):
              r.method != "search":
             # Map Popups
             table = r.table
-            table.location_id.represent = s3db.gis_LocationRepresent(format=" | ")
+            table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
             table.created_by.represent = s3_auth_user_represent_name
             # Used by default popups
             series = T(table.series_id.represent(r.record.series_id))
@@ -2307,7 +2307,7 @@ def customize_gis_location(**attr):
                 customize_project_project_fields()
 
                 # gis_location table (Sub-Locations)
-                table.parent.represent = s3db.gis_LocationRepresent(format=" | ")
+                table.parent.represent = s3db.gis_LocationRepresent(sep=" | ")
 
                 list_fields = ["name",
                                "id",
@@ -2447,7 +2447,7 @@ def customize_hrm_human_resource_fields():
     s3db = current.s3db
     table = s3db.hrm_human_resource
     table.site_id.represent = S3Represent(lookup="org_site")
-    s3db.org_site.location_id.represent = s3db.gis_LocationRepresent(format=" | ")
+    s3db.org_site.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
     #table.modified_by.represent = s3_auth_user_represent_name
     table.modified_on.represent = datetime_represent
 
@@ -2561,7 +2561,7 @@ def customize_org_office_fields():
 
     s3db = current.s3db
     table = s3db.org_office
-    table.location_id.represent = s3db.gis_LocationRepresent(format=" | ")
+    table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
     table.modified_by.represent = s3_auth_user_represent_name
     table.modified_on.represent = datetime_represent
 
@@ -2918,7 +2918,7 @@ def customize_org_resource_fields(method):
     s3db = current.s3db
 
     table = s3db.org_resource
-    table.location_id.represent = s3db.gis_LocationRepresent(format=" | ")
+    table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
 
     list_fields = ["organisation_id",
                    "location_id",
@@ -3259,7 +3259,7 @@ def customize_project_project_fields():
 
     s3db = current.s3db
 
-    s3db.project_location.location_id.represent = s3db.gis_LocationRepresent(format=" | ")
+    s3db.project_location.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
     table = s3db.project_project
     table.start_date.represent = date_represent
     table.end_date.represent = date_represent

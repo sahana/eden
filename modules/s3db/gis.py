@@ -4105,11 +4105,13 @@ class gis_LocationRepresent(S3Represent):
                  translate=False,
                  show_link=False,
                  multiple=False,
-                 format=None
+                 sep=None
                  ):
 
-        if format:
-            # Format is a separator to place between all elements in the hierarchy
+        self.sep = sep
+
+        if sep:
+            # Separator to place between all elements in the hierarchy
             fields = ["name",
                       "level",
                       "L0",
@@ -4144,8 +4146,6 @@ class gis_LocationRepresent(S3Represent):
                              show_link=show_link,
                              translate=translate,
                              multiple=multiple)
-
-        self.format = format
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4214,10 +4214,10 @@ class gis_LocationRepresent(S3Represent):
             @param row: the gis_location Row
         """
 
-        format = self.format
+        sep = self.sep
         name = row.name
         level = row.level
-        if format:
+        if sep:
             if level == "L0":
                 return name
             locations = [name]
@@ -4270,7 +4270,7 @@ class gis_LocationRepresent(S3Represent):
                         matched = True
                     else:
                         lappend(L0)
-            represent = format.join(locations)
+            represent = sep.join(locations)
         else:
             if level == "L0":
                 represent = "%s (%s)" % (name, current.messages.COUNTRY)
