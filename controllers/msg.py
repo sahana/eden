@@ -302,32 +302,36 @@ def email_inbound_channel():
         mtable = r.table
 
         s3_action_buttons(r)
-        query = (stable.enabled == False)
+        query = (stable.enabled == False) & \
+                (stable.function_name == "msg_email_poll")
         records = db(query).select()
         rows = []
         for record in records:
-            if "username" in record.vars:
-                r = record.vars.split("\"username\":")[1]
+            if "account_id" in record.vars:
+                r = record.vars.split("\"account_id\":")[1]
                 s = r.split("}")[0]
-                s = s.split("\"")[1].split("\"")[0]
-
-                record1 = db(mtable.username == s).select(mtable.id)
+                q = s.split("\"")[1].split("\"")[0]
+                server = s.split("\"")[3]
+                query = ((mtable.username == q) & (mtable.server == server))
+                record1 = db(query).select(mtable.id)
                 if record1:
                     for rec in record1:
                         rows += [rec]
 
         restrict_e = [str(row.id) for row in rows]
 
-        query = (stable.enabled == True              )
+        query = (stable.enabled == True) & \
+                (stable.function_name == "msg_email_poll")
         records = db(query).select()
         rows = []
         for record in records:
-            if "username" in record.vars:
-                r = record.vars.split("\"username\":")[1]
+            if "account_id" in record.vars:
+                r = record.vars.split("\"account_id\":")[1]
                 s = r.split("}")[0]
-                s = s.split("\"")[1].split("\"")[0]
-
-                record1 = db(mtable.username == s).select(mtable.id)
+                q = s.split("\"")[1].split("\"")[0]
+                server = s.split("\"")[3]
+                query = ((mtable.username == q) & (mtable.server == server))
+                record1 = db(query).select(mtable.id)
                 if record1:
                     for rec in record1:
                         rows += [rec]
@@ -335,20 +339,28 @@ def email_inbound_channel():
         restrict_d = [str(row.id) for row in rows]
 
         rows = []
-        records = db(stable.id > 0).select()
+        query = (stable.id > 0) & (stable.function_name == "msg_email_poll")
+        records = db(query).select()
         tasks = [record.vars for record in records]
-        sources = []
+        sources = {}
         for task in tasks:
-            if "username" in task:
-                u = task.split("\"username\":")[1]
-                v = u.split(",")[0]
-                v = v.split("\"")[1]
-                sources += [v]
+            if "account_id" in task:
+                r = task.split("\"account_id\":")[1]
+                s = r.split("}")[0]
+                q = s.split("\"")[1].split("\"")[0]
+                server = s.split("\"")[3]
+                if not sources.has_key(q):
+                    sources[q] = [str(server)]
+                if server not in sources[q]:
+                    sources[q].append(str(server))
 
         msettings = db(mtable.deleted == False).select(mtable.ALL)
         for msetting in msettings :
-            if msetting.username:
-                if (msetting.username not in sources):
+            if msetting.username and msetting.server:
+                if (msetting.username not in sources.keys()):
+                    if msetting:
+                        rows += [msetting]
+                elif (msetting.server not in sources[msetting.username]):
                     if msetting:
                         rows += [msetting]
 
@@ -430,12 +442,13 @@ def mcommons_channel():
             table = r.table
 
             s3_action_buttons(r)
-            query = (stable.enabled == False)
+            query = (stable.enabled == False) & \
+                    (stable.function_name == "msg_mcommons_poll")
             records = db(query).select(stable.vars)
             rows = []
             for record in records:
-                if "account" in record.vars:
-                    r = record.vars.split("\"account\":")[1]
+                if "account_id" in record.vars:
+                    r = record.vars.split("\"account_id\":")[1]
                     s = r.split("}")[0]
                     s = s.split("\"")[1].split("\"")[0]
 
@@ -446,38 +459,41 @@ def mcommons_channel():
 
             restrict_e = [str(row.id) for row in rows]
 
-            query = (stable.enabled == True)
+            query = (stable.enabled == True) & \
+                    (stable.function_name == "msg_mcommons_poll")
             records = db(query).select(stable.vars)
             rows = []
             for record in records:
-                if "account" in record.vars:
-                    r = record.vars.split("\"account\":")[1]
+                if "account_id" in record.vars:
+                    r = record.vars.split("\"account_id\":")[1]
                     s = r.split("}")[0]
                     s = s.split("\"")[1].split("\"")[0]
 
-                    record1 = db(table.account_name == s).select(table.id)
+                    record1 = db(table.campaign_id == s).select(table.id)
                     if record1:
                         for rec in record1:
                             rows += [rec]
 
             restrict_d = [str(row.id) for row in rows]
 
-            records = db(stable.id > 0).select(stable.vars)
+            query = (stable.id > 0) & \
+                    (stable.function_name == "msg_mcommons_poll")
+            records = db(query).select(stable.vars)
             tasks = [record.vars for record in records]
             sources = []
             for task in tasks:
-                if "account" in task:
-                    u = task.split("\"account\":")[1]
-                    v = u.split(",")[0]
-                    v = v.split("\"")[1]
+                if "account_id" in task:
+                    u = task.split("\"account_id\":")[1]
+                    v = u.split("}")[0]
+                    v = v.split("\"")[1].split("\"")[0]
                     sources += [v]
 
             settings = db(table.deleted == False).select(table.id,
-                                                         table.name)
+                                                         table.campaign_id)
             rows = []
             for setting in settings :
-                if setting.name:
-                    if (setting.name not in sources):
+                if setting.campaign_id:
+                    if (setting.campaign_id not in sources):
                         if setting:
                             rows += [setting]
 
@@ -555,12 +571,13 @@ def twilio_inbound_channel():
         ttable = r.table
 
         s3_action_buttons(r)
-        query = (stable.enabled == False)
+        query = (stable.enabled == False) & \
+                (stable.function_name == "msg_twilio_poll")
         records = db(query).select()
         rows = []
         for record in records:
-            if "account" in record.vars:
-                r = record.vars.split("\"account\":")[1]
+            if "account_id" in record.vars:
+                r = record.vars.split("\"account_id\":")[1]
                 s = r.split("}")[0]
                 s = s.split("\"")[1].split("\"")[0]
 
@@ -571,12 +588,13 @@ def twilio_inbound_channel():
 
         restrict_e = [str(row.id) for row in rows]
 
-        query = (stable.enabled == True)
+        query = (stable.enabled == True) & \
+                (stable.function_name == "msg_twilio_poll")
         records = db(query).select()
         rows = []
         for record in records:
-            if "account" in record.vars:
-                r = record.vars.split("\"account\":")[1]
+            if "account_id" in record.vars:
+                r = record.vars.split("\"account_id\":")[1]
                 s = r.split("}")[0]
                 s = s.split("\"")[1].split("\"")[0]
 
@@ -588,12 +606,13 @@ def twilio_inbound_channel():
         restrict_d = [str(row.id) for row in rows]
 
         rows = []
-        records = db(stable.id > 0).select()
+        query = (stable.id > 0) & (stable.function_name == "msg_twilio_poll")
+        records = db(query).select()
         tasks = [record.vars for record in records]
         sources = []
         for task in tasks:
-            if "account" in task:
-                u = task.split("\"account\":")[1]
+            if "account_id" in task:
+                u = task.split("\"account_id\":")[1]
                 v = u.split(",")[0]
                 v = v.split("\"")[1]
                 sources += [v]
@@ -635,13 +654,13 @@ def twilio_inbound_channel():
 # -----------------------------------------------------------------------------
 def keyword():
     """ REST Controller """
-    
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def sender():
     """ REST Controller """
-    
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
@@ -833,25 +852,9 @@ def schedule_parser():
         Schedule a Parsing Workflow
     """
 
-    try:
-        id = request.args[0]
-    except:
-        session.error = T("Workflow not specified!")
-        redirect(URL(f="workflow"))
-
-    table = s3db.msg_workflow
-    record = db(table.id == id).select(table.workflow_task_id,
-                                       table.source_task_id,
-                                       limitby=(0, 1)).first()
-    s3task.schedule_task("msg_parse_workflow",
-                         vars={"workflow": record.workflow_task_id,
-                               "source": record.source_task_id},
-                         period=300,  # seconds
-                         timeout=300, # seconds
-                         repeats=0    # unlimited
-                         )
-
-    redirect(URL(f="workflow"))
+    from s3db.msg import S3ParsingModel
+    S3ParsingModel.schedule_parser(s3task)
+    return
 
 # -----------------------------------------------------------------------------
 def schedule_email():
@@ -859,23 +862,9 @@ def schedule_email():
         Schedule Inbound Email
     """
 
-    try:
-        id = request.args[0]
-    except:
-        session.error = T("Source not specified!")
-        redirect(URL(f="email_inbound_channel"))
-
-    table = s3db.msg_email_inbound_channel
-    record = db(table.id == id).select(table.username,
-                                       limitby=(0, 1)).first()
-    s3task.schedule_task("msg_email_poll",
-                         vars={"username": record.username},
-                         period=300,  # seconds
-                         timeout=300, # seconds
-                         repeats=0    # unlimited
-                         )
-
-    redirect(URL(f="email_inbound_channel"))
+    from s3db.msg import S3EmailInboundModel
+    S3EmailInboundModel.schedule(s3task)
+    return
 
 # -----------------------------------------------------------------------------
 def schedule_mcommons_sms():
@@ -883,23 +872,9 @@ def schedule_mcommons_sms():
         Schedules Mobile Commons Inbound SMS
     """
 
-    try:
-        id = request.args[0]
-    except:
-        session.error = T("Source not specified!")
-        redirect(URL(f="mcommons_channel"))
-
-    table = s3db.msg_mcommons_channel
-    record = db(table.id == id).select(table.campaign_id,
-                                       limitby=(0, 1)).first()
-    s3task.schedule_task("msg_mcommons_poll",
-                         vars={"campaign_id": record.campaign_id},
-                         period=300,  # seconds
-                         timeout=300, # seconds
-                         repeats=0    # unlimited
-                         )
-
-    redirect(URL(f="mcommons_channel"))
+    from s3db.msg import S3MCommonsModel
+    S3MCommonsModel.schedule(s3task)
+    return
 
 # -----------------------------------------------------------------------------
 def schedule_twilio_sms():
@@ -907,23 +882,9 @@ def schedule_twilio_sms():
         Schedules Twilio Inbound SMS
     """
 
-    try:
-        id = request.args[0]
-    except:
-        session.error = T("Source not specified!")
-        redirect(URL(f="twilio_inbound_channel"))
-
-    ttable = s3db.msg_twilio_inbound_channel
-    record = db(table.id == id).select(table.account_name,
-                                       limitby=(0, 1)).first()
-    s3task.schedule_task("msg_twilio_poll",
-                         vars={"account": record.account_name},
-                         period=300,  # seconds
-                         timeout=300, # seconds
-                         repeats=0    # unlimited
-                         )
-
-    redirect(URL(f="twilio_inbound_channel"))
+    from s3db.msg import S3TwilioModel
+    S3TwilioModel.schedule(s3task)
+    return
 
 # -----------------------------------------------------------------------------
 def disable_parser():
@@ -931,33 +892,9 @@ def disable_parser():
         Disables different parsing workflows.
     """
 
-    try:
-        id = request.args[0]
-    except:
-        session.error = T("Workflow not specified!")
-        redirect(URL(f="workflow"))
-
-    stable = s3db.scheduler_task
-    wtable = s3db.msg_workflow
-
-    records = db(stable.id > 0).select()
-    workflow = db(wtable.id == id).select(wtable.workflow_task_id,
-                                          wtable.source_task_id,
-                                          limitby=(0, 1)).first()
-    for record in records:
-        if "workflow" and "source" in record.vars:
-            r = record.vars.split("\"workflow\":")[1]
-            s = r.split("}")[0]
-            s = s.split("\"")[1].split("\"")[0]
-
-            u = record.vars.split("\"source\":")[1]
-            v = u.split(",")[0]
-            v = v.split("\"")[1]
-
-            if (s == workflow.workflow_task_id) and (v == workflow.source_task_id) :
-                db(stable.id == record.id).update(enabled = False)
-
-    redirect(URL(f="workflow"))
+    from s3db.msg import S3ParsingModel
+    S3ParsingModel.disable_parser()
+    return
 
 # -----------------------------------------------------------------------------
 def disable_email():
@@ -965,29 +902,9 @@ def disable_email():
         Disables different Email Sources.
     """
 
-    try:
-        id = request.args[0]
-    except:
-        session.error = T("Source not specified!")
-        redirect(URL(f="email_inbound_channel"))
-
-    stable = s3db.scheduler_task
-    table = s3db.msg_email_inbound_channel
-
-    settings = db(table.id == id).select(table.username,
-                                         limitby=(0, 1)).first()
-    records = db(stable.id > 0).select(stable.id,
-                                       stable.vars)
-    for record in records:
-        if "username" in record.vars:
-            r = record.vars.split("\"username\":")[1]
-            s = r.split("}")[0]
-            s = s.split("\"")[1].split("\"")[0]
-
-            if (s == settings.username) :
-                db(stable.id == record.id).update(enabled = False)
-
-    redirect(URL(f="email_inbound_channel"))
+    from s3db.msg import S3EmailInboundModel
+    S3EmailInboundModel.disable()
+    return
 
 # -----------------------------------------------------------------------------
 def disable_mcommons_sms():
@@ -995,29 +912,9 @@ def disable_mcommons_sms():
         Disables Mobile Commons Inbound SMS
     """
 
-    try:
-        id = request.args[0]
-    except:
-        session.error = T("Source not specified!")
-        redirect(URL(f="mcommons_channel"))
-
-    stable = s3db.scheduler_task
-    table = s3db.msg_mcommons_channel
-
-    settings = db(table.id == id).select(table.campaign_id,
-                                         limitby=(0, 1)).first()
-    records = db(stable.id > 0).select(stable.id,
-                                       stable.vars)
-    for record in records:
-        if "account" in record.vars:
-            r = record.vars.split("\"account\":")[1]
-            s = r.split("}")[0]
-            s = s.split("\"")[1].split("\"")[0]
-
-            if (s == settings.campaign_id) :
-                db(stable.id == record.id).update(enabled = False)
-
-    redirect(URL(f="mcommons_channel"))
+    from s3db.msg import S3MCommonsModel
+    S3MCommonsModel.disable()
+    return
 
 # -----------------------------------------------------------------------------
 def disable_twilio_sms():
@@ -1025,29 +922,9 @@ def disable_twilio_sms():
         Disables Twilio Inbound SMS
     """
 
-    try:
-        id = request.args[0]
-    except:
-        session.error = T("Source not specified!")
-        redirect(URL(f="twilio_inbound_channel"))
-
-    stable = s3db.scheduler_task
-    table = s3db.msg_twilio_inbound_channel
-
-    settings = db(table.id == id).select(table.account_name,
-                                         limitby=(0, 1)).first()
-    records = db(stable.id > 0).select(stable.id,
-                                       stable.vars)
-    for record in records:
-        if "account" in record.vars:
-            r = record.vars.split("\"account\":")[1]
-            s = r.split("}")[0]
-            s = s.split("\"")[1].split("\"")[0]
-
-            if (s == settings.account_name) :
-                db(stable.id == record.id).update(enabled = False)
-
-    redirect(URL(f="twilio_inbound_channel"))
+    from s3db.msg import S3TwilioModel
+    S3TwilioModel.disable()
+    return
 
 # -----------------------------------------------------------------------------
 def enable_email():
@@ -1055,29 +932,9 @@ def enable_email():
         Enables different Email Sources.
     """
 
-    try:
-        id = request.args[0]
-    except:
-        session.error = T("Source not specified!")
-        redirect(URL(f="email_inbound_channel"))
-
-    stable = s3db.scheduler_task
-    table = s3db.msg_email_inbound_channel
-
-    settings = db(table.id == id).select(table.username,
-                                         limitby=(0, 1)).first()
-    records = db(stable.id > 0).select(stable.id,
-                                       stable.vars)
-    for record in records:
-        if "username" in record.vars:
-            r = record.vars.split("\"username\":")[1]
-            s = r.split("}")[0]
-            s = s.split("\"")[1].split("\"")[0]
-
-            if (s == settings.username) :
-                db(stable.id == record.id).update(enabled = True)
-
-    redirect(URL(f="email_inbound_channel"))
+    from s3db.msg import S3EmailInboundModel
+    S3EmailInboundModel.enable()
+    return
 
 # -----------------------------------------------------------------------------
 def enable_mcommons_sms():
@@ -1085,29 +942,9 @@ def enable_mcommons_sms():
         Enable Mobile Commons Inbound SMS
     """
 
-    try:
-        id = request.args[0]
-    except:
-        session.error = T("Source not specified!")
-        redirect(URL(f="mcommons_channel"))
-
-    stable = s3db.scheduler_task
-    table = s3db.msg_mcommons_channel
-
-    settings = db(table.id == id).select(table.campaign_id,
-                                         limitby=(0, 1)).first()
-    records = db(stable.id > 0).select(stable.id,
-                                       stable.vars)
-    for record in records:
-        if "account" in record.vars:
-            r = record.vars.split("\"account\":")[1]
-            s = r.split("}")[0]
-            s = s.split("\"")[1].split("\"")[0]
-
-            if (s == settings.campaign_id) :
-                db(stable.id == record.id).update(enabled = True)
-
-    redirect(URL(f="mcommons_channel"))
+    from s3db.msg import S3MCommonsModel
+    S3MCommonsModel.enable()
+    return
 
 # -----------------------------------------------------------------------------
 def enable_twilio_sms():
@@ -1115,29 +952,9 @@ def enable_twilio_sms():
         Enable Twilio Inbound SMS
     """
 
-    try:
-        id = request.args[0]
-    except:
-        session.error = T("Source not specified!")
-        redirect(URL(f="twilio_inbound_channel"))
-
-    stable = s3db.scheduler_task
-    table = s3db.msg_twilio_inbound_channel
-
-    settings = db(table.id == id).select(table.account_name,
-                                         limitby=(0, 1)).first()
-    records = db(stable.id > 0).select(stable.id,
-                                       stable.vars)
-    for record in records:
-        if "account" in record.vars:
-            r = record.vars.split("\"account\":")[1]
-            s = r.split("}")[0]
-            s = s.split("\"")[1].split("\"")[0]
-
-            if (s == settings.account_name) :
-                db(stable.id == record.id).update(enabled = True)
-
-    redirect(URL(f="twilio_inbound_channel"))
+    from s3db.msg import S3TwilioModel
+    S3TwilioModel.enable()
+    return
 
 # -----------------------------------------------------------------------------
 def enable_parser():
@@ -1145,42 +962,16 @@ def enable_parser():
         Enables different parsing workflows.
     """
 
-    try:
-        id = request.args[0]
-    except:
-        session.error = T("Workflow not specified!")
-        redirect(URL(f="workflow"))
-
-    stable = s3db.scheduler_task
-    wtable = s3db.msg_workflow
-
-    records = db(stable.id > 0).select()
-    workflow = db(wtable.id == id).select(wtable.workflow_task_id,
-                                          wtable.source_task_id,
-                                          limitby=(0, 1)).first()
-
-    for record in records:
-        if "workflow" and "source" in record.vars:
-            r = record.vars.split("\"workflow\":")[1]
-            s = r.split("}")[0]
-            s = s.split("\"")[1].split("\"")[0]
-
-            u = record.vars.split("\"source\":")[1]
-            v = u.split(",")[0]
-            v = v.split("\"")[1]
-
-            if (s == workflow.workflow_task_id) and \
-               (v == workflow.source_task_id):
-                db(stable.id == record.id).update(enabled = True)
-
-    redirect(URL(f="workflow"))
+    from s3db.msg import S3ParsingModel
+    S3ParsingModel.enable_parser()
+    return
 
 # -----------------------------------------------------------------------------
 def inbox():
     """
         RESTful CRUD controller for the Inbox
         - all Inbound Messages will go here
-        @ToDo: Complete (currently just MobileCommons) 
+        @ToDo: Complete (currently just MobileCommons)
     """
 
     if not auth.s3_logged_in():
