@@ -7468,6 +7468,8 @@ class S3Map(S3Search):
 
             @param r: the S3Request
             @param attr: request attributes
+
+            @returns: output object to send to the view
         """
 
         output = {}

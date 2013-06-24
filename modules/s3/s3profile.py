@@ -44,8 +44,9 @@ class S3Profile(S3CRUD):
         Configure widgets using s3db.configure(tablename, profile_widgets=[])
 
         @ToDo: Make more configurable:
-               * Currently assumes a max of 2 widgets per row
-               * Currently uses Bootstrap classes
+           * Currently assumes a max of 2 widgets per row
+           * Currently uses Bootstrap classes
+           * Currently uses internal widgets rather than S3Method widgets
     """
 
     # -------------------------------------------------------------------------

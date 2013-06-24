@@ -50,3 +50,8 @@
 "MAP_ADMIN","Map Admin",,,,"gis_layer_wfs",,"ALL",,,,,
 "MAP_ADMIN","Map Admin",,,,"gis_layer_wms",,"ALL",,,,,
 "MAP_ADMIN","Map Admin",,,,"gis_layer_xyz",,"ALL",,,,,
+"AUTHENTICATED","Authenticated",,"event",,,,"READ|CREATE|UPDATE","ALL",,,,
+"AUTHENTICATED","Authenticated",,"org",,,,"READ|CREATE|UPDATE","ALL",,,,
+"AUTHENTICATED","Authenticated",,"project",,,,"READ|CREATE|UPDATE","ALL",,,,
+"AUTHENTICATED","Authenticated",,"stats",,,,"READ|CREATE|UPDATE","ALL",,,,
+"AUTHENTICATED","Authenticated",,"vulnerability",,,,"READ|CREATE|UPDATE","ALL",,,,

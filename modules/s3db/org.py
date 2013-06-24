@@ -1907,7 +1907,6 @@ class S3FacilityModel(S3Model):
 
     names = ["org_facility_type",
              "org_facility",
-             "org_facility_group",
              "org_facility_geojson",
              ]
 
@@ -2162,6 +2161,8 @@ class S3FacilityModel(S3Model):
 
         configure(tablename,
                   super_entity=("org_site", "doc_entity", "pr_pentity"),
+                  context = {"org_group": "organisation_id$group_membership.group_id",
+                             },
                   crud_form = crud_form,
                   deduplicate = self.org_facility_duplicate,
                   onaccept = self.org_facility_onaccept,
@@ -2210,20 +2211,6 @@ class S3FacilityModel(S3Model):
         # Format for filter_widgets
         add_component("org_facility_group",
                       org_facility="facility_id")
-
-        # ---------------------------------------------------------------------
-        # Facilities <> Organisation Groups Link Table
-        #
-        tablename = "org_facility_group"
-        define_table(tablename,
-                     Field("facility_id", table),
-                     self.org_group_id(),
-                     *s3_meta_fields()
-                     )
-
-        configure(tablename,
-                  deduplicate=self.org_facility_group_deduplicate,
-                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -2443,31 +2430,6 @@ class S3FacilityModel(S3Model):
         File = open(path, "w")
         File.write(output)
         File.close()
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def org_facility_group_deduplicate(item):
-        """ Import item de-duplication """
-
-        if item.tablename != "org_facility_group":
-            return
-
-        data = item.data
-        if "facility_id" in data and \
-           "group_id" in data:
-            facility_id = data.facility_id
-            group_id = data.group_id
-            table = item.table
-            query = (table.facility_id == facility_id) & \
-                    (table.group_id == group_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
-
-        return
 
 # -----------------------------------------------------------------------------
 def org_facility_rheader(r, tabs=[]):

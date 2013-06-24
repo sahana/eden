@@ -1,0 +1,9 @@
+Module,Resource,Name,Body
+event,incident_report,"Incident Reports Summary Page Header","Things which happen within your community."
+org,facility,"Locations Summary Page Header","Schools, Hospitals, Offices, Parks, Shops, Shelters"
+org,organisation,"Organizations Summary Page Header","Community Based, Faith Based, Volunteer, Non Profit, Government, Business"
+project,activity,"Activities Summary Page Header","Planned events within your community"
+stats,resident,"Residents Summary Page Header","Different groups of people within your community"
+stats,trained,"Trained People Summary Page Header","Groups of people within your community with specific training"
+vulnerability,evac_route,"Evacuation Routes Summary Page Header","Roads and Infrastructure used to get people out of their community in case of an emergency"
+vulnerability,risk,"Risks Summary Page Header","Environmental factors or situations which could have a negative impact on your community"

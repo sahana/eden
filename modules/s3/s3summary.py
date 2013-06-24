@@ -100,19 +100,19 @@ class S3Summary(S3Method):
 
             common = section.get("common")
 
-            # Label
-            label = section["label"]
-            translate = section.get("translate", True)
-            if isinstance(label, basestring) and translate:
-                self.label = current.T(label)
-            else:
-                self.label = label
-
             # Section container
             section_id = section["name"]
             s = DIV(_class="section-container", _id=section_id)
             
             if not common:
+                # Label
+                label = section["label"]
+                translate = section.get("translate", True)
+                if isinstance(label, basestring) and translate:
+                    self.label = current.T(label)
+                else:
+                    self.label = label
+
                 # Add tab
                 tablist.append(LI(A(label, _href="#%s" % section_id)))
                 # Active tab?
