@@ -1989,7 +1989,7 @@ class GIS(object):
                     if fname in attr_fields or selector in attr_fields:
                         attr_cols.append(f.colname)
 
-                data = records["data"]
+                data = records["rows"]
                 for record in data:
                     record_id = int(record[str(table[pkey])])
                     if attr_cols:

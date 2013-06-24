@@ -882,7 +882,7 @@ class S3Importer(S3CRUD):
             resource.add_filter(s3.filter)
             data = resource.fast_select(["id", "element", "error"],
                                         start=None,
-                                        limit=None)["data"]
+                                        limit=None)["rows"]
             return (upload_id, select_list, data)
 
         s3.actions = [dict(label=str(self.messages.item_show_details),
@@ -1288,7 +1288,7 @@ class S3Importer(S3CRUD):
                                     count=True,
                                     orderby=orderby,
                                     left=left)
-        data = rows["data"]
+        data = rows["rows"]
         
         displayrows = rows["numrows"]
         if totalrows is None:

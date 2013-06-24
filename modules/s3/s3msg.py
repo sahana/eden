@@ -1842,7 +1842,7 @@ class S3Compose(S3CRUD):
             field = None
 
         if field:
-            records = resource.fast_select([field])["data"]
+            records = resource.fast_select([field])["rows"]
             recipients = [record.values()[0] for record in records]
 
         if recipients:

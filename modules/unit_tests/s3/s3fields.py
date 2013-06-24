@@ -366,16 +366,16 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         fac = self.facs[0]
         resource = s3db.resource("org_facility", id=fac.id)
 
-        rows = resource.select(["id", "organisation_id"],
-                               start=None, limit=None)
-        self.assertEqual(len(rows), 1)
-
         renderer = S3Represent(lookup="org_organisation")
         table = resource.table
         table.organisation_id.represent = renderer
 
-        result = resource.extract(rows, ["id", "organisation_id"], represent=True)
-        
+        data = resource.fast_select(["id", "organisation_id"],
+                                    start=None,
+                                    limit=None,
+                                    represent=True)
+        result = data["rows"]
+
         self.assertEqual(renderer.queries, 1)
         self.assertTrue(isinstance(result, list))
         self.assertEqual(len(result), 1)
@@ -395,17 +395,17 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         fac = self.facs[0]
         resource = s3db.resource("org_facility", id=fac.id)
 
-        rows = resource.select(["id", "organisation_id"],
-                               start=None, limit=None)
-        self.assertEqual(len(rows), 1)
-
         renderer = S3Represent(lookup="org_organisation",
                                #linkto=URL(c="org", f="organisation", args=["[id]"]),
                                show_link=True)
         table = resource.table
         table.organisation_id.represent = renderer
 
-        result = resource.extract(rows, ["id", "organisation_id"], represent=True)
+        data = resource.fast_select(["id", "organisation_id"],
+                                    start=None,
+                                    limit=None,
+                                    represent=True)
+        result = data["rows"]
 
         self.assertEqual(renderer.queries, 1)
         self.assertTrue(isinstance(result, list))
@@ -431,17 +431,17 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         fac = self.facs[0]
         resource = s3db.resource("org_facility", id=fac.id)
 
-        rows = resource.select(["id", "organisation_id"],
-                               start=None, limit=None)
-        self.assertEqual(len(rows), 1)
-
         renderer = S3Represent(lookup="org_organisation",
                                linkto=URL(c="org", f="organisation", args=["[id]"]))
         table = resource.table
         table.organisation_id.represent = renderer
 
-        result = resource.extract(rows, ["id", "organisation_id"],
-                                  represent=True, show_links=False)
+        data = resource.fast_select(["id", "organisation_id"],
+                                    start=None,
+                                    limit=None,
+                                    represent=True,
+                                    show_links=False)
+        result = data["rows"]
 
         self.assertEqual(renderer.queries, 1)
         self.assertTrue(isinstance(result, list))
@@ -465,11 +465,12 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
 
         resource = s3db.resource("org_organisation", id=self.org.id)
 
-        rows = resource.select(["id", "name", "facility.location_id"],
-                               start=None, limit=None)
-        self.assertEqual(len(rows), 2)
-        result = resource.extract(rows, ["id", "facility.location_id"],
-                                  represent=True)
+        data = resource.fast_select(["id", "name", "facility.location_id"],
+                                    start=None,
+                                    limit=None,
+                                    represent=True)
+        result = data["rows"]
+        
         self.assertEqual(renderer.queries, 1)
         self.assertTrue(len(result), 1)
         output = result[0]
@@ -495,11 +496,12 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
 
         resource = s3db.resource("org_organisation", id=self.org.id)
 
-        rows = resource.select(["id", "name", "facility.location_id"],
-                               start=None, limit=None)
-        self.assertEqual(len(rows), 2)
-        result = resource.extract(rows, ["id", "facility.location_id"],
-                                  represent=True)
+        data = resource.fast_select(["id", "name", "facility.location_id"],
+                                    start=None,
+                                    limit=None,
+                                    represent=True)
+        result = data["rows"]
+        
         self.assertEqual(renderer.queries, 1)
         self.assertTrue(len(result), 1)
         output = result[0]
@@ -528,11 +530,13 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
 
         resource = s3db.resource("org_organisation", id=self.org.id)
 
-        rows = resource.select(["id", "name", "facility.location_id"],
-                               start=None, limit=None)
-        self.assertEqual(len(rows), 2)
-        result = resource.extract(rows, ["id", "facility.location_id"],
-                                  represent=True, show_links=False)
+        data = resource.fast_select(["id", "name", "facility.location_id"],
+                                    start=None,
+                                    limit=None,
+                                    represent=True,
+                                    show_links=False)
+        result = data["rows"]
+
         self.assertEqual(renderer.queries, 1)
         self.assertTrue(len(result), 1)
         output = result[0]
@@ -553,16 +557,16 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         fac = self.facs[0]
         resource = s3db.resource("org_facility", id=fac.id)
 
-        rows = resource.select(["id", "facility_type_id"],
-                               start=None, limit=None)
-        self.assertEqual(len(rows), 1)
-
         renderer = S3Represent(lookup="org_facility_type",
                                multiple=True)
         table = resource.table
         table.facility_type_id.represent = renderer
 
-        result = resource.extract(rows, ["id", "facility_type_id"], represent=True)
+        data = resource.fast_select(["id", "facility_type_id"],
+                                    start=None,
+                                    limit=None,
+                                    represent=True)
+        result = data["rows"]
 
         self.assertEqual(renderer.queries, 1)
         self.assertTrue(isinstance(result, list))
@@ -587,10 +591,6 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         fac = self.facs[0]
         resource = s3db.resource("org_facility", id=fac.id)
 
-        rows = resource.select(["id", "facility_type_id"],
-                               start=None, limit=None)
-        self.assertEqual(len(rows), 1)
-
         renderer = S3Represent(lookup="org_facility_type",
                                multiple=True,
                                #linkto=URL(c="org", f="facility_type", args=["[id]"]),
@@ -598,7 +598,12 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         table = resource.table
         table.facility_type_id.represent = renderer
 
-        result = resource.extract(rows, ["id", "facility_type_id"], represent=True)
+        data = resource.fast_select(["id", "facility_type_id"],
+                                    start=None,
+                                    limit=None,
+                                    represent=True)
+
+        result = data["rows"]
 
         self.assertEqual(renderer.queries, 1)
         self.assertTrue(isinstance(result, list))
@@ -627,18 +632,19 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         fac = self.facs[0]
         resource = s3db.resource("org_facility", id=fac.id)
 
-        rows = resource.select(["id", "facility_type_id"],
-                               start=None, limit=None)
-        self.assertEqual(len(rows), 1)
-
         renderer = S3Represent(lookup="org_facility_type",
                                multiple=True,
                                linkto=URL(c="org", f="facility_type", args=["[id]"]))
         table = resource.table
         table.facility_type_id.represent = renderer
 
-        result = resource.extract(rows, ["id", "facility_type_id"],
-                                  represent=True, show_links=False)
+        data = resource.fast_select(["id", "facility_type_id"],
+                                    start=None,
+                                    limit=None,
+                                    represent=True,
+                                    show_links=False)
+
+        result = data["rows"]
 
         self.assertEqual(renderer.queries, 1)
         self.assertTrue(isinstance(result, list))
@@ -668,11 +674,14 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
 
         resource = s3db.resource("org_organisation", id=self.org.id)
 
-        rows = resource.select(["id", "name", "facility.location_id"],
-                               start=None, limit=None)
-        self.assertEqual(len(rows), 2)
-        result = resource.extract(rows, ["id", "facility.location_id"],
-                                  represent=True, show_links=False)
+        data = resource.fast_select(["id", "name", "facility.location_id"],
+                                    start=None,
+                                    limit=None,
+                                    represent=True,
+                                    show_links=False)
+                                    
+        result = data["rows"]
+        
         self.assertEqual(renderer.queries, 1)
         self.assertTrue(len(result), 1)
         output = result[0]
@@ -699,11 +708,12 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         org = self.org
         resource = s3db.resource("org_organisation", id=org.id)
 
-        rows = resource.select(["id", "facility.facility_type_id"],
-                               start=None, limit=None)
-        self.assertEqual(len(rows), 2)
-        result = resource.extract(rows, ["id", "facility.facility_type_id"],
-                                  represent=True)
+        data = resource.fast_select(["id", "facility.facility_type_id"],
+                                    start=None,
+                                    limit=None,
+                                    represent=True)
+        result = data["rows"]
+        
         self.assertEqual(renderer.queries, 1)
         self.assertTrue(isinstance(result, list))
         self.assertEqual(len(result), 1)
@@ -737,11 +747,12 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         org = self.org
         resource = s3db.resource("org_organisation", id=org.id)
 
-        rows = resource.select(["id", "facility.facility_type_id"],
-                               start=None, limit=None)
-        self.assertEqual(len(rows), 2)
-        result = resource.extract(rows, ["id", "facility.facility_type_id"],
-                                  represent=True)
+        data = resource.fast_select(["id", "facility.facility_type_id"],
+                                    start=None,
+                                    limit=None,
+                                    represent=True)
+        result = data["rows"]
+        
         self.assertEqual(renderer.queries, 1)
         self.assertTrue(isinstance(result, list))
         self.assertEqual(len(result), 1)
@@ -778,11 +789,13 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         org = self.org
         resource = s3db.resource("org_organisation", id=org.id)
 
-        rows = resource.select(["id", "facility.facility_type_id"],
-                               start=None, limit=None)
-        self.assertEqual(len(rows), 2)
-        result = resource.extract(rows, ["id", "facility.facility_type_id"],
-                                  represent=True, show_links=False)
+        data = resource.fast_select(["id", "facility.facility_type_id"],
+                                    start=None,
+                                    limit=None,
+                                    represent=True,
+                                    show_links=False)
+        result = data["rows"]
+        
         self.assertEqual(renderer.queries, 1)
         self.assertTrue(isinstance(result, list))
         self.assertEqual(len(result), 1)

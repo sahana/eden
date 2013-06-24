@@ -324,7 +324,7 @@ class S3RL_PDF(S3Codec):
         # Now generate the PDF table
         pdf_table = S3PDFTable(doc,
                                result["rfields"],
-                               result["data"],
+                               result["rows"],
                                groupby = self.pdf_groupby,
                                autogrow = self.table_autogrow,
                                body_height = doc.body_height,

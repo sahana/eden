@@ -1182,7 +1182,7 @@ class S3PivotTable(object):
         #
         result = resource.fast_select(self.rfields.keys(),
                                       start=None, limit=None)
-        data = result["data"]
+        data = result["rows"]
         if data:
 
             key = str(resource.table._id)

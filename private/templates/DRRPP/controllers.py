@@ -844,7 +844,7 @@ class organisations():
                                        represent=True)
 
         rfields = details["rfields"]
-        records = details["data"]
+        records = details["rows"]
         
         numrows = len(records)
 

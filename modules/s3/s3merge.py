@@ -308,7 +308,7 @@ class S3Merge(S3Method):
             totalrows = displayrows
 
         # Generate a datatable
-        dt = S3DataTable(rows["rfields"], rows["data"])
+        dt = S3DataTable(rows["rfields"], rows["rows"])
         
         datatable_id = "s3merge_1"
         response = current.response

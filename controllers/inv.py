@@ -68,7 +68,7 @@ def index2():
             filteredrows = rows["numrows"]
             if totalrows is None:
                 totalrows = filteredrows
-            data = rows["data"]
+            data = rows["rows"]
             rfields = rows["rfields"]
             dt = S3DataTable(rfields, data)
             dt.defaultActionButtons(resource)
@@ -123,7 +123,7 @@ def index2():
                 filteredrows = rows["numrows"]
                 if totalrows is None:
                     totalrows = filteredrows
-                data = rows["data"]
+                data = rows["rows"]
                 for row in data:
                     site_id = row["inv_inv_item.site_id"]
                     if site_id not in site_list:
@@ -144,7 +144,7 @@ def index2():
                                             limit=limit,
                                             represent=True)
                 rfields = rows["rfields"]
-                data = rows["data"]
+                data = rows["rows"]
                 dt = S3DataTable(rfields,
                                  data,
                                  orderby=orderby,
@@ -234,7 +234,7 @@ def index2():
                                         limit=None,
                                         count=True,
                                         represent=True)
-            data = rows["data"]
+            data = rows["rows"]
             rfields = rows["rfields"]
             numrows = rows["numrows"]
             dt = S3DataTable(rfields, data)

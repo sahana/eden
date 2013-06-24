@@ -202,7 +202,7 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
                                     represent=True)
         filteredrows = data["numrows"]
         rfields = data["rfields"]
-        data = data["data"]
+        data = data["rows"]
 
         dt = S3DataTable(rfields, data)
         dt.defaultActionButtons(resource)
