@@ -294,7 +294,7 @@ class S3Merge(S3Method):
             orderby, left = None, None
 
         # Get the records
-        rows = resource.fast_select(list_fields,
+        data = resource.fast_select(list_fields,
                                     start=start,
                                     limit=limit,
                                     orderby=orderby,
@@ -303,12 +303,12 @@ class S3Merge(S3Method):
                                     represent=True)
 
         
-        displayrows = rows["numrows"]
+        displayrows = data["numrows"]
         if totalrows is None:
             totalrows = displayrows
 
         # Generate a datatable
-        dt = S3DataTable(rows["rfields"], rows["data"])
+        dt = S3DataTable(data["rfields"], data["rows"])
         
         datatable_id = "s3merge_1"
         response = current.response

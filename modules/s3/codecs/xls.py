@@ -95,7 +95,7 @@ class S3XLS(S3Codec):
                                       show_links=False)
 
         rfields = result["rfields"]
-        items = result["data"]
+        items = result["rows"]
         
         types = []
         lfields = []

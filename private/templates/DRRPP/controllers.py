@@ -836,15 +836,15 @@ class organisations():
     def _table(name, resource, field_list, limit=10, orderby="name"):
         """ Generate a datatable in the organisations custom page """
 
-        details = resource.fast_select(field_list,
-                                       start=None,
-                                       limit=None,
-                                       orderby=orderby,
-                                       count=True,
-                                       represent=True)
+        data = resource.fast_select(field_list,
+                                    start=None,
+                                    limit=None,
+                                    orderby=orderby,
+                                    count=True,
+                                    represent=True)
 
-        rfields = details["rfields"]
-        records = details["data"]
+        rfields = data["rfields"]
+        records = data["rows"]
         
         numrows = len(records)
 
@@ -860,7 +860,7 @@ class organisations():
 
         options = json.dumps({
             "iDisplayLength": limit,
-            "iDeferLoading": details["numrows"],
+            "iDeferLoading": data["numrows"],
             "bProcessing": True,
             #"bServerSide": True,
             #"sAjaxSource": "/%s/default/index/organisations/?table=%s" % (current.request.application, name),

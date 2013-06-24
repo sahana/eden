@@ -1973,12 +1973,12 @@ class GIS(object):
                 if pkey not in fields:
                     fields.insert(0, pkey)
 
-                records = resource.fast_select(fields,
-                                               # Override default limit=PAGESIZE
-                                               start=None,
-                                               represent=True)
+                data = resource.fast_select(fields,
+                                            # Override default limit=PAGESIZE
+                                            start=None,
+                                            represent=True)
 
-                rfields = records["rfields"]
+                rfields = data["rfields"]
                 popup_cols = []
                 attr_cols = []
                 for f in rfields:
@@ -1989,13 +1989,13 @@ class GIS(object):
                     if fname in attr_fields or selector in attr_fields:
                         attr_cols.append(f.colname)
 
-                data = records["data"]
-                for record in data:
-                    record_id = int(record[str(table[pkey])])
+                rows = data["rows"]
+                for row in rows:
+                    record_id = int(row[str(table[pkey])])
                     if attr_cols:
                         attribute = {}
                         for fieldname in attr_cols:
-                            represent = record[fieldname]
+                            represent = row[fieldname]
                             if represent and represent != NONE:
                                 # Skip empty fields
                                 fname = fieldname.split(".")[1]
@@ -2006,7 +2006,7 @@ class GIS(object):
                         tooltip = _tooltip
                         first = True
                         for fieldname in popup_cols:
-                            represent = record[fieldname]
+                            represent = row[fieldname]
                             if represent and represent != NONE:
                                 # Skip empty fields
                                 if first:

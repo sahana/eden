@@ -147,9 +147,9 @@ class project():
                                     represent=True)
         filteredrows = data["numrows"]
         rfields = data["rfields"]
-        data = data["data"]
+        rows = data["rows"]
 
-        dt = S3DataTable(rfields, data)
+        dt = S3DataTable(rfields, rows)
         dt.defaultActionButtons(resource)
         current.response.s3.no_formats = True
 

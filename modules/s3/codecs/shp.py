@@ -96,7 +96,7 @@ class S3SHP(S3Codec):
                 else:
                     types.append(rfield.ftype)
 
-        items = data["data"]
+        items = data["rows"]
 
         return (title, types, colnames, heading, items)
 

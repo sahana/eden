@@ -1248,7 +1248,7 @@ class S3Resource(object):
         output = {"rfields": dfields, "numrows": totalrows, "ids": ids}
 
         if not rows:
-            output["data"] = []
+            output["rows"] = []
             return output
 
         # Extract master rows
@@ -1454,7 +1454,7 @@ class S3Resource(object):
         #    _debug("Representation complete after %s seconds" % duration)
         #_debug("fast_select DONE")
 
-        output["data"] = [results[record_id] for record_id in page]
+        output["rows"] = [results[record_id] for record_id in page]
         return output
         
     # -------------------------------------------------------------------------
@@ -1843,7 +1843,7 @@ class S3Resource(object):
         table = self.table
 
         records = self.fast_select([self._id.name])
-        for record in records["data"]:
+        for record in records["rows"]:
 
             record_id = record[str(self._id)]
 
@@ -2097,9 +2097,9 @@ class S3Resource(object):
                                 represent=True)
 
         # Generate the data table
-        if data["data"]:
+        if data["rows"]:
             rfields = data["rfields"]
-            dt = S3DataTable(rfields, data["data"], orderby=orderby)
+            dt = S3DataTable(rfields, data["rows"], orderby=orderby)
         else:
             dt = None
         return dt, data["numrows"], data["ids"]
@@ -2161,7 +2161,7 @@ class S3Resource(object):
         numrows = data["numrows"]
         dl = S3DataList(self,
                         fields,
-                        data["data"],
+                        data["rows"],
                         listid=listid,
                         start=start,
                         limit=limit,
@@ -2216,7 +2216,7 @@ class S3Resource(object):
                                 limit=limit,
                                 orderby=orderby,
                                 left=left,
-                                distinct=distinct)["data"]
+                                distinct=distinct)["rows"]
 
         return json.dumps(data)
 
@@ -2551,7 +2551,7 @@ class S3Resource(object):
 
         rows = self.fast_select(fields,
                                 start=start,
-                                limit=limit)["data"]
+                                limit=limit)["rows"]
 
         if rows:
             ID = str(table._id)
