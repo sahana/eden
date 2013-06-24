@@ -1197,7 +1197,9 @@ class S3PivotTable(object):
 
             if strict:
                 rfields = self.rfields
-                axes = (rfields[self.rows], rfields[self.cols])
+                axes = (rfield
+                        for rfield in (rfields[self.rows], rfields[self.cols])
+                        if rfield != None)
                 axisfilter = resource.axisfilter(axes)
             else:
                 axisfilter = None
@@ -1764,7 +1766,8 @@ class S3PivotTable(object):
             cappend = ocols.append
             for rindex, rtotal, rtitle in rows:
                 orow = []
-                rval = s3_unicode(rtitle.value) if rindex != OTHER else None
+                rval = s3_unicode(rtitle.value) \
+                       if rtitle.value is not None and rindex != OTHER else None
                 if represent:
                     rappend((rindex,
                              rindex in rothers,
@@ -1836,7 +1839,8 @@ class S3PivotTable(object):
                                  "items": items,
                                  "value": value})
                     if ctotals:
-                        cval = s3_unicode(ctitle.value) if cindex != OTHER else None
+                        cval = s3_unicode(ctitle.value) \
+                               if ctitle.value is not None and cindex != OTHER else None
                         if represent:
                             cappend((cindex,
                                      cindex in cothers,
