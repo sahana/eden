@@ -6820,7 +6820,7 @@ class S3URLQuery(object):
             Parse a URL query value
 
             @param value: the value
-            @returns: the parsed value
+            @return: the parsed value
         """
 
         uquote = lambda w: w.replace('\\"', '\\"\\') \

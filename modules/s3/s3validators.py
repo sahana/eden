@@ -742,7 +742,7 @@ class IS_ONE_OF_EMPTY(Validator):
             @param instance_types: list of instance tablenames, if table is
                                    a super-entity (required in this case!)
 
-            @returns: tuple (query, left) where query is the query and left joins
+            @return: tuple (query, left) where query is the query and left joins
                       is the list of left joins required for the query
 
             @note: for higher security policies and super-entities with many

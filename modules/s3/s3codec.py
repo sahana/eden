@@ -97,7 +97,7 @@ class S3Codec(object):
             @param resource: the S3Resource
             @param source: the source
 
-            @returns: an S3XML ElementTree
+            @return: an S3XML ElementTree
         """
         raise NotImplementedError
 
@@ -108,7 +108,7 @@ class S3Codec(object):
 
             @param resource: the S3Resource
 
-            @returns: a handle to the output
+            @return: a handle to the output
         """
         raise NotImplementedError
 

@@ -1776,7 +1776,7 @@ i18n.edit_saved_search="%s"
             @param submit: the HTML name attribute for the submit button
             @param attr: HTML attributes for the form
 
-            @returns: a FORM instance
+            @return: a FORM instance
         """
 
         T = current.T

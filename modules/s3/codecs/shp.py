@@ -231,7 +231,7 @@ class S3SHP(S3Codec):
             @param resource: the S3Resource
             @param source: the source
 
-            @returns: an S3XML ElementTree
+            @return: an S3XML ElementTree
 
             @ToDo: Handle encodings within Shapefiles other than UTF-8
         """

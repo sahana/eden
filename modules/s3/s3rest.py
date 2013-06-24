@@ -727,7 +727,7 @@ class S3Request(object):
             Get a method handler for this request
 
             @param method: the method name
-            @returns: the handler function
+            @return: the handler function
         """
 
         http = self.http
@@ -1788,7 +1788,7 @@ class S3Request(object):
         """
             Get the target table of the current request
 
-            @returns: a tuple of (prefix, name, table, tablename) of the target
+            @return: a tuple of (prefix, name, table, tablename) of the target
                 resource of this request
 
             @todo: update for link table support
@@ -1919,7 +1919,7 @@ class S3Method(object):
             @param as_widget: render as widget (to embed in another method)
             @param attr: dict of parameters for the method handler
 
-            @returns: output object to send to the view
+            @return: output object to send to the view
         """
 
         # Environment of the request
@@ -2018,7 +2018,7 @@ class S3Method(object):
             @param r: the S3Request
             @param attr: dictionary of parameters for the method handler
 
-            @returns: output object to send to the view
+            @return: output object to send to the view
         """
 
         output = dict()
@@ -2054,7 +2054,7 @@ class S3Method(object):
             @param r: the S3Request
             @param attr: dictionary of parameters for the method handler
 
-            @returns: output
+            @return: output
         """
 
         return None

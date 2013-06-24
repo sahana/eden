@@ -4297,7 +4297,7 @@ def pr_get_pe_id(entity, record_id=None):
                        record_id), a Row of the instance type, or a PE-ID
         @param record_id: the record ID, if entity is a tablename
 
-        @returns: the PE-ID
+        @return: the PE-ID
     """
 
     s3db = current.s3db
@@ -4365,7 +4365,7 @@ def pr_define_role(pe_id,
         @param entity_type: limit selection in CRUD forms to this entity type
         @param sub_type: limit selection in CRUD forms to this entity sub-type
 
-        @returns: the role ID
+        @return: the role ID
     """
 
     if not pe_id:
@@ -4478,7 +4478,7 @@ def pr_get_role_paths(pe_id, roles=None, role_types=None):
         @param roles: list of roles to limit the search
         @param role_types: list of role types to limit the search
 
-        @returns: a Storage() of S3MultiPaths with the role names as keys
+        @return: a Storage() of S3MultiPaths with the role names as keys
 
         @note: role_types is ignored if roles gets specified
     """
@@ -4532,7 +4532,7 @@ def pr_get_role_branches(pe_id,
         @param role_types: list of role types to limit the search
         @param entity_type: limit the result to this entity type
 
-        @returns: a list of PE-IDs
+        @return: a list of PE-IDs
 
         @note: role_types is ignored if roles gets specified
     """
@@ -4583,7 +4583,7 @@ def pr_get_path(pe_id):
 
         @param pe_id: the person entity ID
 
-        @returns: an S3MultiPath instance
+        @return: an S3MultiPath instance
     """
 
     s3db = current.s3db
@@ -4617,7 +4617,7 @@ def pr_get_ancestors(pe_id):
 
         @param pe_id: the person entity ID
 
-        @returns: a list of PE-IDs
+        @return: a list of PE-IDs
     """
 
     s3db = current.s3db
@@ -4725,7 +4725,7 @@ def pr_ancestors(entities):
 
         @param entities:
 
-        @returns: Storage of lists of PE-IDs
+        @return: Storage of lists of PE-IDs
     """
 
     if not entities:
@@ -4827,7 +4827,7 @@ def pr_get_descendants(pe_ids, skip=[], entity_type=None, ids=True):
         @param entity_type: optional filter to a specific entity_type
         @param ids: whether to return a list of ids or nodes
 
-        @returns: a list of PE-IDs
+        @return: a list of PE-IDs
     """
 
     if type(pe_ids) is not list:

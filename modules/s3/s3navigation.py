@@ -579,7 +579,7 @@ class S3NavigationItem(object):
 
             @param request: the request object (defaults to current.request)
 
-            @returns: the match level (integer):
+            @return: the match level (integer):
                         0=no match
                         1=controller
                         2=controller+function
@@ -832,7 +832,7 @@ class S3NavigationItem(object):
             @param args: argument list
             @param ext: the format extension
 
-            @returns: tuple (f, args)
+            @return: tuple (f, args)
         """
 
         if not ext or ext == "html":

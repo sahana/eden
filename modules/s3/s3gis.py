@@ -717,7 +717,7 @@ class GIS(object):
 
             @param: level - optionally filter by level
             
-            @returns: Rows object containing IDs & Names
+            @return: Rows object containing IDs & Names
                       Note: This does NOT include the parent location itself
         """
 
@@ -7469,7 +7469,7 @@ class S3Map(S3Search):
             @param r: the S3Request
             @param attr: request attributes
 
-            @returns: output object to send to the view
+            @return: output object to send to the view
         """
 
         output = {}

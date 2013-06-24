@@ -94,7 +94,7 @@ class S3Importer(S3CRUD):
             @param r: the S3Request
             @param attr: dictionary of parameters for the method handler
 
-            @returns: output object to send to the view
+            @return: output object to send to the view
 
             Known means of communicating with this module:
 
@@ -1796,7 +1796,7 @@ class S3ImportItem(object):
             @param tree: the import tree
             @param files: uploaded files
 
-            @returns: True if successful, False if not (sets self.error)
+            @return: True if successful, False if not (sets self.error)
         """
 
         s3db = current.s3db
@@ -2884,7 +2884,7 @@ class S3ImportJob():
             @param parent: the parent item (if this is a component)
             @param joinby: the component join key(s) (if this is a component)
 
-            @returns: a unique identifier for the new item, or None if there
+            @return: a unique identifier for the new item, or None if there
                       was an error. self.error contains the last error, and
                       self.error_tree an element tree with all failing elements
                       including error attributes.

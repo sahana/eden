@@ -1111,7 +1111,7 @@ class S3Model(object):
 
             @param supertable: the super-entity table
             @param superid: the super-entity record ID
-            @returns: a tuple (prefix, name, ID) of the instance
+            @return: a tuple (prefix, name, ID) of the instance
                       record (if it exists)
         """
 

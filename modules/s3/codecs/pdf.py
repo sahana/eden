@@ -1194,7 +1194,7 @@ class S3html2pdf():
             Parses a DIV element and converts it into a format for ReportLab
 
             @param html: the DIV element  to convert
-            @returns: a list containing text that ReportLab can use
+            @return: a list containing text that ReportLab can use
         """
 
         content = []
@@ -1213,7 +1213,7 @@ class S3html2pdf():
             Parses an A element and converts it into a format for ReportLab
 
             @param html: the A element  to convert
-            @returns: a list containing text that ReportLab can use
+            @return: a list containing text that ReportLab can use
         """
 
         content = []
@@ -1234,7 +1234,7 @@ class S3html2pdf():
 
             @param html: the IMG element  to convert
             @param uploadfolder: an optional uploadfolder in which to find the file
-            @returns: a list containing an Image that ReportLab can use
+            @return: a list containing an Image that ReportLab can use
 
 
             @note: The `src` attribute of the image must either
@@ -1284,7 +1284,7 @@ class S3html2pdf():
             Parses a P element and converts it into a format for ReportLab
 
             @param html: the P element  to convert
-            @returns: a list containing text that ReportLab can use
+            @return: a list containing text that ReportLab can use
         """
 
         content = []
@@ -1303,7 +1303,7 @@ class S3html2pdf():
             Parses a TABLE element and converts it into a format for ReportLab
 
             @param html: the TABLE element  to convert
-            @returns: a list containing text that ReportLab can use
+            @return: a list containing text that ReportLab can use
         """
 
         style = [("FONTSIZE", (0, 0), (-1, -1), self.fontsize),
@@ -1341,7 +1341,7 @@ class S3html2pdf():
             Parses a TR element and converts it into a format for ReportLab
 
             @param html: the TR element  to convert
-            @returns: a list containing text that ReportLab can use
+            @return: a list containing text that ReportLab can use
         """
 
         row = []

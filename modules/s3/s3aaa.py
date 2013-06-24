@@ -504,7 +504,7 @@ Thank you
         """
             Overrides Web2Py's login() to use custom flash styles & utcnow
 
-            @returns: a login form
+            @return: a login form
         """
 
         db = current.db
@@ -802,7 +802,7 @@ Thank you
                 - Lookup Domains/Organisations to check for Whitelists
                   &/or custom Approver
 
-            @returns: a registration form
+            @return: a registration form
         """
 
         db = current.db
@@ -2864,7 +2864,7 @@ S3OptionsFilter({
             @param group_id: the group record ID
             @param for_pe: show only group members for this PE
 
-            @returns: a list of the user_ids for members of a group
+            @return: a list of the user_ids for members of a group
         """
 
         mtable = self.settings.table_membership
@@ -3116,7 +3116,7 @@ S3OptionsFilter({
                               (can use 0 to lookup 1:1 delegations)
             @param by_role: group by affiliation roles
 
-            @returns: a Storage {<receiver>: [group_ids]}, or
+            @return: a Storage {<receiver>: [group_ids]}, or
                       a Storage {<rolename>: {entities:[pe_ids], groups:[group_ids]}}
         """
 
@@ -4456,7 +4456,7 @@ class S3Permission(object):
                    fields (id, owned_by_user, owned_by_group, realm_entity),
                    otherwise the record will be re-loaded by this function.
 
-            @returns: tuple of (realm_entity, owner_group, owner_user)
+            @return: tuple of (realm_entity, owner_group, owner_user)
         """
 
         realm_entity = None
@@ -4522,7 +4522,7 @@ class S3Permission(object):
             @param owners: override the actual record owners by a tuple
                            (realm_entity, owner_group, owner_user)
 
-            @returns: True if the current user owns the record, else False
+            @return: True if the current user owns the record, else False
         """
 
         user_id = None
@@ -4595,7 +4595,7 @@ class S3Permission(object):
             @param user: the current auth.user (None for not authenticated)
             @param use_realm: use realms
             @param no_realm: don't include these entities in role realms
-            @returns: a web2py Query instance, or None if no query can be
+            @return: a web2py Query instance, or None if no query can be
                       constructed
         """
 
@@ -4682,7 +4682,7 @@ class S3Permission(object):
 
             @param table: the table
             @param entities: list of entities
-            @returns: a web2py Query instance, or None if no query can be
+            @return: a web2py Query instance, or None if no query can be
                       constructed
         """
 
@@ -4709,7 +4709,7 @@ class S3Permission(object):
 
             @param tablename: the tablename
             @param method: the method
-            @returns: a list of pe_ids or None (for no restriction)
+            @return: a list of pe_ids or None (for no restriction)
         """
 
         if not self.entity_realm:
@@ -5334,7 +5334,7 @@ class S3Permission(object):
             @param t: the tablename
             @param entity: the realm entity
 
-            @returns: None for no ACLs defined (allow),
+            @return: None for no ACLs defined (allow),
                       [] for no ACLs applicable (deny),
                       or list of applicable ACLs
         """
@@ -7211,7 +7211,7 @@ class S3GroupedOptionsWidget(OptionsWidget):
             @param options: a list of tuples, each either (label, value) or (label, {options})
             @param attributes: any other attributes to be applied
 
-            @returns: SELECT object
+            @return: SELECT object
         """
 
         default = dict(value=value)

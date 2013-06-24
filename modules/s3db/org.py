@@ -3067,7 +3067,7 @@ def org_root_organisation(organisation_id=None, pe_id=None):
                                 which contains the organisation_id
         @param pe_id: the organisation's pe_id
 
-        @returns: tuple of (id, pe_id) of the root organisation,
+        @return: tuple of (id, pe_id) of the root organisation,
                   or (None, None) if no root organisation can be found
     """
 

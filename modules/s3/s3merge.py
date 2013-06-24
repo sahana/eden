@@ -61,7 +61,7 @@ class S3Merge(S3Method):
             @param r: the S3Request
             @param attr: dictionary of parameters for the method handler
 
-            @returns: output object to send to the view
+            @return: output object to send to the view
         """
 
         output = dict()

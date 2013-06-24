@@ -308,7 +308,7 @@ class S3PDF(S3Method):
                       * report_groupby
                       * report_hide_comments
 
-            @returns: output object to send to the view
+            @return: output object to send to the view
         """
 
         # ---------------------------------------------------------------------

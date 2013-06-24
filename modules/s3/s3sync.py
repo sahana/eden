@@ -156,7 +156,7 @@ class S3Sync(S3Method):
 
             @param repository: the repository Row
 
-            @returns: True if successful, False if there was an error
+            @return: True if successful, False if there was an error
         """
 
         _debug("S3Sync.synchronize(%s)" % repository.url)

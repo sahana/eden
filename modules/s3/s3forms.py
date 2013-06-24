@@ -107,7 +107,7 @@ class S3SQLForm(object):
             @param format: data format extension (for audit)
             @param options: keyword options for the form
 
-            @returns: a FORM instance
+            @return: a FORM instance
         """
 
         return None
@@ -256,7 +256,7 @@ class S3SQLDefaultForm(S3SQLForm):
 
             @todo: describe keyword arguments
 
-            @returns: a FORM instance
+            @return: a FORM instance
         """
 
         if resource is None:
@@ -650,7 +650,7 @@ class S3SQLCustomForm(S3SQLForm):
             @param format: data format extension (for audit)
             @param options: keyword options for the form
 
-            @returns: a FORM instance
+            @return: a FORM instance
         """
 
         db = current.db
@@ -1150,7 +1150,7 @@ class S3SQLFormElement(object):
             To be implemented in subclass.
 
             @param resource: the resource
-            @returns: a tuple
+            @return: a tuple
                         (
                             form element,
                             original field name,
@@ -1265,7 +1265,7 @@ class S3SQLField(S3SQLFormElement):
             Method to resolve this form element against the calling resource.
 
             @param resource: the resource
-            @returns: a tuple
+            @return: a tuple
                         (
                             subtable alias (or None for main table),
                             original field name,
@@ -1324,7 +1324,7 @@ class S3SQLSubForm(S3SQLFormElement):
 
             @param resource: the resource the record belongs to
             @param record_id: the record ID
-            @returns: the value for the input field that corresponds
+            @return: the value for the input field that corresponds
                       to the specified record.
         """
 
@@ -1340,7 +1340,7 @@ class S3SQLSubForm(S3SQLFormElement):
             in the resolve()-method of this form element.
 
             @param value: the value returned from the input field
-            @returns: tuple of (value, error) where value is the
+            @return: tuple of (value, error) where value is the
                       pre-processed field value and error an error
                       message in case of invalid data, or None.
         """
@@ -1357,7 +1357,7 @@ class S3SQLSubForm(S3SQLFormElement):
             @param field: the input field
             @param value: the value to populate the widget
             @param attributes: attributes for the widget
-            @returns: the widget for this form element as HTML helper
+            @return: the widget for this form element as HTML helper
         """
 
         raise NotImplementedError
@@ -1370,7 +1370,7 @@ class S3SQLSubForm(S3SQLFormElement):
             is to be rendered read-only.
 
             @param value: the value as returned from extract()
-            @returns: the read-only representation of this element as
+            @return: the read-only representation of this element as
                       string or HTML helper
         """
 
@@ -1387,7 +1387,7 @@ class S3SQLSubForm(S3SQLFormElement):
             @param form: the form
             @param master_id: the master record ID
             @param format: the data format extension
-            @returns: True on success, False on error
+            @return: True on success, False on error
         """
 
         return True
@@ -1450,7 +1450,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             Method to resolve this form element against the calling resource.
 
             @param resource: the resource
-            @returns: a tuple (self, None, Field instance)
+            @return: a tuple (self, None, Field instance)
         """
 
         selector = self.selector
@@ -1502,7 +1502,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
             @param resource: the resource the record belongs to
             @param record_id: the record ID
-            @returns: the JSON for the input field.
+            @return: the JSON for the input field.
         """
 
         self.resource = resource
@@ -1640,7 +1640,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             field into a Python object.
 
             @param value: the JSON from the input field.
-            @returns: tuple of (value, error), where value is the converted
+            @return: tuple of (value, error), where value is the converted
                       JSON, and error the error message if the decoding
                       fails, otherwise None
         """
@@ -2529,7 +2529,7 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
 
             @param resource: the resource the record belongs to
             @param record_id: the record ID
-            @returns: the JSON for the input field.
+            @return: the JSON for the input field.
         """
 
         self.resource = resource
@@ -2879,7 +2879,7 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
             is to be rendered read-only.
 
             @param value: the value as returned from extract()
-            @returns: the read-only representation of this element as
+            @return: the read-only representation of this element as
                       string or HTML helper
         """
 
