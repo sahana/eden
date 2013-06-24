@@ -45,7 +45,7 @@ from gluon import current
 from gluon.storage import Storage
 from gluon.html import *
 from gluon.sqlhtml import OptionsWidget
-from gluon.validators import IS_IN_SET
+from gluon.validators import IS_IN_SET, IS_EMPTY_OR
 from gluon.languages import lazyT
 
 from s3rest import S3Method

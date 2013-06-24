@@ -216,6 +216,164 @@ def customize_project_project(**attr):
 settings.ui.customize_project_project = customize_project_project
 
 # -----------------------------------------------------------------------------
+def customize_project_location(**attr):
+    """
+        Customize project_location controller
+    """
+
+    s3 = current.response.s3
+
+    # Custom PreP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+
+        if r.interactive:
+            messages = current.messages
+            filter_widgets = [
+                    
+                ]
+            report_fields = [
+                (messages.COUNTRY, "location_id$L0"),
+                "location_id$L1",
+                "location_id$L2",
+                "location_id$L3",
+                "location_id$L4",
+                (messages.ORGANISATION, "project_id$organisation_id"),
+                (T("Project"), "project_id"),
+                (T("Activity Types"), "activity_type.activity_type_id"),
+                ]
+            report_options = Storage(
+                rows=report_fields,
+                cols=report_fields,
+                fact=report_fields,
+                defaults=Storage(rows="location.location_id$L1",
+                                 cols="location.project_id",
+                                 fact="activity_type.activity_type_id",
+                                 aggregate="list",
+                                 totals=True
+                                 )
+                )
+            current.s3db.configure("project_location",
+                                   filter_widgets = filter_widgets,
+                                   report_options = report_options,
+                                   )
+        return True
+    s3.prep = custom_prep
+
+    return attr
+
+settings.ui.customize_project_location = customize_project_location
+
+# -----------------------------------------------------------------------------
+def customize_project_organisation(**attr):
+    """
+        Customize project_organisation controller
+    """
+
+    s3 = current.response.s3
+
+    # Custom PreP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+
+        if r.interactive:
+            filter_widgets = [
+                    
+                ]
+            report_fields = ["project_id",
+                             "organisation_id",
+                             "role",
+                             "amount",
+                             "currency",
+                             ]
+            report_options = Storage(
+                    rows=report_fields,
+                    cols=report_fields,
+                    fact=report_fields,
+                    defaults=Storage(rows = "organisation.organisation_id",
+                                     cols = "organisation.currency",
+                                     fact = "organisation.amount",
+                                     aggregate = "sum",
+                                     totals = False
+                                     )
+                    )
+            current.s3db.configure("project_organisation",
+                                   filter_widgets = filter_widgets,
+                                   report_options = report_options,
+                                   )
+        return True
+    s3.prep = custom_prep
+
+    return attr
+
+settings.ui.customize_project_organisation = customize_project_organisation
+
+# -----------------------------------------------------------------------------
+def customize_project_beneficiary(**attr):
+    """
+        Customize project_beneficiary controller
+    """
+
+    s3 = current.response.s3
+
+    # Custom PreP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+
+        if r.interactive:
+            filter_widgets = [
+                    
+                ]
+            report_fields = ["project_location_id",
+                             (T("Beneficiary Type"), "parameter_id"),
+                             "project_id",
+                             (T("Year"), "year"),
+                             "project_id$hazard.name",
+                             "project_id$theme.name",
+                             (current.messages.COUNTRY, "location_id$L0"),
+                             "location_id$L1",
+                             "location_id$L2",
+                             "location_id$L3",
+                             "location_id$L4",
+                             ]
+            report_options = Storage(
+                    rows=report_fields,
+                    cols=report_fields,
+                    fact=report_fields,
+                    defaults=Storage(rows="beneficiary.project_id",
+                                     cols="beneficiary.parameter_id",
+                                     fact="beneficiary.value",
+                                     aggregate="sum",
+                                     totals=True
+                                     )
+                    )
+            current.s3db.configure("project_organisation",
+                                   filter_widgets = filter_widgets,
+                                   report_options = report_options,
+                                   )
+        return True
+    s3.prep = custom_prep
+
+    return attr
+
+settings.ui.customize_project_beneficiary = customize_project_beneficiary
+
+# -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([
     # Core modules which shouldn't be disabled

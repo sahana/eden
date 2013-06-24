@@ -1533,8 +1533,6 @@ class S3OptionsMenu(object):
     def project(self):
         """ PROJECT / Project Tracking & Management """
 
-        ADMIN = current.session.s3.system_roles.ADMIN
-
         settings = current.deployment_settings
         #activities = settings.get_project_activities()
         community = settings.get_project_community()
@@ -1580,7 +1578,7 @@ class S3OptionsMenu(object):
                     M("Beneficiaries", f="beneficiary", m="report",
                       check = stats,
                       ),
-                    M("Funding", f="organisation", args="report"),
+                    M("Funding", f="organisation", m="report"),
                  ),
                  M("Import", f="project", m="import", p="create")(
                     M("Import Projects", m="import", p="create"),
@@ -1645,6 +1643,7 @@ class S3OptionsMenu(object):
                  ),
                 )
             if current.auth.s3_has_role("STAFF"):
+                ADMIN = current.session.s3.system_roles.ADMIN
                 menu(
                      M("Daily Work", f="time")(
                         M("My Logged Hours", vars={"mine":1}),
