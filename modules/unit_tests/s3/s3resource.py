@@ -537,24 +537,24 @@ class ResourceFilterQueryTests(unittest.TestCase):
     def testAnyOf(self):
         """ Test filter construction with containment methods (contains vs anyof) """
 
-        resource = current.s3db.resource("org_organisation")
+        resource = current.s3db.resource("org_facility")
         FS = S3FieldSelector
-        q = FS("multi_sector_id").contains([1, 2])
+        q = FS("facility_type_id").contains([1, 2])
         query = q.query(resource)
         try:
-            self.assertEqual(str(query), "((org_organisation.multi_sector_id LIKE (CONCAT('%|',(REPLACE((REPLACE('1','%','%%')),'|','||')),'|%'))) AND "
-                                         "(org_organisation.multi_sector_id LIKE (CONCAT('%|',(REPLACE((REPLACE('2','%','%%')),'|','||')),'|%'))))")
+            self.assertEqual(str(query), "((org_facility.facility_type_id LIKE (CONCAT('%|',(REPLACE((REPLACE('1','%','%%')),'|','||')),'|%'))) AND "
+                                         "(org_facility.facility_type_id LIKE (CONCAT('%|',(REPLACE((REPLACE('2','%','%%')),'|','||')),'|%'))))")
         except AssertionError:
-            self.assertEqual(str(query), "((org_organisation.multi_sector_id LIKE '%|1|%') AND "
-                                         "(org_organisation.multi_sector_id LIKE '%|2|%'))")
-        q = FS("multi_sector_id").anyof([1, 2])
+            self.assertEqual(str(query), "((org_facility.facility_type_id LIKE '%|1|%') AND "
+                                         "(org_facility.facility_type_id LIKE '%|2|%'))")
+        q = FS("facility_type_id").anyof([1, 2])
         query = q.query(resource)
         try:
-            self.assertEqual(str(query), "((org_organisation.multi_sector_id LIKE (CONCAT('%|',(REPLACE((REPLACE('1','%','%%')),'|','||')),'|%'))) OR "
-                                         "(org_organisation.multi_sector_id LIKE (CONCAT('%|',(REPLACE((REPLACE('2','%','%%')),'|','||')),'|%'))))")
+            self.assertEqual(str(query), "((org_facility.facility_type_id LIKE (CONCAT('%|',(REPLACE((REPLACE('1','%','%%')),'|','||')),'|%'))) OR "
+                                         "(org_facility.facility_type_id LIKE (CONCAT('%|',(REPLACE((REPLACE('2','%','%%')),'|','||')),'|%'))))")
         except AssertionError:
-            self.assertEqual(str(query), "((org_organisation.multi_sector_id LIKE '%|1|%') OR "
-                                        "(org_organisation.multi_sector_id LIKE '%|2|%'))")
+            self.assertEqual(str(query), "((org_facility.facility_type_id LIKE '%|1|%') OR "
+                                        "(org_facility.facility_type_id LIKE '%|2|%'))")
 
     # -------------------------------------------------------------------------
     def tearDown(self):
@@ -1385,51 +1385,51 @@ class ResourceAxisFilterTests(unittest.TestCase):
 
         s3db = current.s3db
 
-        resource = s3db.resource("org_organisation")
-        rfield = S3ResourceField(resource, "multi_sector_id")
+        resource = s3db.resource("org_facility")
+        rfield = S3ResourceField(resource, "facility_type_id")
         
-        resource = s3db.resource("org_organisation")
-        q = (S3FieldSelector("multi_sector_id").contains([1,2,3])) & \
-            (~(S3FieldSelector("multi_sector_id") == 2))
+        resource = s3db.resource("org_facility")
+        q = (S3FieldSelector("facility_type_id").contains([1,2,3])) & \
+            (~(S3FieldSelector("facility_type_id") == 2))
         resource.add_filter(q)
         query = resource.get_query()
-        af = S3AxisFilter(query.as_dict(flat=True), "org_organisation")
+        af = S3AxisFilter(query.as_dict(flat=True), "org_facility")
         
         values, ignore = af.values(rfield)
         self.assertTrue("1" in values)
         self.assertFalse("2" in values)
         self.assertTrue("3" in values)
 
-        resource = s3db.resource("org_organisation")
-        q = (S3FieldSelector("multi_sector_id").contains([1,2,3])) & \
-            (~(S3FieldSelector("multi_sector_id") != 2))
+        resource = s3db.resource("org_facility")
+        q = (S3FieldSelector("facility_type_id").contains([1,2,3])) & \
+            (~(S3FieldSelector("facility_type_id") != 2))
         resource.add_filter(q)
         query = resource.get_query()
-        af = S3AxisFilter(query.as_dict(flat=True), "org_organisation")
+        af = S3AxisFilter(query.as_dict(flat=True), "org_facility")
         
         values, ignore = af.values(rfield)
         self.assertTrue("1" in values)
         self.assertTrue("2" in values)
         self.assertTrue("3" in values)
 
-        resource = s3db.resource("org_organisation")
-        q = (S3FieldSelector("multi_sector_id").contains([1,2,3])) | \
-            (~(S3FieldSelector("multi_sector_id") == 2))
+        resource = s3db.resource("org_facility")
+        q = (S3FieldSelector("facility_type_id").contains([1,2,3])) | \
+            (~(S3FieldSelector("facility_type_id") == 2))
         resource.add_filter(q)
         query = resource.get_query()
-        af = S3AxisFilter(query.as_dict(flat=True), "org_organisation")
+        af = S3AxisFilter(query.as_dict(flat=True), "org_facility")
 
         values, ignore = af.values(rfield)
         self.assertTrue("1" in values)
         self.assertTrue("2" in values)
         self.assertTrue("3" in values)
 
-        resource = s3db.resource("org_organisation")
-        q = (S3FieldSelector("multi_sector_id").contains([1,2,3])) | \
-            (~(S3FieldSelector("multi_sector_id") != 2))
+        resource = s3db.resource("org_facility")
+        q = (S3FieldSelector("facility_type_id").contains([1,2,3])) | \
+            (~(S3FieldSelector("facility_type_id") != 2))
         resource.add_filter(q)
         query = resource.get_query()
-        af = S3AxisFilter(query.as_dict(flat=True), "org_organisation")
+        af = S3AxisFilter(query.as_dict(flat=True), "org_facility")
 
         values, ignore = af.values(rfield)
         self.assertTrue("1" in values)
@@ -2504,24 +2504,22 @@ class MergeReferenceListsTest(unittest.TestCase):
         
         xmlstr = """
 <s3xml>
-    <resource name="org_sector" uuid="TESTMERGESECTOR1">
-        <data field="name">TestMergeSector1</data>
-        <data field="abrv">TMS1</data>
+    <resource name="org_facility_type" uuid="TESTMERGEFACTYPE1">
+        <data field="name">TestMergeFacilityType1</data>
     </resource>
-    <resource name="org_sector" uuid="TESTMERGESECTOR2">
-        <data field="name">TestMergeSector2</data>
-        <data field="abrv">TMS2</data>
+    <resource name="org_facility_type" uuid="TESTMERGEFACTYPE2">
+        <data field="name">TestMergeFacilityType2</data>
     </resource>
-    <resource name="org_organisation" uuid="TESTMERGEMULTISECTORORG">
-        <data field="name">TestMergeMultiSectorOrg</data>
-        <reference field="multi_sector_id" resource="org_sector"
-                   uuid="[&quot;TESTMERGESECTOR1&quot;, &quot;TESTMERGESECTOR2&quot;]"/>
+    <resource name="org_facility" uuid="TESTMERGEFACILITY">
+        <data field="name">TestMergeFacility</data>
+        <reference field="facility_type_id" resource="org_facility_type"
+                   uuid="[&quot;TESTMERGEFACTYPE1&quot;, &quot;TESTMERGEFACTYPE2&quot;]"/>
     </resource>
 </s3xml>"""
 
         current.auth.override = True
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
-        resource = current.s3db.resource("org_organisation")
+        resource = current.s3db.resource("org_facility")
         resource.import_xml(xmltree)
 
     # -------------------------------------------------------------------------
@@ -2529,8 +2527,8 @@ class MergeReferenceListsTest(unittest.TestCase):
 
         s3db = current.s3db
     
-        resource = s3db.resource("org_sector",
-                                 uid=["TESTMERGESECTOR1", "TESTMERGESECTOR2"])
+        resource = s3db.resource("org_facility_type",
+                                 uid=["TESTMERGEFACTYPE1", "TESTMERGEFACTYPE2"])
 
         rows = resource.select(["id"])
         self.assertEqual(len(rows), 2)
@@ -2539,11 +2537,11 @@ class MergeReferenceListsTest(unittest.TestCase):
         duplicate = rows[1].id
         resource.merge(original, duplicate)
 
-        resource = s3db.resource("org_organisation",
-                                 uid="TESTMERGEMULTISECTORORG")
-        rows = resource.select(["id", "multi_sector_id"])
+        resource = s3db.resource("org_facility",
+                                 uid="TESTMERGEFACILITY")
+        rows = resource.select(["id", "facility_type_id"])
         self.assertEqual(len(rows), 1)
-        self.assertEqual(rows[0].multi_sector_id, [original])
+        self.assertEqual(rows[0].facility_type_id, [original])
 
     # -------------------------------------------------------------------------
     def tearDown(self):
