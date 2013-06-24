@@ -304,17 +304,6 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
 
         s3db = current.s3db
 
-        sectors = (
-                    Storage(name="FK Represent TestSector A", abrv="FKTA"),
-                    Storage(name="FK Represent TestSector B", abrv="FKTB"),
-                  )
-        stable = s3db.org_sector
-        for i in xrange(len(sectors)):
-            sector = sectors[i]
-            sector_id = stable.insert(**sector)
-            sector["id"] = sector_id
-        self.sectors = sectors
-
         locations = (
                         Storage(name="FK Represent TestLocation 1"),
                         Storage(name="FK Represent TestLocation 2"),
@@ -338,8 +327,7 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
             fac_type["id"] = fac_type_id
         self.fac_types = fac_types
 
-        org = Storage(name="FK Represent TestOrg 1",
-                      multi_sector_id = [sectors[0].id, sectors[1].id])
+        org = Storage(name="FK Represent TestOrg 1")
 
         otable = s3db.org_organisation
         org_id = otable.insert(**org)

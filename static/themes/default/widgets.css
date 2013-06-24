@@ -1116,6 +1116,13 @@ ul.x-tree-root-ct {
     vertical-align: middle;
 }
 
+.range-filter-label {
+    font-size: 85%;
+}
+.range-filter-field {
+    float: left;
+}
+
 .filter-form td,
 .search_form td,
 #filter_options td {

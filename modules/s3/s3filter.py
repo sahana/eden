@@ -464,8 +464,13 @@ class S3RangeFilter(S3FilterWidget):
                 input_box["_value"] = value
                 input_box["value"] = value
 
-            ie_append(current.T(input_labels[operator]) + ":")
-            ie_append(input_box)
+            ie_append(DIV(
+                        DIV(LABEL(current.T(input_labels[operator] + ":"),
+                                  _for=input_id),
+                            _class="range-filter-label"),
+                        DIV(input_box,
+                            _class="range-filter-widget"),
+                        _class="range-filter-field"))
 
         return input_elements
 
@@ -557,8 +562,13 @@ class S3DateFilter(S3RangeFilter):
                             _class=input_class)
 
             # Append label and widget
-            append(current.T(input_labels[operator]) + ":")
-            append(picker)
+            append(DIV(
+                    DIV(LABEL(current.T(input_labels[operator] + ":"),
+                            _for=input_id),
+                        _class="range-filter-label"),
+                    DIV(picker,
+                        _class="range-filter-widget"),
+                    _class="range-filter-field"))
 
         return input_elements
 
