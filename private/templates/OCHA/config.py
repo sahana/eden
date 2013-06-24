@@ -159,6 +159,7 @@ def customize_org_organisation(**attr):
             s3db.configure("org_organisation", list_fields=list_fields)
         
         if r.interactive:
+            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponentCheckbox
             crud_form = S3SQLCustomForm(
                 "name",
                 "acronym",
