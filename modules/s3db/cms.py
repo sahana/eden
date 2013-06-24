@@ -30,6 +30,7 @@
 __all__ = ["S3ContentModel",
            "cms_index",
            "cms_rheader",
+           "S3CMS",
            ]
 
 from gluon import *
@@ -123,7 +124,7 @@ class S3ContentModel(S3Model):
 
         # Resource Configuration
         configure(tablename,
-                  onaccept = self.series_onaccept,
+                  onaccept = self.cms_series_onaccept,
                   create_next=URL(f="series", args=["[id]", "post"]))
 
         # Components
@@ -148,7 +149,9 @@ class S3ContentModel(S3Model):
                              Field("body", "text", notnull=True,
                                    widget = s3_richtext_widget,
                                    label=T("Body")),
+                             # @ToDo: Move this to link table
                              self.gis_location_id(),
+                             # @ToDo: Just use series_id setting?
                              Field("avatar", "boolean",
                                    default=False,
                                    represent = s3_yes_no_represent,
@@ -207,7 +210,7 @@ class S3ContentModel(S3Model):
         # Resource Configuration
         configure(tablename,
                   super_entity="doc_entity",
-                  onaccept = self.post_onaccept,
+                  onaccept = self.cms_post_onaccept,
                   context = {"event": "event.id",
                              "location": "location_id",
                              "organisation": "created_by$organisation_id",
@@ -238,21 +241,15 @@ class S3ContentModel(S3Model):
         # ---------------------------------------------------------------------
         # Modules <> Posts link table
         #
-        modules = {}
-        _modules = current.deployment_settings.modules
-        for module in _modules:
-            if module in ("appadmin", "errors", "sync", "ocr"):
-                continue
-            modules[module] = _modules[module].name_nice
-
         tablename = "cms_post_module"
         table = define_table(tablename,
                              post_id(),
                              Field("module",
-                                   requires=IS_IN_SET_LAZY(lambda: \
-                                                sort_dict_by_values(modules)),
                                    comment=T("If you specify a module then this will be used as the text in that module's index page"),
                                    label=T("Module")),
+                             Field("resource",
+                                   comment=T("If you specify a resource then this will be used as the text in that resource's summary page"),
+                                   label=T("Resource")),
                              *s3_meta_fields())
 
         # CRUD Strings
@@ -265,10 +262,10 @@ class S3ContentModel(S3Model):
             subtitle_create = T("Add New Post"),
             label_list_button = T("List Posts"),
             label_create_button = ADD_POST,
-            msg_record_created = T("Post set as Module homepage"),
+            msg_record_created = T("Post set as Module/Resource homepage"),
             msg_record_modified = T("Post updated"),
             msg_record_deleted = T("Post removed"),
-            msg_list_empty = T("No posts currently set as module homepages"))
+            msg_list_empty = T("No posts currently set as module/resource homepages"))
 
         # ---------------------------------------------------------------------
         # Tags
@@ -366,9 +363,9 @@ class S3ContentModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def series_onaccept(form):
+    def cms_series_onaccept(form):
         """
-            cascade values down to all component Posts
+            Cascade values down to all component Posts
         """
 
         vars = form.vars
@@ -385,108 +382,35 @@ class S3ContentModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def post_onaccept(form):
+    def cms_post_onaccept(form):
         """
+           Handle the case where the page is for a Module home page or
+           Resource Summary page
         """
 
-        module = current.request.get_vars.get("module", None)
+        vars = current.request.get_vars
+        module = vars.get("module", None)
         if module:
-            # Set this page as the one for this module
             post_id = form.vars.id
             db = current.db
             table = db.cms_post_module
             query = (table.module == module)
+            resource = vars.get("resource", None)
+            if resource:
+                # Resource Summary page
+                query &= (table.resource == resource)
+            else:
+                # Module home page
+                query &= ((table.resource == None) | \
+                          (table.resource == "index"))
             result = db(query).update(post_id=post_id)
             if not result:
                 table.insert(post_id=post_id,
                              module=module,
+                             resource=resource,
                              )
 
         return
-
-# =============================================================================
-def cms_index(module, alt_function=None):
-    """
-        Return a module index page retrieved from CMS
-        - or run an alternate function if not found
-    """
-
-    response = current.response
-    settings = current.deployment_settings
-
-    module_name = settings.modules[module].name_nice
-    response.title = module_name
-
-    item = None
-    if settings.has_module("cms"):
-        db = current.db
-        table = current.s3db.cms_post
-        ltable = db.cms_post_module
-        query = (ltable.module == module) & \
-                (ltable.post_id == table.id) & \
-                (table.deleted != True)
-        _item = db(query).select(table.id,
-                                 table.body,
-                                 limitby=(0, 1)).first()
-        auth = current.auth
-        ADMIN = auth.get_system_roles().ADMIN
-        ADMIN = auth.s3_has_role(ADMIN)
-        if _item:
-            if ADMIN:
-                item = DIV(XML(_item.body),
-                           BR(),
-                           A(current.T("Edit"),
-                             _href=URL(c="cms", f="post",
-                                       args=[_item.id, "update"],
-                                       vars={"module":module}),
-                             _class="action-btn"))
-            else:
-                item = XML(_item.body)
-        elif ADMIN:
-            item = DIV(H2(module_name),
-                       A(current.T("Edit"),
-                         _href=URL(c="cms", f="post", args="create",
-                                   vars={"module":module}),
-                         _class="action-btn"))
-
-    if not item:
-        if alt_function:
-            # Serve the alternate controller function
-            # Copied from gluon.main serve_controller()
-            # (We don't want to re-run models)
-            from gluon.compileapp import build_environment, run_controller_in, run_view_in
-            request = current.request
-            environment = build_environment(request, response, current.session)
-            environment["settings"] = settings
-            environment["s3db"] = current.s3db
-            page = run_controller_in(request.controller, alt_function, environment)
-            if isinstance(page, dict):
-                response._vars = page
-                response._view_environment.update(page)
-                run_view_in(response._view_environment)
-                page = response.body.getvalue()
-            # Set default headers if not set
-            default_headers = [
-                ("Content-Type", contenttype("." + request.extension)),
-                ("Cache-Control",
-                 "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"),
-                ("Expires", time.strftime("%a, %d %b %Y %H:%M:%S GMT",
-                                          time.gmtime())),
-                ("Pragma", "no-cache")]
-            for key, value in default_headers:
-                response.headers.setdefault(key, value)
-            raise HTTP(response.status, page, **response.headers)
-
-        else:
-            item = H2(module_name)
-
-    # tbc
-    report = ""
-
-    response.view = "index.html"
-    return dict(item=item, report=report)
-    
-    return None
 
 # =============================================================================
 def cms_rheader(r, tabs=[]):
@@ -530,5 +454,178 @@ def cms_rheader(r, tabs=[]):
                             ), rheader_tabs)
 
     return rheader
+
+# =============================================================================
+def cms_index(module, alt_function=None):
+    """
+        Return a module index page retrieved from CMS
+        - or run an alternate function if not found
+    """
+
+    response = current.response
+    settings = current.deployment_settings
+
+    module_name = settings.modules[module].name_nice
+    response.title = module_name
+
+    item = None
+    if settings.has_module("cms"):
+        db = current.db
+        table = current.s3db.cms_post
+        ltable = db.cms_post_module
+        query = (ltable.module == module) & \
+                (ltable.post_id == table.id) & \
+                (table.deleted != True) & \
+                ((ltable.resource == None) | \
+                 (ltable.resource == "index"))
+        _item = db(query).select(table.id,
+                                 table.body,
+                                 table.title,
+                                 limitby=(0, 1)).first()
+        # @ToDo: Replace this crude check with?
+        #if current.auth.s3_has_permission("update", table, record_id=_item.id):
+        auth = current.auth
+        ADMIN = auth.get_system_roles().ADMIN
+        ADMIN = auth.s3_has_role(ADMIN)
+        if _item:
+            if _item.title:
+                response.title = _item.title
+            if ADMIN:
+                item = DIV(XML(_item.body),
+                           BR(),
+                           A(current.T("Edit"),
+                             _href=URL(c="cms", f="post",
+                                       args=[_item.id, "update"],
+                                       vars={"module": module}),
+                             _class="action-btn"))
+            else:
+                item = XML(_item.body)
+        elif ADMIN:
+            item = DIV(H2(module_name),
+                       A(current.T("Edit"),
+                         _href=URL(c="cms", f="post", args="create",
+                                   vars={"module": module}),
+                         _class="action-btn"))
+
+    if not item:
+        if alt_function:
+            # Serve the alternate controller function
+            # Copied from gluon.main serve_controller()
+            # (We don't want to re-run models)
+            from gluon.compileapp import build_environment, run_controller_in, run_view_in
+            request = current.request
+            environment = build_environment(request, response, current.session)
+            environment["settings"] = settings
+            environment["s3db"] = current.s3db
+            page = run_controller_in(request.controller, alt_function, environment)
+            if isinstance(page, dict):
+                response._vars = page
+                response._view_environment.update(page)
+                run_view_in(response._view_environment)
+                page = response.body.getvalue()
+            # Set default headers if not set
+            default_headers = [
+                ("Content-Type", contenttype("." + request.extension)),
+                ("Cache-Control",
+                 "no-store, no-cache, must-revalidate, post-check=0, pre-check=0"),
+                ("Expires", time.strftime("%a, %d %b %Y %H:%M:%S GMT",
+                                          time.gmtime())),
+                ("Pragma", "no-cache")]
+            for key, value in default_headers:
+                response.headers.setdefault(key, value)
+            raise HTTP(response.status, page, **response.headers)
+
+        else:
+            item = H2(module_name)
+
+    # tbc
+    report = ""
+
+    response.view = "index.html"
+    return dict(item=item, report=report)
+    
+    return None
+
+# =============================================================================
+class S3CMS(S3Method):
+    """
+        Class to generate a Map with a Search form above it
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point to apply cms method to S3Requests
+            - produces a full page with a Richtext widget
+
+            @param r: the S3Request
+            @param attr: dictionary of parameters for the method handler
+
+            @returns: output object to send to the view
+        """
+
+        # Not Implemented
+        r.error(405, r.ERROR.BAD_METHOD)
+
+    # -------------------------------------------------------------------------
+    def widget(self, r, method="cms", widget_id=None, **attr):
+        """
+            Render a Rich Text widget suitable for use in a page such as
+            S3Summary
+
+            @param method: the widget method
+            @param r: the S3Request
+            @param attr: controller attributes
+
+            @ToDo: Support comments
+        """
+
+        if not current.deployment_settings.has_module("cms"):
+            return ""
+
+        # This is currently assuming that we're being used in a Summary page or similar
+        request = current.request
+        module = request.controller
+        resource = request.function
+        db = current.db
+        table = current.s3db.cms_post
+        ltable = db.cms_post_module
+        query = (ltable.module == module) & \
+                (ltable.resource == resource) & \
+                (ltable.post_id == table.id) & \
+                (table.deleted != True)
+        _item = db(query).select(table.id,
+                                 table.body,
+                                 limitby=(0, 1)).first()
+        # @ToDo: Replace this crude check with?
+        #if current.auth.s3_has_permission("update", r.table, record_id=r.id):
+        auth = current.auth
+        ADMIN = auth.get_system_roles().ADMIN
+        ADMIN = auth.s3_has_role(ADMIN)
+        if _item:
+            if ADMIN:
+                item = DIV(XML(_item.body),
+                           BR(),
+                           A(current.T("Edit"),
+                             _href=URL(c="cms", f="post",
+                                       args=[_item.id, "update"],
+                                       vars={"module": module,
+                                             "resource": resource
+                                             }),
+                             _class="action-btn"))
+            else:
+                item = XML(_item.body)
+        elif ADMIN:
+            item = A(current.T("Edit"),
+                     _href=URL(c="cms", f="post", args="create",
+                               vars={"module": module,
+                                     "resource": resource
+                                     }),
+                     _class="action-btn")
+        else:
+            item = ""
+
+        output = DIV(item, _id=widget_id, _class="cms_content")
+        return output
 
 # END =========================================================================

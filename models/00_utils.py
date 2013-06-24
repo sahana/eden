@@ -265,6 +265,8 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     # Configure standard method handlers
     set_handler = r.set_handler
     set_handler("barchart", s3_barchart)
+    from s3db.cms import S3CMS
+    set_handler("cms", S3CMS)
     set_handler("compose", s3base.S3Compose)
     # @ToDo: Make work in Component Tabs:
     set_handler("copy", lambda r, **attr: \

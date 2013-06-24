@@ -1180,13 +1180,13 @@ class S3PivotTable(object):
 
         # Retrieve the records ------------------------------------------------
         #
-        result = resource.fast_select(self.rfields.keys(),
-                                      start=None, limit=None)
-        data = result["rows"]
-        if data:
+        data = resource.fast_select(self.rfields.keys(),
+                                    start=None, limit=None)
+        drows = data["rows"]
+        if drows:
 
             key = str(resource.table._id)
-            records = Storage([(i[key], i) for i in data])
+            records = Storage([(i[key], i) for i in drows])
                 
             # Generate the data frame -----------------------------------------
             #
@@ -1198,7 +1198,7 @@ class S3PivotTable(object):
             if strict:
                 rfields = self.rfields
                 axes = (rfield
-                        for rfield in (rfields[self.rows], rfields[self.cols])
+                        for rfield in (rfields[rows], rfields[cols])
                         if rfield != None)
                 axisfilter = resource.axisfilter(axes)
             else:

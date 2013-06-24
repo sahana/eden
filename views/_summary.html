@@ -1,13 +1,13 @@
 {{try:}}{{=H2(title)}}{{except:}}{{pass}}
 <div id='summary-tabs'>
-<div id='summary-tab-headers'>
-{{try:}}{{=tabs}}{{except:}}{{pass}}
-</div>
 <div id='summary-common'>
 {{try:}}{{for section in common:}}{{=section}}{{pass}}{{except:}}{{pass}}
 <div id='filter-form' class='form-container'>
 {{try:}}{{=filter_form}}{{except:}}{{pass}}
 </div>
+</div>
+`<div id='summary-tab-headers'>
+{{try:}}{{=tabs}}{{except:}}{{pass}}
 </div>
 <div id='summary-sections'>
 {{try:}}{{for section in sections:}}{{=section}}{{pass}}{{except:}}{{pass}}

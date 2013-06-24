@@ -11,6 +11,7 @@
          Title....................Post Title (for use in the browser-bar)
          Body.....................Post Body (HTML)
          Module...................Post Module
+         Resource.................Post Resource
          Country..................optional.....Post Country
          L1.......................optional.....Post L1
          L2.......................optional.....Post L2
@@ -164,6 +165,7 @@
         <xsl:variable name="Title" select="col[@field='Title']/text()"/>
         <xsl:variable name="Comments" select="col[@field='Comments']/text()"/>
         <xsl:variable name="Module" select="col[@field='Module']/text()"/>
+        <xsl:variable name="Resource" select="col[@field='Resource']/text()"/>
 
         <resource name="cms_post">
             <xsl:if test="$Author!=''">
@@ -227,6 +229,9 @@
             <xsl:if test="$Module!=''">
                 <resource name="cms_post_module">
                     <data field="module"><xsl:value-of select="$Module"/></data>
+                    <xsl:if test="$Resource!=''">
+                        <data field="resource"><xsl:value-of select="$Resource"/></data>
+                    </xsl:if>
                 </resource>
             </xsl:if>
 

@@ -98,10 +98,12 @@ def post():
 
     def prep(r):
         if r.interactive:
-            table = r.table
             if r.method in ("create", "update"):
+                table = r.table
+                vars = request.get_vars
+
                 # Filter from a Profile page?"
-                series = request.get_vars.get("~.series_id$name", None)
+                series = vars.get("~.series_id$name", None)
                 if series:
                     # Lookup ID
                     stable = db.cms_series
@@ -112,26 +114,15 @@ def post():
                         field = table.series_id
                         field.default = row.id
                         field.readable = field.writable = False
+
                 # Context from a Profile page?"
-                location_id = request.get_vars.get("(location)", None)
+                location_id = vars.get("(location)", None)
                 if location_id:
                     field = table.location_id
                     field.default = location_id
                     field.readable = field.writable = False
 
-            _module = request.get_vars.get("module", None)
-            if _module:
-                table.name.default = "%s Home Page" % _module
-                table.location_id.readable = table.location_id.writable = False
-                _crud = s3.crud_strings[tablename]
-                _crud.title_create = T("New Page")
-                _crud.title_update = T("Edit Page")
-                url = URL(c=_module, f="index")
-                s3db.configure(tablename,
-                               create_next = url,
-                               update_next = url)
-            else:
-                page = request.get_vars.get("page", None)
+                page = vars.get("page", None)
                 if page:
                     table.name.default = page
                     table.name.readable = table.name.writable = False
@@ -143,9 +134,42 @@ def post():
                                    create_next = url,
                                    update_next = url)
 
+                _module = vars.get("module", None)
+                if _module:
+                    table.avatar.readable = table.avatar.writable = False
+                    table.location_id.readable = table.location_id.writable = False
+                    resource = request.get_vars.get("resource", None)
+                    if resource:
+                        # We're creating/updating text for a Resource Summary page
+                        table.name.default = "%s Summary Page Header" % resource
+                        table.title.readable = table.title.writable = False
+                        table.replies.readable = table.replies.writable = False
+                        url = URL(c=_module, f=resource, args="summary")
+                    else:
+                        # We're creating/updating a Module home page
+                        table.name.default = "%s Home Page" % _module
+                        _crud = s3.crud_strings[tablename]
+                        _crud.title_create = T("New Page")
+                        _crud.title_update = T("Edit Page")
+                        url = URL(c=_module, f="index")
+
+                    s3db.configure(tablename,
+                                   create_next = url,
+                                   update_next = url)
+
+                if r.component_name == "module":
+                    modules = {}
+                    _modules = current.deployment_settings.modules
+                    for module in _modules:
+                        if module in ("appadmin", "errors", "ocr"):
+                            continue
+                        modules[module] = _modules[module].name_nice
+                    s3db.cms_post_module.field.requires = \
+                        IS_IN_SET_LAZY(lambda: sort_dict_by_values(modules))
+
         return True
     s3.prep = prep
-    
+
     output = s3_rest_controller(rheader=s3db.cms_rheader)
     return output
 

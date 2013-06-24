@@ -60,17 +60,17 @@ def index2():
                 resource.add_filter(searchq)
             else:
                 totalrows = None
-            rows = resource.fast_select(list_fields,
+            data = resource.fast_select(list_fields,
                                         start=start,
                                         limit=limit,
                                         count=True,
                                         represent=True)
-            filteredrows = rows["numrows"]
+            filteredrows = data["numrows"]
             if totalrows is None:
                 totalrows = filteredrows
-            data = rows["rows"]
-            rfields = rows["rfields"]
-            dt = S3DataTable(rfields, data)
+            rfields = data["rfields"]
+            rows = data["rows"]
+            dt = S3DataTable(rfields, rows)
             dt.defaultActionButtons(resource)
             if request.extension == "html":
                 warehouses = dt.html(totalrows,
@@ -116,15 +116,15 @@ def index2():
                 else:
                     totalrows = None
                 site_list = {}
-                rows = resource.fast_select(list_fields,
+                data = resource.fast_select(list_fields,
                                             start=None,
                                             limit=None,
                                             count=True)
-                filteredrows = rows["numrows"]
+                filteredrows = data["numrows"]
                 if totalrows is None:
                     totalrows = filteredrows
-                data = rows["rows"]
-                for row in data:
+                rows = data["rows"]
+                for row in rows:
                     site_id = row["inv_inv_item.site_id"]
                     if site_id not in site_list:
                         site_list[site_id] = 1
@@ -138,15 +138,15 @@ def index2():
                     orderby = [table.site_id, stable.name, ~table.quantity]
                 start = int(vars.iDisplayStart) if vars.iDisplayStart else 0
                 limit = int(vars.iDisplayLength) if vars.iDisplayLength else s3mgr.ROWSPERPAGE
-                rows = resource.fast_select(list_fields,
+                data = resource.fast_select(list_fields,
                                             orderby=orderby,
                                             start=start,
                                             limit=limit,
                                             represent=True)
-                rfields = rows["rfields"]
-                data = rows["rows"]
+                rfields = data["rfields"]
+                rows = data["rows"]
                 dt = S3DataTable(rfields,
-                                 data,
+                                 rows,
                                  orderby=orderby,
                                  )
                 custom_actions = [dict(label=str(T("Warehouse")),
@@ -229,15 +229,15 @@ def index2():
                            "um",
                            "model",
                            ]
-            rows = resource.fast_select(list_fields,
+            data = resource.fast_select(list_fields,
                                         start=None,
                                         limit=None,
                                         count=True,
                                         represent=True)
-            data = rows["rows"]
-            rfields = rows["rfields"]
-            numrows = rows["numrows"]
-            dt = S3DataTable(rfields, data)
+            rows = data["rows"]
+            rfields = data["rfields"]
+            numrows = data["numrows"]
+            dt = S3DataTable(rfields, rows)
             dt.defaultActionButtons(resource)
             if request.extension == "html":
                 supply_items = dt.html(numrows,

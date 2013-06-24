@@ -5,11 +5,8 @@ from gluon.html import *
 from gluon.storage import Storage
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
-from s3.s3fields import S3Represent
 from s3.s3filter import S3OptionsFilter
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
-from s3.s3validators import IS_ONE_OF
-from s3.s3widgets import S3LocationAutocompleteWidget
 
 T = current.T
 settings = current.deployment_settings
@@ -116,7 +113,11 @@ settings.save_search.widget = False
 
 # -----------------------------------------------------------------------------
 # Summary Pages
-settings.ui.summary = [{"name": "map",
+settings.ui.summary = [{"common": True,
+                        "name": "cms",
+                        "widgets": [{"method": "cms"}]
+                        },
+                       {"name": "map",
                         "label": "Map",
                         "widgets": [{"method": "map"}]
                         },
@@ -235,6 +236,7 @@ def customize_org_organisation(**attr):
     tablename = "org_organisation"
     table = s3db[tablename]
 
+    from s3.s3widgets import S3LocationAutocompleteWidget
     s3db.org_facility.location_id.widget = S3LocationAutocompleteWidget()
     s3db.org_facility.location_id.label = T("Address")
     s3db.hrm_human_resource.person_id.widget = None
@@ -318,10 +320,37 @@ def customize_org_organisation(**attr):
 
 settings.ui.customize_org_organisation = customize_org_organisation
 
+# -----------------------------------------------------------------------------
+# Coalitions (org_group)
+def customize_org_group(**attr):
+    """
+        Customize org_group controller
+    """
+
+    tablename = "org_group"
+    # CRUD Strings
+    current.response.s3.crud_strings[tablename] = Storage(
+                title_create = T("Add Coalition"),
+                title_display = T("Coalition Details"),
+                title_list = T("Coalitions"),
+                title_update = T("Edit Coalition"),
+                title_search = T("Search Coalitions"),
+                subtitle_create = T("Add New Coalition"),
+                label_list_button = T("List Coalitions"),
+                label_create_button = T("Add Coalition"),
+                label_delete_button = T("Remove Coalition"),
+                msg_record_created = T("Coalition added"),
+                msg_record_modified = T("Coalition updated"),
+                msg_record_deleted = T("Coalition removed"),
+                msg_list_empty = T("No Coalitions currently recorded"))
+
+    return attr
+
+settings.ui.customize_org_group = customize_org_group
+
 #-----------------------------------------------------------------------------
 # Location (org_facility)
 #-----------------------------------------------------------------------------
-
 def customize_org_facility(**attr):
     """
         Customize org_facility controller
@@ -336,6 +365,8 @@ def customize_org_facility(**attr):
     tablename = "org_facility"
     table = s3db[tablename]
     
+    from s3.s3fields import S3Represent
+    from s3.s3validators import IS_ONE_OF
     table.facility_type_id.requires = IS_NULL_OR(IS_ONE_OF(db, "org_facility_type.id",
                                                           S3Represent(lookup=tablename),
                                                           sort=True))
@@ -351,12 +382,6 @@ def customize_org_facility(**attr):
         "facility_type_id",
         "organisation_id",
         "location_id",
-        S3SQLInlineComponentCheckbox(
-            "group",
-            label = T("Coalition"),
-            field = "group_id",
-            cols = 3,
-        ),
         S3SQLInlineComponent(
             "human_resource",
             label = T("Location's Contacts"),
@@ -370,7 +395,7 @@ def customize_org_facility(**attr):
         "comments",
     ) 
 
-    filter_widgets = [S3OptionsFilter("facility_group.group_id",
+    filter_widgets = [S3OptionsFilter("(org_group)",
                                       label=T("Coalition"),
                                       represent="%(name)s",
                                       widget="multiselect",
@@ -516,11 +541,11 @@ settings.modules = OrderedDict([
             restricted = True,
             module_type = None,
         )),
-    #("cms", Storage(
-    #        name_nice = T("Content Management"),
-    #        restricted = True,
-    #        module_type = None,
-    #    )),
+    ("cms", Storage(
+            name_nice = T("Content Management"),
+            restricted = True,
+            module_type = None,
+        )),
     ("doc", Storage(
             name_nice = T("Documents"),
             #description = "A library of digital resources, such as photos, documents and reports",
