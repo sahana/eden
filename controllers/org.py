@@ -308,7 +308,7 @@ def facility():
         # Not yet ready otherwise
         hide_filter = True
 
-    output = s3_rest_controller(rheader=s3db.org_rheader
+    output = s3_rest_controller(rheader=s3db.org_rheader,
                                 hide_filter=hide_filter,
                                 )
     return output
