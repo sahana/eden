@@ -76,7 +76,6 @@ from gluon.storage import Storage, Messages
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3fields import s3_all_meta_field_names
-from s3filter import S3Filter
 from s3rest import S3Method
 from s3track import S3Trackable
 from s3track import S3Trackable
@@ -7452,7 +7451,7 @@ class LayerXYZ(Layer):
             return output
 
 # =============================================================================
-class S3Map(S3Filter):
+class S3Map(S3Method):
     """
         Class to generate a Map linked to Search filters
     """
@@ -7474,9 +7473,6 @@ class S3Map(S3Filter):
             if representation == "html":
                 return self.page(r, **attr)
 
-            elif representation == "json":
-                # Return the filter options as JSON
-                return self._options(r, **attr)
         else:
             r.error(405, current.manager.ERROR.BAD_METHOD)
 
@@ -7517,9 +7513,9 @@ class S3Map(S3Filter):
                                            formstyle=filter_formstyle,
                                            submit=True,
                                            ajax=True,
-                                           ajaxurl=URL(args=request.args,
-                                                       extension="json",
-                                                       vars={}),
+                                           ajaxurl=r.url(method="filter",
+                                                         vars={},
+                                                         representation="json"),
                                            _class="filter-form",
                                            _id="%s-filter-form" % widget_id,
                                            )
@@ -7527,7 +7523,7 @@ class S3Map(S3Filter):
                 filter_form = filter_form.html(resource, get_vars=get_vars, target=widget_id)
             else:
                 # Render as empty string to avoid the exception in the view
-                filter_form = None
+                filter_form = ""
 
             output["form"] = filter_form
 

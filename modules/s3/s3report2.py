@@ -138,6 +138,14 @@ class S3Report2(S3Method):
         else:
             pivottable = None
 
+        # Render as JSON-serializable dict
+        if pivottable is not None:
+            pivotdata = pivottable.json(maxrows=maxrows,
+                                        maxcols=maxcols,
+                                        url=r.url(method=""))
+        else:
+            pivotdata = None
+
         if r.representation in ("html", "iframe"):
 
             response = current.response
@@ -173,9 +181,7 @@ class S3Report2(S3Method):
             ajaxurl = r.url(representation="json", vars=ajax_vars)
 
             output["form"] = S3ReportForm(resource) \
-                                    .html(pivottable,
-                                          maxrows=maxrows,
-                                          maxcols=maxcols,
+                                    .html(pivotdata,
                                           get_vars = get_vars,
                                           filter_widgets = filter_widgets,
                                           ajaxurl = ajaxurl,
@@ -186,11 +192,7 @@ class S3Report2(S3Method):
 
         elif r.representation == "json":
 
-            if pivottable is not None:
-                output = json.dumps(pivottable.json(maxrows=maxrows,
-                                                    maxcols=maxcols))
-            else:
-                output = """null"""
+            output = json.dumps(pivotdata)
 
         elif r.representation == "aadata":
             r.error(501, r.ERROR.BAD_FORMAT)
@@ -223,9 +225,7 @@ class S3ReportForm(object):
 
     # -------------------------------------------------------------------------
     def html(self,
-             pivottable,
-             maxrows=None,
-             maxcols=None,
+             pivotdata,
              filter_widgets=None,
              get_vars=None,
              ajaxurl=None,
@@ -244,14 +244,11 @@ class S3ReportForm(object):
                                                      widget_id = widget_id)
 
         # Pivot data
-        if pivottable is not None:
-            pivotdata = pivottable.json(maxrows=maxrows,
-                                        maxcols=maxcols)
+        if pivotdata is not None:
             labels = pivotdata["labels"]
-            hidden["pivotdata"] = json.dumps(pivotdata)
         else:
             labels = None
-            hidden["pivotdata"] = """null"""
+        hidden["pivotdata"] = json.dumps(pivotdata)
             
         empty = T("No report specified.")
         hide = T("Hide Table")

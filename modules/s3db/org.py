@@ -2791,7 +2791,7 @@ class S3OfficeModel(S3Model):
                 #                #hidden=True,
                 #                ),
                 S3OptionsFilter("organisation_id",
-                                label=T("Organization"),
+                                label=messages.ORGANISATION,
                                 represent="%(name)s",
                                 widget="multiselect",
                                 cols=3,
@@ -2812,23 +2812,6 @@ class S3OfficeModel(S3Model):
                   deduplicate=self.org_office_duplicate,
                   filter_widgets=filter_widgets,
                   search_method=search_method,
-                  ## Experimental: filter form
-                  #filter_widgets=[
-                       #S3TextFilter(["name", "email", "comments"],
-                                    #label=T("Search"),
-                                    #comment=T("Search for office by text.")),
-                       #S3OptionsFilter("organisation_id",
-                                       #label=messages.ORGANISATION,
-                                       #comment=T("Search for office by organization."),
-                                       #represent="%(name)s",
-                                       #cols=3,
-                                       #widget="multiselect"),
-                       #S3OptionsFilter("location_id$L1",
-                                       #location_level="L1",
-                                       #none=False,
-                                       #cols=3,
-                                       #widget="multiselect")
-                  #],
                   list_fields=["id",
                                "name",
                                "organisation_id", # Filtered in Component views

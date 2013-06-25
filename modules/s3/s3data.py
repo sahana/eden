@@ -1608,6 +1608,7 @@ class S3PivotTable(object):
              maxrows=None,
              maxcols=None,
              least=False,
+             url=None,
              represent=True):
         """
             Render the pivot table data as JSON-serializable dict
@@ -1630,7 +1631,8 @@ class S3PivotTable(object):
                 rows: [rows[index, value, label, total]],
                 cols: [cols[index, value, label, total]],
                 
-                total: <grand total> # @todo
+                total: <grand total>,
+                filter: [url, rows selector, cols selector]
             }
         """
 
@@ -1914,6 +1916,12 @@ class S3PivotTable(object):
             labels["cols"] = ""
 
         output["labels"] = labels
+
+        # Filter-URL and axis selectors
+        prefix = resource.prefix_selector
+        output["filter"] = (str(url) if url else None,
+                            prefix(rows_dim) if rows_dim else None,
+                            prefix(cols_dim) if cols_dim else None)
 
         # @todo: add the record layer
 
