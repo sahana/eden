@@ -1212,7 +1212,7 @@ class S3FilterForm(object):
             formstyle = self._formstyle
 
         rows = self._render_widgets(resource,
-                                    get_vars=get_vars,
+                                    get_vars=get_vars or {},
                                     alias=alias,
                                     formstyle=formstyle)
 

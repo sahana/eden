@@ -314,10 +314,10 @@ class S3OrganisationModel(S3Model):
 
         # Groups
         add_component("org_group",
-                      org_organisation=Storage(link="org_group_membership",
-                                               joinby="organisation_id",
-                                               key="group_id",
-                                               actuate="hide"))
+                      org_organisation=dict(link="org_group_membership",
+                                            joinby="organisation_id",
+                                            key="group_id",
+                                            actuate="hide"))
         # Format for filter_widget
         add_component("org_group_membership",
                       org_organisation="organisation_id")
@@ -348,10 +348,10 @@ class S3OrganisationModel(S3Model):
 
         # Locations served
         add_component("gis_location",
-                      org_organisation=Storage(link="org_organisation_location",
-                                               joinby="organisation_id",
-                                               key="location_id",
-                                               actuate="hide"))
+                      org_organisation=dict(link="org_organisation_location",
+                                            joinby="organisation_id",
+                                            key="location_id",
+                                            actuate="hide"))
         # Format for filter_widget
         add_component("org_organisation_location",
                       org_organisation="organisation_id")
@@ -366,20 +366,20 @@ class S3OrganisationModel(S3Model):
 
         # Sectors
         add_component("org_sector",
-                      org_organisation=Storage(link="org_sector_organisation",
-                                               joinby="organisation_id",
-                                               key="sector_id",
-                                               actuate="hide"))
+                      org_organisation=dict(link="org_sector_organisation",
+                                            joinby="organisation_id",
+                                            key="sector_id",
+                                            actuate="hide"))
         # Format for filter_widget
         add_component("org_sector_organisation",
                       org_organisation="organisation_id")
 
         # Services
         add_component("org_service",
-                      org_organisation=Storage(link="org_service_organisation",
-                                               joinby="organisation_id",
-                                               key="service_id",
-                                               actuate="hide"))
+                      org_organisation=dict(link="org_service_organisation",
+                                            joinby="organisation_id",
+                                            key="service_id",
+                                            actuate="hide"))
         # Format for filter_widget
         add_component("org_service_organisation",
                       org_organisation="organisation_id")
@@ -389,17 +389,21 @@ class S3OrganisationModel(S3Model):
                       org_organisation="organisation_id")
 
         # Projects
-        if settings.get_project_mode_3w():
+        if settings.get_project_multiple_organisations():
             add_component("project_project",
-                          org_organisation=Storage(
-                                    link="project_organisation",
-                                    joinby="organisation_id",
-                                    key="project_id",
-                                    # Embed widget doesn't currently support 2 fields of same name (8 hours)
-                                    #actuate="embed",
-                                    actuate="hide",
-                                    autocomplete="name",
-                                    autodelete=False))
+                          org_organisation=dict(link="project_organisation",
+                                                joinby="organisation_id",
+                                                key="project_id",
+                                                # Embed widget doesn't currently support 2 fields of same name (8 hours)
+                                                #actuate="embed",
+                                                actuate="hide",
+                                                autocomplete="name",
+                                                autodelete=False))
+            # Format for filter_widget
+            add_component("project_organisation",
+                          org_organisation=dict(joinby="organisation_id",
+                                                name="project_organisation"))
+            
         else:
             add_component("project_project",
                           org_organisation="organisation_id")
@@ -3989,7 +3993,7 @@ def org_office_controller():
                             # A non-standard formstyle with just a single row
                             pass
 
-                elif r.method not in ("import", "search") and \
+                elif r.method not in ("import", "map", "search") and \
                      "form" in output:
 
                     sep = ": "
