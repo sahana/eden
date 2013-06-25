@@ -149,10 +149,12 @@ table.embeddedComponent tr.label-row td {
     padding-left: 2px;
 }
 
-/* Summary Page */
+/* Filter Forms */
 #filter-form {
     margin: 0;
 }
+
+/* Summary Page */
 #summary-filter-form {
     margin: 0;
 }

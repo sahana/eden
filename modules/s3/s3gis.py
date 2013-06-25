@@ -14,7 +14,6 @@
     restriction, including without limitation the rights to use,
     copy, modify, merge, publish, distribute, sublicense, and/or sell
     copies of the Software, and to permit persons to whom the
-    Software is furnished to do so, subject to the following
     conditions:
 
     The above copyright notice and this permission notice shall be
@@ -7505,14 +7504,22 @@ class S3Map(S3Method):
             hide_filter = attr.get("hide_filter", False)
             filter_widgets = get_config("filter_widgets", None)
             if filter_widgets and not hide_filter:
+                advanced = False
+                for widget in filter_widgets:
+                    if "hidden" in widget.opts and widget.opts.hidden:
+                        advanced = resource.get_config("map_advanced", True)
+                        break
 
                 request = self.request
                 from s3filter import S3FilterForm
                 filter_formstyle = get_config("filter_formstyle", None)
+                submit = resource.get_config("map_submit", True)
                 filter_form = S3FilterForm(filter_widgets,
                                            formstyle=filter_formstyle,
-                                           submit=True,
+                                           advanced=advanced,
+                                           submit=submit,
                                            ajax=True,
+                                           # URL to update the Filter Widget Status
                                            ajaxurl=r.url(method="filter",
                                                          vars={},
                                                          representation="json"),
@@ -7529,7 +7536,7 @@ class S3Map(S3Method):
 
             # Map
             output["map"] = self.widget(r, widget_id=widget_id,
-                                        callback="DEFAULT", **attr)
+                                        callback='''S3.search.s3map()''', **attr)
 
             # View
             response.view = self._view(r, "map.html")
@@ -7573,7 +7580,8 @@ class S3Map(S3Method):
                               "id"        : layer_id,
                               "tablename" : tablename,
                               "url"       : url,
-                              "active"    : True,
+                              # We activate in callback after ensuring URL is updated for current filter status
+                              "active"    : False,
                               "marker"    : marker
                               }]
 

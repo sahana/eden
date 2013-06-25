@@ -211,6 +211,7 @@ class S3ContentModel(S3Model):
         configure(tablename,
                   super_entity="doc_entity",
                   onaccept = self.cms_post_onaccept,
+                  orderby = ~table.created_on,
                   context = {"event": "event.id",
                              "location": "location_id",
                              "organisation": "created_by$organisation_id",

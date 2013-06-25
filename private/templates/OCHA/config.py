@@ -322,7 +322,7 @@ def customize_project_project(**attr):
             field.readable = field.writable = True
 
         if r.interactive:
-            from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
+            from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter, S3RangeFilter
             filter_widgets = [
                 S3TextFilter(["name",
                               "code",
@@ -333,6 +333,11 @@ def customize_project_project(**attr):
                              label=T("Name"),
                              _class="filter-search",
                              ),
+                S3OptionsFilter("status_id",
+                                label=T("Status"),
+                                represent="%(name)s",
+                                cols=3,
+                                ),
                 S3OptionsFilter("theme_project.theme_id",
                                 label=T("Theme"),
                                 represent="%(name)s",
@@ -347,6 +352,17 @@ def customize_project_project(**attr):
                                  cols=3,
                                  #hidden=True,
                                  ),
+                # @ToDo: Widget to handle Start & End in 1!
+                S3DateFilter("start_date",
+                             label=T("Start Date"),
+                             hide_time=True,
+                             #hidden=True,
+                             ),
+                S3DateFilter("end_date",
+                             label=T("End Date"),
+                             hide_time=True,
+                             #hidden=True,
+                             ),
                 ]
             current.s3db.configure("project_project",
                                    filter_widgets = filter_widgets,
@@ -393,7 +409,7 @@ def customize_project_location(**attr):
                 S3OptionsFilter("project_id$status_id",
                                 label=T("Status"),
                                 represent="%(name)s",
-                                widget="multiselect",
+                                #widget="multiselect",
                                 cols=3,
                                 #hidden=True,
                                 ),
@@ -411,6 +427,17 @@ def customize_project_location(**attr):
                                  cols=3,
                                  #hidden=True,
                                  ),
+                # @ToDo: Widget to handle Start & End in 1!
+                S3DateFilter("start_date",
+                             label=T("Start Date"),
+                             hide_time=True,
+                             #hidden=True,
+                             ),
+                S3DateFilter("end_date",
+                             label=T("End Date"),
+                             hide_time=True,
+                             #hidden=True,
+                             ),
                 ]
             report_fields = [
                 #(messages.COUNTRY, "location_id$L0"),

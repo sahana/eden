@@ -10,6 +10,7 @@ OpenLayers.Strategy.AttributeCluster = OpenLayers.Class(OpenLayers.Strategy.Clus
      * the attribute to use for comparison
      */
     attribute: null,
+
     /**
      * Method: shouldCluster
      * Determine whether to include a feature in a given cluster.
@@ -28,6 +29,79 @@ OpenLayers.Strategy.AttributeCluster = OpenLayers.Class(OpenLayers.Strategy.Clus
         return cc_attrval === fc_attrval && 
                superProto.shouldCluster.apply(this, arguments);
     },
+
+    /**
+     * Method: cluster
+     * Cluster features based on some threshold distance.
+     *
+     * Parameters:
+     * event - {Object} The event received when cluster is called as a
+     *     result of a moveend event.
+     */
+    cluster: function(event) {
+        if((!event || event.zoomChanged || event.recluster) && this.features) {
+            var resolution = this.layer.map.getResolution();
+            if(resolution != this.resolution || !this.clustersExist() || (event && event.recluster)) {
+                this.resolution = resolution;
+                var clusters = [];
+                var feature, clustered, cluster;
+                for(var i=0; i<this.features.length; ++i) {
+                    feature = this.features[i];
+                    if(feature.geometry) {
+                        clustered = false;
+                        for(var j=clusters.length-1; j>=0; --j) {
+                            cluster = clusters[j];
+                            if(this.shouldCluster(cluster, feature)) {
+                                this.addToCluster(cluster, feature);
+                                clustered = true;
+                                break;
+                            }
+                        }
+                        if(!clustered) {
+                            clusters.push(this.createCluster(this.features[i]));
+                        }
+                    }
+                }
+                this.clustering = true;
+                this.layer.removeAllFeatures();
+                this.clustering = false;
+                if(clusters.length > 0) {
+                    if(this.threshold > 1) {
+                        var clone = clusters.slice();
+                        clusters = [];
+                        var candidate;
+                        for(var i=0, len=clone.length; i<len; ++i) {
+                            candidate = clone[i];
+                            if(candidate.attributes.count < this.threshold) {
+                                Array.prototype.push.apply(clusters, candidate.cluster);
+                            } else {
+                                clusters.push(candidate);
+                            }
+                        }
+                    }
+                    this.clustering = true;
+                    // A legitimate feature addition could occur during this
+                    // addFeatures call.  For clustering to behave well, features
+                    // should be removed from a layer before requesting a new batch.
+                    this.layer.addFeatures(clusters);
+                    this.clustering = false;
+                }
+                this.clusters = clusters;
+            }
+        }
+    },
+    
+    /**
+     * Method: recluster
+     * User-callable function to recluster features
+     * Useful for instances where a clustering attribute (distance, threshold, ...)
+     *     has changed
+     */
+    recluster: function() {
+        var event = {'recluster': true};
+        this.cluster(event);
+    },
+
     CLASS_NAME: "OpenLayers.Strategy.AttributeCluster"
 });
 
@@ -168,7 +242,7 @@ OpenLayers.Strategy.AttributeClusterMultiple = OpenLayers.Class(OpenLayers.Strat
      *     result of a moveend event.
      */
     cluster: function(event) {
-        if ((!event || event.zoomChanged) && this.features) {
+        if ((!event || event.zoomChanged || event.recluster) && this.features) {
             var layers = this.layers;
             var resolution = layers[0].map.getResolution();
             if (resolution != this.resolution || !this.clustersExist()) {

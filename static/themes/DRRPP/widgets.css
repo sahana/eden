@@ -318,7 +318,6 @@ label.radio-label, label.checkbox-label {
 	display: inline-block;
 }
 
-/*input[value="Save"],*/
 .save-button.medium {
 	background: url(img/m-save.png) no-repeat;
 	width: 90px;
@@ -355,19 +354,6 @@ label.radio-label, label.checkbox-label {
 	display: inline-block;
 }
 
-td>a.advanced-lnk,
-td>a.simple-lnk,
-.save-search-button {
-	background: url(img/s-button.png) repeat;
-    color: #fff;
-	font-weight: bold;
-	font-size: 100%;
-	width: 140px;
-	height: 24px;
-    margin: 4px !important;
-	border: 0;
-	padding: 2px;
-}
 .crud-submit-button,
 .interim-save {
 	background: url(img/s-button.png) repeat;
@@ -384,6 +370,7 @@ td>a.simple-lnk,
 	width: 240px;
     margin: 4px !important;
 }
+.filter-submit,
 .report-submit-button,
 .search-button,
 .toggle-text {
@@ -404,6 +391,20 @@ td>a.simple-lnk,
 	height: 24px;
 	border: 0;
 } */
+td>a.advanced-lnk,
+td>a.simple-lnk,
+.filter-advanced,
+.save-search-button {
+	background: url(img/s-button.png) repeat;
+    color: #fff;
+	font-weight: bold;
+	font-size: 100%;
+	width: 140px;
+	height: 24px;
+    margin: 4px !important;
+	border: 0;
+	padding: 2px;
+}
 .display-button.small {
 	background: url(img/s-display.png) no-repeat;
 	width: 60px;

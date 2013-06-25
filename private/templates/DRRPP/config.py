@@ -672,91 +672,9 @@ def customize_project_location(**attr):
                                                multiple = False))
 
     # Custom CRUD Strings
-    s3.crud_strings.project_location.title_map = \
-        T("Project Map")
+    s3.crud_strings.project_location.title_map = T("Project Map")
 
-    # Custom Search Fields
-    from s3.s3search import S3Search, S3SearchSimpleWidget, S3SearchOptionsWidget
-    simple = [
-        S3SearchSimpleWidget(name = "project_search_text_advanced",
-                             label = T("Search Projects"),
-                             comment = T("Search for a Project by name, code, or description."),
-                             field = ["project_id$name",
-                                      "project_id$code",
-                                      "project_id$description",
-                                      ]
-                             ),
-        S3SearchOptionsWidget(name = "project_search_status",
-                              label = T("Status"),
-                              field = "project_id$status_id",
-                              cols = 4,
-                              )
-        ]
-
-    project_hfa_opts = s3db.project_hfa_opts()
-    hfa_options = {}
-    #hfa_options = {None:NONE} To search NO HFA
-    for key in project_hfa_opts.keys():
-        hfa_options[key] = "HFA %s" % key
-    project_rfa_opts = s3db.project_rfa_opts()
-    rfa_options = {}
-    #rfa_options = {None:NONE} To search NO RFA
-    for key in project_rfa_opts.keys():
-        rfa_options[key] = "RFA %s" % key
-
-    advanced = [
-        S3SearchOptionsWidget(name = "project_search_location",
-                              label = T("Country"),
-                              field = "location_id",
-                              cols = 3
-                              ),
-        S3SearchOptionsWidget(name = "project_search_hazard",
-                              label = T("Hazard"),
-                              field = "project_id$hazard.name",
-                              options = s3db.project_hazard_opts,
-                              help_field="comments",
-                              cols = 4
-                              ),
-        S3SearchOptionsWidget(name = "project_search_theme",
-                              label = T("Theme"),
-                              field = "project_id$theme.name",
-                              options = s3db.project_theme_opts,
-                              help_field="comments",
-                              cols = 4
-                              ),
-        S3SearchOptionsWidget(name = "project_search_hfa",
-                              label = T("HFA"),
-                              field = "project_id$drr.hfa",
-                              options = hfa_options,
-                              help_field = project_hfa_opts,
-                              cols = 5
-                              ),
-       S3SearchOptionsWidget(name = "project_search_rfa",
-                             label = T("RFA"),
-                             field = "project_id$drrpp.rfa",
-                             options = rfa_options,
-                             help_field = project_rfa_opts,
-                             cols = 6
-                             ),
-       S3SearchOptionsWidget(name = "project_search_organisation_id",
-                             label = T("Lead Organisation"),
-                             field = "project_id$organisation_id",
-                             cols = 3
-                             ),
-       S3SearchOptionsWidget(name = "project_search_partners",
-                             field = "project_id$partner.organisation_id",
-                             label = T("Partners"),
-                             cols = 3,
-                             ),
-       S3SearchOptionsWidget(name = "project_search_donors",
-                             field = "project_id$donor.organisation_id",
-                             label = T("Donors"),
-                             cols = 3,
-                             )
-     ]
-    search_method = S3Search(simple = simple,
-                             advanced = simple + advanced)
-
+    # Custom Search Filters
     from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
     filter_widgets = [
         S3TextFilter(["project_id$name",
@@ -772,70 +690,72 @@ def customize_project_location(**attr):
         S3OptionsFilter("project_id$status_id",
                         label=T("Status"),
                         represent="%(name)s",
-                        widget="multiselect",
+                        #widget="multiselect",
                         cols=3,
                         #hidden=True,
                         ),
         S3LocationFilter("location_id",
                          label=T("Country"),
                          levels=["L0"],
-                         widget="multiselect",
+                         #widget="multiselect",
                          cols=3,
                          hidden=True,
                          ),
         S3OptionsFilter("project_id$hazard_project.hazard_id",
                         label=T("Hazard"),
                         represent="%(name)s",
-                        widget="multiselect",
+                        #widget="multiselect",
                         cols=4,
                         hidden=True,
                         ),
         S3OptionsFilter("project_id$theme_project.theme_id",
                         label=T("Theme"),
                         represent="%(name)s",
-                        widget="multiselect",
+                        #widget="multiselect",
                         cols=4,
                         hidden=True,
                         ),
         S3OptionsFilter("project_id$drr.hfa",
                         label=T("HFA"),
                         #represent="%(name)s",
-                        widget="multiselect",
+                        #widget="multiselect",
                         cols=5,
                         hidden=True,
                         ),
         S3OptionsFilter("project_id$drrpp.rfa",
                         label=T("RFA"),
                         #represent="%(name)s",
-                        widget="multiselect",
+                        #widget="multiselect",
                         cols=6,
                         hidden=True,
                         ),
         S3OptionsFilter("project_id$organisation_id",
                         label=T("Lead Organization"),
                         represent="%(name)s",
-                        widget="multiselect",
+                        #widget="multiselect",
                         cols=3,
                         hidden=True,
                         ),
         S3OptionsFilter("project_id$partner.organisation_id",
                         label=T("Partners"),
                         represent="%(name)s",
-                        widget="multiselect",
+                        #widget="multiselect",
                         cols=3,
                         hidden=True,
                         ),
         S3OptionsFilter("project_id$donor.organisation_id",
                         label=T("Donors"),
                         represent="%(name)s",
-                        widget="multiselect",
+                        #widget="multiselect",
                         cols=3,
                         hidden=True,
                         ),
         ]
     s3db.configure("project_location",
                    filter_widgets=filter_widgets,
-                   search_method = search_method,
+                   # Add CSS to default class better than patching
+                   #map_submit=(T("Search"), "search-button"),
+                   map_advanced=T("Advanced Search"),
                    )
     
     return attr

@@ -125,19 +125,24 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var layer = event.object;
         // Read Bounds for Zoom
         var bounds = layer.getDataExtent();
-        // Re-enable Clustering
+        // Zoom Out to Cluster
+        //layer.map.zoomTo(0)
+        // Zoom to Bounds
+        layer.map.zoomToExtent(bounds);
         var strategy,
             strategies = layer.strategies;
         for (var i=0, len=strategies.length; i < len; i++) {
             strategy = strategies[i];
             if (strategy.CLASS_NAME == 'OpenLayers.Strategy.AttributeCluster') {
+                // Re-enable
                 strategy.activate();
+                // cacheFeatures
+                strategy.features = layer.features;
+                // Re-Cluster
+                strategy.recluster();
+                return false;
             }
         }
-        // Zoom Out to Cluster
-        //layer.map.zoomTo(0)
-        // Zoom to Bounds
-        layer.map.zoomToExtent(bounds);
         // Disable this event
         layer.events.un({
             'loadend': search_layer_loadend
@@ -169,7 +174,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     layer.protocol.options.url = url;
                     // If map is showing then refresh the layer
                     if (map.s3.mapWin.isVisible()) {
-                        // Set an event to re-enable Clustering when the layer is loaded
+                        // Set an event to re-enable Clustering when the layer is reloaded
                         layer.events.on({
                             'loadend': search_layer_loadend
                         });
@@ -183,13 +188,18 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                                 break;
                             }
                         }
-                        // Reload the layer
-                        for (j=0; j < jlen; j++) {
-                            strategy = strategies[j];
-                            if (strategy.CLASS_NAME == 'OpenLayers.Strategy.Refresh') {
-                                strategy.refresh();
-                                break;
+                        if (layer.visibility) {
+                            // Reload the layer
+                            for (j=0; j < jlen; j++) {
+                                strategy = strategies[j];
+                                if (strategy.CLASS_NAME == 'OpenLayers.Strategy.Refresh') {
+                                    strategy.refresh();
+                                    break;
+                                }
                             }
+                        } else {
+                            // Show the Layer
+                            layer.setVisibility(true);
                         }
                     }
                 }

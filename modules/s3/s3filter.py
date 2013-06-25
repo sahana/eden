@@ -1216,6 +1216,22 @@ class S3FilterForm(object):
                                     alias=alias,
                                     formstyle=formstyle)
 
+        advanced = self.opts.get("advanced", False)
+        if advanced:
+            _class = "filter-advanced"
+            if advanced is True:
+                label = current.T("More Options")
+            elif isinstance(advanced, (list, tuple)):
+                label = advanced[0]
+                _class = "%s %s" % (advanced[1], _class)
+            else:
+                label = advanced
+            advanced = INPUT(_type="button",
+                             _value=label,
+                             _class=_class)
+
+            rows.append(formstyle(None, "", advanced, ""))
+
         submit = self.opts.get("submit", False)
         if submit:
             _class = "filter-submit"
@@ -1251,7 +1267,7 @@ class S3FilterForm(object):
 
             rows.append(formstyle(None, "", submit, ""))
 
-        # Adapt to formstyle: only render a TABLE if formstyle returns TRs
+        # Adapt to formstyle: render a TABLE only if formstyle returns TRs
         if rows:
             elements = rows[0]
             if not isinstance(elements, (list, tuple)):
@@ -1263,6 +1279,8 @@ class S3FilterForm(object):
             else:
                 form = FORM(DIV(rows), **self.attr)
 
+        # Put a copy of formstyle into the form for access by the view
+        form.formstyle = formstyle
         return form
 
     # -------------------------------------------------------------------------
