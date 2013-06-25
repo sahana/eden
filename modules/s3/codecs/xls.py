@@ -83,7 +83,10 @@ class S3XLS(S3Codec):
         vars["iColumns"] = len(list_fields)
         filter, orderby, left = resource.datatable_filter(list_fields, vars)
         resource.add_filter(filter)
-        
+
+        if orderby is None:
+            orderby = resource.get_config("orderby", None)
+
         result = resource.fast_select(list_fields,
                                       left=left,
                                       start=None,
