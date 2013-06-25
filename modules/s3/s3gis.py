@@ -7452,7 +7452,7 @@ class LayerXYZ(Layer):
             return output
 
 # =============================================================================
-class S3Map(S3Filter):
+class S3Map(S3Method):
     """
         Class to generate a Map linked to Search filters
     """
@@ -7474,9 +7474,6 @@ class S3Map(S3Filter):
             if representation == "html":
                 return self.page(r, **attr)
 
-            elif representation == "json":
-                # Return the filter options as JSON
-                return self._options(r, **attr)
         else:
             r.error(405, current.manager.ERROR.BAD_METHOD)
 
@@ -7527,7 +7524,7 @@ class S3Map(S3Filter):
                 filter_form = filter_form.html(resource, get_vars=get_vars, target=widget_id)
             else:
                 # Render as empty string to avoid the exception in the view
-                filter_form = None
+                filter_form = ""
 
             output["form"] = filter_form
 
