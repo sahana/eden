@@ -50,6 +50,7 @@ class S3DocumentLibrary(S3Model):
         T = current.T
         db = current.db
         s3 = current.response.s3
+        settings = current.deployment_settings
 
         person_comment = self.pr_person_comment
         person_id = self.pr_person_id
@@ -112,6 +113,9 @@ class S3DocumentLibrary(S3Model):
                                    requires = IS_NULL_OR(IS_URL()),
                                    represent = lambda url: \
                                                url and A(url, _href=url) or NONE),
+                             Field("has_been_indexed", "boolean", 
+                                   readable=False, writable=False,
+                                   default = False),
                              person_id(label=T("Author"),
                                        comment=person_comment(T("Author"),
                                                               T("The Author of this Document (optional)"))),
@@ -149,10 +153,19 @@ class S3DocumentLibrary(S3Model):
         # Search Method
 
         # Resource Configuration
+        if settings.get_base_solr_url():
+            onaccept = self.document_onaccept
+            ondelete = self.document_ondelete
+        else:
+            onaccept = None
+            ondelete = None
+
         configure(tablename,
                   super_entity = "stats_source",
                   deduplicate=self.document_duplicate,
                   onvalidation=self.document_onvalidation,
+                  onaccept=onaccept,
+                  ondelete=ondelete,
                   )
 
         # ---------------------------------------------------------------------
@@ -302,7 +315,6 @@ class S3DocumentLibrary(S3Model):
 
         vars = form.vars
         doc = vars.file
-        
         if (not document) and (not doc):
             encoded_file = vars.get("imagecrop-data", None)
             if encoded_file:
@@ -373,6 +385,44 @@ class S3DocumentLibrary(S3Model):
         #        doc_name = result.name
         #        form.errors["file"] = "%s %s" % \
         #                              (T("This file already exists on the server as"), doc_name)
+
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def document_onaccept(form):        
+        
+        vars = form.vars
+        doc = vars.file
+       
+        table = current.db.doc_document
+
+        document = json.dumps(dict(filename=doc,
+                                  name=table.file.retrieve(doc)[0],
+                                  id=vars.id,
+                                  ))
+
+        current.s3task.async("document_create_index",
+                             args = [document])
+
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def document_ondelete(row):        
+        
+        db = current.db
+        table = db.doc_document
+
+        record = db(table.id == row.id).select(table.file,
+                                               limitby=(0, 1)).first()
+
+        document = json.dumps(dict(filename=record.file,
+                                  id=row.id,
+                                 ))
+        
+        current.s3task.async("document_delete_index",
+                             args = [document])   
 
         return
 

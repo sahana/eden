@@ -358,6 +358,11 @@ class S3Config(Storage):
             between multiple instances?
         """
         return self.base.get("session_memcache", False)
+    def get_base_solr_url(self):
+        """
+            URL to connect to solr server
+        """    
+        return self.base.get("solr_url", False)
 
     # -------------------------------------------------------------------------
     # Database settings

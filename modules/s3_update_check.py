@@ -80,6 +80,14 @@ def update_check(settings):
         import tweepy
     except ImportError:
         warnings.append("S3Msg unresolved dependency: tweepy required for non-Tropo Twitter support")
+    try:
+        import sunburnt
+    except ImportError:
+        warnings.append("S3Doc unresolved dependency: sunburnt required for Full-Text Search support")
+    try:
+        import pyth
+    except ImportError:
+        warnings.append("S3Doc unresolved dependency: pyth required for RTF document support in Full-Text Search")
     # @ToDo: Load settinmgs before running this
     #if settings.has_module("survey"):
     #    mandatory = True

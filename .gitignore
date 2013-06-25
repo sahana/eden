@@ -4,6 +4,7 @@
 /compiled/*
 /databases/*
 /errors/*
+/indices/*
 /models/000_config.py
 /models/0000_update_check.py
 /sessions/*
