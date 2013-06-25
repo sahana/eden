@@ -7514,9 +7514,9 @@ class S3Map(S3Method):
                                            formstyle=filter_formstyle,
                                            submit=True,
                                            ajax=True,
-                                           ajaxurl=URL(args=request.args,
-                                                       extension="json",
-                                                       vars={}),
+                                           ajaxurl=r.url(method="filter",
+                                                         vars={},
+                                                         representation="json"),
                                            _class="filter-form",
                                            _id="%s-filter-form" % widget_id,
                                            )
