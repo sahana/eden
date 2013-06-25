@@ -373,9 +373,7 @@
 
             var chart = this.chart;
             if (chart) {
-                $(chart).unbind('plothover');
-                $(chart).unbind('plotclick');
-                $(chart).empty();
+                $(chart).unbind('plothover').unbind('plotclick').empty();
             } else {
                 return;
             }
@@ -415,28 +413,33 @@
                 rows_title = labels.layer + ' ' + per + ' ' + labels.rows,
                 cols_title = labels.layer + ' ' + per + ' ' + labels.cols;
 
+            var filter = data.filter;
+            var filter_url = filter[0],
+                rows_selector = filter[1],
+                cols_selector = filter[2];
+
             if (chart_type == 'piechart') {
                 if (chart_axis == 'rows') {
-                    this._renderPieChart(data.rows, rows_title);
+                    this._renderPieChart(data.rows, rows_title, filter_url, rows_selector);
                 } else {
-                    this._renderPieChart(data.cols, cols_title);
+                    this._renderPieChart(data.cols, cols_title, filter_url, cols_selector);
                 }
             } else if (chart_type == 'barchart') {
                 if (chart_axis == 'rows') {
-                    this._renderBarChart(data.rows, rows_title);
+                    this._renderBarChart(data.rows, rows_title, filter_url, rows_selector);
                 } else {
-                    this._renderBarChart(data.cols, cols_title);
+                    this._renderBarChart(data.cols, cols_title, filter_url, cols_selector);
                 }
             } else if (chart_type == 'breakdown') {
                 if (chart_axis == 'rows') {
-                    this._renderBreakDown(data, 0, rows_title);
+                    this._renderBreakDown(data, 0, rows_title, filter);
                 } else {
-                    this._renderBreakDown(data, 1, cols_title);
+                    this._renderBreakDown(data, 1, cols_title, filter);
                 }
             }
         },
 
-        _renderPieChart: function(data, title) {
+        _renderPieChart: function(data, title, filter_url, selector) {
             // Render a pie chart
 
             var chart = this.chart;
@@ -452,7 +455,8 @@
                 if (!item[1]) {
                     items.push({
                         label: item[4],
-                        data: item[2]
+                        data: item[2],
+                        key: item[3]
                     });
                 }
             }
@@ -504,9 +508,25 @@
                 }
             });
 
+            // Click-link to filtered URL
+            if (filter_url && selector) {
+                $(chart).bind('plotclick', function(event, pos, item) {
+                    if (item) {
+                        var filter={};
+                        try {
+                            filter[selector] = items[item.seriesIndex]['key'];
+                        }
+                        catch(e) {
+                            return;
+                        }
+                        var page = pt._updateURL(filter_url, filter);
+                        window.open(page, '_blank');
+                    }
+                });
+            }
         },
 
-        _renderBarChart: function(data, title) {
+        _renderBarChart: function(data, title, filter_url, selector) {
             // Render a (vertical) bar chart
 
             var chart = this.chart;
@@ -520,7 +540,11 @@
             for (var i=0; i<data.length; i++) {
                 var item = data[i];
                 if (!item[1]) {
-                    items.push({label: item[4], data: [[idx+1, item[2]]]});
+                    items.push({
+                        label: item[4],
+                        data: [[idx+1, item[2]]],
+                        key: item[3]
+                    });
                     labels.push([idx+1, item[4]]);
                     idx++;
                 }
@@ -580,9 +604,26 @@
                     pt._removeChartTooltip();
                 }
             });
+            
+            // Click-link to filtered URL
+            if (filter_url && selector) {
+                $(chart).bind('plotclick', function(event, pos, item) {
+                    if (item) {
+                        var filter={};
+                        try {
+                            filter[selector] = items[item.seriesIndex]['key'];
+                        }
+                        catch(e) {
+                            return;
+                        }
+                        var page = pt._updateURL(filter_url, filter);
+                        window.open(page, '_blank');
+                    }
+                });
+            }
         },
 
-        _renderBreakDown: function(data, dim, title) {
+        _renderBreakDown: function(data, dim, title, filter) {
             // Render a breakdown (2-dimensional horizontal bar chart)
 
             var chart = this.chart;
@@ -590,6 +631,8 @@
                 return;
             }
             $(chart).closest('.pt-chart-contents').show().css({width: '96%'});
+
+            var filter_url = filter[0], rows_selector, cols_selector;
 
             var cells = data.cells, rdim, cdim, get_data, ridx = [], cidx = [];
             if (dim === 0) {
@@ -599,6 +642,8 @@
                     var ri = ridx[i], ci = cidx[j];
                     return cells[ri][ci]['value'];
                 };
+                rows_selector = filter[1];
+                cols_selector = filter[2];
             } else {
                 rdim = data.cols;
                 cdim = data.rows;
@@ -606,6 +651,8 @@
                     var ri = ridx[i], ci = cidx[j];
                     return cells[ci][ri]['value'];
                 };
+                rows_selector = filter[2];
+                cols_selector = filter[1];
             }
 
             var i, rows = [], cols = [];
@@ -682,7 +729,11 @@
                     }
                 }
             );
-            $('.yAxis .tickLabel').css({'padding-top': '20px'});
+            $('.flot-y-axis .tickLabel').css({
+                'padding-top': '20px',
+                'left': '0px', // prevent left-overflow
+                'width': '120px'
+            });
 
             var pt = this;
 
@@ -712,6 +763,24 @@
                     pt._removeChartTooltip();
                 }
             });
+
+            // Click-link to filtered URL
+            if (filter_url && rows_selector && cols_selector) {
+                $(chart).bind('plotclick', function(event, pos, item) {
+                    if (item) {
+                        var filter = {};
+                        try {
+                            filter[rows_selector] = rows[item.dataIndex][3];
+                            filter[cols_selector] = cols[item.seriesIndex][3];
+                        }
+                        catch(e) {
+                            return;
+                        }
+                        var page = pt._updateURL(filter_url, filter);
+                        window.open(page, '_blank');
+                    }
+                });
+            }
         },
 
         _renderChartTooltip: function(x, y, contents) {
@@ -780,6 +849,47 @@
             return options;
         },
 
+        _updateURL: function(url, filters) {
+            // Update a URL with new filters
+
+            // Construct the URL
+            var url_parts = url.split('?'), query = {};
+
+            if (url_parts.length > 1) {
+                var qstr = url_parts[1];
+
+                var a = qstr.split('&'),
+                b, v, i, len;
+                for (i=0, len=a.length; i < len; i++) {
+                    b = a[i].split('=');
+                    if (b.length > 1) {
+                        query[decodeURIComponent(b[0])] = decodeURIComponent(b[1]);
+                    }
+                }
+            }
+
+            if (filters) {
+                for (option in filters) {
+                    newopt = filters[option];
+                    query[option] = newopt ? newopt : null;
+                }
+            }
+
+            var url_queries = [], url_query;
+            for (option in query) {
+                if (query[option] !== null) {
+                    url_queries.push(option + '=' + query[option]);
+                }
+            }
+            url_query = url_queries.join('&');
+            
+            var filtered_url = url_parts[0];
+            if (url_query) {
+                filtered_url = filtered_url + '?' + url_query;
+            }
+            return filtered_url;
+        },
+        
         _updateAjaxURL: function(options, filters) {
             // Update the Ajax URL with new options and filters
 
@@ -1011,6 +1121,7 @@
             $(el).find('.pt-show-table').unbind('click');
             
             $(el).find('.pt-hide-chart').unbind('click');
+            
         }
     });
 })(jQuery);
