@@ -452,6 +452,34 @@ def customize_org_organisation(**attr):
 settings.ui.customize_org_organisation = customize_org_organisation
 
 # -----------------------------------------------------------------------------
+# Networks (org_group)
+def customize_org_group(**attr):
+    """
+        Customize org_group controller
+    """
+
+    tablename = "org_group"
+    # CRUD Strings
+    current.response.s3.crud_strings[tablename] = Storage(
+                title_create = T("Add Network"),
+                title_display = T("Network Details"),
+                title_list = T("Networks"),
+                title_update = T("Edit Network"),
+                title_search = T("Search Networks"),
+                subtitle_create = T("Add New Network"),
+                label_list_button = T("List Networks"),
+                label_create_button = T("Add Network"),
+                label_delete_button = T("Remove Network"),
+                msg_record_created = T("Network added"),
+                msg_record_modified = T("Network updated"),
+                msg_record_deleted = T("Network removed"),
+                msg_list_empty = T("No Networks currently recorded"))
+
+    return attr
+
+settings.ui.customize_org_group = customize_org_group
+
+# -----------------------------------------------------------------------------
 # Persons
 # Uncomment to hide fields in S3AddPersonWidget
 settings.pr.request_dob = False

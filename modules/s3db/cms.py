@@ -549,7 +549,7 @@ def cms_index(module, alt_function=None):
 # =============================================================================
 class S3CMS(S3Method):
     """
-        Class to generate a Map with a Search form above it
+        Class to generate a Rich Text widget to embed in a page
     """
 
     # -------------------------------------------------------------------------
