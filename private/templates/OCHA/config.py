@@ -156,6 +156,7 @@ def customize_org_office(**attr):
             filter_widgets = [
                 S3TextFilter(["name",
                               "code",
+                              "comments",
                               "organisation_id$name",
                               "organisation_id$acronym",
                               "location_id$name",
@@ -325,6 +326,7 @@ def customize_project_project(**attr):
             filter_widgets = [
                 S3TextFilter(["name",
                               "code",
+                              "description",
                               "organisation.name",
                               "organisation.acronym",
                               ],
@@ -380,6 +382,7 @@ def customize_project_location(**attr):
             filter_widgets = [
                 S3TextFilter(["project_id$name",
                               "project_id$code",
+                              "project_id$description",
                               "location_id$name",
                               "project_id$organisation.name",
                               "project_id$organisation.acronym",
@@ -387,6 +390,13 @@ def customize_project_location(**attr):
                              label=T("Name"),
                              _class="filter-search",
                              ),
+                S3OptionsFilter("project_id$status_id",
+                                label=T("Status"),
+                                represent="%(name)s",
+                                widget="multiselect",
+                                cols=3,
+                                #hidden=True,
+                                ),
                 S3OptionsFilter("project_id$theme_project.theme_id",
                                 label=T("Theme"),
                                 represent="%(name)s",
@@ -459,6 +469,7 @@ def customize_project_organisation(**attr):
             filter_widgets = [
                 S3TextFilter(["project_id$name",
                               "project_id$code",
+                              "project_id$description",
                               "organisation_id$name",
                               "organisation_id$acronym",
                               ],
@@ -537,6 +548,7 @@ def customize_project_beneficiary(**attr):
             filter_widgets = [
                 S3TextFilter(["project_id$name",
                               "project_id$code",
+                              "project_id$description",
                               "project_id$organisation.name",
                               "project_id$organisation.acronym",
                               ],

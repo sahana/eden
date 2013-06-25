@@ -304,8 +304,16 @@ def hospital():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller("hms", "hospital",
-                                rheader=s3db.hms_hospital_rheader)
+    if "map" in request.args:
+        # S3Map has migrated
+        hide_filter = False
+    else:
+        # Not yet ready otherwise
+        hide_filter = True
+
+    output = s3_rest_controller(rheader=s3db.hms_hospital_rheader,
+                                hide_filter=hide_filter,
+                                )
     return output
 
 # -----------------------------------------------------------------------------

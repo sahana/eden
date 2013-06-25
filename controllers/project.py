@@ -380,6 +380,15 @@ def theme():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def theme_project():
+    """
+        RESTful CRUD controller
+        - not normally exposed to users via a menu
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def theme_sector():
     """ RESTful CRUD controller for options.s3json lookups """
 
@@ -666,9 +675,18 @@ def location():
         return output
     s3.postp = postp
 
+    if "map" in request.args:
+        # S3Map has migrated
+        hide_filter = False
+    else:
+        # Not yet ready otherwise
+        hide_filter = True
+
     return s3_rest_controller(interactive_report=True,
                               rheader=s3db.project_rheader,
-                              csv_template="location")
+                              hide_filter=hide_filter,
+                              csv_template="location",
+                              )
 
 # -----------------------------------------------------------------------------
 def demographic():

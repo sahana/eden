@@ -372,8 +372,16 @@ def warehouse():
         resourcename = "warehouse"
     csv_stylesheet = "%s.xsl" % resourcename
 
+    if "map" in request.args:
+        # S3Map has migrated
+        hide_filter = False
+    else:
+        # Not yet ready otherwise
+        hide_filter = True
+
     output = s3_rest_controller(module, resourcename,
                                 rheader=s3db.inv_rheader,
+                                hide_filter=hide_filter,
                                 csv_template = resourcename,
                                 csv_stylesheet = csv_stylesheet,
                                 # Extra fields for CSV uploads:
