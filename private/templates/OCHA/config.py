@@ -132,7 +132,79 @@ settings.project.organisation_roles = {
 }
 
 # -----------------------------------------------------------------------------
+def customize_org_office(**attr):
+    """
+        Customize org_office controller
+    """
+
+    s3 = current.response.s3
+
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        if r.interactive or r.representation.lower() == "aadata":
+            s3db = current.s3db
+        
+        if r.interactive:
+            from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
+            filter_widgets = [
+                S3TextFilter(["name",
+                              "code",
+                              "organisation_id$name",
+                              "organisation_id$acronym",
+                              "location_id$name",
+                              "location_id$L1",
+                              "location_id$L2",
+                              ],
+                             label=T("Name"),
+                             _class="filter-search",
+                             ),
+                #S3OptionsFilter("office_type_id",
+                #                label=T("Type"),
+                #                represent="%(name)s",
+                #                widget="multiselect",
+                #                cols=3,
+                #                #hidden=True,
+                #                ),
+                S3OptionsFilter("organisation_id",
+                                label=T("Organization"),
+                                represent="%(name)s",
+                                widget="multiselect",
+                                cols=3,
+                                #hidden=True,
+                                ),
+                S3LocationFilter("location_id",
+                                 label=T("Location"),
+                                 levels=["L1", "L2"],
+                                 widget="multiselect",
+                                 cols=3,
+                                 #hidden=True,
+                                 ),
+                ]
+            s3db.configure("org_office",
+                           #crud_form=crud_form,
+                           filter_widgets = filter_widgets,
+                           )
+            
+        return result
+    s3.prep = custom_prep
+
+    attr["hide_filter"] = False
+    return attr
+
+settings.ui.customize_org_office = customize_org_office
+
+# -----------------------------------------------------------------------------
 def customize_org_organisation(**attr):
+    """
+        Customize org_organisation controller
+    """
 
     s3 = current.response.s3
 
@@ -178,11 +250,50 @@ def customize_org_organisation(**attr):
                 "logo",
                 "comments",
             )
-            s3db.configure("org_organisation", crud_form=crud_form)
+            from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
+            filter_widgets = [
+                S3TextFilter(["name", "acronym"],
+                             label=T("Name"),
+                             _class="filter-search",
+                             ),
+                S3OptionsFilter("organisation_type_id",
+                                label=T("Type"),
+                                represent="%(name)s",
+                                widget="multiselect",
+                                cols=3,
+                                #hidden=True,
+                                ),
+                S3OptionsFilter("sector_organisation.sector_id",
+                                label=T("Cluster"),
+                                represent="%(name)s",
+                                widget="multiselect",
+                                cols=3,
+                                #hidden=True,
+                                ),
+                S3OptionsFilter("project_organisation.project_id$theme_project.theme_id",
+                                label=T("Theme"),
+                                represent="%(name)s",
+                                widget="multiselect",
+                                cols=3,
+                                #hidden=True,
+                                ),
+                S3LocationFilter("project_organisation.project_id$location.location_id",
+                                 label=T("Location"),
+                                 levels=["L1", "L2"],
+                                 widget="multiselect",
+                                 cols=3,
+                                 #hidden=True,
+                                 ),
+                ]
+            s3db.configure("org_organisation",
+                           crud_form=crud_form,
+                           filter_widgets = filter_widgets,
+                           )
             
         return result
     s3.prep = custom_prep
 
+    attr["hide_filter"] = False
     return attr
 
 settings.ui.customize_org_organisation = customize_org_organisation
@@ -209,9 +320,39 @@ def customize_project_project(**attr):
             field = r.table.duration
             field.readable = field.writable = True
 
+        if r.interactive:
+            from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
+            filter_widgets = [
+                S3TextFilter(["name",
+                              "code",
+                              "organisation.name",
+                              "organisation.acronym",
+                              ],
+                             label=T("Name"),
+                             _class="filter-search",
+                             ),
+                S3OptionsFilter("theme_project.theme_id",
+                                label=T("Theme"),
+                                represent="%(name)s",
+                                widget="multiselect",
+                                cols=3,
+                                #hidden=True,
+                                ),
+                S3LocationFilter("location.location_id",
+                                 label=T("Location"),
+                                 levels=["L1", "L2"],
+                                 widget="multiselect",
+                                 cols=3,
+                                 #hidden=True,
+                                 ),
+                ]
+            current.s3db.configure("project_project",
+                                   filter_widgets = filter_widgets,
+                                   )
         return True
     s3.prep = custom_prep
 
+    attr["hide_filter"] = False
     return attr
 
 settings.ui.customize_project_project = customize_project_project
@@ -235,26 +376,52 @@ def customize_project_location(**attr):
 
         if r.interactive:
             messages = current.messages
+            from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
             filter_widgets = [
-                    
+                S3TextFilter(["project_id$name",
+                              "project_id$code",
+                              "location_id$name",
+                              "project_id$organisation.name",
+                              "project_id$organisation.acronym",
+                              ],
+                             label=T("Name"),
+                             _class="filter-search",
+                             ),
+                S3OptionsFilter("project_id$theme_project.theme_id",
+                                label=T("Theme"),
+                                represent="%(name)s",
+                                widget="multiselect",
+                                cols=3,
+                                #hidden=True,
+                                ),
+                S3LocationFilter("location_id",
+                                 label=T("Location"),
+                                 levels=["L1", "L2"],
+                                 widget="multiselect",
+                                 cols=3,
+                                 #hidden=True,
+                                 ),
                 ]
             report_fields = [
-                (messages.COUNTRY, "location_id$L0"),
+                #(messages.COUNTRY, "location_id$L0"),
                 "location_id$L1",
                 "location_id$L2",
-                "location_id$L3",
-                "location_id$L4",
+                #"location_id$L3",
+                #"location_id$L4",
                 (messages.ORGANISATION, "project_id$organisation_id"),
                 (T("Project"), "project_id"),
-                (T("Activity Types"), "activity_type.activity_type_id"),
+                #(T("Activity Types"), "activity_type.activity_type_id"),
+                (T("Themes"), "project_id$theme.name"),
                 ]
             report_options = Storage(
                 rows=report_fields,
                 cols=report_fields,
                 fact=report_fields,
-                defaults=Storage(rows="location_id$L1",
-                                 cols="project_id",
-                                 fact="list(activity_type.activity_type_id)",
+                defaults=Storage(rows="location_id$L2",
+                                 #cols=(T("Themes"), "project_id$theme.name"),
+                                 cols="project_id$theme.name",
+                                 # T("Projects")
+                                 fact="count(project_id$name)",
                                  totals=True
                                  )
                 )
@@ -265,6 +432,7 @@ def customize_project_location(**attr):
         return True
     s3.prep = custom_prep
 
+    attr["hide_filter"] = False
     return attr
 
 settings.ui.customize_project_location = customize_project_location
@@ -287,8 +455,37 @@ def customize_project_organisation(**attr):
                 return False
 
         if r.interactive:
+            from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
             filter_widgets = [
-                    
+                S3TextFilter(["project_id$name",
+                              "project_id$code",
+                              "organisation_id$name",
+                              "organisation_id$acronym",
+                              ],
+                             label=T("Name"),
+                             _class="filter-search",
+                             ),
+                S3OptionsFilter("role",
+                                label=T("Role"),
+                                #represent="%(name)s",
+                                widget="multiselect",
+                                cols=3,
+                                #hidden=True,
+                                ),
+                S3OptionsFilter("project_id$theme_project.theme_id",
+                                label=T("Theme"),
+                                represent="%(name)s",
+                                widget="multiselect",
+                                cols=3,
+                                #hidden=True,
+                                ),
+                S3LocationFilter("project_id$location.location_id",
+                                 label=T("Location"),
+                                 levels=["L1", "L2"],
+                                 widget="multiselect",
+                                 cols=3,
+                                 #hidden=True,
+                                 ),
                 ]
             report_fields = ["project_id",
                              "organisation_id",
@@ -313,6 +510,7 @@ def customize_project_organisation(**attr):
         return True
     s3.prep = custom_prep
 
+    attr["hide_filter"] = False
     return attr
 
 settings.ui.customize_project_organisation = customize_project_organisation
@@ -335,16 +533,45 @@ def customize_project_beneficiary(**attr):
                 return False
 
         if r.interactive:
+            from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
             filter_widgets = [
-                    
+                S3TextFilter(["project_id$name",
+                              "project_id$code",
+                              "project_id$organisation.name",
+                              "project_id$organisation.acronym",
+                              ],
+                             label=T("Name"),
+                             _class="filter-search",
+                             ),
+                S3OptionsFilter("parameter_id",
+                                label=T("Beneficiary Type"),
+                                represent="%(name)s",
+                                widget="multiselect",
+                                cols=3,
+                                #hidden=True,
+                                ),
+                S3OptionsFilter("project_id$theme_project.theme_id",
+                                label=T("Theme"),
+                                represent="%(name)s",
+                                widget="multiselect",
+                                cols=3,
+                                #hidden=True,
+                                ),
+                S3LocationFilter("project_location_id$location_id",
+                                 label=T("Location"),
+                                 levels=["L1", "L2"],
+                                 widget="multiselect",
+                                 cols=3,
+                                 #hidden=True,
+                                 ),
                 ]
             report_fields = ["project_location_id",
                              (T("Beneficiary Type"), "parameter_id"),
                              "project_id",
                              (T("Year"), "year"),
-                             "project_id$hazard.name",
+                             #"project_id$hazard.name",
                              "project_id$theme.name",
-                             (current.messages.COUNTRY, "location_id$L0"),
+                             #(current.messages.COUNTRY, "location_id$L0"),
                              "location_id$L1",
                              "location_id$L2",
                              "location_id$L3",
@@ -367,6 +594,7 @@ def customize_project_beneficiary(**attr):
         return True
     s3.prep = custom_prep
 
+    attr["hide_filter"] = False
     return attr
 
 settings.ui.customize_project_beneficiary = customize_project_beneficiary

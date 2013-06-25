@@ -76,8 +76,9 @@ from gluon.storage import Storage, Messages
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3fields import s3_all_meta_field_names
+from s3filter import S3Filter
 from s3rest import S3Method
-from s3search import S3Search
+from s3track import S3Trackable
 from s3track import S3Trackable
 from s3utils import s3_debug, s3_fullname, s3_fullname_bulk, s3_has_foreign_key, s3_include_ext
 
@@ -7451,58 +7452,104 @@ class LayerXYZ(Layer):
             return output
 
 # =============================================================================
-class S3Map(S3Search):
+class S3Map(S3Filter):
     """
-        Class to generate a Map with a Search form above it
-
-        @ToDo: Allow .configure() to override normal search_method with one
-               for map (like report)
+        Class to generate a Map linked to Search filters
     """
 
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
             Entry point to apply map method to S3Requests
-            - produces a full page with S3Search widgets above a Map
-            @ToDo: Migrate to S3Filter to reload Search results via AJAX
+            - produces a full page with S3FilterWidgets above a Map
 
-            @param r: the S3Request
-            @param attr: request attributes
+            @param r: the S3Request isntance
+            @param attr: controller attributes for the request
 
             @return: output object to send to the view
         """
 
-        output = {}
+        if r.http == "GET":
+            representation = r.representation
+            if representation == "html":
+                return self.page(r, **attr)
 
-        search_method = self.resource.search_method()
-        if r.component and self != search_method:
-            output = search_method(r, **attr)
-
-        # Save search
-        elif "save" in r.vars :
-            r.interactive = False
-            output = self.save_search(r, **attr)
-
-        # Interactive or saved search
-        elif "load" in r.vars or r.interactive and \
-             search_method._S3Search__interactive:
-                # Put shortcuts where other methods expect them
-                self.advanced = search_method.advanced
-                # We want advanced open by default
-                #self.simple = search_method.simple
-                output = self.search_interactive(r, **attr)
-
-        if not output:
-            # Not supported
-            r.error(501, current.manager.ERROR.BAD_FORMAT)
-
-        return output
+            elif representation == "json":
+                # Return the filter options as JSON
+                return self._options(r, **attr)
+        else:
+            r.error(405, current.manager.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
-    def widget(self, r, method="map", widget_id=None, **attr):
+    def page(self, r, **attr):
+        """
+            Map page
+
+            @param r: the S3Request instance
+            @param attr: controller attributes for the request
+        """
+
+        if r.representation in ("html", "iframe"):
+
+            s3db = current.s3db
+            response = current.response
+            resource = self.resource
+            get_config = resource.get_config
+            tablename = resource.tablename
+
+            widget_id = "default_map"
+
+            output = {}
+
+            title = response.s3.crud_strings[tablename].get("title_map",
+                                                            current.T("Map"))
+            output["title"] = title
+
+            # Filter widgets
+            hide_filter = attr.get("hide_filter", False)
+            filter_widgets = get_config("filter_widgets", None)
+            if filter_widgets and not hide_filter:
+
+                request = self.request
+                from s3filter import S3FilterForm
+                filter_formstyle = get_config("filter_formstyle", None)
+                filter_form = S3FilterForm(filter_widgets,
+                                           formstyle=filter_formstyle,
+                                           submit=True,
+                                           ajax=True,
+                                           ajaxurl=URL(args=request.args,
+                                                       extension="json",
+                                                       vars={}),
+                                           _class="filter-form",
+                                           _id="%s-filter-form" % widget_id,
+                                           )
+                get_vars = request.get_vars
+                filter_form = filter_form.html(resource, get_vars=get_vars, target=widget_id)
+            else:
+                # Render as empty string to avoid the exception in the view
+                filter_form = None
+
+            output["form"] = filter_form
+
+            # Map
+            output["map"] = self.widget(r, widget_id=widget_id,
+                                        callback="DEFAULT", **attr)
+
+            # View
+            response.view = self._view(r, "map.html")
+
+            return output
+
+        else:
+            r.error(501, r.ERROR.BAD_FORMAT)
+
+    # -------------------------------------------------------------------------
+    def widget(self, r, method="map", widget_id=None, callback=None, **attr):
         """
             Render a Map widget suitable for use in an S3Filter-based page
             such as S3Summary
+            
+            @param: callback. None by default in case DIV is hidden
         """
 
         if not widget_id:
@@ -7541,189 +7588,9 @@ class S3Map(S3Search):
                            legend = True,
                            toolbar = True,
                            search = True,
-                           # Don't show map by default in case DIV is hidden
-                           callback = None,
+                           callback = callback,
                            )
         return map
-
-    # -------------------------------------------------------------------------
-    def search_interactive(self, r, **attr):
-        """
-            Interactive search
-
-            @param r: the S3Request instance
-            @param attr: request parameters
-
-            @ToDo: Reload Map Layer by AJAX rather than doing a full-page refresh
-            @ToDo: Static JS to resize page to bounds when layer is loaded
-            @ToDo: Refactor components common to parent class
-        """
-
-        T = current.T
-        session = current.session
-
-        table = self.table
-
-        if "location_id" in table or \
-           "site_id" in table:
-           # ok
-           pass
-        else:
-            session.error = T("This resource cannot be displayed on the map!")
-            redirect(r.url(method="search"))
-
-        s3db = current.s3db
-        response = current.response
-        tablename = self.tablename
-
-        # Initialize the form
-        form = DIV(_class="search_form form-container")
-
-        # Figure out which set of form values to use
-        # POST > GET > session > unfiltered
-        if r.http == "POST":
-            # POST
-            form_values = r.post_vars
-        else:
-            url_options = Storage([(k, v) for k, v in r.get_vars.iteritems() if v])
-            if url_options:
-                # GET
-                form_values = url_options
-            else:
-                session_options = session.s3.search_options
-                if session_options and tablename in session_options:
-                    # session
-                    if "clear_opts" in r.get_vars:
-                        session_options = Storage()
-                    else:
-                        session_options = session_options[tablename] or Storage()
-                else:
-                    # unfiltered
-                    session_options = Storage()
-                form_values = session_options
-
-        # Build the search forms
-        simple_form, advanced_form = self.build_forms(r, form_values)
-
-        # Check for Load Search
-        if "load" in r.get_vars:
-            search_id = r.get_vars.get("load", None)
-            if not search_id:
-                r.error(400, current.manager.ERROR.BAD_RECORD)
-            r.post_vars = r.vars
-            _query = (s3db.pr_save_search.id == search_id)
-            search_vars = record.search_vars
-            record = current.db(_query).select(search_vars,
-                                               limitby=(0, 1)).first()
-            if not record:
-                r.error(400, current.manager.ERROR.BAD_RECORD)
-            s_vars = cPickle.loads(search_vars)
-            r.post_vars = Storage(s_vars["criteria"])
-            r.http = "POST"
-
-        # Process the search forms
-        dq, vq, errors = self.process_forms(r,
-                                            simple_form,
-                                            advanced_form,
-                                            form_values)
-
-        search_url = None
-        search_url_vars = Storage()
-        save_search = ""
-        if not errors:
-            resource = self.resource
-            if (dq is None or hasattr(dq, "serialize_url")) and \
-               (vq is None or hasattr(vq, "serialize_url")):
-                query = dq
-                if vq is not None:
-                    if query is not None:
-                        query &= vq
-                    else:
-                        query = vq
-                if query is not None:
-                    search_url_vars = query.serialize_url(resource)
-                search_url = r.url(method = "", vars = search_url_vars)
-
-                if current.deployment_settings.get_save_search_widget():
-                    # Create a Save Search widget
-                    save_search = self.save_search_widget(r, query, **attr)
-
-            # Add sub-queries
-            resource.add_filter(dq)
-            resource.add_filter(vq)
-
-            # Add a map for search results
-            # (this same map is also used by the Map Search Widget, if-present)
-            # Build URL to load the features onto the map
-            gis = current.gis
-            request = self.request
-            marker_fn = s3db.get_config(tablename, "marker_fn")
-            if marker_fn:
-                marker = None
-            else:
-                marker = gis.get_marker(request.controller,
-                                        request.function)
-            url = URL(extension="geojson",
-                      args=None,
-                      vars=search_url_vars)
-            feature_resources = [{
-                    "name"      : T("Search Results"),
-                    "id"        : "search_results",
-                    "tablename" : tablename,
-                    "url"       : url,
-                    "active"    : True,
-                    "marker"    : marker
-                }]
-            # @ToDo: deployment_setting for whether to show WMSBrowser in Search?
-            # @ToDo: WMSBrowser setting should come from hierarchy
-            config = gis.get_config()
-            if config.wmsbrowser_url:
-                wms_browser = {"name": config.wmsbrowser_name,
-                               "url": config.wmsbrowser_url}
-            else:
-                wms_browser = {}
-            map = gis.show_map(feature_resources=feature_resources,
-                               catalogue_layers=True,
-                               legend=True,
-                               toolbar=True,
-                               collapsed=True,
-                               search = True,
-                               wms_browser = wms_browser,
-                               )
-
-        else:
-            map = DIV()
-
-        if response.s3.simple_search:
-            form.append(DIV(_id="search-mode", _mode="simple"))
-        else:
-            form.append(DIV(_id="search-mode", _mode="advanced"))
-
-        # Complete the output form
-        if simple_form is not None:
-            if save_search:
-                # Insert the save button next to the submit button
-                simple_form[0][-1][1].insert(1, save_search)
-            form.append(simple_form)
-        if advanced_form is not None:
-            if save_search:
-                # Insert the save button next to the submit button
-                advanced_form[0][-1][1].insert(1, save_search)
-            form.append(advanced_form)
-
-        # Title
-        title = self.crud_string(tablename, "title_map")
-
-        # View
-        response.view = self._view(r, "map.html")
-
-        # RHeader gets added later in S3Method()
-
-        output = dict(title = title,
-                      form = form,
-                      map = map,
-                      )
-        return output
 
 # =============================================================================
 class Geocoder(object):

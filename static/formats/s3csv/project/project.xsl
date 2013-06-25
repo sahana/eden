@@ -208,6 +208,7 @@
             </xsl:for-each>
 
             <!-- Project Locations -->
+            <!-- theme_percentages=False -->
             <xsl:call-template name="splitList">
                 <xsl:with-param name="list">
                     <xsl:value-of select="$Locations"/>
@@ -217,20 +218,20 @@
             <xsl:for-each select="col[starts-with(@field, 'Location')]">
                 <xsl:choose>
                     <xsl:when test="@field='Locations'">
+                        <!-- theme_percentages=False -->
                     </xsl:when>
                     <xsl:otherwise>
+                        <!-- theme_percentages=True -->
                         <xsl:variable name="Location" select="normalize-space(substring-after(@field, ':'))"/>
                         <xsl:variable name="Percentage" select="text()"/>
-                        <xsl:if test="$Location!=''">
+                        <xsl:if test="$Percentage!='' and $Percentage!='0'">
                             <resource name="project_location">
                                 <reference field="location_id" resource="gis_location">
                                     <xsl:attribute name="tuid">
                                         <xsl:value-of select="concat($LocationPrefix, $Location)"/>
                                     </xsl:attribute>
                                 </reference>
-                                <xsl:if test="$Percentage!=''">
-                                    <data field="percentage"><xsl:value-of select="$Percentage"/></data>
-                                </xsl:if>
+                                <data field="percentage"><xsl:value-of select="$Percentage"/></data>
                             </resource>
                         </xsl:if>
                     </xsl:otherwise>

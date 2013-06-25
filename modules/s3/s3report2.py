@@ -80,9 +80,8 @@ class S3Report2(S3Method):
             @param attr: controller attributes for the request
         """
 
-
         output = {}
-        
+
         resource = self.resource
         get_config = resource.get_config
 
@@ -149,7 +148,11 @@ class S3Report2(S3Method):
 
         if r.representation in ("html", "iframe"):
 
-            output["title"] = current.T("Report")
+            response = current.response
+            tablename = resource.tablename
+            title = response.s3.crud_strings[tablename].get("title_report",
+                                                            current.T("Report"))
+            output["title"] = title
 
             # Filter widgets
             hide_filter = attr.get("hide_filter", False)
@@ -163,7 +166,7 @@ class S3Report2(S3Method):
                                            submit=False,
                                            _class="filter-form",
                                            _id="%s-filter-form" % widget_id)
-                fresource = current.s3db.resource(resource.tablename)
+                fresource = current.s3db.resource(tablename)
                 alias = resource.alias if r.component else None
                 filter_widgets = filter_form.fields(fresource,
                                                     r.get_vars,
@@ -184,10 +187,8 @@ class S3Report2(S3Method):
                                           ajaxurl = ajaxurl,
                                           widget_id = widget_id)
 
-            # @todo: if pivottable is None: render a datatable instead?
-
             # View
-            current.response.view = self._view(r, "report2.html")
+            response.view = self._view(r, "report2.html")
 
         elif r.representation == "json":
 

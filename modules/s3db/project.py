@@ -567,6 +567,9 @@ class S3ProjectModel(S3Model):
                                               joinby="project_id",
                                               key="sector_id",
                                               actuate="hide"))
+        # Format needed by S3Filter
+        add_component("project_sector_project",
+                      project_project="project_id")
 
         # Themes
         add_component("project_theme",
@@ -574,6 +577,9 @@ class S3ProjectModel(S3Model):
                                               joinby="project_id",
                                               key="theme_id",
                                               actuate="hide"))
+        # Format needed by S3Filter
+        add_component("project_theme_project",
+                      project_project="project_id")
 
         # DRR
         if mode_drr:

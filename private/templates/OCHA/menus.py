@@ -32,6 +32,40 @@ class S3OptionsMenu(default.S3OptionsMenu):
     """
 
     # -------------------------------------------------------------------------
+    def org(self):
+        """ ORG / Organization Registry """
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+
+        return M(c="org")(
+                    M("Organizations", f="organisation")(
+                        M("Add Organization", m="create"),
+                        M("List All"),
+                        M("Import", m="import")
+                    ),
+                    M("Offices", f="office")(
+                        M("New", m="create"),
+                        M("List All"),
+                        M("Map", m="map"),
+                        M("Import", m="import")
+                    ),
+                    M("Organization Types", f="organisation_type",
+                      restrict=[ADMIN])(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
+                    M("Office Types", f="office_type",
+                      restrict=[ADMIN])(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
+                    M("Clusters", f="sector", restrict=[ADMIN])(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
     def project(self):
         """ PROJECT / Project Tracking & Management """
 
@@ -40,7 +74,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 M("New", m="create"),
                 M("List All"),
                 M("Map", f="location", m="map"),
-                M("Search", m="search"),
             ),
             M("Reports", f="location", m="report2")(
                 M("3W", f="location", m="report2"),
@@ -57,7 +90,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
             M("Partner Organizations",  f="partners")(
                 M("New", m="create"),
                 M("List All"),
-                M("Search", m="search"),
                 M("Import", m="import", p="create"),
             ),
             M("Themes", f="theme")(
