@@ -124,19 +124,23 @@
             <data field="code"><xsl:value-of select="col[@field='Code']"/></data>
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
-            <data field="duration"><xsl:value-of select="col[@field='Duration']"/></data>
             <xsl:if test="col[@field='Start Date']!=''">
                 <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
             </xsl:if>
             <xsl:if test="col[@field='End Date']!=''">
                 <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
             </xsl:if>
-            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            <xsl:if test="col[@field='Duration']!=''">
+                <data field="duration"><xsl:value-of select="col[@field='Duration']"/></data>
+            </xsl:if>
             <xsl:if test="col[@field='Objectives']!=''">
                 <data field="objectives"><xsl:value-of select="col[@field='Objectives']"/></data>
             </xsl:if>
             <xsl:if test="col[@field='Budget']!=''">
                 <data field="budget"><xsl:value-of select="col[@field='Budget']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Comments']!=''">
+                <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
             </xsl:if>
 
             <!-- Status -->
@@ -191,7 +195,7 @@
                     <xsl:otherwise>
                         <xsl:variable name="Theme" select="normalize-space(substring-after(@field, ':'))"/>
                         <xsl:variable name="Percentage" select="text()"/>
-                        <xsl:if test="$Theme!=''">
+                        <xsl:if test="$Theme!='' and $Percentage!='' and $Percentage!='0'">
                             <resource name="project_theme_project">
                                 <reference field="theme_id" resource="project_theme">
                                     <xsl:attribute name="tuid">

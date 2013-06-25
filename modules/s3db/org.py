@@ -2149,19 +2149,33 @@ class S3FacilityModel(S3Model):
                                     "website",
                                     "site_details.last_contacted",
                                     "obsolete",
-                                    "comments")
+                                    "comments",
+                                    )
 
-        filter_widgets = [S3OptionsFilter("facility_type_id",
-                                          label=T("Type"),
-                                          represent="%(name)s",
-                                          widget="multiselect",
-                                          ),
-                          S3OptionsFilter("organisation_id",
-                                          label=T("Organization"),
-                                          represent="%(name)s",
-                                          widget="multiselect",
-                                          ),
-                          ]
+        filter_widgets = [
+            S3TextFilter(["name",
+                          "code",
+                          "comments",
+                          "organisation_id$name",
+                          "organisation_id$acronym",
+                          "location_id$name",
+                          "location_id$L1",
+                          "location_id$L2",
+                          ],
+                         label=T("Name"),
+                         _class="filter-search",
+                         ),
+            S3OptionsFilter("facility_type_id",
+                            label=T("Type"),
+                            represent="%(name)s",
+                            widget="multiselect",
+                            ),
+            S3OptionsFilter("organisation_id",
+                            label=T("Organization"),
+                            represent="%(name)s",
+                            widget="multiselect",
+                            ),
+            ]
 
         configure(tablename,
                   super_entity=("org_site", "doc_entity", "pr_pentity"),
@@ -2756,28 +2770,48 @@ class S3OfficeModel(S3Model):
                       #),
             ))
 
+        filter_widgets = [
+                S3TextFilter(["name",
+                              "code",
+                              "comments",
+                              "organisation_id$name",
+                              "organisation_id$acronym",
+                              "location_id$name",
+                              "location_id$L1",
+                              "location_id$L2",
+                              ],
+                             label=T("Name"),
+                             _class="filter-search",
+                             ),
+                #S3OptionsFilter("office_type_id",
+                #                label=T("Type"),
+                #                represent="%(name)s",
+                #                widget="multiselect",
+                #                cols=3,
+                #                #hidden=True,
+                #                ),
+                S3OptionsFilter("organisation_id",
+                                label=messages.ORGANISATION,
+                                represent="%(name)s",
+                                widget="multiselect",
+                                cols=3,
+                                #hidden=True,
+                                ),
+                S3LocationFilter("location_id",
+                                 label=T("Location"),
+                                 levels=["L0", "L1", "L2"],
+                                 widget="multiselect",
+                                 cols=3,
+                                 #hidden=True,
+                                 ),
+                ]
+
         configure(tablename,
                   super_entity=("pr_pentity", "org_site"),
                   onaccept=self.org_office_onaccept,
                   deduplicate=self.org_office_duplicate,
+                  filter_widgets=filter_widgets,
                   search_method=search_method,
-                  # Experimental: filter form
-                  filter_widgets=[
-                       S3TextFilter(["name", "email", "comments"],
-                                    label=T("Search"),
-                                    comment=T("Search for office by text.")),
-                       S3OptionsFilter("organisation_id",
-                                       label=messages.ORGANISATION,
-                                       comment=T("Search for office by organization."),
-                                       represent="%(name)s",
-                                       cols=3,
-                                       widget="multiselect"),
-                       S3OptionsFilter("location_id$L1",
-                                       location_level="L1",
-                                       none=False,
-                                       cols=3,
-                                       widget="multiselect")
-                  ],
                   list_fields=["id",
                                "name",
                                "organisation_id", # Filtered in Component views
@@ -4034,7 +4068,15 @@ def org_office_controller():
         return output
     s3.postp = postp
 
+    if "map" in request.args:
+        # S3Map has migrated
+        hide_filter = False
+    else:
+        # Not yet ready otherwise
+        hide_filter = True
+
     output = current.rest_controller("org", "office",
+                                     hide_filter=hide_filter,
                                      # Don't allow components with components (such as document) to breakout from tabs
                                      native=False,
                                      rheader=org_rheader)

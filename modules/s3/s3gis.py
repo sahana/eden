@@ -76,7 +76,6 @@ from gluon.storage import Storage, Messages
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3fields import s3_all_meta_field_names
-from s3filter import S3Filter
 from s3rest import S3Method
 from s3track import S3Trackable
 from s3track import S3Trackable

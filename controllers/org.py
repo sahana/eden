@@ -301,7 +301,16 @@ def facility():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.org_rheader)
+    if "map" in request.args:
+        # S3Map has migrated
+        hide_filter = False
+    else:
+        # Not yet ready otherwise
+        hide_filter = True
+
+    output = s3_rest_controller(rheader=s3db.org_rheader,
+                                hide_filter=hide_filter,
+                                )
     return output
 
 # -----------------------------------------------------------------------------
