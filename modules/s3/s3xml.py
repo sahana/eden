@@ -251,9 +251,14 @@ class S3XML(S3Codec):
             _args = dict([(k, "'%s'" % args[k]) for k in args])
         else:
             _args = None
-        stylesheet = self.parse(stylesheet_path)
+            
+        if isinstance(stylesheet_path, (etree._ElementTree, etree._Element)):
+            # Pre-parsed stylesheet
+            stylesheet = stylesheet_path
+        else:
+            stylesheet = self.parse(stylesheet_path)
 
-        if stylesheet:
+        if stylesheet is not None:
             try:
                 ac = etree.XSLTAccessControl(read_file=True, read_network=True)
                 transformer = etree.XSLT(stylesheet, access_control=ac)
