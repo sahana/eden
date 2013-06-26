@@ -46,7 +46,7 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
-from gluon.dal import Row
+from gluon.dal import Expression, Field, Row
 from gluon.storage import Storage
 from gluon.languages import lazyT
 
@@ -1061,6 +1061,57 @@ def s3_flatlist(nested):
                 yield sub
         else:
             yield item
+
+# =============================================================================
+def s3_orderby_fields(orderby):
+    """
+        Introspect and yield all fields involved in a DAL orderby
+        expression.
+
+        @param orderby: the orderby expression
+    """
+
+    if not orderby:
+        return
+
+    db = current.db
+    if isinstance(orderby, str):
+        items = orderby.split(",")
+    elif type(orderby) is Expression:
+        def expand(e):
+            f = e.first
+            if e.op == db._adapter.COMMA:
+                if type(f) is Field:
+                    return [f] + expand(e.second)
+                elif type(f) is Expression:
+                    return expand(f) + expand(e.second)
+            elif e.op == db._adapter.INVERT:
+                return [e.first]
+            return []
+        items = expand(orderby)
+    elif not isinstance(orderby, (list, tuple)):
+        items = [orderby]
+    else:
+        items = orderby
+
+    s3db = current.s3db
+    for item in items:
+        if type(item) is Expression:
+            f = item.first
+            if type(f) is not Field:
+                continue
+        elif type(item) is Field:
+            f = item
+        elif isinstance(item, str):
+            fn, direction = (item.strip().split() + ["asc"])[:2]
+            tn, fn = ([table._tablename] + fn.split(".", 1))[-2:]
+            try:
+                f = s3db.table(tn)[fn]
+            except (AttributeError, KeyError):
+                continue
+        else:
+            continue
+        yield f
 
 # =============================================================================
 def search_vars_represent(search_vars):

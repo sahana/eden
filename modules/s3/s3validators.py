@@ -77,7 +77,7 @@ from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.validators import Validator
 
-from s3utils import S3DateTime, s3_unicode
+from s3utils import S3DateTime, s3_orderby_fields, s3_unicode
     
 def translate(text):
     if text is None:
@@ -668,6 +668,15 @@ class IS_ONE_OF_EMPTY(Validator):
                         self.left = left
                 if self.left is not None:
                     dd.update(left=self.left)
+                    
+                # Make sure we have all ORDERBY fields in the query
+                # (otherwise postgresql will complain)
+                fieldnames = [str(f) for f in fields]
+                for f in s3_orderby_fields(dd.get("orderby")):
+                    if str(f) not in fieldnames:
+                        fields.append(f)
+                        fieldnames.append(str(f))
+
                 records = dbset(query).select(distinct=True, *fields, **dd)
             else:
                 # Note this does not support filtering.
