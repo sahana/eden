@@ -66,6 +66,8 @@ from gluon.dal import Row
 from gluon.storage import Storage
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
+from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+
 from ..s3 import *
 from s3layouts import S3AddResourceLink
 
@@ -4240,7 +4242,7 @@ class S3ProjectTaskModel(S3Model):
                         ),
                         "time_actual",
                     )
-
+ 
         # Resource Configuration
         configure(tablename,
                   super_entity="doc_entity",
@@ -5847,166 +5849,64 @@ def project_rheader(r):
     return rheader
 
 # =============================================================================
-def project_task_form_inject(r, output, project=True):
+def project_task_form_inject(r,project=True):
     """
         Inject Project, Activity & Milestone fields into a Task form
-        @ToDo: Re-implement using http://eden.sahanafoundation.org/wiki/S3SQLForm
     """
 
     T = current.T
-    db = current.db
     s3db = current.s3db
     auth = current.auth
     s3 = current.response.s3
     settings = current.deployment_settings
-
-    sep = ": "
-    s3_formstyle = settings.get_ui_formstyle()
-
-    table = s3db.project_task_activity
-    field = table.activity_id
-    default = None
-    if r.component_id:
-        query = (table.task_id == r.component_id)
-        default = db(query).select(field,
-                                   limitby=(0, 1)).first()
-        if default:
-            default = default.activity_id
-    elif r.id:
-        query = (table.task_id == r.id)
-        default = db(query).select(field,
-                                   limitby=(0, 1)).first()
-        if default:
-            default = default.activity_id
-    if not default:
-        default = field.default
-    field_id = "%s_%s" % (table._tablename, field.name)
-    if r.component:
-        requires = {}
-        table = db.project_activity
-        query = (table.project_id == r.id)
-        rows = db(query).select(table.id, table.name)
-        for row in rows:
-            requires[row.id] = row.name
-        field.requires = IS_IN_SET(requires)
-    else:
-        if default:
-            field.requires = IS_IN_SET([default])
-        else:
-            field.requires = IS_IN_SET([])
-    widget = SQLFORM.widgets.options.widget(field, default)
-    label = field.label
-    label = LABEL(label, label and sep, _for=field_id,
-                  _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
-    comment = S3AddResourceLink(T("Add Activity"),
-                                c="project",
-                                f="activity",
-                                tooltip=T("If you don't see the activity in the list, you can add a new one by clicking link 'Add Activity'."))
+    fields = ["task_activity.activity_id"]
+    
+    # project
     if project:
-        options = {"triggerName": "project_id",
-                   "targetName": "activity_id",
-                   "lookupPrefix": "project",
-                   "lookupResource": "activity",
-                   "optional": True,
-                   }
-        s3.jquery_ready.append('''S3OptionsFilter(%s)''' % json.dumps(options))
-    row_id = field_id + SQLFORM.ID_ROW_SUFFIX
-    row = s3_formstyle(row_id, label, widget, comment)
-    try:
-        output["form"][0].insert(0, row[1])
-    except:
-        # A non-standard formstyle with just a single row
-        pass
-    try:
-        output["form"][0].insert(0, row[0])
-    except:
-        pass
-
-    # Milestones
+        options = {
+            "triggerName": "project_id",
+            "targetName": "activity_id",
+            "lookupPrefix": "project",
+            "lookupResource": "activity",
+            "optional": True,
+        }
+        s3.jquery_ready.append('''S3OptionsFilter(%s)''' % json.dumps(options)) 
+        fields.append("task_project.project_id")
+    
+    fields.extend([ "name",
+                    "description",
+                    "source",
+                    "priority",
+                    "pe_id",
+                    "date_due",
+                    "time_estimated",
+                    "status",
+                    S3SQLInlineComponent(
+                                    "time", 
+                                    label = T("Time Log"), 
+                                    fields = ("date",
+                                    "person_id",
+                                    "hours",
+                                    "comments"), 
+                                     orderby = "date"),
+                     "time_actual"])
+    # milestone
     if settings.get_project_milestones():
-        table = s3db.project_task_milestone
-        field = table.milestone_id
-        if project and r.id:
-            query = (table.task_id == r.id)
-            default = db(query).select(field,
-                                       limitby=(0, 1)).first()
-            if default:
-                default = default.milestone_id
-        else:
-            default = field.default
-        field_id = "%s_%s" % (table._tablename, field.name)
-        # Options will be added later based on the Project
-        if default:
-            field.requires = IS_IN_SET({default:field.represent(default)})
-        else:
-            field.requires = IS_IN_SET([])
-        #widget = SELECT(_id=field_id, _name=field.name)
-        widget = SQLFORM.widgets.options.widget(field, default)
-        label = field.label
-        label = LABEL(label, label and sep, _for=field_id,
-                      _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
-        comment = S3AddResourceLink(T("Add Milestone"),
-                                    c="project",
-                                    f="milestone",
-                                    tooltip=T("If you don't see the milestone in the list, you can add a new one by clicking link 'Add Milestone'."))
-        options = {"triggerName": "project_id",
-                   "targetName": "milestone_id",
-                   "lookupPrefix": "project",
-                   "lookupResource": "milestone",
-                   "optional": True,
-                   }
+        options = {
+            "triggerName": "project_id",
+            "targetName": "milestone_id",
+            "lookupPrefix": "project",
+            "lookupResource": "milestone",
+            "optional": True,
+        }
         s3.jquery_ready.append('''S3OptionsFilter(%s)''' % json.dumps(options))
-        row_id = field_id + SQLFORM.ID_ROW_SUFFIX
-        row = s3_formstyle(row_id, label, widget, comment)
-        try:
-            output["form"][0].insert(14, row[1])
-            output["form"][0].insert(14, row[0])
-        except:
-            # A non-standard formstyle with just a single row
-            pass
-        try:
-            output["form"][0].insert(7, row[0])
-        except:
-            pass
+        fields.append("task_milestone.milestone_id")
 
-    if project:
-        vars = current.request.get_vars
-        if "project" in vars:
-            widget = INPUT(value=vars.project, _name="project_id")
-            row = s3_formstyle("project_task_project__row", "",
-                                   widget, "", hidden=True)
-        else:
-            table = s3db.project_task_project
-            field = table.project_id
-            if r.id:
-                query = (table.task_id == r.id)
-                default = db(query).select(table.project_id,
-                                           limitby=(0, 1)).first()
-                if default:
-                    default = default.project_id
-            else:
-                default = field.default
-            widget = field.widget or SQLFORM.widgets.options.widget(field, default)
-            field_id = "%s_%s" % (table._tablename, field.name)
-            label = field.label
-            label = LABEL(label, label and sep, _for=field_id,
-                          _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
-            comment = field.comment if auth.s3_has_role("STAFF") else ""
-            row_id = field_id + SQLFORM.ID_ROW_SUFFIX
-            row = s3_formstyle(row_id, label, widget, comment)
-        try:
-            output["form"][0].insert(0, row[1])
-        except:
-            # A non-standard formstyle with just a single row
-            pass
-        try:
-            output["form"][0].insert(0, row[0])
-        except:
-            pass
+    crud_form = S3SQLCustomForm(*fields)
+    return crud_form
 
-    return output
+# ======================================================================================
 
-# =============================================================================
 def project_task_controller():
     """
         Tasks Controller, defined in the model for use from
@@ -6018,6 +5918,21 @@ def project_task_controller():
     auth = current.auth
     s3 = current.response.s3
     vars = current.request.get_vars
+ 
+    s3db.add_component("project_task_activity",
+                    project_task = Storage(
+                    joinby="task_id",
+                    multiple = False))
+
+    s3db.add_component("project_task_project",
+                    project_task = Storage(
+                    joinby = "task_id",
+                    multiple = False))
+
+    s3db.add_component("project_task_milestone",
+                    project_task = Storage(
+                    joinby = "task_id",
+                    multiple = False))
 
     # Pre-process
     def prep(r):
@@ -6119,7 +6034,10 @@ def project_task_controller():
                 # Hide fields to avoid confusion (both of inputters & recipients)
                 table = r.table
                 field = table.time_actual
-                field.readable = field.writable = False
+                field.readable = field.writable = False 
+        if not r.method in ("search", "report"):
+            crud_form = project_task_form_inject(r)
+            s3db.configure("project_task", crud_form = crud_form)
         return True
     s3.prep = prep
 
@@ -6131,11 +6049,6 @@ def project_task_controller():
                 update_url = URL(args=["[id]"], vars=vars)
                 current.manager.crud.action_buttons(r,
                                                     update_url=update_url)
-                if not r.method in ("search", "report") and \
-                   "form" in output:
-                    # Insert fields to control the Project, Activity & Milestone
-                    output = project_task_form_inject(r, output)
-
         return output
     s3.postp = postp
 
