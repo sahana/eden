@@ -5768,7 +5768,7 @@ def project_rheader(r):
                                    limitby=(0, 1)).first()
         if project:
             project = TR(TH("%s: " % T("Project")),
-                         project_project_represent(id=None,
+                         s3db.project_project_represent(id=None,
                                                    row=project)
                          )
         else:
