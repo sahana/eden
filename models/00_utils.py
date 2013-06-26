@@ -306,7 +306,13 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     output = r(**attr)
 
     if isinstance(output, dict) and \
-       (not method or method in ("report", "search", "datatable", "summary")):
+       method in (None,
+                  "report",
+                  "search",
+                  "datatable",
+                  "datatable_f",
+                  "summary"):
+                      
         if s3.actions is None:
 
             # Add default action buttons
@@ -359,7 +365,11 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                 add_btn = A(label, _href=url, _class="action-btn")
                 output.update(add_btn=add_btn)
 
-    elif method not in ("import", "review", "approve", "reject", "deduplicate"):
+    elif method not in ("import",
+                        "review",
+                        "approve",
+                        "reject",
+                        "deduplicate"):
         s3.actions = None
 
     return output

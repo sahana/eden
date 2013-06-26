@@ -672,7 +672,7 @@ class IS_ONE_OF_EMPTY(Validator):
                 # Make sure we have all ORDERBY fields in the query
                 # (otherwise postgresql will complain)
                 fieldnames = [str(f) for f in fields]
-                for f in s3_orderby_fields(dd.get("orderby")):
+                for f in s3_orderby_fields(table, dd.get("orderby")):
                     if str(f) not in fieldnames:
                         fields.append(f)
                         fieldnames.append(str(f))

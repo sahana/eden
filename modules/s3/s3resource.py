@@ -698,12 +698,12 @@ class S3Resource(object):
                         # Already an aggregation
                         orderby.append(orderby_field)
                         continue
-                    elif type(f) is Field and op == db._adapter.INVERT:
+                    elif isinstance(f, Field) and op == db._adapter.INVERT:
                         direction = "desc"
                     else:
                         # Other expression - not supported
                         continue
-                elif type(orderby_field) is Field:
+                elif isinstance(orderby_field, Field):
                     direction = "asc"
                     f = orderby_field
                 elif isinstance(orderby_field, str):
@@ -1001,12 +1001,12 @@ class S3Resource(object):
                     if op == db._adapter.AGGREGATE:
                         # Already an aggregation
                         expression = item
-                    elif type(f) is Field and op == db._adapter.INVERT:
+                    elif isinstance(f, Field) and op == db._adapter.INVERT:
                         direction = "desc"
                     else:
                         # Other expression - not supported
                         continue
-                elif type(item) is Field:
+                elif isinstance(item, Field):
                     direction = "asc"
                     f = item
                 elif isinstance(item, str):
@@ -1130,7 +1130,7 @@ class S3Resource(object):
             gappend = groupby.append
             for item in items:
                 tname = None
-                if type(item) is Field:
+                if isinstance(item, Field):
                     f = item
                 elif isinstance(item, str):
                     fn = item.strip()
@@ -5248,7 +5248,7 @@ class S3FieldSelector(object):
 
         t = type(field)
         
-        if t is Field:
+        if isinstance(field, Field):
             f = field
             colname = str(field)
             tname, fname = colname.split(".", 1)

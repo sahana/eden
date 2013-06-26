@@ -1063,7 +1063,7 @@ def s3_flatlist(nested):
             yield item
 
 # =============================================================================
-def s3_orderby_fields(orderby):
+def s3_orderby_fields(table, orderby):
     """
         Introspect and yield all fields involved in a DAL orderby
         expression.
@@ -1075,13 +1075,14 @@ def s3_orderby_fields(orderby):
         return
 
     db = current.db
+    
     if isinstance(orderby, str):
         items = orderby.split(",")
     elif type(orderby) is Expression:
         def expand(e):
             f = e.first
             if e.op == db._adapter.COMMA:
-                if type(f) is Field:
+                if isinstance(f, Field):
                     return [f] + expand(e.second)
                 elif type(f) is Expression:
                     return expand(f) + expand(e.second)
@@ -1100,7 +1101,7 @@ def s3_orderby_fields(orderby):
             f = item.first
             if type(f) is not Field:
                 continue
-        elif type(item) is Field:
+        elif isinstance(item, Field):
             f = item
         elif isinstance(item, str):
             fn, direction = (item.strip().split() + ["asc"])[:2]
