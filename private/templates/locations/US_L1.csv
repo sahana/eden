@@ -1,52 +1,54 @@
-Country,L1,L1 KV:state
-US,Alabama,AL
-US,Alaska,AK
-US,Arizona,AZ
-US,Arkansas,AR
-US,California,CA
-US,Colorado,CO
-US,Connecticut,CT
-US,Delaware,DE
-US,District of Columbia,DC
-US,Florida,FL
-US,Georgia,GA
-US,Hawaii,HI
-US,Idaho,ID
-US,Illinois,IL
-US,Indiana,IN
-US,Iowa,IA
-US,Kansas,KS
-US,Kentucky,KY
-US,Louisiana,LA
-US,Maine,ME
-US,Maryland,MD
-US,Massachusetts,MA
-US,Michigan,MI
-US,Minnesota,MN
-US,Mississippi,MS
-US,Missouri,MO
-US,Montana,MT
-US,Nebraska,NE
-US,Nevada,NV
-US,New Hampshire,NH
-US,New Jersey,NJ
-US,New Mexico,NM
-US,New York,NY
-US,North Carolina,NC
-US,North Dakota,ND
-US,Ohio,OH
-US,Oklahoma,OK
-US,Oregon,OR
-US,Pennsylvania,PA
-US,Rhode Island,RI
-US,South Carolina,SC
-US,South Dakota,SD
-US,Tennessee,TN
-US,Texas,TX
-US,Utah,UT
-US,Vermont,VT
-US,Virginia,VA
-US,Washington,WA
-US,West Virginia,WV
-US,Wisconsin,WI
-US,Wyoming,WY
+Country,L1,L1 KV:state,L1 KV:FIPS
+US,Alabama,AL,01
+US,Alaska,AK,02
+US,Arizona,AZ,04
+US,Arkansas,AR,05
+US,California,CA,06
+US,Colorado,CO,08
+US,Connecticut,CT,09
+US,Delaware,DE,10
+US,District of Columbia,DC,11
+US,Florida,FL,12
+US,Georgia,GA,13
+US,Guam,GU,66
+US,Hawaii,HI,15
+US,Idaho,ID,16
+US,Illinois,IL,17
+US,Indiana,IN,18
+US,Iowa,IA,19
+US,Kansas,KS,20
+US,Kentucky,KY,21
+US,Louisiana,LA,22
+US,Maine,ME,23
+US,Maryland,MD,24
+US,Massachusetts,MA,25
+US,Michigan,MI,26
+US,Minnesota,MN,27
+US,Mississippi,MS,28
+US,Missouri,MO,29
+US,Montana,MT,30
+US,Nebraska,NE,31
+US,Nevada,NV,32
+US,New Hampshire,NH,33
+US,New Jersey,NJ,34
+US,New Mexico,NM,35
+US,New York,NY,36
+US,North Carolina,NC,37
+US,North Dakota,ND,38
+US,Ohio,OH,39
+US,Oklahoma,OK,40
+US,Oregon,OR,41
+US,Pennsylvania,PA,42
+US,Rhode Island,RI,44
+US,South Carolina,SC,45
+US,South Dakota,SD,46
+US,Tennessee,TN,47
+US,Texas,TX,48
+US,Utah,UT,49
+US,Vermont,VT,50
+US,Virginia,VA,51
+US,Virgin Islands,VI,78
+US,Washington,WA,53
+US,West Virginia,WV,54
+US,Wisconsin,WI,55
+US,Wyoming,WY,56

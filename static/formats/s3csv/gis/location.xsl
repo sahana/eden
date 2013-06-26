@@ -20,17 +20,17 @@
 
          CSV fields:
          L0.................L0 Name
-         L0 KV:XX...........L0 Key,Value (Key = XX in column name, value = cell in row)
+         L0 KV:XX...........L0 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
          L1.................L1 Name
-         L1 KV:XX ..........L1 Key,Value (Key = XX in column name, value = cell in row)
+         L1 KV:XX ..........L1 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
          L2.................L2 Name
-         L2 KV:XX ..........L2 Key,Value (Key = XX in column name, value = cell in row)
+         L2 KV:XX ..........L2 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
          L3.................L3 Name
-         L3 KV:XX ..........L3 Key,Value (Key = XX in column name, value = cell in row)
+         L3 KV:XX ..........L3 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
          L4.................L4 Name
-         L4 KV:XX ..........L4 Key,Value (Key = XX in column name, value = cell in row)
+         L4 KV:XX ..........L4 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
          L5.................L5 Name
-         L5 KV:XX ..........L5 Key,Value (Key = XX in column name, value = cell in row)
+         L5 KV:XX ..........L5 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
          For specific locations:
          Name...............Location Name
          KV:XX..............Key,Value
