@@ -589,12 +589,17 @@ def person_search():
         - allows differential access permissions
     """
 
+    # Load the normal model
+    table = s3db.hrm_human_resource
+
+    # Filter
     group = request.get_vars.get("group", None)
     if group == "staff":
-        s3.filter = (s3db.hrm_human_resource.type == 1)
+        s3.filter = (table.type == 1)
     elif group == "volunteer":
-        s3.filter = (s3db.hrm_human_resource.type == 2)
+        s3.filter = (table.type == 2)
 
+    # Plug in the specialised Search method
     s3db.configure("hrm_human_resource",
                    search_method = s3base.S3HRSearch(),
                    )
