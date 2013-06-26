@@ -312,11 +312,11 @@ class S3ReportForm(object):
                                _alt=current.T("Processing"),
                                _class="pt-throbber"),
                            DIV(_class="pt-table"),
-                           DIV(empty, _class="pt-empty"),
                            _class="pt-table-contents"
                        ),
                        _class="pt-table-container"
                    ),
+                   DIV(empty, _class="pt-empty"),
                    _class="pt-container",
                    _id=widget_id
                )
@@ -329,7 +329,7 @@ class S3ReportForm(object):
         script = """
 $("#%(widget_id)s").pivottable({
   showTotals: %(totals)s,
-  collapseForm: %(collapse)s,
+  collapseOptions: %(collapse)s,
   ajaxURL: %(ajaxurl)s
 });""" % {
             "widget_id": widget_id,

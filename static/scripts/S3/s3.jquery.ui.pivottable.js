@@ -18,10 +18,19 @@
         // Default options
         options: {
             showTotals: true,
-            collapseForm: true,
             ajaxURL: null,
-            defaultChart: null,
-            showChart: false
+            defaultChart: {
+                type: 'breakdown',
+                axis: 'rows'
+            },
+            renderFilter: true,
+            renderOptions: true,
+            renderChart: true,
+            renderTable: true,
+            collapseFilter: false,
+            collapseOptions: true,
+            collapseChart: true,
+            collapseTable: false
         },
 
         _create: function() {
@@ -59,11 +68,37 @@
                 this.chart = null;
             }
 
-            // Hide report options initially?
-            if (this.options.collapseForm) {
+            // Hide the form or parts of it?
+            if (!this.options.renderFilter && !this.options.renderOptions) {
+                $(el).find('.pt-form-container').hide();
+            } else {
                 var widget_id = $(el).attr('id');
-                $('#' + widget_id + '-options legend').siblings().toggle();
-                $('#' + widget_id + '-options legend').children().toggle();
+                if (this.options.renderOptions) {
+                    $('#' + widget_id + '-options').show();
+                    if (this.options.collapseOptions) {
+                        $('#' + widget_id + '-options legend').siblings().toggle();
+                        $('#' + widget_id + '-options legend').children().toggle();
+                    }
+                } else {
+                    $('#' + widget_id + '-options').hide();
+                }
+                if (this.options.renderFilter) {
+                    $('#' + widget_id + '-filters').show();
+                    if (this.options.collapseFilter) {
+                        $('#' + widget_id + '-filters legend').siblings().toggle();
+                        $('#' + widget_id + '-filters legend').children().toggle();
+                    }
+                } else {
+                    $('#' + widget_id + '-options').hide();
+                }
+            }
+
+            // Hide the pivot table?
+            if (this.options.collapseTable) {
+                this.table_options.hidden = true;
+                $(el).find('.pt-table').hide();
+                $(el).find('.pt-show-table').show();
+                $(el).find('.pt-hide-table').hide();
             }
 
             // Render all initial contents
@@ -95,7 +130,6 @@
                 // Show the empty section
                 $(el).find('.pt-hide-table').hide();
                 $(el).find('.pt-show-table').hide();
-                $(el).find('.pt-empty').show();
             }
             this.data = data;
 
@@ -106,7 +140,6 @@
                      .append($('<div class="pt-no-data">' + data.nodata + '</div>'));
                 $(el).find('.pt-hide-table').hide();
                 $(el).find('.pt-show-table').hide();
-                $(el).find('.pt-empty').hide();
                 this._renderChart();
 
             } else {
@@ -114,7 +147,11 @@
                 this._renderChartOptions();
                 this._renderChart();
             }
-            
+            if (data.empty) {
+                $(el).find('.pt-empty').show();
+            } else {
+                $(el).find('.pt-empty').hide();
+            }
             this._bindEvents();
 
             $(el).find('.pt-throbber').hide();
@@ -132,40 +169,40 @@
             if (data.empty) {
                 return;
             }
-            var cells = data.cells,
-                cols = data.cols,
-                rows = data.rows,
-                total = data.total,
-                labels = data.labels,
-                nodata = data.nodata;
 
-            // Render the table
-            var thead = this._renderHeader(cols, labels);
+            if (this.options.renderTable) {
+                var cells = data.cells,
+                    cols = data.cols,
+                    rows = data.rows,
+                    total = data.total,
+                    labels = data.labels,
+                    nodata = data.nodata;
 
-            thead.append(this._renderColumns(cols, labels));
+                // Render the table
+                var thead = this._renderHeader(cols, labels);
 
-            var tbody = this._renderRows(rows, cols, labels, cells),
-                tfoot = this._renderFooter(rows, cols, labels, total);
-            var table = $('<table class="dataTable display report"/>')
-                        .append(thead)
-                        .append(tbody);
-            if (tfoot !== null) {
-                table.append(tfoot);
-            }
-            this.table = $(table);
+                thead.append(this._renderColumns(cols, labels));
 
-            // Show the table
-            $(container).append(this.table);
-            
-            // Hide the empty section
-            $(el).find('.pt-empty').hide();
+                var tbody = this._renderRows(rows, cols, labels, cells),
+                    tfoot = this._renderFooter(rows, cols, labels, total);
+                var table = $('<table class="dataTable display report"/>')
+                            .append(thead)
+                            .append(tbody);
+                if (tfoot !== null) {
+                    table.append(tfoot);
+                }
+                this.table = $(table);
 
-            if (this.table_options.hidden) {
-                $(el).find('.pt-show-table').show();
-                $(el).find('.pt-hide-table').hide();
-            } else {
-                $(el).find('.pt-show-table').hide();
-                $(el).find('.pt-hide-table').show();
+                // Show the table
+                $(container).append(this.table);
+
+                if (this.table_options.hidden) {
+                    $(el).find('.pt-show-table').show();
+                    $(el).find('.pt-hide-table').hide();
+                } else {
+                    $(el).find('.pt-show-table').hide();
+                    $(el).find('.pt-hide-table').show();
+                }
             }
         },
 
@@ -316,7 +353,7 @@
             var container = $(el).find('.pt-chart-controls').first().empty();
             
             var data = this.data;
-            if (data.empty) {
+            if (data.empty || !this.options.renderChart) {
                 return;
             }
             var labels = data.labels;
@@ -389,23 +426,23 @@
             } else {
                 return;
             }
-            if (data.empty) {
+            if (data.empty || !this.options.renderChart) {
                 return;
             }
             if (chart_options === false) {
-                this.options.showChart = false;
+                this.options.collapseChart = true;
                 return;
             }
 
-            var showChart = this.options.showChart;
+            var collapseChart = this.options.collapseChart;
             if (typeof chart_options == 'undefined' || !chart_options) {
-                if (!showChart) {
+                if (collapseChart) {
                     return;
                 }
                 chart_options = this.chart_options.currentChart;
             }
             if (typeof chart_options == 'undefined' || !chart_options) {
-                if (!showChart) {
+                if (collapseChart) {
                     return;
                 }
                 chart_options = this.options.defaultChart;
@@ -414,7 +451,7 @@
                 return;
             }
             
-            this.options.showChart = true;
+            this.options.collapseChart = false;
             this.chart_options.currentChart = chart_options;
 
             var chart_type = chart_options.type,
