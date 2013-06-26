@@ -795,7 +795,7 @@ def person():
     else:
         trainings_tab = None
 
-    if settings.get_save_search_widget():
+    if settings.get_search_save_widget():
         searches_tab = (T("Saved Searches"), "saved_search")
     else:
         searches_tab = None

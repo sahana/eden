@@ -133,15 +133,8 @@ def location():
     table = s3db[tablename]
 
     args = request.args
-    if "search.json" in args:
-        gis_location_search = s3base.S3LocationSearch()
-        s3db.configure(tablename,
-                       # Custom Search Method
-                       search_method=gis_location_search,
-                       )
-
-    elif "search" in args or\
-         "report" in args:
+    if "search" in args or\
+       "report" in args:
         # Location Search Method
         gis_location_adv_search = (s3base.S3SearchSimpleWidget(
                 name = "location_search_text_advanced",

@@ -54,7 +54,7 @@ class S3Config(Storage):
         self.mail = Storage()
         self.msg = Storage()
         self.options = Storage()
-        self.save_search = Storage()
+        self.search = Storage()
         self.security = Storage()
         self.ui = Storage()
         self.cap = Storage()
@@ -937,11 +937,21 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # Save Search and Subscription
-    def get_save_search_widget(self):
+    def get_search_max_results(self):
+        """
+            The maximum number of results to return in an Autocomplete Search
+            - more than this will prompt the user to enter a more exact match
+            Lower this number to get extra performance from an overloaded server.
+        """
+        return self.search.get("max_results", 200)
+
+    # -------------------------------------------------------------------------
+    # Save Search and Subscription
+    def get_search_save_widget(self):
         """
             Enable the Saved Search widget
         """
-        return self.save_search.get("widget", True)
+        return self.search.get("save_widget", True)
 
     # =========================================================================
     # Modules

@@ -410,15 +410,6 @@ S3OptionsFilter({
                     represent = self.supply_item_represent,
                     label = T("Item"),
                     widget = S3AutocompleteWidget("supply", "item"),
-                    #widget = S3SearchAutocompleteWidget(
-                    #                get_fieldname = "item_id",
-                    #                tablename = "supply_catalog_item",
-                    #                represent = lambda id: \
-                    #                    self.supply_item_represent(id,
-                    #                                               show_link=False,
-                    #                                               # @ToDo: this doesn't work
-                    #                                               show_um=False),
-                    #                ),
                     comment=S3AddResourceLink(c="supply",
                                               f="item",
                                               label=ADD_ITEM,
@@ -916,6 +907,7 @@ S3OptionsFilter({
     def item_category_represent(id, row=None, use_code=True):
         """
             Represent an Item Category via it's hierarchy
+            @ToDo: Migrate to S3Represent
         """
 
         if row:
@@ -972,6 +964,7 @@ S3OptionsFilter({
         """
             Represent an item entity in option fields or list views
             - unused, we use VirtualField instead
+            @ToDo: Migrate to S3Represent
         """
 
         if not id:
@@ -1012,11 +1005,11 @@ S3OptionsFilter({
     # -------------------------------------------------------------------------
     @staticmethod
     def supply_item_represent(id, row=None,
-                              # Needed for S3SearchAutocompleteWidget
                               show_um = False,
                               show_link = True):
         """
             Representation of a supply_item
+            @ToDo: Migrate to S3Represent
         """
 
         if row:
@@ -1064,6 +1057,7 @@ S3OptionsFilter({
     def item_pack_represent(id, row=None):
         """
             Represent an Item Pack
+            @ToDo: Migrate to S3Represent
         """
 
         if row:

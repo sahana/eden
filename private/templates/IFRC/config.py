@@ -218,7 +218,7 @@ settings.ui.camp = True
 
 # -----------------------------------------------------------------------------
 # Save Search Widget
-settings.save_search.widget = False
+settings.search.save_widget = False
 
 
 # =============================================================================

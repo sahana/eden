@@ -103,9 +103,6 @@ settings.fin.currencies = {
 settings.ui.camp = True
 
 # -----------------------------------------------------------------------------
-# Save Search Widget
-settings.save_search.widget = False
-
 # Uncomment to restrict the export formats available
 settings.ui.export_formats = ["xls"]
 

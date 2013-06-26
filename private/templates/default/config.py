@@ -523,7 +523,9 @@ settings.L10n.decimal_separator = "."
 
 # -----------------------------------------------------------------------------
 # Save Search Widget
-#settings.save_search.widget = False
+#settings.search.save_widget = False
+# Maximum number of search results for an Autocomplete Widget
+#settings.search.max_results = 200
 
 # Terms of Service to be able to Register on the system
 #settings.options.terms_of_service = T("Terms of Service\n\nYou have to be eighteen or over to register as a volunteer.")

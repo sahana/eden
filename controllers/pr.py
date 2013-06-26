@@ -314,12 +314,11 @@ def contact_emergency():
 def person_search():
     """
         Person REST controller
-        - limited to just search.json for use in Autocompletes
+        - limited to just search_ac for use in Autocompletes
         - allows differential access permissions
     """
 
-    s3.prep = lambda r: r.representation == "json" and \
-                        r.method == "search"
+    s3.prep = lambda r: r.method == "search_ac"
     return s3_rest_controller(module, "person")
 
 # -----------------------------------------------------------------------------
@@ -400,10 +399,10 @@ def presence():
 def pentity():
     """
         RESTful CRUD controller
-        - limited to just search.json for use in Autocompletes
+        - limited to just search_ac for use in Autocompletes
     """
 
-    s3.prep = lambda r: r.representation in ("s3json", "json", "xml")
+    s3.prep = lambda r: r.method == "search_ac"
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------

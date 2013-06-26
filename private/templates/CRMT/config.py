@@ -108,10 +108,6 @@ settings.fin.currencies = {
 }
 
 # -----------------------------------------------------------------------------
-# Save Search Widget
-settings.save_search.widget = False
-
-# -----------------------------------------------------------------------------
 # Summary Pages
 settings.ui.summary = [{"common": True,
                         "name": "cms",

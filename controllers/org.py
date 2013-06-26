@@ -60,19 +60,14 @@ def subsector():
 def site():
     """
         RESTful CRUD controller
-        - used by S3SiteAutocompleteWidget(), which doesn't yet support filtering
-                                              to just updateable sites
+        - used by S3SiteAutocompleteWidget/S3SiteAddressAutocompleteWidget
+          which doesn't yet support filtering to just updateable sites
     """
 
     # Pre-processor
     def prep(r):
-        if r.representation != "json":
+        if r.method not in ("search_ac", "search_address_ac"):
             return False
-        if "address" in request.args:
-            # S3SiteAddressAutocompleteWidget
-            s3db.configure("org_site",
-                           search_method=s3base.S3SiteAddressSearch()
-                           )
 
         # Location Filter
         s3db.gis_location_filter(r)
@@ -342,14 +337,11 @@ def organisation():
 def org_search():
     """
         Organisation REST controller
-        - limited to just search.json for use in Autocompletes
+        - limited to just search_ac for use in Autocompletes
         - allows differential access permissions
     """
 
-    search_method = s3base.S3OrganisationSearch()
-    s3db.configure("org_organisation", search_method=search_method)
-    s3.prep = lambda r: r.representation == "json" and \
-                        r.method == "search"
+    s3.prep = lambda r: r.representation == "search_ac"
     return s3_rest_controller(module, "organisation")
 
 # -----------------------------------------------------------------------------

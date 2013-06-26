@@ -305,6 +305,11 @@ class S3LocationModel(S3Model):
                                   },
                        )
 
+        # Custom Method for S3LocationAutocompleteWidget
+        self.set_method("gis", "location",
+                        method="search_ac",
+                        action=self.gis_search_ac)
+
         # Tags as component of Locations
         add_component("gis_location_tag",
                       gis_location=dict(joinby="location_id",
@@ -691,6 +696,215 @@ class S3LocationModel(S3Model):
             return "%s(...)" % wkt[0:wkt.index("(")]
         else:
             return wkt
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_search_ac(r, **attr):
+        """
+            JSON search method for S3LocationAutocompleteWidget
+            - adds hierarchy support
+
+            @param r: the S3Request
+            @param attr: request attributes
+        """
+
+        output = None
+        response = current.response
+        resource = r.resource
+        table = r.resource.table
+
+        # Query comes in pre-filtered to accessible & deletion_status
+        # Respect response.s3.filter
+        resource.add_filter(response.s3.filter)
+
+        _vars = current.request.get_vars
+
+        limit = int(_vars.limit or 0)
+
+        # JQueryUI Autocomplete uses "term"
+        # old JQuery Autocomplete uses "q"
+        # what uses "value"?
+        value = _vars.term or _vars.value or _vars.q or None
+
+        # We want to do case-insensitive searches
+        # (default anyway on MySQL/SQLite, but not PostgreSQL)
+        if value:
+            value = value.lower().strip()
+
+        query = None
+        fields = []
+        field = table.id
+
+        if _vars.field and _vars.filter and value:
+            fieldname = str.lower(_vars.field)
+            field = table[fieldname]
+
+            if _vars.simple:
+                fields = [table.id,
+                          table.name,
+                          table.level,
+                          table.path,
+                          table.L0,
+                          table.L1,
+                          table.L2,
+                          table.L3
+                          ]
+            else:
+                # Default fields to return
+                fields = [table.id,
+                          table.name,
+                          table.level,
+                          table.parent,
+                          table.path,
+                          table.uuid,
+                          table.lat,
+                          table.lon,
+                          table.addr_street,
+                          table.addr_postcode
+                          ]
+
+            # Optional fields
+            if "level" in _vars and _vars.level:
+                if _vars.level == "null":
+                    level = None
+                elif "|" in _vars.level:
+                    level = _vars.level.split("|")
+                else:
+                    level = str.upper(_vars.level)
+            else:
+                level = None
+
+            if "parent" in _vars and _vars.parent:
+                if _vars.parent == "null":
+                    parent = None
+                else:
+                    parent = int(_vars.parent)
+            else:
+                parent = None
+
+            if "children" in _vars and _vars.children:
+                if _vars.children == "null":
+                    children = None
+                else:
+                    children = int(_vars.children)
+            else:
+                children = None
+
+            if "field2" in _vars and _vars.field2:
+                fieldname = str.lower(_vars.field2)
+                field2 = table[fieldname]
+            else:
+                field2 = None
+
+            if "exclude_field" in _vars:
+                exclude_field = str.lower(_vars.exclude_field)
+                if "exclude_value" in _vars:
+                    exclude_value = str.lower(_vars.exclude_value)
+                else:
+                    exclude_value = None
+            else:
+                exclude_field = None
+                exclude_value = None
+
+            filter = _vars.filter
+            if filter == "~":
+                if children:
+                    # LocationSelector
+                    children = current.gis.get_children(children, level=level)
+                    children = children.find(lambda row: \
+                                             row.name and value in str.lower(row.name))
+                    output = children.json()
+                    response.headers["Content-Type"] = "application/json"
+                    return output
+
+                if field2:
+                    # LocationSelector for addr_street
+                    query = ((field.lower().like(value + "%")) | \
+                             (field2.lower().like(value + "%")))
+
+                else:
+                    # Normal single-field
+                    query = (field.lower().like(value + "%"))
+
+                resource.add_filter(query)
+                if level:
+                    # LocationSelector or Autocomplete
+                    if isinstance(level, list):
+                        query = (table.level.belongs(level))
+                    elif str.upper(level) == "NULLNONE":
+                        level = None
+                        query = (table.level == level)
+                    else:
+                        query = (table.level == level)
+                else:
+                    # Filter out poor-quality data, such as from Ushahidi
+                    query = (table.level != "XX")
+
+                if parent:
+                    # LocationSelector
+                    resource.add_filter(query)
+                    query = (table.parent == parent)
+
+            elif filter == "=":
+                if field.type.split(" ")[0] in \
+                   ["reference", "id", "float", "integer"]:
+                    # Numeric, e.g. Organizations' offices_by_org
+                    query = (field == value)
+                else:
+                    # Text
+                    if value == "nullnone":
+                        # i.e. old Location Selector
+                        query = (field == None)
+                    else:
+                        query = (field.lower() == value)
+
+                if parent:
+                    # i.e. gis_location hierarchical search
+                    resource.add_filter(query)
+                    query = (table.parent == parent)
+
+                fields = [table.id,
+                          table.name,
+                          table.level,
+                          table.uuid,
+                          table.parent,
+                          table.lat,
+                          table.lon,
+                          table.addr_street,
+                          table.addr_postcode
+                          ]
+            else:
+                output = current.xml.json_message(False, 400,
+                                "Unsupported filter! Supported filters: ~, =")
+                raise HTTP(400, body=output)
+
+
+        if not fields:
+            append = fields.append
+            for field in table.fields:
+                append(table[field])
+
+        resource.add_filter(query)
+
+        MAX_SEARCH_RESULTS = current.deployment_settings.get_search_max_results()
+        if filter == "~":
+            if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
+                output = jsons([dict(id="",
+                                     name="Search results are over %d. Please input more characters." \
+                                        % MAX_SEARCH_RESULTS)])
+        elif not parent:
+            if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
+                output = jsons([])
+
+        if output is None:
+            output = S3Exporter().json(resource,
+                                       start=0,
+                                       limit=limit,
+                                       fields=fields,
+                                       orderby=field)
+
+        response.headers["Content-Type"] = "application/json"
+        return output
 
 # =============================================================================
 class S3LocationNameModel(S3Model):

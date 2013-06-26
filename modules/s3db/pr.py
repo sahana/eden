@@ -167,10 +167,10 @@ class S3PersonEntity(S3Model):
                              Field("pe_label", length=128))
 
         # Search method
-        pentity_search = S3PentitySearch(name = "pentity_search_simple",
-                                         label = T("Name and/or ID"),
-                                         comment = "",
-                                         field = ["pe_label"])
+        pentity_search = S3Search(name = "pentity_search_simple",
+                                  label = T("Name and/or ID"),
+                                  comment = "",
+                                  field = ["pe_label"])
 
         pentity_search.pentity_represent = pr_pentity_represent
 
@@ -190,6 +190,11 @@ class S3PersonEntity(S3Model):
                                       label = T("ID Tag Number"),
                                       requires = IS_NULL_OR(IS_NOT_ONE_OF(db,
                                                             "pr_pentity.pe_label")))
+
+        # Custom Method for S3AutocompleteWidget
+        self.set_method("pr", "pentity",
+                        method="search_ac",
+                        action=self.pe_search_ac)
 
         # Components
         pe_id = super_key(table)
@@ -361,6 +366,109 @@ class S3PersonEntity(S3Model):
             pr_role_types=role_types,
             pr_role_id=role_id,
         )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pe_search_ac(r, **attr):
+        """
+            JSON search method for S3AutocompleteWidget
+
+            @param r: the S3Request
+            @param attr: request attributes
+        """
+
+        response = current.response
+        resource = r.resource
+        table = resource.table
+        s3db = current.s3db
+
+        # Query comes in pre-filtered to accessible & deletion_status
+        # Respect response.s3.filter
+        resource.add_filter(response.s3.filter)
+
+        _vars = current.request.get_vars
+
+        # JQueryUI Autocomplete uses "term"
+        # old JQuery Autocomplete uses "q"
+        # what uses "value"?
+        value = _vars.term or _vars.value or _vars.q or None
+
+        # We want to do case-insensitive searches
+        # (default anyway on MySQL/SQLite, but not PostgreSQL)
+        value = value.lower()
+
+        filter = _vars.filter
+        limit = int(_vars.limit or 0)
+
+        # Persons
+        if filter and value:
+            ptable = s3db.pr_person
+            field = ptable.first_name
+            field2 = ptable.middle_name
+            field3 = ptable.last_name
+
+            if filter == "~":
+                # pr_person Autocomplete
+                if " " in value:
+                    value1, value2 = value.split(" ", 1)
+                    value2 = value2.strip()
+                    query = (field.lower().like(value1 + "%")) & \
+                            (field2.lower().like(value2 + "%")) | \
+                            (field3.lower().like(value2 + "%"))
+                else:
+                    value = value.strip()
+                    query = ((field.lower().like(value + "%")) | \
+                            (field2.lower().like(value + "%")) | \
+                            (field3.lower().like(value + "%")))
+                resource.add_filter(query)
+            else:
+                output = current.xml.json_message(False, 400,
+                                "Unsupported filter! Supported filters: ~")
+                raise HTTP(400, body=output)
+
+        resource.add_filter(ptable.pe_id == table.pe_id)
+
+        output = S3Exporter().json(resource, start=0, limit=limit,
+                                   fields=[table.pe_id], orderby=field)
+        items = json.loads(output)
+
+        # Add Groups
+        if filter and value:
+            gtable = s3db.pr_group
+            field = gtable.name
+            query = field.lower().like("%" + value + "%")
+            resource.clear_query()
+            resource.add_filter(query)
+            resource.add_filter(gtable.pe_id == table.pe_id)
+            output = S3Exporter().json(resource,
+                                       start=0,
+                                       limit=limit,
+                                       fields=[table.pe_id],
+                                       orderby=field)
+            items += json.loads(output)
+
+        # Add Organisations
+        if filter and value:
+            otable = s3db.org_organisation
+            field = otable.name
+            query = field.lower().like("%" + value + "%")
+            resource.clear_query()
+            resource.add_filter(query)
+            resource.add_filter(otable.pe_id == table.pe_id)
+            output = S3Exporter().json(resource,
+                                       start=0,
+                                       limit=limit,
+                                       fields=[table.pe_id],
+                                       orderby=field)
+            items += json.loads(output)
+
+        items = [{"id" : item[u'pe_id'],
+                  "name" : s3db.pr_pentity_represent(item[u'pe_id'],
+                                                     show_label=False)
+                  } for item in items ]
+        output = json.dumps(items)
+        response.headers["Content-Type"] = "application/json"
+        return output
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -671,7 +779,7 @@ class S3PersonModel(S3Model):
         table.age_group = Field.Lazy(self.pr_person_age_group)
 
         # Search method
-        pr_person_search = S3PersonSearch(
+        pr_person_search = S3Search(
             name="person_search_simple",
             label=T("Name and/or ID"),
             comment=T("To search for a person, enter any of the first, middle or last names and/or an ID number of a person, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all persons."),
@@ -743,6 +851,11 @@ class S3PersonModel(S3Model):
                                     comment = person_id_comment,
                                     ondelete = "RESTRICT",
                                     widget = S3PersonAutocompleteWidget())
+
+        # Custom Method for S3PersonAutocompleteWidget
+        self.set_method("pr", "person",
+                        method="search_ac",
+                        action=self.pr_search_ac)
 
         # Components
         add_component("pr_group_membership", pr_person="person_id")
@@ -1015,6 +1128,85 @@ class S3PersonModel(S3Model):
                 for citem in item.components:
                     citem.method = citem.METHOD.UPDATE
         return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pr_search_ac(r, **attr):
+        """
+            JSON search method for S3PersonAutocompleteWidget
+            - full name search
+        """
+
+        response = current.response
+        resource = r.resource
+
+        # Query comes in pre-filtered to accessible & deletion_status
+        # Respect response.s3.filter
+        resource.add_filter(response.s3.filter)
+
+        _vars = current.request.get_vars
+
+        # JQueryUI Autocomplete uses "term"
+        # old JQuery Autocomplete uses "q"
+        # what uses "value"?
+        value = _vars.term or _vars.value or _vars.q or None
+
+        if not value:
+            output = current.xml.json_message(
+                            False,
+                            400,
+                            "No value provided!"
+                        )
+            raise HTTP(400, body=output)
+
+        # We want to do case-insensitive searches
+        # (default anyway on MySQL/SQLite, but not PostgreSQL)
+        value = value.lower()
+
+        if " " in value:
+            value1, value2 = value.split(" ", 1)
+            value2 = value2.strip()
+            query = (S3FieldSelector("first_name").lower().like(value1 + "%")) & \
+                    ((S3FieldSelector("middle_name").lower().like(value2 + "%")) | \
+                     (S3FieldSelector("last_name").lower().like(value2 + "%")))
+        else:
+            value = value.strip()
+            query = ((S3FieldSelector("first_name").lower().like(value + "%")) | \
+                    (S3FieldSelector("middle_name").lower().like(value + "%")) | \
+                    (S3FieldSelector("last_name").lower().like(value + "%")))
+
+        resource.add_filter(query)
+
+        limit = int(_vars.limit or 0)
+        MAX_SEARCH_RESULTS = current.deployment_settings.get_search_max_results()
+        if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
+            output = jsons([dict(id="",
+                                 name="Search results are over %d. Please input more characters." \
+                                     % MAX_SEARCH_RESULTS)])
+        else:
+            fields = ["id",
+                      "first_name",
+                      "middle_name",
+                      "last_name",
+                      ]
+
+            rows = resource.select(fields=fields,
+                                   start=0,
+                                   limit=limit,
+                                   orderby="pr_person.first_name")
+
+            if rows:
+                items = [{"id"     : row.id,
+                          "first"  : row.first_name,
+                          "middle" : row.middle_name or "",
+                          "last"   : row.last_name or "",
+                          } for row in rows ]
+            else:
+                items = []
+            output = json.dumps(items)
+
+        response.headers["Content-Type"] = "application/json"
+        return output
 
 # =============================================================================
 class S3GroupModel(S3Model):

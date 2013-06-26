@@ -91,7 +91,7 @@ class S3Exporter(object):
 
             @note: export does not include components!
 
-            @ToDo: Deprecate (after modifying s3search json functions)
+            @ToDo: Deprecate (after modifying search_ac functions)
 
             @param resource: the resource to export
             @param start: index of the first record to export (for slicing)

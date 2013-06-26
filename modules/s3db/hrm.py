@@ -343,6 +343,11 @@ class S3HRModel(S3Model):
                                             ondelete = "RESTRICT"
                                             )
 
+        # Custom Method for S3HumanResourceAutocompleteWidget
+        self.set_method("hrm", "human_resource",
+                        method="search_ac",
+                        action=self.hrm_search_ac)
+
         # Components
         # Email
         add_component("pr_contact",
@@ -471,7 +476,6 @@ class S3HRModel(S3Model):
                           #  label=T("Skills"),
                           #  field="skill_id"
                           # ),
-                          # This currently breaks Requests from being able to save since this form is embedded inside the S3SearchAutocompleteWidget
                           #S3SearchMinMaxWidget(
                           #  name="human_resource_search_date",
                           #  method="range",
@@ -558,8 +562,8 @@ class S3HRModel(S3Model):
         crud_form = S3SQLCustomForm(*crud_fields)
 
         search_method = S3Search(
-            simple=(self.human_resource_search_simple_widget("simple")),
-            advanced=[self.human_resource_search_simple_widget("advanced")] + \
+            simple=(self.hrm_search_simple_widget("simple")),
+            advanced=[self.hrm_search_simple_widget("advanced")] + \
                       [w for w in search_widgets])
 
         if settings.get_hrm_org_required():
@@ -618,7 +622,7 @@ class S3HRModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def human_resource_search_simple_widget(type):
+    def hrm_search_simple_widget(type):
 
         T = current.T
 
@@ -633,6 +637,93 @@ class S3HRModel(S3Model):
                              "job_title_id$name",
                              ]
                     )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hrm_search_ac(r, **attr):
+        """
+            JSON search method for S3HumanResourceAutocompleteWidget
+            - full name search
+            - include Organisation & Job Role in the output
+        """
+
+        resource = r.resource
+        response = current.response
+        settings = current.deployment_settings
+
+        # Query comes in pre-filtered to accessible & deletion_status
+        # Respect response.s3.filter
+        resource.add_filter(response.s3.filter)
+
+        _vars = current.request.get_vars
+
+        # JQueryUI Autocomplete uses "term"
+        # old JQuery Autocomplete uses "q"
+        # what uses "value"?
+        value = _vars.term or _vars.value or _vars.q or None
+
+        if not value:
+            output = current.xml.json_message(False, 400, "No value provided!")
+            raise HTTP(400, body=output)
+
+        # We want to do case-insensitive searches
+        # (default anyway on MySQL/SQLite, but not PostgreSQL)
+        value = value.lower()
+
+        if " " in value:
+            # Multiple words
+            # - check for match of first word against first_name
+            # - & second word against either middle_name or last_name
+            value1, value2 = value.split(" ", 1)
+            value2 = value2.strip()
+            query = ((S3FieldSelector("person_id$first_name").lower().like(value1 + "%")) & \
+                    ((S3FieldSelector("person_id$middle_name").lower().like(value2 + "%")) | \
+                     (S3FieldSelector("person_id$last_name").lower().like(value2 + "%"))))
+        else:
+            # Single word - check for match against any of the 3 names
+            value = value.strip()
+            query = ((S3FieldSelector("person_id$first_name").lower().like(value + "%")) | \
+                     (S3FieldSelector("person_id$middle_name").lower().like(value + "%")) | \
+                     (S3FieldSelector("person_id$last_name").lower().like(value + "%")))
+
+        resource.add_filter(query)
+
+        limit = int(_vars.limit or 0)
+        MAX_SEARCH_RESULTS = settings.get_search_max_results()
+        if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
+            output = jsons([dict(id="",
+                                 name="Search results are over %d. Please input more characters." \
+                                    % MAX_SEARCH_RESULTS)])
+        else:
+            fields = ["id",
+                      "person_id$first_name",
+                      "person_id$middle_name",
+                      "person_id$last_name",
+                      "job_title_id$name",
+                      ]
+            show_orgs = settings.get_hrm_show_organisation()
+            if show_orgs:
+                fields.append("organisation_id$name")
+
+            rows = resource.select(fields=fields,
+                                   start=0,
+                                   limit=limit,
+                                   orderby="pr_person.first_name")
+
+            if rows:
+                items = [{"id"     : row["hrm_human_resource"].id,
+                          "first"  : row["pr_person"].first_name,
+                          "middle" : row["pr_person"].middle_name or "",
+                          "last"   : row["pr_person"].last_name or "",
+                          "org"    : row["org_organisation"].name if show_orgs else "",
+                          "job"    : row["hrm_job_title"].name or "",
+                          } for row in rows ]
+            else:
+                items = []
+            output = json.dumps(items)
+
+        response.headers["Content-Type"] = "application/json"
+        return output
 
     # -------------------------------------------------------------------------
     @staticmethod

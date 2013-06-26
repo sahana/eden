@@ -317,9 +317,6 @@ settings.project.mode_task = True
 # Uncomment this to use Activities for projects
 settings.project.activities = True
 
-# Save Search Widget
-#settings.save_search.widget = False
-
 # Terms of Service to be able to Register on the system
 #settings.options.terms_of_service = T("Terms of Service\n\nYou have to be eighteen or over to register as a volunteer.")
 # Should we use internal Support Requests?

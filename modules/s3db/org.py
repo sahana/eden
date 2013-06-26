@@ -306,6 +306,11 @@ class S3OrganisationModel(S3Model):
                                "website"
                                ])
 
+        # Custom Method for S3SiteAddressAutocompleteWidget
+        self.set_method("org", "organisation",
+                        method="search_ac",
+                        action=self.org_search_ac)
+
         # Components
 
         # Documents
@@ -648,6 +653,109 @@ class S3OrganisationModel(S3Model):
                     # Retain the correct spelling of the name
                     item.data.name = duplicate.name
                     item.method = item.METHOD.UPDATE
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def org_search_ac(r, **attr):
+        """
+            JSON search method for S3OrganisationAutocompleteWidget
+            - searches name & acronym for both this organisation & the parent
+              of branches
+            @param r: the S3Request
+            @param attr: request attributes
+        """
+
+        response = current.response
+        resource = r.resource
+        table = resource.table
+        settings = current.deployment_settings
+
+        use_branches = settings.get_org_branches()
+
+        # Query comes in pre-filtered to accessible & deletion_status
+        # Respect response.s3.filter
+        resource.add_filter(response.s3.filter)
+
+        _vars = current.request.get_vars
+
+        # JQueryUI Autocomplete uses "term"
+        # old JQuery Autocomplete uses "q"
+        # what uses "value"?
+        value = _vars.term or _vars.value or _vars.q or None
+
+        # We want to do case-insensitive searches
+        # (default anyway on MySQL/SQLite, but not PostgreSQL)
+        value = value.lower().strip()
+
+        filter = _vars.filter
+
+        if filter and value:
+
+            if filter == "~":
+                query = (S3FieldSelector("organisation.name").lower().like(value + "%")) | \
+                        (S3FieldSelector("organisation.acronym").lower().like(value + "%"))
+                if use_branches:
+                    query |= (S3FieldSelector("parent.name").lower().like(value + "%")) | \
+                             (S3FieldSelector("parent.acronym").lower().like(value + "%"))
+
+            else:
+                output = current.xml.json_message(False, 400,
+                                "Unsupported filter! Supported filters: ~")
+                raise HTTP(400, body=output)
+
+        resource.add_filter(query)
+
+        MAX_SEARCH_RESULTS = settings.get_search_max_results()
+        limit = int(_vars.limit or MAX_SEARCH_RESULTS)
+        if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
+            output = jsons([dict(id="",
+                                 name="Search results are over %d. Please input more characters." \
+                                 % MAX_SEARCH_RESULTS)])
+        else:
+            field = table.name
+            field2 = table.acronym
+
+            # Fields to return
+            fields = [table.id, field, field2]
+            if use_branches:
+                btable = current.s3db.org_organisation_branch
+                field3 = btable.organisation_id
+                fields.append(field3)
+                db = current.db
+
+            attributes = dict(orderby=field)
+            limitby = resource.limitby(start=0, limit=limit)
+            if limitby is not None:
+                attributes["limitby"] = limitby
+            rows = resource._load(*fields, **attributes)
+            output = []
+            append = output.append
+            for row in rows:
+                if use_branches:
+                    _row = row[table]
+                else:
+                    _row = row
+                name = _row.name
+                parent = None
+                if "org_organisation_branch" in row:
+                    query = (table.id == row[btable].organisation_id)
+                    parent = db(query).select(table.name,
+                                              limitby = (0, 1)).first()
+                    if parent:
+                        name = "%s > %s" % (parent.name, name)
+                if not parent:
+                    acronym = _row.acronym
+                    if acronym:
+                        name = "%s (%s)" % (name, acronym)
+                record = dict(
+                    id = _row.id,
+                    name = name,
+                    )
+                append(record)
+            output = jsons(output)
+
+        response.headers["Content-Type"] = "application/json"
+        return output
 
     # -----------------------------------------------------------------------------
     @staticmethod
@@ -1692,6 +1800,11 @@ class S3SiteModel(S3Model):
                                   comment=comment
                                   )
 
+        # Custom Method for S3SiteAddressAutocompleteWidget
+        self.set_method("org", "site",
+                        method="search_address_ac",
+                        action=self.site_search_address_ac)
+
         # Components
         add_component = self.add_component
 
@@ -1785,7 +1898,8 @@ class S3SiteModel(S3Model):
                         wildcard_posn.append(length - (1 + w))
                 wildcard_bit += 1
                 code_list = S3SiteModel.getCodeList(code, wildcard_posn)
-                temp_code = S3SiteModel.returnUniqueCode(code, wildcard_posn, code_list)
+                temp_code = S3SiteModel.returnUniqueCode(code, wildcard_posn,
+                                                         code_list)
         if temp_code:
             db(site_table.site_id == form.vars.site_id).update(code=temp_code)
 
@@ -1793,6 +1907,7 @@ class S3SiteModel(S3Model):
     @staticmethod
     def getCodeList(code, wildcard_posn=[]):
         """
+            Called by org_site_onaccept
         """
 
         temp_code = ""
@@ -1818,6 +1933,7 @@ class S3SiteModel(S3Model):
     @staticmethod
     def returnUniqueCode(code, wildcard_posn=[], code_list=[]):
         """
+            Called by org_site_onaccept
         """
 
         # Select the replacement letters with numbers first and then
@@ -1849,6 +1965,87 @@ class S3SiteModel(S3Model):
             # If no new permutation of replacement characters has been found
             if p == len(wildcard_posn):
                 return None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def site_search_address_ac(r, **attr):
+        """
+            JSON search method for S3SiteAddressAutocompleteWidget
+
+            @param r: the S3Request
+            @param attr: request attributes
+        """
+
+        response = current.response
+        resource = r.resource
+        table = resource.table
+
+        # Query comes in pre-filtered to accessible & deletion_status
+        # Respect response.s3.filter
+        resource.add_filter(response.s3.filter)
+
+        _vars = current.request.get_vars
+
+        # JQueryUI Autocomplete uses "term"
+        # old JQuery Autocomplete uses "q"
+        # what uses "value"?
+        value = _vars.term or _vars.value or _vars.q or None
+
+        # We want to do case-insensitive searches
+        # (default anyway on MySQL/SQLite, but not PostgreSQL)
+        value = value.lower().strip()
+
+        filter = _vars.filter
+
+        if filter and value:
+
+            if filter == "~":
+                query = (S3FieldSelector("name").lower().like(value + "%")) | \
+                        (S3FieldSelector("location_id$address").lower().like(value + "%"))
+
+            else:
+                output = current.xml.json_message(False, 400,
+                                "Unsupported filter! Supported filters: ~")
+                raise HTTP(400, body=output)
+
+        resource.add_filter(query)
+
+        MAX_SEARCH_RESULTS = current.deployment_settings.get_search_max_results()
+        limit = int(_vars.limit or MAX_SEARCH_RESULTS)
+        if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
+            output = jsons([dict(id="",
+                                 name="Search results are over %d. Please input more characters." \
+                                 % MAX_SEARCH_RESULTS)])
+        else:
+            s3db = current.s3db
+            field = table.name
+            field2 = s3db.gis_location.address
+
+            # Fields to return
+            fields = [table.id, field, field2]
+
+            attributes = dict(orderby=field)
+            limitby = resource.limitby(start=0, limit=limit)
+            if limitby is not None:
+                attributes["limitby"] = limitby
+            rows = resource._load(*fields, **attributes)
+            output = []
+            append = output.append
+            represent = s3db.org_site_represent
+            for row in rows:
+                name = represent(row[table].name)
+                address = row.gis_location.address
+                if address:
+                        name = "%s, %s" % (name, address)
+                record = dict(
+                    id = row[table].id,
+                    name = name,
+                    )
+                append(record)
+            output = jsons(output)
+
+        response.headers["Content-Type"] = "application/json"
+        return output
 
 # =============================================================================
 class S3SiteDetailsModel(S3Model):
@@ -3594,7 +3791,7 @@ def org_organisation_controller():
                     SECTOR = T("Cluster")
                 else:
                     SECTOR = T("Sector")
-                search_method = S3OrganisationSearch(
+                search_method = S3Search(
                         # simple = (S3SearchSimpleWidget(
                             # name="org_search_text_simple",
                             # label = T("Search"),

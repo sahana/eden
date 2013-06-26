@@ -20,7 +20,7 @@ S3.autocomplete.normal = function(fieldname, module, resourcename, input, filter
     var real_input = $('#' + input);
     var throbber = $('#' + dummy + '_throbber');
 
-    var url = S3.Ap.concat('/', module, '/', resourcename, '/search.json?filter=~&field=', fieldname);
+    var url = S3.Ap.concat('/', module, '/', resourcename, '/search_ac?filter=~&field=', fieldname);
     if (filter != 'undefined') {
         url += '&' + filter;
     }
@@ -269,7 +269,7 @@ S3.autocomplete.person = function(module, resourcename, input, postprocess, dela
     var real_input = $('#' + input);
     var throbber = $('#' + dummy + '_throbber');
 
-    var url = S3.Ap.concat('/', module, '/', resourcename, '/search.json');
+    var url = S3.Ap.concat('/', module, '/', resourcename, '/search_ac');
 
     // Optional args
     if (postprocess == 'undefined') {
@@ -402,13 +402,13 @@ S3.autocomplete.hrm = function(group, input, postprocess, delay, min_length) {
 
     if (group == "staff") {
         // Search Staff using S3HRSearch
-        var url = S3.Ap.concat('/hrm/person_search/search.json?group=staff');
+        var url = S3.Ap.concat('/hrm/person_search/search_ac?group=staff');
     } else if (group == "volunteer") {
         // Search Volunteers using S3HRSearch
-        var url = S3.Ap.concat('/vol/person_search/search.json');
+        var url = S3.Ap.concat('/vol/person_search/search_ac');
     } else {
         // Search all HRs using S3HRSearch
-        var url = S3.Ap.concat('/hrm/person_search/search.json');
+        var url = S3.Ap.concat('/hrm/person_search/search_ac');
     }
 
     // Optional args
@@ -579,7 +579,7 @@ S3.autocomplete.site = function(input, postprocess, delay, min_length) {
     var real_input = $('#' + input);
     var throbber = $('#' + dummy + '_throbber');
 
-    var url = S3.Ap.concat('/org/site/search.json?field=name&filter=~');
+    var url = S3.Ap.concat('/org/site/search_ac?field=name&filter=~');
 
     // Optional args
     if (postprocess == 'undefined') {
@@ -700,8 +700,7 @@ S3.autocomplete.site_address = function(input, postprocess, delay, min_length) {
     var real_input = $('#' + input);
     var throbber = $('#' + dummy + '_throbber');
 
-    // Address arg tells controller to use S3SiteAddressSearch
-    var url = S3.Ap.concat('/org/site/search.json/address?field=name&filter=~');
+    var url = S3.Ap.concat('/org/site/search_address_ac?field=name&filter=~');
 
     // Optional args
     if (postprocess == 'undefined') {

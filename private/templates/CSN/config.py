@@ -112,10 +112,6 @@ settings.fin.currencies = {
 # Enable this to use the label 'Camp' instead of 'Shelter'
 #settings.ui.camp = True
 
-# -----------------------------------------------------------------------------
-# Save Search Widget
-settings.save_search.widget = False
-
 # =============================================================================
 # Module Settings
 

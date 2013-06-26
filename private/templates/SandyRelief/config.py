@@ -381,8 +381,8 @@ def customize_org_organisation(**attr):
                                 #hidden=True,
                                 ),
                 ]
-            from s3.s3search import S3OrganisationSearch, S3SearchSimpleWidget, S3SearchOptionsWidget
-            search_method = S3OrganisationSearch(
+            from s3.s3search import S3Search, S3SearchSimpleWidget, S3SearchOptionsWidget
+            search_method = S3Search(
                 simple=(),
                 advanced=(
                     S3SearchSimpleWidget(

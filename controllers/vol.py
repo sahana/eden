@@ -613,17 +613,14 @@ def person():
 def person_search():
     """
         Person REST controller
-        - limited to just search.json for use in Autocompletes
+        - limited to just search_ac for use in Autocompletes
         - allows differential access permissions
     """
 
+    # Filter
     s3.filter = (s3db.hrm_human_resource.type == 2)
 
-    s3db.configure("hrm_human_resource",
-                   search_method = s3base.S3HRSearch(),
-                   )
-    s3.prep = lambda r: r.representation == "json" and \
-                        r.method == "search"
+    s3.prep = lambda r: r.method == "search_ac"
     return s3_rest_controller("hrm", "human_resource")
 
 # =============================================================================
