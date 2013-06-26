@@ -322,8 +322,10 @@
             var labels = data.labels;
 
             var widget_id = $(el).attr('id'),
+                layer_label = labels.layer,
                 rows_label = labels.rows,
                 cols_label = labels.cols,
+                per = labels.per,
                 chart_opts = $('<div class="pt-chart-opts">');
                 
             var pchart_rows = widget_id + '-pchart-rows',
@@ -333,11 +335,16 @@
                 vchart_cols = widget_id + '-vchart-cols',
                 hchart_cols = widget_id + '-hchart-cols';
 
+            if (layer_label) {
+                $(chart_opts).append($(
+                    '<span class="pt-chart-label">' + layer_label + '</span>'
+                ));
+            }
             if (rows_label) {
                 $(chart_opts).append($(
                     '<div id="' + pchart_rows + '" class="pt-chart-icon pt-pchart"/>' +
                     '<div id="' + vchart_rows + '" class="pt-chart-icon pt-vchart"/>' +
-                    '<span class="pt-chart-label">' + rows_label + '</span>'
+                    '<span class="pt-chart-label">' + per + ' ' + rows_label + '</span>'
                 ));
             }
 
@@ -345,16 +352,21 @@
                 $(chart_opts).append($(
                     '<div id="' + pchart_cols + '" class="pt-chart-icon pt-pchart"/>' +
                     '<div id="' + vchart_cols + '" class="pt-chart-icon pt-vchart"/>' +
-                    '<span class="pt-chart-label">' + cols_label + '</span>'
+                    '<span class="pt-chart-label">' + per + ' '  + cols_label + '</span>'
                 ));
             }
 
             if (rows_label && cols_label) {
                 $(chart_opts).append($(
+                    '<span class="pt-chart-label">| ' + labels.breakdown + '</span>' +
                     '<div id="' + hchart_rows + '" class="pt-chart-icon pt-hchart"/>' +
-                    '<span class="pt-chart-label">' + rows_label + '</span>' +
+                    '<span class="pt-chart-label">' +
+                        [per, rows_label, '&amp;', cols_label].join(' ') +
+                    '</span>' +
                     '<div id="' + hchart_cols + '"  class="pt-chart-icon pt-hchart"/>' +
-                    '<span class="pt-chart-label">' + cols_label + '</span>'
+                    '<span class="pt-chart-label">' +
+                        [per, cols_label, '&amp;', rows_label].join(' ') +
+                    '</span>'
                 ));
             }
 

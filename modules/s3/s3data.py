@@ -1873,6 +1873,7 @@ class S3PivotTable(object):
                   "total": str(T("Total")),
                   "none": str(current.messages["NONE"]),
                   "per": str(T("per")),
+                  "breakdown": str(T("Breakdown")),
                  }
 
         # Layer title
