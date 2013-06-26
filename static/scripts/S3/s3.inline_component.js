@@ -380,21 +380,14 @@ $(function() {
             // Add edit-button
             var edit = '#edt-' + formname + '-none';
             if ($(edit).length !== 0) {
-                read_row += '<td><a id="edt-' +
-                            formname + '-' +
-                            newindex + '" class="inline-edt" href="#">' +
-                            $(edit).html() +
-                            '</a></td>';
+                read_row += '<td><div><div id="edt-' + formname + '-' + newindex + '" class="inline-edt"></div></div></td>';
             } else {
                 read_row += '<td></td>';
             }
             // Add remove-button
             var remove = '#rmv-' + formname + '-none';
             if ($(remove).length !== 0) {
-                read_row += '<td><a id="rmv-' + formname + '-' +
-                            newindex + '" class="inline-rmv" href="#">' +
-                            $(remove).html() +
-                            '</a></td>';
+                read_row += '<td><div><div id="rmv-' + formname + '-' + newindex + '" class="inline-rmv"></div></div></td>';
             } else {
                 read_row += '<td></td>';
             }
@@ -467,22 +460,14 @@ $(function() {
             // Add edit-button
             var edit = '#edt-' + formname + '-none';
             if ($(edit).length !== 0) {
-                read_row += '<td><a id="edt-' +
-                            formname + '-' +
-                            rowindex + '" class="inline-edt" href="#">' +
-                            $(edit).html() +
-                            '</a></td>';
+                read_row += '<td><div><div id="edt-' + formname + '-' + rowindex + '" class="inline-edt"></div></div></td>';
             } else {
                 read_row += '<td></td>';
             }
             // Add remove-button
             var remove = '#rmv-' + formname + '-none';
             if ($(remove).length !== 0) {
-                read_row += '<td><a id="rmv-' +
-                            formname + '-' +
-                            rowindex + '" class="inline-rmv" href="#">' +
-                            $(remove).html() +
-                            '</a></td>';
+                read_row += '<td><div><div id="rmv-' + formname + '-' + rowindex + '" class="inline-rmv"></div></div></td>';
             } else {
                 read_row += '<td></td>';
             }
