@@ -705,18 +705,18 @@ class S3HRModel(S3Model):
             if show_orgs:
                 fields.append("organisation_id$name")
 
-            rows = resource.select(fields=fields,
-                                   start=0,
-                                   limit=limit,
-                                   orderby="pr_person.first_name")
+            rows = resource.fast_select(fields,
+                                        start=0,
+                                        limit=limit,
+                                        orderby="pr_person.first_name")["rows"]
 
             if rows:
-                items = [{"id"     : row["hrm_human_resource"].id,
-                          "first"  : row["pr_person"].first_name,
-                          "middle" : row["pr_person"].middle_name or "",
-                          "last"   : row["pr_person"].last_name or "",
-                          "org"    : row["org_organisation"].name if show_orgs else "",
-                          "job"    : row["hrm_job_title"].name or "",
+                items = [{"id"     : row["hrm_human_resource.id"],
+                          "first"  : row["pr_person.first_name"],
+                          "middle" : row["pr_person.middle_name"] or "",
+                          "last"   : row["pr_person.last_name"] or "",
+                          "org"    : row["org_organisation.name"] if show_orgs else "",
+                          "job"    : row["hrm_job_title.name"] or "",
                           } for row in rows ]
             else:
                 items = []

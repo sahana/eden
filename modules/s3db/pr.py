@@ -1190,16 +1190,16 @@ class S3PersonModel(S3Model):
                       "last_name",
                       ]
 
-            rows = resource.select(fields=fields,
-                                   start=0,
-                                   limit=limit,
-                                   orderby="pr_person.first_name")
+            rows = resource.fast_select(fields=fields,
+                                        start=0,
+                                        limit=limit,
+                                        orderby="pr_person.first_name")["rows"]
 
             if rows:
-                items = [{"id"     : row.id,
-                          "first"  : row.first_name,
-                          "middle" : row.middle_name or "",
-                          "last"   : row.last_name or "",
+                items = [{"id"     : row["pr_person.id"],
+                          "first"  : row["pr_person.first_name"],
+                          "middle" : row["pr_person.middle_name"] or "",
+                          "last"   : row["pr_person.last_name"] or "",
                           } for row in rows ]
             else:
                 items = []
