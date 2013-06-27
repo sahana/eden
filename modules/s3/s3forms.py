@@ -2718,7 +2718,6 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                                     break
                         if found:
                             _rows = _component.fast_select(["id"],
-                                                           start=None,
                                                            limit=None,
                                                            as_rows=True)
                             values = [r.id for r in _rows]
@@ -2763,8 +2762,6 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                     _resource.add_filter(S3FieldSelector(filter_field) == options)
 
             rows = _resource.fast_select(fields=fields,
-                                         # Override default limit=PAGESIZE
-                                         start=None,
                                          limit=None,
                                          orderby=table.name,
                                          as_rows=True)

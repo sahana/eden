@@ -371,7 +371,6 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         table.organisation_id.represent = renderer
 
         data = resource.fast_select(["id", "organisation_id"],
-                                    start=None,
                                     limit=None,
                                     represent=True)
         result = data["rows"]
@@ -402,7 +401,6 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         table.organisation_id.represent = renderer
 
         data = resource.fast_select(["id", "organisation_id"],
-                                    start=None,
                                     limit=None,
                                     represent=True)
         result = data["rows"]
@@ -437,7 +435,6 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         table.organisation_id.represent = renderer
 
         data = resource.fast_select(["id", "organisation_id"],
-                                    start=None,
                                     limit=None,
                                     represent=True,
                                     show_links=False)
@@ -466,7 +463,6 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         resource = s3db.resource("org_organisation", id=self.org.id)
 
         data = resource.fast_select(["id", "name", "facility.location_id"],
-                                    start=None,
                                     limit=None,
                                     represent=True)
         result = data["rows"]
@@ -497,7 +493,6 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         resource = s3db.resource("org_organisation", id=self.org.id)
 
         data = resource.fast_select(["id", "name", "facility.location_id"],
-                                    start=None,
                                     limit=None,
                                     represent=True)
         result = data["rows"]
@@ -531,7 +526,6 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         resource = s3db.resource("org_organisation", id=self.org.id)
 
         data = resource.fast_select(["id", "name", "facility.location_id"],
-                                    start=None,
                                     limit=None,
                                     represent=True,
                                     show_links=False)
@@ -563,7 +557,6 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         table.facility_type_id.represent = renderer
 
         data = resource.fast_select(["id", "facility_type_id"],
-                                    start=None,
                                     limit=None,
                                     represent=True)
         result = data["rows"]
@@ -599,7 +592,6 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         table.facility_type_id.represent = renderer
 
         data = resource.fast_select(["id", "facility_type_id"],
-                                    start=None,
                                     limit=None,
                                     represent=True)
 
@@ -639,7 +631,6 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         table.facility_type_id.represent = renderer
 
         data = resource.fast_select(["id", "facility_type_id"],
-                                    start=None,
                                     limit=None,
                                     represent=True,
                                     show_links=False)
@@ -675,7 +666,6 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         resource = s3db.resource("org_organisation", id=self.org.id)
 
         data = resource.fast_select(["id", "name", "facility.location_id"],
-                                    start=None,
                                     limit=None,
                                     represent=True,
                                     show_links=False)
@@ -709,7 +699,6 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         resource = s3db.resource("org_organisation", id=org.id)
 
         data = resource.fast_select(["id", "facility.facility_type_id"],
-                                    start=None,
                                     limit=None,
                                     represent=True)
         result = data["rows"]
@@ -748,7 +737,6 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         resource = s3db.resource("org_organisation", id=org.id)
 
         data = resource.fast_select(["id", "facility.facility_type_id"],
-                                    start=None,
                                     limit=None,
                                     represent=True)
         result = data["rows"]
@@ -790,7 +778,6 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         resource = s3db.resource("org_organisation", id=org.id)
 
         data = resource.fast_select(["id", "facility.facility_type_id"],
-                                    start=None,
                                     limit=None,
                                     represent=True,
                                     show_links=False)

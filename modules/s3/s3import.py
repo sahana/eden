@@ -881,7 +881,6 @@ class S3Importer(S3CRUD):
             resource = self.resource
             resource.add_filter(s3.filter)
             rows = resource.fast_select(["id", "element", "error"],
-                                        start=None,
                                         limit=None)["rows"]
             return (upload_id, select_list, rows)
 

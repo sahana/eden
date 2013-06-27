@@ -1973,8 +1973,7 @@ class GIS(object):
                     fields.insert(0, pkey)
 
                 data = resource.fast_select(fields,
-                                            # Override default limit=PAGESIZE
-                                            start=None,
+                                            limit=None,
                                             represent=True)
 
                 rfields = data["rfields"]

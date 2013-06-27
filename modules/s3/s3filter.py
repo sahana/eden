@@ -754,7 +754,6 @@ class S3LocationFilter(S3FilterWidget):
 
         # Find the options
         rows = resource.fast_select(fields=fields,
-                                    start=None,
                                     limit=None,
                                     virtual=False,
                                     as_rows=True)
@@ -1054,7 +1053,6 @@ class S3OptionsFilter(S3FilterWidget):
                 groupby = field if field and not multiple else None
                 virtual = field is None
                 rows = resource.fast_select([selector],
-                                            start=None,
                                             limit=None,
                                             orderby=field,
                                             groupby=groupby,

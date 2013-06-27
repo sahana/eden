@@ -1180,8 +1180,7 @@ class S3PivotTable(object):
 
         # Retrieve the records ------------------------------------------------
         #
-        data = resource.fast_select(self.rfields.keys(),
-                                    start=None, limit=None)
+        data = resource.fast_select(self.rfields.keys(), limit=None)
         drows = data["rows"]
         if drows:
 

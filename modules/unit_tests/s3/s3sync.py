@@ -55,7 +55,7 @@ class ExportMergeTests(unittest.TestCase):
         resource = s3db.resource("org_office",
                                  uid=["TESTSYNCOFFICE1", "TESTSYNCOFFICE2"])
                                  
-        records = resource.fast_select(["id", "uuid"])["rows"]
+        records = resource.fast_select(["id", "uuid"], limit=None)["rows"]
         self.assertNotEqual(records, None)
         
         ids = dict([(record["org_office.uuid"], record["org_office.id"])
@@ -176,7 +176,7 @@ class ImportMergeWithExistingRecords(unittest.TestCase):
         # Check the existing records
         resource = s3db.resource("org_organisation",
                                  uid =uids, include_deleted = True)
-        result = resource.fast_select(test_fields)["rows"]
+        result = resource.fast_select(test_fields, limit=None)["rows"]
         self.assertEqual(len(result), 2)
         for record in result:
             self.assertTrue(record[UUID] in uids)
@@ -206,7 +206,7 @@ class ImportMergeWithExistingRecords(unittest.TestCase):
         # Check the result
         resource = s3db.resource("org_organisation",
                                  uid =uids, include_deleted = True)
-        result = resource.fast_select(test_fields)["rows"]
+        result = resource.fast_select(test_fields, limit=None)["rows"]
         self.assertEqual(len(result), 2)
         for record in result:
             if record[UUID] == "TESTIMPORTMERGEORG1":
@@ -258,7 +258,7 @@ class ImportMergeWithExistingOriginal(unittest.TestCase):
         # Check the existing record
         resource = s3db.resource("org_organisation",
                                  uid =uids, include_deleted = True)
-        result = resource.fast_select(test_fields)["rows"]
+        result = resource.fast_select(test_fields, limit=None)["rows"]
         self.assertEqual(len(result), 1)
         record = result[0]
         self.assertTrue(record[UUID] in uids)
@@ -286,7 +286,7 @@ class ImportMergeWithExistingOriginal(unittest.TestCase):
         # get exported - hence no need to test the handling of it
         resource = s3db.resource("org_organisation",
                                  uid =uids, include_deleted = True)
-        result = resource.fast_select(test_fields)["rows"]
+        result = resource.fast_select(test_fields, limit=None)["rows"]
         self.assertEqual(len(result), 1)
         record = result[0]
         self.assertEqual(record[UUID], "TESTIMPORTMERGEORG3")
@@ -334,7 +334,7 @@ class ImportMergeWithExistingDuplicate(unittest.TestCase):
         # Check the existing records
         resource = s3db.resource("org_organisation",
                                  uid =uids, include_deleted = True)
-        result = resource.fast_select(test_fields)["rows"]
+        result = resource.fast_select(test_fields, limit=None)["rows"]
         self.assertEqual(len(result), 1)
         record = result[0]
         self.assertTrue(record[UUID] in uids)
@@ -361,7 +361,7 @@ class ImportMergeWithExistingDuplicate(unittest.TestCase):
         # Check the result: new record gets imported, duplicate merged into it
         resource = s3db.resource("org_organisation",
                                  uid =uids, include_deleted = True)
-        result = resource.fast_select(test_fields)["rows"]
+        result = resource.fast_select(test_fields, limit=None)["rows"]
         self.assertEqual(len(result), 2)
         for record in result:
             if record[UUID] == "TESTIMPORTMERGEORG5":
@@ -402,7 +402,7 @@ class ImportMergeWithoutExistingRecords(unittest.TestCase):
         # Check the existing records
         resource = s3db.resource("org_organisation",
                                  uid =uids, include_deleted = True)
-        result = resource.fast_select(test_fields)["rows"]
+        result = resource.fast_select(test_fields, limit=None)["rows"]
         self.assertEqual(len(result), 0)
 
         # Send the merge
@@ -426,7 +426,7 @@ class ImportMergeWithoutExistingRecords(unittest.TestCase):
         # get exported - hence no need to test the handling of it
         resource = s3db.resource("org_organisation",
                                  uid =uids, include_deleted = True)
-        result = resource.fast_select(test_fields)["rows"]
+        result = resource.fast_select(test_fields, limit=None)["rows"]
         self.assertEqual(len(result), 1)
         for record in result:
             self.assertEqual(record[UUID], "TESTIMPORTMERGEORG7")

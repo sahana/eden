@@ -1842,7 +1842,7 @@ class S3Resource(object):
         tablename = self.tablename
         table = self.table
 
-        records = self.fast_select([self._id.name])
+        records = self.fast_select([self._id.name], limit=None)
         for record in records["rows"]:
 
             record_id = record[str(self._id)]
@@ -4366,7 +4366,7 @@ class S3Resource(object):
         return current.s3db.get_config(self.tablename, key, default=default)
 
     # -------------------------------------------------------------------------
-    def limitby(self, start=None, limit=None):
+    def limitby(self, start=0, limit=0):
         """
             Convert start+limit parameters into a limitby tuple
                 - limit without start => start = 0
@@ -4378,16 +4378,13 @@ class S3Resource(object):
             @param limit: maximum number of records to select
         """
 
+        if limit is None:
+            return None
+            
         if start is None:
-            if not limit:
-                return None
-            else:
-                start = 0
-
-        if not limit:
+            start = 0
+        if limit == 0:
             limit = current.manager.ROWSPERPAGE
-            if limit is None:
-                return None
 
         if limit <= 0:
             limit = 1
@@ -7414,7 +7411,11 @@ class S3ResourceFilter(object):
                 return 0
 
         else:
-            data = resource.fast_select([table._id.name], count=True)
+            data = resource.fast_select([table._id.name],
+                                        # We don't really want to retrieve
+                                        # any rows but just count, hence:
+                                        limit=1,
+                                        count=True)
             return data["numrows"]
 
     # -------------------------------------------------------------------------

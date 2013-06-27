@@ -117,7 +117,6 @@ def index2():
                     totalrows = None
                 site_list = {}
                 data = resource.fast_select(list_fields,
-                                            start=None,
                                             limit=None,
                                             count=True)
                 filteredrows = data["numrows"]
@@ -230,7 +229,6 @@ def index2():
                            "model",
                            ]
             data = resource.fast_select(list_fields,
-                                        start=None,
                                         limit=None,
                                         count=True,
                                         represent=True)

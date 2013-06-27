@@ -77,7 +77,6 @@ class S3SHP(S3Codec):
 
         data = resource.fast_select(list_fields,
                                     left=left,
-                                    start=None,
                                     limit=None,
                                     orderby=orderby,
                                     represent=True,

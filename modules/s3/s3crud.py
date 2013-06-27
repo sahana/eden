@@ -892,23 +892,27 @@ class S3CRUD(S3Method):
             r.unauthorised()
 
         # Pagination
-        vars = self.request.get_vars
+        get_vars = self.request.get_vars
         if representation == "aadata":
-            start = vars.get("iDisplayStart", None)
-            limit = vars.get("iDisplayLength", None)
+            start = get_vars.get("iDisplayStart", None)
+            limit = get_vars.get("iDisplayLength", 0)
         else:
-            start = vars.get("start", None)
-            limit = vars.get("limit", None)
-        if limit is not None:
-            try:
-                start = int(start)
-                limit = int(limit)
-            except ValueError:
-                start = None
-                limit = None # use default
+            start = get_vars.get("start", None)
+            limit = get_vars.get("limit", 0)
+        if limit:
+            if limit.lower() == "none":
+                limit = None
+            else:
+                try:
+                    start = int(start)
+                    limit = int(limit)
+                except ValueError:
+                    start = None
+                    limit = 0 # use default
         else:
-            start = None # use default
-
+            # Use defaults
+            start = None
+            
         # Linkto
         if not linkto:
             linkto = self._linkto(r)
@@ -984,9 +988,9 @@ class S3CRUD(S3Method):
             # Server-side pagination?
             if not s3.no_sspag:
                 dt_pagination = "true"
-                if limit is None:
+                if not limit:
                     limit = 2 * display_length
-                session.s3.filter = vars
+                session.s3.filter = get_vars
                 if orderby is None:
                     dt_sorting = {
                         "iSortingCols": "1",
@@ -1057,7 +1061,7 @@ class S3CRUD(S3Method):
                                      vars=session.s3.filter)
 
             # Apply datatable filters
-            searchq, orderby, left = resource.datatable_filter(list_fields, vars)
+            searchq, orderby, left = resource.datatable_filter(list_fields, get_vars)
             if searchq is not None:
                 totalrows = resource.count()
                 resource.add_filter(searchq)
@@ -1085,7 +1089,7 @@ class S3CRUD(S3Method):
                 totalrows = displayrows
 
             # Echo
-            sEcho = int(vars.sEcho or 0)
+            sEcho = int(get_vars.sEcho or 0)
 
             # Representation
             if dt is not None:
@@ -1110,7 +1114,7 @@ class S3CRUD(S3Method):
                 if r.record:
                     r.id = r.record.id
                     self.record_id = self._record_id(r)
-                    if "update" in vars and \
+                    if "update" in get_vars and \
                        self._permitted(method="update"):
                          items = self.update(r, **attr).get("form", None)
                     else:
@@ -1122,7 +1126,9 @@ class S3CRUD(S3Method):
                 else:
                     raise HTTP(404, body="Record not Found")
             else:
-                rows = resource.fast_select(list_fields, as_rows=True)
+                rows = resource.fast_select(list_fields,
+                                            limit=None,
+                                            as_rows=True)
                 if rows:
                     items = rows.as_list()
                 else:
@@ -1305,7 +1311,9 @@ class S3CRUD(S3Method):
                 else:
                     raise HTTP(404, body="Record not Found")
             else:
-                rows = resource.fast_select(list_fields, as_rows=True)
+                rows = resource.fast_select(list_fields,
+                                            limit=None,
+                                            as_rows=True)
                 if rows:
                     items = rows.as_list()
                 else:
@@ -1323,14 +1331,14 @@ class S3CRUD(S3Method):
 
             get_vars = self.request.get_vars
             start = get_vars.get("start", None)
-            limit = get_vars.get("limit", None)
-            if limit is not None:
+            limit = get_vars.get("limit", 0)
+            if limit:
                 try:
                     start = int(start)
                     limit = int(limit)
                 except ValueError:
                     start = None
-                    limit = None # use default
+                    limit = 0 # use default
             else:
                 start = None
 
@@ -1430,19 +1438,23 @@ class S3CRUD(S3Method):
         get_vars = self.request.get_vars
         if representation == "aadata":
             start = get_vars.get("iDisplayStart", None)
-            limit = get_vars.get("iDisplayLength", None)
+            limit = get_vars.get("iDisplayLength", 0)
         else:
             start = get_vars.get("start", None)
-            limit = get_vars.get("limit", None)
-        if limit is not None:
-            try:
-                start = int(start)
-                limit = int(limit)
-            except ValueError:
-                start = None
-                limit = None # use default
+            limit = get_vars.get("limit", 0)
+        if limit:
+            if limit.lower() == "none":
+                limit = None
+            else:
+                try:
+                    start = int(start)
+                    limit = int(limit)
+                except ValueError:
+                    start = None
+                    limit = 0 # use default
         else:
-            start = None # use default
+            # Use defaults
+            start = None
 
         # Initialize output
         output = {}
@@ -1480,7 +1492,7 @@ class S3CRUD(S3Method):
             # Server-side pagination?
             if not s3.no_sspag:
                 dt_pagination = "true"
-                if limit is None:
+                if not limit:
                     limit = 2 * display_length
                 session.s3.filter = get_vars
                 if orderby is None:
@@ -1675,14 +1687,17 @@ class S3CRUD(S3Method):
             limit = 1
         else:
             start = get_vars.get("start", None)
-            limit = get_vars.get("limit", None)
-            if limit is not None:
-                try:
-                    start = int(start)
-                    limit = int(limit)
-                except ValueError:
-                    start = None
-                    limit = None # use default
+            limit = get_vars.get("limit", 0)
+            if limit:
+                if limit.lower() == "none":
+                    limit = None
+                else:
+                    try:
+                        start = int(start)
+                        limit = int(limit)
+                    except ValueError:
+                        start = None
+                        limit = 0 # use default
             else:
                 start = None
 
@@ -1848,21 +1863,25 @@ class S3CRUD(S3Method):
         # Pagination
         vars = self.request.get_vars
         if representation == "aadata":
-            start = vars.get("iDisplayStart", None)
-            limit = vars.get("iDisplayLength", None)
+            start = get_vars.get("iDisplayStart", None)
+            limit = get_vars.get("iDisplayLength", 0)
         else:
-            start = vars.get("start", None)
-            limit = vars.get("limit", None)
-        if limit is not None:
-            try:
-                start = int(start)
-                limit = int(limit)
-            except ValueError:
-                start = None
-                limit = None # use default
+            start = get_vars.get("start", None)
+            limit = get_vars.get("limit", 0)
+        if limit:
+            if limit.lower() == "none":
+                limit = None
+            else:
+                try:
+                    start = int(start)
+                    limit = int(limit)
+                except ValueError:
+                    start = None
+                    limit = 0 # use default
         else:
-            start = None # use default
-
+            # Use defaults
+            start = None
+            
         # Linkto
         if not linkto:
             linkto = self._linkto(r)
@@ -1915,7 +1934,7 @@ class S3CRUD(S3Method):
             # Server-side pagination?
             if not s3.no_sspag:
                 dt_pagination = "true"
-                if limit is None:
+                if not limit:
                     limit = 2 * display_length
                 session.s3.filter = vars
                 if orderby is None:

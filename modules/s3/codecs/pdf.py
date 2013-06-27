@@ -313,7 +313,6 @@ class S3RL_PDF(S3Codec):
 
         result = resource.fast_select(list_fields,
                                       left=left,
-                                      start=None,
                                       limit=None,
                                       count=True,
                                       getids=True,

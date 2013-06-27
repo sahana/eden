@@ -837,7 +837,6 @@ class organisations():
         """ Generate a datatable in the organisations custom page """
 
         data = resource.fast_select(field_list,
-                                    start=None,
                                     limit=None,
                                     orderby=orderby,
                                     count=True,
