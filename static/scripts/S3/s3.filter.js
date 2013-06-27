@@ -25,8 +25,45 @@ S3.search = {};
         } else {
             return (value);
         }
-    }
+    };
 
+    /**
+     * clearFilters: remove all selected filter options
+     */
+    var clearFilters = function(form) {
+        
+        form = typeof form !== 'undefined' ? form : $('body');
+ 
+        form.find('.text-filter').each(function() {
+            $(this).val('');
+        });
+        form.find('.options-filter, .location-filter').each(function() {
+            if (this.tagName.toLowerCase() == 'select') {
+                $this = $(this)
+                $this.val('');
+                if ($this.hasClass('groupedopts-filter-widget') && typeof $this.groupedopts != 'undefined') {
+                    $this.groupedopts('refresh');
+                } else
+                if ($this.hasClass('multiselect-filter-widget') && typeof $this.multiselect != 'undefined') {
+                    $this.multiselect('refresh');
+                }
+            } else {
+                var id = $(this).attr('id');
+                $("input[name='" + id + "']:checked").each(function() {
+                    $(this).click();
+                });
+            }
+        });
+        form.find('.range-filter-input').each(function() {
+            $(this).val('');
+        });
+        form.find('.date-filter-input').each(function() {
+            $(this).val('');
+        });
+        // Other widgets go here
+        
+    };
+    
     /**
      * getCurrentFilters: retrieve all current filters
      */
@@ -249,7 +286,7 @@ S3.search = {};
             }
             $(submit_url).val(update_url);
         }
-    }
+    };
 
     /**
      * filterURL: add filters to a URL
@@ -473,7 +510,7 @@ S3.search = {};
                 S3.gis.refreshLayer('search_results');
             }
         }
-    }
+    };
 
     /**
      * Set up the Tabs for an S3Summary page
@@ -510,7 +547,7 @@ S3.search = {};
                 updatePendingTargets(form);
             }
         });
-    }
+    };
 
     /**
      * Initialise Maps for an S3Summary page
@@ -535,7 +572,7 @@ S3.search = {};
                 }
             }
         }
-    }
+    };
     
     /**
      * Initialise Map for an S3Map page
@@ -551,7 +588,7 @@ S3.search = {};
         var queries = getCurrentFilters();
         // Load the layer
         gis.refreshLayer('search_results', queries);
-    }
+    };
 
     /**
      * A Hierarchical Location Filter has changed
@@ -700,7 +737,7 @@ S3.search = {};
                 }
             }
         }
-    }
+    };
 
     /**
      * document-ready script
@@ -732,6 +769,7 @@ S3.search = {};
         // Advanced button
         $('.filter-advanced').on('click', function() {
             // Toggle visibility & mark widgets as [in]active
+            // @todo: select form
             $('.advanced').each(function() {
                 var that = $(this);
                 // Ignoring .multiselect-filter-bootstrap as not used & to be deprecated
@@ -755,10 +793,16 @@ S3.search = {};
             hierarchical_location_change(this);
         });
 
+        $('.filter-clear').click(function() {
+            var form = $(this).closest('.filter-form');
+            clearFilters(form);
+        });
+        
         // Filter-form submission
         $('.filter-submit').click(function() {
             var that = $(this);
             var url = that.nextAll('input.filter-submit-url[type="hidden"]').val(),
+                // @todo: select form
                 queries = getCurrentFilters();
 
             if (that.hasClass('filter-ajax')) {

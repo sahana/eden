@@ -814,6 +814,9 @@ span.tab_next_inactive a {
     margin-left: 15px;
     cursor: pointer;
 }
+.action-lnk:first-child {
+    margin-left: 0;
+}
 
 .sublabels {
     font-size: 85%;

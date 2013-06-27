@@ -985,9 +985,11 @@ class S3DateWidget(FormWidget):
                         _type = "text",
                         value = (value != None and str(value)) or "",
                     )
+                    
         attr = StringWidget._attributes(field, default, **attributes)
-
-        attr["_class"] = "date"
+        
+        widget = INPUT(**attr)
+        widget.add_class("date")
 
         if "_id" in attr:
             selector = attr["_id"]
@@ -1005,9 +1007,7 @@ class S3DateWidget(FormWidget):
              future = self.future,
              format = format))
 
-        return TAG[""](INPUT(**attr),
-                       requires = field.requires
-                       )
+        return TAG[""](widget, requires = field.requires)
 
 # =============================================================================
 class S3DateTimeWidget(FormWidget):

@@ -1216,21 +1216,9 @@ class S3FilterForm(object):
                                     alias=alias,
                                     formstyle=formstyle)
 
-        advanced = self.opts.get("advanced", False)
-        if advanced:
-            _class = "filter-advanced"
-            if advanced is True:
-                label = current.T("More Options")
-            elif isinstance(advanced, (list, tuple)):
-                label = advanced[0]
-                _class = "%s %s" % (advanced[1], _class)
-            else:
-                label = advanced
-            advanced = INPUT(_type="button",
-                             _value=label,
-                             _class=_class)
-
-            rows.append(formstyle(None, "", advanced, ""))
+        controls = self._render_controls()
+        if controls:
+            rows.append(formstyle(None, "", controls, ""))
 
         submit = self.opts.get("submit", False)
         if submit:
@@ -1303,6 +1291,10 @@ class S3FilterForm(object):
                                     alias=alias,
                                     formstyle=formstyle)
 
+        controls = self._render_controls()
+        if controls:
+            rows.append(formstyle(None, "", controls, ""))
+        
         # Adapt to formstyle: only render a TABLE if formstyle returns TRs
         if rows:
             elements = rows[0]
@@ -1316,6 +1308,49 @@ class S3FilterForm(object):
                 fields = DIV(rows)
 
         return fields
+
+    # -------------------------------------------------------------------------
+    def _render_controls(self):
+        """
+            Render optional additional filter form controls: advanced
+            options toggle, clear filters.
+        """
+
+        controls = []
+    
+        advanced = self.opts.get("advanced", False)
+        if advanced:
+            _class = "filter-advanced"
+            if advanced is True:
+                label = current.T("More Options")
+            elif isinstance(advanced, (list, tuple)):
+                label = advanced[0]
+                _class = "%s %s" % (advanced[1], _class)
+            else:
+                label = advanced
+            advanced = INPUT(_type="button",
+                             _value=label,
+                             _class=_class)
+            controls.append(advanced)
+
+        clear = self.opts.get("clear", True)
+        if clear:
+            _class = "filter-clear"
+            if clear is True:
+                label = current.T("Reset all filters")
+            elif isinstance(clear, (list, tuple)):
+                label = clear[0]
+                _class = "%s %s" % (clear[1], _class)
+            else:
+                label = clear
+            clear = A(label, _class=_class)
+            clear.add_class("action-lnk")
+            controls.append(clear)
+
+        if controls:
+            return DIV(controls, _class="filter-controls")
+        else:
+            return None
 
     # -------------------------------------------------------------------------
     def _render_widgets(self,
