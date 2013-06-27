@@ -1334,7 +1334,7 @@ class S3Msg(object):
         return True
 
     # -------------------------------------------------------------------------
-    def fetch_inbound_email(self, username):
+    def fetch_inbound_email(self, username, server):
         """
             This is a simple mailbox polling script for the Messaging Module.
             It is called from the scheduler.
@@ -1367,12 +1367,15 @@ class S3Msg(object):
         inbox_table = s3db.msg_email_inbox
         log_table = s3db.msg_log
         source_task_id = username
+        setting_table = s3db.msg_email_inbound_channel
 
         # Read-in configuration from Database
-        settings = db(s3db.msg_email_inbound_channel.username == username).select(limitby=(0, 1)).first()
+        query = (setting_table.username == username) & (setting_table.server == server)
+        settings = db(query).select(limitby=(0, 1)).first()
         if not settings:
-            return "Username %s not scheduled." % username
-        host = settings.server
+            return "Username %s (%s) not scheduled." % username % server
+        
+        host = server
         protocol = settings.protocol
         ssl = settings.use_ssl
         port = settings.port

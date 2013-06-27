@@ -341,7 +341,7 @@ def org_search():
         - allows differential access permissions
     """
 
-    s3.prep = lambda r: r.representation == "search_ac"
+    s3.prep = lambda r: r.method == "search_ac"
     return s3_rest_controller(module, "organisation")
 
 # -----------------------------------------------------------------------------
