@@ -1979,7 +1979,8 @@ class S3ImportItem(object):
             self.accepted = False
             return False
 
-        ERROR = current.xml.ATTRIBUTE["error"]
+        xml = current.xml
+        ERROR = xml.ATTRIBUTE["error"]
 
         METHOD = self.METHOD
         DELETE = METHOD["DELETE"]
@@ -2002,23 +2003,38 @@ class S3ImportItem(object):
 
         all_fields = self.data.keys()
 
+        failed_references = []
         items = self.job.items
         for reference in self.references:
-            resolved = True
+            resolvable = resolved = True
             entry = reference.entry
             if entry and not entry.id:
                 if entry.item_id:
                     item = items[entry.item_id]
                     if item.error:
+                        relement = reference.element
+                        if relement is not None:
+                            # Repeat the errors from the referenced record
+                            # in the <reference> element (better reasoning)
+                            msg = "; ".join(xml.collect_errors(entry.element))
+                            relement.set(ERROR, msg)
+                        else:
+                            resolvable = False
                         resolved = False
                 else:
-                    resolved = False
+                    resolvable = resolved = False
+            field = reference.field
+            if isinstance(field, (tuple, list)):
+                field = field[1]
             if resolved:
-                field = reference.field
-                if isinstance(field, (tuple, list)):
-                    all_fields.append(field[1])
-                else:
-                    all_fields.append(field)
+                all_fields.append(field)
+            elif resolvable:
+                # Both reference and referenced record are in the XML,
+                # => treat foreign key as mandatory, and mark as failed
+                if field not in required_fields:
+                    required_fields.append(field)
+                if field not in failed_references:
+                    failed_references.append(field)
 
         missing = [fname for fname in required_fields
                          if fname not in all_fields]
@@ -2029,8 +2045,17 @@ class S3ImportItem(object):
                 missing = [fname for fname in missing
                                  if fname not in original]
             if missing:
-                fields = ", ".join(missing)
-                self.error = "%s: value(s) required" % fields
+                fields = [f for f in missing
+                            if f not in failed_references]
+                if fields:
+                    errors = ["%s: value(s) required" % ", ".join(fields)]
+                else:
+                    errors = []
+                if failed_references:
+                    fields = ", ".join(failed_references)
+                    errors.append("%s: reference import(s) failed" %
+                                  ", ".join(failed_references))
+                self.error = "; ".join(errors)
                 self.element.set(ERROR, self.error)
                 self.accepted = False
                 return False
@@ -2157,7 +2182,7 @@ class S3ImportItem(object):
                     # Skip this item on any component validation errors
                     self.skip = True
                     self.error = self.ERROR.VALIDATION_ERROR
-                    return False
+                    return ignore_errors
 
         elif self.method in (MERGE, DELETE) and not self.accepted:
             self.skip = True
@@ -2300,7 +2325,7 @@ class S3ImportItem(object):
                 except:
                     self.error = sys.exc_info()[1]
                     self.skip = True
-                    return False
+                    return ignore_errors
                 else:
                     self.committed = True
             else:
@@ -2334,7 +2359,7 @@ class S3ImportItem(object):
                 except:
                     self.error = sys.exc_info()[1]
                     self.skip = True
-                    return False
+                    return ignore_errors
                 if success:
                     self.id = success
                     self.committed = True
@@ -2413,7 +2438,7 @@ class S3ImportItem(object):
                     except:
                         self.error = sys.exc_info()[1]
                         self.skip = True
-                        return False
+                        return ignore_errors
                     if success:
                         self.committed = True
                 else:
@@ -3187,11 +3212,13 @@ class S3ImportJob():
                                                 id=_id,
                                                 item_id=None)
                                 reference_list.append(Storage(field=field,
+                                                              element=reference,
                                                               entry=entry))
                             else:
                                 continue
                     else:
                         reference_list.append(Storage(field=field,
+                                                      element=reference,
                                                       entry=entry))
 
             # Create entries for all newly found elements
@@ -3212,7 +3239,9 @@ class S3ImportJob():
                 if uid and directory is not None:
                     directory[(tablename, attr, uid)] = entry
                 # Append the entry to the reference list
-                reference_list.append(Storage(field=field, entry=entry))
+                reference_list.append(Storage(field=field,
+                                              element=reference,
+                                              entry=entry))
 
         return reference_list
 
@@ -3284,10 +3313,23 @@ class S3ImportJob():
         updated = []
         deleted = []
         tablename = self.table._tablename
+        
+        failed = False
         for item_id in import_list:
             item = items[item_id]
             error = None
-            success = item.commit(ignore_errors=ignore_errors)
+            
+            if item.accepted is not False:
+                logged = False
+                success = item.commit(ignore_errors=ignore_errors)
+            else:
+                # Field validation failed
+                logged = True
+                success = ignore_errors
+
+            if not success:
+                failed = True
+                
             error = item.error
             if error:
                 self.error = error
@@ -3295,9 +3337,9 @@ class S3ImportJob():
                 if element is not None:
                     if not element.get(ATTRIBUTE.error, False):
                         element.set(ATTRIBUTE.error, str(self.error))
-                    self.error_tree.append(deepcopy(element))
-                if not ignore_errors:
-                    return False
+                    if not logged:
+                        self.error_tree.append(deepcopy(element))
+                    
             elif item.tablename == tablename:
                 count += 1
                 if mtime is None or item.mtime > mtime:
@@ -3309,6 +3351,10 @@ class S3ImportJob():
                         updated.append(item.id)
                     elif item.method in (METHOD.MERGE, METHOD.DELETE):
                         deleted.append(item.id)
+                        
+        if failed:
+            return False
+            
         self.count = count
         self.mtime = mtime
         self.created = created
