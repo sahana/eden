@@ -163,11 +163,17 @@ class S3Report2(S3Method):
             hide_filter = attr.get("hide_filter", False)
             filter_widgets = get_config("filter_widgets", None)
             if filter_widgets and not hide_filter:
+                advanced = False
+                for widget in filter_widgets:
+                    if "hidden" in widget.opts and widget.opts.hidden:
+                        advanced = resource.get_config("report_advanced", True)
+                        break
 
                 from s3filter import S3FilterForm
                 filter_formstyle = get_config("filter_formstyle", None)
                 filter_form = S3FilterForm(filter_widgets,
                                            formstyle=filter_formstyle,
+                                           advanced=advanced,
                                            submit=False,
                                            _class="filter-form",
                                            _id="%s-filter-form" % widget_id)

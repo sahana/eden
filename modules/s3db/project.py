@@ -1180,12 +1180,6 @@ class S3ProjectActivityModel(S3Model):
 
         # Search Method
         filter_widgets = [
-            S3TextFilter(["name",
-                          "comments",
-                          ],
-                         label=T("Name"),
-                         _class="filter-search",
-                         ),
             S3OptionsFilter("activity_type_id",
                             label=T("Type"),
                             represent="%(name)s",

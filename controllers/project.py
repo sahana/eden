@@ -577,7 +577,9 @@ def activity():
     s3.postp = postp
 
     return s3_rest_controller(rheader=s3db.project_rheader,
-                              csv_template="activity")
+                              csv_template="activity"
+                              hide_filter=False,
+                              )
 
 # -----------------------------------------------------------------------------
 def location():
