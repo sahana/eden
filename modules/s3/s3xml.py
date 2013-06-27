@@ -555,69 +555,86 @@ class S3XML(S3Codec):
                 dbfield = ogetattr(table, f)
             except:
                 continue
-            #if f not in record or not record[f]:
-                #continue
+
             ktablename, pkey, multiple = s3_get_foreign_key(dbfield)
             if not ktablename:
+                # Not a foreign key
                 continue
+            
             val = ids = ogetattr(record, f)
 
-            try:
-                ktable = db.get(ktablename) #db[ktablename]
-            except:
+            ktable = load_table(ktablename)
+            if not ktable:
+                # Referenced table doesn't exist
                 continue
 
             ktable_fields = ktable.fields
             k_id = ktable._id
 
-            if pkey is None:
-                pkey = k_id.name
-            if multiple:
-                query = k_id.belongs(ids)
-                limitby = None
-            else:
-                query = k_id == ids
-                limitby = (0, 1)
-
             uid = None
             uids = None
 
+            if pkey is None:
+                pkey = k_id.name
             if pkey != "id" and "instance_type" in ktable_fields:
 
+                # Super-link
                 if multiple:
-                    # @todo: can't currently resolve multi-references
-                    # to super-entities
+                    # @todo: Can't currently resolve multi-references to
+                    # super-entities
                     continue
+                else:
+                    query = (k_id == ids)
 
+                # Get the super-record
                 srecord = db(query).select(ogetattr(ktable, UID),
                                            ktable.instance_type,
                                            limitby=(0, 1)).first()
                 if not srecord:
                     continue
+                    
                 ktablename = srecord.instance_type
                 uid = ogetattr(srecord, UID)
+                
                 if ktablename == tablename and \
                    UID in record and ogetattr(record, UID) == uid and \
                    not show_ids:
+                    # Super key in the main instance record, never export
                     continue
+                
                 ktable = load_table(ktablename)
                 if not ktable:
                     continue
-                krecord = db(ktable[UID] == uid).select(ktable._id,
-                                                        limitby=(0, 1)).first()
+                    
+                # Make sure the referenced record is accessible:
+                query = current.auth.s3_accessible_query("read", ktable) & \
+                        (ktable[UID] == uid)
+                krecord = db(query).select(ktable._id, limitby=(0, 1)).first()
+                
                 if not krecord:
                     continue
+                    
                 ids = [krecord[ktable._id]]
                 uids = [export_uid(uid)]
 
             else:
+
+                # Make sure the referenced records are accessible:
+                query = current.auth.s3_accessible_query("read", ktable)
+                if multiple:
+                    query &= (k_id.belongs(ids))
+                    limitby = None
+                else:
+                    query &= (k_id == ids)
+                    limitby = (0, 1)
+                    
                 if DELETED in ktable_fields:
                     query = (ktable.deleted != True) & query
-
                 if filter_mci and MCI in ktable_fields:
                     query = (ktable.mci >= 0) & query
 
                 if UID in ktable_fields:
+                    
                     krecords = db(query).select(ogetattr(ktable, UID),
                                                 limitby=limitby)
                     if krecords:
@@ -627,6 +644,7 @@ class S3XML(S3Codec):
                     else:
                         continue
                 else:
+                    
                     krecord = db(query).select(k_id, limitby=(0, 1)).first()
                     if not krecord:
                         continue
@@ -645,6 +663,7 @@ class S3XML(S3Codec):
             else:
                 text = value
 
+            # Add the entry to the reference map
             entry = {"field":f,
                      "table":ktablename,
                      "multiple":multiple,
