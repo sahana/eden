@@ -4205,7 +4205,7 @@ class S3ProjectTaskModel(S3Model):
                                  fact = list_fields,
                                  defaults = Storage(rows = "task.project",
                                                     cols = "task.pe_id",
-                                                    fact = sum("task.time_estimated"),
+                                                    fact = "sum(task.time_estimated)",
                                                     totals = True
                                                     ),
                                  )
