@@ -9,9 +9,18 @@ import unittest
 
 from gluon import *
 
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 # =============================================================================
 class ListStringImportTests(unittest.TestCase):
 
+    # -------------------------------------------------------------------------
     def setUp(self):
 
         xmlstr = """
@@ -28,6 +37,7 @@ class ListStringImportTests(unittest.TestCase):
         self.tree = etree.ElementTree(etree.fromstring(xmlstr))
         current.auth.override = True
 
+    # -------------------------------------------------------------------------
     def testListStringImport(self):
         """ Test import with list:string """
 
@@ -47,6 +57,7 @@ class ListStringImportTests(unittest.TestCase):
         self.assertTrue(isinstance(row.popup_fields, list))
         self.assertEqual(row.popup_fields, ['test1', 'test2'])
 
+    # -------------------------------------------------------------------------
     def tearDown(self):
 
         current.auth.override = False
@@ -56,6 +67,7 @@ class ListStringImportTests(unittest.TestCase):
 class DefaultApproverOverrideTests(unittest.TestCase):
     """ Test ability to override default approver in imports """
 
+    # -------------------------------------------------------------------------
     def setUp(self):
 
         xmlstr = """
@@ -71,6 +83,7 @@ class DefaultApproverOverrideTests(unittest.TestCase):
         from lxml import etree
         self.tree = etree.ElementTree(etree.fromstring(xmlstr))
 
+    # -------------------------------------------------------------------------
     def testDefaultApproverOverride(self):
         """ Test import with approve-attribute """
 
@@ -101,6 +114,7 @@ class DefaultApproverOverrideTests(unittest.TestCase):
 
         current.auth.override = False
 
+    # -------------------------------------------------------------------------
     def tearDown(self):
 
         current.db.rollback()
@@ -109,6 +123,7 @@ class DefaultApproverOverrideTests(unittest.TestCase):
 class ComponentDisambiguationTests(unittest.TestCase):
     """ Test component disambiguation using the alias-attribute """
 
+    # -------------------------------------------------------------------------
     def setUp(self):
 
         xmlstr1 = """
@@ -141,6 +156,7 @@ class ComponentDisambiguationTests(unittest.TestCase):
         self.branch_tree = etree.ElementTree(etree.fromstring(xmlstr1))
         self.parent_tree = etree.ElementTree(etree.fromstring(xmlstr2))
 
+    # -------------------------------------------------------------------------
     def testOrganisationBranchImport(self):
         """ Test import of organisation branches using alias-attribute """
 
@@ -167,6 +183,7 @@ class ComponentDisambiguationTests(unittest.TestCase):
         link = db(query).select(limitby=(0, 1)).first()
         self.assertNotEqual(link, None)
 
+    # -------------------------------------------------------------------------
     def testParentImport(self):
         """ Test import of organisation parents using alias-attribute """
 
@@ -193,6 +210,7 @@ class ComponentDisambiguationTests(unittest.TestCase):
         link = db(query).select(limitby=(0, 1)).first()
         self.assertNotEqual(link, None)
 
+    # -------------------------------------------------------------------------
     def tearDown(self):
 
         current.db.rollback()
@@ -201,11 +219,13 @@ class ComponentDisambiguationTests(unittest.TestCase):
 class PostParseTests(unittest.TestCase):
     """ Test xml_post_parse hook """
 
+    # -------------------------------------------------------------------------
     def setUp(self):
     
         current.auth.override = True
         self.pp = current.s3db.get_config("pr_person", "xml_post_parse")
 
+    # -------------------------------------------------------------------------
     def testDynamicDefaults(self):
         """ Test setting dynamic defaults with xml_post_parse """
 
@@ -247,11 +267,122 @@ class PostParseTests(unittest.TestCase):
         self.assertNotEqual(row, None)
         self.assertEqual(row.gender, 3)
 
+    # -------------------------------------------------------------------------
     def tearDown(self):
 
         current.db.rollback()
         current.auth.override = False
         current.s3db.configure("pr_person", xml_post_parse=self.pp)
+
+# =============================================================================
+class FailedReferenceTests(unittest.TestCase):
+    """ Test handling of failed references """
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        current.auth.override = True
+
+    # -------------------------------------------------------------------------
+    def testFailedReferenceExplicit(self):
+        """ Test handling of failed explicit reference """
+
+        xmlstr = """
+<s3xml>
+    <resource name="org_office">
+        <data field="name">FRTestOffice1</data>
+        <reference field="organisation_id">
+            <resource name="org_organisation" uuid="TROX">
+                <data field="name">FRTestOrgX</data>
+            </resource>
+        </reference>
+        <reference field="location_id" resource="gis_location" tuid="FRLOCATION"/>
+    </resource>
+    <resource name="gis_location" tuid="FRLOCATION">
+        <!-- Error -->
+        <data field="lat">283746.285753</data>
+        <data field="lon">172834.334556</data>
+    </resource>
+</s3xml>"""
+
+        from lxml import etree
+        tree = etree.ElementTree(etree.fromstring(xmlstr))
+
+        s3db = current.s3db
+
+        org = s3db.resource("org_organisation", uid="TROX")
+        before = org.count()
+
+        resource = current.s3db.resource("org_office")
+        result = resource.import_xml(tree)
+
+        msg = json.loads(result)
+        self.assertEqual(msg["status"], "failed")
+
+        error_resources = msg["tree"].keys()
+        self.assertEqual(len(error_resources), 2)
+        self.assertTrue("$_gis_location" in error_resources)
+        self.assertTrue("$_org_office" in error_resources)
+        self.assertTrue("@error" in msg["tree"]["$_org_office"][0]["$k_location_id"])
+
+        # Check rollback
+        org = s3db.resource("org_organisation", uid="TROX")
+        self.assertEqual(before, org.count())
+        org.delete()
+
+    # -------------------------------------------------------------------------
+    def testFailedReferenceInline(self):
+        """ Test handling of failed inline reference """
+
+        xmlstr = """
+<s3xml>
+    <resource name="org_office">
+        <data field="name">FRTestOffice2</data>
+        <reference field="organisation_id">
+            <resource name="org_organisation" uuid="TROY">
+                <data field="name">FRTestOrgY</data>
+            </resource>
+        </reference>
+        <reference field="location_id" resource="gis_location">
+            <resource name="gis_location">
+                <!-- Error -->
+                <data field="lat">283746.285753</data>
+                <data field="lon">172834.334556</data>
+            </resource>
+        </reference>
+    </resource>
+</s3xml>"""
+
+        from lxml import etree
+        tree = etree.ElementTree(etree.fromstring(xmlstr))
+
+        s3db = current.s3db
+
+        org = s3db.resource("org_organisation", uid="TROY")
+        before = org.count()
+
+        resource = current.s3db.resource("org_office")
+        result = resource.import_xml(tree)
+
+        msg = json.loads(result)
+        self.assertEqual(msg["status"], "failed")
+
+        error_resources = msg["tree"].keys()
+        self.assertEqual(len(error_resources), 2)
+        self.assertTrue("$_gis_location" in error_resources)
+        self.assertTrue("$_org_office" in error_resources)
+        self.assertTrue("@error" in msg["tree"]["$_org_office"][0]["$k_location_id"])
+
+        # Check rollback
+        org = s3db.resource("org_organisation", uid="TROY")
+        self.assertEqual(before, org.count())
+        org.delete()
+        
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        current.db.rollback()
+        current.auth.override = False
 
 # =============================================================================
 def run_suite(*test_classes):
@@ -273,6 +404,7 @@ if __name__ == "__main__":
         DefaultApproverOverrideTests,
         ComponentDisambiguationTests,
         PostParseTests,
+        FailedReferenceTests,
     )
 
 # END ========================================================================

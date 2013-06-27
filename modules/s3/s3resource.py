@@ -3604,7 +3604,7 @@ class S3Resource(object):
 
         # Commit the import job
         auth.rollback = not commit_job
-        import_job.commit(ignore_errors=ignore_errors)
+        success = import_job.commit(ignore_errors=ignore_errors)
         auth.rollback = False
         self.error = import_job.error
         self.import_count += import_job.count
@@ -3619,8 +3619,15 @@ class S3Resource(object):
             if ignore_errors:
                 self.error = "%s - invalid items ignored" % self.error
             self.error_tree = import_job.error_tree
-        if not commit_job:
+        elif not success:
+            # Oops - how could this happen? We can have an error
+            # without failure, but not a failure without error!
+            # If we ever get here, then there's a bug without a
+            # chance to recover - hence let it crash:
+            raise RuntimeError("Import failed without error message")
+        if not success or not commit_job:
             db.rollback()
+        if not commit_job:
             import_job.store()
             return import_job
         else:

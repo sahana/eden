@@ -2115,7 +2115,7 @@ class S3XML(S3Codec):
         elements = error_tree.xpath(".//*[@error]")
         for element in elements:
             get = element.get
-            if element.tag in ("data", "reference"):
+            if element.tag == "data":
                 resource = element.getparent()
                 value = get("value")
                 if not value:
@@ -2125,6 +2125,12 @@ class S3XML(S3Codec):
                             get("field", None),
                             get("error", None),
                             value)
+            if element.tag == "reference":
+                resource = element.getparent()
+                error = "%s, %s: '%s'" % (
+                            resource.get("name", None),
+                            get("field", None),
+                            get("error", None))
             elif element.tag == "resource":
                 error = "%s: %s" % (get("name", None),
                                     get("error", None))
