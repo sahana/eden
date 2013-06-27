@@ -91,7 +91,7 @@ class S3MessagingModel(S3Model):
                              Field("body"),
                              *s3_meta_fields()
                              )
-       
+
         # ---------------------------------------------------------------------
         # Message Log - all Inbound & Outbound Messages
         #
@@ -217,6 +217,27 @@ class S3MessagingModel(S3Model):
         tablename = "msg_limit"
         table = define_table(tablename,
                              *s3_timestamp())
+
+        # ---------------------------------------------------------------------
+        tablename = "msg_message"
+        table = self.super_entity(tablename, "message_id",
+                                  Field("sender",
+                                        label = T("Sender")),
+                                  Field("source",
+                                        label = T("Source")),
+                                  Field("body",
+                                        label = T("Body")),
+                                  Field("inbound", "boolean", default = False,
+                                        represent = lambda direction: \
+                                            (direction and ["In"] or ["Out"])[0],
+                                        label = T("Direction")),
+                                  # @ToDo: Indicate whether channel can be used for Inbound or Outbound
+                                  #Field("inbound", "boolean",
+                                  #      label = T("Inbound?")),
+                                  #Field("outbound", "boolean",
+                                  #      label = T("Outbound?")),
+                                  )
+        table.instance_type.readable = True
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -408,8 +429,227 @@ class S3ChannelModel(S3Model):
         return Storage(
             )
 
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def schedule(s3task):
+        """
+            Master Schedule method for various channels.
+        """
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+        session = current.session
+        request = current.request
+        function = request.function
+        accountID = []
+
+        if function == "schedule_email":
+          f = "email_inbound_channel"
+          table = s3db.msg_email_inbound_channel
+          task = "msg_email_poll"
+
+          try:
+              id = request.args[0]
+          except:
+              session.error = T("Source not specified!")
+              redirect(URL(f=f))
+
+          record = db(table.id == id).select(table["username"],
+                                      table["server"], limitby=(0, 1)).first()
+          accountID.append(str(record["username"]))
+          accountID.append(str(record["server"]))
+        elif function == "schedule_twilio_sms":
+          f = "twilio_inbound_channel"
+          table = s3db.msg_twilio_inbound_channel
+          account_id = "account_name"
+          task = "msg_twilio_poll"
+        elif function == "schedule_mcommons_sms":
+          f = "mcommons_channel"
+          table = s3db.msg_mcommons_channel
+          account_id = "campaign_id"
+          task = "msg_mcommons_poll"
+
+
+        if not accountID:
+
+          try:
+              id = request.args[0]
+          except:
+              session.error = T("Source not specified!")
+              redirect(URL(f=f))
+
+          record = db(table.id == id).select(table[account_id],
+                                           limitby=(0, 1)).first()
+
+          accountID.append(str(record[account_id]))
+
+        # A list "accountID" is passed as the variable to identify
+        # the individual channel setting. A list is used so that
+        # multiple paramters (e.g. username & server) can be passed
+        s3task.schedule_task(task,
+                             vars={"account_id": accountID},
+                             period=300,  # seconds
+                             timeout=300, # seconds
+                             repeats=0    # unlimited
+                             )
+
+        redirect(URL(f=f))
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def enable():
+        """
+            Master enable method for various channels.
+        """
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+        session = current.session
+        request = current.request
+        function = request.function
+
+        if function == "enable_email":
+          f = "email_inbound_channel"
+          table = s3db.msg_email_inbound_channel
+
+          try:
+              id = request.args[0]
+          except:
+              session.error = T("Source not specified!")
+              redirect(URL(f=f))
+
+          stable = s3db.scheduler_task
+
+          settings = db(table.id == id).select(table["username"],
+                                               table["server"],
+                                               limitby=(0, 1)).first()
+          records = db(stable.id > 0).select(stable.id,
+                                             stable.vars)
+          for record in records:
+              if "account_id" in record.vars:
+                  r = record.vars.split("\"account_id\":")[1]
+                  s = r.split("}")[0]
+                  q = s.split("\"")[1].split("\"")[0]
+                  try:
+                    server =  s.split("\"")[3]
+                    if (q == settings["username"]) and \
+                       (server == settings["server"]):
+                        db(stable.id == record.id).update(enabled = True)
+                  except:
+                    pass
+
+          redirect(URL(f=f))
+        elif function == "enable_twilio_sms":
+          f = "twilio_inbound_channel"
+          table = s3db.msg_twilio_inbound_channel
+          account_id = "account_name"
+        elif function == "enable_mcommons_sms":
+          f = "mcommons_channel"
+          table = s3db.msg_mcommons_channel
+          account_id = "campaign_id"
+
+        try:
+            id = request.args[0]
+        except:
+            session.error = T("Source not specified!")
+            redirect(URL(f=f))
+
+        stable = s3db.scheduler_task
+
+        settings = db(table.id == id).select(table[account_id],
+                                             limitby=(0, 1)).first()
+        records = db(stable.id > 0).select(stable.id,
+                                           stable.vars)
+        for record in records:
+            if "account_id" in record.vars:
+                r = record.vars.split("\"account_id\":")[1]
+                s = r.split("}")[0]
+                q = s.split("\"")[1].split("\"")[0]
+                if (q == settings[account_id]) :
+                    db(stable.id == record.id).update(enabled = True)
+
+        redirect(URL(f=f))
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def disable():
+        """
+            Master disable method for various channels.
+        """
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+        session = current.session
+        request = current.request
+        function = request.function
+
+        if function == "disable_email":
+          f = "email_inbound_channel"
+          table = s3db.msg_email_inbound_channel
+
+          try:
+              id = request.args[0]
+          except:
+              session.error = T("Source not specified!")
+              redirect(URL(f=f))
+
+          stable = s3db.scheduler_task
+
+          settings = db(table.id == id).select(table["username"],
+                                               table["server"],
+                                               limitby=(0, 1)).first()
+          records = db(stable.id > 0).select(stable.id,
+                                             stable.vars)
+          for record in records:
+              if "account_id" in record.vars:
+                  r = record.vars.split("\"account_id\":")[1]
+                  s = r.split("}")[0]
+                  q = s.split("\"")[1].split("\"")[0]
+                  try:
+                    server =  s.split("\"")[3]
+                    if (q == settings["username"]) and \
+                       (server == settings["server"]):
+                        db(stable.id == record.id).update(enabled = False)
+                  except:
+                    pass
+
+          redirect(URL(f=f))
+        elif function == "disable_twilio_sms":
+          f = "twilio_inbound_channel"
+          table = s3db.msg_twilio_inbound_channel
+          account_id = "account_name"
+        elif function == "disable_mcommons_sms":
+          f = "mcommons_channel"
+          table = s3db.msg_mcommons_channel
+          account_id = "campaign_id"
+
+        try:
+            id = request.args[0]
+        except:
+            session.error = T("Source not specified!")
+            redirect(URL(f=f))
+
+        stable = s3db.scheduler_task
+
+        settings = db(table.id == id).select(table[account_id],
+                                             limitby=(0, 1)).first()
+        records = db(stable.id > 0).select(stable.id,
+                                           stable.vars)
+        for record in records:
+            if "account_id" in record.vars:
+                r = record.vars.split("\"account_id\":")[1]
+                s = r.split("}")[0]
+                q = s.split("\"")[1].split("\"")[0]
+                if (q == settings[account_id]) :
+                    db(stable.id == record.id).update(enabled = False)
+
+        redirect(URL(f=f))
+
 # =============================================================================
-class S3EmailInboundModel(S3Model):
+class S3EmailInboundModel(S3ChannelModel):
     """
         Inbound Email
 
@@ -442,7 +682,9 @@ class S3EmailInboundModel(S3Model):
                              Field("use_ssl", "boolean"),
                              Field("port", "integer"),
                              Field("username"),
-                             Field("password"),
+                             Field("password", "password", length=64,
+                                   readable = False,
+                                   requires=IS_NOT_EMPTY()),
                              # Set true to delete messages from the remote
                              # inbox after fetching them.
                              Field("delete_from_server", "boolean"),
@@ -492,7 +734,7 @@ class S3EmailInboundModel(S3Model):
         return Storage()
 
 # =============================================================================
-class S3MCommonsModel(S3Model):
+class S3MCommonsModel(S3ChannelModel):
     """
         Mobile Commons Inbound SMS Settings
         - Outbound can use Web API
@@ -514,6 +756,7 @@ class S3MCommonsModel(S3Model):
                              Field("name"),
                              Field("description"),
                              Field("campaign_id",
+                                   unique=True,
                                    requires=IS_NOT_EMPTY()),
                              Field("url",
                                    default = \
@@ -615,7 +858,7 @@ class S3ParsingModel(S3Model):
         """
 
         db = current.db
-        stable = db.msg_email_inbound
+        stable = db.msg_email_inbound_channel
         wtable = db.msg_workflow
         # @ToDo: If we already have the source_task_id, why do we look it up again!?
         source = db(wtable.source_task_id == id).select(wtable.source_task_id,
@@ -632,6 +875,121 @@ class S3ParsingModel(S3Model):
             return repr
         else:
             return repr
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def schedule_parser(s3task):
+        """
+            Schedule a Parsing Workflow
+        """
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+        session = current.session
+        request = current.request
+
+        try:
+            id = request.args[0]
+        except:
+            session.error = T("Workflow not specified!")
+            redirect(URL(f="workflow"))
+
+        table = s3db.msg_workflow
+        record = db(table.id == id).select(table.workflow_task_id,
+                                           table.source_task_id,
+                                           limitby=(0, 1)).first()
+        s3task.schedule_task("msg_parse_workflow",
+                             vars={"workflow": record.workflow_task_id,
+                                   "source": record.source_task_id},
+                             period=300,  # seconds
+                             timeout=300, # seconds
+                             repeats=0    # unlimited
+                             )
+
+        redirect(URL(f="workflow"))
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def enable_parser():
+        """
+            Enables different parsing workflows.
+        """
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+        session = current.session
+        request = current.request
+
+        try:
+            id = request.args[0]
+        except:
+            session.error = T("Workflow not specified!")
+            redirect(URL(f="workflow"))
+
+        stable = s3db.scheduler_task
+        wtable = s3db.msg_workflow
+
+        records = db(stable.id > 0).select()
+        workflow = db(wtable.id == id).select(wtable.workflow_task_id,
+                                              wtable.source_task_id,
+                                              limitby=(0, 1)).first()
+
+        for record in records:
+            if "workflow" and "source" in record.vars:
+                r = record.vars.split("\"workflow\":")[1]
+                s = r.split("}")[0]
+                s = s.split("\"")[1].split("\"")[0]
+
+                u = record.vars.split("\"source\":")[1]
+                v = u.split(",")[0]
+                v = v.split("\"")[1]
+
+                if (s == workflow.workflow_task_id) and \
+                   (v == workflow.source_task_id):
+                    db(stable.id == record.id).update(enabled = True)
+
+        redirect(URL(f="workflow"))
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def disable_parser():
+        """
+            Disables different parsing workflows.
+        """
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+        session = current.session
+        request = current.request
+
+        try:
+            id = request.args[0]
+        except:
+            session.error = T("Workflow not specified!")
+            redirect(URL(f="workflow"))
+
+        stable = s3db.scheduler_task
+        wtable = s3db.msg_workflow
+
+        records = db(stable.id > 0).select()
+        workflow = db(wtable.id == id).select(wtable.workflow_task_id,
+                                              wtable.source_task_id,
+                                              limitby=(0, 1)).first()
+        for record in records:
+            if "workflow" and "source" in record.vars:
+                r = record.vars.split("\"workflow\":")[1]
+                s = r.split("}")[0]
+                s = s.split("\"")[1].split("\"")[0]
+
+                u = record.vars.split("\"source\":")[1]
+                v = u.split(",")[0]
+                v = v.split("\"")[1]
+
+                if (s == workflow.workflow_task_id) and (v == workflow.source_task_id) :
+                    db(stable.id == record.id).update(enabled = False)
+
+        redirect(URL(f="workflow"))
 
 # =============================================================================
 class S3SMSOutboundModel(S3Model):
@@ -864,7 +1222,7 @@ class S3TropoModel(S3Model):
         return Storage()
 
 # =============================================================================
-class S3TwilioModel(S3Model):
+class S3TwilioModel(S3ChannelModel):
     """
         Twilio Inbound SMS channel
     """
@@ -887,7 +1245,8 @@ class S3TwilioModel(S3Model):
                              self.super_link("channel_id", "msg_channel"),
                              Field("name"),
                              Field("description"),
-                             Field("account_name"),
+                             Field("account_name",
+                                    unique=True),
                              Field("url",
                                    default = \
                                    "https://api.twilio.com/2010-04-01/Accounts"

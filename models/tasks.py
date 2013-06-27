@@ -254,15 +254,18 @@ if settings.has_module("msg"):
     tasks["msg_process_outbox"] = msg_process_outbox
 
     # -------------------------------------------------------------------------
-    def msg_email_poll(username, user_id):
+    def msg_email_poll(account_id, user_id):
         """
             Poll an inbound email source.
 
-            @param username: email address of the email source to read from.
+            @param account_id: a list which contains the username and server.
             This uniquely identifies one inbound email task.
         """
         # Run the Task & return the result
-        result = msg.fetch_inbound_email(username)
+
+        username = account_id[0]
+        server = account_id[1]
+        result = msg.fetch_inbound_email(username, server)
         db.commit()
         return result
 
@@ -277,7 +280,7 @@ if settings.has_module("msg"):
             This uniquely identifies one inbound SMS task.
         """
         # Run the Task & return the result
-        result = msg.mcommons_poll(campaign_id)
+        result = msg.mcommons_poll(campaign_id[0])
         db.commit()
         return result
 
@@ -292,7 +295,7 @@ if settings.has_module("msg"):
             This uniquely identifies one inbound SMS task.
         """
         # Run the Task & return the result
-        result = msg.twilio_poll(account)
+        result = msg.twilio_poll(account[0])
         db.commit()
         return result
 
