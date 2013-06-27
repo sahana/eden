@@ -100,10 +100,15 @@ class S3Report2(S3Method):
                                  "totals"))
 
         # Fall back to report options defaults
-        if not get_vars:
-            report_options = get_config("report_options")
-            if report_options and "defaults" in report_options:
-                get_vars = report_options["defaults"]
+        report_options = get_config("report_options", {})
+        defaults = report_options.get("defaults", {})
+
+        if not any (k in get_vars for k in ("rows", "cols", "fact")):
+            get_vars = defaults
+        get_vars["chart"] = r.get_vars.get("chart",
+                              defaults.get("chart", None))
+        get_vars["table"] = r.get_vars.get("table",
+                              defaults.get("table", None))
 
         # Generate the pivot table
         if get_vars:
@@ -323,19 +328,48 @@ class S3ReportForm(object):
 
         # Settings
         settings = current.deployment_settings
-        collapse = settings.get_ui_hide_report_options()
+
+        # Default options
+        opts = {
+            #"renderFilter": True,
+            #"collapseFilter": False,
+
+            #"renderOptions": True,
+            "collapseOptions": settings.get_ui_hide_report_options(),
+
+            "renderTable": True,
+            "collapseTable": False,
+            "showTotals": self.show_totals,
+
+            "ajaxURL": ajaxurl,
+
+            "renderChart": True,
+            "collapseChart": True,
+            "defaultChart": None,
+        }
+
+        chart_opt = get_vars["chart"]
+        if chart_opt is not None:
+            if str(chart_opt).lower() in ("0", "off", "false"):
+                opts["renderChart"] = False
+            elif ":" in chart_opt:
+                opts["collapseChart"] = False
+                ctype, caxis = chart_opt.split(":", 1)
+                opts["defaultChart"] = {"type": ctype, "axis": caxis}
+
+        table_opt = get_vars["table"]
+        if table_opt is not None:
+            table_opt = str(table_opt).lower()
+            if table_opt in ("0", "off", "false"):
+                opts["renderTable"] = False
+            elif table_opt == "collapse":
+                opts["collapseTable"] = True
 
         # jQuery-ready script
         script = """
-$("#%(widget_id)s").pivottable({
-  showTotals: %(totals)s,
-  collapseOptions: %(collapse)s,
-  ajaxURL: %(ajaxurl)s
-});""" % {
+$("#%(widget_id)s").pivottable(%(opts)s);""" % {
             "widget_id": widget_id,
-            "totals": "true" if self.show_totals else "false",
-            "collapse": "true" if collapse else "false",
-            "ajaxurl": "'%s'" % ajaxurl if ajaxurl else "null",
+            "opts": json.dumps(opts)
          }
          
         current.response.s3.jquery_ready.append(script)

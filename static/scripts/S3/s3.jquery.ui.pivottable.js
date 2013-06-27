@@ -203,6 +203,9 @@
                     $(el).find('.pt-show-table').hide();
                     $(el).find('.pt-hide-table').show();
                 }
+            } else {
+                $(el).find('.pt-show-table').hide();
+                $(el).find('.pt-hide-table').hide();
             }
         },
 
