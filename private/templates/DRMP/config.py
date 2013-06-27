@@ -2189,6 +2189,7 @@ def customize_event_event(**attr):
             # Simple dropdown
             location_field.widget = None
 
+            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
             crud_form = S3SQLCustomForm(
                     "name",
                     "event_type_id",
