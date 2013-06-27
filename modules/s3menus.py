@@ -1658,7 +1658,6 @@ class S3OptionsMenu(object):
                           vars=Storage(rows="person_id",
                                        cols="day",
                                        fact="sum(hours)",
-                                       aggregate="sum",
                                        week=1)),
                         M("Last Month's Work", f="time", m="report2",
                           vars=Storage(rows="person_id",

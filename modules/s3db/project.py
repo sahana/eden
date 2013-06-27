@@ -4127,6 +4127,7 @@ class S3ProjectTaskModel(S3Model):
                             label=T("Priority"),
                             #represent="%(name)s",
                             #widget="multiselect",
+                            options=project_task_priority_opts,
                             cols=4,
                             ),
             S3OptionsFilter("task_project.project_id",
@@ -4169,6 +4170,7 @@ class S3ProjectTaskModel(S3Model):
                           ),
             S3OptionsFilter("status",
                             label=T("Status"),
+                            options=project_task_status_opts,
                             #represent="%(name)s",
                             #widget="multiselect",
                             cols=4,
@@ -4192,10 +4194,10 @@ class S3ProjectTaskModel(S3Model):
             # Use the field in this format to get the custom represent
             list_fields.insert(5, (T("Milestone"), "task_milestone.milestone_id"))
             filter_widgets.insert(4, S3OptionsFilter("task_milestone.milestone_id",
-                                        label = T("Milestone"),
-                                        options = self.project_task_milestone_opts,
-                                        cols = 3
-                                        ))
+                                                     label = T("Milestone"),
+                                                     options = self.project_task_milestone_opts,
+                                                     cols = 3
+                                                     ))
 
         report_options = Storage(rows = list_fields,
                                  cols = list_fields,
@@ -4520,6 +4522,7 @@ class S3ProjectTaskModel(S3Model):
         configure(tablename,
                   onaccept=self.project_time_onaccept,
                   filter_widgets=filter_widgets,
+                  report_fields=["date"],
                   report_options=Storage(
                     rows=report_fields,
                     cols=report_fields,
