@@ -800,9 +800,11 @@ def time():
 
     # Load model to get normal CRUD strings
     table = s3db.project_time
+    hide_filter = False
     vars = request.get_vars
     if "mine" in vars:
         # Display this user's Logged Hours in reverse-order
+        hide_filter = True
         s3.crud_strings["project_time"].title_list = T("My Logged Hours")
         person_id = auth.s3_logged_in_person()
         if person_id:
@@ -852,7 +854,7 @@ def time():
         delta = month * months
         s3.filter = (table.date > (now - delta))
 
-    return s3_rest_controller(hide_filter=False)
+    return s3_rest_controller(hide_filter=hide_filter)
 
 # =============================================================================
 # Comments

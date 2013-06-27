@@ -1179,7 +1179,19 @@ class S3ProjectActivityModel(S3Model):
         )
 
         # Search Method
-        project_activity_search = S3Search(field="name")
+        filter_widgets = [
+            S3TextFilter(["name",
+                          "comments",
+                          ],
+                         label=T("Name"),
+                         _class="filter-search",
+                         ),
+            S3OptionsFilter("activity_type_id",
+                            label=T("Type"),
+                            represent="%(name)s",
+                            widget="multiselect",
+                            ),
+            ]
 
         # Resource Configuration
         report_fields = []
@@ -1208,18 +1220,11 @@ class S3ProjectActivityModel(S3Model):
         else:
             create_next = URL(c="project", f="activity", args=["[id]"])
 
-        filter_widgets = [S3OptionsFilter("activity_type_id",
-                                          label=T("Type"),
-                                          represent="%(name)s",
-                                          widget="multiselect",
-                                          )
-                          ]
-
         self.configure(tablename,
                        super_entity="doc_entity",
                        create_next=create_next,
-                       search_method=project_activity_search,
                        deduplicate=self.project_activity_deduplicate,
+                       filter_widgets = filter_widgets,
                        report_options=Storage(
                                 rows=report_fields,
                                 cols=report_fields,
@@ -1227,12 +1232,10 @@ class S3ProjectActivityModel(S3Model):
                                 defaults=Storage(
                                     rows="activity.project_id",
                                     cols="activity.name",
-                                    fact="activity.time_actual",
-                                    aggregate="sum",
+                                    fact="sum(activity.time_actual)",
                                     totals=True
                                 )
                             ),
-                       filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        )
 
