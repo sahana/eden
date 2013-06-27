@@ -182,6 +182,18 @@
         <xsl:variable name="location">
             <xsl:call-template name="LocationUid"/>
         </xsl:variable>
+        <xsl:variable name="tuid">
+            <xsl:choose>
+                <xsl:when test="col[@field='L1']!='' or col[@field='L2']!=''
+                             or col[@field='L3']!='' or col[@field='L4']!=''
+                             or col[@field='L5']!='' or col[@field='Location']!=''">
+                    <xsl:text>tuid</xsl:text>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:text>uuid</xsl:text>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
         <xsl:variable name="approved">
             <xsl:choose>
                 <xsl:when test="col[@field='Approved']='false'">
@@ -207,6 +219,9 @@
                         </xsl:with-param>
                         <xsl:with-param name="location">
                             <xsl:value-of select="$location"/>
+                        </xsl:with-param>
+                        <xsl:with-param name="tuid">
+                            <xsl:value-of select="$tuid"/>
                         </xsl:with-param>
                         <xsl:with-param name="date">
                             <xsl:value-of select="$date"/>
@@ -236,6 +251,9 @@
                             <xsl:with-param name="location">
                                 <xsl:value-of select="$location"/>
                             </xsl:with-param>
+                            <xsl:with-param name="tuid">
+                                <xsl:value-of select="$tuid"/>
+                            </xsl:with-param>
                             <xsl:with-param name="date">
                                 <xsl:value-of select="$date"/>
                             </xsl:with-param>
@@ -258,6 +276,7 @@
         <xsl:param name="demographic"/>
         <xsl:param name="value"/>
         <xsl:param name="location"/>
+        <xsl:param name="tuid"/>
         <xsl:param name="date"/>
         <xsl:param name="source"/>
         <xsl:param name="approved"/>
@@ -287,6 +306,9 @@
             <xsl:call-template name="LocationReference">
                 <xsl:with-param name="location">
                     <xsl:value-of select="$location"/>
+                </xsl:with-param>
+                <xsl:with-param name="tuid">
+                    <xsl:value-of select="$tuid"/>
                 </xsl:with-param>
             </xsl:call-template>
 
@@ -319,7 +341,18 @@
         <xsl:variable name="location">
             <xsl:call-template name="LocationUid"/>
         </xsl:variable>
-
+        <xsl:variable name="tuid">
+            <xsl:choose>
+                <xsl:when test="col[@field='L1']!='' or col[@field='L2']!=''
+                             or col[@field='L3']!='' or col[@field='L4']!=''
+                             or col[@field='L5']!='' or col[@field='Location']!=''">
+                    <xsl:text>tuid</xsl:text>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:text>uuid</xsl:text>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
         <xsl:variable name="approved">
             <xsl:choose>
                 <xsl:when test="col[@field='Approved']='false'">
@@ -346,6 +379,9 @@
                 <xsl:call-template name="LocationReference">
                     <xsl:with-param name="location">
                         <xsl:value-of select="$location"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="tuid">
+                        <xsl:value-of select="$tuid"/>
                     </xsl:with-param>
                 </xsl:call-template>
 
@@ -438,11 +474,11 @@
     <!-- ****************************************************************** -->
     <xsl:template name="LocationReference">
         <xsl:param name="location"/>
+        <xsl:param name="tuid"/>
+
         <reference field="location_id" resource="gis_location">
             <xsl:choose>
-                <xsl:when test="col[@field='L1']!='' or col[@field='L2']!=''
-                             or col[@field='L3']!='' or col[@field='L4']!=''
-                             or col[@field='L5']!='' or col[@field='Location']!=''">
+                <xsl:when test="$tuid='tuid'">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$location"/>
                     </xsl:attribute>

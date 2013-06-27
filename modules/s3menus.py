@@ -1638,8 +1638,7 @@ class S3OptionsMenu(object):
                  ),
                  M("Tasks", f="task")(
                     M("New", m="create"),
-                    #M("List All Tasks"),
-                    M("Search", m="search"),
+                    M("Search"),
                  ),
                 )
             if current.auth.s3_has_role("STAFF"):

@@ -852,7 +852,7 @@ def time():
         delta = month * months
         s3.filter = (table.date > (now - delta))
 
-    return s3_rest_controller()
+    return s3_rest_controller(hide_filter=False)
 
 # =============================================================================
 # Comments
