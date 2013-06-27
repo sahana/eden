@@ -1321,15 +1321,21 @@ class S3FilterForm(object):
         advanced = self.opts.get("advanced", False)
         if advanced:
             _class = "filter-advanced"
+            T = current.T
             if advanced is True:
-                label = current.T("More Options")
+                label = T("More Options")
             elif isinstance(advanced, (list, tuple)):
                 label = advanced[0]
-                _class = "%s %s" % (advanced[1], _class)
+                label = advanced[1]
+                if len(advanced > 2):
+                    _class = "%s %s" % (advanced[2], _class)
             else:
                 label = advanced
+            label_off = T("Less Options")
             advanced = INPUT(_type="button",
                              _value=label,
+                             _label_on=label,
+                             _label_off=label_off,
                              _class=_class)
             controls.append(advanced)
 

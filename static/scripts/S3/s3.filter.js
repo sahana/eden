@@ -770,22 +770,39 @@ S3.search = {};
         $('.filter-advanced').on('click', function() {
             // Toggle visibility & mark widgets as [in]active
             // @todo: select form
+            var hidden;
             $('.advanced').each(function() {
                 var that = $(this);
                 // Ignoring .multiselect-filter-bootstrap as not used & to be deprecated
                 var selectors = '.multiselect-filter-widget,.groupedopts-filter-widget';
                 if (that.hasClass('hide')) {
+                    // Show the Widgets
                     that.removeClass('hide')
-                        .show();
-                    that.find(selectors)
+                        .show()
+                        // Mark them as Active
+                        .find(selectors)
                         .addClass('active');
+                    hidden = true;
                 } else {
+                    // Hide the Widgets
                     that.addClass('hide')
-                        .hide();
-                    that.find(selectors)
+                        .hide()
+                        // Mark them as Inactive
+                        .find(selectors)
                         .removeClass('active');
+                    hidden = false;
                 }
             });
+            var that = $(this);
+            if (hidden) {
+                // Change label to label_off
+                var label_off = that.attr('label_off');
+                that.attr('value', label_off);
+            } else {
+                // Change label to label_on
+                var label_on = that.attr('label_on');
+                that.attr('value', label_on);
+            }
         });
 
         // Hierarchical Location Filter

@@ -755,7 +755,7 @@ def customize_project_location(**attr):
                    filter_widgets=filter_widgets,
                    # Add CSS to default class better than patching
                    #map_submit=(T("Search"), "search-button"),
-                   map_advanced=T("Advanced Search"),
+                   map_advanced=(T("Advanced Search"), T("Simple Search")),
                    )
     
     return attr
