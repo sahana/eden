@@ -72,6 +72,7 @@ def ifrc_realm_entity(table, row):
 
     # Owner Entity Foreign Key
     realm_entity_fks = dict(pr_contact = EID,
+                            pr_contact_emergency = EID,
                             pr_physical_description = EID,
                             pr_address = EID,
                             pr_image = EID,
