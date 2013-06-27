@@ -120,23 +120,25 @@
         <xsl:choose>
             <xsl:when test="col[@field='Value']!=''">
                 <!-- Single Demographic per row -->
-                <xsl:call-template name="DemographicData">
-                    <xsl:variable name="Demographic" select="col[@field='Demographic']"/>
-                    <xsl:variable name="Value" select="col[@field='Value']"/>
-                    <xsl:with-param name="demographic">
-                        <xsl:value-of select="$Demographic"/>
-                    </xsl:with-param>
-                    <xsl:with-param name="value">
-                        <xsl:value-of select="$Value"/>
-                    </xsl:with-param>
-                </xsl:call-template>
+                <xsl:if test="col[@field='Value']!='0'">
+                    <xsl:call-template name="DemographicData">
+                        <xsl:variable name="Demographic" select="col[@field='Demographic']"/>
+                        <xsl:variable name="Value" select="col[@field='Value']"/>
+                        <xsl:with-param name="demographic">
+                            <xsl:value-of select="$Demographic"/>
+                        </xsl:with-param>
+                        <xsl:with-param name="value">
+                            <xsl:value-of select="$Value"/>
+                        </xsl:with-param>
+                    </xsl:call-template>
+                </xsl:if>
             </xsl:when>
             <xsl:otherwise>
                 <!-- Multiple Demographics per row -->
                 <xsl:for-each select="col[starts-with(@field, 'Demo')]">
                     <xsl:variable name="Demographic" select="normalize-space(substring-after(@field, ':'))"/>
                     <xsl:variable name="Value" select="text()"/>
-                    <xsl:if test="$Value!=''">
+                    <xsl:if test="$Value!='' and $Value!='0'">
                         <xsl:call-template name="DemographicData">
                             <xsl:with-param name="demographic">
                                 <xsl:value-of select="$Demographic"/>

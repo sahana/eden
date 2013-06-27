@@ -3805,7 +3805,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 if (undefined != elem.prop) {
                     prop = elem.prop;
                 } else {
-                    // Default (e.g. for Theme Layers)
+                    // Default (e.g. for Theme/Stats Layers)
                     prop = 'value';
                 }
                 if (undefined != elem.cat) {
