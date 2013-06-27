@@ -155,7 +155,7 @@ class S3StatsModel(S3Model):
         aggregate_type = {1 : T("Time"),
                           2 : T("Location"),
                           3 : T("Copy"),
-                          4 : T("Indicator"),
+                          4 : T("Indicator"), # for Vulnerability
                           }
 
         tablename = "stats_aggregate"
@@ -971,7 +971,7 @@ class S3StatsGroupModel(S3Model):
 
         # CRUD Strings
         ADD_STAT_SOURCE = T("Add Demographic Source")
-        demographic_crud_strings = Storage(
+        current.response.s3.crud_strings[tablename] = Storage(
             title_create = ADD_STAT_SOURCE,
             title_display = T("Demographic Source Details"),
             title_list = T("Demographic Sources"),
@@ -986,26 +986,9 @@ class S3StatsGroupModel(S3Model):
             msg_record_deleted = T("Demographic source deleted"),
             msg_list_empty = T("No demographic sources currently defined"))
 
-        ADD_VULNERABILITY = T("Add Vulnerability Indicator Source")
-        vulnerability_crud_strings = Storage(
-            title_create = ADD_VULNERABILITY,
-            title_display = T("Vulnerability Indicator Source Details"),
-            title_list = T("Vulnerability Indicator Sources"),
-            title_update = T("Edit Vulnerability Indicator Sources"),
-            title_search = T("Search Vulnerability Indicator Sources"),
-            title_upload = T("Import Vulnerability Indicator Sources"),
-            subtitle_create = T("Add New Vulnerability Indicator Sources"),
-            label_list_button = T("List Vulnerability Indicator Sources"),
-            label_create_button = ADD_VULNERABILITY,
-            msg_record_created = T("Vulnerability indicator sources added"),
-            msg_record_modified = T("Vulnerability indicator sources updated"),
-            msg_record_deleted = T("Vulnerability indicator sources deleted"),
-            msg_list_empty = T("No vulnerability indicator Sources currently defined"))
-
-        current.response.s3.crud_strings[tablename] = demographic_crud_strings
-
         # Components
         self.add_component("stats_group", stats_source=self.super_key(table))
+
         configure("stats_source",
                   deduplicate = self.stats_source_duplicate,
                   )
@@ -1063,16 +1046,14 @@ class S3StatsGroupModel(S3Model):
                              *s3_meta_fields()
                              )
         # Reusable Field
+        represent = stats_GroupRepresent()
         group_id = S3ReusableField("group_id", table,
                                    requires = IS_NULL_OR(
-                                                IS_ONE_OF(db,
-                                                          "stats_group.id",
-                                                          stats_group_represent)),
-                                   represent = stats_group_represent,
+                                                IS_ONE_OF(db, "stats_group.id",
+                                                          represent)),
+                                   represent = represent,
                                    label = T("Stats Group"),
                                    ondelete = "CASCADE")
-
-        table.virtualfields.append(StatsGroupVirtualFields())
 
         # Resource Configuration
         configure("stats_group",
@@ -1085,8 +1066,6 @@ class S3StatsGroupModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return Storage(
-                demographic_source_crud_strings = demographic_crud_strings,
-                vulnerability_source_crud_strings = vulnerability_crud_strings,
                 stats_group_type_id = group_type_id,
                 stats_group_id = group_id,
                 stats_source_id = source_id,
@@ -1110,11 +1089,10 @@ class S3StatsGroupModel(S3Model):
                                     writable=False)
 
         return Storage(
-                       stats_group_type_id = group_type_id,
-                       stats_group_id = group_id,
-                       stats_source_id = source_id,
-                       )
-
+                   stats_group_type_id = group_type_id,
+                   stats_group_id = group_id,
+                   stats_source_id = source_id,
+                   )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1255,51 +1233,55 @@ def stats_demographic_data_controller():
     return output
 
 # =============================================================================
-def stats_group_represent(id, row=None):
-    """ FK representation """
+class stats_GroupRepresent(S3Represent):
+    """ Representation of Stats Groups """
 
-    if row:
-        return represent(s3db.stats_source)(row.source_id)
-    elif not id:
-        return current.messages["NONE"]
+    def __init__(self,
+                 translate=False,
+                 show_link=False,
+                 multiple=False):
 
-    s3db = current.s3db
-    table = s3db.stats_group
-    stable = s3db.stats_source
-    query = (table._id == id) & \
-            (stable._id == table.source_id)
-    r = current.db(query).select(stable.name,
-                                 limitby=(0, 1)).first()
-    try:
-        return r.name
-    except:
-        return current.messages.UNKNOWN_OPT
+        # Need a custom lookup
+        self.lookup_rows = self.custom_lookup_rows
+        fields = ["stats_source.name",
+                  ]
 
-# =============================================================================
-class StatsGroupVirtualFields:
-    """ Virtual fields to show the group that the report belongs to
-        used by vulnerability/report
-    """
+        super(stats_GroupRepresent,
+              self).__init__(lookup="stats_group",
+                             fields=fields,
+                             show_link=show_link,
+                             translate=translate,
+                             multiple=multiple)
 
-    def group(self):
-        try:
-            approved = self.stats_group.approved_by
-        except (AttributeError, TypeError):
-            # @ToDo: i18n?
-            return "Approval pending"
+    # -------------------------------------------------------------------------
+    def custom_lookup_rows(self, key, values, fields=[]):
+        """
+            Custom lookup method for stats group rows, does a
+            join with the source. Parameters
+            key and fields are not used, but are kept for API
+            compatiblity reasons.
+
+            @param values: the stats_group IDs
+        """
+
+        db = current.db
+        sgtable = db.stats_group
+        sstable = db.stats_source
+
+        query = (sstable.source_id == sgtable.source_id)
+
+        if len(values) == 1:
+            query &= (sgtable.id == values[0])
+            limitby = (0, 1)
         else:
-            if approved is None:
-                return "Approval pending"
-            else:
-                sgtype = current.s3db.stats_group_type
-                query = (self.stats_group.group_type_id == sgtype.id)
-                r = current.db(query).select(sgtype.name,
-                                             limitby=(0, 1)).first()
-                if  (r.name == "stats_vca"):
-                    return "VCA Report"
-                # @todo: add conditional branch for VCA report
-                return "Report"
-            
+            query &= (sgtable.id.belongs(values))
+            limitby = None
+
+        rows = db(query).select(sstable.name,
+                                limitby=limitby)
+        self.queries += 1
+        return rows
+
 # =============================================================================
 class S3StatsResidentModel(S3Model):
     """

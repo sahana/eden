@@ -831,7 +831,7 @@ class S3ParsingModel(S3Model):
         table = self.define_table(tablename,
                                   Field("keyword",
                                         label=T("Keyword")),
-                                  # @ToDo: Move this to a link table?
+                                  # @ToDo: Move this to a link table
                                   self.event_incident_type_id(),
                                   *s3_meta_fields())
 
@@ -1325,12 +1325,15 @@ class S3TwitterModel(S3Model):
         # ---------------------------------------------------------------------
         # Twitter Search Queries
         #
+        # @ToDo: Use link table to msg_keyword instead?
         tablename = "msg_twitter_search"
         table = define_table(tablename,
                              Field("search_query", length=140),
                              *s3_meta_fields())
 
         # ---------------------------------------------------------------------
+        # @ToDo: Rename as twitter_inbox
+        # - Q? Do we need to separate stuff directed at us via @username vs general searching other than by column?
         tablename = "msg_twitter_search_results"
         table = define_table(tablename,
                              Field("tweet", length=140,

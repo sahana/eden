@@ -21,10 +21,10 @@ S3.autocomplete.normal = function(fieldname, module, resourcename, input, filter
     var throbber = $('#' + dummy + '_throbber');
 
     var url = S3.Ap.concat('/', module, '/', resourcename, '/search_ac?filter=~&field=', fieldname);
-    if (filter != 'undefined') {
+    if (filter) {
         url += '&' + filter;
     }
-    if ((link != 'undefined') && (link !== '')) {
+    if (link) {
         url += '&link=' + link;
     }
 

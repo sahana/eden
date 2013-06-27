@@ -332,7 +332,8 @@ class S3Resource(object):
     # -------------------------------------------------------------------------
     def search_method(self):
         """
-            Return a Search method
+            Return an S3Search method
+            - to be deprecated
         """
 
         tablename = self.tablename

@@ -812,8 +812,10 @@ def time():
             # Log time with just this user's open tasks visible
             ttable = db.project_task
             query = (ttable.pe_id == auth.user.pe_id) & \
-                    (ttable.deleted == False) & \
-                    (ttable.status.belongs(s3db.project_task_active_statuses))
+                    (ttable.deleted == False)
+            if "update" not in request.args:
+                # Only log time against Open Tasks
+                query &= (ttable.status.belongs(s3db.project_task_active_statuses))
             dbset = db(query)
             table.task_id.requires = IS_ONE_OF(dbset, "project_task.id",
                                                s3db.project_task_represent_w_project
