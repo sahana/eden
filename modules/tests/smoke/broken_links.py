@@ -496,6 +496,8 @@ class BrokenLinkTest(Web2UnitTest):
                                                                 )
                 self.reporter(msg)
                 n += 1
+        # If there are any broken links, report failed test.
+        self.assertTrue(n == 1, "Found Broken Links")
 
     def timeReport(self):
         from operator import itemgetter
