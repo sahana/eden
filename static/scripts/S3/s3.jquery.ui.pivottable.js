@@ -885,20 +885,12 @@
             var filters = $(widget_id + '-filters'), filter_options = [];
             try {
                 if (filters.length) {
-                    filter_options = S3.search.getCurrentFilters(filters.first());
+                    return S3.search.getCurrentFilters(filters.first());
                 } else {
                     return null;
                 }
             } catch (e) {}
 
-            var options = {};
-            for (var i=0, len=filter_options.length, opt; i < len; i++) {
-                opt = filter_options[i].split('=');
-                if (opt.length > 1) {
-                    options[opt[0]] = opt[1];
-                }
-            }
-            return options;
         },
 
         _updateURL: function(url, filters) {
@@ -948,64 +940,105 @@
             var ajaxURL = this.options.ajaxURL;
 
             // Construct the URL
-            var url_parts = ajaxURL.split('?'), query = {};
+            var url_parts = ajaxURL.split('?'),
+                url_query = null,
+                query = [];
+                needs_reload = false;
+
+            var qstr, url_vars;
             
             if (url_parts.length > 1) {
-                var qstr = url_parts[1];
-                    
-                var a = qstr.split('&'),
-                b, v, i, len;
-                for (i=0, len=a.length; i < len; i++) {
-                    b = a[i].split('=');
-                    if (b.length > 1 && b[0] != 'aggregate') {
-                        query[decodeURIComponent(b[0])] = decodeURIComponent(b[1]);
-                    }
-                }
+                qstr = url_parts[1];
+                url_vars = qstr.split('&');
+            } else {
+                qstr = '';
+                url_vars = [];
             }
 
-            var newopt, needs_reload = false;
-
+            var option, q;
             if (options) {
                 for (option in options) {
                     newopt = options[option];
+                    q = option + '=' + newopt;
                     if (option == 'totals') {
                         this.options.showTotals = newopt ? true : false;
-                    } else if (query[option] != newopt) {
+                    } else if (!(needs_reload || $.inArray(q, url_vars) != -1 )) {
                         needs_reload = true;
                     }
-                    query[option] = newopt ? newopt : null;
+                    query.push(q);
                 }
             }
             
-            if (filters) {
-                for (option in filters) {
-                    newopt = filters[option];
-                    if (query[option] != newopt) {
-                        needs_reload = true;
-                    }
-                    query[option] = newopt ? newopt : null;
-                }
-                for (option in query) {
-                    if (options.hasOwnProperty(option)) {
-                        continue;
-                    }
-                    newopt = filters[option];
-                    if (query[option] != newopt) {
-                        needs_reload = true;
-                    }
-                    query[option] = newopt ? newopt : null;
-                }
-            }
-            
-            var url_queries = [], url_query;
-            for (option in query) {
-                if (query[option] !== null) {
-                    url_queries.push(option + '=' + query[option]);
-                }
-            }
-            url_query = url_queries.join('&');
+            var update = {},
+                remove = {},
+                i, len, q, k, v;
 
-            var filtered_url = url_parts[0];
+            // Check filters to update/remove (we're not using
+            // S3.search.filterURL here, but an experimental
+            // lazy-reload-pattern, i.e. we only reload data
+            // if the filter or a pivot axis have actually changed.)
+            if (filters) {
+                for (i=0, len=filters.length; i < len; i++) {
+                    q = filters[i];
+                    k = q[0];
+                    v = q[1];
+                    if (v === null) {
+                        if (!update[k]) {
+                            remove[k] = true;
+                        }
+                    } else {
+                        if (remove[k]) {
+                            remove[k] = false;
+                        }
+                        if (update[k]) {
+                            update[k].push(k + '=' + v);
+                        } else {
+                            update[k] = [k + '=' + v];
+                        }
+                    }
+                }
+            }
+
+            // Check which existing URL query vars to retain/replace
+            for (i=0, len=url_vars.length; i < len; i++) {
+                q = url_vars[i].split('=');
+                if (q.length > 1) {
+                    k = decodeURIComponent(q[0]);
+                    v = decodeURIComponent(q[1]);
+
+                    if (remove[k]) {
+                        needs_reload = true;
+                        continue;
+                    } else if (update[k]) {
+                        if (!(needs_reload || $.inArray(k + '=' + v, update[k]) != -1)) {
+                            needs_reload = true;
+                        }
+                        // Will be replaced
+                        continue;
+                    } else if (k == 'aggregate') {
+                        // Remove
+                        continue;
+                    } else if (options && options.hasOwnProperty(k)) {
+                        continue;
+                    } else {
+                        // Keep this
+                        query.push(url_vars[i]);
+                    }
+                }
+            }
+
+            // Add new filters
+            for (k in update) {
+                for (i=0, len=update[k].length; i < len; i++) {
+                    if (!(needs_reload || $.inArray(update[k][i], url_vars) != -1)) {
+                        needs_reload = true;
+                    }
+                    query.push(update[k][i]);
+                }
+            }
+
+            var url_query = query.join('&'),
+                filtered_url = url_parts[0];
             if (url_query) {
                 filtered_url = filtered_url + '?' + url_query;
             }

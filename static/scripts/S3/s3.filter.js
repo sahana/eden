@@ -66,6 +66,13 @@ S3.search = {};
     
     /**
      * getCurrentFilters: retrieve all current filters
+     *
+     * - returns: [[key, value], [key, value], ...]
+     *            to update a URL query like &key=value,
+     *            a value of null means to remove that key from the URL query.
+     *
+     * Note: empty widgets must push [key, null] anyway, so
+     *       that existing queries for 'key' get removed!
      */
     var getCurrentFilters = function(form) {
 
@@ -84,8 +91,10 @@ S3.search = {};
                 var values = value.split(' '), v;
                 for (var i=0; i < values.length; i++) {
                     v = '*' + values[i] + '*';
-                    queries.push(url_var + '=' + quoteValue(v));
+                    queries.push([url_var, quoteValue(v)]);
                 }
+            } else {
+                queries.push([url_var, null]);
             }
         });
 
@@ -135,7 +144,9 @@ S3.search = {};
                 });
             }
             if (value !== '') {
-                queries.push(url_var + '=' + value);
+                queries.push([url_var, value]);
+            } else {
+                queries.push([url_var, null]);
             }
         });
 
@@ -145,7 +156,9 @@ S3.search = {};
             var url_var = $('#' + id + '-data').val();
             var value = $(this).val();
             if (value) {
-                queries.push(url_var + '=' + value);
+                queries.push([url_var, value]);
+            } else {
+                queries.push([url_var, null]);
             }
         });
 
@@ -181,7 +194,6 @@ S3.search = {};
                         dt = $(this).datetimepicker('getDate');
                     }
                     dt_str = iso(dt);
-                    queries.push(url_var + '=' + dt_str);
                 } else {
                     dt = Date.parse(value);
                     if (isNaN(dt)) {
@@ -191,8 +203,10 @@ S3.search = {};
                     } else {
                         dt_str = iso(new Date(dt));
                     }
-                    queries.push(url_var + '=' + dt_str);
                 }
+                queries.push([url_var, dt_str]);
+            } else {
+                queries.push([url_var, null]);
             }
         });
 
@@ -234,7 +248,9 @@ S3.search = {};
                 });
             }
             if (value !== '') {
-                queries.push(url_var + '=' + value);
+                queries.push([url_var, value]);
+            } else {
+                queries.push([url_var, null]);
             }
         });
 
@@ -289,48 +305,81 @@ S3.search = {};
     };
 
     /**
-     * filterURL: add filters to a URL
+     * filterURL: update filters in a URL
      *
-     * Note: this removes+replaces all existing filters in the URL query,
-     *       but leaves other vars untouched
+     * - url: URL as string
+     * - queries: [[key, value], [key, value], ...]
+     *
+     * Note: a value of null means to remove that key from the URL
+     *       query
+     * Note: Each key can appear multiple times - remove/update will
+     *       affect all occurences of that key in the URL, and update
+     *       overrides remove.
      */
     var filterURL = function(url, queries) {
 
         if (undefined === queries) {
             queries = getCurrentFilters();
         }
-        // Construct the URL
+        
         var url_parts = url.split('?'),
-            url_query = queries.join('&');
-        if (url_parts.length > 1) {
-            var qstr = url_parts[1],
-                query = {};
-            var a = qstr.split('&'),
-                b, v, i, len;
-            for (i=0, len=a.length; i < len; i++) {
-                b = a[i].split('=');
-                if (b.length > 1 && b[0].search(/\./) == -1) {
-                    query[decodeURIComponent(b[0])] = decodeURIComponent(b[1]);
+            update = {},
+            reset = {},
+            i, len, q, k, v;
+
+        for (i=0, len=queries.length; i < len; i++) {
+            q = queries[i];
+            k = q[0];
+            v = q[1];
+            if (v === null) {
+                if (!update.hasOwnProperty(k)) {
+                    reset[k] = true;
                 }
-            }
-            for (i=0, len=queries.length; i < len; i++) {
-                v = queries[i].split('=');
-                if (v.length > 1) {
-                    query[v[0]] = v[1];
+            } else {
+                if (reset.hasOwnProperty(k)) {
+                    reset[k] = false;
                 }
+                update[k] = true;
             }
-            var url_queries = [], url_query;
-            for (v in query) {
-                url_queries.push(v + '=' + query[v]);
-            }
-            url_query = url_queries.join('&');
         }
-        var filtered_url = url_parts[0];
+
+        var query = [];
+        
+        if (url_parts.length > 1) {
+            
+            var qstr = url_parts[1];
+            var url_vars = qstr.split('&');
+            
+            for (i=0, len=url_vars.length; i < len; i++) {
+                q = url_vars[i].split('=');
+                if (q.length > 1) {
+                    k = decodeURIComponent(q[0]);
+                    if (reset[k] || update[k]) {
+                        continue;
+                    } else {
+                        query.push(url_vars[i]);
+                    }
+                }
+            }
+        }
+        
+        for (i=0, len=queries.length; i < len; i++) {
+            q = queries[i];
+            k = q[0];
+            v = q[1];
+            if (update[k]) {
+                query.push(k + '=' + v);
+            }
+        }
+            
+        var url_query = query.join('&'),
+            filtered_url = url_parts[0];
         if (url_query) {
             filtered_url = filtered_url + '?' + url_query;
         }
         return filtered_url;
     };
+    
     // Pass to global scope to be called by S3.gis.refreshLayer()
     S3.search.filterURL = filterURL;
 
