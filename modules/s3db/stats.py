@@ -822,7 +822,7 @@ class S3StatsDemographicModel(S3Model):
             title_list = T("Demographics"),
             title_update = T("Edit Demographic"),
             title_search = T("Search Demographics"),
-            title_upload = T("Import Demographic"),
+            title_upload = T("Import Demographics"),
             subtitle_create = T("Add New Demographic"),
             label_list_button = T("List Demographics"),
             label_create_button = ADD_DEMOGRAPHIC,

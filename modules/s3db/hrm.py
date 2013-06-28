@@ -4370,7 +4370,7 @@ def hrm_training_event_controller():
                 title_list = T("Participants"),
                 title_update = T("Edit Participant"),
                 title_search = T("Search Participants"),
-                title_upload = T("Import Participant Participants"),
+                title_upload = T("Import Participants"),
                 subtitle_create = T("Add Participant"),
                 label_list_button = T("List Participants"),
                 label_create_button = T("Add New Participant"),

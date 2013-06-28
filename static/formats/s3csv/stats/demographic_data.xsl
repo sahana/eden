@@ -85,6 +85,31 @@
     <xsl:template match="/">
 
         <s3xml>
+            <!-- Stats Group Type -->
+            <resource name="stats_group_type">
+                <xsl:attribute name="tuid">stats_group_type/stats_demographic</xsl:attribute>
+                <data field="name">stats_demographic</data>
+            </resource>
+
+            <!-- Sources -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('source',
+                                                        col[@field='Source'])[1])]">
+                <xsl:call-template name="Source" />
+            </xsl:for-each>
+
+            <!-- Demographics (1/row) -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('demographic',
+                                                        col[@field='Demographic'])[1])]">
+                <xsl:call-template name="Demographic" />
+            </xsl:for-each>
+
+            <!-- Demographics (multi/row) -->
+            <xsl:for-each select="//row[1]/col[starts-with(@field, 'Demo:')]">
+                <xsl:call-template name="DemographicMulti"/>
+            </xsl:for-each>
+
             <!-- L1 -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('L1',
                                                                    concat(col[@field=$Country], '/',
@@ -130,27 +155,7 @@
                 <xsl:call-template name="L5"/>
             </xsl:for-each>
 
-            <!-- Create the Stats Group Type -->
-            <resource name="stats_group_type">
-                <xsl:attribute name="tuid">stats_group_type/stats_demographic</xsl:attribute>
-                <data field="name">stats_demographic</data>
-            </resource>
-
-            <!-- Create the Demographics -->
-            <xsl:for-each select="//row[generate-id(.)=
-                                        generate-id(key('demographic',
-                                                        col[@field='Demographic'])[1])]">
-                <xsl:call-template name="Demographic" />
-            </xsl:for-each>
-
-            <!-- Create the Sources -->
-            <xsl:for-each select="//row[generate-id(.)=
-                                        generate-id(key('source',
-                                                        col[@field='Source'])[1])]">
-                <xsl:call-template name="Source" />
-            </xsl:for-each>
-
-            <!-- Create the Groups -->
+            <!-- Groups -->
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('group',
                                                         concat(col[@field='Source'],
@@ -164,10 +169,10 @@
                 <xsl:call-template name="Groups"/>
             </xsl:for-each>
 
-            <!-- Create the Demographic Data records -->
+            <!-- Demographic Data -->
             <xsl:apply-templates select="table/row"/>
 
-            <!-- Create the specific Locations records -->
+            <!-- specific Locations -->
             <xsl:call-template name="Locations"/>
 
         </s3xml>
@@ -176,6 +181,8 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
+        <!-- Need to read columns outside the loop as otherwise path is wrong -->
+
         <xsl:variable name="value" select="col[@field='Value']"/>
         <xsl:variable name="date" select="col[@field='Date']"/>
         <xsl:variable name="source" select="col[@field='Source']"/>
@@ -205,7 +212,7 @@
             </xsl:choose>
         </xsl:variable>
 
-        <!-- Demographic Data Record -->
+        <!-- Demographic Data -->
         <xsl:choose>
             <xsl:when test="$value!=''">
                 <!-- Single Demographic per row -->
@@ -237,7 +244,7 @@
             </xsl:when>
             <xsl:otherwise>
                 <!-- Multiple Demographics per row -->
-                <xsl:for-each select="col[starts-with(@field, 'Demo')]">
+                <xsl:for-each select="col[starts-with(@field, 'Demo:')]">
                     <xsl:variable name="Demographic" select="normalize-space(substring-after(@field, ':'))"/>
                     <xsl:variable name="Value" select="text()"/>
                     <xsl:if test="$Value!='' and $Value!='0'">
@@ -329,6 +336,19 @@
             <xsl:if test="$desc!=''">
                 <data field="description"><xsl:value-of select="$desc"/></data>
             </xsl:if>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="DemographicMulti">
+        <xsl:variable name="name" select="normalize-space(substring-after(@field, ':'))"/>
+
+        <resource name="stats_demographic">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat('stats_demographic/',$name)"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$name"/></data>
         </resource>
 
     </xsl:template>

@@ -471,7 +471,7 @@ class S3OrganisationModel(S3Model):
                 title_list=T("Branch Organizations"),
                 title_update=T("Edit Branch Organization"),
                 title_search=T("Search Branch Organizations"),
-                title_upload=T("Import Branch Organizations"),
+                #title_upload=T("Import Branch Organizations"),
                 subtitle_create=T("Add New Branch Organization"),
                 label_list_button=T("List Branch Organizations"),
                 label_create_button=T("Add New Branch"),
