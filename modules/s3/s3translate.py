@@ -832,22 +832,6 @@ class TranslateReadFiles:
                     sappend((tmpstr[i][1:-1], tmpstr[i + 1][1:-1]))
             return strings
 
-        # ---------------------------------------------------------------------
-        @staticmethod
-        def read_csvfile(fileName):
-            """ Function to read a csv file and return a list of rows """
-
-            import csv
-
-            data = []
-            dappend = data.append
-            f = open(fileName, "rb")
-            transReader = csv.reader(f)
-            for row in transReader:
-                dappend(row)
-            f.close()
-            return data
-
 # =============================================================================
 class TranslateReportStatus:
         """
@@ -1292,19 +1276,34 @@ class CsvToWeb2py:
             # with untranslated string as the key
             d = {}
 
-            R = TranslateReadFiles()
-
+            errors = 0
             for f in csvfiles:
-                data = R.read_csvfile(f)
-                for row in data:
-                    if row[1] in d.keys():
-                        if d[row[1]][1] == "":
+                data = self.read_csvfile(f)
+                # Test: 2 cols or 3?
+                cols = len(data[0])
+                if cols == 1:
+                    current.session.error = T("CSV file needs to have at least 2 columns!")
+                    redirect(URL(c="admin", f="translate"))
+                elif cols == 2:
+                    # 1st column is source, 2nd is target
+                    for row in data:
+                        if row[0] in d.keys():
+                            if d[row[0]][1] == "":
+                                d[row[0]] = ("", row[1])
+                        else:
+                            d[row[0]] = ("", row[1])
+                else:
+                    # 1st column is location, 2nd is source, 3rd is target
+                    for row in data:
+                        if row[1] in d.keys():
+                            if d[row[1]][1] == "":
+                                d[row[1]] = (row[0], row[2])
+                        else:
                             d[row[1]] = (row[0], row[2])
-                    else:
-                        d[row[1]] = (row[0], row[2])
 
-            # If strings are to be merged with existing .py file
             if option == "m":
+                # Strings are to be merged with existing .py file
+                R = TranslateReadFiles()
                 data = R.read_w2pfile(w2pfilename)
                 for row in data:
                     row = (row[0], row[1].decode("string-escape"))
@@ -1337,5 +1336,21 @@ class CsvToWeb2py:
             # Remove intermediate files
             os.unlink(pofilename)
             os.unlink(csvfilename)
+
+        # ---------------------------------------------------------------------
+        @staticmethod
+        def read_csvfile(fileName):
+            """ Function to read a csv file and return a list of rows """
+
+            import csv
+
+            data = []
+            dappend = data.append
+            f = open(fileName, "rb")
+            transReader = csv.reader(f)
+            for row in transReader:
+                dappend(row)
+            f.close()
+            return data
 
 # END =========================================================================
