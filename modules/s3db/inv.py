@@ -40,6 +40,7 @@ __all__ = ["S3WarehouseModel",
            "inv_ship_status",
            "inv_tracking_status",
            "inv_adj_rheader",
+           "depends",
            ]
 
 import itertools
@@ -56,6 +57,9 @@ SHIP_STATUS_RECEIVED   = 1
 SHIP_STATUS_SENT       = 2
 SHIP_STATUS_CANCEL     = 3
 SHIP_STATUS_RETURNING  = 4
+
+# Dependency list
+depends = ["supply"]
 
 # To pass to global scope
 inv_ship_status = {"IN_PROCESS" : SHIP_STATUS_IN_PROCESS,
