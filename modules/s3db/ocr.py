@@ -67,6 +67,7 @@ class OCRDataModel(S3Model):
         table = define_table(tablename,
                              Field("form_uuid",
                                    notnull=True,
+                                   length=128,
                                    unique=True),
                              Field("resource_name",
                                    notnull=True),
@@ -76,6 +77,7 @@ class OCRDataModel(S3Model):
                                    uploadfolder=metadata_folder),
                              Field("revision",
                                    notnull=True,
+                                   length=128,
                                    unique=True),
                              Field("pages", "integer"),
                              *s3_meta_fields())
@@ -102,6 +104,7 @@ class OCRDataModel(S3Model):
         table = define_table(tablename,
                              Field("image_set_uuid",
                                    notnull=True,
+                                   length=128,
                                    unique=True),
                              Field("form_uuid",
                                    notnull=True),
@@ -109,6 +112,7 @@ class OCRDataModel(S3Model):
                                    notnull=True,
                                    default=0),
                              Field("job_uuid",
+                                   length=128,
                                    unique=True),
                              Field("job_has_errors", "integer"),
                              *s3_meta_fields())
@@ -137,6 +141,7 @@ class OCRDataModel(S3Model):
         tablename = "ocr_data_xml"
         table = define_table(tablename,
                              Field("image_set_uuid",
+                                   length=128,
                                    unique=True,
                                    notnull=True),
                              Field("data_file", "upload",

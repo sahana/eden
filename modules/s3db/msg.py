@@ -756,6 +756,7 @@ class S3MCommonsModel(S3ChannelModel):
                              Field("name"),
                              Field("description"),
                              Field("campaign_id",
+                                   length=128,
                                    unique=True,
                                    requires=IS_NOT_EMPTY()),
                              Field("url",
@@ -1246,7 +1247,8 @@ class S3TwilioModel(S3ChannelModel):
                              Field("name"),
                              Field("description"),
                              Field("account_name",
-                                    unique=True),
+                                   length=255,
+                                   unique=True),
                              Field("url",
                                    default = \
                                    "https://api.twilio.com/2010-04-01/Accounts"
