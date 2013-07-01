@@ -54,8 +54,7 @@ class CreateProject(SeleniumUnitTest):
         
         self.create("project_project", 
                     [("organisation_id", 
-                      "International Federation of Red Cross and Red Crescent Societies", 
-                      "automatic"),
+                      "International Federation of Red Cross and Red Crescent Societies"),
                      ( "name",
                        "Community Strengthening through Dancing" ),
                      ( "comments",
@@ -96,8 +95,7 @@ class CreateProject(SeleniumUnitTest):
 
             self.create("project_location",
                         [( "location_id",
-                        "Aileu Vila",
-                        "automatic"),
+                        "Aileu Vila"),
                         # If using LocationSelector:
                         #( "L0",
                         #  "Timor-Leste",
@@ -131,8 +129,7 @@ class CreateProject(SeleniumUnitTest):
 
             self.create("project_beneficiary",
                         [( "parameter_id",
-                        "Teachers",
-                        "option"),
+                        "Teachers"),
                         ( "value",
                         "100"),
                         ( "comments",
@@ -148,8 +145,7 @@ class CreateProject(SeleniumUnitTest):
 
             self.create("project_beneficiary",
                         [( "parameter_id",
-                        "Pupils",
-                        "option"),
+                        "Pupils"),
                         ( "value",
                         "1000"),
                         ( "comments",

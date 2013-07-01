@@ -50,29 +50,21 @@ class CreateOffice(SeleniumUnitTest):
     [
         # 1st field used to check whether record already exists
         ("name",
-         "Bucharest RFAAT Centre (Test)",
-        ),
+         "Bucharest RFAAT Centre (Test)"),
         ("code",
-         "12345678",
-        ),
+         "12345678"),
         ( "organisation_id",
-          "International Federation of Red Cross and Red Crescent Societies",
-          "automatic"),
+          "International Federation of Red Cross and Red Crescent Societies"),
         ("office_type_id",
-         "Headquarters",
-         "option",
-        ),
+         "Headquarters"),
         ("comments",
-         "This is a Test Office",
-        ),
+         "This is a Test Office"),
         ("L0",
          "Romania",
-         "gis_location"
-        ),
+         "gis_location"),
         ("street",
          "102 Diminescu St",
-         "gis_location"
-        ),
+         "gis_location"),
     ],
 ]
 

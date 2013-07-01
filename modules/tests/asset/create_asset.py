@@ -25,6 +25,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+import time
 from tests.web2unittest import SeleniumUnitTest
 
 class CreateAsset(SeleniumUnitTest):
@@ -49,32 +50,30 @@ class CreateAsset(SeleniumUnitTest):
                     [( "number",
                        "WS_100_17"),
                      ( "item_id",
-                       "Blankets",
-                       "option"),
+                       "Blankets"),
                      ("organisation_id", 
-                      "International Federation of Red Cross and Red Crescent Societies", 
-                      "automatic"),
+                      "International Federation of Red Cross and Red Crescent Societies"),
                      ( "site_id",
-                       "AP Zone",
-                       "option",
-                        4),
+                       "AP Zone"),
                      ( "sn",
                        "WPU-4536-9381"),
                      ( "supply_org_id",
-                       "Acme Suppliers",
-                       "option"),
+                       "Acme Suppliers"),
                      ( "purchase_date",
                        today),
                      ( "purchase_price",
                        8),
                      ( "purchase_currency",
-                       "USD",
-                       "option"),
+                       "USD"),
                      ( "comments",
                        "Test Asset")]
                      )
+        # Give time for submission of record
+        time.sleep(1)
+
         # Set Base Facility/Site
         self.browser.find_element_by_link_text("Set Base Facility/Site").click()
+        
         
         self.create("asset_log",
                     [
@@ -83,14 +82,15 @@ class CreateAsset(SeleniumUnitTest):
 #                     ( "datetime",
 #                       now),
                      ( "cond",
-                       "Good Condition",
-                       "option"),
+                       "Good Condition"),
                      ( "by_person_id",
-                       "Admin User",
-                       "autocomplete"),
+                       "Admin User"),
                      ( "comments",
                        "Test site")]
                      )
+        
+        # Give time for submission of record
+        time.sleep(1)
         
         # Assign to Facility/Site
         self.browser.find_element_by_link_text("Assign to Facility/Site").click()
@@ -102,25 +102,24 @@ class CreateAsset(SeleniumUnitTest):
 #                     ( "datetime_until",
 #                       now_1_week),
                      ( "person_id",
-                       "Yakobus Sereno",
-                       "autocomplete"),
+                       "Yakobus Sereno"),
                      ( "site_id",
-                       "AP Zone (Office)",
-                       "option"),
+                       "AP Zone (Office)"),
                      #( "room-id",
                      #  "-",
                      #  "option"),
                      ( "cond",
-                       "Good Condition",
-                       "option"),
+                       "Good Condition"),
                      ( "by_person_id",
-                       "Admin User",
-                       "autocomplete"),
+                       "Admin User"),
                      ( "comments",
                        "Test assign")]
                      )
-                           
-        self.browser.find_element_by_link_text("Assign to Person").click()
+        
+        # Give time for submission of record
+        time.sleep(1)
+                          
+        self.browser.find_element_by_link_text("Assign to Person").click()        
 
         self.create("asset_log",
 #                    [( "datetime",
@@ -128,24 +127,20 @@ class CreateAsset(SeleniumUnitTest):
 #                     ( "datetime_until",
 #                       now_1_week),
                      [( "person_id",
-                       "Margarida Martins",
-                       "autocomplete"),
+                       "Margarida Martins"),
                      # @ToDo: Determine how to enter checkboxes
                      #( "check_in_to_person",
                      #  "true",
                      #  "option"),
                      ( "site_id",
-                       "Besusu (Facility)",
-                       "option"),
+                       "Besusu (Facility)"),
                      #( "room-id",
                      #  "-",
                      #  "option"),
                      ( "cond",
-                       "Good Condition",
-                       "option"),
+                       "Good Condition"),
                      ( "by_person_id",
-                       "Yakobus Sereno",
-                       "autocomplete"),
+                       "Yakobus Sereno"),
                      ( "comments",
                        "Test assign person")]
                      )

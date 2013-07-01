@@ -58,8 +58,7 @@ class AddStaffToOrganisation(SeleniumUnitTest):
         
         self.create("hrm_human_resource", 
                     [( "site_id",
-                       "Lori (Facility)",
-                       "option"),
+                       "Lori (Facility)"),
                      ( "first_name",
                        "Herculano",
                        "pr_person"),
@@ -70,8 +69,7 @@ class AddStaffToOrganisation(SeleniumUnitTest):
                        "herculandfo@icandodfmybest.com",
                        "pr_person"),
                      ( "job_title_id",
-                       "Secretary General",
-                       "option"),
+                       "Secretary General"),
                      ]
                      )
 

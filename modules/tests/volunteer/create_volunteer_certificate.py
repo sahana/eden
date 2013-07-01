@@ -47,7 +47,6 @@ class CreateVolunteerCertificate(SeleniumUnitTest):
                        ),
                      ( "organisation_id",
                        "Timor-Leste Red Cross Society",
-                       "automatic"
                        ),
                      ( "expiry",
                        "12"
@@ -62,11 +61,8 @@ class CreateVolunteerCertificate(SeleniumUnitTest):
         if current.deployment_settings.get_hrm_use_skills():
             self.create("hrm_certificate_skill",	 
                         [( "skill_id",
-                           "Hazmat",
-                           "option"
-                           ),
+                           "Hazmat"),
                          ( "competency_id",
-                           "Level 2",
-                           "option"),
+                           "Level 2"),
                          ]
                          )

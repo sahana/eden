@@ -47,8 +47,7 @@ class CreateCatalog(SeleniumUnitTest):
                     [( "name",
                        "IFRC Food Catalogue" ),
                      ( "organisation_id",
-                       "International Federation of Red Cross and Red Crescent Societies",
-                       "automatic" ),
+                       "International Federation of Red Cross and Red Crescent Societies"),
                      ( "comments",
                        "This is a test Catalogue")
                      ]

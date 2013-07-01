@@ -46,23 +46,18 @@ class SendReceiveItem(InvTestFunctions):
         method = "search"
         send_data = [("site_id",
                  "Timor-Leste Red Cross Society (CVTL) National Warehouse (Warehouse)",
-                 "option",
                 ),
                  ("type",
                   "Internal Shipment",
-                  "option",
                  ),
                 ("to_site_id",
                  "Lospalos Warehouse (Warehouse)",
-                 "option",
                 ),
                 ("sender_id",
                  "Beatriz de Carvalho",
-                 "autocomplete",
                 ),
                 ("recipient_id",
                  "Liliana Otilia",
-                 "autocomplete",
                 )
                ]
         item_data = [
@@ -123,19 +118,15 @@ class SendReceiveItem(InvTestFunctions):
         method = "search"
         send_data = [("site_id",
                  "Timor-Leste Red Cross Society (CVTL) National Warehouse (Warehouse)",
-                 "option",
                 ),
                  ("type",
                   "Internal Shipment",
-                  "option",
                  ),
                 ("to_site_id",
                  "Lori (Facility)",
-                 "option",
                 ),
                 ("sender_id",
                  "Beatriz de Carvalho",
-                 "autocomplete",
                 ),
                ]
         item_data = [
