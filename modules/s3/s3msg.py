@@ -817,9 +817,9 @@ class S3Msg(object):
                                    encoding=encoding
                                    )
         if not result:
-            current.session.error = current.mail.error           
+            current.session.error = current.mail.error
         else:
-            current.session.error = None                
+            current.session.error = None
 
         return result
 
@@ -1374,7 +1374,7 @@ class S3Msg(object):
         settings = db(query).select(limitby=(0, 1)).first()
         if not settings:
             return "Username %s (%s) not scheduled." % username % server
-        
+
         host = server
         protocol = settings.protocol
         ssl = settings.use_ssl
@@ -1659,6 +1659,32 @@ class S3Msg(object):
                 return "Error:" + str(e.code)
             return
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def rss_poll():
+        """ Fetches RSS Feeds."""
+
+        import gluon.contrib.feedparser as feedparser
+
+        request = current.request
+        s3db = current.s3db
+        db = current.db
+        ctable = s3db.msg_rss_channel
+        ftable = s3db.msg_rss_feed
+
+        query = (ctable.deleted == False) & (ctable.subscribed == True)
+        links = db(query).select(ctable.url)
+
+        for link in links:
+            d = feedparser.parse(link.url)
+            for entry in d.entries:
+                ftable.insert(title = entry.title,
+                              link = entry.link,
+                              description = entry.description,
+                              created_on = request.now)
+
+        return
+
 # =============================================================================
 class S3Compose(S3CRUD):
     """ RESTful method for messaging """
@@ -1703,7 +1729,7 @@ class S3Compose(S3CRUD):
         if not current.deployment_settings.has_module("msg"):
             current.session.error = T("Cannot send messages if Messaging module disabled")
             redirect(URL(f="index"))
-            
+
         if not auth.permission.has_permission("update", c="msg"):
             current.session.error = T("You do not have permission to send messages")
             redirect(URL(f="index"))

@@ -392,6 +392,148 @@ def email_inbound_channel():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def rss_feed():
+    """
+       RESTful CRUD controller for RSS feeds
+       - appears in the administration menu
+    """
+
+    if not auth.s3_has_role(ADMIN):
+
+        session.error = UNAUTHORISED
+        redirect(URL(f="index"))
+
+
+    tablename = "msg_rss_feed"
+    table = s3db.msg_rss_feed
+
+    # To represent the description suitably
+    # If it is an image display an image
+    #table.description.represent = lambda description:  HTML(description)
+
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_display = T("RSS Feeds Details"),
+        title_list = T("RSS Feeds"),
+        title_update = T("Edit RSS Feeds"),
+        label_list_button = T("View RSS Feeds"),
+        msg_record_deleted = T("RSS Feed deleted"),
+        msg_list_empty = T("No Feeds available")
+        )
+
+    #response.menu_options = admin_menu_options
+    s3db.configure(tablename, listadd=False, deletable=True)
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def rss_channel():
+    """
+       RESTful CRUD controller for RSS channels
+       - appears in the administration menu
+    """
+
+    if not auth.s3_has_role(ADMIN):
+
+        session.error = UNAUTHORISED
+        redirect(URL(f="index"))
+
+    tablename = "msg_rss_channel"
+    table = s3db[tablename]
+
+    table.name.label = T("Name")
+    table.description.label = T("Description")
+    table.url.label = T("URL/Link")
+    table.url.comment = DIV(_class="tooltip",
+                            _title="%s|%s" % (T("URL"),
+                                              T("Link for the RSS Feed.")))
+    table.subscribed.comment = DIV(_class="tooltip",
+                                   _title="%s|%s" % (T("Subscriptions Status"),
+                                                     T("Are you susbscribed?")))
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_display = T("RSS Setting Details"),
+        title_list = T("RSS Settings"),
+        title_create = T("Add RSS Settings"),
+        title_update = T("Edit RSS Settings"),
+        label_list_button = T("View RSS Settings"),
+        label_create_button = T("Add RSS Settings"),
+        msg_record_created = T("Setting added"),
+        msg_record_deleted = T("RSS Setting deleted"),
+        msg_list_empty = T("No Settings currently defined"),
+        msg_record_modified = T("RSS settings updated")
+        )
+
+    #response.menu_options = admin_menu_options
+    s3db.configure(tablename, listadd=True, deletable=True)
+
+    def postp(r, output):
+
+        rtable = r.table
+
+        s3_action_buttons(r)
+
+        query = (rtable.deleted == False) & \
+        (rtable.subscribed == True)
+        records = db(query).select(rtable.id)
+
+        restrict_s = [str(record.id) for record in records]
+
+        query = (rtable.deleted == False) & \
+        (rtable.subscribed == False)
+        records = db(query).select(rtable.id)
+
+        restrict_u = [str(record.id) for record in records]
+
+        s3.actions = \
+        s3.actions + [
+        dict(label=str(T("Unsubscribe")),
+             _class="action-btn",
+             url=URL(f="unsubscribe_rss",
+                     args="[id]"),
+                     restrict = restrict_s)
+        ]
+
+        s3.actions.append(dict(label=str(T("Subscribe")),
+                               _class="action-btn",
+                               url = URL(f = "subscribe_rss",
+                                         args = "[id]"),
+                                         restrict = restrict_u)
+        )
+
+        ctable = s3db.msg_rss_channel
+        records = db(ctable.deleted == False).select()
+        if len(records) == 0:
+            return output
+
+        stable = s3db.scheduler_task
+        query = (stable.function_name == "msg_rss_poll")
+        functions = db(query).select(stable.function_name, stable.enabled)
+        if (len(functions) == 0) or (functions[0].enabled == False):
+            add_btn = A(T("Activate RSS"),
+                        _class="action-btn",
+                        _href=URL(f="enable_rss")
+                        )
+
+
+            output["rheader"] = add_btn
+        else:
+            add_btn = A(T("Deactivate RSS"),
+                        _class="action-btn",
+                        _href=URL(f="disable_rss")
+                        )
+
+
+            output["rheader"] = add_btn
+
+        return output
+
+    s3.postp = postp
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def mcommons_channel():
     """
         RESTful CRUD controller for Mobile Commons SMS Channels
@@ -957,6 +1099,39 @@ def enable_twilio_sms():
     return
 
 # -----------------------------------------------------------------------------
+def enable_rss():
+    """
+        Enables/Activates RSS Feeds
+    """
+
+    stable = s3db.scheduler_task
+    query = (stable.function_name == "msg_rss_poll")
+    functions = db(query).select(stable.function_name)
+
+    if len(functions) == 0:
+        s3task.schedule_task("msg_rss_poll",
+                             period=300,  # seconds
+                             timeout=300, # seconds
+                             repeats=0    # unlimited
+                             )
+    else:
+        db(stable.function_name == "msg_rss_poll").update(enabled=True)
+
+    redirect(URL(f="rss_channel"))
+
+# -----------------------------------------------------------------------------
+def disable_rss():
+    """
+        Disables RSS Feeds
+    """
+
+    stable = s3db.scheduler_task
+
+    db(stable.function_name == "msg_rss_poll").update(enabled=False)
+
+    redirect(URL(f="rss_channel"))
+
+# -----------------------------------------------------------------------------
 def enable_parser():
     """
         Enables different parsing workflows.
@@ -965,6 +1140,24 @@ def enable_parser():
     from s3db.msg import S3ParsingModel
     S3ParsingModel.enable_parser()
     return
+
+# -----------------------------------------------------------------------------
+def subscribe_rss():
+    """
+        Subscribes to an RSS feed.
+    """
+
+    db(s3db.msg_rss_channel.id == request.args[0]).update(subscribed = True)
+    redirect(URL(f="rss_channel"))
+
+# -----------------------------------------------------------------------------
+def unsubscribe_rss():
+    """
+        Unsubscribes from an RSS feed.
+    """
+
+    db(s3db.msg_rss_channel.id == request.args[0]).update(subscribed = False)
+    redirect(URL(f="rss_channel"))
 
 # -----------------------------------------------------------------------------
 def inbox():
