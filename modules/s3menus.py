@@ -831,7 +831,6 @@ class S3OptionsMenu(object):
                         M("Add Location", m="create"),
                         #M("Add Location Group", m="create", vars={"group": 1}),
                         M("List All"),
-                        M("Search", m="search"),
                         M("Import from CSV", m="import", restrict=[MAP_ADMIN]),
                         M("Import from OpenStreetMap", m="import_poi",
                           restrict=[MAP_ADMIN]),

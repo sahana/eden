@@ -1377,11 +1377,14 @@ class S3FilterForm(object):
         
         rows = []
         rappend = rows.append
+        advanced = False
         for f in self.widgets:
             widget = f(resource, get_vars, alias=alias)
             label = f.opts["label"]
             comment = f.opts["comment"]
             hidden = f.opts["hidden"]
+            if hidden:
+                advanced = True
             widget_id = f.attr["_id"]
             if widget_id:
                 row_id = "%s__row" % widget_id
@@ -1396,6 +1399,8 @@ class S3FilterForm(object):
             if not comment:
                 comment = ""
             rappend(formstyle(row_id, label, widget, comment, hidden=hidden))
+        if advanced:
+            self.opts["advanced"] = True
         return rows
             
     # -------------------------------------------------------------------------

@@ -132,82 +132,22 @@ def location():
     tablename = "gis_location"
     table = s3db[tablename]
 
-    args = request.args
-    if "search" in args or\
-       "report" in args:
-        # Location Search Method
-        gis_location_adv_search = (s3base.S3SearchSimpleWidget(
-                name = "location_search_text_advanced",
-                label = T("Search"),
-                #comment = T("Search for a Location by name, including local names."),
-                comment = T("To search for a location, enter the name. You may use % as wildcard. Press 'Search' without input to list all locations."),
-                field = "name"
-                ),
-                s3base.S3SearchOptionsWidget(
-                    name="location_search_L0",
-                    field="L0",
-                    label = COUNTRY,
-                    cols = 3,
-                ),
-                s3base.S3SearchOptionsWidget(
-                    name="location_search_L1",
-                    field="L1",
-                    location_level="L1",
-                    cols = 3,
-                ),
-                s3base.S3SearchOptionsWidget(
-                    name="location_search_L2",
-                    field="L2",
-                    location_level="L2",
-                    cols = 3,
-                ),
-                s3base.S3SearchOptionsWidget(
-                    name = "location_search_level",
-                    label = T("Level"),
-                    field = "level",
-                    cols = 2
-                ),
-                # NB This currently only works for locations with the country as direct parent (i.e. mostly L1s)
-                #s3base.S3SearchOptionsWidget(
-                #    name = "location_search_country",
-                #    label = COUNTRY,
-                #    field = "parent",
-                #    cols = 2
-                #),
-            )
-        gis_location_search = s3base.S3Search(
-            simple = (s3base.S3SearchSimpleWidget(
-                name="location_search_text_simple",
-                label = T("Search"),
-                #comment = T("Search for a Location by name, including local names."),  # How? These aren't fields in this table or in a table that we link to.
-                comment = T("To search for a location, enter the name. You may use % as wildcard. Press 'Search' without input to list all locations."),
-                field = ["name"]
-                )
-            ),
-            advanced = (
-                gis_location_adv_search
-            )
-        )
-        s3db.configure(tablename,
-                       # Custom Search Method
-                       search_method=gis_location_search,
-                       )
-    else:
-        # Custom Methods
-        set_method = s3db.set_method
-        from s3.s3gis import S3ExportPOI
-        set_method("gis", "location",
-                   method="export_poi",
-                   action=S3ExportPOI())
-        from s3.s3gis import S3ImportPOI
-        set_method("gis", "location",
-                   method="import_poi",
-                   action=S3ImportPOI())
-        set_method("gis", "location",
-                   method="parents",
-                   action=s3_gis_location_parents)
+    # Custom Methods
+    set_method = s3db.set_method
+    from s3.s3gis import S3ExportPOI
+    set_method("gis", "location",
+               method="export_poi",
+               action=S3ExportPOI())
+    from s3.s3gis import S3ImportPOI
+    set_method("gis", "location",
+               method="import_poi",
+               action=S3ImportPOI())
+    set_method("gis", "location",
+               method="parents",
+               action=s3_gis_location_parents)
     
-    if "report" in args:
+    if "report" in request.args:
+        # @ToDo: Migrate to Field.Lazy
         class S3LocationVirtualFields:
             def population(self):
                 """
@@ -251,6 +191,67 @@ def location():
     def prep(r, vars):
 
         if r.interactive and not r.component:
+            location_hierarchy = gis.get_location_hierarchy()
+            from s3.s3filter import S3TextFilter, S3OptionsFilter#, S3LocationFilter
+            filter_widgets = [
+                S3TextFilter(["name",
+                              "comments",
+                              "L0",
+                              "L1",
+                              "L2",
+                              "L3",
+                              "L4",
+                              "L5",
+                              "tag.value",
+                              ],
+                             label = T("Search"),
+                             comment = T("To search for a location, enter the name. You may use % as wildcard. Press 'Search' without input to list all locations."),
+                             _class = "filter-search",
+                             ),
+                S3OptionsFilter("level",
+                                label=T("Level"),
+                                cols=3,
+                                options=location_hierarchy,
+                                hidden=True,
+                                ),
+                # @ToDo: Hierarchical filter working on id
+                #S3LocationFilter("id",
+                #                 label=T("Location"),
+                #                 levels=["L0", "L1", "L2", "L3", "L4", "L5"],
+                #                 widget="multiselect",
+                #                 cols=3,
+                #                 hidden=True,
+                #                 ),
+                S3OptionsFilter("L0",
+                                label=COUNTRY,
+                                #widget="multiselect",
+                                cols=5,
+                                hidden=True,
+                                ),
+                S3OptionsFilter("L1",
+                                label=location_hierarchy["L1"],
+                                #widget="multiselect",
+                                cols=5,
+                                hidden=True,
+                                ),
+                S3OptionsFilter("L2",
+                                label=location_hierarchy["L2"],
+                                #widget="multiselect",
+                                cols=5,
+                                hidden=True,
+                                ),
+                S3OptionsFilter("L3",
+                                label=location_hierarchy["L3"],
+                                #widget="multiselect",
+                                cols=5,
+                                hidden=True,
+                                ),
+                ]
+
+            s3db.configure(tablename,
+                           filter_widgets=filter_widgets,
+                           )
+
             # Restrict access to Polygons to just MapAdmins
             if settings.get_security_map() and not s3_has_role(MAP_ADMIN):
                 table.gis_feature_type.writable = table.gis_feature_type.readable = False
@@ -391,6 +392,7 @@ def location():
                                     gis.get_country(code, key_type="code") or UNKNOWN_OPT)
 
     output = s3_rest_controller(rheader=s3db.gis_rheader,
+                                hide_filter = False,
                                 # CSV column headers, so no T()
                                 csv_extra_fields = [
                                     dict(label="Country",
