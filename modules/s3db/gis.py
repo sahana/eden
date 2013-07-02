@@ -4498,10 +4498,11 @@ class gis_LocationRepresent(S3Represent):
                     if L0_name:
                         path = row.path.split("/")
                         L0_id = path[0]
-                        level_name = gis.get_location_hierarchy(level, L0_id)
+                        level_name = current.gis.get_location_hierarchy(level,
+                                                                        L0_id)
                     else:
                         # Fallback to system default
-                        level_name = gis.get_location_hierarchy(level)
+                        level_name = current.gis.get_location_hierarchy(level)
 
                     represent = name
                     if level_name:
