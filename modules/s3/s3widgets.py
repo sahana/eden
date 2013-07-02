@@ -1458,8 +1458,6 @@ def S3GenericAutocompleteTemplate(post_process,
                                   value,
                                   attributes,
                                   source,
-                                  name_getter = "",
-                                  id_getter = "",
                                   transform_value = lambda value: value,
                                   new_items = False,    # Allow new items
                                   tablename = None,     # Needed if new_items=True
@@ -1499,11 +1497,9 @@ def S3GenericAutocompleteTemplate(post_process,
     else:
         represent = ""
 
-    script = '''S3.autocomplete.generic('%(url)s','%(input)s',"%(name_getter)s","%(id_getter)s","%(postprocess)s",%(delay)s,%(min_length)s)''' % \
+    script = '''S3.autocomplete.generic('%(url)s','%(input)s',"%(postprocess)s",%(delay)s,%(min_length)s)''' % \
             dict(url = source,
                  input = real_input,
-                 name_getter = name_getter,
-                 id_getter = id_getter,
                  postprocess = post_process,
                  delay = delay,
                  min_length = min_length,
@@ -2272,7 +2268,6 @@ class S3LocationAutocompleteWidget(FormWidget):
                           vars={"filter":"~",
                                 "field":fieldname,
                                 "level":levels,
-                                "simple":1,
                                 })
             else:
                 url = URL(c=self.prefix,
@@ -2281,7 +2276,6 @@ class S3LocationAutocompleteWidget(FormWidget):
                           vars={"filter":"~",
                                 "field":fieldname,
                                 "level":level,
-                                "simple":1,
                                 })
         else:
             url = URL(c=self.prefix,
@@ -2289,26 +2283,7 @@ class S3LocationAutocompleteWidget(FormWidget):
                       args="search_ac",
                       vars={"filter":"~",
                             "field":fieldname,
-                            "simple":1,
                             })
-
-        # Which Levels do we have in our hierarchy & what are their Labels?
-        #location_hierarchy = current.deployment_settings.gis.location_hierarchy
-        #try:
-        #    # Ignore the bad bulk-imported data
-        #    del location_hierarchy["XX"]
-        #except:
-        #    pass
-
-        # @ToDo: Something nicer (i.e. server-side formatting within gis_search_ac)
-        name_getter = \
-'''function(item){ \
-if(item.level=='L0'){return item.name+' (%(country)s)' \
-}else if(item.level=='L1'){return item.name+' ('+item.L0+')' \
-}else if(item.level=='L2'){return item.name+' ('+item.L1+','+item.L0+')' \
-}else if(item.level=='L3'){return item.name+' ('+item.L2+','+item.L1+','+item.L0+')' \
-}else if(item.level=='L4'){return item.name+' ('+item.L3+','+item.L2+','+item.L1+','+item.L0+')' \
-}else{return item.name}}''' % dict(country = current.messages.COUNTRY)
 
         return S3GenericAutocompleteTemplate(
             self.post_process,
@@ -2318,7 +2293,6 @@ if(item.level=='L0'){return item.name+' (%(country)s)' \
             value,
             attributes,
             source = url,
-            name_getter = name_getter,
         )
 
 # =============================================================================
@@ -3783,8 +3757,8 @@ class S3OrganisationAutocompleteWidget(FormWidget):
             new_items = self.new_items,
             tablename = "org_organisation",
             source = URL(c="org", f="org_search",
-                    args="search_ac",
-                    vars={"filter":"~"})
+                         args="search_ac",
+                         vars={"filter":"~"})
         )
 
 # =============================================================================

@@ -29,9 +29,6 @@ S3.autocomplete.normal = function(fieldname, module, resourcename, input, filter
     }
 
     // Optional args
-    if (postprocess == 'undefined') {
-        postprocess = '';
-    }
     if (delay == 'undefined') {
         delay = 450;
     }
@@ -126,8 +123,9 @@ S3.autocomplete.normal = function(fieldname, module, resourcename, input, filter
 
 /**
  * S3GenericAutocompleteTemplate
+ * - used by S3LocationAutocompleteWidget and S3OrganisationAutocompleteWidget
  */
-S3.autocomplete.generic = function(url, input, name_getter, id_getter, postprocess, delay, min_length) {
+S3.autocomplete.generic = function(url, input, postprocess, delay, min_length) {
     var dummy = 'dummy_' + input;
     var dummy_input = $('#' + dummy);
 
@@ -138,26 +136,6 @@ S3.autocomplete.generic = function(url, input, name_getter, id_getter, postproce
     var real_input = $('#' + input);
     var throbber = $('#' + dummy + '_throbber');
 
-    // Optional args
-    if (!name_getter) {
-        name_getter = function(item) {
-            return item.name;
-        }
-    }
-    else{
-        eval("name_getter = " + name_getter);
-    }
-    if (!id_getter) {
-        id_getter = function(item) {
-            return item.id;
-        }
-    }
-    else{
-        eval("id_getter = " + id_getter);    
-    }
-    if (postprocess == 'undefined') {
-        postprocess = '';
-    }
     if (delay == 'undefined') {
         delay = 450;
     }
@@ -201,17 +179,14 @@ S3.autocomplete.generic = function(url, input, name_getter, id_getter, postproce
             return content;
         },
         focus: function(event, ui) {
-            var item = ui.item;
-            var name = name_getter(item);
-            dummy_input.val(name);
+            dummy_input.val(ui.item.name);
             return false;
         },
         select: function(event, ui) {
             var item = ui.item;
-            var id = id_getter(item);
+            var id = item.id;
             if (id) {
-                var name = name_getter(item);
-                dummy_input.val(name);
+                dummy_input.val(item.name);
                 real_input.val(id)
                           .change();
             } else {
@@ -233,7 +208,7 @@ S3.autocomplete.generic = function(url, input, name_getter, id_getter, postproce
             // No Match
             var label = item.label;
         } else {
-            var label = name_getter(item);
+            var label = item.name;
         }
         return $('<li>').data('item.autocomplete', item)
                         .append('<a>' + label + '</a>')
@@ -272,9 +247,6 @@ S3.autocomplete.person = function(module, resourcename, input, postprocess, dela
     var url = S3.Ap.concat('/', module, '/', resourcename, '/search_ac');
 
     // Optional args
-    if (postprocess == 'undefined') {
-        postprocess = '';
-    }
     if (delay == 'undefined') {
         delay = 450;
     }
@@ -400,10 +372,10 @@ S3.autocomplete.hrm = function(group, input, postprocess, delay, min_length) {
     var real_input = $('#' + input);
     var throbber = $('#' + dummy + '_throbber');
 
-    if (group == "staff") {
+    if (group == 'staff') {
         // Search Staff using S3HRSearch
         var url = S3.Ap.concat('/hrm/person_search/search_ac?group=staff');
-    } else if (group == "volunteer") {
+    } else if (group == 'volunteer') {
         // Search Volunteers using S3HRSearch
         var url = S3.Ap.concat('/vol/person_search/search_ac');
     } else {
@@ -412,9 +384,6 @@ S3.autocomplete.hrm = function(group, input, postprocess, delay, min_length) {
     }
 
     // Optional args
-    if (postprocess == 'undefined') {
-        postprocess = '';
-    }
     if (delay == 'undefined') {
         delay = 450;
     }
@@ -582,9 +551,6 @@ S3.autocomplete.site = function(input, postprocess, delay, min_length) {
     var url = S3.Ap.concat('/org/site/search_ac?field=name&filter=~');
 
     // Optional args
-    if (postprocess == 'undefined') {
-        postprocess = '';
-    }
     if (delay == 'undefined') {
         delay = 450;
     }
@@ -703,9 +669,6 @@ S3.autocomplete.site_address = function(input, postprocess, delay, min_length) {
     var url = S3.Ap.concat('/org/site/search_address_ac?field=name&filter=~');
 
     // Optional args
-    if (postprocess == 'undefined') {
-        postprocess = '';
-    }
     if (delay == 'undefined') {
         delay = 450;
     }

@@ -735,174 +735,159 @@ class S3LocationModel(S3Model):
         fields = []
         field = table.id
 
-        if _vars.field and _vars.filter and value:
-            fieldname = str.lower(_vars.field)
-            field = table[fieldname]
+        if _vars.field and _vars.filter == "~" and value:
+            pass
+        else:
+            raise
 
-            if _vars.simple:
-                fields = [table.id,
-                          table.name,
-                          table.level,
-                          table.path,
-                          table.L0,
-                          table.L1,
-                          table.L2,
-                          table.L3
-                          ]
-            else:
-                # Default fields to return
-                fields = [table.id,
-                          table.name,
-                          table.level,
-                          table.parent,
-                          table.path,
-                          table.uuid,
-                          table.lat,
-                          table.lon,
-                          table.addr_street,
-                          table.addr_postcode
-                          ]
+        fieldname = str.lower(_vars.field)
+        field = table[fieldname]
 
-            # Optional fields
-            if "level" in _vars and _vars.level:
-                if _vars.level == "null":
-                    level = None
-                elif "|" in _vars.level:
-                    level = _vars.level.split("|")
-                else:
-                    level = str.upper(_vars.level)
-            else:
-                level = None
+        loc_select = _vars.get("loc_select", None)
+        if loc_select:
+            # S3LocationSelectorWidget
+            fields = [table.id,
+                      table.name,
+                      ]
+        else:
+            # S3LocationAutocompleteWidget
+            fields = ["id",
+                      "name",
+                      "level",
+                      "L0",
+                      "L1",
+                      "L2",
+                      "L3",
+                      "L4",
+                      "L5",
+                      ]
 
-            if "parent" in _vars and _vars.parent:
-                if _vars.parent == "null":
-                    parent = None
-                else:
-                    parent = int(_vars.parent)
-            else:
-                parent = None
-
-            if "children" in _vars and _vars.children:
-                if _vars.children == "null":
-                    children = None
-                else:
-                    children = int(_vars.children)
-            else:
+        if "children" in _vars and _vars.children:
+            if _vars.children == "null":
                 children = None
-
-            if "field2" in _vars and _vars.field2:
-                fieldname = str.lower(_vars.field2)
-                field2 = table[fieldname]
             else:
-                field2 = None
+                children = int(_vars.children)
+        else:
+            children = None
 
-            if "exclude_field" in _vars:
-                exclude_field = str.lower(_vars.exclude_field)
-                if "exclude_value" in _vars:
-                    exclude_value = str.lower(_vars.exclude_value)
-                else:
-                    exclude_value = None
+        if children:
+            # LocationSelector
+            children = current.gis.get_children(children, level=level)
+            children = children.find(lambda row: \
+                                     row.name and value in str.lower(row.name))
+            output = children.json()
+            response.headers["Content-Type"] = "application/json"
+            return output
+
+        if "field2" in _vars and _vars.field2:
+            # S3LocationSelectorWidget's s3_gis_autocomplete_search
+            # addr_street
+            fieldname = str.lower(_vars.field2)
+            field2 = table[fieldname]
+            fields.append(field2)
+            query = ((field.lower().like(value + "%")) | \
+                     (field2.lower().like(value + "%")))
+        else:
+            # Normal single-field
+            query = (field.lower().like(value + "%"))
+            if loc_select:
+                fields.append(table.level)
+                fields.append(table.parent)
+        resource.add_filter(query)
+
+        if "level" in _vars and _vars.level:
+            if _vars.level == "null":
+                level = None
+            elif "|" in _vars.level:
+                level = _vars.level.split("|")
             else:
-                exclude_field = None
-                exclude_value = None
+                level = str.upper(_vars.level)
+        else:
+            level = None
 
-            filter = _vars.filter
-            if filter == "~":
-                if children:
-                    # LocationSelector
-                    children = current.gis.get_children(children, level=level)
-                    children = children.find(lambda row: \
-                                             row.name and value in str.lower(row.name))
-                    output = children.json()
-                    response.headers["Content-Type"] = "application/json"
-                    return output
-
-                if field2:
-                    # LocationSelector for addr_street
-                    query = ((field.lower().like(value + "%")) | \
-                             (field2.lower().like(value + "%")))
-
-                else:
-                    # Normal single-field
-                    query = (field.lower().like(value + "%"))
-
-                resource.add_filter(query)
-                if level:
-                    # LocationSelector or Autocomplete
-                    if isinstance(level, list):
-                        query = (table.level.belongs(level))
-                    elif str.upper(level) == "NULLNONE":
-                        level = None
-                        query = (table.level == level)
-                    else:
-                        query = (table.level == level)
-                else:
-                    # Filter out poor-quality data, such as from Ushahidi
-                    query = (table.level != "XX")
-
-                if parent:
-                    # LocationSelector
-                    resource.add_filter(query)
-                    query = (table.parent == parent)
-
-            elif filter == "=":
-                if field.type.split(" ")[0] in \
-                   ["reference", "id", "float", "integer"]:
-                    # Numeric, e.g. Organizations' offices_by_org
-                    query = (field == value)
-                else:
-                    # Text
-                    if value == "nullnone":
-                        # i.e. old Location Selector
-                        query = (field == None)
-                    else:
-                        query = (field.lower() == value)
-
-                if parent:
-                    # i.e. gis_location hierarchical search
-                    resource.add_filter(query)
-                    query = (table.parent == parent)
-
-                fields = [table.id,
-                          table.name,
-                          table.level,
-                          table.uuid,
-                          table.parent,
-                          table.lat,
-                          table.lon,
-                          table.addr_street,
-                          table.addr_postcode
-                          ]
+        if level:
+            # LocationSelector or Autocomplete
+            if isinstance(level, list):
+                query = (table.level.belongs(level))
+            elif level == "nullnone":
+                # S3LocationSelectorWidget's s3_gis_autocomplete_search
+                level = None
+                query = (table.level == level)
             else:
-                output = current.xml.json_message(False, 400,
-                                "Unsupported filter! Supported filters: ~, =")
-                raise HTTP(400, body=output)
-
-
-        if not fields:
-            append = fields.append
-            for field in table.fields:
-                append(table[field])
+                query = (table.level == level)
+        else:
+            # Filter out poor-quality data, such as from Ushahidi
+            query = (table.level != "XX")
 
         resource.add_filter(query)
 
+        if "parent" in _vars and _vars.parent:
+            # LocationSelector
+            parent = int(_vars.parent)
+            query = (table.parent == parent)
+            resource.add_filter(query)
+
         MAX_SEARCH_RESULTS = current.deployment_settings.get_search_max_results()
-        if filter == "~":
-            if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-                output = jsons([dict(id="",
-                                     name="Search results are over %d. Please input more characters." \
-                                        % MAX_SEARCH_RESULTS)])
-        elif not parent:
-            if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-                output = jsons([])
+        if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
+            from gluon.serializers import json as jsons
+            output = jsons([dict(id="",
+                                 name="Search results are over %d. Please input more characters." \
+                                    % MAX_SEARCH_RESULTS)])
 
-        if output is None:
-            output = S3Exporter().json(resource,
-                                       start=0,
-                                       limit=limit,
-                                       fields=fields,
-                                       orderby=field)
+        else:
+            if "loc_select" in _vars:
+                # LocationSelector
+                # @ToDo: Deprecate
+                output = S3Exporter().json(resource,
+                                           start=0,
+                                           limit=limit,
+                                           fields=fields,
+                                           orderby=field)
+            else:
+                # S3LocationAutocompleteWidget
+                rows = resource.fast_select(fields=fields,
+                                            start=0,
+                                            limit=limit,
+                                            orderby="gis_location.name")["rows"]
+                items = []
+                iappend = items.append
+                COUNTRY = current.messages.COUNTRY
+                for row in rows:
+                    level = row["gis_location.level"]
+                    name = row["gis_location.name"]
+                    if level == "L0":
+                        represent = "%s (%s)" % (name, COUNTRY)
+                    elif level == "L1":
+                        represent = "%s (%s)" % (name, row["gis_location.L0"])
+                    elif level == "L2":
+                        represent = "%s (%s, %s)" % (name, row["gis_location.L1"],
+                                                     row["gis_location.L0"])
+                    elif level == "L3":
+                        represent = "%s (%s, %s, %s)" % (name,
+                                                         row["gis_location.L2"],
+                                                         row["gis_location.L1"],
+                                                         row["gis_location.L0"])
+                    elif level == "L4":
+                        represent = "%s (%s, %s, %s, %s)" % (name,
+                                                             row["gis_location.L3"],
+                                                             row["gis_location.L2"],
+                                                             row["gis_location.L1"],
+                                                             row["gis_location.L0"])
+                    elif level == "L5":
+                        represent = "%s (%s, %s, %s, %s, %s)" % (name,
+                                                                 row["gis_location.L4"],
+                                                                 row["gis_location.L3"],
+                                                                 row["gis_location.L2"],
+                                                                 row["gis_location.L1"],
+                                                                 row["gis_location.L0"])
+                    else:
+                        represent = name
+                    iappend({"id"   : row["gis_location.id"],
+                             "name" : represent
+                             })
 
+                output = json.dumps(items)
+                                       
         response.headers["Content-Type"] = "application/json"
         return output
 

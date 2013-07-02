@@ -362,13 +362,13 @@ function s3_gis_ac_set_source(level) {
     var source;
     if (parent) {
         // Filter on parent
-        source = S3.gis.url + '/search.json?filter=~&field=name&level=L' + level + '&parent=' + parent;
+        source = S3.gis.url + '/search_ac?filter=~&field=name&loc_select=1&level=L' + level + '&parent=' + parent;
     } else if (grandparent) {
         // Filter on children (slower)
-        source = S3.gis.url + '/search.json?filter=~&field=name&level=L' + level + '&children=' + grandparent;
+        source = S3.gis.url + '/search_ac?filter=~&field=name&loc_select=1&level=L' + level + '&children=' + grandparent;
     } else {
         // No Filter possible beyond Level
-        source = S3.gis.url + '/search.json?filter=~&field=name&level=L' + level;
+        source = S3.gis.url + '/search_ac?filter=~&field=name&loc_select=1&level=L' + level;
     }
     return source;
 }
@@ -379,7 +379,7 @@ function s3_gis_ac_set_search_source() {
     // @ToDo: Read Hierarchical Filters
 
     // Search all specific locations
-    var source = S3.gis.url + '/search.json?filter=~&field=name&field2=addr_street&level=nullnone';
+    var source = S3.gis.url + '/search_ac?filter=~&field=name&loc_select=1&field2=addr_street&level=nullnone';
 
     return source;
 }

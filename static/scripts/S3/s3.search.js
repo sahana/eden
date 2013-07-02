@@ -111,7 +111,7 @@
 
         var prefix = selSearchForm.attr('prefix');
         var formname = selSearchDiv.attr('class').replace('-', '_');
-        var url = S3.Ap.concat('/', prefix, '/', resourcename, '/search.acjson?',
+        var url = S3.Ap.concat('/', prefix, '/', resourcename, '/search_ac?',
                                 formname, '=True&', FormValues);
 
         // AJAX uses search method, where input name uses resourcename not Fieldname
