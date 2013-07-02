@@ -1417,6 +1417,7 @@ class S3OptionsMenu(object):
                     ),
                     M("InBox", f="inbox"),
                     M("Email InBox", f="email_inbox"),
+                    M("RSS Feeds", f="rss_feed"),
                     M("Twilio SMS InBox", f="twilio_inbox"),
                     M("Log", f="log"),
                     M("Outbox", f="outbox"),
@@ -1829,6 +1830,7 @@ class S3OptionsMenu(object):
         return [
             M("Email Settings", c="msg", f="email_inbound_channel"),
             M("Parsing Settings", c="msg", f="workflow"),
+            M("RSS Settings", c="msg", f="rss_channel"),
             M("SMS Gateway Settings", c="msg", f="sms_outbound_gateway",
                 args=[1], m="update"),
             M("Mobile Commons SMS Settings", c="msg", f="mcommons_channel"),

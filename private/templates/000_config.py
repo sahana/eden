@@ -68,7 +68,7 @@ settings.base.debug = False
 # Uncomment to use Content Delivery Networks to speed up Internet-facing sites
 #settings.base.cdn = True
 
-# Uncomment this and set the solr url to connect to solr server for Full-Text Search 
+# Uncomment this and set the solr url to connect to solr server for Full-Text Search
 #setting.base.solr_url = "http://127.0.0.1:8983/solr/"
 
 # This setting will be automatically changed _before_ registering the 1st user
