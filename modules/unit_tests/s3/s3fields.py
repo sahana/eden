@@ -224,8 +224,10 @@ class S3RepresentTests(unittest.TestCase):
         self.assertTrue(isinstance(result, DIV))
         self.assertEqual(len(result), 1)
         self.assertTrue(isinstance(result[0], A))
-        self.assertEqual(str(result[0]),
-            '<a href="/%s/org/organisation/%s">Represent Test Organisation1</a>' % (a, self.id1))
+        self.assertEqual(result[0].attributes["_href"],
+                         "/%s/org/organisation/%s" % (a, self.id1))
+        self.assertEqual(result[0].components[0],
+                         "Represent Test Organisation1")
 
         # Test with show_link=False
         result = r(self.id1, show_link=False)
@@ -266,12 +268,16 @@ class S3RepresentTests(unittest.TestCase):
         self.assertTrue(isinstance(repr1, DIV))
         self.assertEqual(len(repr1), 3)
         self.assertTrue(isinstance(repr1[0], A))
-        self.assertEqual(str(repr1[0]),
-            '<a href="/%s/org/organisation/%s">Represent Test Organisation1</a>' % (a, self.id1))
+        self.assertEqual(repr1[0].attributes["_href"],
+                         "/%s/org/organisation/%s" % (a, self.id1))
+        self.assertEqual(repr1[0].components[0],
+                         "Represent Test Organisation1")
         self.assertEqual(repr1[1], ", ")
         self.assertTrue(isinstance(repr1[2], A))
-        self.assertEqual(str(repr1[2]),
-            '<a href="/%s/org/organisation/%s">Represent Test Organisation2</a>' % (a, self.id2))
+        self.assertEqual(repr1[2].attributes["_href"],
+                         "/%s/org/organisation/%s" % (a, self.id2))
+        self.assertEqual(repr1[2].components[0],
+                         "Represent Test Organisation2")
 
         # Check NONE-option
         repr2 = r.render_list(values[2], result)
@@ -414,9 +420,11 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
 
         representation = output["org_facility.organisation_id"]
         self.assertTrue(isinstance(representation, A))
-        self.assertEqual(str(representation),
-                         '<a href="/%s/org/organisation/%s">%s</a>' %
-                         (current.request.application, self.org.id, self.org.name))
+        self.assertEqual(representation.attributes["_href"],
+                         "/%s/org/organisation/%s" %
+                            (current.request.application, self.org.id))
+        self.assertEqual(representation.components[0],
+                         self.org.name)
 
     # -------------------------------------------------------------------------
     def testRepresentReferenceSingleLinktoOff(self):
@@ -503,12 +511,22 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         self.assertTrue("org_facility.location_id" in output)
         names = output["org_facility.location_id"]
         self.assertTrue(isinstance(names, DIV))
-        names = str(names).split(", ")
-        self.assertEqual(len(names), 2)
-        a = lambda l: '<a href="/%s/gis/location/%s">%s</a>' % \
-                      (current.request.application, l.id, l.name)
-        self.assertTrue(a(self.locations[0]) in names)
-        self.assertTrue(a(self.locations[1]) in names)
+        
+        from lxml import etree
+        tree = etree.fromstring("<div>%s</div>" % names)
+        links = tree.findall("a")
+        self.assertEqual(len(links), 2)
+
+        appname = current.request.application
+        a = lambda location: (location.name,
+                              "/%s/gis/location/%s" % (appname, location.id))
+
+        types = dict(a(location) for location in self.locations)
+        for link in links:
+            name = link.text
+            self.assertTrue(name in types)
+            self.assertEqual(link.get("href", None),
+                             types[name])
 
     # -------------------------------------------------------------------------
     def testRepresentReferenceMultipleLinktoOff(self):
@@ -606,12 +624,22 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
 
         names = output["org_facility.facility_type_id"]
         self.assertTrue(isinstance(names, DIV))
-        names = str(names).split(", ")
-        self.assertEqual(len(names), 2)
-        a = lambda l: '<a href="/%s/org/facility_type/%s">%s</a>' % \
-                      (current.request.application, l.id, l.name)
-        self.assertTrue(a(self.fac_types[0]) in names)
-        self.assertTrue(a(self.fac_types[1]) in names)
+        
+        from lxml import etree
+        tree = etree.fromstring("<div>%s</div>" % names)
+        links = tree.findall("a")
+        self.assertEqual(len(links), 2)
+
+        appname = current.request.application
+        a = lambda fac_type: (fac_type.name,
+                              "/%s/org/facility_type/%s" % (appname, fac_type.id))
+
+        types = dict(a(fac_type) for fac_type in self.fac_types)
+        for link in links:
+            name = link.text
+            self.assertTrue(name in types)
+            self.assertEqual(link.get("href", None),
+                             types[name])
 
     # -------------------------------------------------------------------------
     def testRepresentListReferenceSingleLinktoOff(self):
@@ -751,20 +779,25 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
 
         names = output["org_facility.facility_type_id"]
         self.assertTrue(isinstance(names, DIV))
-        names = str(names).split(", ")
-        self.assertEqual(len(names), 3)
-        a = lambda l: '<a href="/%s/org/facility_type/%s">%s</a>' % \
-                      (current.request.application, l.id, l.name)
-        self.assertTrue(a(self.fac_types[0]) in names)
-        self.assertTrue(a(self.fac_types[1]) in names)
-        self.assertTrue(a(self.fac_types[2]) in names)
+
+        from lxml import etree
+        tree = etree.fromstring("<div>%s</div>" % names)
+        links = tree.findall("a")
+        self.assertEqual(len(links), 3)
+
+        appname = current.request.application
+        a = lambda fac_type: (fac_type.name,
+                              "/%s/org/facility_type/%s" % (appname, fac_type.id))
+
+        types = dict(a(fac_type) for fac_type in self.fac_types)
+        for link in links:
+            name = link.text
+            self.assertTrue(name in types)
+            self.assertEqual(link.get("href", None),
+                             types[name])
 
     # -------------------------------------------------------------------------
     def testRepresentListReferenceMultipleLinktoOff(self):
-        """
-            Test Representation of list:reference, multiple values,
-            with linkto + show_link=False
-        """
 
         s3db = current.s3db
 
