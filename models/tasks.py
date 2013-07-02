@@ -33,7 +33,6 @@ def document_create_index(document, user_id=None):
 
     name = document["name"]
     filename = document["filename"]
-    index_id = filename.split(".")[2]
 
     filename = "%s/%s/uploads/%s" % (os.path.abspath("applications"), \
                                     request.application, filename)
@@ -69,7 +68,7 @@ def document_create_index(document, user_id=None):
     # Put the data according to the Multiple Fields
     # @ToDo: Also, would change this according to requirement of Eden
     document = {
-                "id": str(index_id), # doc_document.file.xxxxxxxxxx.nnnnnn.cpp -> xxxxxxxxxx
+                "id": str(id), # doc_document.id
                 "name": data, # the data of the file
                 "url": filename, # the encoded file name stored in uploads/
                 "filename": name, # the filename actually uploaded by the user
@@ -96,12 +95,10 @@ def document_delete_index(document, user_id=None):
     id = document["id"]
     filename = document["filename"]
 
-    index_id = filename.split(".")[2]
-
     si = sunburnt.SolrInterface(settings.get_base_solr_url())
 
     # Delete and Commit the indicies of the deleted document
-    si.delete(index_id)
+    si.delete(id)
     si.commit()
     # After removing the index, set has_been_indexed value to False in the database
     db(table.id == id).update(has_been_indexed = False)
