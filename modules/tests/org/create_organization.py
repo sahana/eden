@@ -54,7 +54,7 @@ class CreateOrganisation(SeleniumUnitTest):
         # & for organisation_id lookups
         ("name", "Romanian Food Assistance Association (Test)"),
         ("acronym", "RFAAT"),
-        ("organisation_type_id", "Government", "option"),
+        ("organisation_type_id", "Government"),
         ("region", "Europe"),
         # Whilst the short form is accepted by the DB, our validation routine needs the full form
         ("website", "http://www.rfaat.com"),

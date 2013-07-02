@@ -62,7 +62,6 @@ class AddStaffToWarehouse(SeleniumUnitTest):
         self.create("hrm_human_resource", 
                     [
                      ( "person_id",
-                       "Goku Gohan",
-                       "autocomplete")
+                       "Goku Gohan")
                      ]
                      )
