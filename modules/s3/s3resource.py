@@ -5183,6 +5183,10 @@ class S3FieldSelector(object):
         return S3ResourceQuery(S3ResourceQuery.BELONGS, self, value)
 
     # -------------------------------------------------------------------------
+    def text(self, value):
+        return S3ResourceQuery(S3ResourceQuery.TEXT, self, value)
+
+    # -------------------------------------------------------------------------
     def contains(self, value):
         return S3ResourceQuery(S3ResourceQuery.CONTAINS, self, value)
 
@@ -5859,10 +5863,11 @@ class S3ResourceQuery(object):
     BELONGS = "belongs"
     CONTAINS = "contains"
     ANYOF = "anyof"
+    TEXT = "text"
 
     OPERATORS = [NOT, AND, OR,
                  LT, LE, EQ, NE, GE, GT,
-                 LIKE, BELONGS, CONTAINS, ANYOF]
+                 LIKE, BELONGS, CONTAINS, ANYOF, TEXT]
 
     # -------------------------------------------------------------------------
     def __init__(self, op, left=None, right=None):
@@ -6176,6 +6181,40 @@ class S3ResourceQuery(object):
         else:
             q = None
         return q
+
+    # -------------------------------------------------------------------------
+    def fulltext(self, l, r):
+        """
+            Does a Full-Text Search and Transform it into a BELONG Query 
+
+            @param l: the left operand
+            @param r: the right operand
+        """
+
+        settings = current.deployment_settings
+        db = current.db
+
+        if settings.get_base_solr_url():
+            import sunburnt
+
+            try:
+                si = sunburnt.SolrInterface(settings.get_base_solr_url())
+            except:
+                return None
+
+            records = si.query(name=r).highlight("name").execute()
+            filename = [];
+
+            for re in records:
+                filename.append(int(re["id"]))
+                #filename.append(str(re["url"].split("uploads/")[1]))
+            l.name = str(l.name.split(".")[0] + ".id")
+            
+            query_transform = S3ResourceQuery(self.BELONGS, left=l, right=filename)
+             
+            return query_transform
+
+        return None
 
     # -------------------------------------------------------------------------
     def __call__(self, resource, row, virtual=True):
@@ -7096,6 +7135,8 @@ class S3ResourceFilter(object):
 
         if isinstance(f, S3ResourceQuery):
 
+#            if f.op == "text":
+#                f = f.fulltext(f.left, f.right)
             q = f.query(self.resource)
             if q is not None:
                 self._add_query(q, component=component, master=master)
