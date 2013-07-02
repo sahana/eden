@@ -1426,7 +1426,6 @@ class S3OptionsMenu(object):
                        M("Queries", f="twitter_search"),
                        M("Results", f="twitter_search_results")
                     ),
-                    M("CAP", translate=False, f="tbc"),
                     M("Administration", restrict=[ADMIN])(settings_messaging)
                 )
 

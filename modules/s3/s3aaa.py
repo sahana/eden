@@ -6149,7 +6149,7 @@ class S3RoleManager(S3Method):
             tbody = TBODY(trows)
 
             # Aggregate list
-            items = TABLE(thead, tbody, _id="list", _class="dataTable display")
+            items = TABLE(thead, tbody, _class="dataTable display")
             output.update(items=items)
 
             # Add-button

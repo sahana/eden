@@ -11,8 +11,6 @@
  *
  */
 
-// ,
-// with optional callback once-completed (callback 
 /**
  * Function: s3_gis_loadjs
  * Load the JavaScript required for a Map.
@@ -337,95 +335,99 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
         ]
         jsFiles = jsFiles.concat(ol_files)
 
-        // GeoExt
-        var gxt_files = [
-            'gis/GeoExt/lib/GeoExt/data/AttributeReader.js',
-            'gis/GeoExt/lib/GeoExt/data/AttributeStore.js',
-            'gis/GeoExt/lib/GeoExt/data/FeatureRecord.js',
-            'gis/GeoExt/lib/GeoExt/data/FeatureReader.js',
-            'gis/GeoExt/lib/GeoExt/data/FeatureStore.js',
-            'gis/GeoExt/lib/GeoExt/data/LayerRecord.js',
-            'gis/GeoExt/lib/GeoExt/data/LayerReader.js',
-            'gis/GeoExt/lib/GeoExt/data/LayerStore.js',
-            'gis/GeoExt/lib/GeoExt/data/ScaleStore.js',
-            'gis/GeoExt/lib/GeoExt/data/StyleReader.js',
-            'gis/GeoExt/lib/GeoExt/data/WMSCapabilitiesReader.js',
-            'gis/GeoExt/lib/GeoExt/data/WMSCapabilitiesStore.js',
-            'gis/GeoExt/lib/GeoExt/data/WFSCapabilitiesReader.js',
-            'gis/GeoExt/lib/GeoExt/data/WFSCapabilitiesStore.js',
-            'gis/GeoExt/lib/GeoExt/data/WMSDescribeLayerReader.js',
-            'gis/GeoExt/lib/GeoExt/data/WMSDescribeLayerStore.js',
-            'gis/GeoExt/lib/GeoExt/data/WMCReader.js',
-            'gis/GeoExt/lib/GeoExt/widgets/Action.js',
-            'gis/GeoExt/lib/GeoExt/data/ProtocolProxy.js',
-            'gis/GeoExt/lib/GeoExt/widgets/FeatureRenderer.js',
-            'gis/GeoExt/lib/GeoExt/widgets/MapPanel.js',
-            'gis/GeoExt/lib/GeoExt/widgets/Popup.js',
-            'gis/GeoExt/lib/GeoExt/widgets/form.js',
-            'gis/GeoExt/lib/GeoExt/widgets/form/SearchAction.js',
-            'gis/GeoExt/lib/GeoExt/widgets/form/BasicForm.js',
-            'gis/GeoExt/lib/GeoExt/widgets/form/FormPanel.js',
-            'gis/GeoExt/lib/GeoExt/widgets/grid/SymbolizerColumn.js',
-            'gis/GeoExt/lib/GeoExt/widgets/tips/SliderTip.js',
-            'gis/GeoExt/lib/GeoExt/widgets/tips/LayerOpacitySliderTip.js',
-            'gis/GeoExt/lib/GeoExt/widgets/tips/ZoomSliderTip.js',
-            'gis/GeoExt/lib/GeoExt/widgets/tree/LayerNode.js',
-            'gis/GeoExt/lib/GeoExt/widgets/tree/TreeNodeUIEventMixin.js',
-            'gis/GeoExt/lib/GeoExt/plugins/TreeNodeComponent.js',
-            'gis/GeoExt/lib/GeoExt/plugins/TreeNodeRadioButton.js',
-            'gis/GeoExt/lib/GeoExt/plugins/TreeNodeActions.js',
-            'gis/GeoExt/lib/GeoExt/widgets/tree/LayerLoader.js',
-            'gis/GeoExt/lib/GeoExt/widgets/tree/LayerContainer.js',
-            'gis/GeoExt/lib/GeoExt/widgets/tree/BaseLayerContainer.js',
-            'gis/GeoExt/lib/GeoExt/widgets/tree/OverlayLayerContainer.js',
-            'gis/GeoExt/lib/GeoExt/widgets/tree/LayerParamNode.js',
-            'gis/GeoExt/lib/GeoExt/widgets/tree/LayerParamLoader.js',
-            'gis/GeoExt/lib/GeoExt/widgets/tree/WMSCapabilitiesLoader.js',
-            'gis/GeoExt/lib/GeoExt/widgets/LayerOpacitySlider.js',
-            'gis/GeoExt/lib/GeoExt/widgets/LayerLegend.js',
-            'gis/GeoExt/lib/GeoExt/widgets/LegendImage.js',
-            'gis/GeoExt/lib/GeoExt/widgets/UrlLegend.js',
-            'gis/GeoExt/lib/GeoExt/widgets/WMSLegend.js',
-            'gis/GeoExt/lib/GeoExt/widgets/VectorLegend.js',
-            'gis/GeoExt/lib/GeoExt/widgets/LegendPanel.js',
-            'gis/GeoExt/lib/GeoExt/widgets/ZoomSlider.js',
-            'gis/GeoExt/lib/GeoExt/widgets/grid/FeatureSelectionModel.js',
-            'gis/GeoExt/lib/GeoExt/data/PrintPage.js',
-            'gis/GeoExt/lib/GeoExt/data/PrintProvider.js',
-            'gis/GeoExt/lib/GeoExt/plugins/PrintPageField.js',
-            'gis/GeoExt/lib/GeoExt/plugins/PrintProviderField.js',
-            'gis/GeoExt/lib/GeoExt/plugins/PrintExtent.js',
-            'gis/GeoExt/lib/GeoExt/plugins/AttributeForm.js',
-            'gis/GeoExt/lib/GeoExt/widgets/PrintMapPanel.js',
-            'gis/GeoExt/lib/GeoExt/state/PermalinkProvider.js',
-            'gis/GeoExt/lib/GeoExt/Lang.js',
+        try {
+            Ext;
+            // GeoExt
+            var gxt_files = [
+                'gis/GeoExt/lib/GeoExt/data/AttributeReader.js',
+                'gis/GeoExt/lib/GeoExt/data/AttributeStore.js',
+                'gis/GeoExt/lib/GeoExt/data/FeatureRecord.js',
+                'gis/GeoExt/lib/GeoExt/data/FeatureReader.js',
+                'gis/GeoExt/lib/GeoExt/data/FeatureStore.js',
+                'gis/GeoExt/lib/GeoExt/data/LayerRecord.js',
+                'gis/GeoExt/lib/GeoExt/data/LayerReader.js',
+                'gis/GeoExt/lib/GeoExt/data/LayerStore.js',
+                'gis/GeoExt/lib/GeoExt/data/ScaleStore.js',
+                'gis/GeoExt/lib/GeoExt/data/StyleReader.js',
+                'gis/GeoExt/lib/GeoExt/data/WMSCapabilitiesReader.js',
+                'gis/GeoExt/lib/GeoExt/data/WMSCapabilitiesStore.js',
+                'gis/GeoExt/lib/GeoExt/data/WFSCapabilitiesReader.js',
+                'gis/GeoExt/lib/GeoExt/data/WFSCapabilitiesStore.js',
+                'gis/GeoExt/lib/GeoExt/data/WMSDescribeLayerReader.js',
+                'gis/GeoExt/lib/GeoExt/data/WMSDescribeLayerStore.js',
+                'gis/GeoExt/lib/GeoExt/data/WMCReader.js',
+                'gis/GeoExt/lib/GeoExt/widgets/Action.js',
+                'gis/GeoExt/lib/GeoExt/data/ProtocolProxy.js',
+                'gis/GeoExt/lib/GeoExt/widgets/FeatureRenderer.js',
+                'gis/GeoExt/lib/GeoExt/widgets/MapPanel.js',
+                'gis/GeoExt/lib/GeoExt/widgets/Popup.js',
+                'gis/GeoExt/lib/GeoExt/widgets/form.js',
+                'gis/GeoExt/lib/GeoExt/widgets/form/SearchAction.js',
+                'gis/GeoExt/lib/GeoExt/widgets/form/BasicForm.js',
+                'gis/GeoExt/lib/GeoExt/widgets/form/FormPanel.js',
+                'gis/GeoExt/lib/GeoExt/widgets/grid/SymbolizerColumn.js',
+                'gis/GeoExt/lib/GeoExt/widgets/tips/SliderTip.js',
+                'gis/GeoExt/lib/GeoExt/widgets/tips/LayerOpacitySliderTip.js',
+                'gis/GeoExt/lib/GeoExt/widgets/tips/ZoomSliderTip.js',
+                'gis/GeoExt/lib/GeoExt/widgets/tree/LayerNode.js',
+                'gis/GeoExt/lib/GeoExt/widgets/tree/TreeNodeUIEventMixin.js',
+                'gis/GeoExt/lib/GeoExt/plugins/TreeNodeComponent.js',
+                'gis/GeoExt/lib/GeoExt/plugins/TreeNodeRadioButton.js',
+                'gis/GeoExt/lib/GeoExt/plugins/TreeNodeActions.js',
+                'gis/GeoExt/lib/GeoExt/widgets/tree/LayerLoader.js',
+                'gis/GeoExt/lib/GeoExt/widgets/tree/LayerContainer.js',
+                'gis/GeoExt/lib/GeoExt/widgets/tree/BaseLayerContainer.js',
+                'gis/GeoExt/lib/GeoExt/widgets/tree/OverlayLayerContainer.js',
+                'gis/GeoExt/lib/GeoExt/widgets/tree/LayerParamNode.js',
+                'gis/GeoExt/lib/GeoExt/widgets/tree/LayerParamLoader.js',
+                'gis/GeoExt/lib/GeoExt/widgets/tree/WMSCapabilitiesLoader.js',
+                'gis/GeoExt/lib/GeoExt/widgets/LayerOpacitySlider.js',
+                'gis/GeoExt/lib/GeoExt/widgets/LayerLegend.js',
+                'gis/GeoExt/lib/GeoExt/widgets/LegendImage.js',
+                'gis/GeoExt/lib/GeoExt/widgets/UrlLegend.js',
+                'gis/GeoExt/lib/GeoExt/widgets/WMSLegend.js',
+                'gis/GeoExt/lib/GeoExt/widgets/VectorLegend.js',
+                'gis/GeoExt/lib/GeoExt/widgets/LegendPanel.js',
+                'gis/GeoExt/lib/GeoExt/widgets/ZoomSlider.js',
+                'gis/GeoExt/lib/GeoExt/widgets/grid/FeatureSelectionModel.js',
+                'gis/GeoExt/lib/GeoExt/data/PrintPage.js',
+                'gis/GeoExt/lib/GeoExt/data/PrintProvider.js',
+                'gis/GeoExt/lib/GeoExt/plugins/PrintPageField.js',
+                'gis/GeoExt/lib/GeoExt/plugins/PrintProviderField.js',
+                'gis/GeoExt/lib/GeoExt/plugins/PrintExtent.js',
+                'gis/GeoExt/lib/GeoExt/plugins/AttributeForm.js',
+                'gis/GeoExt/lib/GeoExt/widgets/PrintMapPanel.js',
+                'gis/GeoExt/lib/GeoExt/state/PermalinkProvider.js',
+                'gis/GeoExt/lib/GeoExt/Lang.js',
 
-            // GXP
-            'gis/gxp/RowExpander.js',
-            'gis/gxp/widgets/NewSourceWindow.js',
-            'gis/gxp/plugins/LayerSource.js',
-            'gis/gxp/plugins/WMSSource.js',
-            'gis/gxp/plugins/Tool.js',
-            'gis/gxp/plugins/AddLayers.js',
-            'gis/gxp/plugins/RemoveLayer.js'
-        ];
-        if (i18n.gis_search) {
-            gxt_files.push('gis/GeoExt/ux/GeoNamesSearchCombo.js');
-        }
-        if (i18n.gis_uploadlayer) {
-            gxt_files.push('gis/gxp/FileUploadField.js');
-            gxt_files.push('gis/gxp/LayerUploadPanel.js');
-        }
-        jsFiles = jsFiles.concat(gxt_files)
+                // GXP
+                'gis/gxp/RowExpander.js',
+                'gis/gxp/widgets/NewSourceWindow.js',
+                'gis/gxp/plugins/LayerSource.js',
+                'gis/gxp/plugins/WMSSource.js',
+                'gis/gxp/plugins/Tool.js',
+                'gis/gxp/plugins/AddLayers.js',
+                'gis/gxp/plugins/RemoveLayer.js'
+            ];
+            if (i18n.gis_search) {
+                gxt_files.push('gis/GeoExt/ux/GeoNamesSearchCombo.js');
+            }
+            if (i18n.gis_uploadlayer) {
+                gxt_files.push('gis/gxp/FileUploadField.js');
+                gxt_files.push('gis/gxp/LayerUploadPanel.js');
+            }
+            jsFiles = jsFiles.concat(gxt_files)
+        } catch(err) {};
 
         if (S3.gis.mgrs) {
             jsFiles.push('gis/usng2.js');
             jsFiles.push('gis/MP.js');
         }
 
-        // S3
-        jsFiles.push('S3/s3.gis.js');
-
+        if (S3.gis.custom != 'undefined') {
+            // S3
+            jsFiles.push('S3/s3.gis.js');
+        }
     } else {
         // Non-Debug
         if ((projection != 900913) && (projection != 4326)) {
@@ -433,17 +435,22 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
             jsFiles.push('gis/proj4js/lib/defs/EPSG' + projection + '.js');
         }
         jsFiles.push('gis/OpenLayers.js');
-        jsFiles.push('gis/GeoExt.js');
-        if (i18n.gis_search) {
-            jsFiles.push('gis/GeoExt/ux/GeoNamesSearchCombo.min.js');
-        }
-        if (i18n.gis_uploadlayer) {
-            jsFiles.push('gis/gxp_upload.js');
-        }
+        try {
+            Ext;
+            jsFiles.push('gis/GeoExt.js');
+            if (i18n.gis_search) {
+                jsFiles.push('gis/GeoExt/ux/GeoNamesSearchCombo.min.js');
+            }
+            if (i18n.gis_uploadlayer) {
+                jsFiles.push('gis/gxp_upload.js');
+            }
+        } catch(err) {};
         if (S3.gis.mgrs) {
             jsFiles.push('gis/MGRS.min.js');
         }
-        jsFiles.push('S3/s3.gis.min.js');
+        if (S3.gis.custom != 'undefined') {
+            jsFiles.push('S3/s3.gis.min.js');
+        }
     }
 
     // Add the additional scritps from Layers/Plugins

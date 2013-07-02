@@ -3833,7 +3833,10 @@ class GIS(object):
 
         # L0
         db = current.db
-        table = db.gis_location
+        try:
+            table = db.gis_location
+        except:
+            table = current.s3db.gis_location
         name = feature.get("name", False)
         level = feature.get("level", False)
         path = feature.get("path", False)

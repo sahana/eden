@@ -413,13 +413,21 @@ if len(pop_list) > 0:
     end = datetime.datetime.now()
     print >> sys.stdout, "Location Tree update completed in %s" % (end - start)
 
-    # Update stats_aggregate (disabled during prepop)
-    # - needs to be done after locations
     if has_module("stats"):
+        # Populate stats_demographic_aggregate (disabled during prepop)
+        # - needs to be done after locations
         start = datetime.datetime.now()
-        s3db.stats_rebuild_aggregates()
+        s3db.stats_demographic_rebuild_all_aggregates()
         end = datetime.datetime.now()
-        print >> sys.stdout, "Statistics data aggregation completed in %s" % (end - start)
+        print >> sys.stdout, "Demographic data aggregation completed in %s" % (end - start)
+
+    if has_module("vulnerability"):
+        # Populate vulnerability_aggregate (disabled during prepop)
+        # - needs to be done after locations
+        start = datetime.datetime.now()
+        s3db.vulnerability_rebuild_all_aggregates()
+        end = datetime.datetime.now()
+        print >> sys.stdout, "Vulnerability data aggregation completed in %s" % (end - start)
 
     grandTotalEnd = datetime.datetime.now()
     duration = grandTotalEnd - grandTotalStart

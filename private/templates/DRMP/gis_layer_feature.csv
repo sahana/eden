@@ -1,4 +1,4 @@
-Name,Description,Controller,Function,Symbology,Marker,GPS Marker,Popup Label,Popup Fields,Attribute Fields,Filter,Polygons,Style,Folder,Visible,Enabled,Cluster Distance,Cluster Threshold,Refresh
+Name,Description,Controller,Function,Symbology,Marker,GPS Marker,Popup Label,Popup Fields,Attributes,Filter,Polygons,Style,Folder,Visible,Enabled,Cluster Distance,Cluster Threshold,Refresh
 Offices,All Active Offices,org,office,DRMP,office,Building,Office,"name,organisation_id",,~.obsolete=False,,,,False,,,
 Projects,,project,location,DRMP,project,,Project,"name,location_id,multi_activity_type_id",,,,,,False,,,,,
 Alerts,,cms,post,DRMP,alert,Danger Area,Alert,body,,~.series_id$name=Alert&~.expired=False,,,,False,,,,

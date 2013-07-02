@@ -16,7 +16,7 @@
          Function.............string..........Layer Function
          Popup Label..........string..........Layer Popup Label
          Popup Fields.........comma-sep list..Layer Popup Fields (Fields to build feature OnHover tooltip)
-         Attribute Fields.....comma-sep list..Layer Attribute Fields (Fields to put in feature attributes to be visible to Styler)
+         Attributes...........comma-sep list..Layer Attributes (Fields to put in feature attributes to be visible to Styler)
          Filter...............string..........Layer Filter
          Site.................boolean.........Layer Site (use Site for location)
          Trackable............boolean.........Layer Trackable
@@ -125,7 +125,7 @@
 
         <xsl:variable name="Layer" select="col[@field='Name']/text()"/>
         <xsl:variable name="Config" select="col[@field='Config']/text()"/>
-        <xsl:variable name="Attributes" select="col[@field='Attribute Fields']/text()"/>
+        <xsl:variable name="Attributes" select="col[@field='Attributes']/text()"/>
         <xsl:variable name="PopupFields" select="col[@field='Popup Fields']/text()"/>
 
         <resource name="gis_layer_feature">

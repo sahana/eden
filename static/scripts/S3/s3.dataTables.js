@@ -15,29 +15,24 @@
 // Module pattern to hide internal vars
 (function () {
     // Module scope
-    var bProcessing;
-    var bServerSide;
-    var myList = [];
-    var oDataTable = [];
+    var bulk_action_controls;
     var selected;
+
+    // The configuration details for each table are currently stored as common indexes of a number of global variables
+    // @ToDo: Move to being properties of the table instances instead
+    //        - similar to S3.gis.maps
+    var aHiddenFieldsID = [];
+    var aoColumns = [];
+    var aoTableConfig = [];
+    var cache = [];
+    var fnAjaxCallback = [];
+    var oDataTable = [];
+    var oGroupColumns = [];
     var selectedRows = [];
     var selectionMode = [];
-    var tableCnt = 1;
     var tableId = [];
-
-    // The configuration details for each table
-    // - if 'each table' then why do these need to be module-scope, they should be per-table options, no?
-    var aHiddenFieldsID = [];
-    var aoTableConfig = []; // Passed in from the server
-    // Create an array for the column settings (this is required, otherwise the column widths don't autosize)
-    var aoColumns = [];
-    var bulk_action_controls;
-    var fnAjaxCallback = [];
-    var fnActionCallBacks = [];
-    var oGroupColumns = [];
-    var sDom = [];
-    var sPaginationType = [];
     var textDisplay = [];
+    var totalRecords = [];
 
     var appendUrlQuery = function(url, extension, query) {
         var parts = url.split('?'), q = '';
@@ -100,8 +95,8 @@
     }
 
     var hideSubRows = function(groupid) {
-        var sublevel = '.sublevel' + groupid.substr(6);
-        $(sublevel).each(function (){
+        var sublevel = $('.sublevel' + groupid.substr(6));
+        sublevel.each(function() {
             obj = $(this);
             if (obj.hasClass('group') && obj.is(':visible')) {
                 // Get the group_xxx class
@@ -109,7 +104,7 @@
                 hideSubRows(objGroupid);
             }
         });
-        $(sublevel).hide();
+        sublevel.hide();
         // Close all the arrows
         $('.arrow_e' + groupid).show();
         $('.arrow_s' + groupid).hide();
@@ -144,7 +139,9 @@
         }
     }
 
+    // Lookup a table index from it's id
     var tableIdReverse = function(id) {
+        var tableCnt = S3.dataTables.id.length;
         for (var t=0; t < tableCnt; t++) {
             if (tableId[t] == id) {
                 return t;
@@ -161,20 +158,21 @@
     S3.dataTables.toggleDiv = toggleDiv;
 
     var toggleRow = function(groupid) {
-        var sublevel = '.sublevel' + groupid.substr(6);
-        if ($(sublevel).is(':visible')) {
+        var _sublevel = '.sublevel' + groupid.substr(6);
+        var sublevel = $(_sublevel);
+        if (sublevel.is(':visible')) {
             // Close all sublevels and change the icon to collapsed
             hideSubRows(groupid);
-            $(sublevel).hide();
+            sublevel.hide();
             $('#' + groupid + '_closed').show();
             $('#' + groupid + '_open').hide();
             $('#' + groupid + '_in').show();
             $('#' + groupid + '_out').hide();
-        // Display the spacer of open groups
-        $(sublevel + '.spacer').show();
+            // Display the spacer of open groups
+            $(_sublevel + '.spacer').show();
         } else {
             // Open the immediate sublevel and change the icon to expanded
-            $(sublevel).show();
+            sublevel.show();
             $('#' + groupid + '_closed').hide();
             $('#' + groupid + '_open').show();
             $('#' + groupid + '_in').hide();
@@ -194,7 +192,7 @@
         var level = '';
         var groupid = '';
         var classList = $(obj).attr('class').split(/\s+/);
-        $.each( classList, function(index, rootClass){
+        $.each(classList, function(index, rootClass){
             if (rootClass.substr(0, 6) == 'level_'){
                 level = rootClass;
             }
@@ -298,18 +296,18 @@
         return -1;
     }
 
-    var bindButtons = function(t) {
-        /* This will bind the row action and the bulk action buttons to their callback function */
-        if (aoTableConfig[t]['rowActions'].length > 0) {
-            for (var i=0; i < fnActionCallBacks[t].length; i++){
-                var currentID = '#' + fnActionCallBacks[t][i][0];
+    // Bind the row action and the bulk action buttons to their callback function
+    var bindButtons = function(t, tableConfig, fnActionCallBacks) {
+        if (tableConfig['rowActions'].length > 0) {
+            for (var i=0; i < fnActionCallBacks.length; i++){
+                var currentID = '#' + fnActionCallBacks[i][0];
                 $(currentID).unbind('click')
-                            .bind('click', fnActionCallBacks[t][i][1]);
+                            .bind('click', fnActionCallBacks[i][1]);
             }
         }
-        if (aoTableConfig[t]['bulkActions']) {
+        if (tableConfig['bulkActions']) {
             $('.bulkcheckbox').unbind('change')
-                              .change( function(event){
+                              .change(function(event) {
                 var id = this.id.substr(6);
                 var posn = inList(id, selectedRows[t]);
                 if (posn == -1) {
@@ -326,8 +324,8 @@
         }
     }
 
+    // Show which rows have been selected for a bulk select action
     var setSelectionClass = function(t, row, index) {
-        /* This function is used to show which rows have been selected for a bulk select action */
         if (selectionMode[t] == 'Inclusive') {
             // @ToDo: can 'selected' be pulled in from a parameter rather than module-scope?
             $('#totalSelected').text(selected.length);
@@ -360,24 +358,6 @@
         };
     }
 
-    var setModeSelectionAll = function(event) {
-        var wrapper = $(this).parents('.dataTables_wrapper')[0].id;
-        var selector = '#' + wrapper.substr(0, wrapper.length - 8);
-        var t = tableIdReverse(selector);
-        selectionMode[t] = 'Exclusive';
-        selectedRows[t] = [];
-        oDataTable[t].fnDraw(false);
-    }
-
-    var setModeSelectionNone = function(event) {
-        var wrapper = $(this).parents('.dataTables_wrapper')[0].id;
-        var selector = '#' + wrapper.substr(0, wrapper.length - 8);
-        var t = tableIdReverse(selector);
-        selectionMode[t] = 'Inclusive';
-        selectedRows[t] = [];
-        oDataTable[t].fnDraw(false);
-    }
-
     /* Helper function to add the new group row */
     var addNewGroup = function(t,
                                sGroup,
@@ -401,34 +381,33 @@
         // Add an indentation of the grouping depth
         var levelDisplay = '';
         for (var lvl=1; lvl < level; lvl++) {
-            levelDisplay += "<div style='float:left; width:10px;'>&nbsp;</div>";
+            levelDisplay += "<div style='float:left;width:10px;'>&nbsp;</div>";
         }
         if (level > 1) {
             levelDisplay += '<div id="' + groupClass + '_closed" class="ui-icon ui-icon-triangle-1-e" style="float:left;"></div>';
-            levelDisplay += '<div id="' + groupClass + '_open" class="ui-icon ui-icon-triangle-1-s" style="float:left; display:none;"></div>';
+            levelDisplay += '<div id="' + groupClass + '_open" class="ui-icon ui-icon-triangle-1-s" style="float:left;display:none;"></div>';
         }
         // Add the subtotal counts (if provided)
         var groupCount = '';
-        if (groupTotals[sGroup] !== null) {
+        // Not !== as we want to catch undefined as well as null
+        if (groupTotals[sGroup] != null) {
             groupCount = ' (' + groupTotals[sGroup] + ')';
         } else {
             var index = groupPrefix + sGroup;
-            if (groupTotals[index] !== null) {
+            if (groupTotals[index] != null) {
                 groupCount = ' (' + groupTotals[index] + ')';
             }
         }
         // Create the new HTML elements
         var nGroup = document.createElement('tr');
         nGroup.className = 'group';
-        var nCell = document.createElement('td');
-        var htmlText;
         if (shrink || accordion) {
-            $(nGroup).addClass('headerRow');
-            $(nGroup).addClass(groupClass);
-            $(nGroup).addClass(levelClass);
+            $(nGroup).addClass('headerRow')
+                     .addClass(groupClass)
+                     .addClass(levelClass);
             if (sublevel) {
-                $(nGroup).addClass(sublevel);
-                $(nGroup).addClass('collapsable');
+                $(nGroup).addClass(sublevel)
+                         .addClass('collapsable');
             }
         }
         if (addIcons) {
@@ -461,10 +440,11 @@
                 iconin = '<a href="javascript:S3.dataTables.accordionRow(\'' + t + '\', \'' + levelClass + '\', \'' + groupClass + '\');" ' + iconClassOpen + ' style="float:right">' + iconTextOpen + '</a>';
                 iconout = '<a href="javascript:S3.dataTables.accordionRow(\'' + t + '\', \'' + levelClass + '\', \'' + groupClass + '\');" ' + iconClassClose + ' style="float:right; display:none">' + iconTextClose + '</a>';
             }
-            htmlText = groupTitle + groupCount+ iconin + iconout;
+            var htmlText = groupTitle + groupCount + iconin + iconout;
         } else {
-            htmlText = groupTitle + groupCount;
+            var htmlText = groupTitle + groupCount;
         }
+        var nCell = document.createElement('td');
         nCell.colSpan = iColspan;
         nCell.innerHTML = levelDisplay + htmlText;
         nGroup.appendChild(nCell);
@@ -475,17 +455,18 @@
         }
         if (insertSpace) {
             var nSpace = document.createElement('tr');
-            $(nSpace).addClass('spacer');
+            var _nSpace = $(nSpace);
+            _nSpace.addClass('spacer');
             if (sublevel){
-                $(nSpace).addClass(sublevel);
-                $(nSpace).addClass('collapsable');
+                _nSpace.addClass(sublevel)
+                       .addClass('collapsable');
             } else {
-                $(nSpace).addClass('alwaysOpen');
+                _nSpace.addClass('alwaysOpen');
             }
             nCell = document.createElement('td');
             nCell.colSpan = iColspan;
-            nSpace.appendChild( nCell );
-            $(nSpace).insertAfter(nGroup);
+            nSpace.appendChild(nCell);
+            _nSpace.insertAfter(nGroup);
         }
     } // end of function addNewGroup
 
@@ -493,23 +474,34 @@
      * Function to group the data
      *
      * @param oSettings the dataTable settings
+     * @param id the selector of the table
      * @param t the index of the table
      * @param group The index of the colum that will be grouped
      * @param groupTotals (optional) the totals to be used for each group
      * @param level the level of this group, starting at 1
      *********************************************************************/
-    var buildGroups = function(oSettings, t, group, groupTotals, prefixID, groupTitles, level) {
-        var shrink = aoTableConfig[t]['shrinkGroupedRows'] == 'individual';
-        var accordion = aoTableConfig[t]['shrinkGroupedRows'] == 'accordion';
-        var insertSpace = aoTableConfig[t]['groupSpacing'];
-        var iconGroupTypeList = aoTableConfig[t]['groupIcon'];
+    var buildGroups = function(oSettings, id, t, group, groupTotals, prefixID, groupTitles, level) {
+        // @ToDo: Pass table instance not index
+        var tableConfig = aoTableConfig[t];
+        if (tableConfig['shrinkGroupedRows'] == 'individual') {
+            var shrink = true;
+            var accordion = false;
+        } else if (tableConfig['shrinkGroupedRows'] == 'accordion') {
+            var shrink = false;
+            var accordion = true;
+        } else {
+            var shrink = false;
+            var accordion = false;
+        }
+        var insertSpace = tableConfig['groupSpacing'];
+        var iconGroupTypeList = tableConfig['groupIcon'];
         if (iconGroupTypeList.length >= level) {
-            var iconGroupType = iconGroupTypeList[level-1];
+            var iconGroupType = iconGroupTypeList[level - 1];
         } else {
             var iconGroupType = 'icon';
         }
-        var nTrs = $(tableId[t] + ' tbody tr');
-        var iColspan = $(tableId[t] + ' thead tr')[0].getElementsByTagName('th').length;
+        var nTrs = $(id + ' tbody tr');
+        var iColspan = $(id + ' thead tr')[0].getElementsByTagName('th').length;
         var sLastGroup = '';
         var groupPrefix = '';
         var groupCnt = 1;
@@ -518,12 +510,13 @@
         var sublevel = '';
         var levelClass = 'level_' + level;
         var title;
-        $(tableId[t]).addClass(levelClass);
+        $(id).addClass(levelClass);
         for (var i=0; i < nTrs.length; i++) {
-            if ($(nTrs[i]).hasClass('spacer')) {
+            var row = $(nTrs[i]);
+            if (row.hasClass('spacer')) {
                 continue;
             }
-            if ($(nTrs[i]).hasClass('group')) {
+            if (row.hasClass('group')) {
                 // Calculate the sublevel which can be used for the next new group
                 var item = getElementClass($(nTrs[i]), 'group_');
                 sublevel = 'sublevel' + item.substr(6);
@@ -531,25 +524,26 @@
                 groupPrefix = '';
                 for (var gpCnt = 0; gpCnt < prefixID.length; gpCnt++) {
                     try {
-                        groupPrefix += oSettings.aoData[ oSettings.aiDisplay[dataCnt] ]._aData[prefixID[gpCnt]] + "_";
+                        groupPrefix += oSettings.aoData[oSettings.aiDisplay[dataCnt]]._aData[prefixID[gpCnt]] + '_';
                     } catch(err) {}
                 }
                 continue;
             }
-            var sGroup = oSettings.aoData[ oSettings.aiDisplay[dataCnt] ]._aData[group];
-            if (sGroup != sLastGroup) {  // New group
+            var sGroup = oSettings.aoData[oSettings.aiDisplay[dataCnt]]._aData[group];
+            if (sGroup != sLastGroup) {
+                // New group
                 while (groupTitles.length > groupTitleCnt && sGroup != groupTitles[groupTitleCnt][0]) {
                     title = groupTitles[groupTitleCnt][1];
-                    addNewGroup(t, title, level, sublevel, iColspan, groupTotals, groupPrefix, title, false, iconGroupType, insertSpace, shrink, accordion, groupCnt, nTrs[i],true);
+                    addNewGroup(t, title, level, sublevel, iColspan, groupTotals, groupPrefix, title, false, iconGroupType, insertSpace, shrink, accordion, groupCnt, nTrs[i], true);
                     groupTitleCnt++;
                     groupCnt++;
                 }
                 if (groupTitles.length > groupTitleCnt){
                     title = groupTitles[groupTitleCnt][1];
-                    addNewGroup(t, title, level, sublevel, iColspan, groupTotals, groupPrefix, title, true, iconGroupType, insertSpace, shrink, accordion, groupCnt, nTrs[i],true);
+                    addNewGroup(t, title, level, sublevel, iColspan, groupTotals, groupPrefix, title, true, iconGroupType, insertSpace, shrink, accordion, groupCnt, nTrs[i], true);
                     groupTitleCnt++;
                 } else {
-                    addNewGroup(t, sGroup, level, sublevel, iColspan, groupTotals, groupPrefix, sGroup, true, iconGroupType, insertSpace, shrink, accordion, groupCnt, nTrs[i],true);
+                    addNewGroup(t, sGroup, level, sublevel, iColspan, groupTotals, groupPrefix, sGroup, true, iconGroupType, insertSpace, shrink, accordion, groupCnt, nTrs[i], true);
                 }
                 groupCnt++;
                 sLastGroup = sGroup;
@@ -557,20 +551,20 @@
             dataCnt += 1;
             if (shrink || accordion) {
                 // Hide the detail row
-                $(nTrs[i]).hide();
+                row.hide();
             }
         } // end of loop for each row
         // add any empty groups not yet added to at the end of the table
         while (groupTitles.length > groupTitleCnt) {
             title = groupTitles[groupTitleCnt][1];
-            addNewGroup(t, title, level, sublevel, iColspan, groupTotals, groupPrefix, title, false, iconGroupType, insertSpace, shrink, accordion, groupCnt, nTrs[nTrs.length-1],false);
+            addNewGroup(t, title, level, sublevel, iColspan, groupTotals, groupPrefix, title, false, iconGroupType, insertSpace, shrink, accordion, groupCnt, nTrs[nTrs.length-1], false);
             groupTitleCnt++;
             groupCnt++;
         }
     }
 
-    var setSpecialSortRules = function(t) {
-        var titles = aoTableConfig[t]['groupTitles'];
+    var setSpecialSortRules = function(t, tableConfig, tableColumns) {
+        var titles = tableConfig['groupTitles'];
         var order = [];
         var fname = 'group-title-' + t;
         var limit = titles[0].length;
@@ -578,69 +572,370 @@
             var title = titles[0][cnt][0];
             order[title] = cnt;
         }
-        jQuery.fn.dataTableExt.oSort[fname + '-asc']  = function(x, y) {
+        $.fn.dataTableExt.oSort[fname + '-asc']  = function(x, y) {
             return ((order[x] < order[y]) ? -1 : ((order[x] > order[y]) ?  1 : 0));
         };
-        jQuery.fn.dataTableExt.oSort[fname + '-desc']  = function(x, y) {
+        $.fn.dataTableExt.oSort[fname + '-desc']  = function(x, y) {
             return ((order[x] < order[y]) ? 1 : ((order[x] > order[y]) ?  -1 : 0));
         };
-        aoColumns[t][aoTableConfig[t]['group'][0][0]] = {'sType': fname};
+        tableColumns[tableConfig['group'][0][0]] = {'sType': fname};
     }
 
-    // Initialise a dataTable
-    var initDataTable = function(oTable, t, bReplace) {
-        var config_id = tableId[t] + '_configurations';
-        if ($(config_id).length > 0) {
-            var config = jQuery.parseJSON($(config_id).val());
+    /**
+     * Initialise a dataTable
+     *
+     * Parameters:
+     * id - {String} Selector to locate this dataTable (e.g. '#dataTable')
+     * t - {Integer} The index within all the global vars
+     * bDestroy - {Boolean} Whether to remove any existing dataTable with the same selector before creating this one
+     */
+    var initDataTable = function(id, t, bDestroy) {
+        // Read the configuration details
+        var config_id = $(id + '_configurations');
+        if (config_id.length > 0) {
+            var tableConfig = $.parseJSON(config_id.val());
         } else {
+            // No config can be read: abort
             oDataTable[t] = null;
             return;
         }
-        aoTableConfig[t]['groupTitles'] = config['groupTitles'];
-        if (config['groupTitles'].length > 0) {
-            setSpecialSortRules(t);
+
+        var tableColumns = [];
+        // Pass to global scope
+        aoTableConfig[t] = tableConfig;
+        aoColumns[t] = tableColumns;
+
+        if (tableConfig['groupTitles'].length > 0) {
+            setSpecialSortRules(t, tableConfig, tableColumns);
         }
-        aoTableConfig[t]['groupTotals'] = config['groupTotals'];
-        aoTableConfig[t]['displayLength'] = config['displayLength'];
-        oDataTable[t] = $(oTable).dataTable({
-            'aaSorting': aoTableConfig[t]['aaSort'],
-            'aaSortingFixed': aoTableConfig[t]['group'],
-            'aLengthMenu': aoTableConfig[t]['lengthMenu'],
-            'aoColumnDefs': [ oGroupColumns[t] ],
-            'aoColumns': aoColumns[t],
+
+        fnActionCallBacks = [];
+
+        // Buffer the array so that the default settings are preserved for the rest of the columns
+        var columnCount = $(id).find('thead tr').first().children().length;
+        for (var c=0; c < columnCount; c++) {
+            tableColumns[c] = null;
+        }
+
+        // Action Buttons
+        if (tableConfig['rowActions'].length < 1) {
+            if (S3.dataTables.Actions) {
+                tableConfig['rowActions'] = S3.dataTables.Actions;
+            } else {
+                tableConfig['rowActions'] = [];
+            }
+        }
+        if (tableConfig['rowActions'].length > 0) {
+            tableColumns[tableConfig['actionCol']] = {
+                'sTitle': ' ',
+                'bSortable': false
+            };
+        }
+        if (tableConfig['bulkActions']) {
+            tableColumns[tableConfig['bulkCol']] = {
+                // @ToDo: i18n
+                'sTitle': '<select id="bulk_select_options"><option></option><option id="modeSelectionAll">Select All</option><option id="modeSelectionNone">Deselect All</option></select>',
+                'bSortable': false
+            };
+        }
+        textDisplay[t] = [tableConfig['textMaxLength'],
+                          tableConfig['textShrinkLength']
+                          ];
+
+        if (tableConfig['group'].length > 0) {
+            var groupList = tableConfig['group'];
+            var gList = [];
+            for (var gCnt=0; gCnt < groupList.length; gCnt++) {
+                gList.push(groupList[gCnt][0]);
+            }
+            oGroupColumns[t] = {
+                'bVisible': false,
+                'aTargets': gList
+            };
+        } else {
+            oGroupColumns[t] = {
+                'bVisible': false,
+                'aTargets': [ ]
+            };
+        }
+
+        /* Code to calculate the bulk action buttons
+
+           They will actually be placed on the dataTable inside the fnHeaderCallback
+           It is necessary to do this inside of the callback because the dataTable().fnDraw
+           that these buttons trigger will remove the onClick binding. */
+        if (tableConfig['bulkActions']) {
+            var bulk_submit = '';
+            for (var i=0, iLen=tableConfig['bulkActions'].length; i < iLen; i++) {
+                var bulk_action = tableConfig['bulkActions'][i],
+                    name,
+                    value,
+                    cls = '';
+                if (bulk_action instanceof Array) {
+                    value = bulk_action[0];
+                    name = bulk_action[1];
+                    if (bulk_action.length == 3) {
+                        cls = bulk_action[2];
+                    }
+                } else {
+                    value = bulk_action;
+                    name = value;
+                }
+                bulk_submit += '<input type="submit" id="submitSelection" class="' + cls + '" name="' + name + '" value="' + value + '">&nbsp;';
+            }
+            // Module-scope currently as read by setSelectionClass()
+            bulk_action_controls = '<div class="dataTable-action">' + bulk_submit + '</div>';
+            // Add hidden fields to the form to record what has been selected
+            // Module-scope currently as read by setSelectionClass()
+            selected = $.parseJSON($(tableId[t] + '_dataTable_bulkSelection').val());
+            if (selected === null)
+                selected = [];
+            selectedRows[t] = selected;
+            selectionMode[t] = 'Inclusive';
+            if ($(tableId[t] + '_dataTable_bulkSelectAll').val()) {
+                selectionMode[t] = 'Exclusive';
+            }
+            aHiddenFieldsID[t] = [tableId[t] + '_dataTable_bulkMode',
+                                  tableId[t] + '_dataTable_bulkSelection'
+                                  ];
+        }
+
+        if (tableConfig['pagination'] == 'true') {
+            // Server-side Pagination is True
+            // Cache the pages to reduce server-side calls
+            var bServerSide = true;
+            var bProcessing = true;
+            var iDisplayLength = tableConfig['displayLength'];
+            var aoData = [{name: 'iDisplayLength', value: iDisplayLength},
+                          {name: 'iDisplayStart', value: 0},
+                          {name: 'sEcho', value: 1}
+                          ];
+
+            if ($(tableId[t] + '_dataTable_cache').length > 0) {
+                cache[t] = $.parseJSON($(tableId[t] + '_dataTable_cache').val());
+            } else {
+                cache[t] = { iCacheLower: -1 };
+            }
+
+            function fnSetKey(aoData, sKey, mValue) {
+                for (var i=0, iLen=aoData.length; i < iLen; i++) {
+                    if (aoData[i].name == sKey) {
+                        aoData[i].value = mValue;
+                    }
+                }
+            }
+            function fnGetKey(aoData, sKey) {
+                for (var i=0, iLen=aoData.length; i < iLen; i++) {
+                    if (aoData[i].name == sKey) {
+                        return aoData[i].value;
+                    }
+                }
+                return null;
+            }
+            var fnDataTablesPipeline = function(sSource, aoData, fnCallback) {
+                var bNeedServer = false;
+                var table;
+                if (this.hasOwnProperty('nTable')) {
+                    // Called from fnReloadAjax
+                    table = '#' + this.nTable.id;
+
+                    // Clear cache to enforce reload
+                    var t = tableIdReverse(table);
+                    cache[t] = {
+                            lastRequest: [],
+                            iCacheLower: -1,
+                            iCacheUpper: -1
+                    };
+                    fnCallback({}); // calls the inner function of fnReloadAjax
+
+                    // Can just return here, because fnDraw inside fnCallback
+                    // has already triggered the regular pipeline refresh
+                    return;
+                } else {
+                    table = '#' + this[0].id;
+                }
+
+                var t = tableIdReverse(table);
+                var iRequestLength = fnGetKey(aoData, 'iDisplayLength');
+                var iPipe;
+                // Adjust the pipe size depending on the page size
+                if (iRequestLength == iDisplayLength) {
+                    iPipe = 6;
+                } else if (iRequestLength > 49 || iRequestLength == -1) {
+                    iPipe = 2;
+                } else {
+                    // iRequestLength == 25;
+                    iPipe = 4;
+                }
+                var sEcho = fnGetKey(aoData, 'sEcho');
+                var iRequestStart = fnGetKey(aoData, 'iDisplayStart');
+                var iRequestEnd = iRequestStart + iRequestLength;
+                var oCache = cache[t];
+                oCache.iDisplayStart = iRequestStart;
+                if (oCache.hasOwnProperty('lastJson') && oCache.lastJson.hasOwnProperty('iTotalRecords')) {
+                    totalRecords[t] = oCache.lastJson.iTotalRecords;
+                } else {
+                    // This key never seems to be present?
+                    totalRecords[t] = fnGetKey(aoData, 'iTotalRecords');
+                }
+                // Prevent the Ajax lookup of the last page if we already know
+                // that there are no more records than we have in the cache.
+                if (oCache.hasOwnProperty('lastJson') &&
+                    oCache.lastJson.hasOwnProperty('iTotalDisplayRecords')) {
+                    if (oCache.lastJson.iTotalDisplayRecords < iRequestEnd) {
+                        iRequestEnd = oCache.lastJson.iTotalDisplayRecords;
+                    }
+                }
+                // outside pipeline?
+                if (oCache.iCacheUpper !== -1 && /* If Display All oCache.iCacheUpper == -1 */
+                    (iRequestLength == -1 || oCache.iCacheLower < 0 || iRequestStart < oCache.iCacheLower || iRequestEnd > oCache.iCacheUpper)
+                    ) {
+                    bNeedServer = true;
+                }
+                // sorting etc changed?
+                if (oCache.lastRequest && !bNeedServer) {
+                    if (!oCache.lastRequest.length) {
+                        // no previous request => need server in any case
+                        bNeedServer = true;
+                    } else {
+                        for (var i=0, iLen=aoData.length; i < iLen; i++) {
+                            if (aoData[i].name != 'iDisplayStart' && aoData[i].name != 'iDisplayLength' && aoData[i].name != 'sEcho') {
+                                if (aoData[i].value != oCache.lastRequest[i].value) {
+                                    bNeedServer = true;
+                                    break;
+
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Store the request for checking next time around
+                oCache.lastRequest = aoData.slice();
+                if (bNeedServer) {
+                    if (iRequestStart < oCache.iCacheLower) {
+                        iRequestStart = iRequestStart - (iRequestLength * (iPipe - 1));
+                        if (iRequestStart < 0) {
+                            iRequestStart = 0;
+                        }
+                    }
+                    oCache.iCacheLower = iRequestStart;
+                    oCache.iDisplayLength = fnGetKey(aoData, 'iDisplayLength');
+                    if (iRequestLength == -1) {
+                        oCache.iCacheUpper = -1; // flag for all records are in Cache
+                        fnSetKey(aoData, 'iDisplayStart', 'None'); // No Filter
+                        fnSetKey(aoData, 'iDisplayLength', 'None');  // No Filter
+                    } else {
+                        oCache.iCacheUpper = iRequestStart + (iRequestLength * iPipe);
+                        fnSetKey(aoData, 'iDisplayStart', iRequestStart);
+                        fnSetKey(aoData, 'iDisplayLength', iRequestLength * iPipe);
+                    }
+                    var nonDefaultData = aoData.filter(isNonDefaultData);
+                    $.getJSON(sSource, nonDefaultData, function(json) {
+                        // Callback processing
+                        oCache.lastJson = $.extend(true, {}, json);
+                        if (oCache.iCacheLower != oCache.iDisplayStart) {
+                            json.aaData.splice(0, oCache.iDisplayStart - oCache.iCacheLower);
+                        }
+                        if (oCache.iDisplayLength !== -1) {
+                            json.aaData.splice(oCache.iDisplayLength, json.aaData.length);
+                        }
+                        fnCallback(json);
+                    } );
+                } else {
+                    json = $.extend(true, {}, oCache.lastJson);
+                    json.sEcho = sEcho; // Update the echo for each response
+                    if (iRequestLength !== -1) {
+                        json.aaData.splice(0, iRequestStart - oCache.iCacheLower);
+                        json.aaData.splice(iRequestLength, json.aaData.length);
+                    }
+                    fnCallback(json);
+                }
+            };
+            fnAjaxCallback[t] = fnDataTablesPipeline;
+            // end of pagination code
+        } else {
+            // No Pagination
+            var bServerSide = false;
+            var bProcessing = false;
+            tableConfig['ajaxUrl'] = null;
+            var fnDataTablesPipeline = function(url, data, callback) {
+                var nonDefaultData = data.filter(isNonDefaultData);
+                $.ajax({
+                    'url': url,
+                    'data': nonDefaultData,
+                    'dataType': 'json',
+                    'cache': false
+                }).done(function(data, status) {
+                    if (callback) {
+                        callback(data, status);
+                    }
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    if (textStatus == 'parsererror') {
+                        alert('DataTables warning: JSON data from server could not be parsed. ' +
+                              'This is caused by a JSON formatting error.');
+                    }
+                });
+            };
+            fnAjaxCallback[t] = fnDataTablesPipeline;
+        } // end of no pagination code
+
+        var dt;
+        dt = $(id).dataTable({
+            'aaSorting': tableConfig['aaSort'],
+            'aaSortingFixed': tableConfig['group'],
+            'aLengthMenu': tableConfig['lengthMenu'],
+            'aoColumnDefs': [oGroupColumns[t]],
+            'aoColumns': tableColumns,
             'bAutoWidth' : false,
             'bDeferRender': true,
-            'bDestroy': bReplace,
-            'bFilter': aoTableConfig[t]['bFilter'] == 'true',
+            'bDestroy': bDestroy,
+            'bFilter': tableConfig['bFilter'] == 'true',
             'bProcessing': bProcessing,
             'bServerSide': bServerSide,
             'bSort': true,
-            'sDom': sDom[t],
-            'iDisplayLength': aoTableConfig[t]['displayLength'],
-            'sPaginationType': sPaginationType[t],
-            'sAjaxSource': aoTableConfig[t]['ajaxUrl'],
+            'sDom': tableConfig['sDom'],
+            'iDisplayLength': tableConfig['displayLength'],
+            'sPaginationType': tableConfig['paginationType'],
+            'sAjaxSource': tableConfig['ajaxUrl'],
             'fnHeaderCallback' : function (nHead, aasData, iStart, iEnd, aiDisplay) {
-                $('#modeSelectionAll').on('click', setModeSelectionAll);
-                $('#modeSelectionNone').on('click', setModeSelectionNone);
+                $('#modeSelectionAll').on('click', function(event) {
+                    //var wrapper = $(this).parents('.dataTables_wrapper')[0].id;
+                    //var selector = '#' + wrapper.substr(0, wrapper.length - 8);
+                    //var t = tableIdReverse(selector);
+                    selectionMode[t] = 'Exclusive';
+                    selectedRows[t] = [];
+                    //oDataTable[t].fnDraw(false);
+                    dt.fnDraw(false);
+                });
+                $('#modeSelectionNone').on('click', function(event) {
+                    //var wrapper = $(this).parents('.dataTables_wrapper')[0].id;
+                    //var selector = '#' + wrapper.substr(0, wrapper.length - 8);
+                    //var t = tableIdReverse(selector);
+                    selectionMode[t] = 'Inclusive';
+                    selectedRows[t] = [];
+                    //oDataTable[t].fnDraw(false);
+                    dt.fnDraw(false);
+                });
             },
             'fnServerData': fnAjaxCallback[t],
             'fnRowCallback': function(nRow, aData, iDisplayIndex) {
-                // Extract the id # from the link
-                var t = tableIdReverse(this.selector);
-                var actionCol = aoTableConfig[t]['actionCol'];
+                // Extract the index # from the link (should be in-scope still)
+                //var t = tableIdReverse(this.selector);
+                var actionCol = tableConfig['actionCol'];
                 var re = />(.*)</i;
                 var result = re.exec(aData[actionCol]);
-                var id;
+                var action_id;
                 if (result === null) {
-                    id = aData[actionCol];
+                    action_id = aData[actionCol];
                 } else {
-                    id = result[1];
+                    action_id = result[1];
                 }
                 // Set the action buttons in the id column for each row
-                if (aoTableConfig[t]['rowActions'].length > 0 || aoTableConfig[t]['bulkActions']) {
+                if (tableConfig['rowActions'].length || tableConfig['bulkActions']) {
                     var Buttons = '';
-                    if (aoTableConfig[t]['rowActions'].length > 0) {
-                        var Actions = aoTableConfig[t]['rowActions'];
+                    if (tableConfig['rowActions'].length) {
+                        var Actions = tableConfig['rowActions'];
                         // Loop through each action to build the button
                         for (var i=0; i < Actions.length; i++) {
 
@@ -648,7 +943,7 @@
 
                             // Check if action is restricted to a subset of records
                             if ('restrict' in Actions[i]) {
-                                if (inList(id, Actions[i].restrict) == -1) {
+                                if (inList(action_id, Actions[i].restrict) == -1) {
                                     continue;
                                 }
                             }
@@ -656,53 +951,58 @@
                             var label = S3.Utf8.decode(Actions[i].label);
                             re = /%5Bid%5D/g;
                             if (Actions[i]._onclick) {
-                                var oc = Actions[i]._onclick.replace(re, id);
+                                var oc = Actions[i]._onclick.replace(re, action_id);
                                 Buttons = Buttons + '<a class="' + c + '" onclick="' + oc + '">' + label + '</a>' + '&nbsp;';
                             } else if (Actions[i]._jqclick) {
-                                Buttons = Buttons + '<span class="' + c + '" id="' + id + '">' + label + '</span>' + '&nbsp;';
+                                Buttons = Buttons + '<span class="' + c + '" id="' + action_id + '">' + label + '</span>' + '&nbsp;';
                                 if (typeof S3ActionCallBack != 'undefined') {
-                                    fnActionCallBacks[t].push([id, S3ActionCallBack]);
+                                    fnActionCallBacks.push([action_id, S3ActionCallBack]);
                                 }
                             } else {
                                 if (Actions[i].icon) {
                                     label = '<img src="' + Actions[i].icon + '" alt="' + label + '" title="' + label + '">';
                                 }
-                                var url = Actions[i].url.replace(re, id);
+                                var url = Actions[i].url.replace(re, action_id);
                                 Buttons = Buttons + '<a class="'+ c + '" href="' + url + '">' + label + '</a>' + '&nbsp;';
                             }
                         } // end of loop through for each row Action for this table
                     } // end of if there are to be Row Actions for this table
                     // Put the actions buttons in the actionCol
-                    if ((aoTableConfig[t]['group'].length > 0) && (aoTableConfig[t]['group'][0][0] < actionCol)) {
+                    if ((tableConfig['group'].length > 0) && (tableConfig['group'][0][0] < actionCol)) {
                         actionCol -= 1;
                     }
                     $('td:eq(' + actionCol + ')', nRow).html( Buttons );
                 } // end of processing for the action and bulk buttons
 
                 // Code to toggle the selection of the row
-                if (aoTableConfig[t]['bulkActions']) {
-                    setSelectionClass(t, nRow, inList(id, selectedRows[t]));
+                if (tableConfig['bulkActions']) {
+                    setSelectionClass(t, nRow, inList(action_id, selectedRows[t]));
                 }
                 // Code to add special CSS styles to a row
-                var styles = aoTableConfig[t]['rowStyles'];
-                var style;
-                for (style in styles) {
-                    if (inList(id, styles[style]) > -1) {
-                        $(nRow).addClass( style );
+                var styles = tableConfig['rowStyles'];
+                if (styles.length) {
+                    var row = $(nRow);
+                    var style;
+                    for (style in styles) {
+                        if (inList(action_id, styles[style]) > -1) {
+                            row.addClass(style);
+                        }
                     }
                 }
                 // Code to condense any text that is longer than the display limits
                 var tdposn = 0;
                 var gList = [];
-                if (aoTableConfig[t]['group'].length > 0) {
-                    var groupList = aoTableConfig[t]['group'];
+                if (tableConfig['group'].length) {
+                    var groupList = tableConfig['group'];
                     for (var gCnt=0; gCnt < groupList.length; gCnt++) {
                         gList.push(groupList[gCnt][0]);
                     }
                 }
                 for (var j=0; j < aData.length; j++) {
                     // Ignore any columns used for groups
-                    if ($.inArray(j, gList) != -1) { continue; }
+                    if ($.inArray(j, gList) != -1) {
+                        continue;
+                    }
                     // Ignore if the data starts with an html open tag
                     if (aData[j][0] == '<') {
                         tdposn++;
@@ -711,43 +1011,47 @@
                     if (aData[j].length > textDisplay[t][0]) {
                         var uniqueid = '_' + t + iDisplayIndex + j;
                         var icon = '<a href="javascript:S3.dataTables.toggleDiv(\'' + uniqueid + '\');" class="ui-icon ui-icon-zoomin" style="float:right"></a>';
-                        var display = '<div id="display' + uniqueid + '">' + icon + aData[j].substr(0,textDisplay[t][1]) + "&hellip;</div>";
+                        var display = '<div id="display' + uniqueid + '">' + icon + aData[j].substr(0, textDisplay[t][1]) + "&hellip;</div>";
                         icon = '<a href="javascript:S3.dataTables.toggleDiv(\'' + uniqueid + '\');" class="ui-icon ui-icon-zoomout" style="float:right"></a>';
                         display += '<div  style="display:none" id="full' + uniqueid + '">' + icon + aData[j] + "</div>";
                         $('td:eq(' + tdposn + ')', nRow).html( display );
                     }
-                    tdposn++; // increment the count of the td tags (don't do this for groups)
+                    // increment the count of the td tags (don't do this for groups)
+                    tdposn++;
                 } // end of code to condense 'long text' in a cell
                 return nRow;
             }, // end of fnRowCallback
             'fnDrawCallback': function(oSettings) {
-                var table = '#' + oSettings.nTable.id;
-                var t = tableIdReverse(table);
+                //var table = '#' + oSettings.nTable.id;
+                //var t = tableIdReverse(table);
                 // If using Modals for Update forms:
                 //S3.addModals();
-                bindButtons(t);
+                bindButtons(t, tableConfig, fnActionCallBacks);
                 if (oSettings.aiDisplay.length === 0) {
                     return;
                 }
-                if (aoTableConfig[t]['group'].length > 0) {
-                    var groupList = aoTableConfig[t]['group'];
+                if (tableConfig['group'].length) {
+                    var groupList = tableConfig['group'];
                     for (var gCnt=0; gCnt < groupList.length; gCnt++) {
                         // The prefixID is used to identify what will be added to the key for the
                         // groupTotals, typically it will be a comma separated list of the groups
-                        prefixID = [];
+                        var prefixID = [];
                         for (var pixidCnt = 0; pixidCnt < gCnt; pixidCnt++) {
                             prefixID.push(groupList[pixidCnt][0]);
                         }
                         var group = groupList[gCnt];
-                        var groupTotals = [];
-                        if (aoTableConfig[t]['groupTotals'].length > gCnt) {
-                            groupTotals = aoTableConfig[t]['groupTotals'][gCnt];
+                        if (tableConfig['groupTotals'].length > gCnt) {
+                            var groupTotals = tableConfig['groupTotals'][gCnt];
+                        } else {
+                            var groupTotals = [];
                         }
-                        var groupTitles = [];
-                        if (aoTableConfig[t]['groupTitles'].length > gCnt) {
-                            groupTitles = aoTableConfig[t]['groupTitles'][gCnt];
+                        if (tableConfig['groupTitles'].length > gCnt) {
+                            var groupTitles = tableConfig['groupTitles'][gCnt];
+                        } else {
+                            var groupTitles = [];
                         }
                         buildGroups(oSettings,
+                                    id,
                                     t,
                                     group[0],
                                     groupTotals,
@@ -757,10 +1061,10 @@
                                     );
                     }
                     // Now loop through each row and add the subLevel controls for row collapsing
-                    var shrink = aoTableConfig[t]['shrinkGroupedRows'] == 'individual';
-                    var accordion = aoTableConfig[t]['shrinkGroupedRows'] == 'accordion';
+                    var shrink = tableConfig['shrinkGroupedRows'] == 'individual';
+                    var accordion = tableConfig['shrinkGroupedRows'] == 'accordion';
                     if (shrink || accordion) {
-                        var nTrs = $(tableId[t] + ' tbody tr');
+                        var nTrs = $(id + ' tbody tr');
                         var sublevel = '';
                         for (var i=0; i < nTrs.length; i++) {
                             obj = $(nTrs[i]);
@@ -769,8 +1073,8 @@
                                 item = getElementClass(obj, 'group_');
                                 sublevel = 'sublevel' + item.substr(6);
                             } else {
-                                $(nTrs[i]).addClass(sublevel);
-                                $(nTrs[i]).addClass('collapsable');
+                                $(nTrs[i]).addClass(sublevel)
+                                          .addClass('collapsable');
                             }
                         } // end of loop through each row adding controls to collapse & expand the grouped table
                         $('.collapsable').hide();
@@ -783,334 +1087,44 @@
                    } // end of collapsable rows
                 }
                 if (Math.ceil((oSettings.fnRecordsDisplay()) / oSettings._iDisplayLength) > 1)  {
-                    $(tableId[t] + '_paginate').css('display', 'block');
+                    $(id + '_paginate').css('display', 'block');
                 } else {
-                    $(tableId[t] + '_paginate').css('display', 'none');
+                    $(id + '_paginate').css('display', 'none');
                 }
             } // end of fnDrawCallback
-        }); // end of call to $(oTable).datatable()
+        }); // end of call to $(id).datatable()
+
+        // Delay in milliseconds to prevent too many AJAX calls
+        dt.fnSetFilteringDelay(450);
+
         // Does not handle horizontal overflow properly:
-        //new FixedHeader(oDataTable[t]);
-    } // end of initDataTable function
-
-    // Pass to global scope to allow dataTables to be initialised outside of this function.
-    // - used by Vulnerability
-    S3.dataTables.fnInitDataTable = initDataTable;
-
-    // Function to Intiialise all dataTables in the page
-    // Designed to be called from $(document).ready()
-    var initAll = function() {
-        var t;  // scratch
-        var id;
-        if (S3.dataTables.id) {
-            tableCnt = S3.dataTables.id.length;
-            for (t=0; t < tableCnt; t++) {
-                id = '#' + S3.dataTables.id[t];
-                tableId[t] = id;
-                myList[t] = $(id);
-            }
-        } else {
-            id = '#list';
-            tableId[0] = id;
-            myList[0] = $(id);
-        }
-
-        // The configuration details for each table
-        var sPagination = [];
-        var cache = [];
-        var totalRecords = [];
-
-        // Iterate through each dataTable
-        for (t=0; t < tableCnt; t++) {
-            // First get the config details for each table
-            var config_id = tableId[t] + '_configurations';
-            if ($(config_id).length > 0) {
-                aoTableConfig[t] = jQuery.parseJSON($(config_id).val());
-            } else {
-                // This table is not in the page (maybe empty)
-                aoTableConfig[t] = null;
-                continue;
-            }
-            sDom[t] = aoTableConfig[t]['sDom'];
-            sPaginationType[t] = aoTableConfig[t]['paginationType'];
-
-            fnActionCallBacks[t] = [];
-            var ColumnCount = myList[t].find('thead tr').first().children().length;
-
-            aoColumns[t] = [];
-            // Buffer the array so that the default settings are preserved for the rest of the columns
-            for (var c=0; c < ColumnCount; c++) {
-                aoColumns[t][c] = null;
-            }
-            if (aoTableConfig[t]['rowActions'].length < 1) {
-                if (S3.dataTables.Actions) {
-                    aoTableConfig[t]['rowActions'] = S3.dataTables.Actions;
-                }
-            }
-            if (aoTableConfig[t]['rowActions'].length > 0) {
-                aoColumns[t][aoTableConfig[t]['actionCol']] = {
-                    'sTitle': ' ',
-                    'bSortable': false
-                };
-            }
-            if (aoTableConfig[t]['bulkActions']) {
-                aoColumns[t][aoTableConfig[t]['bulkCol']] = {
-                    // @ToDo: i18n
-                    'sTitle': '<select id="bulk_select_options"><option></option><option id="modeSelectionAll">Select All</option><option id="modeSelectionNone">Deselect All</option></select>',
-                    'bSortable': false
-                };
-            }
-            textDisplay[t] = [aoTableConfig[t]['textMaxLength'],
-                              aoTableConfig[t]['textShrinkLength']
-                              ];
-
-
-            if ($(tableId[t] + '_dataTable_cache').length > 0) {
-                cache[t] = jQuery.parseJSON($(tableId[t] + '_dataTable_cache').val());
-            } else {
-                cache[t] = { iCacheLower: -1 };
-            }
-
-            if (aoTableConfig[t]['group'].length > 0) {
-                var groupList = aoTableConfig[t]['group'];
-                var gList = [];
-                for (var gCnt=0; gCnt < groupList.length; gCnt++) {
-                    gList.push(groupList[gCnt][0]);
-                }
-                oGroupColumns[t] = {
-                    'bVisible': false,
-                    'aTargets': gList
-                };
-            } else {
-                oGroupColumns[t] = {
-                    'bVisible': false,
-                    'aTargets': [ ]
-                };
-            }
-
-            /* Code to calculate the bulk action buttons
-
-               They will actually be placed on the dataTable inside the fnHeaderCallback
-               It is necessary to do this inside of the callback because the dataTable().fnDraw
-               that these buttons trigger will remove the on click binding. */
-            if (aoTableConfig[t]['bulkActions']) {
-                var bulk_submit = '';
-                for (var i=0, iLen=aoTableConfig[t]['bulkActions'].length; i < iLen; i++) {
-                    var bulk_action = aoTableConfig[t]['bulkActions'][i], name, value, cls='';
-                    if (bulk_action instanceof Array) {
-                        value = bulk_action[0];
-                        name = bulk_action[1];
-                        if (bulk_action.length == 3) {
-                            cls = bulk_action[2];
-                        }
-                    } else {
-                        value = bulk_action;
-                        name = value;
-                    }
-                    bulk_submit += '<input type="submit" id="submitSelection" class="' + cls + '" name="' + name + '" value="' + value + '">&nbsp;';
-                }
-                // Module-scope currently as read by other functions
-                bulk_action_controls = '<div class="dataTable-action">' + bulk_submit + '</div>';
-                // Add hidden fields to the form to record what has been selected
-                var bulkSelectionID = tableId[t] + '_dataTable_bulkSelection';
-                // module-scope as read by setSelectionClass()
-                selected = jQuery.parseJSON($(bulkSelectionID).val());
-                if (selected === null)
-                    selected = [];
-                selectedRows[t] = selected;
-                selectionMode[t] = 'Inclusive';
-                if ($(tableId[t] + '_dataTable_bulkSelectAll').val()) {
-                    selectionMode[t] = 'Exclusive';
-                }
-                aHiddenFieldsID[t] = [tableId[t] + '_dataTable_bulkMode',
-                                      tableId[t] + '_dataTable_bulkSelection'
-                                      ];
-            }
-
-            if (aoTableConfig[t]['pagination'] == 'true') {
-                // Server-side Pagination is True
-                // Cache the pages to reduce server-side calls
-                bServerSide = true;
-                bProcessing = true;
-                var iDisplayLength = aoTableConfig[t]['displayLength'];
-                var aoData = [{name: 'iDisplayLength', value: iDisplayLength},
-                              {name: 'iDisplayStart', value: 0},
-                              {name: 'sEcho', value: 1}
-                              ];
-
-                function fnSetKey(aoData, sKey, mValue) {
-                    for (var i=0, iLen=aoData.length; i < iLen; i++) {
-                        if ( aoData[i].name == sKey ) {
-                            aoData[i].value = mValue;
-                        }
-                    }
-                }
-                function fnGetKey(aoData, sKey) {
-                    for (var i=0, iLen=aoData.length; i < iLen; i++) {
-                        if ( aoData[i].name == sKey ) {
-                            return aoData[i].value;
-                        }
-                    }
-                    return null;
-                }
-                var fnDataTablesPipeline = function(sSource, aoData, fnCallback) {
-                    var bNeedServer = false;
-                    var table;
-                    if (this.hasOwnProperty('nTable')) {
-                        // Called from fnReloadAjax
-                        table = '#' + this.nTable.id;
-
-                        // Clear cache to enforce reload
-                        var t = tableIdReverse(table);
-                        cache[t] = {
-                                lastRequest: [],
-                                iCacheLower: -1,
-                                iCacheUpper: -1
-                        };
-                        fnCallback({}); // calls the inner function of fnReloadAjax
-
-                        // Can just return here, because fnDraw inside fnCallback
-                        // has already triggered the regular pipeline refresh
-                        return;
-                    } else {
-                        table = '#' + this[0].id;
-                    }
-
-                    var t = tableIdReverse(table);
-                    var iRequestLength = fnGetKey(aoData, 'iDisplayLength');
-                    var iPipe;
-                    // Adjust the pipe size depending on the page size
-                    if (iRequestLength == iDisplayLength) {
-                        iPipe = 6;
-                    } else if (iRequestLength > 49 || iRequestLength == -1) {
-                        iPipe = 2;
-                    } else {
-                        // iRequestLength == 25;
-                        iPipe = 4;
-                    }
-                    var sEcho = fnGetKey(aoData, 'sEcho');
-                    var iRequestStart = fnGetKey(aoData, 'iDisplayStart');
-                    var iRequestEnd = iRequestStart + iRequestLength;
-                    var oCache = cache[t];
-                    oCache.iDisplayStart = iRequestStart;
-                    if (oCache.hasOwnProperty('lastJson') && oCache.lastJson.hasOwnProperty('iTotalRecords')) {
-                        totalRecords[t] = oCache.lastJson.iTotalRecords;
-                    } else {
-                        // This key never seems to be present?
-                        totalRecords[t] = fnGetKey(aoData, 'iTotalRecords');
-                    }
-                    // Prevent the Ajax lookup of the last page if we already know
-                    // that there are no more records than we have in the cache.
-                    if (oCache.hasOwnProperty('lastJson') &&
-                        oCache.lastJson.hasOwnProperty('iTotalDisplayRecords')) {
-                        if (oCache.lastJson.iTotalDisplayRecords < iRequestEnd) {
-                            iRequestEnd = oCache.lastJson.iTotalDisplayRecords;
-                        }
-                    }
-                    // outside pipeline?
-                    if (oCache.iCacheUpper !== -1 && /* If Display All oCache.iCacheUpper == -1 */
-                        (iRequestLength == -1 || oCache.iCacheLower < 0 || iRequestStart < oCache.iCacheLower || iRequestEnd > oCache.iCacheUpper)
-                        ) {
-                        bNeedServer = true;
-                    }
-                    // sorting etc changed?
-                    if (oCache.lastRequest && !bNeedServer) {
-                        if (!oCache.lastRequest.length) {
-                            // no previous request => need server in any case
-                            bNeedServer = true;
-                        } else {
-                            for (var i=0, iLen=aoData.length; i < iLen; i++) {
-                                if (aoData[i].name != 'iDisplayStart' && aoData[i].name != 'iDisplayLength' && aoData[i].name != 'sEcho') {
-                                    if (aoData[i].value != oCache.lastRequest[i].value) {
-                                        bNeedServer = true;
-                                        break;
-
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Store the request for checking next time around
-                    oCache.lastRequest = aoData.slice();
-                    if (bNeedServer) {
-                        if (iRequestStart < oCache.iCacheLower) {
-                            iRequestStart = iRequestStart - (iRequestLength * (iPipe - 1));
-                            if (iRequestStart < 0) {
-                                iRequestStart = 0;
-                            }
-                        }
-                        oCache.iCacheLower = iRequestStart;
-                        oCache.iDisplayLength = fnGetKey(aoData, 'iDisplayLength');
-                        if (iRequestLength == -1) {
-                            oCache.iCacheUpper = -1; // flag for all records are in Cache
-                            fnSetKey(aoData, 'iDisplayStart', 'None'); // No Filter
-                            fnSetKey(aoData, 'iDisplayLength', 'None');  // No Filter
-                        } else {
-                            oCache.iCacheUpper = iRequestStart + (iRequestLength * iPipe);
-                            fnSetKey(aoData, 'iDisplayStart', iRequestStart);
-                            fnSetKey(aoData, 'iDisplayLength', iRequestLength * iPipe);
-                        }
-                        var nonDefaultData = aoData.filter(isNonDefaultData);
-                        $.getJSON(sSource, nonDefaultData, function(json) {
-                            // Callback processing
-                            oCache.lastJson = jQuery.extend(true, {}, json);
-                            if (oCache.iCacheLower != oCache.iDisplayStart) {
-                                json.aaData.splice(0, oCache.iDisplayStart - oCache.iCacheLower);
-                            }
-                            if (oCache.iDisplayLength !== -1) {
-                                json.aaData.splice(oCache.iDisplayLength, json.aaData.length);
-                            }
-                            fnCallback(json);
-                        } );
-                    } else {
-                        json = jQuery.extend(true, {}, oCache.lastJson);
-                        json.sEcho = sEcho; // Update the echo for each response
-                        if (iRequestLength !== -1) {
-                            json.aaData.splice(0, iRequestStart - oCache.iCacheLower);
-                            json.aaData.splice(iRequestLength, json.aaData.length);
-                        }
-                        fnCallback(json);
-                    }
-                };
-                fnAjaxCallback[t] = fnDataTablesPipeline;
-                // end of pagination code
-            } else {
-                // No Pagination
-                bServerSide = false;
-                bProcessing = false;
-                aoTableConfig[t]['ajaxUrl'] = null;
-                var fnDataTablesPipeline = function(url, data, callback) {
-                    var nonDefaultData = data.filter(isNonDefaultData);
-                    $.ajax({'url': url,
-                            'data': nonDefaultData,
-                            'success': callback,
-                            'dataType': 'json',
-                            'cache': false,
-                            'error': function (xhr, error, thrown) {
-                                if (error == 'parsererror') {
-                                    alert('DataTables warning: JSON data from server could not be parsed. ' +
-                                          'This is caused by a JSON formatting error.');
-                                }
-                            }
-                    });
-                };
-                fnAjaxCallback[t] = fnDataTablesPipeline;
-            } // end of no pagination code
-        } // end of loop for each dataTable
-
-        // Iterate through each dataTable & Init it
-        for (var tcnt=0; tcnt < tableCnt; tcnt++) {
-          initDataTable(myList[tcnt], tcnt, false);
-          // Delay in milliseconds to prevent too many AJAX calls
-          if (null !== oDataTable[tcnt]) {
-            oDataTable[tcnt].fnSetFilteringDelay(450);
-          }
-        } // end of loop through for each table
+        //new FixedHeader(dt);
 
         if (S3.dataTables.Resize) {
             // Resize the Columns after hiding extra data
-            $('.dataTable').dataTable().fnAdjustColumnSizing();
+            dt.fnAdjustColumnSizing();
+        }
+
+        // Pass back to global scope
+        oDataTable[t] = dt;
+
+    } // end of initDataTable function
+
+    // Pass to global scope to allow dataTables to be initialised some time after the page is loaded.
+    // - used by Vulnerability
+    S3.dataTables.initDataTable = initDataTable;
+
+    // Function to Initialise all dataTables in the page
+    // Designed to be called from $(document).ready()
+    var initAll = function() {
+        if (S3.dataTables.id) {
+            // Iterate through each dataTable, store ID in list & Init it
+            var tableCnt = S3.dataTables.id.length;
+            for (var t=0; t < tableCnt; t++) {
+                var id = '#' + S3.dataTables.id[t];
+                tableId[t] = id;
+                initDataTable(id, t, false);
+            }
         }
     }
     // Export to global scope so that $(document).ready can call it

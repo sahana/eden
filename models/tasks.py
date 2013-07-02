@@ -344,69 +344,108 @@ if settings.has_module("req"):
 
 # -----------------------------------------------------------------------------
 if settings.has_module("stats"):
-
-    def stats_group_clean(user_id=None):
+    def stats_demographic_update_aggregates(records=None, user_id=None):
         """
-            Update the stats_aggregate table by calculating all the stats_group
-            records which have the dirty flag set to True
-        """
-        if user_id:
-            # Authenticate
-            auth.s3_impersonate(user_id)
-        # Run the Task & return the result
-        result = s3db.stats_group_clean()
-        db.commit()
-        return result
+            Update the stats_demographic_aggregate table for the given
+            stats_demographic_data record(s)
 
-    tasks["stats_group_clean"] = stats_group_clean
-
-    def stats_update_time_aggregate(data_id=None, user_id=None):
-        """
-            Update the stats_aggregate table for the given stats_data record
-
-            @param data_id: the id of the stats_data record just added
+            @param records: JSON of Rows of stats_demographic_data records to
+                            update aggregates for
             @param user_id: calling request's auth.user.id or None
         """
         if user_id:
             # Authenticate
             auth.s3_impersonate(user_id)
         # Run the Task & return the result
-        result = s3db.stats_update_time_aggregate(data_id)
+        result = s3db.stats_demographic_update_aggregates(records)
         db.commit()
         return result
 
-    tasks["stats_update_time_aggregate"] = stats_update_time_aggregate
+    tasks["stats_demographic_update_aggregates"] = stats_demographic_update_aggregates
 
-    def stats_update_aggregate_location(location_level,
-                                        root_location_id,
-                                        parameter_id,
-                                        start_date,
-                                        end_date,
-                                        user_id=None):
+    def stats_demographic_update_location_aggregate(location_level,
+                                                    root_location_id,
+                                                    parameter_id,
+                                                    start_date,
+                                                    end_date,
+                                                    user_id=None):
         """
-            Update the stats_aggregate table for the given location and parameter
+            Update the stats_demographic_aggregate table for the given location and parameter
+            - called from within stats_demographic_update_aggregates
 
-            @param location_level: the gis level at which the data needs to be accumulated
-            @param root_location_id: the id of the location
-            @param paramerter_id: the parameter for which the stats are being updated
-            @param start_date: the start date of the period in question
-            @param end_date: the end date of the period in question
+            @param location_level: gis level at which the data needs to be accumulated
+            @param root_location_id: id of the location
+            @param parameter_id: parameter for which the stats are being updated
+            @param start_date: start date of the period in question
+            @param end_date: end date of the period in question
             @param user_id: calling request's auth.user.id or None
         """
         if user_id:
             # Authenticate
             auth.s3_impersonate(user_id)
         # Run the Task & return the result
-        result = s3db.stats_update_aggregate_location(location_level,
-                                                      root_location_id,
-                                                      parameter_id,
-                                                      start_date,
-                                                      end_date,
-                                                      )
+        result = s3db.stats_demographic_update_location_aggregate(location_level,
+                                                                  root_location_id,
+                                                                  parameter_id,
+                                                                  start_date,
+                                                                  end_date,
+                                                                  )
         db.commit()
         return result
 
-    tasks["stats_update_aggregate_location"] = stats_update_aggregate_location
+    tasks["stats_demographic_update_location_aggregate"] = stats_demographic_update_location_aggregate
+
+    if settings.has_module("vulnerability"):
+
+        def vulnerability_update_aggregates(records=None, user_id=None):
+            """
+                Update the vulnerability_aggregate table for the given
+                vulnerability_data record(s)
+
+                @param records: JSON of Rows of vulnerability_data records to update aggregates for
+                @param user_id: calling request's auth.user.id or None
+            """
+            if user_id:
+                # Authenticate
+                auth.s3_impersonate(user_id)
+            # Run the Task & return the result
+            result = s3db.vulnerability_update_aggregates(records)
+            db.commit()
+            return result
+
+        tasks["vulnerability_update_aggregates"] = vulnerability_update_aggregates
+
+        def vulnerability_update_location_aggregate(location_level,
+                                                    root_location_id,
+                                                    parameter_id,
+                                                    start_date,
+                                                    end_date,
+                                                    user_id=None):
+            """
+                Update the vulnerability_aggregate table for the given location and parameter
+                - called from within vulnerability_update_aggregates
+
+                @param location_level: gis level at which the data needs to be accumulated
+                @param root_location_id: id of the location
+                @param parameter_id: parameter for which the stats are being updated
+                @param start_date: start date of the period in question
+                @param end_date: end date of the period in question
+                @param user_id: calling request's auth.user.id or None
+            """
+            if user_id:
+                # Authenticate
+                auth.s3_impersonate(user_id)
+            # Run the Task & return the result
+            result = s3db.vulnerability_update_location_aggregate(location_level,
+                                                                  root_location_id,
+                                                                  parameter_id,
+                                                                  start_date,
+                                                                  end_date,
+                                                                  )
+            db.commit()
+            return result
+
+        tasks["vulnerability_update_location_aggregate"] = vulnerability_update_location_aggregate
 
 # -----------------------------------------------------------------------------
 # Instantiate Scheduler instance with the list of tasks

@@ -1723,10 +1723,6 @@ class S3ProjectBeneficiaryModel(S3Model):
                              # Populated automatically from project_location
                              self.gis_location_id(readable = False,
                                                   writable = False),
-                             # Used for Aggregation as per Vulnerability needs
-                             # @ToDo: Can we remove from here?
-                             self.stats_group_id(readable = False,
-                                                 writable = False),
                              Field("value", "double",
                                    label = T("Quantity"),
                                    requires = IS_INT_IN_RANGE(0, 99999999),
@@ -1740,6 +1736,7 @@ class S3ProjectBeneficiaryModel(S3Model):
                                      label = T("End Date"),
                                      #empty = False,
                                      ),
+                             #self.stats_source_id(),
                              s3_comments(),
                              *s3_meta_fields())
 

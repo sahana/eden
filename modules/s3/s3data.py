@@ -226,7 +226,8 @@ class S3DataTable(object):
                                  **attr)
             cache = {"iCacheLower": self.start,
                      "iCacheUpper": self.end if filteredrows > self.end else filteredrows,
-                     "lastJson": aadata}
+                     "lastJson": aadata,
+                     }
 
         html = self.htmlConfig(table,
                                id,
@@ -440,7 +441,7 @@ class S3DataTable(object):
             div.append(link)
             div.append(" | ")
 
-        div.append(current.T("Export to:"))
+        div.append("%s:" % current.T("Export to"))
         iconList = []
         formats = s3.formats
         export_formats = current.deployment_settings.get_ui_export_formats()
@@ -625,7 +626,7 @@ class S3DataTable(object):
             @global current.response.s3.actions used to get the RowActions
         """
 
-        from gluon.serializers import json
+        from gluon.serializers import json as jsons
 
         request = current.request
         s3 = current.response.s3
@@ -708,13 +709,13 @@ class S3DataTable(object):
         form.append(INPUT(_type="hidden",
                           _id="%s_configurations" % id,
                           _name="config",
-                          _value=json(config)))
+                          _value=jsons(config)))
         # If we have a cache set up then pass it in
         if cache:
             form.append(INPUT(_type="hidden",
                               _id="%s_dataTable_cache" %id,
                               _name="cache",
-                              _value=json(cache)))
+                              _value=jsons(cache)))
         # If we have bulk actions then add the hidden fields
         if config.bulkActions:
             form.append(INPUT(_type="hidden",

@@ -1,2 +1,2 @@
 from pr import *
-from stats import *
+from vulnerability import *

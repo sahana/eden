@@ -14,5 +14,5 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,PH,"Region","Province","City / Municipality","Barangay",,
 ,TD,"Region","Department","Sub-Prefecture","Canton",
 ,TL,"District","SubDistrict","Suco","Aldeia",,
-,US,"State","County","City",,,False
+,US,"State","County","City","Neighborhood",,False
 ,VN,"Province","District","Commune",,,

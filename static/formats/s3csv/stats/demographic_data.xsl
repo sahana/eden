@@ -67,16 +67,6 @@
                                                     col[@field='L4'], '/',
                                                     col[@field='L5'])"/>
 
-    <xsl:key name="group" match="row"
-             use="concat(col[@field='Source'],
-                         col[@field='Date'],
-                         col[@field=$Country],
-                         col[@field='L1'],
-                         col[@field='L2'],
-                         col[@field='L3'],
-                         col[@field='L4'],
-                         col[@field='L5'])"/>
-
     <xsl:key name="demographic" match="row" use="col[@field='Demographic']"/>
 
     <xsl:key name="source" match="row" use="col[@field='Source']"/>
@@ -85,12 +75,6 @@
     <xsl:template match="/">
 
         <s3xml>
-            <!-- Stats Group Type -->
-            <resource name="stats_group_type">
-                <xsl:attribute name="tuid">stats_group_type/stats_demographic</xsl:attribute>
-                <data field="name">stats_demographic</data>
-            </resource>
-
             <!-- Sources -->
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('source',
@@ -153,20 +137,6 @@
                                                                           col[@field='L4'], '/',
                                                                           col[@field='L5']))[1])]">
                 <xsl:call-template name="L5"/>
-            </xsl:for-each>
-
-            <!-- Groups -->
-            <xsl:for-each select="//row[generate-id(.)=
-                                        generate-id(key('group',
-                                                        concat(col[@field='Source'],
-                                                               col[@field='Date'],
-                                                               col[@field=$Country],
-                                                               col[@field='L1'],
-                                                               col[@field='L2'],
-                                                               col[@field='L3'],
-                                                               col[@field='L4'],
-                                                               col[@field='L5']))[1])]">
-                <xsl:call-template name="Groups"/>
             </xsl:for-each>
 
             <!-- Demographic Data -->
@@ -302,12 +272,14 @@
                 </xsl:attribute>
             </reference>
 
-            <!-- Link to Group -->
-            <reference field="group_id" resource="stats_group">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('stats_group/',$location,'/',$date,'/',$source)"/>
-                </xsl:attribute>
-            </reference>
+            <!-- Link to Source -->
+            <xsl:if test="$source!=''">
+                <reference field="source_id" resource="doc_document">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('doc_document/', $source)"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
 
             <!-- Link to Location -->
             <xsl:call-template name="LocationReference">
@@ -354,10 +326,8 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <xsl:template name="Groups">
-        <xsl:variable name="status" select="col[@field='Status']"/>
-        <xsl:variable name="date" select="col[@field='Date']"/>
-        <xsl:variable name="source" select="col[@field='Source']"/>
+    <xsl:template name="Source">
+        <xsl:variable name="name" select="col[@field='Source']"/>
         <xsl:variable name="location">
             <xsl:call-template name="LocationUid"/>
         </xsl:variable>
@@ -373,27 +343,15 @@
                 </xsl:otherwise>
             </xsl:choose>
         </xsl:variable>
-        <xsl:variable name="approved">
-            <xsl:choose>
-                <xsl:when test="col[@field='Approved']='false'">
-                    <xsl:text>false</xsl:text>
-                </xsl:when>
-                <xsl:otherwise>
-                    <xsl:text>true</xsl:text>
-                </xsl:otherwise>
-            </xsl:choose>
-        </xsl:variable>
 
-        <xsl:if test="col[@field='Value']!=''">
-            <resource name="stats_group">
+        <xsl:if test="$name!=''">
+            <resource name="doc_document">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('stats_group/',$location,'/',$date,'/',$source)"/>
+                    <xsl:value-of select="concat('doc_document/',$name)"/>
                 </xsl:attribute>
-                <xsl:attribute name="approved">
-                    <xsl:value-of select="$approved"/>
-                </xsl:attribute>
-                <data field="date"><xsl:value-of select="$date"/></data>
-                <data field="created_by">1</data>
+                <data field="name"><xsl:value-of select="$name"/></data>
+                <data field="url"><xsl:value-of select="col[@field='Source URL']"/></data>
+                <data field="date"><xsl:value-of select="col[@field='Date']"/></data>
 
                 <!-- Link to Location -->
                 <xsl:call-template name="LocationReference">
@@ -404,35 +362,6 @@
                         <xsl:value-of select="$tuid"/>
                     </xsl:with-param>
                 </xsl:call-template>
-
-                <!-- Link to Source -->
-                <reference field="source_id" resource="doc_document">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat('doc_document/',$source)"/>
-                    </xsl:attribute>
-                </reference>
-
-                <!-- Link to Group Type -->
-                <reference field="group_type_id" resource="stats_group_type">
-                    <xsl:attribute name="tuid">stats_group_type/stats_demographic</xsl:attribute>
-                </reference>
-            </resource>
-        </xsl:if>
-
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="Source">
-        <xsl:variable name="name" select="col[@field='Source']"/>
-
-        <xsl:if test="$name!=''">
-            <resource name="doc_document">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('doc_document/',$name)"/>
-                </xsl:attribute>
-                <data field="name"><xsl:value-of select="$name"/></data>
-                <data field="url"><xsl:value-of select="col[@field='Source URL']"/></data>
-                <data field="date"><xsl:value-of select="col[@field='Date']"/></data>
             </resource>
         </xsl:if>
 

@@ -449,14 +449,12 @@ class S3Importer(S3CRUD):
 
         _debug("S3Importer.display_job()")
 
-        request = self.request
-        response = current.response
-
         db = current.db
+        request = self.request
         table = self.upload_table
         job_id = self.job_id
         output = dict()
-        if job_id == None:
+        if job_id is None:
             # redirect to the start page (removes all vars)
             query = (table.id == upload_id)
             row = db(query).update(status = 2) # in error
@@ -485,13 +483,15 @@ class S3Importer(S3CRUD):
                      )
             self._display_completed_job(result, row.modified_on)
             redirect(URL(r=request, f=self.function, args=["import"]))
-        # otherwise display import items
-        response.view = self._view(request, "list.html")
 
         output = self._create_import_item_dataTable(upload_id, job_id)
         if request.representation == "aadata":
             return output
 
+        # Interactive Import
+        # Display import items
+        response = current.response
+        response.view = self._view(request, "list.html")
         if response.s3.error_report:
             error_report = "Errors|" + "|".join(response.s3.error_report)
             error_tip = A("All Errors",

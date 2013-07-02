@@ -1085,4 +1085,14 @@ def contact():
                 response.title = T("Contact us")
     return dict()
 
+# -----------------------------------------------------------------------------
+def load_all_models():
+    """
+        Controller to load all models in web browser
+        - to make it easy to debug in Eclipse
+    """
+
+    s3db.load_all_models()
+    return "ok"
+
 # END =========================================================================

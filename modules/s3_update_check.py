@@ -73,10 +73,6 @@ def update_check(settings):
     except ImportError:
         warnings.append("S3GIS unresolved dependency: GDAL required for Shapefile support")
     try:
-        import numpy
-    except ImportError:
-        warnings.append("Stats unresolved dependency: numpy required for Stats module support")
-    try:
         import tweepy
     except ImportError:
         warnings.append("S3Msg unresolved dependency: tweepy required for non-Tropo Twitter support")
@@ -88,7 +84,7 @@ def update_check(settings):
         import pyth
     except ImportError:
         warnings.append("S3Doc unresolved dependency: pyth required for RTF document support in Full-Text Search")
-    # @ToDo: Load settinmgs before running this
+    # @ToDo: Load settings before running this
     #if settings.has_module("survey"):
     #    mandatory = True
     #else:
@@ -109,6 +105,10 @@ def update_check(settings):
         #    errors.append(msg)
         #else:
         warnings.append(msg)
+    try:
+        import numpy
+    except ImportError:
+        warnings.append("Vulnerability unresolved dependency: numpy required for Vulnerability module support")
     # @ToDo: Load settings before running this
     # for now this is done in s3db.climate_first_run()
     if settings.has_module("climate"):

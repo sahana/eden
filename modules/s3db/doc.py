@@ -85,6 +85,7 @@ class S3DocumentLibrary(S3Model):
                                cr_shelter=T("Shelter"),
                                inv_adj=T("Stock Adjustment"),
                                inv_warehouse=T("Warehouse"),
+                               vulnerability_document=T("Vulnerability Document"),
                                )
 
         tablename = "doc_entity"
@@ -100,10 +101,10 @@ class S3DocumentLibrary(S3Model):
         tablename = "doc_document"
         table = define_table(tablename,
                              # Instance
-                             super_link("source_id", "stats_source"),
+                             self.stats_source_superlink,
                              # Component not instance
-                             super_link("site_id", "org_site"),
                              super_link("doc_id", doc_entity),
+                             super_link("site_id", "org_site"),
                              Field("file", "upload", autodelete=True),
                              Field("name", length=128,
                                    # Allow Name to be added onvalidation
@@ -184,9 +185,6 @@ class S3DocumentLibrary(S3Model):
 
         tablename = "doc_image"
         table = define_table(tablename,
-                             # Instance
-                             # @ToDo: Remove (Images aren't stats sources)
-                             super_link("source_id", "stats_source"),
                              # Component not instance
                              super_link("site_id", "org_site"),
                              super_link("pe_id", "pr_pentity"),
@@ -218,8 +216,6 @@ class S3DocumentLibrary(S3Model):
                                 ),
                              s3_date(label = T("Date Taken")),
                              location_id(),
-                             # @ToDo: Remove (not being populated anyway)
-                             #self.stats_group_type_id(),
                              s3_comments(),
                              Field("checksum", readable=False, writable=False),
                              *s3_meta_fields())

@@ -23,23 +23,10 @@ def data():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def aggregate():
+def source():
     """ REST Controller """
 
-    def prep(r):
-        if r.method == "clear":
-            if not s3_has_role(ADMIN):
-                auth.permission.fail()
-            s3db.stats_rebuild_aggregates()
-            redirect(URL(c="stats",
-                         f="aggregate",
-                         args="",
-                         ))
-        return True
-    s3.prep = prep
-
-    output = s3_rest_controller()
-    return output
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def demographic():
@@ -54,22 +41,24 @@ def demographic_data():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def group():
+def demographic_aggregate():
     """ REST Controller """
 
-    return s3_rest_controller()
+    def prep(r):
+        if r.method == "clear":
+            # Admin can rebuild all aggregates via Web UI
+            if not s3_has_role(ADMIN):
+                auth.permission.fail()
+            s3db.stats_demographic_rebuild_all_aggregates()
+            redirect(URL(c="stats",
+                         f="demographic_aggregate",
+                         args="",
+                         ))
+        return True
+    s3.prep = prep
 
-# -----------------------------------------------------------------------------
-def group_type():
-    """ REST Controller """
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def source():
-    """ REST Controller """
-
-    return s3_rest_controller()
+    output = s3_rest_controller()
+    return output
 
 # -----------------------------------------------------------------------------
 def resident_type():
