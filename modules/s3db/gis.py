@@ -4498,18 +4498,10 @@ class gis_LocationRepresent(S3Represent):
                     if L0_name:
                         path = row.path.split("/")
                         L0_id = path[0]
-                        query = (htable.location_id == L0_id)
+                        level_name = gis.get_location_hierarchy(level, L0_id)
                     else:
                         # Fallback to system default
-                        query = (htable.uuid == "SITE_DEFAULT")
-                    config = current.db(query).select(htable.L1,
-                                                      htable.L2,
-                                                      htable.L3,
-                                                      htable.L4,
-                                                      htable.L5,
-                                                      cache=s3db.cache,
-                                                      limitby=(0, 1)).first()
-                    level_name = config[row.level]
+                        level_name = gis.get_location_hierarchy(level)
 
                     represent = name
                     if level_name:

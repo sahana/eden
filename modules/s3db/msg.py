@@ -997,7 +997,7 @@ class S3ParsingModel(S3Model):
 # =============================================================================
 class S3RSSModel(S3ChannelModel):
     """
-        Twilio Inbound SMS channel
+        RSS channel
     """
 
     names = ["msg_rss_channel",

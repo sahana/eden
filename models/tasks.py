@@ -103,14 +103,14 @@ def document_delete_index(document, user_id=None):
     # Delete and Commit the indicies of the deleted document
     si.delete(index_id)
     si.commit()
-    # After removing the index, set has_been_indexed value to False in the databse
+    # After removing the index, set has_been_indexed value to False in the database
     db(table.id == id).update(has_been_indexed = False)
 
     db.commit()
 
 tasks["document_delete_index"] = document_delete_index
 
-# -----------------------------------------------------------------------------)
+# -----------------------------------------------------------------------------
 def gis_download_kml(record_id, filename, session_id_name, session_id,
                      user_id=None):
     """
