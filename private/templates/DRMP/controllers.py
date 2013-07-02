@@ -225,6 +225,8 @@ def _updates():
                       ]
 
     s3db.configure("cms_post",
+                   # We use a custom Advanced widget
+                   filter_advanced = False,
                    filter_formstyle = filter_formstyle,
                    filter_submit = (T("SEARCH"), "btn btn-primary"),
                    filter_widgets = filter_widgets,

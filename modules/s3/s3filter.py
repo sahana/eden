@@ -1207,7 +1207,8 @@ class S3FilterForm(object):
             @param alias: the resource alias to use in widgets
         """
 
-        formstyle = self.opts.get("formstyle", None)
+        opts = self.opts
+        formstyle = opts.get("formstyle", None)
         if not formstyle:
             formstyle = self._formstyle
 
@@ -1220,10 +1221,10 @@ class S3FilterForm(object):
         if controls:
             rows.append(formstyle(None, "", controls, ""))
 
-        submit = self.opts.get("submit", False)
+        submit = opts.get("submit", False)
         if submit:
             _class = "filter-submit"
-            ajax = self.opts.get("ajax", False)
+            ajax = opts.get("ajax", False)
             if ajax:
                 _class = "%s filter-ajax" % _class
             if submit is True:
@@ -1234,9 +1235,9 @@ class S3FilterForm(object):
             else:
                 label = submit
             # Where to request filtered data from:
-            submit_url = self.opts.get("url", URL(vars={}))
+            submit_url = opts.get("url", URL(vars={}))
             # Where to request updated options from:
-            ajax_url = self.opts.get("ajaxurl", URL(args=["filter.json"], vars={}))
+            ajax_url = opts.get("ajaxurl", URL(args=["filter.json"], vars={}))
             submit = TAG[""](
                         INPUT(_type="button",
                               _value=label,
@@ -1400,7 +1401,7 @@ class S3FilterForm(object):
                 comment = ""
             rappend(formstyle(row_id, label, widget, comment, hidden=hidden))
         if advanced:
-            self.opts["advanced"] = True
+            self.opts["advanced"] = resource.get_config("filter_advanced", True)
         return rows
             
     # -------------------------------------------------------------------------

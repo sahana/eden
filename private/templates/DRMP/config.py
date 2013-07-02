@@ -2399,13 +2399,21 @@ def customize_gis_location(**attr):
                                          list_layout = render_posts,
                                          )
                 name = location.name
+                # https://code.google.com/p/web2py/issues/detail?id=1533
+                public_url = current.deployment_settings.get_base_public_url()
+                if public_url.startswith("http://127.0.0.1"):
+                    # Assume Rocket
+                    image = quote_unicode(s3_unicode(name))
+                else:
+                    # Assume Apache or Cherokee
+                    image = s3_unicode(name)
                 s3db.configure("gis_location",
                                list_fields = list_fields,
                                profile_header = DIV(A(IMG(_class="media-object",
                                                           _src=URL(c="static",
                                                                    f="themes",
                                                                    args=["DRMP", "img",
-                                                                         "%s.png" % s3_unicode(name)]),
+                                                                         "%s.png" % image]),
                                                           ),
                                                       _class="pull-left",
                                                       #_href=location_url,
