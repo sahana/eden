@@ -44,8 +44,7 @@ class CreateMember(SeleniumUnitTest):
         self.login(account="admin", nexturl="member/membership/create")
         self.create("member_membership", 
                     [( "organisation_id",
-                       "Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)",
-                       "automatic"),
+                       "Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)"),
                      ( "first_name",
                        "Denise",
                        "pr_person"),
@@ -90,11 +89,9 @@ class CreateMember(SeleniumUnitTest):
         
         self.create("member_membership", 
                     [( "person_id",
-                       "Beatriz Albuquequer",
-                       "autocomplete"),
+                       "Beatriz Albuquequer"),
                      ( "organisation_id",
-                       "Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)",
-                       "automatic"),
+                       "Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)"),
                      ( "start_date",
                        today),
                      ( "membership_fee",

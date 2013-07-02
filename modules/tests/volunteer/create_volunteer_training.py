@@ -55,11 +55,9 @@ class CreateVolunteerTraining(SeleniumUnitTest):
         self.login(account="admin", nexturl="vol/training_event/create")
         self.create("hrm_training_event", 
                     [( "course_id",
-                       "Emergency First Aid",
-                       "option"),
+                       "Emergency First Aid"),
                      ( "site_id",
-                       "AP Zone (Office)",
-                       "option"),
+                       "AP Zone (Office)"),
                      ( "start_date",
                        "2012-04-11"),
                      ( "end_date",

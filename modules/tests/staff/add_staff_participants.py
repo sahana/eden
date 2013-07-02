@@ -58,7 +58,6 @@ class AddStaffParticipants(SeleniumUnitTest):
         self.create("hrm_training", 
                     [   
                     ( "person_id",
-                      "Goku Gohan",
-                      "autocomplete")
+                      "Goku Gohan")
                     ]   
                    )

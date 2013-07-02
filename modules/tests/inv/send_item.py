@@ -48,23 +48,18 @@ class SendItem(InvTestFunctions):
         self.login(account="admin", nexturl="inv/send/create")
         send_data = [("site_id",
                  "Timor-Leste Red Cross Society (CVTL) National Warehouse (Warehouse)",
-                 "option",
                 ),
                  ("type",
                   "Internal Shipment",
-                  "option",
                  ),
                 ("to_site_id",
                  "Lospalos Warehouse (Warehouse)",
-                 "option",
                 ),
                 ("sender_id",
                  "Beatriz de Carvalho",
-                 "autocomplete",
                 ),
                 ("recipient_id",
                  "Liliana Otilia",
-                 "autocomplete",
                 )
                ]
         item_data = [
