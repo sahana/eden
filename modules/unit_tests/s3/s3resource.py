@@ -542,16 +542,16 @@ class ResourceFilterQueryTests(unittest.TestCase):
         q = FS("facility_type_id").contains([1, 2])
         query = q.query(resource)
         try:
-            self.assertEqual(str(query), "((org_facility.facility_type_id LIKE (CONCAT('%|',(REPLACE((REPLACE('1','%','%%')),'|','||')),'|%'))) AND "
-                                         "(org_facility.facility_type_id LIKE (CONCAT('%|',(REPLACE((REPLACE('2','%','%%')),'|','||')),'|%'))))")
+            self.assertEqual(str(query), "((org_facility.facility_type_id LIKE (('%|' || (REPLACE((REPLACE('1','%','%%')),'|','||')) || '|%'))) AND "
+                                         "(org_facility.facility_type_id LIKE (('%|' || (REPLACE((REPLACE('2','%','%%')),'|','||')) || '|%'))))")
         except AssertionError:
             self.assertEqual(str(query), "((org_facility.facility_type_id LIKE '%|1|%') AND "
                                          "(org_facility.facility_type_id LIKE '%|2|%'))")
         q = FS("facility_type_id").anyof([1, 2])
         query = q.query(resource)
         try:
-            self.assertEqual(str(query), "((org_facility.facility_type_id LIKE (CONCAT('%|',(REPLACE((REPLACE('1','%','%%')),'|','||')),'|%'))) OR "
-                                         "(org_facility.facility_type_id LIKE (CONCAT('%|',(REPLACE((REPLACE('2','%','%%')),'|','||')),'|%'))))")
+            self.assertEqual(str(query), "((org_facility.facility_type_id LIKE (('%|' || (REPLACE((REPLACE('1','%','%%')),'|','||')) || '|%'))) OR "
+                                         "(org_facility.facility_type_id LIKE (('%|' || (REPLACE((REPLACE('2','%','%%')),'|','||')) || '|%'))))")
         except AssertionError:
             self.assertEqual(str(query), "((org_facility.facility_type_id LIKE '%|1|%') OR "
                                         "(org_facility.facility_type_id LIKE '%|2|%'))")
