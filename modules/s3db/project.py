@@ -193,7 +193,9 @@ class S3ProjectModel(S3Model):
                                     updateable = True,
                                     ),
                                 ),
-                             Field("name", unique = True,
+                             Field("name",
+                                   length = 255,
+                                   unique = True,
                                    label = T("Name"),
                                    # Require unique=True if using IS_NOT_ONE_OF like here (same table,
                                    # no filter) in order to allow both automatic indexing (faster)
@@ -2332,7 +2334,9 @@ class S3ProjectFrameworkModel(S3Model):
         tablename = "project_framework"
         table = define_table(tablename,
                              self.super_link("doc_id", "doc_entity"),
-                             Field("name", unique=True,
+                             Field("name",
+                                   length=255,
+                                   unique=True,
                                    label = T("Name"),
                                    ),
                              s3_comments("description",

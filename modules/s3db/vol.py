@@ -105,7 +105,9 @@ class S3VolunteerClusterModel(S3Model):
         # Volunteer Cluster
         tablename = "vol_cluster_type"
         table = define_table(tablename,
-                             Field("name", unique=True,
+                             Field("name",
+                                   length=255,
+                                   unique=True,
                                    label = T("Name")),
                              *s3_meta_fields())
 
@@ -149,7 +151,9 @@ class S3VolunteerClusterModel(S3Model):
         tablename = "vol_cluster"
         table = define_table(tablename,
                              vol_cluster_type_id(),
-                             Field("name", unique=True,
+                             Field("name",
+                                   length=255,
+                                   unique=True,
                                    label = T("Name")),
                              *s3_meta_fields())
 
@@ -193,7 +197,9 @@ class S3VolunteerClusterModel(S3Model):
         #
         tablename = "vol_cluster_position"
         table = define_table(tablename,
-                             Field("name", unique=True,
+                             Field("name",
+                                   length=255,
+                                   unique=True,
                                    label = T("Name")),
                              *s3_meta_fields())
 

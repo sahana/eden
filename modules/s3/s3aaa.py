@@ -271,7 +271,7 @@ Thank you
                     Field("last_name", length=128,
                           default="",
                           label=messages.label_last_name),
-                    Field("email", length=512,
+                    Field("email", length=255,
                           default="",
                           label=messages.label_email,
                           unique=True),
@@ -364,7 +364,7 @@ Thank you
                       readable=False, writable=False,
                       default=False),
                 # Role name:
-                Field("role", length=512, unique=True,
+                Field("role", length=255, unique=True,
                       default="",
                       requires = IS_NOT_IN_DB(db, "%s.role" % gname),
                       label=messages.label_role),

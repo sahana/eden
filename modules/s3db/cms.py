@@ -69,7 +69,9 @@ class S3ContentModel(S3Model):
 
         tablename = "cms_series"
         table = define_table(tablename,
-                             Field("name", notnull=True, unique=True,
+                             Field("name",
+                                   length=255,
+                                   notnull=True, unique=True,
                                    label=T("Name")),
                              Field("avatar", "boolean",
                                    default=False,

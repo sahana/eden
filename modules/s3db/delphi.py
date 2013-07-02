@@ -70,7 +70,9 @@ class S3DelphiModel(S3Model):
         # ---------------------------------------------------------------------
         tablename = "delphi_group"
         table = define_table(tablename,
-                             Field("name", notnull=True, unique=True,
+                             Field("name",
+                                   length=255,
+                                   notnull=True, unique=True,
                                    label = T("Group Title")),
                              Field("description", "text",
                                    label = T("Description")),
@@ -195,7 +197,9 @@ class S3DelphiModel(S3Model):
                              Field("code", length=8,
                                    represent = lambda v: v or NONE,
                                    label = T("Problem Code")),
-                             Field("name", notnull=True, unique=True,
+                             Field("name",
+                                   length=255,
+                                   notnull=True, unique=True,
                                    label = T("Problem Title")),
                              Field("description", "text",
                                    represent = s3_comments_represent,
