@@ -1971,13 +1971,14 @@ def customize_cms_post(**attr):
         elif r.representation == "plain" and \
              r.method != "search":
             # Map Popups
+            s3db = current.s3db
             table = r.table
             table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
             table.created_by.represent = s3_auth_user_represent_name
             # Used by default popups
             series = T(table.series_id.represent(r.record.series_id))
             s3.crud_strings["cms_post"].title_display = "%(series)s Details" % dict(series=series)
-            current.s3db.configure("cms_post", popup_url="")
+            s3db.configure("cms_post", popup_url="")
             table.avatar.readable = False
             table.body.label = ""
             table.expired.readable = False
