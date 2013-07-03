@@ -57,7 +57,6 @@ class S3MessagingModel(S3Model):
     """
 
     names = ["msg_inbox",
-             "msg_log",
              "msg_limit",
              "msg_outbox",
              "msg_message",
@@ -97,8 +96,8 @@ class S3MessagingModel(S3Model):
         # ---------------------------------------------------------------------
         # Message Log - all Inbound & Outbound Messages
         #
-        tablename = "msg_log"
-        table = define_table(tablename,
+        tablename = "msg_message"
+        table = self.super_entity(tablename, "message_id",
                              super_link("pe_id", "pr_pentity"),
                              Field("sender"),        # The name to go out incase of the email, if set used
                              Field("fromaddress"),   # From address if set changes sender to this
@@ -128,27 +127,9 @@ class S3MessagingModel(S3Model):
                              Field("reply", "text" ,
                                    label = T("Reply")),
                              Field("source_task_id",
-                                   label = T("Message Source")),
-                             *s3_meta_fields())
+                                   label = T("Message Source")))
 
-        configure(tablename,
-                  list_fields=["id",
-                               "inbound",
-                               "pe_id",
-                               "fromaddress",
-                               "recipient",
-                               "subject",
-                               "message",
-                               "verified",
-                               #"verified_comments",
-                               "actionable",
-                               "actioned",
-                               #"actioned_comments",
-                               #"priority",
-                               "is_parsed",
-                               "reply",
-                               "source_task_id"
-                               ])
+        table.instance_type.readable = True
 
         # Components
         self.add_component("msg_outbox", msg_log="message_id")
@@ -219,27 +200,6 @@ class S3MessagingModel(S3Model):
         tablename = "msg_limit"
         table = define_table(tablename,
                              *s3_timestamp())
-
-        # ---------------------------------------------------------------------
-        tablename = "msg_message"
-        table = self.super_entity(tablename, "message_id",
-                                  Field("sender",
-                                        label = T("Sender")),
-                                  Field("source",
-                                        label = T("Source")),
-                                  Field("body",
-                                        label = T("Body")),
-                                  Field("inbound", "boolean", default = False,
-                                        represent = lambda direction: \
-                                            (direction and ["In"] or ["Out"])[0],
-                                        label = T("Direction")),
-                                  # @ToDo: Indicate whether channel can be used for Inbound or Outbound
-                                  #Field("inbound", "boolean",
-                                  #      label = T("Inbound?")),
-                                  #Field("outbound", "boolean",
-                                  #      label = T("Outbound?")),
-                                  )
-        table.instance_type.readable = True
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -711,6 +671,10 @@ class S3EmailInboundModel(S3ChannelModel):
                                    label = T("Body")),
                              *s3_meta_fields())
 
+        self.configure(tablename,
+                       super_entity = "msg_message",
+                       )
+
         #table.sender.comment = SPAN("*", _class="req")
         VIEW_EMAIL_INBOX = T("View Email InBox")
         current.response.s3.crud_strings[tablename] = Storage(
@@ -1034,6 +998,7 @@ class S3RSSModel(S3ChannelModel):
         #
         tablename = "msg_rss_feed"
         table = define_table(tablename,
+                             self.super_link("message_id", "msg_message"),
                              Field("title"),
                              Field("link"),
                              Field("created_on","datetime"),
@@ -1329,6 +1294,7 @@ class S3TwilioModel(S3ChannelModel):
         #
         tablename = "msg_twilio_inbox"
         table = define_table(tablename,
+                             self.super_link("message_id", "msg_message"),
                              Field("sid", length=64),
                              Field("body", "text"),
                              Field("status"),
@@ -1340,7 +1306,8 @@ class S3TwilioModel(S3ChannelModel):
                        list_fields = ["body",
                                       "sender",
                                       "received_on"
-                                      ]
+                                      ],
+                       super_entity = "msg_message",
                        )
 
         # ---------------------------------------------------------------------
@@ -1398,6 +1365,7 @@ class S3TwitterModel(S3Model):
         # - Q? Do we need to separate stuff directed at us via @username vs general searching other than by column?
         tablename = "msg_twitter_search_results"
         table = define_table(tablename,
+                             self.super_link("message_id", "msg_message"),
                              Field("tweet", length=140,
                                    writable=False),
                              Field("category",
@@ -1430,7 +1398,9 @@ class S3TwitterModel(S3Model):
                                "posted_by",
                                "posted_at",
                                "twitter_search",
-                               ])
+                               ],
+                  super_entity = "msg_message",
+                  )
 
         # ---------------------------------------------------------------------
         return Storage()

@@ -42,7 +42,7 @@ def outbox():
 
     # Subject works for Email but not SMS
     table.message_id.represent = lambda id: db(db.msg_log.id == id).select(db.msg_log.message, limitby=(0, 1)).first().message
-    table.pe_id.represent = s3db.pr_pentity_represent
+    table.pe_id.represent = lambda id: s3db.pr_pentity_represent(id, default_label = "")
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
@@ -856,6 +856,8 @@ def workflow():
 
             mtable = s3db.msg_email_inbound_channel
             ttable = s3db.msg_twilio_inbound_channel
+            rtable = s3db.msg_rss_channel
+
             source_opts = []
             append = source_opts.append
             records = db(mtable.id > 0).select(mtable.username)
@@ -866,8 +868,14 @@ def workflow():
             for record in records:
                 append(record.account_name)
 
+            records = db(rtable.deleted == False).select(rtable.name, \
+                                                         rtable.url)
+            for record in records:
+                append(str(record.name) + "(" + str(record.url) + ")")
+
             # Dynamic lookup of the parsing functions in S3Parsing class.
-            parsers = inspect.getmembers(S3Parsing, predicate=inspect.isfunction)
+            parsers = inspect.getmembers(S3Parsing, \
+                                         predicate=inspect.isfunction)
             parse_opts = []
             for parser in parsers:
                 parse_opts += [parser[0]]
