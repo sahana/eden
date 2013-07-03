@@ -95,7 +95,7 @@ class TranslateAPI:
             """ Return a list of modules """
 
             return self.grp.modlist
-        
+
         # ---------------------------------------------------------------------
         def get_files_by_module(self, module):
             """ Return a list of files corresponding to a module """
@@ -227,7 +227,7 @@ class TranslateGetFiles:
             """
                 Recursive function to group Eden files into respective modules
             """
-            
+
             appname = current.request.application
 
             path = os.path
@@ -1164,6 +1164,28 @@ class StringsToExcel:
             R = TranslateReadFiles()
 
             # Retrieve strings for a module
+
+            # Core Modules are always included
+            core_modules = ["auth", "default"]
+            for mod in core_modules:
+                modlist.append(mod)
+
+            # appadmin and error are a part of admin
+            if "admin" in modlist:
+                modlist.append("appadmin")
+                modlist.append("error")
+
+            # Choosing modules on which selected modules are dependent
+            models = current.models
+            for mod in modlist:
+                if hasattr(models, mod):
+                    obj = getattr(models, mod)
+                    # Right now only for inv depends list has been added
+                    if hasattr(obj, "depends"):
+                        for element in obj.depends:
+                            if element not in modlist:
+                                modlist.append(element)
+
             for mod in modlist:
                 NewStrings += A.get_strings_by_module(mod)
 
