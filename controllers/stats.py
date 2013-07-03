@@ -44,18 +44,18 @@ def demographic_data():
 def demographic_aggregate():
     """ REST Controller """
 
-    def prep(r):
-        if r.method == "clear":
-            # Admin can rebuild all aggregates via Web UI
-            if not s3_has_role(ADMIN):
-                auth.permission.fail()
-            s3db.stats_demographic_rebuild_all_aggregates()
-            redirect(URL(c="stats",
-                         f="demographic_aggregate",
-                         args="",
-                         ))
-        return True
-    s3.prep = prep
+    def clear_aggregates(r, **attr):
+        if not s3_has_role(ADMIN):
+            auth.permission.fail()
+        s3db.stats_demographic_rebuild_all_aggregates()
+        redirect(URL(c="stats",
+                     f="demographic_aggregate",
+                     args="",
+                     ))
+        
+    s3db.set_method("stats", "demographic_aggregate",
+                    method="clear",
+                    action=clear_aggregates)
 
     output = s3_rest_controller()
     return output

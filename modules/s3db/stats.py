@@ -212,6 +212,8 @@ class S3StatsDemographicModel(S3Model):
 
         location_id = self.gis_location_id
 
+        stats_parameter_represent = S3Represent(lookup="stats_parameter"),
+
         #----------------------------------------------------------------------
         # Demographic
         #
@@ -223,6 +225,15 @@ class S3StatsDemographicModel(S3Model):
                                    label = T("Name")),
                              s3_comments("description",
                                          label = T("Description")),
+                             # Link to the Demographic which is the Total, so that we can calculate percentages
+                             Field("total_id", self.stats_parameter,
+                                   requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "stats_parameter.parameter_id",
+                                                          stats_parameter_represent,
+                                                          instance_types = ["stats_demographic"],
+                                                          sort=True)),
+                                   represent=stats_parameter_represent,
+                                   label=T("Total")),
                              *s3_meta_fields()
                              )
 
@@ -259,9 +270,9 @@ class S3StatsDemographicModel(S3Model):
                              # This is a component, so needs to be a super_link
                              # - can't override field name, ondelete or requires
                              super_link("parameter_id", "stats_parameter",
-                                        label = T("Demographic"),
                                         instance_types = ["stats_demographic"],
-                                        represent = S3Represent(lookup="stats_parameter"),
+                                        label = T("Demographic"),
+                                        represent = stats_parameter_represent,
                                         readable = True,
                                         writable = True,
                                         empty = False,
@@ -360,8 +371,13 @@ class S3StatsDemographicModel(S3Model):
                              Field("end_date", "date",
                                    label = T("End Date"),
                                    ),
+                             # Sum is used by Vulnerability as a fallback if we have no data at this level
                              Field("sum", "double",
                                    label = T("Sum"),
+                                   ),
+                             # Percentage is used to compare an absolute value against a total
+                             Field("percentage", "double",
+                                   label = T("Percentage"),
                                    ),
                              #Field("min", "double",
                              #      label = T("Minimum"),
@@ -471,14 +487,18 @@ class S3StatsDemographicModel(S3Model):
         current.s3db.stats_demographic_aggregate.truncate()
 
         # Read all the approved vulnerability_data records
-        dtable = db.stats_demographic_data
-        query = (dtable.deleted != True) & \
-                (dtable.approved_by != None)
-        records = db(query).select(dtable.data_id,
-                                   dtable.parameter_id,
-                                   dtable.date,
-                                   dtable.location_id,
-                                   dtable.value)
+        dtable = db.stats_demographic
+        ddtable = db.stats_demographic_data
+        query = (ddtable.deleted != True) & \
+                (ddtable.approved_by != None) & \
+                (ddtable.parameter_id == dtable.parameter_id)
+        records = db(query).select(ddtable.data_id,
+                                   ddtable.parameter_id,
+                                   ddtable.date,
+                                   ddtable.location_id,
+                                   ddtable.value,
+                                   dtable.total_id,
+                                   )
 
         # Fire off a rebuild task
         current.s3task.async("stats_demographic_update_aggregates",
@@ -539,20 +559,25 @@ class S3StatsDemographicModel(S3Model):
         atable = db.stats_demographic_aggregate
         gtable = db.gis_location
 
-        # Data Structures used for the OPTIMISATION step
+        # Data Structures used for the OPTIMISATION
+        param_total_dict = {} # the total_id for each parameter
         param_location_dict = {} # a list of locations for each parameter
         location_dict = {} # a list of locations
         loc_level_list = {} # a list of levels for each location
 
         aggregated_period = S3StatsDemographicModel.stats_demographic_aggregated_period
+        (last_period, year_end) = aggregated_period(None)
 
-        if isinstance(records[0]["date"], (datetime.date, datetime.datetime)):
+        # Test to see which date format we have based on how we were called
+        if isinstance(records[0]["stats_demographic_data"]["date"], (datetime.date, datetime.datetime)):
             from_json = False
         else:
             from_json = True
             from dateutil.parser import parse
 
         for record in records:
+            total_id = record["stats_demographic"]["total_id"]
+            record = record["stats_demographic_data"]
             data_id = record["data_id"]
             location_id = record["location_id"]
             parameter_id = record["parameter_id"]
@@ -560,6 +585,8 @@ class S3StatsDemographicModel(S3Model):
             if not location_id or not parameter_id:
                 s3_debug("Skipping bad stats_demographic_data record with data_id %s " % data_id)
                 continue
+            if total_id and parameter_id not in param_total_dict:
+                param_total_dict[parameter_id] = total_id
             if from_json:
                 date = parse(record["date"])
             else:
@@ -568,19 +595,51 @@ class S3StatsDemographicModel(S3Model):
 
             # Get all the approved stats_demographic_data records for this location and parameter
             query = (dtable.location_id == location_id) & \
-                    (dtable.parameter_id == parameter_id) & \
                     (dtable.deleted != True) & \
                     (dtable.approved_by != None)
-            data_rows = db(query).select(dtable.data_id,
-                                         dtable.date,
-                                         dtable.value)
+            fields = [dtable.data_id,
+                      dtable.date,
+                      dtable.value,
+                      ]
+            if total_id:
+                # Also get the records for the Total to use to calculate the percentage
+                query &= (dtable.parameter_id.belongs([parameter_id, total_id]))
+                fields.append(dtable.parameter_id)
+            else:
+                percentage = None
+                query &= (dtable.parameter_id == parameter_id)
+            data_rows = db(query).select(*fields)
+
+            if total_id:
+                # Separate out the rows relating to the Totals
+                total_rows = data_rows.exclude(lambda row: row.parameter_id == total_id)
+                # Get each record and store them in a dict keyed on the start date
+                # of the aggregated period. If a record already exists for the
+                # reporting period then the most recent value will be stored.
+                earliest_period = current.request.utcnow.date()
+                end_date = year_end
+                totals = {}
+                for row in total_rows:
+                    row_date = row.date
+                    (start_date, end_date) = aggregated_period(row_date)
+                    if start_date in totals:
+                        if row_date <= totals[start_date]["date"]:
+                            # The indicator in the row is of the same time period as
+                            # another which is already stored in totals but it is earlier
+                            # so ignore this particular record
+                            continue
+                    elif start_date < earliest_period:
+                        earliest_period = start_date
+                    # Store the record from the db in the totals storage
+                    totals[start_date] = Storage(date = row_date,
+                                                 id = row.data_id,
+                                                 value = row.value)
 
             # Get each record and store them in a dict keyed on the start date
-            # of the aggregated period. The value stored is a dict containing
-            # the date, data_id and value. If a record already exists for the
+            # of the aggregated period. If a record already exists for the
             # reporting period then the most recent value will be stored.
             earliest_period = start_date
-            (last_period, end_date) = aggregated_period(None)
+            end_date = year_end
             data = {}
             data[start_date] = Storage(date = date,
                                        id = data_id,
@@ -614,7 +673,7 @@ class S3StatsDemographicModel(S3Model):
                                          atable.sum,
                                          )
 
-            aggr = dict()
+            aggr = {}
             for row in aggr_rows:
                 (start_date, end_date) = aggregated_period(row.date)
                 aggr[start_date] = Storage(id = row.id,
@@ -627,6 +686,7 @@ class S3StatsDemographicModel(S3Model):
             last_data_period = earliest_period
             last_type_agg = False # Whether the type of previous non-copy record was aggr
             last_data_value = None # The value of the previous aggr record
+            last_total = None # The value of the previous aggr record for the totals param
             # Keep track of which periods the aggr record has been changed in
             # the database
             changed_periods = []
@@ -658,10 +718,16 @@ class S3StatsDemographicModel(S3Model):
                             # so aggregate record needs to be changed
                             value = data[dt]["value"]
                             last_data_value = value
+                            if total_id:
+                                if dt in totals:
+                                    last_total = totals[dt]["value"]
+                                if last_total:
+                                    percentage = value / last_total
                             db(query).update(agg_type = 1, # time
                                              #reported_count = 1, # one record
                                              #ward_count = 1, # one ward
                                              end_date = end_date,
+                                             percentage = percentage,
                                              sum = value,
                                              #min = value,
                                              #max = value,
@@ -675,10 +741,16 @@ class S3StatsDemographicModel(S3Model):
                         # Check that the data currently stored is correct
                         elif aggr[dt]["sum"] != last_data_value:
                             value = last_data_value
+                            if total_id:
+                                if dt in totals:
+                                    last_total = totals[dt]["value"]
+                                if last_total:
+                                    percentage = value / last_total
                             db(query).update(agg_type = 3, # copy
                                              #reported_count = 1, # one record
                                              #ward_count = 1, # one ward
                                              end_date = end_date,
+                                             percentage = percentage,
                                              sum = value,
                                              #min = value,
                                              #max = value,
@@ -691,11 +763,16 @@ class S3StatsDemographicModel(S3Model):
                         if dt in data:
                             value = data[dt]["value"]
                             last_data_value = value
+                            if total_id and dt in totals:
+                                last_total = totals[dt]["value"]
                             if aggr[dt]["sum"] != value:
+                                if total_id and last_total:
+                                    percentage = value / last_total
                                 db(query).update(agg_type = 1, # time
                                                  #reported_count = 1, # one record
                                                  #ward_count = 1, # one ward
                                                  end_date = end_date,
+                                                 percentage = percentage,
                                                  sum = value,
                                                  #min = value,
                                                  #max = value,
@@ -707,10 +784,16 @@ class S3StatsDemographicModel(S3Model):
                             # The data is not there so it must have been deleted
                             # Copy the value from the previous record
                             value = last_data_value
+                            if total_id:
+                                if dt in totals:
+                                    last_total = totals[dt]["value"]
+                                if last_total:
+                                    percentage = value / last_total
                             db(query).update(agg_type = 3, # copy
                                              #reported_count = 1, # one record
                                              #ward_count = 1, # one ward
                                              end_date = end_date,
+                                             percentage = percentage,
                                              sum = value,
                                              #min = value,
                                              #max = value,
@@ -728,6 +811,11 @@ class S3StatsDemographicModel(S3Model):
                     else:
                         value = last_data_value
                         agg_type = 3 # copy
+                    if total_id:
+                        if dt in totals:
+                            last_total = totals[dt]["value"]
+                        if last_total:
+                            percentage = value / last_total
                     atable.insert(parameter_id = parameter_id,
                                   location_id = location_id,
                                   agg_type = agg_type,
@@ -735,6 +823,7 @@ class S3StatsDemographicModel(S3Model):
                                   #ward_count = 1, # one ward
                                   date = start_date,
                                   end_date = end_date,
+                                  percentage = percentage,
                                   sum = value,
                                   #min = value,
                                   #max = value,
@@ -813,11 +902,12 @@ class S3StatsDemographicModel(S3Model):
         # fire off requests for the location aggregates to be calculated
         async = current.s3task.async
         for (param_id, loc_dict) in parents_data.items():
+            total_id = param_total_dict[param_id]
             for (loc_id, (changed_periods, loc_level)) in loc_dict.items():
                 for (start_date, end_date) in changed_periods:
                     s, e = str(start_date), str(end_date)
                     async("stats_demographic_update_aggregate_location",
-                          args = [loc_level, loc_id, param_id, s, e],
+                          args = [loc_level, loc_id, param_id, total_id, s, e],
                           timeout = 1800 # 30m
                           )
 
@@ -826,6 +916,7 @@ class S3StatsDemographicModel(S3Model):
     def stats_demographic_update_location_aggregate(location_level,
                                                     location_id,
                                                     parameter_id,
+                                                    total_id,
                                                     start_date,
                                                     end_date
                                                     ):
@@ -835,6 +926,7 @@ class S3StatsDemographicModel(S3Model):
 
             @param location_id: the location record ID
             @param parameter_id: the parameter record ID
+            @param total_id: the parameter record ID for the percentage calculation
             @param start_date: the start date of the time period (as string)
             @param end_date: the end date of the time period (as string)
         """
@@ -847,19 +939,15 @@ class S3StatsDemographicModel(S3Model):
         child_locations = current.gis.get_children(location_id, location_level)
         child_ids = [row.id for row in child_locations]
 
-        # Get the (most recent) stats_demographic_data record for all child locations
+        # Get the most recent stats_demographic_data record for all child locations
+        query = (dtable.parameter_id == parameter_id) & \
+                (dtable.deleted != True) & \
+                (dtable.approved_by != None) & \
+                (dtable.location_id.belongs(child_ids))
         if end_date == "None": # converted to string as async parameter
             end_date = None
-            query = (dtable.parameter_id == parameter_id) & \
-                    (dtable.deleted != True) & \
-                    (dtable.approved_by != None) & \
-                    (dtable.location_id.belongs(child_ids))
         else:
-            query = (dtable.parameter_id == parameter_id) & \
-                    (dtable.location_id.belongs(child_ids)) & \
-                    (dtable.deleted != True) & \
-                    (dtable.approved_by != None) & \
-                    (dtable.date <= end_date)
+            query &= (dtable.date <= end_date)
         rows = db(query).select(dtable.value,
                                 dtable.date,
                                 dtable.location_id,
@@ -870,6 +958,10 @@ class S3StatsDemographicModel(S3Model):
                                 #groupby=(dtable.location_id)
                                 )
 
+        # Get the most recent aggregate for this location for the total parameter
+        if total_id == "None": # converted to string as async parameter
+            total_id = None
+        
         # Collect the values, skip duplicate records for the
         # same location => use the most recent one, which is
         # the first row for each location as per the orderby
@@ -892,6 +984,8 @@ class S3StatsDemographicModel(S3Model):
         #values_min = min(values)
         #values_max = max(values)
         #values_avg = float(values_sum) / values_len
+
+        values_percentage = values_sum / values_total
 
         #from numpy import median
         #values_med = median(values)
