@@ -3641,6 +3641,133 @@ def pr_get_entities(pe_ids=None,
             return repr_all
 
 # =============================================================================
+class pr_PersonEntityRepresent(S3Represent):
+
+    def __init__(self,
+                 show_label=True,
+                 default_label="[No ID Tag]",
+                 multiple=False):
+        """
+            Constructor
+
+            @param show_label: show the ID tag label for persons
+            @param default_label: the default for the ID tag label
+            @param multiple: assume a value list by default
+        """
+
+        self.show_label = show_label
+        self.default_label = default_label
+
+        super(pr_PersonEntityRepresent, self).__init__(lookup="pr_pentity",
+                                                       key="pe_id",
+                                                       multiple=multiple)
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Custom rows lookup function
+
+            @param key: the key field
+            @param values: the values to look up
+            @param fields: unused (retained for API compatibility)
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        instance_fields = {
+            "pr_person": ["first_name", "middle_name", "last_name"],
+        }
+        
+        # Get all super-entity rows
+        etable = s3db.pr_pentity
+        rows = db(key.belongs(values)).select(key,
+                                              etable.pe_label,
+                                              etable.instance_type)
+        self.queries += 1
+        
+        keyname = key.name
+        types = {}
+        for row in rows:
+            instance_type = row.instance_type
+            if instance_type not in types:
+                types[instance_type] = {row[keyname]: row}
+            else:
+                types[instance_type][row[keyname]] = row
+
+        # Get all instance records (per instance type)
+        results = []
+        append = result.append
+        for instance_type in types:
+
+            table = s3db.table(instance_type)
+            if not table:
+                continue
+
+            if instance_type in instance_fields:
+                fields = [table[f]
+                          for f in instance_fields[instance_type]
+                          if f in table.fields]
+            elif "name" in table.fields:
+                fields = [table["name"]]
+            else:
+                continue
+            fields.insert(0, table[keyname])
+
+            query = (table[keyname].belongs(types[instance_type].keys()))
+            rows = db(query).select(*fields)
+            self.queries += 1
+            
+            sdata = types[instance_type]
+            for row in rows:
+                # Construct a new Row which contains both, the super-entity
+                # record and the instance record:
+                append(Row(pr_pentity = sdata[prow[keyname]],
+                           **{instance_type: row}))
+
+        return results
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        pentity = row.pr_pentity
+        instance_type = pentity.instance_type
+
+        show_label = self.show_label
+        if show_label:
+            label = pentity.pe_label \
+                    if pentity.pe_label else self.default_label
+        else:
+            label = None
+
+        etable = current.s3db.pr_pentity
+        instance_type_nice = etable.instance_type.represent(instance_type)
+
+        item = object.__getattribute__(row, instance_type)
+        if instance_type == "pr_person":
+            if show_label:
+                pe_str = "%s %s (%s)" % (s3_fullname(item),
+                                         label,
+                                         instance_type_nice)
+            else:
+                pe_str = "%s (%s)" % (s3_fullname(item),
+                                      instance_type_nice)
+
+        elif "name" in item:
+            pe_str = "%s (%s)" % (item["name"],
+                                  instance_type_nice)
+        else:
+            pe_str = "[%s] (%s)" % (label,
+                                    instance_type_nice)
+
+        return pe_str
+   
+# =============================================================================
 def pr_pentity_represent(id, row=None, show_label=True,
                          default_label="[No ID Tag]"):
     """ Represent a Person Entity in option fields or list views """
