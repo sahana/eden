@@ -1985,6 +1985,19 @@ class S3Method(object):
         if self.method == "_init":
             return None
 
+        if r.interactive:
+            hide_filter = attr.get("hide_filter", None)
+            if isinstance(hide_filter, dict):
+                hide_filter = hide_filter.get(r.component_name,
+                              hide_filter.get("_default", None))
+            if hide_filter is None:
+                # Hide by default until fully migrated:
+                hide_filter = True
+                #hide_filter = r.component is not None
+            self.hide_filter = hide_filter
+        else:
+            self.hide_filter = True
+                          
         # Apply method
         if widget_id and hasattr(self, "widget"):
             output = self.widget(r,

@@ -4068,8 +4068,7 @@ def org_organisation_controller():
     s3.postp = postp
 
     output = current.rest_controller("org", "organisation",
-                                     # This also affects office component tab :/
-                                     #hide_filter = False,
+                                     #hide_filter = {None: False},
                                      # Don't allow components with components (such as document) to breakout from tabs
                                      native=False,
                                      rheader=org_rheader,
