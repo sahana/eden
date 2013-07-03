@@ -364,6 +364,7 @@ class S3StatsDemographicModel(S3Model):
                                    represent = lambda opt: \
                                         aggregate_types.get(opt, UNKNOWN_OPT),
                                    default = 1,
+                                   label = T("Aggregation Type"),
                                    ),
                              Field("date", "date",
                                    label = T("Start Date"),
@@ -722,7 +723,7 @@ class S3StatsDemographicModel(S3Model):
                                 if dt in totals:
                                     last_total = totals[dt]["value"]
                                 if last_total:
-                                    percentage = value / last_total
+                                    percentage = 100 * value / last_total
                             db(query).update(agg_type = 1, # time
                                              #reported_count = 1, # one record
                                              #ward_count = 1, # one ward
@@ -745,7 +746,7 @@ class S3StatsDemographicModel(S3Model):
                                 if dt in totals:
                                     last_total = totals[dt]["value"]
                                 if last_total:
-                                    percentage = value / last_total
+                                    percentage = 100 * value / last_total
                             db(query).update(agg_type = 3, # copy
                                              #reported_count = 1, # one record
                                              #ward_count = 1, # one ward
@@ -767,7 +768,7 @@ class S3StatsDemographicModel(S3Model):
                                 last_total = totals[dt]["value"]
                             if aggr[dt]["sum"] != value:
                                 if total_id and last_total:
-                                    percentage = value / last_total
+                                    percentage = 100 * value / last_total
                                 db(query).update(agg_type = 1, # time
                                                  #reported_count = 1, # one record
                                                  #ward_count = 1, # one ward
@@ -788,7 +789,7 @@ class S3StatsDemographicModel(S3Model):
                                 if dt in totals:
                                     last_total = totals[dt]["value"]
                                 if last_total:
-                                    percentage = value / last_total
+                                    percentage = 100 * value / last_total
                             db(query).update(agg_type = 3, # copy
                                              #reported_count = 1, # one record
                                              #ward_count = 1, # one ward
@@ -815,7 +816,7 @@ class S3StatsDemographicModel(S3Model):
                         if dt in totals:
                             last_total = totals[dt]["value"]
                         if last_total:
-                            percentage = value / last_total
+                            percentage = 100 * value / last_total
                     atable.insert(parameter_id = parameter_id,
                                   location_id = location_id,
                                   agg_type = agg_type,
@@ -985,7 +986,7 @@ class S3StatsDemographicModel(S3Model):
         #values_max = max(values)
         #values_avg = float(values_sum) / values_len
 
-        values_percentage = values_sum / values_total
+        values_percentage = 100 * values_sum / values_total
 
         #from numpy import median
         #values_med = median(values)
