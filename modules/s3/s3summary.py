@@ -191,8 +191,7 @@ class S3Summary(S3Method):
         filter_ajax = True
         form_id = "summary-filter-form"
         filter_widgets = get_config("filter_widgets", None)
-        hide_filter = attr.get("hide_filter", False)
-        if filter_widgets and not hide_filter:
+        if filter_widgets and not self.hide_filter:
 
             # Where to retrieve filtered data from:
             if active_tab != 0:

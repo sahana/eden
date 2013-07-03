@@ -60,6 +60,7 @@ class S3MessagingModel(S3Model):
              "msg_log",
              "msg_limit",
              "msg_outbox",
+             "msg_message",
              "msg_message_id",
              ]
 
@@ -1449,7 +1450,7 @@ class S3TwitterModel(S3Model):
         row = db(query).select(table.pe_id,
                                limitby=(0, 1)).first()
         if row:
-            repr = s3db.pr_pentity_represent(row.pe_id, show_label=False)
+            repr = s3db.pr_pentity_represent(row.pe_id)
             if show_link:
                 # Assume person
                 ptable = s3db.pr_person

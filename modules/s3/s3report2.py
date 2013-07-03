@@ -160,9 +160,8 @@ class S3Report2(S3Method):
             output["title"] = title
 
             # Filter widgets
-            hide_filter = attr.get("hide_filter", False)
             filter_widgets = get_config("filter_widgets", None)
-            if filter_widgets and not hide_filter:
+            if filter_widgets and not self.hide_filter:
                 advanced = False
                 for widget in filter_widgets:
                     if "hidden" in widget.opts and widget.opts.hidden:

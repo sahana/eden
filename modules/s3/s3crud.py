@@ -119,12 +119,12 @@ class S3CRUD(S3Method):
         elif method in ("datatable", "datatable_f"):
             _attr = Storage(attr)
             _attr["list_type"] = "datatable"
-            _attr["hide_filter"] = method == "datatable"
+            self.hide_filter = method == "datatable"
             output = self.select_filter(r, **_attr)
         elif method in ("datalist", "datalist_f"):
             _attr = Storage(attr)
             _attr["list_type"] = "datalist"
-            _attr["hide_filter"] = method == "datalist"
+            self.hide_filter = method == "datalist"
             output = self.select_filter(r, **_attr)
             
         elif method == "validate":
@@ -1220,7 +1220,7 @@ class S3CRUD(S3Method):
             output["title"] = title
 
             # Filter-form
-            hide_filter = attr.get("hide_filter", True)
+            hide_filter = self.hide_filter
             filter_widgets = get_config("filter_widgets", None)
             if filter_widgets and not hide_filter:
 
