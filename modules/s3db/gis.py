@@ -1719,7 +1719,7 @@ class S3GISConfigModel(S3Model):
         field.label = T("Person or OU")
         field.readable = True
         field.writable = True
-        field.represent = lambda id: current.s3db.pr_pentity_represent(id, show_label=False)
+        field.represent = lambda id: current.s3db.pr_pentity_represent(id)
         field.widget = S3AutocompleteWidget("pr", "pentity")
         table.region_location_id.label = T("Region")
         table.default_location_id.label = T("Default Location")
@@ -4621,7 +4621,7 @@ def gis_rheader(r, tabs=[]):
                 if auth.user and auth.user.pe_id == pe_id:
                     context = T("Personal")
                 else:
-                    context = s3db.pr_pentity_represent(pe_id, show_label=False)
+                    context = s3db.pr_pentity_represent(pe_id)
 
             region_location_id = record.region_location_id
             if region_location_id:

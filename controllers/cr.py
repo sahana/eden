@@ -143,7 +143,7 @@ def shelter():
                     # Usually, the pe_id field is an invisible foreign key, therefore it
                     # has no default representation/requirements => need to add this here:
                     pe_id.label = T("Person/Group")
-                    pe_represent = s3db.pr_pentity_represent
+                    pe_represent = s3db.pr_PersonEntityRepresent(show_label=True)
                     pe_id.represent = pe_represent
                     pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
                                                pe_represent,

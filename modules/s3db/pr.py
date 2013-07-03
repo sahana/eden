@@ -43,7 +43,8 @@ __all__ = ["S3PersonEntity",
            "S3ImageLibraryModel",
            # Representation Methods
            "pr_get_entities",
-           "pr_pentity_represent",
+           #"pr_pentity_represent",
+           "pr_PersonEntityRepresent",
            #"pr_person_represent",
            "pr_PersonRepresent",
            "pr_person_phone_represent",
@@ -116,7 +117,8 @@ class S3PersonEntity(S3Model):
              "pr_role_types",
              "pr_role_id",
              "pr_pe_label",
-             "pr_pe_types"
+             "pr_pe_types",
+             "pr_pentity_represent",
              ]
 
     def model(self):
@@ -159,6 +161,8 @@ class S3PersonEntity(S3Model):
                            pr_person = T("Person"),
                            pr_group = T("Group"),
                            )
+
+        pr_pentity_represent = pr_PersonEntityRepresent()
 
         tablename = "pr_pentity"
         table = super_entity(tablename, "pe_id", pe_types,
@@ -365,6 +369,7 @@ class S3PersonEntity(S3Model):
             pr_pe_label=pr_pe_label,
             pr_role_types=role_types,
             pr_role_id=role_id,
+            pr_pentity_represent=pr_pentity_represent
         )
 
     # -------------------------------------------------------------------------
@@ -463,8 +468,7 @@ class S3PersonEntity(S3Model):
             items += json.loads(output)
 
         items = [{"id" : item[u'pe_id'],
-                  "name" : s3db.pr_pentity_represent(item[u'pe_id'],
-                                                     show_label=False)
+                  "name" : s3db.pr_pentity_represent(item[u'pe_id'])
                   } for item in items ]
         output = json.dumps(items)
         response.headers["Content-Type"] = "application/json"
@@ -485,7 +489,7 @@ class S3PersonEntity(S3Model):
                                               table.pe_id,
                                               limitby=(0, 1)).first()
         try:
-            entity = pr_pentity_represent(role.pe_id)
+            entity = current.s3db.pr_pentity_represent(role.pe_id)
             return "%s: %s" % (entity, role.role)
         except:
             return current.messages.UNKNOWN_OPT
@@ -1530,7 +1534,7 @@ class S3ContactModel(S3Model):
 
         # Field configuration
         table.pe_id.requires = IS_ONE_OF(current.db, "pr_pentity.pe_id",
-                                         pr_pentity_represent,
+                                         self.pr_pentity_represent,
                                          orderby="instance_type",
                                          #filterby="instance_type",
                                          #filter_opts=("pr_person", "pr_group"),
@@ -1700,7 +1704,7 @@ class S3AddressModel(S3Model):
                                   *s3_meta_fields())
 
         table.pe_id.requires = IS_ONE_OF(current.db, "pr_pentity.pe_id",
-                                         pr_pentity_represent,
+                                         self.pr_pentity_represent,
                                          orderby="instance_type",
                                          #filterby="instance_type",
                                          #filter_opts=("pr_person", "pr_group"),
@@ -2506,7 +2510,7 @@ class S3SavedSearch(S3Model):
                                                   label=T("Person Entity"),
                                                   readable=True,
                                                   writable=True,
-                                                  represent=pr_pentity_represent,
+                                                  represent=self.pr_pentity_represent,
                                                   ),
                                   Field("controller",
                                         #label=T("Controller"),
@@ -3697,7 +3701,7 @@ class pr_PersonEntityRepresent(S3Represent):
 
         # Get all instance records (per instance type)
         results = []
-        append = result.append
+        append = results.append
         for instance_type in types:
 
             table = s3db.table(instance_type)
@@ -3722,7 +3726,7 @@ class pr_PersonEntityRepresent(S3Represent):
             for row in rows:
                 # Construct a new Row which contains both, the super-entity
                 # record and the instance record:
-                append(Row(pr_pentity = sdata[prow[keyname]],
+                append(Row(pr_pentity = sdata[row[keyname]],
                            **{instance_type: row}))
 
         return results
@@ -3766,76 +3770,6 @@ class pr_PersonEntityRepresent(S3Represent):
                                     instance_type_nice)
 
         return pe_str
-   
-# =============================================================================
-def pr_pentity_represent(id, row=None, show_label=True,
-                         default_label="[No ID Tag]"):
-    """ Represent a Person Entity in option fields or list views """
-
-    db = current.db
-
-    if row:
-        id = row.pe_id
-        s3db = current.s3db
-        pe_table = s3db.pr_pentity
-    elif not id:
-        return current.messages["NONE"]
-    else:
-        s3db = current.s3db
-        pe_table = s3db.pr_pentity
-        row = db(pe_table.pe_id == id).select(pe_table.instance_type,
-                                              pe_table.pe_label,
-                                              limitby=(0, 1)).first()
-
-    pe_str = current.messages.UNKNOWN_OPT
-
-    if not row:
-        return pe_str
-
-    instance_type = row.instance_type
-    instance_type_nice = pe_table.instance_type.represent(instance_type)
-
-    table = s3db.table(instance_type, None)
-    if not table:
-        return pe_str
-
-    label = row.pe_label or default_label
-
-    if instance_type == "pr_person":
-        person = db(table.pe_id == id).select(
-                    table.first_name, table.middle_name, table.last_name,
-                    limitby=(0, 1)).first()
-        if person:
-            if show_label:
-                pe_str = "%s %s (%s)" % (s3_fullname(person),
-                                         label, instance_type_nice)
-            else:
-                pe_str = "%s (%s)" % (s3_fullname(person),
-                                      instance_type_nice)
-    elif instance_type == "pr_group":
-        group = db(table.pe_id == id).select(table.name,
-                                             limitby=(0, 1)).first()
-        if group:
-            pe_str = "%s (%s)" % (group.name, instance_type_nice)
-    elif instance_type == "org_organisation":
-        organisation = db(table.pe_id == id).select(table.name,
-                                                    limitby=(0, 1)).first()
-        if organisation:
-            pe_str = "%s (%s)" % (organisation.name, instance_type_nice)
-    elif instance_type == "org_office":
-        office = db(table.pe_id == id).select(table.name,
-                                              limitby=(0, 1)).first()
-        if office:
-            pe_str = "%s (%s)" % (office.name, instance_type_nice)
-    elif instance_type == "inv_warehouse":
-        warehouse = db(table.pe_id == id).select(table.name,
-                                                 limitby=(0, 1)).first()
-        if warehouse:
-            pe_str = "%s (%s)" % (warehouse.name, instance_type_nice)
-    else:
-        pe_str = "[%s] (%s)" % (label,
-                                instance_type_nice)
-    return pe_str
 
 # =============================================================================
 class pr_PersonRepresent(S3Represent):

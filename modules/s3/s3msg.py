@@ -486,8 +486,7 @@ class S3Msg(object):
         if recipient:
             ocustom.widget.pe_id["_class"] = "hide"
             pe_row.append(TD(ocustom.widget.pe_id,
-                             s3db.pr_pentity_represent(recipient,
-                                                       show_label=False)))
+                             s3db.pr_pentity_represent(recipient)))
         else:
             pe_row.append(TD(INPUT(_id="dummy", _class="ac_input", _size="50"),
                              ocustom.widget.pe_id))
@@ -1911,8 +1910,7 @@ class S3Compose(S3CRUD):
         if recipients:
             if len(recipients) == 1:
                 recipient = recipients[0]
-                represent = s3db.pr_pentity_represent(recipient,
-                                                      show_label=False)
+                represent = s3db.pr_pentity_represent(recipient)
                 # Restrict message options to those available for the entity
                 # @ToDo: Support Groups, etc by looking up Entity Type
                 ctable = s3db.pr_contact
@@ -1944,7 +1942,7 @@ class S3Compose(S3CRUD):
                     otable.pr_message_method.default = contact_method_opts[0]
             else:
                 # @ToDo: This should display all the Recipients (truncated with option to see all)
-                # - wait for pr_PentityRepresent for bulk representation.
+                # - wait for pr_PersonEntityRepresent for bulk representation.
                 represent = "%(number)s Recipients" % dict(number=len(recipients))
             pe_row.append(TD(represent))
         else:
