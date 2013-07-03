@@ -336,7 +336,8 @@ class S3AddResourceLink(S3NavigationItem):
                        _class="s3_add_resource_link",
                        _id="%s_add" % item.function,
                        _target="top",
-                       _title=item.opts.info)
+                       _title=item.opts.info,
+                       )
 
         tooltip = item.opts.tooltip
         if tooltip is not None:
@@ -360,7 +361,8 @@ class S3AddResourceLink(S3NavigationItem):
                        _class="s3_add_resource_link action-lnk",
                        _id="%s_%s_add" % (item.vars["caller"], item.function),
                        _target="top",
-                       _title=item.opts.info)
+                       _title=item.opts.info,
+                       )
 
         return DIV(popup_link, _class="s3_inline_add_resource_link")
 

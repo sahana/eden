@@ -786,30 +786,48 @@ class S3LocationFilter(S3FilterWidget):
                 for level in levels:
                     v = _row[level]
                     if v:
-                        if v not in levels[level]["options"]:
-                            levels[level]["options"].append(v)
-                        if i == 0:
-                            if v not in hierarchy[_level]:
-                                hierarchy[_level][v] = {}
-                            parent = v
-                        elif i == 1:
-                            if v not in hierarchy[_level][parent]:
-                                hierarchy[_level][parent][v] = {}
-                            grandparent = parent
-                            parent = v
-                        elif i == 2:
-                            if v not in hierarchy[_level][grandparent][parent]:
-                                hierarchy[_level][grandparent][parent][v] = {}
-                            greatgrandparent = grandparent
-                            grandparent = parent
-                            parent = v
-                        elif i == 3:
-                            if v not in hierarchy[_level][greatgrandparent][grandparent][parent]:
-                                hierarchy[_level][greatgrandparent][grandparent][parent][v] = {}
-                            greatgreatgrandparent = greatgrandparent
-                            greatgrandparent = grandparent
-                            grandparent = parent
-                            parent = v
+                        o = levels[level]["options"]
+                        if v not in o:
+                            o.append(v)
+                    if i == 0:
+                        h = hierarchy[_level]
+                        if v not in h:
+                            h[v] = {}
+                        parent = v
+                    elif i == 1:
+                        h = hierarchy[_level][parent]
+                        if v not in h:
+                            h[v] = {}
+                        grandparent = parent
+                        parent = v
+                    elif i == 2:
+                        h = hierarchy[_level][grandparent][parent]
+                        if v not in h:
+                            h[v] = {}
+                        greatgrandparent = grandparent
+                        grandparent = parent
+                        parent = v
+                    elif i == 3:
+                        h = hierarchy[_level][greatgrandparent][grandparent][parent]
+                        if v not in h:
+                            h[v] = {}
+                        greatgreatgrandparent = greatgrandparent
+                        greatgrandparent = grandparent
+                        grandparent = parent
+                        parent = v
+                    elif i == 4:
+                        h = hierarchy[_level][greatgreatgrandparent][greatgrandparent][grandparent][parent]
+                        if v not in h:
+                            h[v] = {}
+                        greatgreatgreatgrandparent = greatgreatgrandparent
+                        greatgreatgrandparent = greatgrandparent
+                        greatgrandparent = grandparent
+                        grandparent = parent
+                        parent = v
+                    elif i == 5:
+                        h = hierarchy[_level][greatgreatgreatgrandparent][greatgreatgrandparent][greatgrandparent][grandparent][parent]
+                        if v not in h:
+                            h[v] = {}
                     i += 1
 
         # Inject the Location Hierarchy

@@ -139,10 +139,10 @@ class S3OrganisationModel(S3Model):
                                 represent=represent,
                                 label=T("Organization Type"),
                                 comment=S3AddResourceLink(c="org",
-                                            f="organisation_type",
-                                            label=T("Add Organization Type"),
-                                            title=T("Organization Type"),
-                                            tooltip=T("If you don't see the Type in the list, you can add a new one by clicking link 'Add Organization Type'.")),
+                                    f="organisation_type",
+                                    label=T("Add Organization Type"),
+                                    title=T("Organization Type"),
+                                    tooltip=T("If you don't see the Type in the list, you can add a new one by clicking link 'Add Organization Type'.")),
                                 ondelete="SET NULL")
 
         configure(tablename,
@@ -4068,7 +4068,8 @@ def org_organisation_controller():
     s3.postp = postp
 
     output = current.rest_controller("org", "organisation",
-                                     hide_filter = False,
+                                     # This also affects office component tab :/
+                                     #hide_filter = False,
                                      # Don't allow components with components (such as document) to breakout from tabs
                                      native=False,
                                      rheader=org_rheader,

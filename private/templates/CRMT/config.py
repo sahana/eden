@@ -312,6 +312,7 @@ def customize_org_organisation(**attr):
                    filter_widgets = filter_widgets,
                    )
 
+    attr["hide_filter"] = False
     return attr
 
 settings.ui.customize_org_organisation = customize_org_organisation

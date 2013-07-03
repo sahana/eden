@@ -110,6 +110,7 @@ S3.addModals = function() {
     // jQueryUI Modal Popups
     $('a.s3_add_resource_link').attr('href', function(index, attr) {
         // Add the caller to the URL vars so that the popup knows which field to refresh/set
+        // Default formstyle
         var caller = $(this).parents('tr').attr('id');
         if (!caller) {
             // DIV-based formstyle
@@ -117,7 +118,7 @@ S3.addModals = function() {
         }
         if (!caller) {
             // Bootstrap formstyle
-            caller = $(this).parent().parent().prev().attr('id');
+            caller = $(this).parents('.control-group').attr('id');
         }
         caller = caller.replace(/__row_comment/, ''); // DRRPP formstyle
         caller = caller.replace(/__row/, '');

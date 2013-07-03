@@ -665,13 +665,17 @@ S3.search = {};
                         for (option in _hierarchy[opt]) {
                             if (_hierarchy[opt].hasOwnProperty(option)) {
                                 new_level = level + 1;
-                                widget['options' + new_level].push(option);
+                                if (option) {
+                                    widget['options' + new_level].push(option);
+                                }
                                 if (typeof(_hierarchy[opt][option]) === 'object') {
                                     var __hierarchy = _hierarchy[opt][option];
                                     for (_opt in __hierarchy) {
                                         if (__hierarchy.hasOwnProperty(_opt)) {
                                             new_level = level + 2;
-                                            widget['options' + new_level].push(_opt);
+                                            if (_opt) {
+                                                widget['options' + new_level].push(_opt);
+                                            }
                                             // @ToDo: Greater recursion
                                             //if (typeof(__hierarchy[_opt]) === 'object') {
                                             //}
@@ -686,13 +690,17 @@ S3.search = {};
                                 for (option in _hierarchy[opt]) {
                                     if (_hierarchy[opt].hasOwnProperty(option)) {
                                         new_level = level + 1;
-                                        widget['options' + new_level].push(option);
+                                        if (option) {
+                                            widget['options' + new_level].push(option);
+                                        }
                                         if (typeof(_hierarchy[opt][option]) === 'object') {
                                             var __hierarchy = _hierarchy[opt][option];
                                             for (_opt in __hierarchy) {
                                                 if (__hierarchy.hasOwnProperty(_opt)) {
                                                     new_level = level + 2;
-                                                    widget['options' + new_level].push(_opt);
+                                                    if (_opt) {
+                                                        widget['options' + new_level].push(_opt);
+                                                    }
                                                     // @ToDo: Greater recursion
                                                     //if (typeof(__hierarchy[_opt]) === 'object') {
                                                     //}
@@ -728,7 +736,9 @@ S3.search = {};
                                                 for (_opt in __hierarchy) {
                                                     if (__hierarchy.hasOwnProperty(_opt)) {
                                                         new_level = level + 1;
-                                                        widget['options' + new_level].push(_opt);
+                                                        if (_opt) {
+                                                            widget['options' + new_level].push(_opt);
+                                                        }
                                                         // @ToDo: Greater recursion
                                                         //if (typeof(__hierarchy[_opt]) === 'object') {
                                                         //}
@@ -743,7 +753,9 @@ S3.search = {};
                                                 for (_opt in __hierarchy) {
                                                     if (__hierarchy.hasOwnProperty(_opt)) {
                                                         new_level = level + 1;
-                                                        widget['options' + new_level].push(_opt);
+                                                        if (_opt) {
+                                                            widget['options' + new_level].push(_opt);
+                                                        }
                                                         // @ToDo: Greater recursion
                                                         //if (typeof(__hierarchy[_opt]) === 'object') {
                                                         //}
