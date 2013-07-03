@@ -1539,7 +1539,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             # component record appearing multiple times if the orderby-selector
             # gives multiple values per row, so make sure that the orderby-selector
             # gives only one possible value per row, or otherwise rewrite this
-            # function to use S3Resource.select+extract with its more powerful
+            # function to use S3Resource.fast_select with its more powerful
             # orderby-logic!
             orderby_rfield = None
             orderby_dir = None

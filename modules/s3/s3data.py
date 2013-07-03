@@ -51,7 +51,7 @@ from gluon.html import *
 from gluon.storage import Storage
 from gluon.validators import IS_EMPTY_OR, IS_IN_SET
 
-from s3utils import s3_flatlist, s3_has_foreign_key, s3_truncate, s3_unicode, S3MarkupStripper
+from s3utils import s3_flatlist, s3_has_foreign_key, s3_orderby_fields, s3_truncate, s3_unicode, S3MarkupStripper
 from s3validators import IS_NUMBER
 
 DEBUG = False
@@ -123,41 +123,27 @@ class S3DataTable(object):
         self.filterString = filterString
 
         if orderby:
+
+            _orderby = []
             
-            if isinstance(orderby, str):
-                orderby_fields = orderby.split(",")
-            elif not isinstance(orderby, (list, tuple)):
-                orderby_fields = [orderby]
-            else:
-                orderby_fields = orderby
-            orderby = []
-            for orderby_field in orderby_fields:
-                if type(orderby_field) is Expression:
-                    f = orderby_field.first
-                    if type(f) is Field and \
-                       orderby_field.op == current.db._adapter.INVERT:
-                        direction = "desc"
-                    else:
-                        continue
-                    fname = str(f)
-                elif type(orderby_field) is Field:
-                    direction = "asc"
-                    fname = str(orderby_field)
-                elif isinstance(orderby_field, str):
-                    fname, direction = (orderby_field.strip().split() + ["asc"])[:2]
+            INVERT = current.db._adapter.INVERT
+            for f in s3_orderby_fields(None, orderby, expr=True):
+                if type(f) is Expression:
+                    colname = str(f.first)
+                    direction = "desc" \
+                                if f.op == INVERT else "asc"
                 else:
-                    continue
-                idx = 0
-                for rfield in rfields:
-                    if rfield.colname == fname:
-                        orderby.append([idx, direction])
+                    colname = str(f)
+                    direction = "asc"
+                for idx, rfield in enumerate(rfields):
+                    if rfield.colname == colname:
+                        _orderby.append([idx, direction])
                         break
-                    idx += 1
 
         else:
-            orderby = []
+            _orderby = [[1, "asc"]]
                     
-        self.orderby = orderby
+        self.orderby = _orderby
 
     # -------------------------------------------------------------------------
     def html(self,
