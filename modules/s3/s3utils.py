@@ -1063,31 +1063,34 @@ def s3_flatlist(nested):
             yield item
 
 # =============================================================================
-def s3_orderby_fields(table, orderby):
+def s3_orderby_fields(table, orderby, expr=False):
     """
         Introspect and yield all fields involved in a DAL orderby
         expression.
 
+        @param table: the Table
         @param orderby: the orderby expression
+        @param expr: True to yield asc/desc expressions as they are,
+                     False to yield only Fields
     """
 
     if not orderby:
         return
 
     db = current.db
+    COMMA = db._adapter.COMMA
+    INVERT = db._adapter.INVERT
     
     if isinstance(orderby, str):
         items = orderby.split(",")
     elif type(orderby) is Expression:
         def expand(e):
-            f = e.first
-            if e.op == db._adapter.COMMA:
-                if isinstance(f, Field):
-                    return [f] + expand(e.second)
-                elif type(f) is Expression:
-                    return expand(f) + expand(e.second)
-            elif e.op == db._adapter.INVERT:
-                return [e.first]
+            if isinstance(e, Field):
+                return [e]
+            if e.op == COMMA:
+                return expand(e.first) + expand(e.second)
+            elif e.op == INVERT:
+                return [e] if expr else [e.first]
             return []
         items = expand(orderby)
     elif not isinstance(orderby, (list, tuple)):
@@ -1096,20 +1099,23 @@ def s3_orderby_fields(table, orderby):
         items = orderby
 
     s3db = current.s3db
+    tablename = table._tablename if table else None
     for item in items:
         if type(item) is Expression:
-            f = item.first
-            if type(f) is not Field:
+            if not isinstance(item.first, Field):
                 continue
+            f = item if expr else item.first
         elif isinstance(item, Field):
             f = item
         elif isinstance(item, str):
             fn, direction = (item.strip().split() + ["asc"])[:2]
-            tn, fn = ([table._tablename] + fn.split(".", 1))[-2:]
+            tn, fn = ([tablename] + fn.split(".", 1))[-2:]
             try:
                 f = s3db.table(tn)[fn]
             except (AttributeError, KeyError):
                 continue
+            if expr and direction[:3] == "des":
+                f = ~f
         else:
             continue
         yield f
