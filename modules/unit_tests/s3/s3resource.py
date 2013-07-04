@@ -235,6 +235,50 @@ class ResourceFilterJoinTests(unittest.TestCase):
         current.auth.override = True
 
     # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.get_base_solr_url(), "Full-Text Search disabled")
+    def testFullTextQueryTransform(self):
+
+        s3db = current.s3db
+
+        # Normal
+        q = (S3FieldSelector("file").text("int"))
+        resource = s3db.resource("doc_document", filter=q)
+        query = resource.rfilter.get_query()
+        doc_document = resource.table
+
+        expected = (((doc_document.deleted != True) &
+                     (doc_document.id > 0)) &
+                    (doc_document.id.belongs([2])))
+
+        self.assertEqual(str(query), str(expected))
+
+        # Nested
+        q = (S3FieldSelector("id").like("%123%")) & ((S3FieldSelector("file").text("int")) | (S3FieldSelector("name").like("test")))
+        resource = s3db.resource("doc_document", filter=q)
+        query = resource.rfilter.get_query()
+        doc_document = resource.table
+
+        expected = (((doc_document.deleted != True) &
+                     (doc_document.id > 0)) &
+                    ((doc_document.id.like("%123%")) &
+                      ((doc_document.id.belongs([2])) |
+                        (doc_document.name.like("test")))))
+
+        self.assertEqual(str(query), str(expected))
+
+        # When no results are there/Solr is not running
+        q = (S3FieldSelector("id").like("%123%")) & (S3FieldSelector("file").text("abcdef"))
+        resource = s3db.resource("doc_document", filter=q)
+        query = resource.rfilter.get_query()
+        doc_document = resource.table
+
+        expected = (((doc_document.deleted != True) &
+                    (doc_document.id > 0)) &
+                    (doc_document.id.like("%123%")))
+
+        self.assertEqual(str(query), str(expected))
+
+    # -------------------------------------------------------------------------
     def testGetQueryJoinsInnerField(self):
         """ Inner field queries don't contain joins """
 
