@@ -6031,6 +6031,53 @@ class S3ResourceQuery(object):
             return self.query(resource), None
 
     # -------------------------------------------------------------------------
+    def query_transformation(self, resource):
+        """
+            @param: resource: the resource to resolve the query against
+
+            Returns a S3ResourceQuery with tranformed query: text -> belongs
+        """    
+
+        op = self.op
+        l = self.left
+        r = self.right
+
+        if op == self.AND:
+            l = l.query_transformation(resource)
+            r = r.query_transformation(resource)
+            if l is None or r is None:
+                return None
+            elif l is False or r is False:
+               return l if r is False else r if l is False else False
+            else:
+                return l & r          
+        elif op == self.OR:
+            l = l.query_transformation(resource)
+            r = r.query_transformation(resource)
+            if l is None or r is None:
+                return None
+            elif l is False or r is False:
+                return l if r is False else r if l is False else False
+            else:
+                return l | r
+        elif op == self.NOT:
+            l = l.query_transformation(resource)
+            if l is None:
+                return None
+            elif l is False:
+                return False
+            else:
+                return ~l
+        elif op == self.TEXT:
+            if l.name == "file":
+                l = self.fulltext(l, r)
+                return l
+            else:
+                return self
+        else:
+            return self
+
+    # -------------------------------------------------------------------------
     def query(self, resource):
         """
             Convert this S3ResourceQuery into a DAL query, ignoring virtual
@@ -6200,21 +6247,24 @@ class S3ResourceQuery(object):
             try:
                 si = sunburnt.SolrInterface(settings.get_base_solr_url())
             except:
-                return None
+                return False
 
             records = si.query(name=r).highlight("name").execute()
             filename = [];
 
             for re in records:
                 filename.append(int(re["id"]))
-                #filename.append(str(re["url"].split("uploads/")[1]))
-            l.name = str(l.name.split(".")[0] + ".id")
+
+            if len(filename) < 1:
+                return False
+
+            l.name = "id"
             
             query_transform = S3ResourceQuery(self.BELONGS, left=l, right=filename)
              
             return query_transform
 
-        return None
+        return False
 
     # -------------------------------------------------------------------------
     def __call__(self, resource, row, virtual=True):
@@ -7135,9 +7185,9 @@ class S3ResourceFilter(object):
 
         if isinstance(f, S3ResourceQuery):
 
-#            if f.op == "text":
-#                f = f.fulltext(f.left, f.right)
+#            f = f.query_transformation(self.resource)
             q = f.query(self.resource)
+    
             if q is not None:
                 self._add_query(q, component=component, master=master)
             else:
