@@ -380,7 +380,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                  ADMIN in s3.roles
 
         settings = current.deployment_settings
-        #job_roles = lambda i: settings.get_hrm_job_roles()
         show_programmes = lambda i: settings.get_hrm_vol_experience() == "programme"
         show_tasks = lambda i: settings.has_module("project") and \
                                settings.get_project_mode_task()
@@ -390,11 +389,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
         check_org_dependent_field = lambda tablename, fieldname: \
             settings.set_org_dependent_field(tablename, fieldname,
                                              enable_field = False)
-
-        #if job_roles(""):
-        #    jt_catalog_label = "Job Title Catalog"
-        #else:
-        jt_catalog_label = "Volunteer Role Catalog"
 
         return M(c="vol")(
                     M("Volunteers", f="volunteer",
@@ -415,12 +409,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("New", m="create"),
                         M("List All"),
                     ),
-                    #M("Job Role Catalog", f="job_role",
-                    #  check=[manager_mode, job_roles])(
-                    #    M("New", m="create"),
-                    #    M("List All"),
-                    #),
-                    M(jt_catalog_label, f="job_title",
+                    M("Volunteer Role Catalog", f="job_title",
                       check=manager_mode)(
                         M("New", m="create"),
                         M("List All"),

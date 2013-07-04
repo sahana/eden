@@ -63,12 +63,26 @@ def role():
     return output
 
 # -----------------------------------------------------------------------------
-@auth.s3_requires_membership(1)
 def user():
     """ RESTful CRUD controller """
 
     table = auth.settings.table_user
-    tablename = table._tablename
+
+    if s3_has_role("ADMIN"):
+        # Needed as Admin has all roles
+        pass
+    elif s3_has_role("ORG_ADMIN"):
+        # Filter users to just those belonging to the Org Admin's Org & Descendants
+        otable = s3db.org_organisation
+        pe_id = db(otable.id == auth.user.organisation_id).select(otable.pe_id,
+                                                                  limitby=(0, 1)
+                                                                  ).first().pe_id
+        pe_ids = s3db.pr_get_descendants(pe_id, entity_types="org_organisation")
+        pe_ids.append(pe_id)
+        s3.filter = (otable.pe_id.belongs(pe_ids)) & \
+                    (table.organisation_id == otable.id)
+    else:
+        auth.permission.fail()
 
     auth.configure_user_fields()
 
@@ -89,7 +103,7 @@ def user():
         lappend("link_user_to")
     lappend((T("Roles"), "membership.group_id"))
 
-    s3db.configure(tablename,
+    s3db.configure("auth_user",
                    main="first_name",
                    create_next = URL(c="admin", f="user", args=["[id]", "roles"]),
                    create_onaccept = lambda form: auth.s3_approve_user(form.vars),
@@ -132,10 +146,9 @@ def user():
         redirect(URL(args=[]))
 
     # Custom Methods
-    role_manager = s3base.S3RoleManager()
     set_method = s3db.set_method
     set_method("auth", "user", method="roles",
-               action=role_manager)
+               action=s3base.S3RoleManager())
 
     set_method("auth", "user", method="disable",
                action=disable_user)
@@ -148,7 +161,7 @@ def user():
 
     # CRUD Strings
     ADD_USER = T("Add User")
-    s3.crud_strings[tablename] = Storage(
+    s3.crud_strings["auth_user"] = Storage(
         title_create = ADD_USER,
         title_display = T("User Details"),
         title_list = T("Users"),
@@ -291,6 +304,9 @@ def user():
             # @ToDo: Merge these with the code in s3aaa.py and use S3SQLCustomForm to implement
             form = output.get("form", None)
             if not form:
+                create_url = URL(args=["create"])
+                output["showadd_btn"] = s3base.S3CRUD.crud_button(T("Add User"),
+                                                                  _href=create_url)
                 return output
             form.attributes["_id"] = "regform"
             if s3_formstyle == "bootstrap":

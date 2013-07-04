@@ -1867,9 +1867,9 @@ class S3ProjectBeneficiaryModel(S3Model):
                                      aggregate="sum",
                                      totals=True
                                      )
-                  ),
-                  extra_fields = ["project_id", "date", "end_date",]                  
-                 )
+                    ),
+                  extra_fields = ["project_id", "date", "end_date"]
+                  )
 
         # Reusable Field
         #beneficiary_id = S3ReusableField("beneficiary_id", table,
@@ -3156,22 +3156,24 @@ class S3ProjectOrganisationModel(S3Model):
         if str(vars.role) == \
              str(current.deployment_settings.get_project_organisation_lead_role()):
 
-            # Get the project ID from the new project organisation record
+            # Read the record
+            # (safer than relying on vars which might be missing on component tabs)
             db = current.db
-            ptable = db.project_project
-            otable = db.project_organisation
-            project_id = db(otable.id == vars.id).select(otable.project_id,
-                                                         limitby=(0, 1)
-                                                         ).first().project_id
+            ltable = db.project_organisation
+            record = db(ltable.id == vars.id).select(ltable.project_id,
+                                                     ltable.organisation_id,
+                                                     limitby=(0, 1)
+                                                     ).first()
 
             # Set the Project's organisation_id to the new lead organisation
-            organisation_id = vars.organisation_id
-            db(ptable.id == project_id).update(
-                                        organisation_id = organisation_id,
-                                        realm_entity = \
-                                            current.s3db.pr_get_pe_id("org_organisation",
-                                                                      organisation_id)
-                                        )
+            organisation_id = record.organisation_id
+            ptable = db.project_project
+            db(ptable.id == record.project_id).update(
+                                organisation_id = organisation_id,
+                                realm_entity = \
+                                    current.s3db.pr_get_pe_id("org_organisation",
+                                                              organisation_id)
+                                )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3863,17 +3865,15 @@ class S3ProjectDRRPPModel(S3Model):
     def opts_represent(opt, prefix):
         """ Option representation """
 
-        NONE = current.messages["NONE"]
-
         if isinstance(opt, int):
             opts = [opt]
         if isinstance(opt, (list, tuple)):
             if not opt or opt[0] is None:
-                return NONE
+                return current.messages["NONE"]
             else:
                 return ", ".join(["%s %s" % (prefix, o) for o in opt])
         else:
-            return NONE
+            return current.messages["NONE"]
 
 # =============================================================================
 class S3ProjectTaskModel(S3Model):
@@ -4298,11 +4298,11 @@ class S3ProjectTaskModel(S3Model):
                                         autocomplete="name",
                                         autodelete=False))
 
-        # Job roles
-        add_component("hrm_job_role",
-                      project_task=dict(link="project_task_job_role",
+        # Job titles
+        add_component("hrm_job_title",
+                      project_task=dict(link="project_task_job_title",
                                         joinby="task_id",
-                                        key="job_role_id",
+                                        key="job_title_id",
                                         actuate="embed",
                                         autocomplete="name",
                                         autodelete=False))
@@ -5172,7 +5172,7 @@ class S3ProjectTaskHRMModel(S3Model):
         - either individuals or Job Roles
     """
 
-    names = ["project_task_job_role",
+    names = ["project_task_job_title",
              "project_task_human_resource",
              ]
 
@@ -5191,10 +5191,10 @@ class S3ProjectTaskHRMModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Link Tasks <> Job Roles
-        tablename = "project_task_job_role"
+        tablename = "project_task_job_title"
         table = define_table(tablename,
                              task_id(),
-                             self.hrm_job_role_id(),
+                             self.hrm_job_title_id(),
                              *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -5554,14 +5554,12 @@ def project_time_day(row):
         @param row: the Row
     """
 
-    default = current.messages["NONE"]
-
     try:
         thisdate = row["project_time.date"]
     except AttributeError:
-        return default
+        return current.messages["NONE"]
     if not thisdate:
-        return default
+        return current.messages["NONE"]
 
     now = current.request.utcnow
     week = datetime.timedelta(days=7)
@@ -5583,14 +5581,12 @@ def project_time_week(row):
         @param row: the Row
     """
 
-    default = current.messages["NONE"]
-
     try:
         thisdate = row["project_time.date"]
     except AttributeError:
-        return default
+        return current.messages["NONE"]
     if not thisdate:
-        return default
+        return current.messages["NONE"]
 
     day = thisdate.date()
     monday = day - datetime.timedelta(days=day.weekday())
@@ -5741,7 +5737,7 @@ def project_rheader(r):
         append((attachments_label, "document"))
         if settings.has_module("msg"):
             append((T("Notify"), "dispatch"))
-        #(T("Roles"), "job_role"),
+        #(T("Roles"), "job_title"),
         #(T("Assignments"), "human_resource"),
         #(T("Requests"), "req")
 

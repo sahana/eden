@@ -29,6 +29,7 @@
 """
 
 __all__ = ["S3VolunteerModel",
+           "S3VolunteerAwardModel",
            "S3VolunteerClusterModel",
            "vol_active",
            "vol_service_record",
@@ -85,6 +86,115 @@ class S3VolunteerModel(S3Model):
         return output
 
 # =============================================================================
+class S3VolunteerAwardModel(S3Model):
+
+    names = ["vol_award",
+             "vol_volunteer_award",
+             ]
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+        auth = current.auth
+
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+        is_admin = auth.s3_has_role(ADMIN)
+
+        root_org = auth.root_org()
+        if is_admin:
+            filter_opts = ()
+        elif root_org:
+            filter_opts = (root_org, None)
+        else:
+            filter_opts = (None,)
+
+        # ---------------------------------------------------------------------
+        # Volunteer Award
+        #
+        tablename = "vol_award"
+        table = define_table(tablename,
+                             Field("name",
+                                   label = T("Name")),
+                             # Only included in order to be able to set
+                             # realm_entity to filter appropriately
+                             self.org_organisation_id(default = root_org,
+                                                      readable = is_admin,
+                                                      writable = is_admin,
+                                                      ),
+                             s3_comments(label=T("Description"),
+                                         comment=None),
+                             *s3_meta_fields())
+
+        crud_strings[tablename] = Storage(
+            title_create = T("Add Award"),
+            title_display = T("Award"),
+            title_list = T("Award"),
+            title_update = T("Edit Award"),
+            title_search = T("Search Awards"),
+            title_upload = T("Import Awards"),
+            subtitle_create = T("Add New Award"),
+            label_list_button = T("List Awards"),
+            label_create_button = T("Add Award"),
+            label_delete_button = T("Delete Award"),
+            msg_record_created = T("Award added"),
+            msg_record_modified = T("Award updated"),
+            msg_record_deleted = T("Award deleted"),
+            msg_list_empty = T("No Awards found"))
+
+        comment = S3AddResourceLink(c = "vol",
+                                    f = "award",
+                                    label = crud_strings[tablename].label_create_button,
+                                    title = T("Award"),
+                                    )
+
+        represent = S3Represent(lookup=tablename)
+        award_id = S3ReusableField("award_id", table,
+                                   label = T("Award"),
+                                   requires = IS_NULL_OR(
+                                                IS_ONE_OF(db,
+                                                          "vol_award.id",
+                                                          represent,
+                                                          filterby="organisation_id",
+                                                          filter_opts=filter_opts)),
+                                   represent = represent, 
+                                   comment = comment
+                                   )
+
+        # ---------------------------------------------------------------------
+        # Volunteers <> Awards link table
+        #
+        tablename = "vol_volunteer_award"
+        table = define_table(tablename,
+                             self.pr_person_id(empty=False),
+                             award_id(),
+                             s3_date(),
+                             s3_comments(),
+                             *s3_meta_fields())
+
+        crud_strings[tablename] = Storage(
+            title_create = T("Add Award"),
+            title_display = T("Award"),
+            title_list = T("Award"),
+            title_update = T("Edit Award"),
+            title_search = T("Search Awards"),
+            title_upload = T("Import Awards"),
+            subtitle_create = T("Add New Award"),
+            label_list_button = T("List Awards"),
+            label_create_button = T("Add Award"),
+            label_delete_button = T("Delete Award"),
+            msg_record_created = T("Award added"),
+            msg_record_modified = T("Award updated"),
+            msg_record_deleted = T("Award deleted"),
+            msg_list_empty = T("No Awards found"))
+
+        # Pass names back to global scope (s3.*)
+        return Storage()
+
+# =============================================================================
 class S3VolunteerClusterModel(S3Model):
 
     names = ["vol_cluster_type",
@@ -95,8 +205,8 @@ class S3VolunteerClusterModel(S3Model):
 
     def model(self):
 
-        db = current.db
         T = current.T
+        db = current.db
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table

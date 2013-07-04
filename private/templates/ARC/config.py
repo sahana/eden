@@ -52,7 +52,6 @@ def ifrc_realm_entity(table, row):
     # Do not apply realms for Master Data
     # @ToDo: Restore Realms and add a role/functionality support for Master Data  
     if tablename in ["hrm_department",
-                     "hrm_job_role",
                      "hrm_job_title",
                      "hrm_course",
                      "hrm_programme"]:

@@ -91,8 +91,8 @@ settings.ui.cluster = True
 settings.org.summary = True
 
 # HRM
-# Uncomment to allow HRs to have multiple Job Roles in addition to their Job Title
-settings.hrm.job_roles = True
+# Uncomment to allow HRs to have multiple Job Titles
+settings.hrm.multiple_job_titles = True
 # Uncomment to disable Staff experience
 settings.hrm.staff_experience = False
 # Uncomment to disable Volunteer experience

@@ -935,7 +935,7 @@ class S3SearchCredentialsWidget(S3SearchOptionsWidget):
                     (htable.deleted != True) & \
                     (ctable.person_id == ptable.id) & \
                     (ctable.deleted != True) & \
-                    (ctable.job_role_id.belongs(value))
+                    (ctable.job_title_id.belongs(value))
             return query
         else:
             return None

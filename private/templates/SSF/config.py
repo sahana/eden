@@ -58,10 +58,6 @@ settings.auth.always_notify_approver = True
 settings.base.system_name = T("The Sahana Sunflower: A Community Portal")
 settings.base.system_name_short = T("Sahana Sunflower")
 
-# Set this to True to use Content Delivery Networks to speed up Internet-facing sites
-settings.base.cdn = False
-
-
 # L10n settings
 settings.L10n.languages = OrderedDict([
     ("ar", "العربية"),
@@ -92,19 +88,6 @@ settings.L10n.utc_offset = "UTC +0000"
 settings.L10n.utc_offset = "UTC +0000"
 # Uncomment these to use US-style dates in English (localisations can still convert to local format)
 #settings.L10n.date_format = T("%m-%d-%Y")
-# Religions used in Person Registry
-# @ToDo: find a better code
-# http://eden.sahanafoundation.org/ticket/594
-settings.L10n.religions = {
-    "none":T("none"),
-    "christian":T("Christian"),
-    "muslim":T("Muslim"),
-    "jewish":T("Jewish"),
-    "buddhist":T("Buddhist"),
-    "hindu":T("Hindu"),
-    "bahai":T("Bahai"),
-    "other":T("other")
-}
 # Make last name in person/user records mandatory
 #settings.L10n.mandatory_lastname = True
 

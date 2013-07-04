@@ -470,8 +470,10 @@ def person():
                     table.site_id.writable = table.site_id.readable = False
                     table.site_contact.writable = table.site_contact.readable = False
                     org = session.s3.hrm.org
-                    if org is not None:
-                        field = table.organisation_id
+                    field = table.organisation_id
+                    if org is None:
+                        field.widget = None
+                    else:
                         field.default = org
                         field.readable = field.writable = False
 
@@ -695,26 +697,6 @@ def department():
     return output
 
 # -----------------------------------------------------------------------------
-def job_role():
-    """ Job Roles Controller """
-
-    mode = session.s3.hrm.mode
-    def prep(r):
-        if mode is not None:
-            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
-        return True
-    s3.prep = prep
-
-    if not auth.s3_has_role(ADMIN):
-        s3.filter = auth.filter_by_root_org(s3db.hrm_job_role)
-
-    output = s3_rest_controller("hrm", resourcename,
-                                csv_template=("hrm", "job_role"),
-                                csv_stylesheet=("hrm", "job_role.xsl"),
-                                )
-    return output
-
-# -----------------------------------------------------------------------------
 def job_title():
     """ Job Titles Controller """
 
@@ -725,8 +707,11 @@ def job_title():
         return True
     s3.prep = prep
 
+    table = s3db.hrm_job_title
+    s3.filter = (table.type.belongs([2, 3]))
+
     if not auth.s3_has_role(ADMIN):
-        s3.filter = auth.filter_by_root_org(s3db.hrm_job_title)
+        s3.filter &= auth.filter_by_root_org(table)
 
     output = s3_rest_controller("hrm", resourcename,
                                 csv_template=("hrm", "job_title"),
@@ -984,7 +969,7 @@ def programme():
 def programme_hours():
     """
         Volunteer Programme Hours controller
-        - just meant for Imports
+        - used for Imports & Reports
     """
 
     mode = session.s3.hrm.mode
@@ -993,10 +978,23 @@ def programme_hours():
         redirect(URL(f="index"))
 
     output = s3_rest_controller("hrm", resourcename,
+                                hide_filter = False,
                                 csv_stylesheet=("hrm", "programme_hours.xsl"),
                                 csv_template=("hrm", "programme_hours")
                                 )
     return output
+
+# =============================================================================
+def award():
+    """ Volunteer Awards controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def volunteer_award():
+    """ ONLY FOR RETURNING options to the S3AddResourceLink PopUp """
+
+    return s3_rest_controller()
 
 # =============================================================================
 def cluster_type():
@@ -1004,13 +1002,7 @@ def cluster_type():
 
     return s3_rest_controller()
 
-# =============================================================================
-def volunteer_cluster():
-    """ ONLY FOR RETURNING options to the S3AddResourceLink PopUp """
-
-    return s3_rest_controller()
-
-# =============================================================================
+# -----------------------------------------------------------------------------
 def cluster():
     """ Volunteer Clusters controller """
 
@@ -1019,6 +1011,12 @@ def cluster():
 # -----------------------------------------------------------------------------
 def cluster_position():
     """ Volunteer Group Positions controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def volunteer_cluster():
+    """ ONLY FOR RETURNING options to the S3AddResourceLink PopUp """
 
     return s3_rest_controller()
 

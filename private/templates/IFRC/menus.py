@@ -227,10 +227,13 @@ class S3MainMenu(default.S3MainMenu):
             )
         else:
             s3_has_role = auth.s3_has_role
-            ADMIN = auth.get_system_roles().ADMIN
+            is_org_admin = lambda i: s3_has_role("ORG_ADMIN") and \
+                                     not s3_has_role("ADMIN")
             menu_personal = MP()(
                         MP("Administration", c="admin", f="index",
-                           check=s3_has_role(ADMIN)),
+                           check=s3_has_role("ADMIN")),
+                        MP("Administration", c="admin", f="user",
+                           check=is_org_admin),
                         MP("Profile", c="default", f="person"),
                         MP("Change Password", c="default", f="user",
                            m="change_password"),
@@ -398,7 +401,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                  ADMIN in s3.roles
 
         settings = current.deployment_settings
-        #job_roles = lambda i: settings.get_hrm_job_roles()
         show_programmes = lambda i: settings.get_hrm_vol_experience() == "programme"
         show_tasks = lambda i: settings.has_module("project") and \
                                settings.get_project_mode_task()
@@ -408,11 +410,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
         check_org_dependent_field = lambda tablename, fieldname: \
             settings.set_org_dependent_field(tablename, fieldname,
                                              enable_field = False)
-
-        #if job_roles(""):
-        #    jt_catalog_label = "Job Title Catalog"
-        #else:
-        jt_catalog_label = "Volunteer Role Catalog"
 
         return M(c="vol")(
                     M("Volunteers", f="volunteer",
@@ -435,12 +432,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("New", m="create"),
                         M("List All"),
                     ),
-                    #M("Job Role Catalog", f="job_role",
-                    #  check=[manager_mode, job_roles])(
-                    #    M("New", m="create"),
-                    #    M("List All"),
-                    #),
-                    M(jt_catalog_label, f="job_title",
+                    M("Volunteer Role Catalog", f="job_title",
                       check=manager_mode)(
                         M("New", m="create"),
                         M("List All"),
@@ -479,6 +471,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("List All"),
                         M("Import Hours", f="programme_hours", m="import"),
                     ),
+                    M("Awards", f="award",
+                      check=[manager_mode, is_org_admin])(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
                     M("Volunteer Cluster Type", f="cluster_type",
                       check = check_org_dependent_field("vol_volunteer_cluster",
                                                         "vol_cluster_type_id"))(
@@ -500,6 +497,16 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Reports", f="volunteer", m="report",
                       check=manager_mode)(
                         M("Volunteer Report", m="report"),
+                        M("Hours by Role Report", f="programme_hours", m="report2",
+                          vars=Storage(rows="job_title_id",
+                                       cols="month",
+                                       fact="sum(hours)"),
+                          check=show_programmes),
+                        M("Hours by Programme Report", f="programme_hours", m="report2",
+                          vars=Storage(rows="programme_id",
+                                       cols="month",
+                                       fact="sum(hours)"),
+                          check=show_programmes),
                         M("Training Report", f="training", m="report"),
                     ),
                     #M("My Profile", f="person",
