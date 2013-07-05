@@ -1863,11 +1863,11 @@ class S3CRUD(S3Method):
         # Pagination
         vars = self.request.get_vars
         if representation == "aadata":
-            start = get_vars.get("iDisplayStart", None)
-            limit = get_vars.get("iDisplayLength", 0)
+            start = vars.get("iDisplayStart", None)
+            limit = vars.get("iDisplayLength", 0)
         else:
-            start = get_vars.get("start", None)
-            limit = get_vars.get("limit", 0)
+            start = vars.get("start", None)
+            limit = vars.get("limit", 0)
         if limit:
             if limit.lower() == "none":
                 limit = None

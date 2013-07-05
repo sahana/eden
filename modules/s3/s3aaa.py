@@ -67,7 +67,7 @@ from s3utils import s3_mark_required
 DEFAULT = lambda: None
 #table_field = re.compile("[\w_]+\.[\w_]+")
 
-DEBUG = False
+DEBUG = True
 if DEBUG:
     import sys
     print >> sys.stderr, "S3AAA: DEBUG MODE"
@@ -1083,19 +1083,21 @@ Thank you
             Patched for S3 to use s3_mark_required and handle opt_in mailing lists
         """
 
-        utable = self.settings.table_user
-
-        utable.utc_offset.readable = True
-        utable.utc_offset.writable = True
-
         if not self.is_logged_in():
             redirect(self.settings.login_url)
+
+        utable = self.settings.table_user
+
         passfield = self.settings.password_field
         utable[passfield].writable = False
 
         request = current.request
         session = current.session
         settings = current.deployment_settings
+
+        if settings.get_auth_show_utc_offset():
+            utable.utc_offset.readable = True
+            utable.utc_offset.writable = True
 
         if next == DEFAULT:
             next = request.get_vars._next \
@@ -1363,7 +1365,7 @@ S3OptionsFilter({
         link_user_to_opts = deployment_settings.get_auth_registration_link_user_to()
         if link_user_to_opts:
             link_user_to = utable.link_user_to
-            link_user_to_default = []
+            link_user_to_default = deployment_settings.get_auth_registration_link_user_to_default()
             vars = request.vars
             for type in ["staff", "volunteer", "member"]:
                 if "link_user_to_%s" % type in vars:
@@ -1658,7 +1660,10 @@ S3OptionsFilter({
         # Add to user Person Registry and Email/Mobile to pr_contact
         person_id = self.s3_link_to_person(user, organisation_id)
 
-        link_user_to = user.link_user_to
+        utable = self.settings.table_user
+
+        link_user_to = user.link_user_to or utable.link_user_to.default
+
         if link_user_to:
             if "staff" in link_user_to:
                 # Add Staff Record
@@ -1668,7 +1673,7 @@ S3OptionsFilter({
                 # Add Volunteer Record
                 human_resource_id = self.s3_link_to_human_resource(user, person_id,
                                                                    type=2)
-            if "member" in user.link_user_to:
+            if "member" in link_user_to:
                 # Add Member Record
                 member_id = self.s3_link_to_member(user, person_id)
 
@@ -6255,22 +6260,23 @@ class S3RoleManager(S3Method):
             new_acl = SPAN(T("new ACL"), _class="new-acl")
 
             # Role form -------------------------------------------------------
-            form_rows = formstyle("role_name",
-                                  mandatory("%s:" % T("Role Name")),
-                                  INPUT(value=role_name,
-                                        _name="role_name",
-                                        _type="text",
-                                        requires=IS_NOT_IN_DB(db,
-                                                  "auth_group.role",
-                                                  allowed_override=[role_name]
-                                                  )),
-                                  "") + \
-                        formstyle("role_desc",
-                                  "%s:" % T("Description"),
-                                  TEXTAREA(value=role_desc,
-                                           _name="role_desc",
-                                           _rows="4"),
-                                  "")
+            # Broken for formstyle = "bootstrap"
+            form_rows = TR("role_name",
+                            mandatory("%s:" % T("Role Name")),
+                            INPUT(value=role_name,
+                                  _name="role_name",
+                                  _type="text",
+                                  requires=IS_NOT_IN_DB(db,
+                                            "auth_group.role",
+                                            allowed_override=[role_name]
+                                            )),
+                          "") + \
+                        TR("role_desc",
+                            "%s:" % T("Description"),
+                            TEXTAREA(value=role_desc,
+                                     _name="role_desc",
+                                     _rows="4"),
+                          "")
             key_row = DIV(T("* Required Fields"), _class="red")
             role_form = DIV(TABLE(form_rows), key_row, _id="role-form")
 

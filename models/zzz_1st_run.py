@@ -242,6 +242,7 @@ if len(pop_list) > 0:
     bi = s3base.S3BulkImporter()
 
     s3.import_role = bi.import_role
+    s3.import_user = bi.import_user
     s3.import_image = bi.import_image
 
     # Disable table protection
