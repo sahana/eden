@@ -34,12 +34,19 @@ settings.auth.registration_organisation_required = True
 settings.auth.registration_requests_site = False
 
 settings.auth.registration_link_user_to = {"staff": T("Staff")}
+settings.auth.registration_link_user_to_default = ["staff"]
+settings.auth.registration_roles = {"organisation_id": ["USER"],
+                                    }
+
+
+settings.auth.show_utc_offset = False
 
 settings.auth.record_approval = False
+settings.auth.record_approval_required_for = ["org_organisation"]
 
 # -----------------------------------------------------------------------------
 # Security Policy
-settings.security.policy = 3 # Controllers
+settings.security.policy = 6 # Controllers
 settings.security.map = True
 
 # Owner Entity
