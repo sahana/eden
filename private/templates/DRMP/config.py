@@ -34,16 +34,52 @@ settings.auth.registration_organisation_required = True
 settings.auth.registration_requests_site = False
 
 settings.auth.registration_link_user_to = {"staff": T("Staff")}
+settings.auth.registration_link_user_to_default = ["staff"]
+settings.auth.registration_roles = {"organisation_id": ["USER"],
+                                    }
+
+
+settings.auth.show_utc_offset = False
 
 settings.auth.record_approval = False
+settings.auth.record_approval_required_for = ["org_organisation"]
 
 # -----------------------------------------------------------------------------
 # Security Policy
-settings.security.policy = 3 # Controllers
+settings.security.policy = 6 # Realms
 settings.security.map = True
 
 # Owner Entity
 settings.auth.person_realm_human_resource_site_then_org = False
+
+def drmp_realm_entity(table, row):
+    """
+        Assign a Realm Entity to records
+    """
+
+    tablename = table._tablename
+
+    if tablename == "cms_post":
+        # Give the Post the Realm of the author's Organisation
+        db = current.db
+        utable = db.auth_user
+        otable = current.s3db.org_organisation
+        if "created_by" in row:
+            query = (utable.id == row.created_by) & \
+                    (otable.id == utable.organisation_id)
+        else:
+            query = (table.id == row.id) & \
+                    (utable.id == table.created_by) & \
+                    (otable.id == utable.organisation_id)
+        org = db(query).select(otable.pe_id,
+                               limitby=(0, 1)).first()
+        if org:
+            return org.pe_id
+
+    # Follow normal rules
+    return 0
+
+settings.auth.realm_entity = drmp_realm_entity
 
 # -----------------------------------------------------------------------------
 # Pre-Populate
