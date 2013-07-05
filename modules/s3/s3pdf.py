@@ -3157,10 +3157,10 @@ class S3PDFDataSource:
         headers = [f.label for f in lfields if f.show]
         if orderby != None:
             orderby = fields[0].field
-        self.records = resource.select(fields=list_fields,
-                                       start=None,
-                                       limit=None,
-                                       orderby=orderby)
+        self.records = resource.fast_select(list_fields,
+                                            limit=None,
+                                            orderby=orderby,
+                                            as_rows=True)
 
         # Pass to getLabels
         self.labels = headers
