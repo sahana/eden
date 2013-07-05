@@ -625,4 +625,26 @@ class glossary():
         return dict(title = title,
                     )
 
+# =============================================================================
+class support():
+    """
+        Custom page
+    """
+
+    def __call__(self):
+
+        view = path.join(current.request.folder, "private", "templates",
+                         THEME, "views", "support.html")
+        try:
+            # Pass view as file not str to work in compiled mode
+            current.response.view = open(view, "rb")
+        except IOError:
+            from gluon.http import HTTP
+            raise HTTP("404", "Unable to open Custom View: %s" % view)
+
+        title = current.T("Support")
+
+        return dict(title = title,
+                    )
+
 # END =========================================================================

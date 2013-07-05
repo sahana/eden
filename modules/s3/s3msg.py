@@ -1767,7 +1767,7 @@ class S3Compose(S3CRUD):
                 # subtitle = ""
 
             # Maintain RHeader for consistency
-            if "rheader" in attr:
+            if attr.get("rheader"):
                 rheader = attr["rheader"](r)
                 if rheader:
                     output["rheader"] = rheader
