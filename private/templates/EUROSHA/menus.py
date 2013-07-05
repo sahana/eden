@@ -45,7 +45,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
         is_org_admin = lambda i: s3.hrm.orgs and True or \
                                  ADMIN in s3.roles
         settings = current.deployment_settings
-        job_roles = lambda i: settings.get_hrm_job_roles()
         teams = settings.get_hrm_teams()
         use_teams = lambda i: teams
 
@@ -60,11 +59,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     ),
                     M(teams, f="group",
                       check=[manager_mode, use_teams])(
-                        M("New", m="create"),
-                        M("List All"),
-                    ),
-                    M("Job Role Catalog", f="job_role",
-                      check=[manager_mode, job_roles])(
                         M("New", m="create"),
                         M("List All"),
                     ),
@@ -132,17 +126,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                  ADMIN in s3.roles
 
         settings = current.deployment_settings
-        job_roles = lambda i: settings.get_hrm_job_roles()
         show_programmes = lambda i: settings.get_hrm_vol_experience() == "programme"
         show_tasks = lambda i: settings.has_module("project") and \
                                settings.get_project_mode_task()
         teams = settings.get_hrm_teams()
         use_teams = lambda i: teams
-
-        if job_roles(""):
-            jt_catalog_label = "Job Title Catalog"
-        else:
-            jt_catalog_label = "Volunteer Role Catalog"
 
         return M(c="vol")(
                     M("Volunteers", f="volunteer",
@@ -158,12 +146,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("New", m="create"),
                         M("List All"),
                     ),
-                    M("Job Role Catalog", f="job_role",
-                      check=[manager_mode, job_roles])(
-                        M("New", m="create"),
-                        M("List All"),
-                    ),
-                    M(jt_catalog_label, f="job_title",
+                    M("Volunteer Role Catalog", f="job_title",
                       check=manager_mode)(
                         M("New", m="create"),
                         M("List All"),

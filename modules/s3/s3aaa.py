@@ -1277,13 +1277,35 @@ Thank you
         req_org = deployment_settings.get_auth_registration_requests_organisation()
         if req_org:
             organisation_id = utable.organisation_id
+            if self.s3_has_role("ADMIN"):
+                filterby = None
+                filter_opts = None
+            elif self.s3_has_role("ORG_ADMIN"):
+                # Filter orgs to just those belonging to the Org Admin's Org
+                # & Descendants
+                otable = s3db.org_organisation
+                query = (otable.id == self.user.organisation_id)
+                pe_id = db(query).select(otable.pe_id,
+                                         limitby=(0, 1)
+                                         ).first().pe_id
+                pe_ids = s3db.pr_get_descendants(pe_id,
+                                                 entity_types="org_organisation")
+                pe_ids.append(pe_id)
+                filterby = "pe_id"
+                filter_opts = pe_ids
+            else:
+                filterby = None
+                filter_opts = None
             organisation_id.readable = organisation_id.writable = True
             from s3validators import IS_ONE_OF
+            org_represent = s3db.org_organisation_represent
             organisation_id.requires = IS_ONE_OF(db, "org_organisation.id",
-                                                 s3db.org_organisation_represent,
+                                                 org_represent,
+                                                 filterby=filterby,
+                                                 filter_opts=filter_opts,
                                                  orderby="org_organisation.name",
                                                  sort=True)
-            organisation_id.represent = s3db.org_organisation_represent
+            organisation_id.represent = org_represent
             organisation_id.default = deployment_settings.get_auth_registration_organisation_id_default()
             # no permissions for autocomplete on registration page yet
             #from s3widgets import S3OrganisationAutocompleteWidget
@@ -6652,8 +6674,9 @@ class S3RoleManager(S3Method):
 
         request = current.request
         session = current.session
+        settings = auth.settings
 
-        if auth.settings.username:
+        if settings.username:
             username = "username"
         else:
             username = "email"
@@ -6671,8 +6694,9 @@ class S3RoleManager(S3Method):
 
             use_realms = auth.permission.entity_realm
             unassignable = [sr.ANONYMOUS, sr.AUTHENTICATED]
-            if user_id == auth.user.id:
+            if user_id == auth.user.id or not auth.s3_has_role("ADMIN"):
                 # Users cannot remove their own ADMIN permission
+                # Org Admins cannot give Users Admin
                 unassignable.append(sr.ADMIN)
 
             if r.representation == "html":
@@ -6681,8 +6705,8 @@ class S3RoleManager(S3Method):
                            _style="text-align:center; vertical-align:middle; width:48px;")
 
                 # Get current memberships
-                mtable = auth.settings.table_membership
-                gtable = auth.settings.table_group
+                mtable = settings.table_membership
+                gtable = settings.table_group
                 query = (mtable.deleted != True) & \
                         (mtable.user_id == user_id) & \
                         (gtable.deleted != True) & \
@@ -6800,7 +6824,7 @@ class S3RoleManager(S3Method):
                 thead = THEAD(trow)
 
                 # Roles selector
-                gtable = auth.settings.table_group
+                gtable = settings.table_group
                 query = (gtable.deleted != True) & \
                         (~(gtable.id.belongs(unassignable)))
                 rows = db(query).select(gtable.id, gtable.role)
@@ -6814,10 +6838,6 @@ class S3RoleManager(S3Method):
                 [select_grp.append(OPTION(role, _value=gid))
                  for role, gid in options]
 
-                # Entity Selector
-                if use_realms:
-                    select_ent = self._entity_select()
-
                 # Add button
                 submit_btn = INPUT(_id="submit_add_button",
                                    _type="submit",
@@ -6827,7 +6847,8 @@ class S3RoleManager(S3Method):
                 trow = TR(TD(select_grp, _colspan="2"), _class="odd")
                 srow = TR(arrow, TD(submit_btn))
                 if use_realms:
-                    trow.append(TD(select_ent))
+                    # Entity Selector
+                    trow.append(TD(self._entity_select()))
                     srow.append(TD())
                 addform = FORM(DIV(TABLE(thead, TBODY(trow, srow),
                                          _class="dataTable display")))
@@ -6885,8 +6906,9 @@ class S3RoleManager(S3Method):
 
         request = current.request
         session = current.session
+        settings = auth.settings
 
-        if auth.settings.username:
+        if settings.username:
             username = "username"
         else:
             username = "email"
@@ -6912,8 +6934,8 @@ class S3RoleManager(S3Method):
                            _style="text-align:center; vertical-align:middle; width:48px;")
 
                 # Get current memberships
-                mtable = auth.settings.table_membership
-                utable = auth.settings.table_user
+                mtable = settings.table_membership
+                utable = settings.table_user
                 query = (mtable.deleted != True) & \
                         (mtable.group_id == group_id) & \
                         (utable.deleted != True) & \
@@ -7049,7 +7071,7 @@ class S3RoleManager(S3Method):
                 thead = THEAD(trow)
 
                 # User selector
-                utable = auth.settings.table_user
+                utable = settings.table_user
                 query = (utable.deleted != True)
                 if group_id in unrestrictable and assigned:
                     query &= (~(utable.id.belongs(assigned)))
@@ -7069,22 +7091,17 @@ class S3RoleManager(S3Method):
                     options.sort()
                     [select_usr.append(OPTION(name, _value=uid)) for name, uid in options]
 
-                    # Entity selector
-                    if use_realms:
-                        select_ent = self._entity_select()
-
                     # Add button
                     submit_btn = INPUT(_id="submit_add_button",
                                        _type="submit",
                                        _value=T("Add"))
-
-
 
                     # Assemble form
                     trow = TR(TD(select_usr, _colspan="2"), _class="odd")
                     srow = TR(arrow,
                               TD(submit_btn))
                     if use_realms:
+                        # Entity Selector
                         trow.append(TD(self._entity_select()))
                         srow.append(TD())
                     addform = FORM(DIV(TABLE(thead, TBODY(trow, srow),
@@ -7148,11 +7165,17 @@ class S3RoleManager(S3Method):
 
         T = current.T
         s3db = current.s3db
+        auth = current.auth
+        is_admin = auth.s3_has_role("ADMIN")
 
+        if is_admin:
+            all_entities = OPTION(T("All Entities"), _value=0)
+        else:
+            all_entities = ""
         select = SELECT(
                     OPTGROUP(
                         OPTION(T("Default Realm"), _value="__NONE__", _selected="selected"),
-                        OPTION(T("All Entities"), _value=0),
+                        all_entities,
                         _label=T("Multiple")),
                     _name="pe_id")
 
@@ -7162,7 +7185,20 @@ class S3RoleManager(S3Method):
         instance_type_nice = table.instance_type.represent
 
         types = ("org_organisation", "org_office", "inv_warehouse", "pr_group")
-        entities = s3db.pr_get_entities(types=types, group=True)
+
+        if is_admin:
+            pe_ids = []
+        else:
+            # Filter the realms
+            otable = s3db.org_organisation
+            query = (otable.id == auth.user.organisation_id)
+            pe_id = current.db(query).select(otable.pe_id,
+                                             limitby=(0, 1)
+                                             ).first().pe_id
+            pe_ids = s3db.pr_get_descendants(pe_id, entity_types=types)
+            pe_ids.append(pe_id)
+
+        entities = s3db.pr_get_entities(pe_ids=pe_ids, types=types, group=True)
 
         for instance_type in types:
             if instance_type in entities:

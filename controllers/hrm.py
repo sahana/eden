@@ -395,8 +395,10 @@ def person():
                     table.site_id.writable = True
                     table.site_id.readable = True
                     org = session.s3.hrm.org
-                    if org is not None:
-                        f = table.organisation_id
+                    f = table.organisation_id
+                    if org is None:
+                        f.widget = None
+                    else:
                         f.default = org
                         f.comment = None
                         f.readable = f.writable = False
@@ -657,23 +659,6 @@ def department():
     return output
 
 # -----------------------------------------------------------------------------
-def job_role():
-    """ Job Roles Controller """
-
-    mode = session.s3.hrm.mode
-    def prep(r):
-        if mode is not None:
-            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
-        return True
-    s3.prep = prep
-    
-    if not auth.s3_has_role(ADMIN):
-        s3.filter = auth.filter_by_root_org(s3db.hrm_job_role)
-
-    output = s3_rest_controller()
-    return output
-
-# -----------------------------------------------------------------------------
 def job_title():
     """ Job Titles Controller """
 
@@ -684,8 +669,11 @@ def job_title():
         return True
     s3.prep = prep
 
+    table = s3db.hrm_job_title
+    s3.filter = (table.type.belongs([1, 3]))
+
     if not auth.s3_has_role(ADMIN):
-        s3.filter = auth.filter_by_root_org(s3db.hrm_job_title)
+        s3.filter &= auth.filter_by_root_org(table)
 
     output = s3_rest_controller()
     return output

@@ -3338,6 +3338,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 } else {
                     url = S3.Ap.concat('/gis/config.url/create');
                 }
+                // @ToDo: Switch to jQuery
                 Ext.Ajax.request({
                     url: url,
                     method: 'POST',
@@ -3353,7 +3354,6 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             $('#gis_menu_config').attr('href', url);
                         }
                     },
-                    //failure: otherFn,
                     params: {
                         lat: state.lat,
                         lon: state.lon,

@@ -886,6 +886,10 @@ class S3PersonModel(S3Model):
         add_component("hrm_programme_hours", pr_person=dict(name="hours",
                                                             joinby="person_id"))
 
+        # Awards
+        add_component("vol_volunteer_award", pr_person=dict(name="award",
+                                                            joinby="person_id"))
+
         # Assets
         add_component("asset_asset", pr_person="assigned_to_id")
 
@@ -4825,7 +4829,7 @@ def pr_get_role_branches(pe_id,
               if entity_type is None or r[etn].instance_type == entity_type]
 
     # Get the branches
-    branches = pr_get_descendants(nodes, entity_type=entity_type)
+    branches = pr_get_descendants(nodes, entity_types=entity_type)
 
     return result + branches
 
@@ -5070,14 +5074,14 @@ def pr_descendants(pe_ids, skip=[]):
     return result
 
 # =============================================================================
-def pr_get_descendants(pe_ids, skip=[], entity_type=None, ids=True):
+def pr_get_descendants(pe_ids, skip=[], entity_types=None, ids=True):
     """
         Find descendant entities of a person entity in the OU hierarchy
         (performs a real search, not a path lookup).
 
         @param pe_ids: person entity ID or list of IDs
         @param skip: list of person entity IDs to skip during descending
-        @param entity_type: optional filter to a specific entity_type
+        @param entity_types: optional filter to a specific entity_type
         @param ids: whether to return a list of ids or nodes
 
         @return: a list of PE-IDs
@@ -5089,10 +5093,11 @@ def pr_get_descendants(pe_ids, skip=[], entity_type=None, ids=True):
     if not pe_ids:
         return []
 
+    db = current.db
     s3db = current.s3db
     etable = s3db.pr_pentity
-    rtable = s3db.pr_role
-    atable = s3db.pr_affiliation
+    rtable = db.pr_role
+    atable = db.pr_affiliation
     en = etable._tablename
     an = atable._tablename
     query = (rtable.deleted != True) & \
@@ -5103,8 +5108,8 @@ def pr_get_descendants(pe_ids, skip=[], entity_type=None, ids=True):
             (atable.role_id == rtable.id) & \
             (etable.pe_id == atable.pe_id)
     skip = skip + pe_ids
-    rows = current.db(query).select(atable.pe_id,
-                                    etable.instance_type)
+    rows = db(query).select(atable.pe_id,
+                            etable.instance_type)
     nodes = [(r[an].pe_id, r[en].instance_type) for r in rows]
     result = []
     append = result.append
@@ -5112,15 +5117,19 @@ def pr_get_descendants(pe_ids, skip=[], entity_type=None, ids=True):
         if n not in result:
             append(n)
     node_ids = [n[0] for n in result]
+    # Recurse
     descendants = pr_get_descendants(node_ids, skip=skip, ids=False)
     for d in descendants:
         if d not in result:
             append(d)
 
     if ids:
-        return [n[0]
-                for n in result
-                if entity_type is None or n[1] == entity_type]
+        if entity_types and not isinstance(entity_types, (list, tuple)):
+            entity_types = [entity_types]
+        result = [n[0]
+                  for n in result
+                  if (entity_types is None) or (n[1] in entity_types)]
+        return result
     else:
         return result
 

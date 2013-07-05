@@ -1096,11 +1096,11 @@ class S3Config(Storage):
         """
         return self.hrm.get("filter_certificates", False)
 
-    def get_hrm_job_roles(self):
+    def get_hrm_multiple_job_titles(self):
         """
-            If set to True then HRs can have multiple Job Roles in addition to their Job Title
+            If set to True then HRs can have multiple Job Titles
         """
-        return self.hrm.get("job_roles", False)
+        return self.hrm.get("multi_job_titles", False)
 
     def get_hrm_show_staff(self):
         """
@@ -1144,6 +1144,12 @@ class S3Config(Storage):
             & what to call them
         """
         return self.hrm.get("teams", "Team")
+
+    def get_hrm_use_awards(self):
+        """
+            Whether Volunteers should use Awards
+        """
+        return self.hrm.get("use_awards", True)
 
     def get_hrm_use_certificates(self):
         """

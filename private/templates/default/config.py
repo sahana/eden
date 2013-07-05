@@ -324,8 +324,8 @@ settings.L10n.decimal_separator = "."
 #settings.hrm.deletable = True
 # Uncomment to filter certificates by (root) Organisation & hence not allow Certificates from other orgs to be added to a profile (except by Admin)
 #settings.hrm.filter_certificates = True
-# Uncomment to allow HRs to have multiple Job Roles in addition to their Job Title
-#settings.hrm.job_roles = True
+# Uncomment to allow HRs to have multiple Job Titles
+#settings.hrm.multiple_job_titles = True
 # Uncomment to hide the Staff resource
 #settings.hrm.show_staff = False
 # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
@@ -336,6 +336,8 @@ settings.L10n.decimal_separator = "."
 #settings.hrm.vol_experience = False
 # Uncomment to show the Organisation name in HR represents
 #settings.hrm.show_organisation = True
+# Uncomment to disable the use of Volunteer Awards
+#settings.hrm.use_awards = False
 # Uncomment to disable the use of HR Certificates
 #settings.hrm.use_certificates = False
 # Uncomment to disable the use of HR Credentials

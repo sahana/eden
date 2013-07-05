@@ -1,4 +1,4 @@
-""" Sahana Eden Automated Test - HRM001 Create Job Role
+""" Sahana Eden Automated Test - HRM001 Create Job Title
 
     @copyright: 2011-2012 (c) Sahana Software Foundation
     @license: MIT
@@ -27,25 +27,25 @@
 
 from tests.web2unittest import SeleniumUnitTest
 
-class CreateStaffJobRole(SeleniumUnitTest):
-    def test_hrm001_create_staff_job_role(self):
+class CreateStaffJobTitle(SeleniumUnitTest):
+    def test_hrm001_create_staff_job_title(self):
         """
             @case: HRM001
-            @description: Create a Job Role
+            @description: Create a Job Title
             
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
         print "\n"
 
-        self.login(account="admin", nexturl="hrm/job_role/create")
+        self.login(account="admin", nexturl="hrm/job_title/create")
 
-        self.create("hrm_job_role", 
+        self.create("hrm_job_title", 
                     [( "name",
                        "Programme Coordinator"
                        ),
                      ( "comments",
-                       "Comment/Description of the role job goes here."),
+                       "Comment/Description of the role goes here."),
                      ]
                      )
         

@@ -724,6 +724,7 @@ class S3StatsDemographicModel(S3Model):
                                     last_total = totals[dt]["value"]
                                 if last_total:
                                     percentage = 100 * value / last_total
+                                    percentage = round(percentage, 3)
                             db(query).update(agg_type = 1, # time
                                              #reported_count = 1, # one record
                                              #ward_count = 1, # one ward
@@ -747,6 +748,7 @@ class S3StatsDemographicModel(S3Model):
                                     last_total = totals[dt]["value"]
                                 if last_total:
                                     percentage = 100 * value / last_total
+                                    percentage = round(percentage, 3)
                             db(query).update(agg_type = 3, # copy
                                              #reported_count = 1, # one record
                                              #ward_count = 1, # one ward
@@ -769,6 +771,7 @@ class S3StatsDemographicModel(S3Model):
                             if aggr[dt]["sum"] != value:
                                 if total_id and last_total:
                                     percentage = 100 * value / last_total
+                                    percentage = round(percentage, 3)
                                 db(query).update(agg_type = 1, # time
                                                  #reported_count = 1, # one record
                                                  #ward_count = 1, # one ward
@@ -790,6 +793,7 @@ class S3StatsDemographicModel(S3Model):
                                     last_total = totals[dt]["value"]
                                 if last_total:
                                     percentage = 100 * value / last_total
+                                    percentage = round(percentage, 3)
                             db(query).update(agg_type = 3, # copy
                                              #reported_count = 1, # one record
                                              #ward_count = 1, # one ward
@@ -817,6 +821,7 @@ class S3StatsDemographicModel(S3Model):
                             last_total = totals[dt]["value"]
                         if last_total:
                             percentage = 100 * value / last_total
+                            percentage = round(percentage, 3)
                     atable.insert(parameter_id = parameter_id,
                                   location_id = location_id,
                                   agg_type = agg_type,
@@ -986,7 +991,8 @@ class S3StatsDemographicModel(S3Model):
         #values_max = max(values)
         #values_avg = float(values_sum) / values_len
 
-        values_percentage = 100 * values_sum / values_total
+        percentage = 100 * values_sum / values_total
+        values_percentage = round(percentage, 3)
 
         #from numpy import median
         #values_med = median(values)
@@ -1010,6 +1016,7 @@ class S3StatsDemographicModel(S3Model):
                     #median = values_med,
                     #mad = values_mad,
                     sum = values_sum,
+                    percentage = values_percentage,
                     )
         if exists:
             # Update

@@ -87,7 +87,6 @@ def eurosha_realm_entity(table, row):
     # @ToDo: Restore Realms and add a role/functionality support for Master Data  
     if tablename in [#"hrm_certificate",
                      "hrm_department",
-                     "hrm_job_role",
                      "hrm_job_title",
                      "hrm_course",
                      "hrm_programme",
@@ -215,8 +214,8 @@ settings.frontpage.rss = [
 settings.org.summary = True
 
 # HRM
-# Uncomment to allow HRs to have multiple Job Roles in addition to their Job Title
-settings.hrm.job_roles = True
+# Uncomment to allow HRs to have multiple Job Titles
+settings.hrm.multiple_job_titles = True
 # Uncomment to disable Staff experience
 settings.hrm.staff_experience = False
 # Uncomment to disable Volunteer experience
