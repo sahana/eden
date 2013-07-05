@@ -909,7 +909,7 @@ def s3_ownerstamp():
                                            # use a lambda here as we don't
                                            # want the model to be loaded yet
                                            represent=lambda val: \
-                                               s3db.pr_pentity_represent(val))
+                                               current.s3db.pr_pentity_represent(val))
     return (s3_meta_owned_by_user(),
             s3_meta_owned_by_group(),
             s3_meta_realm_entity())

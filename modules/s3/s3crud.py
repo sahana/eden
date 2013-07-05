@@ -1861,7 +1861,7 @@ class S3CRUD(S3Method):
             r.unauthorised()
 
         # Pagination
-        vars = self.request.get_vars
+        get_vars = self.request.get_vars
         if representation == "aadata":
             start = get_vars.get("iDisplayStart", None)
             limit = get_vars.get("iDisplayLength", 0)
