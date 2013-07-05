@@ -586,10 +586,12 @@ def person():
     # Set to current user
     user_person_id  = str(s3_logged_in_person())
 
-    if not request.args or (request.args[0] != user_person_id):
-        # Check if it is not a json request
-        if request.args[-1] != "options.s3json":
-            request.args = [str(user_person_id)]
+    # When request.args = [], set it as user_person_id.
+    # When it is not an ajax request and the first argument is not user_person_id, set it.
+    # If it is an json request, leave the arguments unmodified.
+    if not request.args or (request.args[0] != user_person_id
+                            and request.args[-1] != "options.s3json"):
+        request.args = [str(user_person_id)]
 
     set_method = s3db.set_method
 
