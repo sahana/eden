@@ -933,6 +933,13 @@ class S3Request(object):
                         current.session.error = self.ERROR.BAD_RECORD
                         redirect(URL(r=self, c=self.prefix, f=self.name))
 
+
+        if self.post_vars and "wf_id" in self.get_vars:
+            from s3.s3workflow import S3Workflow
+            import pdb;pdb.set_trace()
+            output = S3Workflow().execute(self)
+
+
         # Pre-process
         if hooks is not None:
             preprocess = hooks.get("prep", None)
