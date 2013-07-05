@@ -37,6 +37,7 @@ __all__ = ["S3PersonEntity",
            "S3PersonIdentityModel",
            "S3PersonEducationModel",
            "S3PersonDetailsModel",
+           "S3SavedFilterModel",
            "S3SavedSearch",
            "S3PersonPresence",
            "S3PersonDescription",
@@ -2471,6 +2472,31 @@ class S3PersonDetailsModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
+
+# =============================================================================
+class S3SavedFilterModel(S3Model):
+    """ Saved Filters """
+
+    names = ["pr_filter"]
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        tablename = "pr_filter"
+        table = self.define_table(tablename,
+                                  Field("title"),
+                                  Field("description", "text"),
+                                  self.super_link("pe_id", "pr_pentity"),
+                                  Field("query", "text"),
+                                  s3_comments(),
+                                  *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return Storage()
 
 # =============================================================================
 class S3SavedSearch(S3Model):
