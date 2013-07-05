@@ -1,4 +1,4 @@
-(function ($, undefined) {
+﻿(function ($, undefined) {
   /*
    * Unobtrusive scripting adapter for jQuery, largely taken from
    * the wonderful https://github.com/rails/jquery-ujs
@@ -64,23 +64,23 @@
        * Ideally all events should be bound to the document, so we can avoid calling
        * this over and over... all will be bound to the document
        */
-      var date_format = (typeof w2p_ajax_date_format != 'undefined') ? w2p_ajax_date_format : "%Y-%m-%d";
-      var datetime_format = (typeof w2p_ajax_datetime_format != 'undefined') ? w2p_ajax_datetime_format : "%Y-%m-%d %H:%M:%S";
-      $("input.date", target).each(function () {
-        Calendar.setup({
-          inputField: this,
-          ifFormat: date_format,
-          showsTime: false
-        });
-      });
-      $("input.datetime", target).each(function () {
-        Calendar.setup({
-          inputField: this,
-          ifFormat: datetime_format,
-          showsTime: true,
-          timeFormat: "24"
-        });
-      });
+//       var date_format = (typeof w2p_ajax_date_format != 'undefined') ? w2p_ajax_date_format : "%Y-%m-%d";
+//       var datetime_format = (typeof w2p_ajax_datetime_format != 'undefined') ? w2p_ajax_datetime_format : "%Y-%m-%d %H:%M:%S";
+//       $("input.date", target).each(function () {
+//         Calendar.setup({
+//           inputField: this,
+//           ifFormat: date_format,
+//           showsTime: false
+//         });
+//       });
+//       $("input.datetime", target).each(function () {
+//         Calendar.setup({
+//           inputField: this,
+//           ifFormat: datetime_format,
+//           showsTime: true,
+//           timeFormat: "24"
+//         });
+//       });
       $("input.time", target).each(function () {
         $(this).timeEntry();
       });
