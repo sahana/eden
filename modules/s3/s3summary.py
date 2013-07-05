@@ -252,8 +252,8 @@ class S3Summary(S3Method):
             # Render the Sections as Tabs
             # @todo: store pending widgets which need an Ajax-call
             # to load their data layer after having been hidden initially
-           script = '''S3.search.summary_tabs("%s",%s)''' % (form_id,
-                                                             active_tab)
+            script = '''S3.search.summary_tabs("%s",%s)''' % (form_id,
+                                                              active_tab)
             response.s3.jquery_ready.append(script)
             if active_map:
                 # If there is a map on the active tab then we need to add
