@@ -108,6 +108,7 @@ class S3Profile(S3CRUD):
                 except ValueError:
                     datalist = ""
                 else:
+                    # @ToDo: Check permissions to the Resource & do something different if no permission
                     datalist = self._datalist(r, widgets[index], **attr)
             output["item"] = datalist
         else:
@@ -435,6 +436,7 @@ class S3Profile(S3CRUD):
             show_on_map = widget.get("show_on_map", True)
             if not show_on_map:
                 continue
+            # @ToDo: Check permission to access layer (both controller/function & also within Map Config)
             tablename = widget["tablename"]
             listid = "profile-list-%s-%s" % (tablename, widget["index"])
             layer = dict(name = T(widget["label"]),

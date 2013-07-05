@@ -52,11 +52,11 @@ def ifrc_realm_entity(table, row):
     # @ToDo: Restore Realms and add a role/functionality support for Master Data  
     if tablename in ["hrm_certificate",
                      "hrm_department",
-                     "hrm_job_role",
                      "hrm_job_title",
                      "hrm_course",
                      "hrm_programme",
                      "member_membership_type",
+                     "vol_award",
                      ]:
         return None
 
@@ -251,6 +251,8 @@ settings.hrm.email_required = False
 settings.hrm.filter_certificates = True
 # Uncomment to show the Organisation name in HR represents
 settings.hrm.show_organisation = True
+# Uncomment to allow HRs to have multiple Job Titles
+settings.hrm.multiple_job_titles = True
 # Uncomment to disable Staff experience
 settings.hrm.staff_experience = False
 # Uncomment to disable the use of HR Credentials

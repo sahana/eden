@@ -1861,7 +1861,7 @@ class S3CRUD(S3Method):
             r.unauthorised()
 
         # Pagination
-        vars = self.request.get_vars
+        get_vars = self.request.get_vars
         if representation == "aadata":
             start = get_vars.get("iDisplayStart", None)
             limit = get_vars.get("iDisplayLength", 0)
@@ -2595,10 +2595,11 @@ class S3CRUD(S3Method):
                 query = auth.s3_accessible_query("delete", table)
                 rows = current.db(query).select(table._id)
                 restrict = []
+                rappend = restrict.append
                 for row in rows:
                     row_id = row.get("id", None)
                     if row_id:
-                        restrict.append(str(row_id))
+                        rappend(str(row_id))
                 s3crud.action_button(labels.DELETE, delete_url,
                                      _class="delete-btn", restrict=restrict)
             else:

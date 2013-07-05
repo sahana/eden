@@ -195,7 +195,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
         is_org_admin = lambda i: s3.hrm.orgs and True or \
                                  ADMIN in s3.roles
         settings = current.deployment_settings
-        job_roles = lambda i: settings.get_hrm_job_roles()
         teams = settings.get_hrm_teams()
         use_teams = lambda i: teams
 
@@ -215,11 +214,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     ),
                     M("Department Catalog", f="department",
                       check=manager_mode)(
-                        M("New", m="create"),
-                        M("List All"),
-                    ),
-                    M("Job Role Catalog", f="job_role",
-                      check=[manager_mode, job_roles])(
                         M("New", m="create"),
                         M("List All"),
                     ),

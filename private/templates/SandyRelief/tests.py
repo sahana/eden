@@ -11,11 +11,11 @@
 from gluon import current
 
 current.selenium_tests = ["CreateStaff",
-                          "CreateStaffJobRole",
+                          "CreateStaffJobTitle",
                           "CreateStaffCertificate",
                           "StaffReport",
                           "CreateVolunteer",
-                          "CreateVolunteerJobRole",
+                          "CreateVolunteerJobTitle",
                           "CreateVolunteerProgramme",
                           "CreateVolunteerSkill",
                           "CreateVolunteerCertificate",

@@ -1305,6 +1305,8 @@ class S3ComponentTabs(object):
                [t.component for t in tabs if t.component == r.method] and True or False
 
         record_id = r.id
+        if not record_id and r.record:
+            record_id = r.record[r.table._id]
 
         for i in xrange(len(tabs)):
 
@@ -1337,9 +1339,13 @@ class S3ComponentTabs(object):
             if function == r.name or function == r.function:
                 here = r.method == component or not mtab
             if component:
-                if r.component and r.component.alias == component and vars_match:
+                if r.component and \
+                   r.component.alias == component and \
+                   vars_match:
                     here = True
-                elif r.custom_action and r.method == component:
+                elif not r.component and \
+                     r.custom_action and \
+                     r.method == component:
                     here = True
                 else:
                     here = False

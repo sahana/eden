@@ -178,6 +178,14 @@ class S3Config(Storage):
             * Member
         """
         return self.auth.get("registration_link_user_to", None)
+    def get_auth_registration_link_user_to_default(self):
+        """
+            Link User accounts to none or more of:
+            * Staff
+            * Volunteer
+            * Member
+        """
+        return self.auth.get("registration_link_user_to_default", None)
     def get_auth_opt_in_team_list(self):
         return self.auth.get("opt_in_team_list", [])
     def get_auth_opt_in_to_email(self):
@@ -298,6 +306,8 @@ class S3Config(Storage):
         return self.auth.get("ignore_levels_for_presence", ["L0"])
     def get_auth_create_unknown_locations(self):
         return self.auth.get("create_unknown_locations", False)
+    def get_auth_show_utc_offset(self):
+        return self.auth.get("show_utc_offset", True)
 
     def get_security_archive_not_delete(self):
         return self.security.get("archive_not_delete", True)
@@ -1096,11 +1106,11 @@ class S3Config(Storage):
         """
         return self.hrm.get("filter_certificates", False)
 
-    def get_hrm_job_roles(self):
+    def get_hrm_multiple_job_titles(self):
         """
-            If set to True then HRs can have multiple Job Roles in addition to their Job Title
+            If set to True then HRs can have multiple Job Titles
         """
-        return self.hrm.get("job_roles", False)
+        return self.hrm.get("multi_job_titles", False)
 
     def get_hrm_show_staff(self):
         """
@@ -1144,6 +1154,12 @@ class S3Config(Storage):
             & what to call them
         """
         return self.hrm.get("teams", "Team")
+
+    def get_hrm_use_awards(self):
+        """
+            Whether Volunteers should use Awards
+        """
+        return self.hrm.get("use_awards", True)
 
     def get_hrm_use_certificates(self):
         """

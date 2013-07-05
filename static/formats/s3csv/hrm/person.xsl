@@ -19,7 +19,6 @@
          Office Postcode................optional.....office postcode
          Department.....................optional.....human_resource department
          Job Title......................optional.....human_resource job title
-         Job Role.......................optional.....human_resource job role
          Start Date.....................optional.....human_resource start date
          First Name.....................required.....person first name
          Middle Name....................optional.....person middle name
@@ -117,12 +116,6 @@
         </xsl:call-template>
     </xsl:variable>
 
-    <xsl:variable name="JobRole">
-        <xsl:call-template name="ResolveColumnHeader">
-            <xsl:with-param name="colname">JobRole</xsl:with-param>
-        </xsl:call-template>
-    </xsl:variable>
-
     <xsl:variable name="MemberType">
         <xsl:call-template name="ResolveColumnHeader">
             <xsl:with-param name="colname">MemberType</xsl:with-param>
@@ -147,12 +140,6 @@
              use="concat(col[@field='Organisation'], '/',
                          col[contains(
                              document('../labels.xml')/labels/column[@name='JobTitle']/match/text(),
-                             concat('|', @field, '|'))])"/>
-
-    <xsl:key name="jobroles" match="row"
-             use="concat(col[@field='Organisation'], '/',
-                         col[contains(
-                             document('../labels.xml')/labels/column[@name='JobRole']/match/text(),
                              concat('|', @field, '|'))])"/>
 
     <xsl:key name="volunteerclusters" match="row"
@@ -217,19 +204,6 @@
                                                        concat('|', @field, '|'))])
                                         )[1])]">
                 <xsl:call-template name="JobTitle">
-                    <xsl:with-param name="type">resource</xsl:with-param>
-                </xsl:call-template>
-            </xsl:for-each>
-
-            <!-- Job Roles -->
-            <xsl:for-each select="//row[generate-id(.)=
-                                        generate-id(key('jobroles',
-                                            concat(col[@field='Organisation'], '/',
-                                                   col[contains(
-                                                       document('../labels.xml')/labels/column[@name='JobRoles']/match/text(),
-                                                       concat('|', @field, '|'))])
-                                        )[1])]">
-                <xsl:call-template name="JobRole">
                     <xsl:with-param name="type">resource</xsl:with-param>
                 </xsl:call-template>
             </xsl:for-each>
@@ -322,53 +296,6 @@
                 </xsl:when>
                 <xsl:otherwise>
                     <resource name="hrm_job_title">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="concat($OrgName,'/',$JobName)"/>
-                        </xsl:attribute>
-
-                        <data field="name">
-                            <xsl:value-of select="$JobName"/>
-                        </data>
-
-                        <!-- Link to Organisation to filter lookup lists -->
-                        <xsl:if test="$OrgName!=''">
-                            <reference field="organisation_id" resource="org_organisation">
-                                <xsl:attribute name="tuid">
-                                    <xsl:value-of select="$OrgName"/>
-                                </xsl:attribute>
-                            </reference>
-                        </xsl:if>
-                    </resource>
-                </xsl:otherwise>
-            </xsl:choose>
-        </xsl:if>
-
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="JobRole">
-
-        <xsl:param name="type"/>
-
-        <xsl:variable name="JobName">
-            <xsl:call-template name="GetColumnValue">
-                <xsl:with-param name="colhdrs" select="$JobRole"/>
-            </xsl:call-template>
-        </xsl:variable>
-        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
-
-        <xsl:if test="$JobName!=''">
-            <!-- Create the Job Role -->
-            <xsl:choose>
-                <xsl:when test="$type='reference'">
-                    <reference field="job_role_id" resource="hrm_job_role">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="concat($OrgName,'/',$JobName)"/>
-                        </xsl:attribute>
-                    </reference>
-                </xsl:when>
-                <xsl:otherwise>
-                    <resource name="hrm_job_role">
                         <xsl:attribute name="tuid">
                             <xsl:value-of select="concat($OrgName,'/',$JobName)"/>
                         </xsl:attribute>
@@ -775,11 +702,6 @@
             </xsl:if>
 
             <!-- Link to Department -->
-            <xsl:call-template name="JobRole">
-                <xsl:with-param name="type">reference</xsl:with-param>
-            </xsl:call-template>
-
-            <!-- Link to Job Role -->
             <xsl:call-template name="Department">
                 <xsl:with-param name="type">reference</xsl:with-param>
             </xsl:call-template>

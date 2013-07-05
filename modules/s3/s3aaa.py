@@ -1083,19 +1083,21 @@ Thank you
             Patched for S3 to use s3_mark_required and handle opt_in mailing lists
         """
 
-        utable = self.settings.table_user
-
-        utable.utc_offset.readable = True
-        utable.utc_offset.writable = True
-
         if not self.is_logged_in():
             redirect(self.settings.login_url)
+
+        utable = self.settings.table_user
+
         passfield = self.settings.password_field
         utable[passfield].writable = False
 
         request = current.request
         session = current.session
         settings = current.deployment_settings
+
+        if settings.get_auth_show_utc_offset():
+            utable.utc_offset.readable = True
+            utable.utc_offset.writable = True
 
         if next == DEFAULT:
             next = request.get_vars._next \
@@ -1212,9 +1214,12 @@ Thank you
         return form
 
     # -------------------------------------------------------------------------
-    def configure_user_fields(self):
+    def configure_user_fields(self, pe_ids=None):
         """
             Configure User Fields - for registration & user administration
+
+            pe_ids: an optional list of pe_ids for the Org Filter 
+                    i.e. org_admin coming from admin.py/user()
         """
 
         T = current.T
@@ -1276,14 +1281,25 @@ Thank you
 
         req_org = deployment_settings.get_auth_registration_requests_organisation()
         if req_org:
+            if pe_ids:
+                # Filter orgs to just those belonging to the Org Admin's Org
+                # & Descendants
+                filterby = "pe_id"
+                filter_opts = pe_ids
+            else:
+                filterby = None
+                filter_opts = None
             organisation_id = utable.organisation_id
             organisation_id.readable = organisation_id.writable = True
             from s3validators import IS_ONE_OF
+            org_represent = s3db.org_organisation_represent
             organisation_id.requires = IS_ONE_OF(db, "org_organisation.id",
-                                                 s3db.org_organisation_represent,
+                                                 org_represent,
+                                                 filterby=filterby,
+                                                 filter_opts=filter_opts,
                                                  orderby="org_organisation.name",
                                                  sort=True)
-            organisation_id.represent = s3db.org_organisation_represent
+            organisation_id.represent = org_represent
             organisation_id.default = deployment_settings.get_auth_registration_organisation_id_default()
             # no permissions for autocomplete on registration page yet
             #from s3widgets import S3OrganisationAutocompleteWidget
@@ -1341,7 +1357,7 @@ S3OptionsFilter({
         link_user_to_opts = deployment_settings.get_auth_registration_link_user_to()
         if link_user_to_opts:
             link_user_to = utable.link_user_to
-            link_user_to_default = []
+            link_user_to_default = deployment_settings.get_auth_registration_link_user_to_default()
             vars = request.vars
             for type in ["staff", "volunteer", "member"]:
                 if "link_user_to_%s" % type in vars:
@@ -1636,7 +1652,10 @@ S3OptionsFilter({
         # Add to user Person Registry and Email/Mobile to pr_contact
         person_id = self.s3_link_to_person(user, organisation_id)
 
-        link_user_to = user.link_user_to
+        utable = self.settings.table_user
+
+        link_user_to = user.link_user_to or utable.link_user_to.default
+
         if link_user_to:
             if "staff" in link_user_to:
                 # Add Staff Record
@@ -1646,7 +1665,7 @@ S3OptionsFilter({
                 # Add Volunteer Record
                 human_resource_id = self.s3_link_to_human_resource(user, person_id,
                                                                    type=2)
-            if "member" in user.link_user_to:
+            if "member" in link_user_to:
                 # Add Member Record
                 member_id = self.s3_link_to_member(user, person_id)
 
@@ -6156,7 +6175,7 @@ class S3RoleManager(S3Method):
             add_btn = A(T("Add Role"), _href=URL(c="admin", f="role",
                                                  args=["create"]),
                                                  _class="action-btn")
-            output.update(add_btn=add_btn)
+            output.update(showadd_btn=add_btn)
 
             response.view = "admin/role_list.html"
             s3 = response.s3
@@ -6220,8 +6239,6 @@ class S3RoleManager(S3Method):
             acl_widget = lambda f, n, v: \
                             S3ACLWidget.widget(acl_table[f], v, _id=n, _name=n,
                                                _class="acl-widget")
-            formstyle = current.deployment_settings.get_ui_formstyle()
-
 
             using_default = SPAN(T("using default"), _class="using-default")
             delete_acl = lambda _id: _id is not None and \
@@ -6233,22 +6250,47 @@ class S3RoleManager(S3Method):
             new_acl = SPAN(T("new ACL"), _class="new-acl")
 
             # Role form -------------------------------------------------------
-            form_rows = formstyle("role_name",
-                                  mandatory("%s:" % T("Role Name")),
-                                  INPUT(value=role_name,
-                                        _name="role_name",
-                                        _type="text",
-                                        requires=IS_NOT_IN_DB(db,
-                                                  "auth_group.role",
-                                                  allowed_override=[role_name]
-                                                  )),
-                                  "") + \
-                        formstyle("role_desc",
-                                  "%s:" % T("Description"),
-                                  TEXTAREA(value=role_desc,
-                                           _name="role_desc",
-                                           _rows="4"),
-                                  "")
+            formstyle = current.deployment_settings.get_ui_formstyle()
+            id1 = "role_name"
+            label1 = mandatory("%s:" % T("Role Name"))
+            widget1 = INPUT(value=role_name,
+                            _name="role_name",
+                            _type="text",
+                            requires=IS_NOT_IN_DB(db,
+                                      "auth_group.role",
+                                      allowed_override=[role_name]
+                                      ))
+            id2 = "role_desc"
+            label2 = "%s:" % T("Description")
+            widget2 = TEXTAREA(value=role_desc,
+                               _name="role_desc",
+                               _rows="4")
+            if formstyle == "bootstrap":
+                _class = "control-group"
+                label1 = LABEL("%s:" % label1, _class="control-label",
+                                               _for=id)
+                label2 = LABEL("%s:" % label2, _class="control-label",
+                                               _for=id)
+                widget1.add_class("input-xlarge")
+                widget2.add_class("input-xlarge")
+                _controls1 = DIV(widget1, _class="controls")
+                _controls2 = DIV(widget2, _class="controls")
+                row1 = DIV(label1,
+                           _controls1,
+                           _class=_class,
+                           _id="%s__row" % id1)
+                row2 = DIV(label2,
+                           _controls2,
+                           _class=_class,
+                           _id="%s__row" % id2)
+                form_rows = row1 + row2
+            elif callable(formstyle):
+                form_rows = formstyle(id1, label1, widget1, "") + \
+                            formstyle(id2, label2, widget2, "")
+            else:
+                # Fallback to DIVs
+                form_rows = DIV(label1, widget1, _id=id1) +\
+                            DIV(label2, widget2, _id=id2)
             key_row = DIV(T("* Required Fields"), _class="red")
             role_form = DIV(TABLE(form_rows), key_row, _id="role-form")
 
@@ -6652,8 +6694,9 @@ class S3RoleManager(S3Method):
 
         request = current.request
         session = current.session
+        settings = auth.settings
 
-        if auth.settings.username:
+        if settings.username:
             username = "username"
         else:
             username = "email"
@@ -6671,8 +6714,9 @@ class S3RoleManager(S3Method):
 
             use_realms = auth.permission.entity_realm
             unassignable = [sr.ANONYMOUS, sr.AUTHENTICATED]
-            if user_id == auth.user.id:
+            if user_id == auth.user.id or not auth.s3_has_role("ADMIN"):
                 # Users cannot remove their own ADMIN permission
+                # Org Admins cannot give Users Admin
                 unassignable.append(sr.ADMIN)
 
             if r.representation == "html":
@@ -6681,8 +6725,8 @@ class S3RoleManager(S3Method):
                            _style="text-align:center; vertical-align:middle; width:48px;")
 
                 # Get current memberships
-                mtable = auth.settings.table_membership
-                gtable = auth.settings.table_group
+                mtable = settings.table_membership
+                gtable = settings.table_group
                 query = (mtable.deleted != True) & \
                         (mtable.user_id == user_id) & \
                         (gtable.deleted != True) & \
@@ -6800,7 +6844,7 @@ class S3RoleManager(S3Method):
                 thead = THEAD(trow)
 
                 # Roles selector
-                gtable = auth.settings.table_group
+                gtable = settings.table_group
                 query = (gtable.deleted != True) & \
                         (~(gtable.id.belongs(unassignable)))
                 rows = db(query).select(gtable.id, gtable.role)
@@ -6814,10 +6858,6 @@ class S3RoleManager(S3Method):
                 [select_grp.append(OPTION(role, _value=gid))
                  for role, gid in options]
 
-                # Entity Selector
-                if use_realms:
-                    select_ent = self._entity_select()
-
                 # Add button
                 submit_btn = INPUT(_id="submit_add_button",
                                    _type="submit",
@@ -6827,7 +6867,8 @@ class S3RoleManager(S3Method):
                 trow = TR(TD(select_grp, _colspan="2"), _class="odd")
                 srow = TR(arrow, TD(submit_btn))
                 if use_realms:
-                    trow.append(TD(select_ent))
+                    # Entity Selector
+                    trow.append(TD(self._entity_select()))
                     srow.append(TD())
                 addform = FORM(DIV(TABLE(thead, TBODY(trow, srow),
                                          _class="dataTable display")))
@@ -6865,7 +6906,7 @@ class S3RoleManager(S3Method):
                               help_txt=help_txt,
                               addform=addform,
                               list_btn=list_btn,
-                              add_btn=add_btn)
+                              showadd_btn=add_btn)
 
                 current.response.view = "admin/membership_manage.html"
             else:
@@ -6885,8 +6926,9 @@ class S3RoleManager(S3Method):
 
         request = current.request
         session = current.session
+        settings = auth.settings
 
-        if auth.settings.username:
+        if settings.username:
             username = "username"
         else:
             username = "email"
@@ -6912,8 +6954,8 @@ class S3RoleManager(S3Method):
                            _style="text-align:center; vertical-align:middle; width:48px;")
 
                 # Get current memberships
-                mtable = auth.settings.table_membership
-                utable = auth.settings.table_user
+                mtable = settings.table_membership
+                utable = settings.table_user
                 query = (mtable.deleted != True) & \
                         (mtable.group_id == group_id) & \
                         (utable.deleted != True) & \
@@ -7049,7 +7091,7 @@ class S3RoleManager(S3Method):
                 thead = THEAD(trow)
 
                 # User selector
-                utable = auth.settings.table_user
+                utable = settings.table_user
                 query = (utable.deleted != True)
                 if group_id in unrestrictable and assigned:
                     query &= (~(utable.id.belongs(assigned)))
@@ -7069,22 +7111,17 @@ class S3RoleManager(S3Method):
                     options.sort()
                     [select_usr.append(OPTION(name, _value=uid)) for name, uid in options]
 
-                    # Entity selector
-                    if use_realms:
-                        select_ent = self._entity_select()
-
                     # Add button
                     submit_btn = INPUT(_id="submit_add_button",
                                        _type="submit",
                                        _value=T("Add"))
-
-
 
                     # Assemble form
                     trow = TR(TD(select_usr, _colspan="2"), _class="odd")
                     srow = TR(arrow,
                               TD(submit_btn))
                     if use_realms:
+                        # Entity Selector
                         trow.append(TD(self._entity_select()))
                         srow.append(TD())
                     addform = FORM(DIV(TABLE(thead, TBODY(trow, srow),
@@ -7133,7 +7170,7 @@ class S3RoleManager(S3Method):
                               addform=addform,
                               list_btn=list_btn,
                               edit_btn=edit_btn,
-                              add_btn=add_btn)
+                              showadd_btn=add_btn)
                 current.response.view = "admin/membership_manage.html"
             else:
                 r.error(501, current.manager.BAD_FORMAT)
@@ -7148,11 +7185,17 @@ class S3RoleManager(S3Method):
 
         T = current.T
         s3db = current.s3db
+        auth = current.auth
+        is_admin = auth.s3_has_role("ADMIN")
 
+        if is_admin:
+            all_entities = OPTION(T("All Entities"), _value=0)
+        else:
+            all_entities = ""
         select = SELECT(
                     OPTGROUP(
                         OPTION(T("Default Realm"), _value="__NONE__", _selected="selected"),
-                        OPTION(T("All Entities"), _value=0),
+                        all_entities,
                         _label=T("Multiple")),
                     _name="pe_id")
 
@@ -7162,7 +7205,20 @@ class S3RoleManager(S3Method):
         instance_type_nice = table.instance_type.represent
 
         types = ("org_organisation", "org_office", "inv_warehouse", "pr_group")
-        entities = s3db.pr_get_entities(types=types, group=True)
+
+        if is_admin:
+            pe_ids = []
+        else:
+            # Filter the realms
+            otable = s3db.org_organisation
+            query = (otable.id == auth.user.organisation_id)
+            pe_id = current.db(query).select(otable.pe_id,
+                                             limitby=(0, 1)
+                                             ).first().pe_id
+            pe_ids = s3db.pr_get_descendants(pe_id, entity_types=types)
+            pe_ids.append(pe_id)
+
+        entities = s3db.pr_get_entities(pe_ids=pe_ids, types=types, group=True)
 
         for instance_type in types:
             if instance_type in entities:

@@ -96,6 +96,7 @@ class S3Summary(S3Method):
         tab_idx = 0
         widget_idx = 0
         targets = []
+        pending = []
         for section in config:
 
             common = section.get("common")
@@ -119,6 +120,11 @@ class S3Summary(S3Method):
                 if active and active == str(tab_idx):
                     active_tab = tab_idx
 
+            if common or active_tab == tab_idx:
+                visible = True
+            else:
+                visible = False
+
             # Widgets
             widgets = section.get("widgets", [])
             for widget in widgets:
@@ -134,6 +140,13 @@ class S3Summary(S3Method):
                 filterable = widget.get("filterable", True)
                 if filterable:
                     targets.append(widget_id)
+                    if not visible:
+                        # @todo: have a config setting whether this widget
+                        # needs an Ajax-call to load data (e.g. maps, reports)
+                        # after being initially hidden, so it can be triggered
+                        # even if there are no pending targets when switching
+                        # tabs (e.g. filter not changed)
+                        pending.append(widget_id)
 
                 # Apply method
                 method = widget.get("method", None)
@@ -142,6 +155,9 @@ class S3Summary(S3Method):
                 else:
                     handler = r.get_widget_handler(method)
                     if handler is not None:
+                        # @todo: inform the widget that it is intially
+                        # hidden so it can load empty (and then Ajax-load
+                        # its data layer once it becomes visible)
                         content = handler(r,
                                           method=method,
                                           widget_id=widget_id,
@@ -234,6 +250,8 @@ class S3Summary(S3Method):
 
         if len(sections) > 1:
             # Render the Sections as Tabs
+            # @todo: store pending widgets which need an Ajax-call
+            # to load their data layer after having been hidden initially
             script = '''S3.search.summary_tabs("%s",%s)''' % (form_id,
                                                               active_tab)
             response.s3.jquery_ready.append(script)

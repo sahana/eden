@@ -107,16 +107,11 @@
 
     <column name="JobTitle">
         <!-- Special Element match for key generation -->
-        <match>|JobTitle|Job Title|Position|Volunteer Role|</match>
+        <match>|JobTitle|Job Title|JobRole|Job Role|Position|Volunteer Role|</match>
         <label>Job Title</label>
+        <label>Job Role</label>
         <label>Position</label>
         <label>Volunteer Role</label>
-    </column>
-
-    <column name="JobRole">
-        <!-- Special Element match for key generation -->
-        <match>|JobRole|Job Role|</match>
-        <label>Job Role</label>
     </column>
 
     <column name="MemberType">

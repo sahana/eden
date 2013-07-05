@@ -296,7 +296,8 @@ class S3DelphiModel(S3Model):
             msg_list_empty = T("No Solutions currently defined"))
 
 
-        table.virtualfields.append(solution_virtualfields())
+        table.comments = Field.Lazy(delphi_solution_comments)
+        table.votes = Field.Lazy(delphi_solution_votes)
 
         configure(tablename,
                   list_fields=["id",
@@ -478,40 +479,44 @@ class S3DelphiModel(S3Model):
                 job.method = job.METHOD.UPDATE
 
 # =============================================================================
-class solution_virtualfields(dict, object):
-    """ Virtual Fields for Solutions """
+def delphi_solution_comments(row):
+    """ Clickable number of comments for a solution, virtual field """
 
-    def comments(self):
-        ctable = current.s3db.delphi_comment
-        # Prevent recursive queries
-        try:
-            query = (ctable.solution_id == self.delphi_solution.id)
-        except AttributeError:
-            # We are being instantiated inside one of the other methods
-            return None
-        comments = current.db(query).count()
-        url = URL(c="delphi", f="problem",
-                  args=["solution", self.delphi_solution.id, "discuss"])
-        output = A(comments,
-                   _href=url)
-        return output
+    if hasattr(row, "delphi_solution"):
+        row = row.delphi_solution
+    try:
+        solution_id = row.id
+        problem_id = row.problem_id
+    except AttributeError:
+        return None
+        
+    ctable = current.s3db.delphi_comment
+    query = (ctable.solution_id == solution_id)
+    comments = current.db(query).count()
+    
+    url = URL(c="delphi", f="problem",
+              args=[problem_id, "solution", solution_id, "discuss"])
+    return A(comments, _href=url)
 
-    def votes(self):
-        vtable = current.s3db.delphi_vote
-        # Prevent recursive queries
-        try:
-            query = (vtable.solution_id == self.delphi_solution.id)
-        except AttributeError:
-            # We are being instantiated inside one of the other methods
-            return None
-        votes = current.db(query).count()
-        url = URL(c="delphi", f="problem",
-                  args=[self.delphi_solution.problem_id, "results"])
-        output = A(votes,
-                   _href=url)
-        return output
+def delphi_solution_votes(row):
+    """ Clickable number of solutions for a problem, virtual field """
+    
+    if hasattr(row, "delphi_solution"):
+        row = row.delphi_solution
+    try:
+        solution_id = row.id
+        problem_id = row.problem_id
+    except AttributeError:
+        return None
 
-# -----------------------------------------------------------------------------
+    vtable = current.s3db.delphi_vote
+    query = (vtable.solution_id == solution_id)
+    votes = current.db(query).count()
+    url = URL(c="delphi", f="problem",
+              args=[problem_id, "results"])
+    return A(votes, _href=url)
+
+# =============================================================================
 class S3DelphiUser:
     """ Delphi User class """
 

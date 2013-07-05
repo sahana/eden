@@ -3556,8 +3556,6 @@ class S3BulkImporter(object):
 
         self.csv = csv
         self.unescape = unescape
-        self.importTasks = []
-        self.specialTasks = []
         self.tasks = []
         self.alternateTables = {
             "hrm_group_membership": {"tablename": "pr_group_membership",
@@ -3577,7 +3575,7 @@ class S3BulkImporter(object):
     def load_descriptor(self, path):
         """
             Load the descriptor file and then all the import tasks in that file
-            into the importTasks property.
+            into the task property.
             The descriptor file is the file called tasks.cfg in path.
             The file consists of a comma separated list of:
             application, resource name, csv filename, xsl filename.
@@ -3645,7 +3643,6 @@ class S3BulkImporter(object):
             if argCnt == 5:
                 vars = details[4]
             self.tasks.append([1, app, res, csv, xsl, vars])
-            self.importTasks.append([app, res, csv, xsl, vars])
         else:
             self.errorList.append(
             "prepopulate error: job not of length 4. %s job ignored" % task)
@@ -3653,7 +3650,7 @@ class S3BulkImporter(object):
     # -------------------------------------------------------------------------
     def extractSpecialistLine(self, path, details):
         """
-            Store a single import job into the importTasks property
+            Store a single import job into the task property
         """
 
         function = details[1].strip('" ')
@@ -3671,7 +3668,6 @@ class S3BulkImporter(object):
         if len(details) >= 4:
             extraArgs = details[3:]
         self.tasks.append([2, function, csv, extraArgs])
-        self.specialTasks.append([function, csv, extraArgs])
 
     # -------------------------------------------------------------------------
     def execute_import_task(self, task):
@@ -3917,6 +3913,26 @@ class S3BulkImporter(object):
                 create_role(rulelist[0],
                             rulelist[1],
                             *acls[rulelist[0]])
+    # -------------------------------------------------------------------------
+    def import_user(self, csv_filename):
+        """ Import Roles from CSV """
+
+        current.manager.import_prep = current.auth.s3_membership_import_prep
+        user_task = [1,
+                     "auth",
+                     "user",
+                     csv_filename,
+                     os.path.join(current.request.folder,
+                                  "static",
+                                  "formats",
+                                  "s3csv",
+                                  "auth",
+                                  "user.xsl"
+                                  ),
+                     None
+                     ]
+        self.execute_import_task(user_task)
+        
     # -------------------------------------------------------------------------
     def import_image(self,
                      filename,

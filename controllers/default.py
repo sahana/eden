@@ -585,7 +585,12 @@ def person():
 
     # Set to current user
     user_person_id  = str(s3_logged_in_person())
-    if not request.args or request.args[0] != user_person_id:
+
+    # When request.args = [], set it as user_person_id.
+    # When it is not an ajax request and the first argument is not user_person_id, set it.
+    # If it is an json request, leave the arguments unmodified.
+    if not request.args or (request.args[0] != user_person_id
+                            and request.args[-1] != "options.s3json"):
         request.args = [str(user_person_id)]
 
     set_method = s3db.set_method
@@ -647,6 +652,8 @@ def person():
 
     # CRUD pre-process
     def prep(r):
+        if r.method == "options":
+            return True        
         if r.interactive and r.method != "import":
             if r.component:
                 if r.component_name == "physical_description":
@@ -822,6 +829,52 @@ def person():
     output = s3_rest_controller("pr", "person",
                                 rheader = lambda r: \
                                     s3db.pr_rheader(r, tabs=tabs))
+    return output
+
+# -----------------------------------------------------------------------------
+def group():
+    """ 
+        RESTful CRUD controller
+        - needed when group add form embedded in default/person
+        - only create method is allowed, when opened in a inline form.
+    """
+
+    # Check if it is called from a inline form
+    if auth.permission.format != "popup":
+        return ""
+
+    # Pre-process
+    def prep(r):
+        if r.method != "create":
+            return False
+        return True
+    s3.prep = prep
+
+    output = s3_rest_controller("pr", "group")
+
+    return output
+
+# -----------------------------------------------------------------------------
+def skill():
+    """ 
+        RESTful CRUD controller
+        - needed when skill add form embedded in default/person
+        - only create method is allowed, when opened in a inline form.
+    """
+    
+    # Check if it is called from a inline form
+    if auth.permission.format != "popup":
+        return ""
+
+    # Pre-process
+    def prep(r):
+        if r.method != "create":
+            return False
+        return True
+    s3.prep = prep
+
+    output = s3_rest_controller("hrm", "skill")
+
     return output
 
 # -----------------------------------------------------------------------------

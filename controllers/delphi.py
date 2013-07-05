@@ -607,11 +607,14 @@ def results(r, **attr):
     problem = r.record
 
     # Lookup Votes
-    vtable = s3db.delphi_vote
-    query = (vtable.problem_id == problem.id)
-    votes = db(query).select(vtable.solution_id,
-                             vtable.rank,
-                             vtable.created_by)
+    if problem:
+        vtable = s3db.delphi_vote
+        query = (vtable.problem_id == problem.id)
+        votes = db(query).select(vtable.solution_id,
+                                 vtable.rank,
+                                 vtable.created_by)
+    else:
+        votes = None
     if not votes:
         return empty
 
@@ -947,11 +950,11 @@ def results(r, **attr):
                        _class="taright"),
                     TD(solution.uncertainty,
                        _class="taright"),
-                    TD(solution.votes,
+                    TD(solution.votes(),
                        _class="tacenter"),
                     TD(solution.changes,
                        _class="tacenter"),
-                    TD(solution.comments,
+                    TD(solution.comments(),
                        _class="tacenter"),
                 )
             )
@@ -1134,7 +1137,8 @@ def comments():
                                       ))
 
     # Form to add a new Comment
-    form = crud.create(table, formname="delphi_%s/%s" % (resourcename, id))
+    from gluon.tools import Crud
+    form = Crud(db).create(table, formname="delphi_%s/%s" % (resourcename, id))
 
     # List of existing Comments
     if solution_id:
