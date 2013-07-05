@@ -590,8 +590,22 @@ S3.search = {};
                         // Instantiate the map (can't be done when the DIV is hidden)
                         var options = gis.options[map_id];
                         gis.show_map(map_id, options);
+                        // Workaround: if the map widget was initially hidden
+                        // we need to load the layer even if it isn't a pending
+                        // target (e.g. because the filter was not changed).
+                        if (!pendingTargets.hasOwnProperty(map_id)) {
+                            // Get the current Filters
+                            var queries = getCurrentFilters();
+                            // Load the layer
+                            gis.refreshLayer('search_results', queries);
+                        }
                     }
                 }
+                // @todo: trigger all widgets which need an initial Ajax-call
+                // to load their data layer and haven't been triggered yet
+                // (pending widgets) - unless they are pending targets (generic
+                // fix for the map workaround above, see also @todo's in s3summary.py
+
                 // Update all just-unhidden widgets which have pending updates
                 updatePendingTargets(form);
             }
