@@ -3097,6 +3097,19 @@ class S3HRProgrammeModel(S3Model):
         table.month = Field.Lazy(hrm_programme_hours_month)
 
         filter_widgets = [
+            #S3LocationFilter("location_id",
+            #                 levels=["L1", "L2"],
+            #                 label=T("Location"),
+            #                 represent="%(name)s",
+            #                 widget="multiselect",
+            #                 ),
+            #S3OptionsFilter("organisation_id",
+            #                label=T("Organization/Branch"),
+            #                #options = self.project_task_activity_opts,
+            #                represent="%(name)s",
+            #                #widget="multiselect",
+            #                cols=3,
+            #                ),
             S3OptionsFilter("programme_id",
                             label=T("Programme"),
                             #options = self.project_task_activity_opts,

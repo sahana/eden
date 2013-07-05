@@ -70,7 +70,7 @@ def user():
 
     if s3_has_role("ADMIN"):
         # Needed as Admin has all roles
-        pass
+        pe_ids = None
     elif s3_has_role("ORG_ADMIN"):
         # Filter users to just those belonging to the Org Admin's Org & Descendants
         otable = s3db.org_organisation
@@ -84,7 +84,7 @@ def user():
     else:
         auth.permission.fail()
 
-    auth.configure_user_fields()
+    auth.configure_user_fields(pe_ids)
 
     s3db.add_component("auth_membership", auth_user="user_id")
 
@@ -304,9 +304,6 @@ def user():
             # @ToDo: Merge these with the code in s3aaa.py and use S3SQLCustomForm to implement
             form = output.get("form", None)
             if not form:
-                create_url = URL(args=["create"])
-                output["showadd_btn"] = s3base.S3CRUD.crud_button(T("Add User"),
-                                                                  _href=create_url)
                 return output
             form.attributes["_id"] = "regform"
             if s3_formstyle == "bootstrap":

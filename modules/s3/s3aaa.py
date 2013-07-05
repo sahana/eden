@@ -1212,9 +1212,12 @@ Thank you
         return form
 
     # -------------------------------------------------------------------------
-    def configure_user_fields(self):
+    def configure_user_fields(self, pe_ids=None):
         """
             Configure User Fields - for registration & user administration
+
+            pe_ids: an optional list of pe_ids for the Org Filter 
+                    i.e. org_admin coming from admin.py/user()
         """
 
         T = current.T
@@ -1276,26 +1279,15 @@ Thank you
 
         req_org = deployment_settings.get_auth_registration_requests_organisation()
         if req_org:
-            organisation_id = utable.organisation_id
-            if self.s3_has_role("ADMIN"):
-                filterby = None
-                filter_opts = None
-            elif self.s3_has_role("ORG_ADMIN"):
+            if pe_ids:
                 # Filter orgs to just those belonging to the Org Admin's Org
                 # & Descendants
-                otable = s3db.org_organisation
-                query = (otable.id == self.user.organisation_id)
-                pe_id = db(query).select(otable.pe_id,
-                                         limitby=(0, 1)
-                                         ).first().pe_id
-                pe_ids = s3db.pr_get_descendants(pe_id,
-                                                 entity_types="org_organisation")
-                pe_ids.append(pe_id)
                 filterby = "pe_id"
                 filter_opts = pe_ids
             else:
                 filterby = None
                 filter_opts = None
+            organisation_id = utable.organisation_id
             organisation_id.readable = organisation_id.writable = True
             from s3validators import IS_ONE_OF
             org_represent = s3db.org_organisation_represent
@@ -6178,7 +6170,7 @@ class S3RoleManager(S3Method):
             add_btn = A(T("Add Role"), _href=URL(c="admin", f="role",
                                                  args=["create"]),
                                                  _class="action-btn")
-            output.update(add_btn=add_btn)
+            output.update(showadd_btn=add_btn)
 
             response.view = "admin/role_list.html"
             s3 = response.s3
@@ -6242,8 +6234,6 @@ class S3RoleManager(S3Method):
             acl_widget = lambda f, n, v: \
                             S3ACLWidget.widget(acl_table[f], v, _id=n, _name=n,
                                                _class="acl-widget")
-            formstyle = current.deployment_settings.get_ui_formstyle()
-
 
             using_default = SPAN(T("using default"), _class="using-default")
             delete_acl = lambda _id: _id is not None and \
@@ -6255,22 +6245,47 @@ class S3RoleManager(S3Method):
             new_acl = SPAN(T("new ACL"), _class="new-acl")
 
             # Role form -------------------------------------------------------
-            form_rows = formstyle("role_name",
-                                  mandatory("%s:" % T("Role Name")),
-                                  INPUT(value=role_name,
-                                        _name="role_name",
-                                        _type="text",
-                                        requires=IS_NOT_IN_DB(db,
-                                                  "auth_group.role",
-                                                  allowed_override=[role_name]
-                                                  )),
-                                  "") + \
-                        formstyle("role_desc",
-                                  "%s:" % T("Description"),
-                                  TEXTAREA(value=role_desc,
-                                           _name="role_desc",
-                                           _rows="4"),
-                                  "")
+            formstyle = current.deployment_settings.get_ui_formstyle()
+            id1 = "role_name"
+            label1 = mandatory("%s:" % T("Role Name"))
+            widget1 = INPUT(value=role_name,
+                            _name="role_name",
+                            _type="text",
+                            requires=IS_NOT_IN_DB(db,
+                                      "auth_group.role",
+                                      allowed_override=[role_name]
+                                      ))
+            id2 = "role_desc"
+            label2 = "%s:" % T("Description")
+            widget2 = TEXTAREA(value=role_desc,
+                               _name="role_desc",
+                               _rows="4")
+            if formstyle == "bootstrap":
+                _class = "control-group"
+                label1 = LABEL("%s:" % label1, _class="control-label",
+                                               _for=id)
+                label2 = LABEL("%s:" % label2, _class="control-label",
+                                               _for=id)
+                widget1.add_class("input-xlarge")
+                widget2.add_class("input-xlarge")
+                _controls1 = DIV(widget1, _class="controls")
+                _controls2 = DIV(widget2, _class="controls")
+                row1 = DIV(label1,
+                           _controls1,
+                           _class=_class,
+                           _id="%s__row" % id1)
+                row2 = DIV(label2,
+                           _controls2,
+                           _class=_class,
+                           _id="%s__row" % id2)
+                form_rows = row1 + row2
+            elif callable(formstyle):
+                form_rows = formstyle(id1, label1, widget1, "") + \
+                            formstyle(id2, label2, widget2, "")
+            else:
+                # Fallback to DIVs
+                form_rows = DIV(label1, widget1, _id=id1) +\
+                            DIV(label2, widget2, _id=id2)
             key_row = DIV(T("* Required Fields"), _class="red")
             role_form = DIV(TABLE(form_rows), key_row, _id="role-form")
 
@@ -6886,7 +6901,7 @@ class S3RoleManager(S3Method):
                               help_txt=help_txt,
                               addform=addform,
                               list_btn=list_btn,
-                              add_btn=add_btn)
+                              showadd_btn=add_btn)
 
                 current.response.view = "admin/membership_manage.html"
             else:
@@ -7150,7 +7165,7 @@ class S3RoleManager(S3Method):
                               addform=addform,
                               list_btn=list_btn,
                               edit_btn=edit_btn,
-                              add_btn=add_btn)
+                              showadd_btn=add_btn)
                 current.response.view = "admin/membership_manage.html"
             else:
                 r.error(501, current.manager.BAD_FORMAT)
