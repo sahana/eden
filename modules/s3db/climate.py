@@ -243,7 +243,8 @@ class S3ClimateModel(S3Model):
             msg_record_deleted = T("Station Parameter removed"),
             msg_list_empty = T("No Station Parameters"))
 
-        table.virtualfields.append(station_parameters_virtualfields())
+        table.range_from = Field.Lazy(climate_station_parameter_range_from)
+        table.range_to = Field.Lazy(climate_station_parameter_range_to)
 
         configure(tablename,
                   insertable = False,
@@ -581,49 +582,58 @@ def sample_table_spec_represent(id, row=None):
         return current.messages["NONE"]
 
 # =============================================================================
-class station_parameters_virtualfields(dict, object):
+def climate_station_parameter_range_from(row):
 
-    # -------------------------------------------------------------------------
-    def range_from(self):
-        try:
-            query = (
-                "SELECT MIN(time_period) "
-                "from climate_sample_table_%(parameter_id)i "
-                "WHERE place_id = %(station_id)i;"
-            ) % dict(
-                parameter_id = self.climate_station_parameter.parameter_id,
-                station_id = self.climate_station_parameter.station_id,
-            )
-        except AttributeError:
-            return current.messages["NONE"]
-        date  = current.db.executesql(query)[0][0]
-        if date is not None:
-            import ClimateDataPortal
-            year, month = ClimateDataPortal.month_number_to_year_month(date)
-            return "%s-%s" % (month, year)
-        else:
-            return current.messages["NONE"]
+    default = current.messages["NONE"]
 
-    # -------------------------------------------------------------------------
-    def range_to(self):
-        try:
-            query = (
-                "SELECT MAX(time_period) "
-                "from climate_sample_table_%(parameter_id)i "
-                "WHERE place_id = %(station_id)i;"
-            ) % dict(
-                parameter_id = self.climate_station_parameter.parameter_id,
-                station_id = self.climate_station_parameter.station_id,
-            )
-        except AttributeError:
-            return current.messages["NONE"]
-        date  = current.db.executesql(query)[0][0]
-        if date is not None:
-            import ClimateDataPortal
-            year, month = ClimateDataPortal.month_number_to_year_month(date)
-            return "%s-%s" % (month, year)
-        else:
-            return current.messages["NONE"]
+    if hasattr(row, "climate_station_parameter"):
+        row = row.climate_station_parameter
+    try:
+        parameter_id = row.parameter_id
+        station_id = row.station_id
+    except AttributeError:
+        return default
+
+    table = current.s3db.table("climate_sample_table_%s" % parameter_id)
+    if not table:
+        return default
+        
+    date = table.time_period.min()
+    row = db(table.place_id == station_id).select(date).first()
+    if row:
+        date = row[date]
+        import ClimateDataPortal
+        year, month = ClimateDataPortal.month_number_to_year_month(date)
+        return "%s-%s" % (month, year)
+    else:
+        return default
+
+# -------------------------------------------------------------------------
+def climate_station_parameter_range_to(self):
+    
+    default = current.messages["NONE"]
+
+    if hasattr(row, "climate_station_parameter"):
+        row = row.climate_station_parameter
+    try:
+        parameter_id = row.parameter_id
+        station_id = row.station_id
+    except AttributeError:
+        return default
+
+    table = current.s3db.table("climate_sample_table_%s" % parameter_id)
+    if not table:
+        return default
+
+    date = table.time_period.max()
+    row = db(table.place_id == station_id).select(date).first()
+    if row:
+        date = row[date]
+        import ClimateDataPortal
+        year, month = ClimateDataPortal.month_number_to_year_month(date)
+        return "%s-%s" % (month, year)
+    else:
+        return default
 
 # =============================================================================
 def climate_first_run():
