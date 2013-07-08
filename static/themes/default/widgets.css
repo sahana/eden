@@ -548,6 +548,10 @@ body.popup {
 .loading {
     background: url(../../img/ajax-loader.gif) center no-repeat !important;
 }
+#popup form {
+    /* Form initially hidden until resized to fit modal */
+    display: none;
+}
 
 /* Message Flash styles */
 #_statusbar {

@@ -466,6 +466,8 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
         yepnope({
             load: jsFiles,
             complete: function() {
+                // Hide the Loader
+                $('.map_loader').hide();
                 // Loading complete, now we can run the callback
                 callback.call();
             }
@@ -475,7 +477,7 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
         // http://hsivonen.iki.fi/script-execution/
         var src, script;
         var head = document.getElementsByTagName('head');
-        for (var i=0, len=jsFiles.length; i<len; i++) {
+        for (var i=0, len=jsFiles.length; i < len; i++) {
             src = path + jsFiles[i];
             script = document.createElement('script');
             script.src = src;
@@ -483,5 +485,7 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
             script.async = false;
             head[0].appendChild(script);
         }
+        // Hide the Loader
+        $('.map_loader').hide();
     }
 }
