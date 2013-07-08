@@ -49,14 +49,19 @@ except ImportError:
     except:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
+try:
+    # Python 2.7
+    from collections import OrderedDict
+except:
+    # Python 2.6
+    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+
 from gluon import *
 from gluon.dal import Row, Rows, Query, Set, Table, Expression
-from gluon.storage import Storage, Messages
 from gluon.sqlhtml import OptionsWidget
+from gluon.storage import Storage, Messages
 from gluon.tools import Auth, callback, addrow
 from gluon.utils import web2py_uuid
-
-from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3error import S3PermissionError
 from s3fields import S3Represent, s3_uid, s3_timestamp, s3_deletion_status, s3_comments

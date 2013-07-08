@@ -65,6 +65,13 @@ except ImportError:
     except:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
+try:
+    # Python 2.7
+    from collections import OrderedDict
+except:
+    # Python 2.6
+    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+
 from gluon import *
 # Here are dependencies listed for reference:
 #from gluon import current
@@ -72,7 +79,6 @@ from gluon import *
 #from gluon.http import HTTP, redirect
 from gluon.dal import Rows
 from gluon.storage import Storage, Messages
-from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3fields import s3_all_meta_field_names
 from s3rest import S3Method

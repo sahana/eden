@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 
+try:
+    # Python 2.7
+    from collections import OrderedDict
+except:
+    # Python 2.6
+    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+
 from gluon import current, URL
 from gluon.html import *
 from gluon.storage import Storage
 from gluon.validators import IS_NULL_OR
-
-from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3.s3fields import S3Represent
 from s3.s3resource import S3FieldSelector

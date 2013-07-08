@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 
+try:
+    # Python 2.7
+    from collections import OrderedDict
+except:
+    # Python 2.6
+    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+
 from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 from gluon.validators import IS_NULL_OR
-
-from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
 from s3.s3utils import S3DateTime, s3_auth_user_represent_name, s3_avatar_represent, s3_unicode
