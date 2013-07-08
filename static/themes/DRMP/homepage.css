@@ -33,6 +33,12 @@ div.carousel-caption p {
     font-weight: 300;
 } 
 
+@media screen and (min-width: 1001px) and (max-width: 1200px) {
+  div.carousel-caption {
+    top: 19px;
+  }
+}
+
 @media screen and (min-width: 768px) and (max-width: 1000px) {
   div.carousel-caption {
     width: 379px;
