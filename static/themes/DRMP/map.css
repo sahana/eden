@@ -6,6 +6,12 @@
     max-width: none;
 }
 
+.map_loader {
+    background-image: url(img/ajax-loader.gif);
+    height: 48px;
+    width: 48px;
+}
+
 /* West Panel */
 .x-panel-body {
     background-color: #f5f6f5;

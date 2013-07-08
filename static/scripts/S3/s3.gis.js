@@ -112,6 +112,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             map.zoomToExtent(bounds);
         }
 
+        // Hide the Loader
+        $('.map_loader').hide();
+
         // Return the map object
         return map;
     };

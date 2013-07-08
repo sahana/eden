@@ -1899,16 +1899,16 @@ def layer_shapefile():
             # Define the Table
             id = args[0]
             _tablename = "gis_layer_shapefile_%s" % id
-            row = db(table.id == id).select(table.data,
-                                            limitby=(0, 1)
-                                            ).first()
-            fields = json.loads(row.data)
             Fields = [Field("lat", "float"),
                       Field("lon", "float"),
                       Field("wkt", "text"),
                       Field("layer_id", table),
                       ]
             append = Fields.append
+            row = db(table.id == id).select(table.data,
+                                            limitby=(0, 1)
+                                            ).first()
+            fields = json.loads(row.data)
             for field in fields:
                 # Unicode fieldnames not supported
                 append(Field(str(field[0]), field[1]))

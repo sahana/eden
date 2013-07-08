@@ -3,6 +3,13 @@
 .map_home {
     margin: 0 0 0 -12px;
 }
+/* Ensure Throbber shows centered
+   - core definition in widgets.css */
+.map_loader {
+    margin-top: 50px;
+    margin-left: auto;
+    margin-right: auto;
+}
 
 .x-form-item-label {
     margin: 0 0 0 4px;

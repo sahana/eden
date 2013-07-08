@@ -632,7 +632,8 @@ body.popup {
 /* Throbber */
 /* Used by Autocompletes, map popups, map toolbar, dropdown widgets */
 .throbber,
-.layer_throbber {
+.layer_throbber,
+.map_loader {
     background-image: url(../../img/ajax-loader.gif);
     background-repeat: no-repeat;
     height: 32px;

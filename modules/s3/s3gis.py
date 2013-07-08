@@ -5375,7 +5375,8 @@ class MAP(DIV):
         # Map (Embedded not Window)
         # Needs to be an ID which means we can't have multiple per page :/
         # - Alternatives are also fragile. See s3.gis.js
-        components.append(DIV(_id="map_panel"))
+        components.append(DIV(DIV(_class="map_loader"),
+                              _id="map_panel"))
 
         self.components = components
         for c in components:
