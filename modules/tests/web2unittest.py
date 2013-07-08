@@ -571,14 +571,16 @@ class SeleniumUnitTest(Web2UnitTest):
                 elif isinstance(table[details[0]].widget, S3DateWidget):
                     el_value_date = datetime.datetime.strptime(el_value, "%Y-%m-%d") # %H:%M:%S")
                     el_value = el_value_date.strftime(date_format)
+                    el.clear()
                     el.send_keys(el_value)
                     raw_value = el_value_date
                 elif isinstance(table[details[0]].widget, S3DateTimeWidget):
                     el_value_datetime = datetime.datetime.strptime(el_value, "%Y-%m-%d %H:%M:%S")
                     el_value = el_value_datetime.strftime(datetime_format)
+                    el.clear()
                     el.send_keys(el_value)
                     #raw_value = el_value_datetime
-                    raw_value = el_value
+                    raw_value = None
                     # @ToDo: Fix hack to stop checking datetime field. This is because the field does not support data entry by key press
                     # Use the raw value to check that the record was added succesfully
                 else:

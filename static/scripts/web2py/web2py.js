@@ -81,9 +81,9 @@
 //           timeFormat: "24"
 //         });
 //       });
-      $("input.time", target).each(function () {
-        $(this).timeEntry();
-      });
+//      $("input.time", target).each(function () {
+//        $(this).timeEntry();
+//      });
       /*adds btn class to buttons*/
       $('button', target).addClass('btn');
       $('form input[type="submit"], form input[type="button"]', target).addClass('btn');
