@@ -832,6 +832,88 @@ class TranslateReadFiles:
                     sappend((tmpstr[i][1:-1], tmpstr[i + 1][1:-1]))
             return strings
 
+        # ---------------------------------------------------------------------
+        @staticmethod
+        def get_database_strings(all_template_flag):
+            """
+                Function to get database strings from csv files
+                which are to be considered for translation.
+            """
+
+            from s3import import S3BulkImporter
+
+            # List of database strings.
+            database_strings = []
+            template_list = []
+            tappend = template_list.append
+            base_dir = current.request.folder
+            path = os.path
+            # if all templates flag is set we look in all templates' tasks.cfg file
+            if all_template_flag:
+                template_dir = path.join(base_dir, "private", "templates")
+                files = os.listdir(template_dir)
+                # template_list will have the list of all templates
+                for f in files:
+                    curFile = path.join(template_dir, f)
+                    baseFile = path.basename(curFile)
+                    if path.isdir(curFile):
+                        tappend(baseFile)
+            else:
+                # Setting current template.
+                tappend(current.deployment_settings.base.template)
+
+            # Using bulk importer class to parse tasks.cfg in template folder
+            bi = S3BulkImporter()
+            for template in template_list:
+                pth = path.join(base_dir, "private", "templates", template)
+                if path.exists(path.join(pth, "tasks.cfg")) == False:
+                    continue
+                bi.load_descriptor(pth)
+
+                s3db = current.s3db
+                for csv in bi.tasks:
+                    # Not to consider special import files
+                    if csv[0] != 1:
+                        continue
+
+                    # csv is in format: prefix, tablename, path of csv file
+                    # assuming represent.translate is always on primary key id
+                    translate = False
+                    fieldname = "%s_%s_id" %(csv[1], csv[2])
+                    if hasattr(s3db, fieldname) == False:
+                        continue
+                    reusable_field = s3db.get(fieldname)
+                    if reusable_field:
+                        represent = reusable_field.attr.represent
+                        if hasattr(represent, "translate"):
+                            translate = represent.translate
+
+                    # if translate attribute is set to True
+                    if translate:
+                        # Consider it for transation (csv[3])
+                        obj = CsvToWeb2py()
+                        data = obj.read_csvfile(csv[3])
+                        # Translating only "name" column for now.
+                        title_row = data[0]
+                        idx = 0
+                        for e in title_row:
+                            if e.lower() == "name":
+                                break
+                            idx += 1
+
+                        # If "name" column is found
+                        if idx != len(title_row):
+                            # Line number of string retreived.
+                            line_number = 1
+                            for row in data[1:]:
+                                line_number += 1
+                                # If string is not empty
+                                if row[idx] != "":
+                                    loc = "%s:%s" %(csv[3], str(line_number))
+                                    database_strings.append((loc, row[idx]))
+
+            return database_strings
+
 # =============================================================================
 class TranslateReportStatus:
         """
@@ -1195,6 +1277,8 @@ class StringsToExcel:
 
             # Remove quotes
             NewStrings = self.remove_quotes(NewStrings)
+            # Add database strings
+            NewStrings += R.get_database_strings(all_template_flag)
             # Add user-supplied strings
             NewStrings += R.get_user_strings()
             # Remove duplicates
