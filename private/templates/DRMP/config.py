@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 
+try:
+    # Python 2.7
+    from collections import OrderedDict
+except:
+    # Python 2.6
+    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+
 from gluon import current, URL
 from gluon.html import *
 from gluon.storage import Storage
 from gluon.validators import IS_NULL_OR
-
-from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3.s3fields import S3Represent
 from s3.s3resource import S3FieldSelector
@@ -85,8 +90,8 @@ settings.auth.realm_entity = drmp_realm_entity
 # Pre-Populate
 settings.base.prepopulate = ["DRMP"]
 
-settings.base.system_name = T("Disaster Risk Management Portal")
-settings.base.system_name_short = T("DRMP")
+settings.base.system_name = T("Timor Leste Disaster Risk Management Information System ")
+settings.base.system_name_short = T("DRMIS")
 
 # -----------------------------------------------------------------------------
 # Theme (folder to use for views/layout.html)
@@ -2333,6 +2338,8 @@ def customize_gis_location(**attr):
                                list_fields = list_fields,
                                list_layout = render_locations,
                                )
+
+                s3.crud_strings["gis_location"].title_list = T("Districts")
 
             elif r.method == "profile":
         

@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
 
+try:
+    # Python 2.7
+    from collections import OrderedDict
+except:
+    # Python 2.6
+    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+
 from gluon import current, IS_NULL_OR
 from gluon.html import *
 from gluon.storage import Storage
-from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3.s3filter import S3OptionsFilter
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox

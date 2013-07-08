@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
 
+#try:
+#    # Python 2.7
+#    from collections import OrderedDict
+#except:
+#    # Python 2.6
+from gluon.contrib.simplejson.ordered_dict import OrderedDict
+
 from gluon import current, IS_EMPTY_OR
 from gluon.storage import Storage
-from gluon.contrib.simplejson.ordered_dict import OrderedDict
+
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
 
 T = current.T

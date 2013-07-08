@@ -32,10 +32,15 @@
 
 __all__ = ["S3Config"]
 
+try:
+    # Python 2.7
+    from collections import OrderedDict
+except:
+    # Python 2.6
+    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+
 from gluon import current, URL, TR, TD
 from gluon.storage import Storage
-
-from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 class S3Config(Storage):
     """

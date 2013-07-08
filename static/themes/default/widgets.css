@@ -548,6 +548,10 @@ body.popup {
 .loading {
     background: url(../../img/ajax-loader.gif) center no-repeat !important;
 }
+#popup form {
+    /* Form initially hidden until resized to fit modal */
+    display: none;
+}
 
 /* Message Flash styles */
 #_statusbar {
@@ -632,7 +636,8 @@ body.popup {
 /* Throbber */
 /* Used by Autocompletes, map popups, map toolbar, dropdown widgets */
 .throbber,
-.layer_throbber {
+.layer_throbber,
+.map_loader {
     background-image: url(../../img/ajax-loader.gif);
     background-repeat: no-repeat;
     height: 32px;

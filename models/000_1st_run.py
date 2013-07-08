@@ -70,9 +70,15 @@ if update_check_needed:
 
 # -----------------------------------------------------------------------------
 import os
+try:
+    # Python 2.7
+    from collections import OrderedDict
+except:
+    # Python 2.6
+    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+
 from gluon import current
 from gluon.storage import Storage
-from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 # Keep all S3 framework-level elements stored in response.s3, so as to avoid
 # polluting global namespace & to make it clear which part of the framework is

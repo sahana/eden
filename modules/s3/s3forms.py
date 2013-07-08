@@ -38,13 +38,18 @@ except ImportError:
     except:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
+try:
+    # Python 2.7
+    from collections import OrderedDict
+except:
+    # Python 2.6
+    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+
 from gluon import *
 from gluon.storage import Storage
 from gluon.sqlhtml import StringWidget
 from gluon.tools import callback
 from gluon.validators import Validator
-
-from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from s3resource import S3FieldSelector
 from s3utils import s3_mark_required, s3_unicode

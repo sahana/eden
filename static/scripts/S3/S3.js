@@ -23,9 +23,9 @@ S3.timeline = Object();
 S3.JSONRequest = Object(); // Used to store and abort JSON requests
 S3.TimeoutVar = Object(); // Used to store and abort JSON requests
 
-S3.uid = function () {
+S3.uid = function() {
     // Generate a random uid
-    // Used by GIS
+    // Used for Popups on Map & jQueryUI modals
     // http://jsperf.com/random-uuid/2
     return (((+(new Date())) / 1000 * 0x10000 + Math.random() * 0xffff) >> 0).toString(16);
 };
@@ -33,7 +33,7 @@ S3.uid = function () {
 S3.Utf8 = {
     // Used by dataTables
     // http://www.webtoolkit.info
-    encode: function (string) {
+    encode: function(string) {
         string = string.replace(/\r\n/g, '\n');
         var utftext = '';
         for (var n = 0; n < string.length; n++) {
@@ -51,7 +51,7 @@ S3.Utf8 = {
         }
         return utftext;
     },
-    decode: function (utftext) {
+    decode: function(utftext) {
         var string = '';
         var i = 0;
         var c1, c2;
@@ -106,8 +106,8 @@ S3.addTooltips = function() {
     });
 };
 
+// jQueryUI Modal Popups
 S3.addModals = function() {
-    // jQueryUI Modal Popups
     $('a.s3_add_resource_link').attr('href', function(index, attr) {
         // Add the caller to the URL vars so that the popup knows which field to refresh/set
         // Default formstyle
@@ -120,8 +120,8 @@ S3.addModals = function() {
             // Bootstrap formstyle
             caller = $(this).parents('.control-group').attr('id');
         }
-        caller = caller.replace(/__row_comment/, ''); // DRRPP formstyle
-        caller = caller.replace(/__row/, '');
+        caller = caller.replace(/__row_comment/, '') // DRRPP formstyle
+                       .replace(/__row/, '');
         // Avoid Duplicate callers
         var url_out = attr;
         if (attr.indexOf('caller=') == -1) {
@@ -129,17 +129,13 @@ S3.addModals = function() {
         }
         return url_out;
     });
-    $('.s3_add_resource_link, .s3_modal').unbind('click');
-    $('.s3_add_resource_link, .s3_modal').click(function() {
+    $('.s3_add_resource_link, .s3_modal').unbind('click')
+                                         .click(function() {
         var title = this.title;
         var url = this.href;
-        S3.popup_loaded = function() {
-            // Resize the iframe to fit the Dialog
-            var width = $('.ui-dialog').width() - 10;
-            dialog.css({width: width});
-        }
+        var id = S3.uid();
         // Open a jQueryUI Dialog showing a spinner until iframe is loaded
-        var dialog = $('<iframe class="loading" src=' + url + ' marginWidth="0" marginHeight="0" frameBorder="0" scrolling="auto" onload="S3.popup_loaded()" style = "width:740px;"></iframe>')
+        var dialog = $('<iframe id="' + id + '" class="loading" src=' + url + ' marginWidth="0" marginHeight="0" frameBorder="0" scrolling="auto" onload="S3.popup_loaded(\'' + id + '\')" style = "width:740px;"></iframe>')
                       .appendTo('body');
         dialog.dialog({
             // add a close listener to prevent adding multiple divs to the document
@@ -149,26 +145,53 @@ S3.addModals = function() {
             },
             minHeight: 500,
             modal: true,
-            open: function(event, ui) {$('.ui-widget-overlay').bind('click', function(){ dialog.dialog('close'); });},
+            open: function(event, ui) {
+                $('.ui-widget-overlay').bind('click', function() {
+                    dialog.dialog('close');
+                });
+            },
             title: title,
             width: 750,
-            closeText: ""
+            closeText: ''
         });
         // Prevent browser from following link
         return false;
     })
 };
+S3.popup_loaded = function(id) {
+    // Resize the iframe to fit the Dialog
+    var width = $('.ui-dialog').width() - 10;
+    $('#' + id).css({width: width})
+               // Display the hidden form
+               .contents().find('#popup form').show();
+}
+function s3_popup_remove() {
+    // Close jQueryUI Dialog Modal Popup
+    $('iframe.ui-dialog-content').dialog('close');
+}
 
 $(document).ready(function() {
     // Web2Py Layer
     $('.error').hide().slideDown('slow');
-    $('.error').click(function() { $(this).fadeOut('slow'); return false; });
+    $('.error').click(function() {
+        $(this).fadeOut('slow');
+        return false;
+    });
     $('.warning').hide().slideDown('slow');
-    $('.warning').click(function() { $(this).fadeOut('slow'); return false; });
+    $('.warning').click(function() {
+        $(this).fadeOut('slow');
+        return false;
+    });
     $('.information').hide().slideDown('slow');
-    $('.information').click(function() { $(this).fadeOut('slow'); return false; });
+    $('.information').click(function() {
+        $(this).fadeOut('slow');
+        return false;
+    });
     $('.confirmation').hide().slideDown('slow');
-    $('.confirmation').click(function() { $(this).fadeOut('slow'); return false; });
+    $('.confirmation').click(function() {
+        $(this).fadeOut('slow');
+        return false;
+    });
     $("input[type='checkbox'].delete").click(function() {
         if ((this.checked) && (!confirm(i18n.delete_confirmation))) {
                 this.checked = false;
@@ -212,25 +235,36 @@ $(document).ready(function() {
     }
 
     // Accept comma as thousands separator
-    $('input.int_amount').keyup(function(){this.value=this.value.reverse().replace(/[^0-9\-,]|\-(?=.)/g,'').reverse();});
-    $('input.float_amount').keyup(function(){this.value=this.value.reverse().replace(/[^0-9\-\.,]|[\-](?=.)|[\.](?=[0-9]*[\.])/g,'').reverse();});
+    $('input.int_amount').keyup(function() {
+        this.value = this.value.reverse()
+                               .replace(/[^0-9\-,]|\-(?=.)/g, '')
+                               .reverse();
+    });
+    $('input.float_amount').keyup(function() {
+        this.value = this.value.reverse()
+                               .replace(/[^0-9\-\.,]|[\-](?=.)|[\.](?=[0-9]*[\.])/g, '')
+                               .reverse();
+    });
     // Auto-capitalize first names
-    $('input[name="first_name"]').focusout(function() {this.value = this.value.charAt(0).toLocaleUpperCase() + this.value.substring(1);});
+    $('input[name="first_name"]').focusout(function() {
+        this.value = this.value.charAt(0).toLocaleUpperCase() + this.value.substring(1);
+    });
 
     // Resizable textareas
     $('textarea.resizable:not(.textarea-processed)').each(function() {
+        var that = $(this);
         // Avoid non-processed teasers.
-        if ($(this).is(('textarea.teaser:not(.teaser-processed)'))) {
+        if (that.is(('textarea.teaser:not(.teaser-processed)'))) {
             return false;
         }
-        var textarea = $(this).addClass('textarea-processed');
+        var textarea = that.addClass('textarea-processed');
         var staticOffset = null;
         // When wrapping the text area, work around an IE margin bug. See:
         // http://jaspan.com/ie-inherited-margin-bug-form-elements-and-haslayout
-        $(this).wrap('<div class="resizable-textarea"><span></span></div>')
+        that.wrap('<div class="resizable-textarea"><span></span></div>')
         .parent().append($('<div class="grippie"></div>').mousedown(startDrag));
-        var grippie = $('div.grippie', $(this).parent())[0];
-        grippie.style.marginRight = (grippie.offsetWidth - $(this)[0].offsetWidth) + 'px';
+        var grippie = $('div.grippie', that.parent())[0];
+        grippie.style.marginRight = (grippie.offsetWidth - that[0].offsetWidth) + 'px';
         function startDrag(e) {
             staticOffset = textarea.height() - e.pageY;
             textarea.css('opacity', 0.25);
@@ -250,8 +284,12 @@ $(document).ready(function() {
 
     // IE6 non anchor hover hack
     $('#modulenav .hoverable').hover(
-        function() { $(this).addClass('hovered'); },
-        function() { $(this).removeClass('hovered'); }
+        function() {
+            $(this).addClass('hovered');
+        },
+        function() {
+            $(this).removeClass('hovered');
+        }
     );
 
     // Menu popups (works in IE6)
@@ -268,7 +306,9 @@ $(document).ready(function() {
                 }
                 $('ul', this).css('display', 'block');
             },
-        function() { $('ul', this).css('display', 'none');  }
+        function() {
+            $('ul', this).css('display', 'none');
+        }
     );
 
     // jQueryUI Dialog Modal Popups
@@ -298,11 +338,6 @@ $(document).ready(function() {
     }
 
 });
-
-function s3_popup_remove() {
-    // Close jQueryUI Dialog Modal Popup
-    $('iframe.ui-dialog-content').dialog('close');
-}
 
 function s3_get_client_location(targetfield) {
    // Geolocation
