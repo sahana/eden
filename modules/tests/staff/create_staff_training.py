@@ -57,7 +57,7 @@ class CreateStaffTraining(SeleniumUnitTest):
                     [( "course_id",
                        "Emergency First Aid"),
                      ( "start_date",
-                       "2012-08-01"),
+                       "2012-08-01 00:00:00"),
                      ( "hours",
                        "12"),
                      ( "site_id",
