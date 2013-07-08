@@ -1297,7 +1297,7 @@ class S3OrganisationSectorModel(S3Model):
                                                          title=SECTOR,
                                                          tooltip=help)
 
-        represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup=tablename, translate=True, fields=["name", "subsectorof"])
         sector_id = S3ReusableField("sector_id", "reference org_sector",
                                     sortby="abrv",
                                     requires=IS_NULL_OR(

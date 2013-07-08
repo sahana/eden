@@ -825,10 +825,6 @@ def translate():
 
                 # Obtaining the type of file to export to
                 filetype = form.request_vars.filetype
-                if filetype is None:
-                    filetype = "xls"
-                elif filetype == "on":
-                    filetype = "po"
 
                 # Generating the xls file for download
                 X = StringsToExcel()
@@ -899,8 +895,12 @@ def translate():
             div.append(BR())
 
             # Providing option to export strings in pootle format
-            row = TR(TD(INPUT(_type="checkbox", _name="filetype")),
-                     TD(T("Export as Pootle (.po) file (Excel (.xls) is default)")))
+            row = TR(TD(INPUT(_type="radio", _name="filetype",
+                            _value="xls", _checked="checked")),
+                     TD(T("Export as Xls")),
+                     TD(INPUT(_type="radio", _name="filetype", _value="po")),
+                     TD(T("Export as Pootle")))
+
             row.append(BR())
             row.append(BR())
             div.append(row)
