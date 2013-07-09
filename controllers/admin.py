@@ -304,6 +304,9 @@ def user():
             # @ToDo: Merge these with the code in s3aaa.py and use S3SQLCustomForm to implement
             form = output.get("form", None)
             if not form:
+                create_url = URL(args=["create"])
+                output["showadd_btn"] = s3base.S3CRUD.crud_button(T("Add User"),
+                                                                  _href=create_url)
                 return output
             form.attributes["_id"] = "regform"
             if s3_formstyle == "bootstrap":
