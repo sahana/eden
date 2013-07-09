@@ -2112,20 +2112,21 @@ class GIS(object):
                         rows = db(query).select(table.id,
                                                 gtable.the_geom.st_simplify(0.01).st_asgeojson(precision=4).with_alias("geojson"))
                         for row in rows:
-                            geojsons[row[tablename].id] = row["gis_location"].geojson
+                            geojsons[row[tablename].id] = row.geojson
                     else:
                         # Do the Simplify direct from the DB
                         rows = db(query).select(table.id,
                                                 gtable.the_geom.st_simplify(0.01).st_astext().with_alias("wkt"))
                         for row in rows:
-                            wkts[row[tablename].id] = row["gis_location"].wkt
+                            wkts[row[tablename].id] = row.wkt
                 else:
                     rows = db(query).select(table.id,
                                             gtable.wkt)
                     if format == "geojson":
                         for row in rows:
                             # Simplify the polygon to reduce download size
-                            geojson = GIS.simplify(row["gis_location"].wkt, output="geojson")
+                            geojson = GIS.simplify(row["gis_location"].wkt,
+                                                   output="geojson")
                             if geojson:
                                 geojsons[row[tablename].id] = geojson
                     else:
