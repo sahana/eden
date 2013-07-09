@@ -558,7 +558,8 @@ def customize_project_project(**attr):
                       "comments", # NB This is labelled 'Role' in DRRPP
                       ],
             filterby = dict(field = "role",
-                            options = [2, 9])
+                            options = [2, 9]),
+            default = {"role": 2}
         ),
         # Donors
         S3SQLInlineComponent(
@@ -567,7 +568,8 @@ def customize_project_project(**attr):
             label = T("Donor(s)"),
             fields = ["organisation_id", "amount", "currency"],
             filterby = dict(field = "role",
-                            options = [3])
+                            options = [3]),
+            default = {"role": 3}
         ),
         "budget",
         "drrpp.local_budget",

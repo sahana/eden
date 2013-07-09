@@ -1515,8 +1515,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
         if component_name in resource.components:
 
             component = resource.components[component_name]
-            # For link-table components, embed the link table
-            # rather than the component
+            
+            # For link-table components, embed the link
+            # table rather than the component
             if component.link:
                 component = component.link
 
@@ -1531,91 +1532,62 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 # Really?
                 fields = [f.name for f in table if f.readable or f.writable]
 
-            headers = [{"name": f,
-                        "label": s3_unicode(table[f].label)} for f in fields]
+            if pkey not in fields:
+                fields.insert(0, pkey)
 
-            qfields = [f for f in fields]
-            if pkey not in qfields:
-                qfields.insert(0, pkey)
-            qfields = [table[f] for f in qfields]
-
-            # Sort the component items
-            # @note: this is using a left join which can result in the same
-            # component record appearing multiple times if the orderby-selector
-            # gives multiple values per row, so make sure that the orderby-selector
-            # gives only one possible value per row, or otherwise rewrite this
-            # function to use S3Resource.fast_select with its more powerful
-            # orderby-logic!
-            orderby_rfield = None
-            orderby_dir = None
             if "orderby" in self.options:
                 orderby = self.options["orderby"]
-                if isinstance(orderby, (list, tuple)):
-                    orderby, orderby_dir = orderby[:2]
-                else:
-                    orderby, orderby_dir = orderby, "asc"
-                try:
-                    orderby_rfield = component.resolve_selector(orderby)
-                except:
-                    orderby_rfield = None
-            left = None
-            if orderby_rfield is not None:
-                orderby = orderby_rfield.field
-                left = []
-                if orderby is not None:
-                    for joins in orderby_rfield.left.values():
-                        left.extend(joins)
-                    left = component.sortleft(left)
-                    if orderby_dir[:3].lower() == "des":
-                        orderby = ~orderby
             else:
                 orderby = None
 
-            items = []
             if record_id:
-                # Build the query
-                query = (resource.table._id == record_id) & \
-                        component.get_join()
-
                 # Filter
                 f = self._filterby_query()
                 if f is not None:
-                    query &= f
+                    component.build_query(filter=f)
 
-                # Get the rows:
-                rows = current.db(query).select(*qfields,
-                                                left=left,
-                                                orderby=orderby)
+                data = component.fast_select(fields,
+                                             limit=None,
+                                             represent=True,
+                                             raw_data=True,
+                                             orderby=orderby)
 
-                permit = resource.permit
-                represent = current.manager.represent
-                for row in rows:
-                    row_id = row[pkey]
-                    item = {"_id": row_id}
+                records = data["rows"]
+                rfields = data["rfields"]
+            else:
+                records = []
+                rfields = [component.resolve_selector(s) for s in fields]
 
-                    cid = row[component.table._id]
-                    permitted = permit("read", tablename, row_id)
-                    if not permitted:
+            headers = [{"name": rfield.fname,
+                        "label": s3_unicode(rfield.label)}
+                        for rfield in rfields if rfield.fname != pkey]
+
+            items = []
+            permit = resource.permit
+            for record in records:
+                
+                row = record["_row"]
+                row_id = row[str(table._id)]
+                
+                item = {"_id": row_id}
+                
+                permitted = permit("update", tablename, row_id)
+                if not permitted:
+                    item["_readonly"] = True
+
+                for rfield in rfields:
+                    
+                    fname = rfield.fname
+                    if fname == pkey:
                         continue
-                    permitted = permit("update", tablename, row_id)
-                    if not permitted:
-                        item["_readonly"] = True
-
-                    for f in headers:
-                        fname = f["name"]
-                        field = table[fname]
-                        if fname in row:
-                            value = row[fname]
-                            try:
-                                text = represent(field, value = value)
-                            except:
-                                text = s3_unicode(value)
-                        else:
-                            value = None
-                            text = ""
-                        value = field.formatter(value)
-                        item[fname] = {"value": value, "text": text}
-                    items.append(item)
+                    
+                    colname = rfield.colname
+                    value = rfield.field.formatter(row[colname])
+                    text = s3_unicode(record[colname])
+                    
+                    item[fname] = {"value": value, "text": text}
+                    
+                items.append(item)
 
             validate = self.options.get("validate", None)
             if not validate or \
@@ -1936,6 +1908,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
         # Name of the real input field
         fname = self._formname(separator="_")
 
+        defaults = self.options.get("default", {})
+
         if fname in form.vars:
 
             # Retrieve the data
@@ -2061,6 +2035,11 @@ class S3SQLInlineComponent(S3SQLSubForm):
                         values[fkey] = row[mastertable[pkey]]
                     else:
                         values[fkey] = master_id
+
+                    # Apply defaults
+                    for f, v in defaults.iteritems():
+                        if f not in item:
+                            values[f] = v
 
                     # Create the new record
                     record_id = component.table.insert(**values)
