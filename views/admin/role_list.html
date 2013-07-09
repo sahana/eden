@@ -1,23 +1,11 @@
 {{extend "layout.html"}}
-{{try:}}
- {{=H2(title)}}
-{{except:}}
-{{pass}}
-{{try:}}
- {{=H3(subtitle)}}
-{{except:}}
-{{pass}}
+{{try:}}{{=H2(title)}}{{except:}}{{pass}}
+{{try:}}{{=H3(subtitle)}}{{except:}}{{pass}}
 <div id='table-container'>
-{{try:}}
- {{=items}}
-{{except:}}
-{{pass}}
+{{try:}}{{=items}}{{except:}}{{pass}}
 </div>
 <p>&nbsp;</p>
 {{include "pagenav.html"}}
 {{include "searchbox.html"}}
-{{try:}}
- {{=add_btn}}
-{{except:}}
-{{pass}}
+{{try:}}{{=add_btn}}{{except:}}{{pass}}
 {{include "dataTables.html"}}
