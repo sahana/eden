@@ -3955,16 +3955,34 @@ class S3BulkImporter(object):
             American Red Cross            icrc.gif
         """
 
-         # Check if the source file is accessible
+        # Check if the source file is accessible
         try:
             openFile = open(filename, "r")
         except IOError:
             return "Unable to open file %s" % filename
+
+        prefix, name = tablename.split("_", 1)
+
         reader = self.csv.DictReader(openFile)
+
         db = current.db
-        table = current.s3db[tablename]
+        s3db = current.s3db
+        audit = current.manager.audit
+        table = s3db[tablename]
         idfield = table[idfield]
         base_query = (table.deleted != True)
+
+        # Get callbacks
+        get_config = s3db.get_config
+        onvalidation = get_config(tablename, "update_onvalidation") or \
+                       get_config(tablename, "onvalidation")
+        onaccept = get_config(tablename, "update_onaccept") or \
+                   get_config(tablename, "onaccept")
+        update_realm = get_config(tablename, "update_realm")
+        if update_realm:
+            set_realm_entity = current.auth.set_realm_entity
+        update_super = s3db.update_super
+
         for row in reader:
             if row != None:
                 id = row["id"]
@@ -3989,16 +4007,31 @@ class S3BulkImporter(object):
                     s3_debug("Unable to get record %s of the resource %s to attach the image file to" % (id, tablename))
                     continue
                 # Create and accept the form
-                image_form = SQLFORM(table, record, fields=["id", imagefield])
+                form = SQLFORM(table, record, fields=["id", imagefield])
                 form_vars = Storage()
-                form_vars._formname = "%s/%s" % (tablename, record.id)
-                form_vars.id = record.id
+                record_id = record.id
+                form_vars._formname = "%s/%s" % (tablename, record_id)
+                form_vars.id = record_id
                 source = Storage()
                 source.filename = imagepath
                 source.file = image_source
                 form_vars[imagefield] = source
-                if not image_form.accepts(form_vars):
-                    for (key, error) in image_form.errors.items():
+                if form.accepts(form_vars, onvalidation=onvalidation):
+                    # Audit
+                    audit("update", prefix, name, form=form,
+                          record=record_id, representation="csv")
+
+                    # Update super entity links
+                    update_super(table, form_vars)
+
+                    # Update realm
+                    if update_realm:
+                        set_realm_entity(table, form_vars, force_update=True)
+
+                    # Execute onaccept
+                    callback(onaccept, form, tablename=tablename)
+                else:
+                    for (key, error) in form.errors.items():
                         s3_debug("error importing logo %s: %s %s" % (image, key, error))
 
     # -------------------------------------------------------------------------
