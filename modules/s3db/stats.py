@@ -574,8 +574,12 @@ class S3StatsDemographicModel(S3Model):
             from_json = True
             from dateutil.parser import parse
             records = json.loads(records)
-        else:
+        elif isinstance(records[0]["stats_demographic_data"]["date"],
+                        (datetime.date, datetime.datetime)):
             from_json = False
+        else:
+            from_json = True
+            from dateutil.parser import parse
 
         for record in records:
             total_id = record["stats_demographic"]["total_id"]

@@ -205,7 +205,7 @@
                 //doc.off('click', '.flash')
                 switch(xhr.status) {
                 case 500:
-                  web2py.flash(ajax_error_500);
+                  web2py.flash(i18n.ajax_500);
                 }
             });
         },
@@ -533,7 +533,7 @@
                 eval(pre_call);
             }
             if (confirm_message != undefined) {
-                if (confirm_message == 'default') confirm_message = w2p_ajax_confirm_message || 'Are you sure you want to delete this object?';
+                if (confirm_message == 'default') confirm_message = i18n.delete_confirmation;
                 if (!web2py.confirm(confirm_message)) {
                     web2py.stopEverything(e);
                     return;

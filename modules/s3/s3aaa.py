@@ -225,6 +225,7 @@ Thank you
         else:
             shelter = T("Shelter")
         self.org_site_types = Storage(transport_airport = T("Airport"),
+                                      msg_basestation = T("Cell Tower"),
                                       cr_shelter = shelter,
                                       org_facility = T("Facility"),
                                       #org_facility = T("Site"),

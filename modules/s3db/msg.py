@@ -332,7 +332,7 @@ class S3BaseStationModel(S3Model):
 
         self.configure(tablename,
                        super_entity=("org_site"),
-                       deduplciate = self.msg_basestation_duplicate,
+                       deduplicate = self.msg_basestation_duplicate,
                        )
 
         # ---------------------------------------------------------------------
