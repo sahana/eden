@@ -4,7 +4,16 @@
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 {{# Always force latest IE rendering engine (even in intranet) & Chrome Frame }}
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-<title>{{try:}}{{=title}}{{except:}}{{=response.title or settings.get_system_name_short()}}{{pass}}</title>
+<title>
+{{try:}}
+ {{title #Test Title}}
+ {{=settings.get_system_name_short()}}
+ : 
+ {{=title}}
+{{except:}}
+ {{=settings.get_system_name()}}
+{{pass}}
+</title>
 {{if response.refresh:}}{{=XML(response.refresh)}}{{pass}}
 {{# http://dev.w3.org/html5/markup/meta.name.html }}
 <meta name="application-name" content="{{=appname}}" />
