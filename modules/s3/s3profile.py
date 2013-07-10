@@ -80,7 +80,7 @@ class S3Profile(S3CRUD):
         tablename = self.tablename
         get_config = current.s3db.get_config
 
-        #Page Title
+        # Page Title
         title = get_config(tablename, "profile_title")
         if not title:
             try:

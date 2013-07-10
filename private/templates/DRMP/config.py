@@ -3135,6 +3135,7 @@ def customize_org_resource(**attr):
                             url=URL(c="org", f="resource",
                                     args=["[id]", "read"]))
                        ]
+            # All users just get "Open"
             #db = current.db
             #auth = current.auth
             #has_permission = auth.s3_has_permission
@@ -3372,6 +3373,7 @@ def customize_pr_person(**attr):
                             url=URL(c="pr", f="person",
                                     args=["[id]", "read"]))
                        ]
+            # All users just get "Open"
             #db = current.db
             #auth = current.auth
             #has_permission = auth.s3_has_permission
@@ -3658,6 +3660,7 @@ def customize_project_project(**attr):
                             url=URL(c="project", f="project",
                                     args=["[id]", "read"]))
                        ]
+            # All users just get "Open"
             #db = current.db
             #auth = current.auth
             #has_permission = auth.s3_has_permission
