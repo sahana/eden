@@ -4035,6 +4035,52 @@ class S3BulkImporter(object):
                         s3_debug("error importing logo %s: %s %s" % (image, key, error))
 
     # -------------------------------------------------------------------------
+    def import_doc(self,
+                     filename,
+                     tablename,
+                     namefield,
+                     docfield):
+        """
+            Import documents, such as a reports
+            
+            filename     a CSV list of records and filenames
+            tablename    the name of the table
+            idfield      the field used to identify the record
+            docfield   the field to where the image will be added
+            
+            Example:
+            bi.import_image ("doc_document.csv", "doc_document", "name", "file")
+            and the file org_logos.csv may look as follows
+            Name         file
+            Test1        sample1.pdf
+            Test2        sample2.doc
+        """
+
+         # Check if the source file is accessible
+        try:
+            openFile = open(filename, "r")
+        except IOError:
+            return "Unable to open file %s" % filename
+        reader = self.csv.DictReader(openFile)
+        db = current.db
+        table = current.s3db[tablename]
+        for row in reader:
+            if row != None:
+                name = row["name"]
+                doc = row["file"]
+                # Open the file
+                try:
+                    # Extract the path to the CSV file, document should be in
+                    # this directory, or relative to it
+                    (path, file) = os.path.split(filename)
+                    docpath= os.path.join(path, doc)
+                    openFile = open(docpath, "rb")
+                except IOError:
+                    s3_debug("Unable to open document file %s" % doc)
+                    continue
+                table.insert(file=openFile, name=name)
+
+    # -------------------------------------------------------------------------
     def perform_tasks(self, path):
         """
             Load and then execute the import jobs that are listed in the
