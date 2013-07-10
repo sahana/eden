@@ -75,9 +75,10 @@ from gluon.storage import Storage
 from gluon.tools import callback
 
 from s3data import S3DataTable, S3DataList, S3PivotTable
-from s3fields import S3Represent, S3RepresentLazy
+from s3fields import S3Represent, S3RepresentLazy, s3_all_meta_field_names
 from s3utils import s3_has_foreign_key, s3_flatlist, s3_get_foreign_key, s3_unicode, S3MarkupStripper, S3TypeConverter
 from s3validators import IS_ONE_OF
+from s3xml import S3XMLFormat
 
 DEBUG = False
 if DEBUG:
@@ -2273,6 +2274,8 @@ class S3Resource(object):
     # Data Object API
     # -------------------------------------------------------------------------
     def load(self,
+             fields=None,
+             skip=None,
              start=None,
              limit=None,
              orderby=None,
@@ -2282,22 +2285,70 @@ class S3Resource(object):
             Loads records from the resource, applying the current filters,
             and stores them in the instance.
 
+            @param fields: list of field names to include
+            @param skip: list of field names to skip
             @param start: the index of the first record to load
             @param limit: the maximum number of records to load
             @param orderby: orderby-expression for the query
+            @param virtual: whether to load virtual fields or not
+            @param cacheable: don't define Row actions like update_record
+                              or delete_record (faster, and the record can
+                              be cached)
 
             @return: the records as list of Rows
         """
 
+
         table = self.table
         tablename = self.tablename
 
-        if tablename == "gis_location" or \
-           tablename.startswith("gis_layer_shapefile_"):
-            # Filter out bulky Polygons
-            fields = [f for f in table.fields if f not in ("wkt", "the_geom")]
-        else:
-            fields = [f for f in table.fields]
+        UID = current.xml.UID
+        load_uids = hasattr(table, UID)
+
+        if not skip:
+            skip = tuple()
+
+        if fields or skip:
+            s3 = current.response.s3
+            if "all_meta_fields" in s3:
+                meta_fields = s3.all_meta_fields
+            else:
+                meta_fields = s3.all_meta_fields = s3_all_meta_field_names()
+            s3db = current.s3db
+
+        # Field selection
+        qfields = ([table._id.name, UID])
+        append = qfields.append
+        for f in table.fields:
+            
+            if f in ("wkt", "the_geom") and \
+               (tablename == "gis_location" or \
+                tablename.startswith("gis_layer_shapefile_")):
+                    
+                # Filter out bulky Polygons
+                continue
+
+            if fields or skip:
+
+                # Must include all meta-fields
+                if f in meta_fields:
+                    append(f)
+                    continue
+
+                # Must include all super-keys
+                ktablename, key, multiple = s3_get_foreign_key(table[f], m2m=False)
+                if ktablename:
+                    ktable = s3db.table(ktablename)
+                    if ktable and hasattr(ktable, "instance_type"):
+                        append(f)
+                        continue
+
+            if f in skip:
+                continue
+            if not fields or f in fields:
+                qfields.append(f)
+
+        fields = list(set(filter(lambda f: hasattr(table, f), qfields)))
 
         if self._rows is not None:
             self.clear()
@@ -2317,31 +2368,25 @@ class S3Resource(object):
 
         ids = self._ids = []
         new_id = ids.append
+        
+        self._uids = []
+        new_uid = self._uids.append
         self._rows = []
         new_row = self._rows.append
-
+        
         if rows:
             pkey = table._id.name
-
-            UID = current.xml.UID
-            if UID in table.fields:
-                self._uids = []
-                new_uid = self._uids.append
-                load_uids = True
-            else:
-                load_uids = False
-
             for row in rows:
-                if hasattr(row, pkey):
-                    record = row
-                else:
-                    record = ogetattr(row, tablename)
-                record_id = ogetattr(record, pkey)
+                if hasattr(row, tablename):
+                    _row = ogetattr(row, tablename)
+                    if type(_row) is Row:
+                        row = _row
+                record_id = ogetattr(row, pkey)
                 if record_id not in ids:
                     new_id(record_id)
-                    new_row(record)
+                    new_row(row)
                     if load_uids:
-                        new_uid(ogetattr(record, UID))
+                        new_uid(ogetattr(row, UID))
             self._length = len(self._rows)
 
         return self._rows
@@ -2641,11 +2686,13 @@ class S3Resource(object):
         output = None
         args = Storage(args)
 
+        xmlformat = S3XMLFormat(stylesheet) if stylesheet else None
+
         # Export as element tree
-        if DEBUG:
-            _start = datetime.datetime.now()
-            tablename = self.tablename
-            _debug("export_tree of %s starting" % tablename)
+        #if DEBUG:
+            #_start = datetime.datetime.now()
+            #tablename = self.tablename
+            #_debug("export_tree of %s starting" % tablename)
         tree = self.export_tree(start=start,
                                 limit=limit,
                                 msince=msince,
@@ -2655,16 +2702,17 @@ class S3Resource(object):
                                 rcomponents=rcomponents,
                                 references=references,
                                 filters=filters,
-                                maxbounds=maxbounds)
-        if DEBUG:
-            end = datetime.datetime.now()
-            duration = end - _start
-            duration = '{:.2f}'.format(duration.total_seconds())
-            _debug("export_tree of %s completed in %s seconds" % \
-                    (tablename, duration))
+                                maxbounds=maxbounds,
+                                xmlformat=xmlformat)
+        #if DEBUG:
+            #end = datetime.datetime.now()
+            #duration = end - _start
+            #duration = '{:.2f}'.format(duration.total_seconds())
+            #_debug("export_tree of %s completed in %s seconds" % \
+                    #(tablename, duration))
 
         # XSLT transformation
-        if tree and stylesheet is not None:
+        if tree and xmlformat is not None:
             if DEBUG:
                 _start = datetime.datetime.now()
             import uuid
@@ -2675,13 +2723,13 @@ class S3Resource(object):
                         name=self.name,
                         utcnow=datetime.datetime.utcnow().strftime(tfmt),
                         msguid=uuid.uuid4().urn)
-            tree = xml.transform(tree, stylesheet, **args)
-            if DEBUG:
-                end = datetime.datetime.now()
-                duration = end - _start
-                duration = '{:.2f}'.format(duration.total_seconds())
-                _debug("transform of %s using %s completed in %s seconds" % \
-                        (tablename, stylesheet, duration))
+            tree = xmlformat.transform(tree, **args)
+            #if DEBUG:
+                #end = datetime.datetime.now()
+                #duration = end - _start
+                #duration = '{:.2f}'.format(duration.total_seconds())
+                #_debug("transform of %s using %s completed in %s seconds" % \
+                        #(tablename, stylesheet, duration))
 
         # Convert into the requested format
         # (Content Headers are set by the calling function)
@@ -2689,15 +2737,15 @@ class S3Resource(object):
             if as_tree:
                 output = tree
             elif as_json:
-                if DEBUG:
-                    _start = datetime.datetime.now()
+                #if DEBUG:
+                    #_start = datetime.datetime.now()
                 output = xml.tree2json(tree, pretty_print=pretty_print)
-                if DEBUG:
-                    end = datetime.datetime.now()
-                    duration = end - _start
-                    duration = '{:.2f}'.format(duration.total_seconds())
-                    _debug("tree2json of %s completed in %s seconds" % \
-                            (tablename, duration))
+                #if DEBUG:
+                    #end = datetime.datetime.now()
+                    #duration = end - _start
+                    #duration = '{:.2f}'.format(duration.total_seconds())
+                    #_debug("tree2json of %s completed in %s seconds" % \
+                            #(tablename, duration))
             else:
                 output = xml.tostring(tree, pretty_print=pretty_print)
 
@@ -2709,13 +2757,13 @@ class S3Resource(object):
                     limit=None,
                     msince=None,
                     fields=None,
-                    skip=[],
                     references=None,
                     dereference=True,
                     mcomponents=None,
                     rcomponents=None,
                     filters=None,
-                    maxbounds=False):
+                    maxbounds=False,
+                    xmlformat=None):
         """
             Export the resource as element tree
 
@@ -2723,7 +2771,6 @@ class S3Resource(object):
             @param limit: maximum number of records to export
             @param msince: minimum modification date of the records
             @param fields: data fields to include (default: all)
-            @param skip: list of fieldnames to skip
             @param references: foreign keys to include (default: all)
             @param dereference: also export referenced records
             @param mcomponents: components of the master resource to
@@ -2749,8 +2796,7 @@ class S3Resource(object):
             base_url = None
 
         # Split reference/data fields
-        (rfields, dfields) = self.split_fields(skip=skip,
-                                               data=fields,
+        (rfields, dfields) = self.split_fields(data=fields,
                                                references=references)
 
         # Filter for MCI >= 0 (setting)
@@ -2778,10 +2824,18 @@ class S3Resource(object):
         else:
             orderby = None
 
-        # @ToDo: Can we avoid this?
-        # - it is loading *all* fields, not just list_fields
-        # - even list_fields would be wrong when using get_location_data
-        self.load(start=start, limit=limit, orderby=orderby, virtual=False, cacheable=True)
+        # Fields to load
+        if xmlformat:
+            include, exclude = xmlformat.get_fields(self.tablename)
+        else:
+            include, exclude = None, None
+        self.load(fields=include,
+                  skip=exclude,
+                  start=start,
+                  limit=limit,
+                  orderby=orderby,
+                  virtual=False,
+                  cacheable=True)
 
         format = current.auth.permission.format
         if format == "geojson":
@@ -2834,10 +2888,10 @@ class S3Resource(object):
                                       export_map=export_map,
                                       lazy=lazy,
                                       components=mcomponents,
-                                      skip=skip,
                                       filters=filters,
                                       msince=msince,
-                                      locations=locations)
+                                      locations=locations,
+                                      xmlformat=xmlformat)
             if element is None:
                 results -= 1
         #if DEBUG:
@@ -2902,12 +2956,19 @@ class S3Resource(object):
                     url = "%s/%s/%s" % (manager.s3.base_url, prefix, name)
                 else:
                     url = "/%s/%s" % (prefix, name)
-                rfields, dfields = rresource.split_fields(skip=skip,
-                                                          data=fields,
+                rfields, dfields = rresource.split_fields(data=fields,
                                                           references=references)
 
-                # @todo: apply field selection
-                rresource.load()
+                # Fields to load
+                if xmlformat:
+                    include, exclude = xmlformat.get_fields(rresource.tablename)
+                else:
+                    include, exclude = None, None
+                rresource.load(fields=include,
+                               skip=exclude,
+                               limit=None,
+                               virtual=False,
+                               cacheable=True)
 
                 export_resource = rresource.__export_resource
                 for record in rresource:
@@ -2920,10 +2981,10 @@ class S3Resource(object):
                                               export_map=export_map,
                                               components=rcomponents,
                                               lazy=lazy,
-                                              skip=skip,
                                               filters=filters,
                                               master=False,
-                                              locations=locations)
+                                              locations=locations,
+                                              xmlformat=xmlformat)
 
                     # Mark as referenced element (for XSLT)
                     if element is not None:
@@ -2966,11 +3027,11 @@ class S3Resource(object):
                           export_map=None,
                           lazy=None,
                           components=None,
-                          skip=[],
                           filters=None,
                           msince=None,
                           master=True,
-                          locations=None):
+                          locations=None,
+                          xmlformat=None):
         """
             Add a <resource> to the element tree
 
@@ -2983,7 +3044,6 @@ class S3Resource(object):
             @param export_map: the export map of the request
             @param components: list of components to include from referenced
                                resources (tablenames)
-            @param skip: fields to skip
             @param filters: additional URL filters (Sync), as dict
                             {tablename: {url_var: string}}
             @param msince: the minimum update datetime for exported records
@@ -3060,9 +3120,21 @@ class S3Resource(object):
                         queries = S3URLQuery.parse(self, filters[ctablename])
                         [c.add_filter(q) for a in queries for q in queries[a]]
 
+                    # Fields to load
+                    if xmlformat:
+                        include, exclude = xmlformat.get_fields(c.tablename)
+                    else:
+                        include, exclude = None, None
+                        
+                    # Load the records
+                    c.load(fields=include,
+                           skip=exclude,
+                           limit=None,
+                           virtual=False,
+                           cacheable=True)
+
                 # Split fields
-                _skip = skip+[c.fkey]
-                crfields, cdfields = c.split_fields(skip=_skip)
+                crfields, cdfields = c.split_fields(skip=[c.fkey])
 
                 # Construct the component base URL
                 if record_url:
@@ -3072,6 +3144,7 @@ class S3Resource(object):
 
                 # Find related records
                 crecords = self.get(record[pkey], component=c.alias)
+                # @todo: load() should limit this automatically:
                 if not c.multiple and len(crecords):
                     crecords = [crecords[0]]
 

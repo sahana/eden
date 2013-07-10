@@ -7,6 +7,7 @@
 #
 import unittest
 import datetime
+from lxml import etree
 from gluon import *
 from gluon.storage import Storage
 from gluon.dal import Row
@@ -776,7 +777,6 @@ class ResourceContextFilterTests(unittest.TestCase):
     </resource>
 </s3xml>"""
 
-        from lxml import etree
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
 
         current.auth.override = True
@@ -1394,7 +1394,6 @@ class ResourceDataAccessTests(unittest.TestCase):
     </resource>
 </s3xml>"""
 
-        from lxml import etree
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
         resource = s3db.resource("org_organisation")
         resource.import_xml(xmltree)
@@ -1723,7 +1722,6 @@ class ResourceExportTests(unittest.TestCase):
 </s3xml>"""
 
         try:
-            from lxml import etree
             xmltree = etree.ElementTree(etree.fromstring(xmlstr))
             resource = current.s3db.resource("org_organisation")
             resource.import_xml(xmltree)
@@ -1772,7 +1770,6 @@ class ResourceExportTests(unittest.TestCase):
 </s3xml>"""
 
         try:
-            from lxml import etree
             xmltree = etree.ElementTree(etree.fromstring(xmlstr))
             resource = current.s3db.resource("org_organisation")
             resource.import_xml(xmltree)
@@ -1812,7 +1809,6 @@ class ResourceExportTests(unittest.TestCase):
 </s3xml>"""
 
         try:
-            from lxml import etree
             xmltree = etree.ElementTree(etree.fromstring(xmlstr))
             resource = current.s3db.resource("hms_hospital")
             resource.import_xml(xmltree)
@@ -1899,7 +1895,6 @@ class ResourceExportTests(unittest.TestCase):
 </s3xml>"""
 
         try:
-            from lxml import etree
             xmltree = etree.ElementTree(etree.fromstring(xmlstr))
             resource = current.s3db.resource("org_organisation")
             resource.import_xml(xmltree)
@@ -2036,7 +2031,6 @@ class ResourceImportTests(unittest.TestCase):
 
 </s3xml>"""
 
-        from lxml import etree
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
         
         resource = current.s3db.resource("pr_person")
@@ -2068,7 +2062,6 @@ class ResourceImportTests(unittest.TestCase):
     </resource>
 </s3xml>"""
 
-        from lxml import etree
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
         resource = current.s3db.resource("hms_hospital")
         resource.import_xml(xmltree)
@@ -2087,7 +2080,6 @@ class ResourceImportTests(unittest.TestCase):
     </resource>
 </s3xml>"""
 
-        from lxml import etree
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
         resource = current.s3db.resource("hms_hospital")
         resource.import_xml(xmltree)
@@ -2111,7 +2103,6 @@ class ResourceImportTests(unittest.TestCase):
     </resource>
 </s3xml>"""
 
-        from lxml import etree
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
         resource = current.s3db.resource("hms_hospital")
         resource.import_xml(xmltree)
@@ -2146,6 +2137,102 @@ class ResourceDataObjectAPITests (unittest.TestCase):
         resource.clear()
         self.assertEqual(resource._rows, None)
 
+    # -------------------------------------------------------------------------
+    def testLoadFieldSelection(self):
+        """ Test selection of fields in load() with fields and skip """
+
+        s3db = current.s3db
+        auth = current.auth
+        auth.override = True
+
+        xmlstr = """
+<s3xml>
+    <resource name="org_office" uuid="LOADTESTOFFICE">
+        <data field="name">LoadTestOffice</data>
+        <reference field="organisation_id" resource="org_organisation">
+            <resource name="org_organisation">
+                <data field="name">LoadTestOrganisation</data>
+            </resource>
+        </reference>
+    </resource>
+</s3xml>"""
+
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+
+        try:
+            resource = s3db.resource("org_office")
+            resource.import_xml(xmltree)
+
+            resource = s3db.resource("org_office", uid="LOADTESTOFFICE")
+
+            # Restrict field selection
+            rows = resource.load(fields=["name"])
+            self.assertEqual(len(rows), 1)
+            row = rows[0]
+            self.assertTrue(hasattr(row, "id"))
+            self.assertTrue(hasattr(row, "name"))
+            self.assertTrue(hasattr(row, "created_on")) # meta-field
+            self.assertTrue(hasattr(row, "pe_id")) # super-key
+            self.assertFalse(hasattr(row, "organisation_id"))
+
+            # Skip field
+            rows = resource.load(skip=["name"])
+            self.assertEqual(len(rows), 1)
+            row = rows[0]
+            self.assertTrue(hasattr(row, "id"))
+            self.assertFalse(hasattr(row, "name"))
+            self.assertTrue(hasattr(row, "created_on"))
+            self.assertTrue(hasattr(row, "pe_id"))
+            self.assertTrue(hasattr(row, "organisation_id"))
+
+            # skip overrides fields
+            rows = resource.load(fields=["name", "organisation_id"],
+                                 skip=["organisation_id"])
+            self.assertEqual(len(rows), 1)
+            row = rows[0]
+            self.assertTrue(hasattr(row, "id"))
+            self.assertTrue(hasattr(row, "name"))
+            self.assertTrue(hasattr(row, "created_on"))
+            self.assertTrue(hasattr(row, "pe_id"))
+            self.assertFalse(hasattr(row, "organisation_id"))
+
+            # Can't skip meta-fields
+            rows = resource.load(fields=["name", "organisation_id"],
+                                 skip=["created_on"])
+            self.assertEqual(len(rows), 1)
+            row = rows[0]
+            self.assertTrue(hasattr(row, "id"))
+            self.assertTrue(hasattr(row, "name"))
+            self.assertTrue(hasattr(row, "created_on"))
+            self.assertTrue(hasattr(row, "pe_id"))
+            self.assertTrue(hasattr(row, "organisation_id"))
+
+            # Can't skip record ID
+            rows = resource.load(fields=["name", "organisation_id"],
+                                 skip=["id"])
+            self.assertEqual(len(rows), 1)
+            row = rows[0]
+            self.assertTrue(hasattr(row, "id"))
+            self.assertTrue(hasattr(row, "name"))
+            self.assertTrue(hasattr(row, "created_on"))
+            self.assertTrue(hasattr(row, "pe_id"))
+            self.assertTrue(hasattr(row, "organisation_id"))
+
+            # Can't skip super-keys
+            rows = resource.load(fields=["name", "organisation_id"],
+                                 skip=["pe_id"])
+            self.assertEqual(len(rows), 1)
+            row = rows[0]
+            self.assertTrue(hasattr(row, "id"))
+            self.assertTrue(hasattr(row, "name"))
+            self.assertTrue(hasattr(row, "created_on"))
+            self.assertTrue(hasattr(row, "pe_id"))
+            self.assertTrue(hasattr(row, "organisation_id"))
+
+        finally:
+            auth.override = False
+            current.db.rollback()
+        
 # =============================================================================
 class MergeOrganisationsTests(unittest.TestCase):
     """ Test merging org_organisation records """
@@ -2815,7 +2902,6 @@ class ResourceGetTests(unittest.TestCase):
     </resource>
 </s3xml>"""
 
-        from lxml import etree
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
         resource = current.s3db.resource("org_organisation")
         resource.import_xml(xmltree)
@@ -3483,7 +3569,6 @@ class ResourceFilteredComponentTests(unittest.TestCase):
     </resource>
 </s3xml>"""
 
-        from lxml import etree
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
 
         auth.override = True
