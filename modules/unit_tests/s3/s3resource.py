@@ -1646,6 +1646,7 @@ class ResourceDataTableFilterTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def testDataTableFilterStandard(self):
         """ Test Standard Data Table """
+        
         resource = current.s3db.resource("hrm_certificate_skill")
         vars = Storage({"bSortable_0": "false",
                         "bSortable_1": "true",
@@ -1663,6 +1664,7 @@ class ResourceDataTableFilterTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def testDataTableFilterWithBulkColumn(self):
         """ Test De-Duplicator Data Table """
+        
         resource = current.s3db.resource("hrm_certificate_skill")
         vars = Storage({"bSortable_0": "false",
                         "bSortable_1": "false",
@@ -1681,6 +1683,7 @@ class ResourceDataTableFilterTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def testDataTableFilterOther(self):
         """ Test Other Data Table """
+        
         resource = current.s3db.resource("hrm_certificate_skill")
         vars = Storage({"bSortable_0": "false",
                         "bSortable_1": "true",
@@ -1705,53 +1708,98 @@ class ResourceExportTests(unittest.TestCase):
         """ Test export of a resource as element tree """
 
         xml = current.xml
+        auth = current.auth
 
-        current.auth.override = True
-        resource = current.s3db.resource("org_office", id=1)
-        tree = resource.export_tree(start=0, limit=1, dereference=False)
+        auth.override = True
+        
+        xmlstr = """
+<s3xml>
+    <resource name="org_organisation">
+        <data field="name">TestExportTreeOrganisation1</data>
+        <resource name="org_office" uuid="ETO1">
+            <data field="name">TestExportTreeOffice1</data>
+        </resource>
+    </resource>
+</s3xml>"""
 
-        root = tree.getroot()
-        self.assertEqual(root.tag, xml.TAG.root)
+        try:
+            from lxml import etree
+            xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+            resource = current.s3db.resource("org_organisation")
+            resource.import_xml(xmltree)
 
-        attrib = root.attrib
-        self.assertEqual(len(attrib), 5)
-        self.assertEqual(attrib["success"], "true")
-        self.assertEqual(attrib["start"], "0")
-        self.assertEqual(attrib["limit"], "1")
-        self.assertEqual(attrib["results"], "1")
-        self.assertTrue("url" in attrib)
+            resource = current.s3db.resource("org_office", uid="ETO1")
+            tree = resource.export_tree(start=0, limit=1, dereference=False)
 
-        self.assertEqual(len(root), 1)
-        for child in root:
-            self.assertEqual(child.tag, xml.TAG.resource)
-            attrib = child.attrib
-            self.assertEqual(attrib["name"], "org_office")
-            self.assertTrue("uuid" in attrib)
+            root = tree.getroot()
+            self.assertEqual(root.tag, xml.TAG.root)
 
+            attrib = root.attrib
+            self.assertEqual(len(attrib), 5)
+            self.assertEqual(attrib["success"], "true")
+            self.assertEqual(attrib["start"], "0")
+            self.assertEqual(attrib["limit"], "1")
+            self.assertEqual(attrib["results"], "1")
+            self.assertTrue("url" in attrib)
+
+            self.assertEqual(len(root), 1)
+            for child in root:
+                self.assertEqual(child.tag, xml.TAG.resource)
+                attrib = child.attrib
+                self.assertEqual(attrib["name"], "org_office")
+                self.assertTrue("uuid" in attrib)
+        finally:
+            current.db.rollback()
+            auth.override = False
 
     # -------------------------------------------------------------------------
     def testExportTreeWithMaxBounds(self):
         """ Text XML output with max bounds """
 
         xml = current.xml
+        auth = current.auth
 
-        current.auth.override = True
-        resource = current.s3db.resource("org_office", id=1)
-        tree = resource.export_tree(start=0, limit=1, dereference=False, maxbounds=True)
-        root = tree.getroot()
-        attrib = root.attrib
-        self.assertEqual(len(attrib), 9)
-        self.assertTrue("latmin" in attrib)
-        self.assertTrue("latmax" in attrib)
-        self.assertTrue("lonmin" in attrib)
-        self.assertTrue("lonmax" in attrib)
+        auth.override = True
+
+        xmlstr = """
+<s3xml>
+    <resource name="org_organisation">
+        <data field="name">TestExportTreeOrganisation2</data>
+        <resource name="org_office" uuid="ETO2">
+            <data field="name">TestExportTreeOffice2</data>
+        </resource>
+    </resource>
+</s3xml>"""
+
+        try:
+            from lxml import etree
+            xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+            resource = current.s3db.resource("org_organisation")
+            resource.import_xml(xmltree)
+
+            resource = current.s3db.resource("org_office", uid="ETO2")
+            tree = resource.export_tree(start=0,
+                                        limit=1,
+                                        dereference=False,
+                                        maxbounds=True)
+            root = tree.getroot()
+            attrib = root.attrib
+            self.assertEqual(len(attrib), 9)
+            self.assertTrue("latmin" in attrib)
+            self.assertTrue("latmax" in attrib)
+            self.assertTrue("lonmin" in attrib)
+            self.assertTrue("lonmax" in attrib)
+
+        finally:
+            current.db.rollback()
+            auth.override = False
 
     # -------------------------------------------------------------------------
     def testExportTreeWithMSince(self):
         """ Test automatic ordering of export items by mtime if msince is given """
 
-        manager = current.manager
-        current.auth.override = True
+        auth = current.auth
+        auth.override = True
 
         xmlstr = """
 <s3xml>
@@ -1806,12 +1854,12 @@ class ResourceExportTests(unittest.TestCase):
 
         finally:
             current.db.rollback()
+            auth.override = False
 
     # -------------------------------------------------------------------------
     def testExportXMLWithSyncFilters(self):
         """ Test XML Export with Sync Filters """
 
-        manager = current.manager
         auth = current.auth
         s3db = current.s3db
         
@@ -1990,12 +2038,13 @@ class ResourceImportTests(unittest.TestCase):
 
         from lxml import etree
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
-        current.auth.override = True
-
+        
         resource = current.s3db.resource("pr_person")
         msg = resource.import_xml(xmltree)
+        
         from gluon.contrib import simplejson as json
         msg = json.loads(msg)
+        
         self.assertEqual(msg["status"], "success")
         self.assertEqual(msg["statuscode"], "200")
         self.assertEqual(msg["records"], 1)
@@ -2006,8 +2055,6 @@ class ResourceImportTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def testImportXMLWithMTime(self):
         """ Test mtime update in imports """
-
-        manager = current.manager
 
         # If mtime is given in the import XML, then resource.mtime should
         # get updated to the youngest entry
@@ -2032,8 +2079,6 @@ class ResourceImportTests(unittest.TestCase):
     def testImportXMLWithoutMTime(self):
         """ Test mtime update in imports with no mtime given """
 
-        manager = current.manager
-
         # If no mtime is given, resource.mtime should be set to current UTC
         xmlstr = """
 <s3xml>
@@ -2054,8 +2099,6 @@ class ResourceImportTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def testImportXMLWithPartialMTime(self):
         """ Test mtime update in imports if mtime given in only some records """
-
-        manager = current.manager
 
         # If mixed, then we should still get current UTC
         xmlstr = """
@@ -2090,10 +2133,8 @@ class ResourceDataObjectAPITests (unittest.TestCase):
     def testLoadStatusIndication(self):
         """ Test load status indication by value of _rows """
 
-        s3db = current.s3db
-
         # A newly created resource has _rows=None
-        resource = s3db.resource("project_time")
+        resource = current.s3db.resource("project_time")
         self.assertEqual(resource._rows, None)
 
         # After load(), this must always be a list
@@ -2242,7 +2283,6 @@ class MergeOrganisationsTests(unittest.TestCase):
         """ Test merge of link table entries """
 
         db = current.db
-        auth = current.auth
         s3db = current.s3db
         deployment_settings = current.deployment_settings
 
@@ -2397,27 +2437,30 @@ class MergePersonsTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def testPermissionError(self):
         """ Check for exception if not authorized """
+        
         db = current.db
         auth = current.auth
         s3db = current.s3db
         deployment_settings = current.deployment_settings
 
+        # Anonymous
         auth.override = False
         auth.s3_impersonate(None)
+
         self.assertRaises(current.auth.permission.error,
                           self.resource.merge, self.id1, self.id2)
+                          
         # Check for proper rollback
         ptable = s3db.pr_person
         query = ptable._id.belongs((self.id1, self.id2))
         rows = db(query).select(ptable._id, limitby=(0, 2))
         self.assertEqual(len(rows), 0)
-        current.auth.override = True
 
     # -------------------------------------------------------------------------
     def testOriginalNotFoundError(self):
         """ Check for exception if record not found """
+        
         db = current.db
-        auth = current.auth
         s3db = current.s3db
         deployment_settings = current.deployment_settings
 
@@ -2431,8 +2474,8 @@ class MergePersonsTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def testNotDuplicateFoundError(self):
         """ Check for exception if record not found """
+        
         db = current.db
-        auth = current.auth
         s3db = current.s3db
         deployment_settings = current.deployment_settings
 
@@ -2495,7 +2538,6 @@ class MergePersonsTests(unittest.TestCase):
         """ Test merge of single-component """
 
         db = current.db
-        auth = current.auth
         s3db = current.s3db
         deployment_settings = current.deployment_settings
 
@@ -2536,7 +2578,6 @@ class MergePersonsTests(unittest.TestCase):
         """ Test merge of multiple-component """
 
         db = current.db
-        auth = current.auth
         s3db = current.s3db
         deployment_settings = current.deployment_settings
 
