@@ -2079,7 +2079,13 @@ def customize_event_event(**attr):
             table.exercise.label = T("Is this an Exercise?")
             table.zero_hour.label = T("Start Time")
 
-            if r.method == "profile":
+            if r.method =="datalist":
+                # Disaster selection page
+                # 2-column datalist, 6 rows per page
+                s3.dl_pagelength = 12
+                s3.dl_rowsize = 2
+
+            elif r.method == "profile":
                 # Customise the cms_post table as that is used for the widgets
                 customize_cms_post_fields()
 
@@ -2328,6 +2334,11 @@ def customize_gis_location(**attr):
             s3db = current.s3db
             table = s3db.gis_location
             if r.method == "datalist":
+                # District selection page
+                # 2-column datalist, 6 rows per page
+                s3.dl_pagelength = 12
+                s3.dl_rowsize = 2
+
                 # Just show L1s (Districts)
                 s3.filter = (table.level == "L1")
                 # Default 5 triggers an AJAX call, we should load all by default

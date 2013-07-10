@@ -31,17 +31,10 @@ h4.latest-updates {
 	text-decoration: none;
 }
 
-/* Show a border around active disasters */
-.thumbnail.disaster {
-    border: 3px solid #E67E22;
-}
-
 /* Cards */
-
 .card-person {
     margin-top: 5px;
 }
-
 .card-person a {
     font-size: 11px;
     color: #7b7b78;
