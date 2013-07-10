@@ -54,7 +54,8 @@ def index():
                      closable=False,
                      maximizable=False)
 
-    return dict(map=map)
+    return dict(map=map,
+                title = T("Map"))
 
 # =============================================================================
 def map_viewing_client():

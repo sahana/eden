@@ -270,6 +270,9 @@ input.btn.btn-primary.filter-submit.filter-ajax {
 	margin-left: -1px;
 }
 
+.filter-controls {
+    clear: both;
+}
 
 /* Large desktop */
 @media (min-width: 1200px) { 
