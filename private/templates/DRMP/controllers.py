@@ -21,7 +21,7 @@ class index():
 
         response = current.response
         output = {}
-        output["title"] = response.title = current.deployment_settings.get_system_name()
+        #output["title"] = response.title = current.deployment_settings.get_system_name()
         view = path.join(current.request.folder, "private", "templates",
                          THEME, "views", "index.html")
         try:
@@ -273,7 +273,7 @@ def _updates():
             response.view = "plain.html"
     elif not ajax:
         # Set Title & View after REST Controller, in order to override
-        output["title"] = response.title = current.deployment_settings.get_system_name()
+        output["title"] = T("News Feed")
         view = path.join(request.folder, "private", "templates",
                          THEME, "views", "updates.html")
         try:
@@ -621,28 +621,6 @@ class glossary():
             raise HTTP("404", "Unable to open Custom View: %s" % view)
 
         title = current.T("Glossary")
-
-        return dict(title = title,
-                    )
-
-# =============================================================================
-class support():
-    """
-        Custom page
-    """
-
-    def __call__(self):
-
-        view = path.join(current.request.folder, "private", "templates",
-                         THEME, "views", "support.html")
-        try:
-            # Pass view as file not str to work in compiled mode
-            current.response.view = open(view, "rb")
-        except IOError:
-            from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
-
-        title = current.T("Support")
 
         return dict(title = title,
                     )

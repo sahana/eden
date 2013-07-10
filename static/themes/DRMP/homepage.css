@@ -248,6 +248,10 @@ p.quote.mb4 {
     color: #4e4e4d;
 }
 
+#homepage-layer a:hover {
+    text-decoration: none;
+}
+
 #homepage-layer div.dl-navigation {
     display: none;
 }
