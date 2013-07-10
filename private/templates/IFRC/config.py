@@ -319,14 +319,23 @@ def ns_only(f, required=True, branches=True, updateable=True):
        s3_has_role("ORG_ADMIN"):
         # Need to do import after setting Theme
         from s3layouts import S3AddResourceLink
-        f.comment = S3AddResourceLink(c="org",
-                                      f="organisation",
-                                      vars={"organisation.organisation_type_id$name":"Red Cross / Red Crescent"},
-                                      label=T("Add National Society"),
-                                      title=T("National Society"),
-                                      )
+        from s3.s3navigation import S3ScriptItem
+        add_link = S3AddResourceLink(c="org",
+                                     f="organisation",
+                                     vars={"organisation.organisation_type_id$name":"Red Cross / Red Crescent"},
+                                     label=T("Add National Society"),
+                                     title=T("National Society"),
+                                     )
+        comment = f.comment
+        if not comment or isinstance(comment, S3AddResourceLink):
+            f.comment = add_link
+        elif isinstance(comment[1], S3ScriptItem):
+            # Don't overwrite scripts
+            f.comment[0] = add_link
+        else:
+            f.comment = add_link
     else:
-        # Not allowed to add NS
+        # Not allowed to add NS/Branch
         f.comment = ""
 
 # -----------------------------------------------------------------------------

@@ -3,7 +3,7 @@ i18n={}
 i18n.language='{{=s3.language}}'
 i18n.ajax_wht='{{=T("We have tried")}}'
 i18n.ajax_gvn='{{=T("times and it is still not working. We give in. Sorry.")}}'
-i18n.ajax_500='{{=T("Sorry - the server has a problem, please try again later.")}}'
+i18n.ajax_500='{{=XML(T("An error occured, please %(reload)s the page.") % dict(reload = A(T("reload"), _href=URL(args=request.args, vars=request.get_vars))))}}'
 i18n.ajax_dwn='{{=T("There was a problem, sorry, please try again later.")}}'
 i18n.ajax_get='{{=T("getting")}}'
 i18n.ajax_fmd='{{=T("form data")}}'

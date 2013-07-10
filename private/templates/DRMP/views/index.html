@@ -15,7 +15,7 @@
   <h1>{{=T("Timor Leste Disaster Risk Management Information System")}}<br></h1>
   <p>{{=T("Improving disaster preparedness, response and monitoring in Timor Leste.")}}</p>
   {{if not auth.is_logged_in():}}
-  <a href='/{{=appname}}/default/user/login' class='btn btn-custom btn-login'><i class='icon-signin'></i> {{=T("LOGIN")}} </a></p>{{pass}}
+  <a href='/{{=appname}}/default/user/login?_next=/{{=appname}}/default/index/updates' class='btn btn-custom btn-login'><i class='icon-signin'></i> {{=T("LOGIN")}} </a></p>{{pass}}
  </div>
 </div>
 <section id='homepage-about'>
@@ -67,11 +67,15 @@
  <div class='container'>   
   <div class='row'>
    <div class='span6'>
-    <h2><i class='icon-calendar'></i> {{=T("Latest Events")}}</h2>
+    <a href='/{{=appname}}/default/index/updates'>
+     <h2><i class='icon-calendar'></i> {{=T("Latest Events")}}</h2>
+    </a>
     {{=events}}
    </div>
    <div class='span6'>
-    <h2><i class='icon-bullhorn'></i> {{=T("Latest Updates")}}</h2>
+    <a href='/{{=appname}}/default/index/updates'>
+     <h2><i class='icon-bullhorn'></i> {{=T("Latest Updates")}}</h2>
+    </a>
     {{=news}}
    </div>
   </div>  

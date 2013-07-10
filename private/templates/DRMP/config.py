@@ -2076,6 +2076,9 @@ def customize_event_event(**attr):
             # Load normal Model
             table = s3db.event_event
 
+            table.exercise.label = T("Is this an Exercise?")
+            table.zero_hour.label = T("Start Time")
+
             if r.method == "profile":
                 # Customise the cms_post table as that is used for the widgets
                 customize_cms_post_fields()
@@ -2189,6 +2192,8 @@ def customize_event_event(**attr):
                                                                           limitby=(0, 1),
                                                                           ).first().name
                 s3db.configure("event_event",
+                               profile_title = "%s : %s" % (s3.crud_strings["event_event"].title_list, 
+                                                            record.name),
                                profile_header = DIV(A(IMG(_class="media-object",
                                                           _src=URL(c="static",
                                                                    f="themes",
@@ -2240,7 +2245,7 @@ def customize_event_event(**attr):
                     "closed",
                     S3SQLInlineComponent(
                         "event_location",
-                        label = T("Location"),
+                        label = T("District"),
                         multiple = False,
                         fields = ["location_id"],
                     ),
@@ -2453,6 +2458,8 @@ def customize_gis_location(**attr):
                     image = s3_unicode(name)
                 s3db.configure("gis_location",
                                list_fields = list_fields,
+                               profile_title = "%s : %s" % (s3.crud_strings["gis_location"].title_list, 
+                                                            name),
                                profile_header = DIV(A(IMG(_class="media-object",
                                                           _src="%s/%s.png" % (URL(c="static",
                                                                                   f="themes",
@@ -2909,6 +2916,8 @@ def customize_org_organisation(**attr):
                                           )
                 record = r.record
                 s3db.configure("org_organisation",
+                               profile_title = "%s : %s" % (s3.crud_strings["org_organisation"].title_list, 
+                                                            record.name),
                                profile_header = DIV(A(IMG(_class="media-object",
                                                           _src=URL(c="default", f="download",
                                                                    args=[record.logo]),
@@ -3126,47 +3135,48 @@ def customize_org_resource(**attr):
                             url=URL(c="org", f="resource",
                                     args=["[id]", "read"]))
                        ]
-            db = current.db
-            auth = current.auth
-            has_permission = auth.s3_has_permission
-            ownership_required = auth.permission.ownership_required
-            s3_accessible_query = auth.s3_accessible_query
-            if has_permission("update", table):
-                action = dict(label=str(T("Edit")),
-                              _class="action-btn",
-                              url=URL(c="org", f="resource",
-                                      args=["[id]", "update"]),
-                              )
-                if ownership_required("update", table):
-                    # Check which records can be updated
-                    query = s3_accessible_query("update", table)
-                    rows = db(query).select(table._id)
-                    restrict = []
-                    rappend = restrict.append
-                    for row in rows:
-                        row_id = row.get("id", None)
-                        if row_id:
-                            rappend(str(row_id))
-                    action["restrict"] = restrict
-                actions.append(action)
-            if has_permission("delete", table):
-                action = dict(label=str(T("Delete")),
-                              _class="action-btn",
-                              url=URL(c="org", f="resource",
-                                      args=["[id]", "delete"]),
-                              )
-                if ownership_required("delete", table):
-                    # Check which records can be deleted
-                    query = s3_accessible_query("delete", table)
-                    rows = db(query).select(table._id)
-                    restrict = []
-                    rappend = restrict.append
-                    for row in rows:
-                        row_id = row.get("id", None)
-                        if row_id:
-                            rappend(str(row_id))
-                    action["restrict"] = restrict
-                actions.append(action)
+            # All users just get "Open"
+            #db = current.db
+            #auth = current.auth
+            #has_permission = auth.s3_has_permission
+            #ownership_required = auth.permission.ownership_required
+            #s3_accessible_query = auth.s3_accessible_query
+            #if has_permission("update", table):
+            #    action = dict(label=str(T("Edit")),
+            #                  _class="action-btn",
+            #                  url=URL(c="org", f="resource",
+            #                          args=["[id]", "update"]),
+            #                  )
+            #    if ownership_required("update", table):
+            #        # Check which records can be updated
+            #        query = s3_accessible_query("update", table)
+            #        rows = db(query).select(table._id)
+            #        restrict = []
+            #        rappend = restrict.append
+            #        for row in rows:
+            #            row_id = row.get("id", None)
+            #            if row_id:
+            #                rappend(str(row_id))
+            #        action["restrict"] = restrict
+            #    actions.append(action)
+            #if has_permission("delete", table):
+            #    action = dict(label=str(T("Delete")),
+            #                  _class="action-btn",
+            #                  url=URL(c="org", f="resource",
+            #                          args=["[id]", "delete"]),
+            #                  )
+            #    if ownership_required("delete", table):
+            #        # Check which records can be deleted
+            #        query = s3_accessible_query("delete", table)
+            #        rows = db(query).select(table._id)
+            #        restrict = []
+            #        rappend = restrict.append
+            #        for row in rows:
+            #            row_id = row.get("id", None)
+            #            if row_id:
+            #                rappend(str(row_id))
+            #        action["restrict"] = restrict
+            #    actions.append(action)
             s3.actions = actions
             if isinstance(output, dict):
                 if "form" in output:
@@ -3363,47 +3373,48 @@ def customize_pr_person(**attr):
                             url=URL(c="pr", f="person",
                                     args=["[id]", "read"]))
                        ]
-            db = current.db
-            auth = current.auth
-            has_permission = auth.s3_has_permission
-            ownership_required = auth.permission.ownership_required
-            s3_accessible_query = auth.s3_accessible_query
-            if has_permission("update", table):
-                action = dict(label=str(T("Edit")),
-                              _class="action-btn",
-                              url=URL(c="pr", f="person",
-                                      args=["[id]", "update"]),
-                              )
-                if ownership_required("update", table):
-                    # Check which records can be updated
-                    query = s3_accessible_query("update", table)
-                    rows = db(query).select(table._id)
-                    restrict = []
-                    rappend = restrict.append
-                    for row in rows:
-                        row_id = row.get("id", None)
-                        if row_id:
-                            rappend(str(row_id))
-                    action["restrict"] = restrict
-                actions.append(action)
-            if has_permission("delete", table):
-                action = dict(label=str(T("Delete")),
-                              _class="action-btn",
-                              url=URL(c="pr", f="person",
-                                      args=["[id]", "delete"]),
-                              )
-                if ownership_required("delete", table):
-                    # Check which records can be deleted
-                    query = s3_accessible_query("delete", table)
-                    rows = db(query).select(table._id)
-                    restrict = []
-                    rappend = restrict.append
-                    for row in rows:
-                        row_id = row.get("id", None)
-                        if row_id:
-                            rappend(str(row_id))
-                    action["restrict"] = restrict
-                actions.append(action)
+            # All users just get "Open"
+            #db = current.db
+            #auth = current.auth
+            #has_permission = auth.s3_has_permission
+            #ownership_required = auth.permission.ownership_required
+            #s3_accessible_query = auth.s3_accessible_query
+            #if has_permission("update", table):
+            #    action = dict(label=str(T("Edit")),
+            #                  _class="action-btn",
+            #                  url=URL(c="pr", f="person",
+            #                          args=["[id]", "update"]),
+            #                  )
+            #    if ownership_required("update", table):
+            #        # Check which records can be updated
+            #        query = s3_accessible_query("update", table)
+            #        rows = db(query).select(table._id)
+            #        restrict = []
+            #        rappend = restrict.append
+            #        for row in rows:
+            #            row_id = row.get("id", None)
+            #            if row_id:
+            #                rappend(str(row_id))
+            #        action["restrict"] = restrict
+            #    actions.append(action)
+            #if has_permission("delete", table):
+            #    action = dict(label=str(T("Delete")),
+            #                  _class="action-btn",
+            #                  url=URL(c="pr", f="person",
+            #                          args=["[id]", "delete"]),
+            #                  )
+            #    if ownership_required("delete", table):
+            #        # Check which records can be deleted
+            #        query = s3_accessible_query("delete", table)
+            #        rows = db(query).select(table._id)
+            #        restrict = []
+            #        rappend = restrict.append
+            #        for row in rows:
+            #            row_id = row.get("id", None)
+            #            if row_id:
+            #                rappend(str(row_id))
+            #        action["restrict"] = restrict
+            #    actions.append(action)
             s3.actions = actions
             if isinstance(output, dict):
                 if "form" in output:
@@ -3649,47 +3660,48 @@ def customize_project_project(**attr):
                             url=URL(c="project", f="project",
                                     args=["[id]", "read"]))
                        ]
-            db = current.db
-            auth = current.auth
-            has_permission = auth.s3_has_permission
-            ownership_required = auth.permission.ownership_required
-            s3_accessible_query = auth.s3_accessible_query
-            if has_permission("update", table):
-                action = dict(label=str(T("Edit")),
-                              _class="action-btn",
-                              url=URL(c="project", f="project",
-                                      args=["[id]", "update"]),
-                              )
-                if ownership_required("update", table):
-                    # Check which records can be updated
-                    query = s3_accessible_query("update", table)
-                    rows = db(query).select(table._id)
-                    restrict = []
-                    rappend = restrict.append
-                    for row in rows:
-                        row_id = row.get("id", None)
-                        if row_id:
-                            rappend(str(row_id))
-                    action["restrict"] = restrict
-                actions.append(action)
-            if has_permission("delete", table):
-                action = dict(label=str(T("Delete")),
-                              _class="action-btn",
-                              url=URL(c="project", f="project",
-                                      args=["[id]", "delete"]),
-                              )
-                if ownership_required("delete", table):
-                    # Check which records can be deleted
-                    query = s3_accessible_query("delete", table)
-                    rows = db(query).select(table._id)
-                    restrict = []
-                    rappend = restrict.append
-                    for row in rows:
-                        row_id = row.get("id", None)
-                        if row_id:
-                            rappend(str(row_id))
-                    action["restrict"] = restrict
-                actions.append(action)
+            # All users just get "Open"
+            #db = current.db
+            #auth = current.auth
+            #has_permission = auth.s3_has_permission
+            #ownership_required = auth.permission.ownership_required
+            #s3_accessible_query = auth.s3_accessible_query
+            #if has_permission("update", table):
+            #    action = dict(label=str(T("Edit")),
+            #                  _class="action-btn",
+            #                  url=URL(c="project", f="project",
+            #                          args=["[id]", "update"]),
+            #                  )
+            #    if ownership_required("update", table):
+            #        # Check which records can be updated
+            #        query = s3_accessible_query("update", table)
+            #        rows = db(query).select(table._id)
+            #        restrict = []
+            #        rappend = restrict.append
+            #        for row in rows:
+            #            row_id = row.get("id", None)
+            #            if row_id:
+            #                rappend(str(row_id))
+            #        action["restrict"] = restrict
+            #    actions.append(action)
+            #if has_permission("delete", table):
+            #    action = dict(label=str(T("Delete")),
+            #                  _class="action-btn",
+            #                  url=URL(c="project", f="project",
+            #                          args=["[id]", "delete"]),
+            #                  )
+            #    if ownership_required("delete", table):
+            #        # Check which records can be deleted
+            #        query = s3_accessible_query("delete", table)
+            #        rows = db(query).select(table._id)
+            #        restrict = []
+            #        rappend = restrict.append
+            #        for row in rows:
+            #            row_id = row.get("id", None)
+            #            if row_id:
+            #                rappend(str(row_id))
+            #        action["restrict"] = restrict
+            #    actions.append(action)
             s3.actions = actions
             if isinstance(output, dict):
                 if "form" in output:

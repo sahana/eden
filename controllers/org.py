@@ -229,38 +229,38 @@ def facility():
                 append(TR(TD(B("%s:" % r.table.organisation_id.label)),
                           TD(org.name)))
 
-            # Requests link to the Site_ID
             site_id = r.record.site_id
 
-            # Open/High/Medium priority Requests
-            rtable = s3db.req_req
-            query = (rtable.site_id == site_id) & \
-                    (rtable.fulfil_status != 2) & \
-                    (rtable.priority.belongs((2, 3)))
-            reqs = db(query).select(rtable.id,
-                                    rtable.req_ref,
-                                    rtable.type,
-                                    )
-            if reqs:
-                append(TR(TD(B("%s:" % T("Requests")))))
-                req_types = {1:"req_item",
-                             3:"req_skill",
-                             8:"",
-                             9:"",
-                             }
-                vals = [A(req.req_ref,
-                          _href=URL(c="req", f="req",
-                                    args=[req.id, req_types[req.type]])) for req in reqs]
-                for val in vals:
-                    append(TR(TD(val, _colspan=2)))
+            if settings.has_module("req"):
+                # Open/High/Medium priority Requests
+                rtable = s3db.req_req
+                query = (rtable.site_id == site_id) & \
+                        (rtable.fulfil_status != 2) & \
+                        (rtable.priority.belongs((2, 3)))
+                reqs = db(query).select(rtable.id,
+                                        rtable.req_ref,
+                                        rtable.type,
+                                        )
+                if reqs:
+                    append(TR(TD(B("%s:" % T("Requests")))))
+                    req_types = {1:"req_item",
+                                 3:"req_skill",
+                                 8:"",
+                                 9:"",
+                                 }
+                    vals = [A(req.req_ref,
+                              _href=URL(c="req", f="req",
+                                        args=[req.id, req_types[req.type]])) for req in reqs]
+                    for val in vals:
+                        append(TR(TD(val, _colspan=2)))
 
+            # Street address
             gtable = s3db.gis_location
             stable = s3db.org_site
             query = (gtable.id == stable.location_id) & \
                     (stable.id == site_id)
             location = db(query).select(gtable.addr_street,
                                         limitby=(0, 1)).first()
-            # Street address
             if location.addr_street:
                 append(TR(TD(B("%s:" % gtable.addr_street.label)),
                           TD(location.addr_street)))

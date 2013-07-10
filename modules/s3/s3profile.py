@@ -80,16 +80,21 @@ class S3Profile(S3CRUD):
         tablename = self.tablename
         get_config = current.s3db.get_config
 
-        # Page Header
-        header = get_config(tablename, "profile_header")
-        if not header:
+        # Page Title
+        title = get_config(tablename, "profile_title")
+        if not title:
             try:
                 title = r.record.name
             except:
                 title = current.T("Profile Page")
+
+        # Page Header
+        header = get_config(tablename, "profile_header")
+        if not header:
             header = H2(title, _class="profile_header")
 
-        output = dict(header=header)
+        output = dict(title=title,
+                      header=header)
 
         # Get the page widgets
         widgets = get_config(tablename, "profile_widgets")
