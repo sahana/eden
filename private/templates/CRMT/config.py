@@ -107,6 +107,9 @@ settings.gis.nav_controls = False
 # Set Map to fill the container
 settings.gis.map_width = 1170
 
+# Don't simplify Polygons as much to retain their original shape
+settings.gis.simplify_tolerance = 0.0001
+
 # -----------------------------------------------------------------------------
 # Finance settings
 settings.fin.currencies = {

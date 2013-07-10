@@ -2106,27 +2106,31 @@ class GIS(object):
                 return None
 
             if polygons:
-                if current.deployment_settings.get_gis_spatialdb():
+                settings = current.deployment_settings
+                tolerance = settings.get_gis_simplify_tolerance()
+                if settings.get_gis_spatialdb():
                     if format == "geojson":
                         # Do the Simplify & GeoJSON direct from the DB
                         rows = db(query).select(table.id,
-                                                gtable.the_geom.st_simplify(0.01).st_asgeojson(precision=4).with_alias("geojson"))
+                                                gtable.the_geom.st_simplify(tolerance).st_asgeojson(precision=4).with_alias("geojson"))
                         for row in rows:
                             geojsons[row[tablename].id] = row.geojson
                     else:
                         # Do the Simplify direct from the DB
                         rows = db(query).select(table.id,
-                                                gtable.the_geom.st_simplify(0.01).st_astext().with_alias("wkt"))
+                                                gtable.the_geom.st_simplify(tolerance).st_astext().with_alias("wkt"))
                         for row in rows:
                             wkts[row[tablename].id] = row.wkt
                 else:
                     rows = db(query).select(table.id,
                                             gtable.wkt)
+                    simplify = GIS.simplify
                     if format == "geojson":
                         for row in rows:
                             # Simplify the polygon to reduce download size
-                            geojson = GIS.simplify(row["gis_location"].wkt,
-                                                   output="geojson")
+                            geojson = simplify(row["gis_location"].wkt,
+                                               tolerance=tolerance,
+                                               output="geojson")
                             if geojson:
                                 geojsons[row[tablename].id] = geojson
                     else:
@@ -2134,7 +2138,7 @@ class GIS(object):
                             # Simplify the polygon to reduce download size
                             # & also to work around the recursion limit in libxslt
                             # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
-                            wkt = GIS.simplify(row["gis_location"].wkt)
+                            wkt = simplify(row["gis_location"].wkt)
                             if wkt:
                                 wkts[row[tablename].id] = wkt
 
@@ -2196,12 +2200,14 @@ class GIS(object):
 
         attributes = {}
         geojsons = {}
-        if current.deployment_settings.get_gis_spatialdb():
+        settings = current.deployment_settings
+        tolerance = settings.get_gis_simplify_tolerance()
+        if settings.get_gis_spatialdb():
             # Do the Simplify & GeoJSON direct from the DB
             fields.remove("the_geom")
             fields.remove("wkt")
             _fields = [table[f] for f in fields]
-            rows = db(query).select(table.the_geom.st_simplify(0.01).st_asgeojson(precision=4).with_alias("geojson"),
+            rows = db(query).select(table.the_geom.st_simplify(tolerance).st_asgeojson(precision=4).with_alias("geojson"),
                                     *_fields)
             for row in rows:
                 _row = row[tablename]
@@ -2218,7 +2224,8 @@ class GIS(object):
             simplify = GIS.simplify
             for row in rows:
                 # Simplify the polygon to reduce download size
-                geojson = simplify(row.wkt, tolerance=0.01, output="geojson")
+                geojson = simplify(row.wkt, tolerance=tolerance,
+                                   output="geojson")
                 id = row.id
                 if geojson:
                     geojsons[id] = geojson
@@ -2270,12 +2277,12 @@ class GIS(object):
                                         gtable.level,
                                         gtable.wkt)
         simplify = GIS.simplify
-        tolerance = {"L0":0.01,
-                     "L1":0.005,
-                     "L2":0.00125,
-                     "L3":0.000625,
-                     "L4":0.0003125,
-                     "L5":0.00015625,
+        tolerance = {"L0": 0.01,
+                     "L1": 0.005,
+                     "L2": 0.00125,
+                     "L3": 0.000625,
+                     "L4": 0.0003125,
+                     "L5": 0.00015625,
                      }
         for row in rows:
             grow = row.gis_location
@@ -2468,8 +2475,7 @@ class GIS(object):
                     field = _field.st_asgeojson(precision=_decimals).with_alias("geojson")
 
             countries = db(cquery).select(ifield,
-                                          field,
-                                          )
+                                          field)
             for row in countries:
                 if spatial:
                     id = row["gis_location"].id
@@ -2492,18 +2498,16 @@ class GIS(object):
                     # Compact Encoding
                     geojson = dumps(shape, separators=SEPARATORS)
                 if geojson:
-                    f = dict(
-                            type = "Feature",
-                            properties = {"id": id},
-                            geometry = json.loads(geojson)
-                            )
+                    f = dict(type = "Feature",
+                             properties = {"id": id},
+                             geometry = json.loads(geojson)
+                             )
                     append(f)
 
             if features:
-                data = dict(
-                            type = "FeatureCollection",
+                data = dict(type = "FeatureCollection",
                             features = features
-                        )
+                            )
                 # Output to file
                 filename = os.path.join(folder, "countries.geojson")
                 File = open(filename, "w")
@@ -2559,18 +2563,16 @@ class GIS(object):
                         # Compact Encoding
                         geojson = dumps(shape, separators=SEPARATORS)
                     if geojson:
-                        f = dict(
-                                type = "Feature",
-                                properties = {"id": id},
-                                geometry = json.loads(geojson)
-                                )
+                        f = dict(type = "Feature",
+                                 properties = {"id": id},
+                                 geometry = json.loads(geojson)
+                                 )
                         append(f)
 
                 if features:
-                    data = dict(
-                                type = "FeatureCollection",
+                    data = dict(type = "FeatureCollection",
                                 features = features
-                            )
+                                )
                     # Output to file
                     filename = os.path.join(folder, "1_%s.geojson" % _id)
                     File = open(filename, "w")
@@ -2622,18 +2624,16 @@ class GIS(object):
                             # Compact Encoding
                             geojson = dumps(shape, separators=SEPARATORS)
                         if geojson:
-                            f = dict(
-                                    type = "Feature",
-                                    properties = {"id": id},
-                                    geometry = json.loads(geojson)
-                                    )
+                            f = dict(type = "Feature",
+                                     properties = {"id": id},
+                                     geometry = json.loads(geojson)
+                                     )
                             append(f)
 
                     if features:
-                        data = dict(
-                                    type = "FeatureCollection",
+                        data = dict(type = "FeatureCollection",
                                     features = features
-                                )
+                                    )
                         # Output to file
                         filename = os.path.join(folder, "2_%s.geojson" % l1.id)
                         File = open(filename, "w")
@@ -2688,18 +2688,16 @@ class GIS(object):
                                 # Compact Encoding
                                 geojson = dumps(shape, separators=SEPARATORS)
                             if geojson:
-                                f = dict(
-                                        type = "Feature",
-                                        properties = {"id": id},
-                                        geometry = json.loads(geojson)
-                                        )
+                                f = dict(type = "Feature",
+                                         properties = {"id": id},
+                                         geometry = json.loads(geojson)
+                                         )
                                 append(f)
 
                         if features:
-                            data = dict(
-                                        type = "FeatureCollection",
+                            data = dict(type = "FeatureCollection",
                                         features = features
-                                    )
+                                        )
                             # Output to file
                             filename = os.path.join(folder, "3_%s.geojson" % l2.id)
                             File = open(filename, "w")
@@ -2757,18 +2755,16 @@ class GIS(object):
                                     # Compact Encoding
                                     geojson = dumps(shape, separators=SEPARATORS)
                                 if geojson:
-                                    f = dict(
-                                            type = "Feature",
-                                            properties = {"id": id},
-                                            geometry = json.loads(geojson)
-                                            )
+                                    f = dict(type = "Feature",
+                                             properties = {"id": id},
+                                             geometry = json.loads(geojson)
+                                             )
                                     append(f)
 
                             if features:
-                                data = dict(
-                                            type = "FeatureCollection",
+                                data = dict(type = "FeatureCollection",
                                             features = features
-                                        )
+                                            )
                                 # Output to file
                                 filename = os.path.join(folder, "4_%s.geojson" % l3.id)
                                 File = open(filename, "w")
