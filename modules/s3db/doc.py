@@ -241,7 +241,6 @@ class S3DocumentLibrary(S3Model):
 
         # Resource Configuration
         configure(tablename,
-                  super_entity = "stats_source",
                   deduplicate=self.document_duplicate,
                   onvalidation=lambda form: \
                             self.document_onvalidation(form, document=False))
