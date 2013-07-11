@@ -196,6 +196,8 @@ class S3XMLFormatTests(unittest.TestCase):
     <s3:fields tables="gis_location" select="ALL"/>
     <s3:fields tables="org_office" exclude="site_id"/>
     <s3:fields tables="pr_person" select="ALL" exclude="last_name"/>
+    <s3:fields tables="pr_*" select="pe_id" exclude="pe_label"/>
+    <s3:fields tables="pr_c*" select="ALL"/>
     <s3:fields tables="ANY" select="location_id,site_id"/>
 
     <xsl:template match="/">
@@ -240,6 +242,17 @@ class S3XMLFormatTests(unittest.TestCase):
 
         self.assertEqual(include, ["location_id"])
         self.assertEqual(exclude, [])
+
+    # -------------------------------------------------------------------------
+    def testWildcard(self):
+        
+        include, exclude = self.stylesheet.get_fields("pr_address")
+        self.assertEqual(include, ["pe_id"])
+        self.assertEqual(exclude, ["pe_label"])
+        
+        include, exclude = self.stylesheet.get_fields("pr_contact")
+        self.assertEqual(include, None)
+        self.assertEqual(exclude, ["pe_label"])
 
     # -------------------------------------------------------------------------
     def testTransformation(self):
