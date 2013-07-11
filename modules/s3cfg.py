@@ -313,7 +313,9 @@ class S3Config(Storage):
         return self.auth.get("create_unknown_locations", False)
     def get_auth_show_utc_offset(self):
         return self.auth.get("show_utc_offset", True)
-
+    def get_auth_show_link(self):
+        return self.auth.get("show_link", True)
+    
     def get_security_archive_not_delete(self):
         return self.security.get("archive_not_delete", True)
     def get_security_audit_read(self):

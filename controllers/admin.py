@@ -193,12 +193,13 @@ def user():
                         _href = URL(args=[id, "disable"])
                         )
                 rheader.append(btn)
-                btn = A(T("Link"),
-                        _class = "action-btn",
-                        _title = "Link (or refresh link) between User, Person & HR Record",
-                        _href = URL(args=[id, "link"])
-                        )
-                rheader.append(btn)
+                if settings.get_auth_show_link():
+                    btn = A(T("Link"),
+                            _class = "action-btn",
+                            _title = "Link (or refresh link) between User, Person & HR Record",
+                            _href = URL(args=[id, "link"])
+                            )
+                    rheader.append(btn)
             #elif registration_key == "pending":
             #    btn = A(T("Approve"),
             #            _class = "action-btn",
@@ -260,12 +261,6 @@ def user():
             s3.actions = [dict(label=str(UPDATE), _class="action-btn",
                                url=URL(c="admin", f="user",
                                        args=["[id]", "update"])),
-                          dict(label=str(T("Link")),
-                               _class="action-btn",
-                               _title = str(T("Link (or refresh link) between User, Person & HR Record")),
-                               url=URL(c="admin", f="user",
-                                       args=["[id]", "link"]),
-                               restrict = restrict),
                           dict(label=str(T("Roles")), _class="action-btn",
                                url=URL(c="admin", f="user",
                                        args=["[id]", "roles"])),
@@ -274,6 +269,14 @@ def user():
                                        args=["[id]", "disable"]),
                                restrict = restrict)
                           ]
+            if deployment_settings.get_auth_show_link():
+                s3.actions.insert(1,dict(label=str(T("Link")),
+                                         _class="action-btn",
+                                         _title = str(T("Link (or refresh link) between User, Person & HR Record")),
+                                         url=URL(c="admin", f="user",
+                                                 args=["[id]", "link"]),
+                                         restrict = restrict)
+                                   )
             # Only show the approve button if the user is currently pending
             query = (table.registration_key != "disabled") & \
                     (table.registration_key != None) & \

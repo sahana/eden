@@ -178,8 +178,8 @@ def _updates():
         - Filterable DataList of CMS Posts & a DataList of Events
     """
 
-    if not current.auth.is_logged_in():
-        current.auth.permission.fail()
+    #if not current.auth.is_logged_in():
+    #    current.auth.permission.fail()
 
     T = current.T
     s3db = current.s3db

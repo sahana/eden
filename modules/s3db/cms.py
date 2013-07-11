@@ -162,6 +162,7 @@ class S3ContentModel(S3Model):
                                    default=False,
                                    represent = s3_yes_no_represent,
                                    label=T("Comments permitted?")),
+                             s3_datetime(default = "now"),
                              # @ToDo: Also have a datetime for 'Expires On'
                              Field("expired", "boolean",
                                    default=False,
