@@ -41,7 +41,7 @@ class index():
             resource = s3db.resource("cms_post")
             resource.add_filter(S3FieldSelector("series_id$name") == "Event")
             list_fields = ["location_id",
-                           "created_on",
+                           "date",
                            "body",
                            "created_by",
                            "created_by$organisation_id",
@@ -49,7 +49,7 @@ class index():
                            "event_post.event_id",
                            ]
             orderby = resource.get_config("list_orderby",
-                                          ~resource.table.created_on)
+                                          ~resource.table.date)
             datalist, numrows, ids = resource.datalist(fields=list_fields,
                                                        start=None,
                                                        limit=4,
@@ -83,7 +83,7 @@ class index():
             resource = s3db.resource("cms_post")
             list_fields = ["series_id",
                            "location_id",
-                           "created_on",
+                           "date",
                            "body",
                            "created_by",
                            "created_by$organisation_id",
@@ -91,7 +91,7 @@ class index():
                            "event_post.event_id",
                            ]
             orderby = resource.get_config("list_orderby",
-                                          ~resource.table.created_on)
+                                          ~resource.table.date)
             datalist, numrows, ids = resource.datalist(fields=list_fields,
                                                        start=None,
                                                        limit=4,
@@ -468,7 +468,7 @@ def render_cms_events(listid, resource, rfields, record, **attr):
 
     raw = record._row
     series = "Event"
-    date = record["cms_post.created_on"]
+    date = record["cms_post.date"]
     body = record["cms_post.body"]
     location = record["cms_post.location_id"]
     location_id = raw["cms_post.location_id"]

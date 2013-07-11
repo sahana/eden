@@ -124,7 +124,7 @@ class S3Config(Storage):
         return self.base.get("google_analytics_tracking_id", None)
 
     # -------------------------------------------------------------------------
-    # Auth settings
+    # Authentication settings
     def get_auth_hmac_key(self):
         """
             salt to encrypt passwords - normally randomised during 1st run
@@ -168,13 +168,22 @@ class S3Config(Storage):
     def get_auth_openid(self):
         """ Use OpenID for Authentication """
         return self.auth.get("openid", False)
-    def get_auth_login_next(self):
-        """ Which page to go to after login """
-        return self.auth.get("login_next", URL(c="default", f="index"))
+
+    def get_security_self_registration(self):
+        return self.security.get("self_registration", True)
     def get_auth_registration_requires_verification(self):
         return self.auth.get("registration_requires_verification", False)
     def get_auth_registration_requires_approval(self):
         return self.auth.get("registration_requires_approval", False)
+    def get_auth_always_notify_approver(self):
+        return self.auth.get("always_notify_approver", True)
+
+    def get_auth_login_next(self):
+        """ Which page to go to after login """
+        return self.auth.get("login_next", URL(c="default", f="index"))
+
+    def get_auth_show_link(self):
+        return self.auth.get("show_link", True)
     def get_auth_registration_link_user_to(self):
         """
             Link User accounts to none or more of:
@@ -191,29 +200,39 @@ class S3Config(Storage):
             * Member
         """
         return self.auth.get("registration_link_user_to_default", None)
+
     def get_auth_opt_in_team_list(self):
         return self.auth.get("opt_in_team_list", [])
+
     def get_auth_opt_in_to_email(self):
         return self.get_auth_opt_in_team_list() != []
+
     def get_auth_opt_in_default(self):
         return self.auth.get("opt_in_default", False)
+
     def get_auth_registration_requests_mobile_phone(self):
         return self.auth.get("registration_requests_mobile_phone", False)
+
     def get_auth_registration_mobile_phone_mandatory(self):
         " Make the selection of Mobile Phone Mandatory during registration "
         return self.auth.get("registration_mobile_phone_mandatory", False)
+
     def get_auth_registration_requests_organisation(self):
         " Have the registration form request the Organisation "
         return self.auth.get("registration_requests_organisation", False)
+
     def get_auth_registration_organisation_required(self):
         " Make the selection of Organisation required during registration "
         return self.auth.get("registration_organisation_required", False)
+
     def get_auth_registration_organisation_hidden(self):
         " Hide the Organisation field in the registration form unless an email is entered which isn't whitelisted "
         return self.auth.get("registration_organisation_hidden", False)
+
     def get_auth_registration_organisation_default(self):
         " Default the Organisation during registration "
         return self.auth.get("registration_organisation_default", None)
+
     def get_auth_registration_organisation_id_default(self):
         " Default the Organisation during registration - will return the organisation_id"
         name = self.auth.get("registration_organisation_default", None)
@@ -227,57 +246,67 @@ class S3Config(Storage):
         else:
             organisation_id = None
         return organisation_id
+
     def get_auth_registration_requests_site(self):
         " Have the registration form request the Site "
         return self.auth.get("registration_requests_site", False)
+
     def get_auth_registration_site_required(self):
         " Make the selection of site required during registration "
         return self.auth.get("registration_site_required", False)
+
+    def get_auth_registration_requests_image(self):
+        """ Have the registration form request an Image """
+        return self.auth.get("registration_requests_image", False)
+
     def get_auth_registration_pending(self):
         """ Message someone gets when they register & they need approving """
         return self.auth.get("registration_pending",
             "Registration is still pending approval from Approver (%s) - please wait until confirmation received." % \
                 self.get_mail_approver())
+
     def get_auth_registration_pending_approval(self):
         """ Message someone gets when they register & they need approving """
         return self.auth.get("registration_pending_approval",
             "Thank you for validating your email. Your user account is still pending for approval by the system administator (%s). You will get a notification by email when your account is activated." % \
                 self.get_mail_approver())
-    def get_auth_registration_requests_image(self):
-        """ Have the registration form request an Image """
-        return self.auth.get("registration_requests_image", False)
+
     def get_auth_registration_roles(self):
         """
             A dictionary of realms, with lists of role UUIDs, to assign to newly-registered users
             Use key = 0 to have the roles not restricted to a realm
         """
         return self.auth.get("registration_roles", [])
+
     def get_auth_registration_volunteer(self):
         """ Redirect the newly-registered user to their volunteer details page """
         return self.auth.get("registration_volunteer", False)
-    def get_auth_always_notify_approver(self):
-        return self.auth.get("always_notify_approver", True)
+
     def get_auth_record_approval(self):
         """ Use record approval (False by default) """
         return self.auth.get("record_approval", False)
     def get_auth_record_approval_required_for(self):
         """ Which tables record approval is required for """
         return self.auth.get("record_approval_required_for", None)
+
     def get_auth_realm_entity(self):
         """ Hook to determine the owner entity of a record """
         return self.auth.get("realm_entity", None)
+
     def get_auth_person_realm_human_resource_site_then_org(self):
         """
             Should we set pr_person.realm_entity to that of
             hrm_human_resource.site_id$pe_id
         """
         return self.auth.get("person_realm_human_resource_site_then_org", False)
+
     def get_auth_person_realm_member_org(self):
         """
             Sets pr_person.realm_entity to
             organisation.pe_id of member_member
         """
         return self.auth.get("person_realm_member_org", False)
+
     def get_auth_role_modules(self):
         """
             Which modules are includes in the Role Manager
@@ -294,6 +323,7 @@ class S3Config(Storage):
             ("survey", "Assessments"),
             ("irs", "Incidents")
         ]))
+
     def get_auth_access_levels(self):
         """
             Access levels for the Role Manager UI
@@ -305,17 +335,17 @@ class S3Config(Storage):
             ("editor", "Editor"),
             ("super", "Super Editor")
         ]))
+
     def get_auth_set_presence_on_login(self):
         return self.auth.get("set_presence_on_login", False)
     def get_auth_ignore_levels_for_presence(self):
         return self.auth.get("ignore_levels_for_presence", ["L0"])
     def get_auth_create_unknown_locations(self):
         return self.auth.get("create_unknown_locations", False)
+
     def get_auth_show_utc_offset(self):
         return self.auth.get("show_utc_offset", True)
-    def get_auth_show_link(self):
-        return self.auth.get("show_link", True)
-    
+
     def get_security_archive_not_delete(self):
         return self.security.get("archive_not_delete", True)
     def get_security_audit_read(self):
@@ -334,8 +364,6 @@ class S3Config(Storage):
         return self.security.get("strict_ownership", True)
     def get_security_map(self):
         return self.security.get("map", False)
-    def get_security_self_registration(self):
-        return self.security.get("self_registration", True)
 
     # -------------------------------------------------------------------------
     # Base settings

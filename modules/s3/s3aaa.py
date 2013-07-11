@@ -72,7 +72,7 @@ from s3utils import s3_mark_required
 DEFAULT = lambda: None
 #table_field = re.compile("[\w_]+\.[\w_]+")
 
-DEBUG = True
+DEBUG = False
 if DEBUG:
     import sys
     print >> sys.stderr, "S3AAA: DEBUG MODE"

@@ -1707,7 +1707,7 @@ def cms_post_popup(r):
     table = db.cms_post
 
     series = table.series_id.represent(record.series_id)
-    date = table.datetime.represent(record.date)
+    date = table.date.represent(record.date)
     body = record.body
     location_id = record.location_id
     location = table.location_id.represent(location_id)
@@ -3643,7 +3643,7 @@ def customize_project_project(**attr):
             list_fields = ["name",
                            "organisation_id",
                            "human_resource_id",
-                           (T("Distrcits"), "location.location_id"),
+                           (T("Districts"), "location.location_id"),
                            "start_date",
                            "end_date",
                            "budget",

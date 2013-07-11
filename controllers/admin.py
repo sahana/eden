@@ -269,14 +269,14 @@ def user():
                                        args=["[id]", "disable"]),
                                restrict = restrict)
                           ]
-            if deployment_settings.get_auth_show_link():
-                s3.actions.insert(1,dict(label=str(T("Link")),
-                                         _class="action-btn",
-                                         _title = str(T("Link (or refresh link) between User, Person & HR Record")),
-                                         url=URL(c="admin", f="user",
-                                                 args=["[id]", "link"]),
-                                         restrict = restrict)
-                                   )
+            if settings.get_auth_show_link():
+                s3.actions.insert(1, dict(label=str(T("Link")),
+                                          _class="action-btn",
+                                          _title = str(T("Link (or refresh link) between User, Person & HR Record")),
+                                          url=URL(c="admin", f="user",
+                                                  args=["[id]", "link"]),
+                                          restrict = restrict)
+                                  )
             # Only show the approve button if the user is currently pending
             query = (table.registration_key != "disabled") & \
                     (table.registration_key != None) & \

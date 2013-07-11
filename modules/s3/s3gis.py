@@ -6141,7 +6141,7 @@ def addFeatureResources(feature_resources):
             else:
                 maxdepth = 0
                 references = "location_id"
-            url = "%s.geojson?layer=%i&components=None&maxdepth=%s&references=%s&fields=name" % \
+            url = "%s.geojson?layer=%i&components=None&maxdepth=%s&references=%s" % \
                 (URL(flayer.controller, flayer.function), flayer.id, maxdepth, references)
             # Use specified filter or fallback to the one in the layer
             filter = layer.get("filter", flayer.filter)
@@ -6712,7 +6712,7 @@ class LayerFeature(Layer):
             else:
                 maxdepth = 0
                 references = "location_id"
-            url = "%s.geojson?layer=%i&components=None&maxdepth=%s&references=%s&fields=name" % \
+            url = "%s.geojson?layer=%i&components=None&maxdepth=%s&references=%s" % \
                 (URL(self.controller, self.function), self.id, maxdepth, references)
             if self.filter:
                 url = "%s&%s" % (url, self.filter)

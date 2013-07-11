@@ -6,27 +6,27 @@
          CMS Post - CSV Import Stylesheet
 
          CSV fields:
-         Series...................Series Name (optional)
-         Name.....................Post Name (for menu links)
-         Title....................Post Title (for use in the browser-bar)
-         Body.....................Post Body (HTML)
-         Module...................Post Module
-         Resource.................Post Resource
-         Country..................optional.....Post Country
-         L1.......................optional.....Post L1
-         L2.......................optional.....Post L2
-         L3.......................optional.....Post L3
-         L4.......................optional.....Post L4
-         L5.......................optional.....Post L5
-         Location Name............optional.....Post Location (specific)
-         Lat......................float........Latitude of most specific location
-         Lon......................float........Longitude of most specific location
-         Comments.................Post Comments
-         Author...................Post created_by (email)
-         Date.....................datetime
-         Attachment...............doc_document (URL to remote server to download)
-         Events...................Comma-separated list of Events to tag the Post to
-         Roles....................Post Roles (not yet implemented)
+         Series.................optional.....Series Name
+         Name...................optional.....Post Name (for menu links)
+         Title..................optional.....Post Title (for use in the browser-bar)
+         Body...................Post Body (HTML)
+         Module.................optional.....Post Module
+         Resource...............optional.....Post Resource
+         Country................optional.....Post Country
+         L1.....................optional.....Post L1
+         L2.....................optional.....Post L2
+         L3.....................optional.....Post L3
+         L4.....................optional.....Post L4
+         L5.....................optional.....Post L5
+         Location Name..........optional.....Post Location (specific)
+         Lat....................float........Latitude of most specific location
+         Lon....................float........Longitude of most specific location
+         Comments...............optional.....Post Comments
+         Author.................optional.....Post created_by (email)
+         Date...................optional.....Post date (datetime)
+         Attachment.............optional.....doc_document (URL to remote server to download)
+         Events.................optional.....Comma-separated list of Events to tag the Post to
+         Roles..................optional.....Post Roles (not yet implemented)
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -173,11 +173,6 @@
                     <xsl:value-of select="$Author"/>
                 </xsl:attribute>
             </xsl:if>
-            <xsl:if test="$Date!=''">
-                <xsl:attribute name="datetime">
-                    <xsl:value-of select="$Date"/>
-                </xsl:attribute>
-            </xsl:if>
             <xsl:if test="$Series!=''">
                 <reference field="series_id" resource="cms_series">
                     <xsl:attribute name="tuid">
@@ -193,7 +188,10 @@
             </xsl:if>
             <data field="body"><xsl:value-of select="col[@field='Body']"/></data>
             <xsl:if test="$Comments!=''">
-                <data field="comments"><xsl:value-of select="$Comments"/></data>
+                
+            </xsl:if>
+            <xsl:if test="$Date!=''">
+                <data field="date"><xsl:value-of select="$Date"/></data>
             </xsl:if>
             <xsl:choose>
                 <xsl:when test="$Expired=''">
