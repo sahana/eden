@@ -2487,6 +2487,9 @@ class S3SavedFilterModel(S3Model):
         tablename = "pr_filter"
         table = self.define_table(tablename,
                                   Field("title"),
+                                  Field("controller"),
+                                  Field("function"),
+                                  Field("resource"),
                                   Field("description", "text"),
                                   self.super_link("pe_id", "pr_pentity"),
                                   Field("query", "text"),

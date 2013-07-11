@@ -1650,7 +1650,7 @@ class S3Request(object):
             print >> sys.stderr, "ERROR: %s" % message
             raise HTTP(status,
                        body=current.xml.json_message(success=False,
-                                                     status_code=status,
+                                                     statuscode=status,
                                                      message=message,
                                                      tree=tree),
                        web2py_header=message,

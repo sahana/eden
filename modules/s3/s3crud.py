@@ -1233,7 +1233,7 @@ class S3CRUD(S3Method):
                 filter_ajax_url = attr.get("filter_ajax_url",
                                            r.url(method="filter",
                                                  vars={},
-                                                 representation="json"))
+                                                 representation="options"))
 
                 from s3filter import S3FilterForm
                 filter_formstyle = get_config("filter_formstyle", None)

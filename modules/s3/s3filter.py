@@ -49,6 +49,7 @@ except:
 from gluon import *
 from gluon.sqlhtml import MultipleOptionsWidget
 from gluon.storage import Storage
+from gluon.tools import callback
 
 from s3rest import S3Method
 from s3resource import S3ResourceField, S3URLQuery
@@ -1290,6 +1291,7 @@ class S3FilterForm(object):
                 form = FORM(TABLE(TBODY(rows)), **self.attr)
             else:
                 form = FORM(DIV(rows), **self.attr)
+            form.add_class("filter-form")
 
         # Put a copy of formstyle into the form for access by the view
         form.formstyle = formstyle
@@ -1478,26 +1480,38 @@ class S3Filter(S3Method):
         """
 
         representation = r.representation
-        if representation == "html":
-            return self._form(r, **attr)
-
-        elif representation == "json":
+        if representation == "options":
             # Return the filter options as JSON
             return self._options(r, **attr)
 
+        elif representation == "json":
+            if r.http == "GET":
+                # Load list of saved filters
+                return self._load(r, **attr)
+            elif r.http == "POST":
+                # Save a filter
+                return self._save(r, **attr)
+            else:
+                r.error(405, r.ERROR.BAD_METHOD)
+                
+        elif representation == "html":
+            return self._form(r, **attr)
+
         else:
-            r.error(501, current.manager.ERROR.BAD_FORMAT)
+            r.error(501, r.ERROR.BAD_FORMAT)
 
     # -------------------------------------------------------------------------
     def _form(self, r, **attr):
         """
             Get the filter form for the target resource as HTML snippet
 
+            GET filter.html
+
             @param r: the S3Request
             @param attr: additional controller parameters
         """
 
-        r.error(501, current.manager.ERROR.NOT_IMPLEMENTED)
+        r.error(501, r.ERROR.NOT_IMPLEMENTED)
 
     # -------------------------------------------------------------------------
     def _options(self, r, **attr):
@@ -1505,10 +1519,11 @@ class S3Filter(S3Method):
             Get the updated options for the filter form for the target
             resource as JSON
 
+            GET filter.options
+
             @param r: the S3Request
             @param attr: additional controller parameters
         """
-
 
         resource = self.resource
         get_config = resource.get_config
@@ -1528,5 +1543,157 @@ class S3Filter(S3Method):
         options = json.dumps(options)
         current.response.headers["Content-Type"] = "application/json"
         return options
+
+    # -------------------------------------------------------------------------
+    def _save(self, r, **attr):
+        """
+            Save a filter
+
+            POST filter.json
+            
+            @param r: the S3Request
+            @param attr: additional controller parameters
+        """
+
+        # Authorization, get pe_id
+        auth = current.auth
+        if auth.s3_logged_in():
+            pe_id = current.auth.user.pe_id
+        else:
+            pe_id = None
+        if not pe_id:
+            r.unauthorized()
+
+        # Read the source
+        source = r.body
+        source.seek(0)
+
+        try:
+            data = json.load(source)
+        except ValueError:
+            r.error(501, r.ERROR.BAD_SOURCE)
+
+        # Try to find the record
+        db = current.db
+        s3db = current.s3db
+        
+        table = s3db.pr_filter
+        record_id = data.get("id")
+        record = None
+        if record_id:
+            query = (table.id == record_id) & (table.pe_id == pe_id)
+            record = db(query).select(table.id, limitby=(0, 1)).first()
+            if not record:
+                r.error(404, r.ERROR.BAD_RECORD)
+
+        # Build new record
+        filter_data = {
+            "pe_id": pe_id,
+            "controller": r.controller,
+            "function": r.function,
+            "resource": self.resource.tablename,
+            "deleted": False,
+        }
+
+        title = data.get("title")
+        if title is not None:
+            filter_data["title"] = title
+
+        description = data.get("description")
+        if description is not None:
+            filter_data["description"] = description
+
+        query = data.get("query")
+        if query is not None:
+            filter_data["query"] = json.dumps(query)
+
+        # Store record
+        onaccept = None
+        if record:
+            success = db(table.id == record_id).update(**filter_data)
+            if success:
+                info = {"updated": record_id}
+                onaccept = s3db.get_config(table, "update_onaccept",
+                           s3db.get_config(table, "onaccept"))
+        else:
+            success = table.insert(**filter_data)
+            if success:
+                record_id = success
+                info = {"created": record_id}
+                onaccept = s3db.get_config(table, "update_onaccept",
+                           s3db.get_config(table, "onaccept"))
+
+        if onaccept is not None:
+            filter_data["id"] = record_id
+            callback(onaccept, Storage(vars=filter_data))
+
+        # Success/Error response
+        xml = current.xml
+        if success:
+            msg = xml.json_message(**info)
+        else:
+            msg = xml.json_message(False, 400)
+        current.response.headers["Content-Type"] = "application/json"
+        return msg
+
+    # -------------------------------------------------------------------------
+    def _load(self, r, **attr):
+        """
+            Load filters
+
+            GET filter.json or GET filter.json?load=<id>
+            
+            @param r: the S3Request
+            @param attr: additional controller parameters
+        """
+
+        db = current.db
+        table = current.s3db.pr_filter
+
+        # Authorization, get pe_id
+        auth = current.auth
+        if auth.s3_logged_in():
+            pe_id = current.auth.user.pe_id
+        else:
+            pe_id = None
+        if not pe_id:
+            r.unauthorized()
+
+        # Build query
+        query = (table.deleted != True) & \
+                (table.resource == self.resource.tablename) & \
+                (table.pe_id == pe_id)
+
+        # Any particular filters?
+        load = r.get_vars.get("load")
+        if load:
+            record_ids = [i for i in load.split(",") if i.isdigit()]
+            if record_ids:
+                if len(record_ids) > 1:
+                    query &= table.id.belongs(record_ids)
+                else:
+                    query &= table.id == record_ids[0]
+        else:
+            record_ids = None
+
+        # Retrieve filters
+        rows = db(query).select(table.id,
+                                table.title,
+                                table.description,
+                                table.query)
+
+        # Pack filters
+        filters = []
+        for row in rows:
+            filters.append({
+                "id": row.id,
+                "title": row.title,
+                "description": row.description,
+                "query": json.loads(row.query) if row.query else [],
+            })
+
+        # JSON response
+        current.response.headers["Content-Type"] = "application/json"
+        return json.dumps(filters)
 
 # END =========================================================================

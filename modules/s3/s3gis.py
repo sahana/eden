@@ -7527,7 +7527,7 @@ class S3Map(S3Method):
                                            # URL to update the Filter Widget Status
                                            ajaxurl=r.url(method="filter",
                                                          vars={},
-                                                         representation="json"),
+                                                         representation="options"),
                                            _class="filter-form",
                                            _id="%s-filter-form" % widget_id,
                                            )

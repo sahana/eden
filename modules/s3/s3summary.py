@@ -217,7 +217,7 @@ class S3Summary(S3Method):
             filter_ajax_url = attr.get("filter_ajax_url",
                                         r.url(method="filter",
                                               vars={},
-                                              representation="json"))
+                                              representation="options"))
 
             filter_formstyle = get_config("filter_formstyle")
             filter_submit = get_config("filter_submit", True)
@@ -258,7 +258,7 @@ class S3Summary(S3Method):
             if active_map:
                 # If there is a map on the active tab then we need to add
                 # a callback to the Map JS Loader
-                active_map.callback = '''S3.search.summary_maps()'''
+                active_map.callback = '''S3.search.summary_maps("%s")''' % form_id
 
         return output
 
