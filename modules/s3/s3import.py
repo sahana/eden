@@ -4035,6 +4035,108 @@ class S3BulkImporter(object):
                         s3_debug("error importing logo %s: %s %s" % (image, key, error))
 
     # -------------------------------------------------------------------------
+    def import_doc(self,
+                     filename,
+                     tablename,
+                     idfield,
+                     docfield):
+        """
+            Import document, such as a reports or files
+            
+            filename     a CSV list of records and filenames
+            tablename    the name of the table
+            idfield      the field used to identify the record
+            docfield     the field to where the docuemnt be added
+            
+            Example:
+            bi.import_doc ("doc_document.csv", "doc_document", "id", "file")
+            and the file doc_document.csv may look as follows
+            id                            file
+             1                          sample1.pdf 
+             2                          sample2.rtf        
+        """
+
+        # Check if the source file is accessible
+        try:
+            openFile = open(filename, "r")
+        except IOError:
+            return "Unable to open file %s" % filename
+
+        prefix, name = tablename.split("_", 1)
+
+        reader = self.csv.DictReader(openFile)
+
+        db = current.db
+        s3db = current.s3db
+        audit = current.manager.audit
+        table = s3db[tablename]
+        idfield = table[idfield]
+        base_query = (table.deleted != True)
+
+        # Get callbacks
+        get_config = s3db.get_config
+        onvalidation = get_config(tablename, "update_onvalidation") or \
+                       get_config(tablename, "onvalidation")
+        onaccept = get_config(tablename, "update_onaccept") or \
+                   get_config(tablename, "onaccept")
+        update_realm = get_config(tablename, "update_realm")
+        if update_realm:
+            set_realm_entity = current.auth.set_realm_entity
+        update_super = s3db.update_super
+
+        for row in reader:
+            if row != None:
+                id = row["id"]
+                doc = row["file"]
+                # Open the file
+                try:
+                    # Extract the path to the CSV file, document should be in
+                    # this directory, or relative to it
+                    (path, file) = os.path.split(filename)
+                    docpath= os.path.join(path, doc)
+                    openFile = open(docpath, "rb")
+                except IOError:
+                    s3_debug("Unable to open document file %s" % doc)
+                    continue
+                doc_source = StringIO(openFile.read())
+                table.insert(file=openFile)
+                # Get the id of the resource
+                try:
+                    query = base_query & (idfield == id)
+                    record = db(query).select(limitby=(0, 1)
+                                              ).first()
+                except:
+                    s3_debug("Unable to get record %s of the resource %s to attach the document file to" % (id, tablename))
+                    continue
+                # Create and accept the form
+                form = SQLFORM(table, record, fields=["id", docfield])
+                form_vars = Storage()
+                record_id = record.id
+                form_vars._formname = "%s/%s" % (tablename, record_id)
+                form_vars.id = record_id
+                source = Storage()
+                source.filename = docpath
+                source.file = doc_source
+                form_vars[docfield] = source
+                if form.accepts(form_vars, onvalidation=onvalidation):
+                    # Audit
+                    audit("update", prefix, name, form=form,
+                          record=record_id, representation="csv")
+
+                    # Update super entity links
+                    update_super(table, form_vars)
+
+                    # Update realm
+                    if update_realm:
+                        set_realm_entity(table, form_vars, force_update=True)
+
+                    # Execute onaccept
+                    callback(onaccept, form, tablename=tablename)
+                else:
+                    for (key, error) in form.errors.items():
+                        s3_debug("error importing document %s: %s %s" % (doc, key, error))
+
+    # -------------------------------------------------------------------------
     def perform_tasks(self, path):
         """
             Load and then execute the import jobs that are listed in the
