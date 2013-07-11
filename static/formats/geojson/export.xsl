@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <xsl:stylesheet
-    xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0"
+    xmlns:s3="http://eden.sahanafoundation.org/wiki/S3">
 
     <!-- **********************************************************************
          GeoJSON Export Templates for Sahana-Eden
@@ -29,6 +30,13 @@
          OTHER DEALINGS IN THE SOFTWARE.
     *********************************************************************** -->
     <xsl:output method="xml"/>
+
+    <s3:fields tables="gis_location" select="name,lat,lon"/>
+    <s3:fields tables="gis_cache" select="lat,lon,title,description,link,data,image,marker"/>
+    <s3:fields tables="gis_feature_query" select="lat,lon,popup_label,popup_url,marker_url,marker_height,marker_width,shape,size,colour,opacity"/>
+    <s3:fields tables="gis_layer_shapefile" select=""/>
+    <s3:fields tables="gis_theme_data" select="value"/>
+    <s3:fields tables="ANY" select="location_id,site_id"/>
 
     <xsl:param name="prefix"/>
     <xsl:param name="name"/>
