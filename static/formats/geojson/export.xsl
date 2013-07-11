@@ -35,6 +35,7 @@
     <s3:fields tables="gis_cache" select="lat,lon,title,description,link,data,image,marker"/>
     <s3:fields tables="gis_feature_query" select="lat,lon,popup_label,popup_url,marker_url,marker_height,marker_width,shape,size,colour,opacity"/>
     <s3:fields tables="gis_layer_shapefile" select=""/>
+    <s3:fields tables="gis_layer_shapefile*" select="layer_id"/>
     <s3:fields tables="gis_theme_data" select="location_id,value"/>
     <s3:fields tables="ANY" select="location_id,site_id"/>
 

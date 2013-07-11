@@ -36,6 +36,7 @@ __all__ = ["S3XML"]
 
 import datetime
 import os
+import re
 import sys
 import urllib2
 
@@ -2254,6 +2255,14 @@ class S3XMLFormat(object):
 
     # -------------------------------------------------------------------------
     def get_fields(self, tablename):
+        """
+            Get the fields to include/exclude for the specified table.
+
+            @param tablename: the tablename
+            @return: tuple of lists (include, exclude) of fields to
+                     include or exclude. None indicates "all fields",
+                     whereas an empty list indicates "no fields".
+        """
 
         ANY = "ANY"
         default = None
@@ -2265,11 +2274,28 @@ class S3XMLFormat(object):
         if self.select is None:
             self.__inspect()
 
-        select = self.select
-        select = select.get(tablename, select.get(ANY, []))
+        def find_match(items, tablename, default):
 
-        skip = self.skip
-        skip = skip.get(tablename, skip.get(ANY, None))
+            if tablename in items:
+                match = items[tablename]
+            else:
+                match = False
+                maxlen = 0
+                for tn, fields in items.iteritems():
+                    if "*" in tn:
+                        m = re.match(tn.replace("*", ".*"), tablename)
+                        if not m:
+                            continue
+                        l = m.span()[-1]
+                        if l > maxlen:
+                            match = fields
+                if match is False:
+                    match = items.get(ANY, default)
+            return match
+
+        select = find_match(self.select, tablename, None)
+        skip = find_match(self.skip, tablename, set())
+        
         if skip:
             if select:
                 include = [fn for fn in select if fn not in skip]

@@ -1650,7 +1650,7 @@ class S3Request(object):
             print >> sys.stderr, "ERROR: %s" % message
             raise HTTP(status,
                        body=current.xml.json_message(success=False,
-                                                     status_code=status,
+                                                     statuscode=status,
                                                      message=message,
                                                      tree=tree),
                        web2py_header=message,
@@ -2038,7 +2038,7 @@ class S3Method(object):
         return output
 
     # -------------------------------------------------------------------------
-    def widget(self, r, method=None, widget_id=None, **attr):
+    def widget(self, r, method=None, widget_id=None, visible=True, **attr):
         """
             Stub, to be implemented in subclass. This method is used
             by other method handlers to embed this method as widget.
@@ -2064,7 +2064,17 @@ class S3Method(object):
                 the URL query of the Ajax-update call, and Ajax-calls should
                 not use "html" format.
 
+                If visible==False, then the widget will initially be hidden,
+                so it can be rendered empty and Ajax-load its data layer
+                upon a separate refresh call. Otherwise, the widget should
+                receive its data layer immediately. Widgets can ignore this
+                parameter if delayed loading of the data layer is not
+                all([possible, useful, supported]).
+
             @param r: the S3Request
+            @param method: the URL method
+            @param widget_id: the widget ID
+            @param visible: whether the widget is initially visible
             @param attr: dictionary of parameters for the method handler
 
             @return: output

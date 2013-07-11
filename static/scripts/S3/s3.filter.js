@@ -13,6 +13,11 @@ S3.search = {};
     var pendingTargets = {};
 
     /**
+     * lastLoaded: ID of the last loaded filter
+     */
+    var lastLoaded = {};
+
+    /**
      * quoteValue: add quotes to values which contain commas, escape quotes
      */
     var quoteValue = function(value) {
@@ -31,8 +36,9 @@ S3.search = {};
      * clearFilters: remove all selected filter options
      */
     var clearFilters = function(form) {
-        
-        form = typeof form !== 'undefined' ? form : $('body');
+
+        // If no form has been specified, find the first one
+        form = typeof form !== 'undefined' ? form : $('body').find('form.filter-form').first();
  
         form.find('.text-filter').each(function() {
             $(this).val('');
@@ -61,7 +67,6 @@ S3.search = {};
             $(this).val('');
         });
         // Other widgets go here
-        
     };
     
     /**
@@ -76,7 +81,7 @@ S3.search = {};
      */
     var getCurrentFilters = function(form) {
 
-        form = typeof form !== 'undefined' ? form : $('body');
+        form = typeof form !== 'undefined' ? form : $('body').find('form.filter-form').first();
 
         var queries = [];
 
@@ -505,7 +510,7 @@ S3.search = {};
         
         var url = $('#' + form).find('input.filter-submit-url[type="hidden"]')
                                .first().val(),
-            targets = pendingTargets,
+            targets = pendingTargets[form],
             target_id,
             target_data,
             needs_reload,
@@ -514,7 +519,7 @@ S3.search = {};
             visible;
 
         // Clear the list
-        pendingTargets = {};
+        pendingTargets[form] = {};
 
         // Inspect the targets
         for (target_id in targets) {
@@ -533,13 +538,13 @@ S3.search = {};
             if (visible) {
                 if (needs_reload) {
                     // reload immediately
-                    queries = getCurrentFilters();
+                    queries = getCurrentFilters($('#' + form));
                     url = filterURL(url, queries);
                     window.location.href = url;
                 }
             } else {
                 // re-schedule for later
-                pendingTargets[target_id] = target_data;
+                pendingTargets[form][target_id] = target_data;
             }
         }
 
@@ -566,10 +571,56 @@ S3.search = {};
      * - in global scope as called from outside
      *
      * Parameters:
-     * form - {String} ID of the form to be made into Tabs
+     * form - {String} ID of the filter form
      * active_tab - {Integer} Which Section is active to start with
      */
-    S3.search.summary_tabs = function(form, active_tab) {
+    S3.search.summary_tabs = function(form, active_tab, pending) {
+
+        // Schedule initially hidden widgets to Ajax-load their data
+        // layers, required here because otherwise this happens only
+        // during filter-submit, but the user could also simply switch
+        // tabs without prior filter-submit; list of initially hidden
+        // widgets with ajax-init option is provided by the page
+        // renderer (S3Summary.summary()).
+        if (pending) {
+            var q = getCurrentFilters($('#' + form));
+            var targets = pending.split(',');
+            for (i=0, len=targets.length; i < len; i++) {
+                target_id = targets[i];
+                if (!pendingTargets.hasOwnProperty(form)) {
+                    pendingTargets[form] = {};
+                }
+                if (pendingTargets[form].hasOwnProperty(target_id)) {
+                    // already scheduled
+                    continue;
+                }
+                t = $('#' + target_id);
+                if (t.hasClass('dl') || t.hasClass('map_wrapper')) {
+                    // These targets handle their AjaxURL themselves
+                    ajaxurl = null;
+                } else if (t.hasClass('dataTable')) {
+                    // Lookup and filter the AjaxURL
+                    config = $('input#' + targets[i] + '_configurations');
+                    if (config.length) {
+                        settings = JSON.parse($(config).val());
+                        ajaxurl = settings['ajaxUrl'];
+                        if (typeof ajaxurl != 'undefined') {
+                            ajaxurl = filterURL(ajaxurl, q);
+                        } else {
+                            continue
+                        }
+                    }
+                } else {
+                    continue;
+                }
+                pendingTargets[form][target_id] = {
+                    needs_reload: false,
+                    ajaxurl: ajaxurl,
+                    queries: q
+                };
+            }
+        }
+
         // Initialise jQueryUI Tabs
         $('#summary-tabs').tabs({
             active: active_tab,
@@ -590,22 +641,8 @@ S3.search = {};
                         // Instantiate the map (can't be done when the DIV is hidden)
                         var options = gis.options[map_id];
                         gis.show_map(map_id, options);
-                        // Workaround: if the map widget was initially hidden
-                        // we need to load the layer even if it isn't a pending
-                        // target (e.g. because the filter was not changed).
-                        if (!pendingTargets.hasOwnProperty(map_id)) {
-                            // Get the current Filters
-                            var queries = getCurrentFilters();
-                            // Load the layer
-                            gis.refreshLayer('search_results', queries);
-                        }
                     }
                 }
-                // @todo: trigger all widgets which need an initial Ajax-call
-                // to load their data layer and haven't been triggered yet
-                // (pending widgets) - unless they are pending targets (generic
-                // fix for the map workaround above, see also @todo's in s3summary.py
-
                 // Update all just-unhidden widgets which have pending updates
                 updatePendingTargets(form);
             }
@@ -616,7 +653,7 @@ S3.search = {};
      * Initialise Maps for an S3Summary page
      * - in global scope as called from callback to Map Loader
      */
-    S3.search.summary_maps = function() {
+    S3.search.summary_maps = function(form) {
         // Find any Map widgets in the initially active tab
         var maps = $('#summary-sections').find('.map_wrapper');
         for (var i=0; i < maps.length; i++) {
@@ -629,7 +666,7 @@ S3.search = {};
                     var options = gis.options[map_id];
                     gis.show_map(map_id, options);
                     // Get the current Filters
-                    var queries = getCurrentFilters();
+                    var queries = getCurrentFilters($('#' + form));
                     // Load the layer
                     gis.refreshLayer('search_results', queries);
                 }
@@ -648,6 +685,7 @@ S3.search = {};
         var options = gis.options[map_id];
         gis.show_map(map_id, options);
         // Get the current Filters
+        // @todo: select a filter form
         var queries = getCurrentFilters();
         // Load the layer
         gis.refreshLayer('search_results', queries);
@@ -843,6 +881,7 @@ S3.search = {};
 
         // Advanced button
         $('.filter-advanced').on('click', function() {
+            
             // Toggle visibility & mark widgets as [in]active
             // @todo: select form
             var hidden;
@@ -885,17 +924,21 @@ S3.search = {};
             hierarchical_location_change(this);
         });
 
+        // Clear all filters
         $('.filter-clear').click(function() {
-            var form = $(this).closest('.filter-form');
+            var form = $(this).closest('form.filter-form');
             clearFilters(form);
+            lastLoaded[filter_form.attr('id')] = null;
         });
         
         // Filter-form submission
         $('.filter-submit').click(function() {
+            
             var that = $(this);
+            var filter_form = that.closest('form.filter-form');
+            var form_id = filter_form.attr('id');
             var url = that.nextAll('input.filter-submit-url[type="hidden"]').val(),
-                // @todo: select form
-                queries = getCurrentFilters();
+                queries = getCurrentFilters(filter_form);
 
             if (that.hasClass('filter-ajax')) {
                 // Ajax-refresh the target objects
@@ -905,7 +948,7 @@ S3.search = {};
                                  .val();
 
                 // Clear the list
-                pendingTargets = {};
+                pendingTargets[form_id] = {};
 
                 var targets = target.split(' '),
                     needs_reload,
@@ -970,7 +1013,7 @@ S3.search = {};
 
                     if (!visible) {
                         // schedule for later
-                        pendingTargets[target_id] = {
+                        pendingTargets[form_id][target_id] = {
                             needs_reload: needs_reload,
                             ajaxurl: ajaxurl,
                             queries: queries

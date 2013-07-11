@@ -140,13 +140,15 @@ class S3CRUD(S3Method):
         return output
 
     # -------------------------------------------------------------------------
-    def widget(self, r, method=None, widget_id=None, **attr):
+    def widget(self, r, method=None, widget_id=None, visible=True, **attr):
         """
             Entry point for other method handlers to embed this
             method as widget
 
-            @param method: the widget method
             @param r: the S3Request
+            @param method: the widget method
+            @param widget_id: the widget ID
+            @param visible: whether the widget is initially visible
             @param attr: controller attributes
         """
 
@@ -1231,7 +1233,7 @@ class S3CRUD(S3Method):
                 filter_ajax_url = attr.get("filter_ajax_url",
                                            r.url(method="filter",
                                                  vars={},
-                                                 representation="json"))
+                                                 representation="options"))
 
                 from s3filter import S3FilterForm
                 filter_formstyle = get_config("filter_formstyle", None)
