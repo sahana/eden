@@ -3122,10 +3122,7 @@ class S3Resource(object):
 
                     # Fields to load
                     if xmlformat:
-                        if self.tablename == "gis_layer_shapefile":
-                            include, exclude = ["layer_id"], None
-                        else:
-                            include, exclude = xmlformat.get_fields(c.tablename)
+                        include, exclude = xmlformat.get_fields(c.tablename)
                     else:
                         include, exclude = None, None
                         
