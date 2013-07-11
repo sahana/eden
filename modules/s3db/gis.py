@@ -4415,7 +4415,7 @@ class gis_LocationRepresent(S3Represent):
         """
 
         sep = self.sep
-        name = row.name
+        name = row.name or ""
         level = row.level
         if sep:
             if level == "L0":

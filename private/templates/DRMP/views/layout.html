@@ -108,6 +108,9 @@
       <li class='dropdown'><a href='#' class='dropdown-toggle disabled' data-toggle='dropdown'><i class='icon-cog'></i><b class='caret'></b></a>
        <ul class='dropdown-menu'>
         <li><a href='/{{=appname}}/default/user/profile'><i class='icon-cog'></i> {{=T("Profile")}}</a></li>
+        {{if auth.s3_has_role("ADMIN"):}}
+        <li><a href='/{{=appname}}/admin/user'><i class='icon-cogs'></i> {{=T("Admin")}}</a></li>
+        {{pass}}
         <li class='divider'></li>
         <li><a href='/{{=appname}}/default/user/logout'><i class='icon-off'></i> {{=T("Logout")}}</a></li>
        </ul>

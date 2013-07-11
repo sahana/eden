@@ -23,7 +23,7 @@
          Lon......................float........Longitude of most specific location
          Comments.................Post Comments
          Author...................Post created_by (email)
-         Date.....................Post created_on (datetime)
+         Date.....................datetime
          Attachment...............doc_document (URL to remote server to download)
          Events...................Comma-separated list of Events to tag the Post to
          Roles....................Post Roles (not yet implemented)
@@ -174,7 +174,7 @@
                 </xsl:attribute>
             </xsl:if>
             <xsl:if test="$Date!=''">
-                <xsl:attribute name="created_on">
+                <xsl:attribute name="datetime">
                     <xsl:value-of select="$Date"/>
                 </xsl:attribute>
             </xsl:if>

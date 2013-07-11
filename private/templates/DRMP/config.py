@@ -33,7 +33,7 @@ datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
 # -----------------------------------------------------------------------------
 # Authorization Settings
 settings.auth.registration_requires_approval = True
-settings.auth.registration_requires_verification = True
+settings.auth.registration_requires_verification = False
 settings.auth.registration_requests_organisation = True
 settings.auth.registration_organisation_required = True
 settings.auth.registration_requests_site = False
@@ -43,8 +43,9 @@ settings.auth.registration_link_user_to_default = ["staff"]
 settings.auth.registration_roles = {"organisation_id": ["USER"],
                                     }
 
-
 settings.auth.show_utc_offset = False
+
+settings.auth.show_link = False
 
 settings.auth.record_approval = False
 settings.auth.record_approval_required_for = ["org_organisation"]
@@ -1068,7 +1069,7 @@ def render_posts(listid, resource, rfields, record, **attr):
 
     raw = record._row
     series = record["cms_post.series_id"]
-    date = record["cms_post.created_on"]
+    date = record["cms_post.date"]
     body = record["cms_post.body"]
     location = record["cms_post.location_id"]
     location_id = raw["cms_post.location_id"]
@@ -1667,11 +1668,10 @@ def customize_cms_post_fields():
     field.widget = S3LocationSelectorWidget2(levels=["L1", "L2", "L3"])
 
     table.created_by.represent = s3_auth_user_represent_name
-    table.created_on.represent = datetime_represent
 
     list_fields = ["series_id",
                    "location_id",
-                   "created_on",
+                   "date",
                    "body",
                    "created_by",
                    "created_by$organisation_id",
@@ -1707,7 +1707,7 @@ def cms_post_popup(r):
     table = db.cms_post
 
     series = table.series_id.represent(record.series_id)
-    date = table.created_on.represent(record.created_on)
+    date = table.datetime.represent(record.date)
     body = record.body
     location_id = record.location_id
     location = table.location_id.represent(location_id)
@@ -1929,6 +1929,7 @@ def customize_cms_post(**attr):
             event_id = get_vars.get("~.(event)", None)
             if event_id:
                 crud_form = S3SQLCustomForm(
+                    "date",
                     "series_id",
                     "body",
                     "location_id",
@@ -1950,6 +1951,7 @@ def customize_cms_post(**attr):
                                )
             else:
                 crud_form = S3SQLCustomForm(
+                    "date",
                     "series_id",
                     "body",
                     "location_id",
@@ -1995,7 +1997,7 @@ def customize_cms_post(**attr):
             utable.organisation_id.represent = s3db.org_organisation_represent
 
             list_fields = [
-                (T("Date"), "created_on"),
+                (T("Date"), "date"),
                 (T("Disaster"), "event_post.event_id"),
                 (T("Type"), "series_id"),
                 (T("Details"), "body"),
@@ -2070,6 +2072,22 @@ def customize_event_event(**attr):
     standard_prep = s3.prep
     def custom_prep(r):
         if r.interactive:
+            ADD_EVENT = T("New Disaster")
+            s3.crud_strings["event_event"] = Storage(
+                title_create = ADD_EVENT,
+                title_display = T("Disaster Details"),
+                title_list = T("Disasters"),
+                title_update = T("Edit Disaster"),
+                title_search = T("Search Disasters"),
+                subtitle_create = T("Add New Disaster"),
+                label_list_button = T("List Disasters"),
+                label_create_button = ADD_EVENT,
+                label_delete_button = T("Delete Disaster"),
+                msg_record_created = T("Disaster added"),
+                msg_record_modified = T("Disaster updated"),
+                msg_record_deleted = T("Disaster deleted"),
+                msg_list_empty = T("No Disasters currently registered"))
+            
             db = current.db
             s3db = current.s3db
 
@@ -2267,22 +2285,6 @@ def customize_event_event(**attr):
                            list_layout = render_events,
                            )
 
-            ADD_EVENT = T("New Disaster")
-            s3.crud_strings["event_event"] = Storage(
-                title_create = ADD_EVENT,
-                title_display = T("Disaster Details"),
-                title_list = T("Disasters"),
-                title_update = T("Edit Disaster"),
-                title_search = T("Search Disasters"),
-                subtitle_create = T("Add New Disaster"),
-                label_list_button = T("List Disasters"),
-                label_create_button = ADD_EVENT,
-                label_delete_button = T("Delete Disaster"),
-                msg_record_created = T("Disaster added"),
-                msg_record_modified = T("Disaster updated"),
-                msg_record_deleted = T("Disaster deleted"),
-                msg_list_empty = T("No Disasters currently registered"))
-
         # Call standard prep
         if callable(standard_prep):
             result = standard_prep(r)
@@ -2333,6 +2335,9 @@ def customize_gis_location(**attr):
         if r.interactive:
             s3db = current.s3db
             table = s3db.gis_location
+
+            s3.crud_strings["gis_location"].title_list = T("Districts")
+
             if r.method == "datalist":
                 # District selection page
                 # 2-column datalist, 6 rows per page
@@ -2354,8 +2359,6 @@ def customize_gis_location(**attr):
                                list_fields = list_fields,
                                list_layout = render_locations,
                                )
-
-                s3.crud_strings["gis_location"].title_list = T("Districts")
 
             elif r.method == "profile":
         
@@ -2826,6 +2829,21 @@ def customize_org_organisation(**attr):
                 return False
 
         if r.interactive:
+            ADD_ORGANISATION = T("New Stakeholder")
+            s3.crud_strings["org_organisation"] = Storage(
+                title_create = ADD_ORGANISATION,
+                title_display = T("Stakeholder Details"),
+                title_list = T("Stakeholders"),
+                title_update = T("Edit Stakeholder"),
+                title_search = T("Search Stakeholders"),
+                subtitle_create = T("Add New Stakeholder"),
+                label_list_button = T("List Stakeholders"),
+                label_create_button = ADD_ORGANISATION,
+                label_delete_button = T("Delete Stakeholder"),
+                msg_record_created = T("Stakeholder added"),
+                msg_record_modified = T("Stakeholder updated"),
+                msg_record_deleted = T("Stakeholder deleted"),
+                msg_list_empty = T("No Stakeholders currently registered"))
 
             list_fields = ["id",
                            "name",
@@ -2993,22 +3011,6 @@ def customize_org_organisation(**attr):
                            list_fields = list_fields,
                            list_layout = render_organisations,
                            )
-
-            ADD_ORGANISATION = T("New Stakeholder")
-            s3.crud_strings["org_organisation"] = Storage(
-                title_create = ADD_ORGANISATION,
-                title_display = T("Stakeholder Details"),
-                title_list = T("Stakeholders"),
-                title_update = T("Edit Stakeholder"),
-                title_search = T("Search Stakeholders"),
-                subtitle_create = T("Add New Stakeholder"),
-                label_list_button = T("List Stakeholders"),
-                label_create_button = ADD_ORGANISATION,
-                label_delete_button = T("Delete Stakeholder"),
-                msg_record_created = T("Stakeholder added"),
-                msg_record_modified = T("Stakeholder updated"),
-                msg_record_deleted = T("Stakeholder deleted"),
-                msg_list_empty = T("No Stakeholders currently registered"))
 
         return True
     s3.prep = custom_prep
@@ -3239,7 +3241,7 @@ def customize_pr_person(**attr):
             s3.crud_strings[tablename] = Storage(
                 title_create = T("Add Contact"),
                 title_display = T("Contact Details"),
-                title_list = T("Contacts"),
+                title_list = T("Contact Directory"),
                 title_update = T("Edit Contact Details"),
                 title_search = T("Search Contacts"),
                 subtitle_create = ADD_CONTACT,
@@ -3641,6 +3643,7 @@ def customize_project_project(**attr):
             list_fields = ["name",
                            "organisation_id",
                            "human_resource_id",
+                           (T("Distrcits"), "location.location_id"),
                            "start_date",
                            "end_date",
                            "budget",
