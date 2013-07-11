@@ -2904,18 +2904,14 @@ class S3Resource(object):
         # Add referenced resources to the tree
         #if DEBUG:
         #    _start = datetime.datetime.now()
-        
+
         depth = dereference and manager.MAX_DEPTH or 0
         while reference_map and depth:
-            
             depth -= 1
-            
             load_map = dict()
-            
             get_exported = export_map.get
             for ref in reference_map:
                 if "table" in ref and "id" in ref:
-
                     # Get tablename and IDs
                     tname = ref["table"]
                     ids = ref["id"]
@@ -2927,7 +2923,7 @@ class S3Resource(object):
                     ids = [x for x in ids if x not in exported]
                     if not ids:
                         continue
-                    
+
                     # Append the new ids to load_map[tname]
                     if tname in load_map:
                         ids = [x for x in ids if x not in load_map[tname]]
@@ -2939,13 +2935,13 @@ class S3Resource(object):
             REF = xml.ATTRIBUTE.ref
             for tablename in load_map:
                 load_list = load_map[tablename]
-                
+
                 # Sync filters
                 if filters:
                     filter_vars = filters.get(tablename, None)
                 else:
                     filter_vars = None
-                    
+
                 prefix, name = tablename.split("_", 1)
                 rresource = define_resource(tablename,
                                             id=load_list,

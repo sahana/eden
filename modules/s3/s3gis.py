@@ -6137,12 +6137,12 @@ def addFeatureResources(feature_resources):
                                       limitby=(0, 1)).first()
             if flayer.use_site:
                 maxdepth = 1
-                references = "site_id,location_id&show_ids=true"
+                show_ids = "&show_ids=true"
             else:
                 maxdepth = 0
-                references = "location_id"
-            url = "%s.geojson?layer=%i&components=None&maxdepth=%s&references=%s" % \
-                (URL(flayer.controller, flayer.function), flayer.id, maxdepth, references)
+                show_ids = ""
+            url = "%s.geojson?layer=%i&components=None&maxdepth=%s%s" % \
+                (URL(flayer.controller, flayer.function), flayer.id, maxdepth, show_ids)
             # Use specified filter or fallback to the one in the layer
             filter = layer.get("filter", flayer.filter)
             if filter:
@@ -6167,20 +6167,15 @@ def addFeatureResources(feature_resources):
             # Optimise the query & tell back-end not to add the type to the tooltips
             if "location_id" in table.fields:
                 maxdepth = 0
-                references = "location_id"
+                show_ids = ""
             elif "site_id" in table.fields:
                 maxdepth = 1
-                references = "site_id,location_id&show_ids=true"
+                show_ids = "&show_ids=true"
             else:
                 # Not much we can do!
                 continue
-            # @ToDo: layer["namefield"]
-            if "name" in table.fields:
-                title = "name"
-            else:
-                title = "id"
-            options = "components=None&maxdepth=%s&references=%s&fields=%s&label_off=1" % \
-                        (maxdepth, references, title)
+            options = "components=None&maxdepth=%s%s&label_off=1" % \
+                        (maxdepth, show_ids)
             if "?" in url:
                 url = "%s&%s" % (url, options)
             else:
@@ -6708,12 +6703,12 @@ class LayerFeature(Layer):
                 return
             if self.use_site:
                 maxdepth = 1
-                references = "site_id,location_id&show_ids=true"
+                show_ids = "&show_ids=true"
             else:
                 maxdepth = 0
-                references = "location_id"
-            url = "%s.geojson?layer=%i&components=None&maxdepth=%s&references=%s" % \
-                (URL(self.controller, self.function), self.id, maxdepth, references)
+                show_ids = ""
+            url = "%s.geojson?layer=%i&components=None&maxdepth=%s%s" % \
+                (URL(self.controller, self.function), self.id, maxdepth, show_ids)
             if self.filter:
                 url = "%s&%s" % (url, self.filter)
             if self.trackable:
@@ -7271,7 +7266,7 @@ class LayerTheme(Layer):
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
         def as_dict(self):
-            url = "%s.geojson?theme_data.layer_theme_id=%i&polygons=1&maxdepth=0&references=location_id&fields=value" % \
+            url = "%s.geojson?theme_data.layer_theme_id=%i&polygons=1&maxdepth=0" % \
                 (URL(c="gis", f="theme_data"), self.id)
 
             # Mandatory attributes
