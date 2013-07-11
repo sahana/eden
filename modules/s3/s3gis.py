@@ -7552,12 +7552,23 @@ class S3Map(S3Method):
             r.error(501, r.ERROR.BAD_FORMAT)
 
     # -------------------------------------------------------------------------
-    def widget(self, r, method="map", widget_id=None, callback=None, **attr):
+    def widget(self,
+               r,
+               method="map",
+               widget_id=None,
+               visible=True,
+               callback=None,
+               **attr):
         """
             Render a Map widget suitable for use in an S3Filter-based page
             such as S3Summary
             
-            @param: callback. None by default in case DIV is hidden
+            @param r: the S3Request
+            @param method: the widget method
+            @param widget_id: the widget ID
+            @param callback: None by default in case DIV is hidden
+            @param visible: whether the widget is initially visible
+            @param attr: controller attributes
         """
 
         if not widget_id:

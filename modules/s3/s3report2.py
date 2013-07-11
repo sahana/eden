@@ -213,13 +213,14 @@ class S3Report2(S3Method):
         return output
 
     # -------------------------------------------------------------------------
-    def widget(self, r, method=None, widget_id=None, **attr):
+    def widget(self, r, method=None, widget_id=None, visible=True, **attr):
         """
             Pivot table report widget
         
+            @param r: the S3Request
             @param method: the widget method
             @param widget_id: the widget ID
-            @param r: the S3Request
+            @param visible: whether the widget is initially visible
             @param attr: controller attributes
         """
 

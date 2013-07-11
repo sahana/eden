@@ -566,10 +566,53 @@ S3.search = {};
      * - in global scope as called from outside
      *
      * Parameters:
-     * form - {String} ID of the form to be made into Tabs
+     * form - {String} ID of the filter form
      * active_tab - {Integer} Which Section is active to start with
      */
-    S3.search.summary_tabs = function(form, active_tab) {
+    S3.search.summary_tabs = function(form, active_tab, pending) {
+
+        // Schedule initially hidden widgets to Ajax-load their data
+        // layers, required here because otherwise this happens only
+        // during filter-submit, but the user could also simply switch
+        // tabs without prior filter-submit; list of initially hidden
+        // widgets with ajax-init option is provided by the page
+        // renderer (S3Summary.summary()).
+        if (pending) {
+            var q = getCurrentFilters($(form));
+            var targets = pending.split(',');
+            for (i=0, len=targets.length; i < len; i++) {
+                target_id = targets[i];
+                if (pendingTargets.hasOwnProperty(target_id)) {
+                    // already scheduled
+                    continue;
+                }
+                t = $('#' + target_id);
+                if (t.hasClass('dl') || t.hasClass('map_wrapper')) {
+                    // These targets handle their AjaxURL themselves
+                    ajaxurl = null;
+                } else if (t.hasClass('dataTable')) {
+                    // Lookup and filter the AjaxURL
+                    config = $('input#' + targets[i] + '_configurations');
+                    if (config.length) {
+                        settings = JSON.parse($(config).val());
+                        ajaxurl = settings['ajaxUrl'];
+                        if (typeof ajaxurl != 'undefined') {
+                            ajaxurl = filterURL(ajaxurl, q);
+                        } else {
+                            continue
+                        }
+                    }
+                } else {
+                    continue;
+                }
+                pendingTargets[target_id] = {
+                    needs_reload: false,
+                    ajaxurl: ajaxurl,
+                    queries: q
+                };
+            }
+        }
+
         // Initialise jQueryUI Tabs
         $('#summary-tabs').tabs({
             active: active_tab,
@@ -590,22 +633,8 @@ S3.search = {};
                         // Instantiate the map (can't be done when the DIV is hidden)
                         var options = gis.options[map_id];
                         gis.show_map(map_id, options);
-                        // Workaround: if the map widget was initially hidden
-                        // we need to load the layer even if it isn't a pending
-                        // target (e.g. because the filter was not changed).
-                        if (!pendingTargets.hasOwnProperty(map_id)) {
-                            // Get the current Filters
-                            var queries = getCurrentFilters();
-                            // Load the layer
-                            gis.refreshLayer('search_results', queries);
-                        }
                     }
                 }
-                // @todo: trigger all widgets which need an initial Ajax-call
-                // to load their data layer and haven't been triggered yet
-                // (pending widgets) - unless they are pending targets (generic
-                // fix for the map workaround above, see also @todo's in s3summary.py
-
                 // Update all just-unhidden widgets which have pending updates
                 updatePendingTargets(form);
             }
