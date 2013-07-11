@@ -141,6 +141,71 @@ class ComponentLeftJoinConstructionTests(unittest.TestCase):
         self.assertEqual(str(ljoin[1]), str(expected_r))
 
 # =============================================================================
+class DocumentFullTextSearchTests(unittest.TestCase):
+    """ Test for Full-Text Function """
+
+    # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.get_base_solr_url(), "Full Text Search Disabled")
+    def testFullTextFunctionSolrAvailable(self):
+        """ Testing the fulltext() function when Solr is confugured """
+
+        import sunburnt    
+        try: 
+            si = sunburnt.SolrInterface(current.deployment_settings.get_base_solr_url())
+            ft = True
+        except:
+            ft = False
+
+        s3db = current.s3db
+        # Normal Query
+        q = (S3FieldSelector("file").text("test"))
+        resource = s3db.resource("doc_document")
+        doc_document = resource.table
+
+        query = q.transform(resource)
+        if ft:
+            query = query.represent(resource)
+            expected = "(doc_document.id in [2, 1, 3])"
+        else:
+            expected = "False"
+        self.assertEqual(str(expected), str(query))
+
+        # Nested Query
+        q = (S3FieldSelector("id").like("%123%")) & ((S3FieldSelector("file").text("document")) | \
+                                                    (S3FieldSelector("file").text("test")))
+        resource = s3db.resource("doc_document")
+
+        query = q.transform(resource)
+        query = query.represent(resource)
+        doc_document = resource.table
+
+        if ft:
+            expected = '((doc_document.id like "%123%") and ((doc_document.id in [1]) or (doc_document.id in [2, 1, 3])))'
+        else:
+            expected = '(doc_document.id like "%123%")'
+            
+        self.assertEqual(str(expected), str(query))
+        
+    # -------------------------------------------------------------------------
+    def testFullTextFunctionSolrUnAvailable(self):
+        """ Testing the fulltext() function when Solr maybe confugured, but not available """
+        
+        # Forcing to fail Solr    
+        current.deployment_settings.base.solr_url = False
+
+        s3db = current.s3db
+        q = (S3FieldSelector("id").like("%123%")) & ((S3FieldSelector("file").text("using")) | \
+                                                    (S3FieldSelector("file").text("<head>")))
+        resource = s3db.resource("doc_document")
+
+        query = q.transform(resource)
+        query = query.represent(resource)
+        doc_document = resource.table
+        expected = '(doc_document.id like "%123%")'
+            
+        self.assertEqual(str(expected), str(query))
+
+# =============================================================================
 class FieldSelectorResolutionTests(unittest.TestCase):
     """ Test field selector resolution """
 
@@ -3735,6 +3800,7 @@ if __name__ == "__main__":
         ComponentJoinConstructionTests,
         ComponentLeftJoinConstructionTests,
 
+        DocumentFullTextSearchTests,
         FieldSelectorResolutionTests,
 
         ResourceFilterJoinTests,

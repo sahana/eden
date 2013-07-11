@@ -5259,6 +5259,10 @@ class S3FieldSelector(object):
         return S3ResourceQuery(S3ResourceQuery.BELONGS, self, value)
 
     # -------------------------------------------------------------------------
+    def text(self, value):
+        return S3ResourceQuery(S3ResourceQuery.TEXT, self, value)
+
+    # -------------------------------------------------------------------------
     def contains(self, value):
         return S3ResourceQuery(S3ResourceQuery.CONTAINS, self, value)
 
@@ -5935,10 +5939,11 @@ class S3ResourceQuery(object):
     BELONGS = "belongs"
     CONTAINS = "contains"
     ANYOF = "anyof"
+    TEXT = "text"
 
     OPERATORS = [NOT, AND, OR,
                  LT, LE, EQ, NE, GE, GT,
-                 LIKE, BELONGS, CONTAINS, ANYOF]
+                 LIKE, BELONGS, CONTAINS, ANYOF, TEXT]
 
     # -------------------------------------------------------------------------
     def __init__(self, op, left=None, right=None):
@@ -6102,6 +6107,53 @@ class S3ResourceQuery(object):
             return self.query(resource), None
 
     # -------------------------------------------------------------------------
+    def transform(self, resource):
+        """
+            @param: resource: the resource to resolve the query against
+
+            Returns a S3ResourceQuery with tranformed query: text -> belongs
+        """    
+
+        op = self.op
+        l = self.left
+        r = self.right
+
+        if op == self.AND:
+            l = l.transform(resource)
+            r = r.transform(resource)
+            if l is None or r is None:
+                return None
+            elif l is False or r is False:
+                return l if r is False else r if l is False else False
+            else:
+                return l & r          
+        elif op == self.OR:
+            l = l.transform(resource)
+            r = r.transform(resource)
+            if l is None or r is None:
+                return None
+            elif l is False or r is False:
+                return l if r is False else r if l is False else False
+            else:
+                return l | r
+        elif op == self.NOT:
+            l = l.transform(resource)
+            if l is None:
+                return None
+            elif l is False:
+                return False
+            else:
+                return ~l
+        elif op == self.TEXT:
+            if l.name == "file":
+                l = self.fulltext(l, r)
+                return l
+            else:
+                return self
+        else:
+            return self
+
+    # -------------------------------------------------------------------------
     def query(self, resource):
         """
             Convert this S3ResourceQuery into a DAL query, ignoring virtual
@@ -6252,6 +6304,43 @@ class S3ResourceQuery(object):
         else:
             q = None
         return q
+
+    # -------------------------------------------------------------------------
+    def fulltext(self, l, r):
+        """
+            Does a Full-Text Search and Transform it into a BELONG Query 
+
+            @param l: the left operand
+            @param r: the right operand
+        """
+
+        solr_url = current.deployment_settings.get_base_solr_url()
+
+        if not solr_url:
+            return False
+        
+        import sunburnt
+
+        try:
+            si = sunburnt.SolrInterface(solr_url)
+        except:
+            return False
+
+        records = si.query(name=r).highlight("name").execute()
+        filename = [];
+
+        for re in records:
+            filename.append(int(re["id"]))
+
+        if len(filename) < 1:
+            return False
+
+        l.name = "id"
+            
+        query_transform = S3ResourceQuery(self.BELONGS, left=l, right=filename)
+             
+        return query_transform
+
 
     # -------------------------------------------------------------------------
     def __call__(self, resource, row, virtual=True):
@@ -7172,7 +7261,9 @@ class S3ResourceFilter(object):
 
         if isinstance(f, S3ResourceQuery):
 
+#            f = f.transform(self.resource)
             q = f.query(self.resource)
+    
             if q is not None:
                 self._add_query(q, component=component, master=master)
             else:
