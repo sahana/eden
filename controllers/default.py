@@ -343,7 +343,7 @@ google.load('feeds','1')
 google.setOnLoadCallback(LoadDynamicFeedControl)'''))
         s3.js_global.append(feed_control)
 
-    return dict(title = title,
+    output =  dict(title = title,
                 item = item,
                 sit_dec_res_box = sit_dec_res_box,
                 facility_box = facility_box,
@@ -359,6 +359,9 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
                 register_div=register_div
                 )
 
+    output = s3_guided_tour(output)
+
+    return output
 # -----------------------------------------------------------------------------
 def organisation():
     """

@@ -1,2 +1,5 @@
 {{extend "../private/templates/%s/views/layout.html" % response.s3.theme}}
 {{include}}
+  {{if settings.get_base_guided_tour() and request.get_vars.tour:}}
+    {{=joyride_div}}
+  {{pass}}

@@ -151,6 +151,31 @@ class S3MainMenu(object):
             MM("Contact us", f="contact"),
             MM("About", f="about")
         )
+
+        # -------------------------------------------------------------------
+        # Now add the available guided tours to the help menu
+
+        # check that a guided_tour is enabled
+        if current.deployment_settings.get_base_guided_tour():
+            # load the guided tour configuration from the database
+            logged_in = current.auth.is_logged_in()
+            table = current.s3db.tour_config
+            query = (table.deleted == False) &\
+                    (table.authenticated == logged_in)
+            tours = current.db(query).select(table.id,
+                                             table.name,
+                                             table.controller,
+                                             table.function,
+                                             )
+            for row in tours:
+                menu_help.append(MM(row.name,
+                                    c=row.controller,
+                                    f=row.function,
+                                    vars={"tour":row.id}
+                                    )
+                                 )
+        # -------------------------------------------------------------------
+
         return menu_help
 
     # -------------------------------------------------------------------------
@@ -1748,6 +1773,22 @@ class S3OptionsMenu(object):
 
         # Use admin menu
         return self.admin()
+
+    # -------------------------------------------------------------------------
+    def tour(self):
+        """ Guided Tour """
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+
+        return M(c="tour")(
+                    M("Configuration", f="config", restrict=[ADMIN])(
+                        M("List All"),
+                        M("Import", m="import", restrict=[ADMIN]),
+                        ),
+                    M("Detail", f="details", restrict=[ADMIN]),
+                    M("User", f="user", restrict=[ADMIN]),
+                )
+
 
     # -------------------------------------------------------------------------
     def transport(self):
