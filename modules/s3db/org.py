@@ -47,12 +47,12 @@ __all__ = ["S3OrganisationModel",
            "org_organisation_address",
            "org_root_organisation",
            "org_organisation_requires",
-           "org_site_represent",
            "org_rheader",
            "org_organisation_controller",
            "org_office_controller",
            "org_update_affiliations",
-           "org_OrganisationRepresent"
+           "org_OrganisationRepresent",
+           #"org_SiteRepresent",
            ]
 
 try:
@@ -64,7 +64,7 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
-from gluon.dal import Row
+from gluon.dal import Row, Rows
 from gluon.storage import Storage
 
 from ..s3 import *
@@ -504,7 +504,7 @@ class S3OrganisationModel(S3Model):
         return Storage(
                     org_organisation_type_id=organisation_type_id,
                     org_organisation_id=organisation_id,
-                    org_organisation_represent=org_organisation_represent
+                    org_organisation_represent=org_organisation_represent,
                 )
 
     # -------------------------------------------------------------------------
@@ -1735,6 +1735,7 @@ class S3SiteModel(S3Model):
     names = ["org_site",
              "org_site_requires",
              "org_site_id",
+             "org_site_represent",
              ]
 
     def model(self):
@@ -1789,6 +1790,9 @@ class S3SiteModel(S3Model):
         else:
             widget = None
             comment = None
+
+        org_site_represent = org_SiteRepresent()
+
         site_id = self.super_link("site_id", "org_site",
                                   #writable = True,
                                   #readable = True,
@@ -1864,9 +1868,9 @@ class S3SiteModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                    org_site_id=site_id
-                )
+        return Storage(org_site_id=site_id,
+                       org_site_represent=org_site_represent,
+                       )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2033,14 +2037,13 @@ class S3SiteModel(S3Model):
             append = output.append
             represent = s3db.org_site_represent
             for row in rows:
-                name = represent(row[table].name)
+                name = represent(row[table].site_id)
                 address = row.gis_location.address
                 if address:
                         name = "%s, %s" % (name, address)
-                record = dict(
-                    id = row[table].id,
-                    name = name,
-                    )
+                record = dict(id = row[table].site_id,
+                              name = name,
+                              )
                 append(record)
             output = jsons(output)
 
@@ -3411,7 +3414,7 @@ class org_OrganisationRepresent(S3Represent):
             Custom lookup method for organisation rows, does a
             left join with the parent organisation. Parameters
             key and fields are not used, but are kept for API
-            compatiblity reasons.
+            compatibility reasons.
 
             @param values: the organisation IDs
         """
@@ -3424,12 +3427,14 @@ class org_OrganisationRepresent(S3Represent):
         left = [btable.on(btable.branch_id == otable.id),
                 ptable.on(ptable.id == btable.organisation_id)]
 
-        if len(values) == 1:
+        qty = len(values)
+        if qty == 1:
             query = (otable.id == values[0])
             limitby = (0, 1)
         else:
             query = (otable.id.belongs(values))
-            limitby = None
+            limitby = (0, qty)
+
         rows = db(query).select(otable.id,
                                 otable.name,
                                 otable.acronym,
@@ -3464,7 +3469,149 @@ class org_OrganisationRepresent(S3Represent):
         if self.parent and parent:
             name = "%s > %s" % (parent, name)
         return s3_unicode(name)
-        
+
+# =============================================================================
+class org_SiteRepresent(S3Represent):
+    """ Representation of Sites """
+
+    def __init__(self,
+                 translate=False,
+                 show_link=False, # Not yet working as rows not available in fast_select's bulk() call
+                 multiple=False):
+
+        # Need a custom lookup
+        self.lookup_rows = self.custom_lookup_rows
+        # Need a custom representation
+        fields = ["name"]
+
+        super(org_SiteRepresent,
+              self).__init__(lookup="org_site",
+                             fields=fields,
+                             show_link=show_link,
+                             translate=translate,
+                             multiple=multiple)
+
+    # -------------------------------------------------------------------------
+    def custom_lookup_rows(self, key, values, fields=[]):
+        """
+            Custom lookup method for site rows, does a
+            left join with anyb instance_types found. Parameters
+            key and fields are not used, but are kept for API
+            compatibility reasons.
+
+            @param values: the site IDs
+        """
+
+        db = current.db
+        s3db = current.s3db
+        stable = s3db.org_site
+
+        qty = len(values)
+        if qty == 1:
+            query = (stable.id == values[0])
+            limitby = (0, 1)
+        else:
+            query = (stable.id.belongs(values))
+            limitby = (0, qty)
+
+        if self.show_link:
+            # We need the instance_type IDs
+            # Do a first query to see which instance_types we have
+            rows = db(query).select(stable.instance_type,
+                                    limitby=limitby)
+            instance_types = []
+            for row in rows:
+                if row.instance_type not in instance_types:
+                    instance_types.append(row.instance_type)
+
+            # Now do a second query which left-joins with all the instance tables we have
+            fields = [stable.site_id,
+                      stable.instance_type,
+                      stable.name,
+                      ]
+            left = []
+            for instance_type in instance_types:
+                table = s3db[instance_type]
+                fields.append(table.id)
+                left.append(table.on(table.site_id == stable.site_id))
+
+                if instance_type == "org_facility":
+                    # We also need the Facility Types
+                    ttable = db.org_facility_type
+                    fields.append(ttable.name)
+                    left.append(ttable.on(ttable.id == table.facility_type_id))
+            rows = db(query).select(*fields,
+                                    left=left,
+                                    limitby=limitby)
+
+        else:
+            # We don't need instance_type IDs
+            # Just do a single join with org_facility
+            ftable = s3db.org_facility
+            ttable = db.org_facility_type
+
+            left = [ftable.on(ftable.site_id == stable.site_id),
+                    ttable.on(ttable.id == ftable.facility_type_id)]
+
+            rows = db(query).select(stable.site_id,
+                                    stable.instance_type,
+                                    stable.name,
+                                    ftable.id,
+                                    ttable.name,
+                                    left=left,
+                                    limitby=limitby)
+
+        self.queries += 1
+        return rows
+
+    # -------------------------------------------------------------------------
+    def link(self, k, v, rows=None):
+        """
+            Represent a (key, value) as hypertext link.
+
+            @param k: the key (site_id)
+            @param v: the representation of the key
+            @param rows: used to lookup the controller, function & ID
+        """
+
+        if not rows:
+            # We have no way to determine the linkto
+            return v
+
+        row = rows.find(lambda row: row["org_site.site_id"] == k).first()
+        instance_type = row["org_site.instance_type"]
+        id = row[instance_type].id
+        c, f = instance_type.split("_", 1)
+        # extension="" removes the .aaData extension in paginated views
+        return A(v, _href=URL(c=c, f=f, args=[id],
+                              #extension=""
+                              ))
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a single Row
+
+            @param row: the org_site Row
+        """
+
+        name = row["org_site.name"]
+        instance_type = row["org_site.instance_type"]
+        facility_type = row.get("org_facility_type.name", None)
+
+        if not name:
+            return self.default
+
+        if facility_type:
+            # These need to be translated
+            name = "%s (%s)" % (name, current.T(facility_type))
+        else:
+            instance_type = current.auth.org_site_types.get(instance_type, None)
+            if instance_type:
+                name = "%s (%s)" % (name, instance_type)
+
+        return s3_unicode(name)
+
 # =============================================================================
 def org_site_top_req_priority(row, tablename="org_facility"):
     """ Highest priority of open requests for a site """
@@ -3500,79 +3647,6 @@ def org_site_top_req_priority(row, tablename="org_facility"):
         return req.priority
     else:
         return None
-
-# =============================================================================
-def org_site_represent(id, row=None, show_link=True):
-    """
-        Represent a Facility in option fields or list views
-
-        @param id: the site_id
-        @param row: the org_site Row
-        @param show_link: whether to render the representation as link
-    """
-
-    if row:
-        db = current.db
-        s3db = current.s3db
-        stable = s3db.org_site
-        id = row.site_id
-    elif id:
-        db = current.db
-        s3db = current.s3db
-        stable = s3db.org_site
-        try:
-            row = db(stable._id == id).select(stable.instance_type,
-                                              limitby=(0, 1)).first()
-        except:
-            # Bad data (e.g. list:reference)
-            return current.messages.UNKNOWN_OPT
-    else:
-        return current.messages["NONE"]
-
-    instance_type = row.instance_type
-    instance_type_nice = stable.instance_type.represent(instance_type)
-
-    try:
-        table = s3db[instance_type]
-    except:
-        return current.messages.UNKNOWN_OPT
-
-    if instance_type == "org_facility":
-        # Lookup Facility Type
-        r = db(table.site_id == id).select(table.id,
-                                           table.name,
-                                           table.facility_type_id,
-                                           limitby=(0, 1)).first()
-        try:
-            if r.facility_type_id:
-                facility_type = r.facility_type_id[0]
-                table = s3db.org_facility_type
-                type = db(table.id == facility_type).select(table.name,
-                                                            limitby=(0, 1),
-                                                            ).first().name
-                instance_type_nice = current.T(type)
-        except:
-            return current.messages.UNKNOWN_OPT
-    else:
-        r = db(table.site_id == id).select(table.id,
-                                           table.name,
-                                           limitby=(0, 1)).first()
-
-    try:
-        if r.name:
-            represent = "%s (%s)" % (r.name, instance_type_nice)
-        else:
-            represent = "[site %d] (%s)" % (id, instance_type_nice)
-    except:
-        return current.messages.UNKNOWN_OPT
-
-    if show_link:
-        c, f = instance_type.split("_", 1)
-        # extension="" removes the .aaData extension in paginated views
-        represent = A(represent,
-                      _href=URL(c=c, f=f, args=[r.id], extension=""))
-
-    return represent
 
 # =============================================================================
 def org_rheader(r, tabs=[]):

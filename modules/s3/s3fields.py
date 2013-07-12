@@ -327,7 +327,7 @@ class S3Represent(object):
             return v
 
     # -------------------------------------------------------------------------
-    def link(self, k, v):
+    def link(self, k, v, rows=None):
         """
             Represent a (key, value) as hypertext link.
 
@@ -340,6 +340,8 @@ class S3Represent(object):
 
             @param k: the key
             @param v: the representation of the key
+            @param rows: the rows (unused in the base class but can be used in
+                                   custom links)
         """
 
         if self.linkto:
@@ -378,7 +380,7 @@ class S3Represent(object):
             rows = [row] if row is not None else None
             items = self._lookup([value], rows=rows)
             if value in items:
-                r = self.link(value, items[value]) \
+                r = self.link(value, items[value], rows) \
                     if show_link else items[value]
             else:
                 r = self.default
@@ -421,7 +423,7 @@ class S3Represent(object):
             items = self._lookup(values, rows=rows)
             if show_link:
                 link = self.link
-                labels = [[link(v, s3_unicode(items[v])), ", "]
+                labels = [[link(v, s3_unicode(items[v]), rows), ", "]
                           if v in items else [default, ", "]
                           for v in values]
                 if labels:
@@ -477,7 +479,7 @@ class S3Represent(object):
             labels = self._lookup(values, rows=rows)
             if show_link:
                 link = self.link
-                labels = dict([(v, link(v, r)) for v, r in labels.items()])
+                labels = dict([(v, link(v, r, rows)) for v, r in labels.items()])
             for v in values:
                 if v not in labels:
                     labels[v] = self.default
@@ -526,7 +528,7 @@ class S3Represent(object):
         if self.default is None:
             self.default = s3_unicode(messages.UNKNOWN_OPT)
         if self.none is None:
-            self.none = s3_unicode(messages["NONE"])
+            self.none = messages["NONE"]
 
         # Initialize theset
         if self.options is not None:

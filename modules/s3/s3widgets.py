@@ -35,6 +35,7 @@
 __all__ = ["S3ACLWidget",
            "S3AddObjectWidget",
            "S3AddPersonWidget",
+           "S3AddPersonWidget2",
            "S3AutocompleteWidget",
            "S3AutocompleteOrAddWidget",
            "S3BooleanWidget",
@@ -375,6 +376,227 @@ $(function () {
 
 # =============================================================================
 class S3AddPersonWidget(FormWidget):
+    """
+        Renders a person_id field as a Create Person form,
+        with an embedded Autocomplete to select existing people.
+
+        It relies on JS code in static/S3/s3.select_person.js
+    """
+
+    def __init__(self,
+                 controller = None,
+                 select_existing = None):
+
+        # Controller to retrieve the person record
+        self.controller = controller
+        if select_existing is not None:
+            self.select_existing = select_existing
+        else:
+            self.select_existing = current.deployment_settings.get_pr_select_existing()
+
+    def __call__(self, field, value, **attributes):
+
+        T = current.T
+        request = current.request
+        appname = request.application
+        s3 = current.response.s3
+        settings = current.deployment_settings
+
+        formstyle = s3.crud.formstyle
+
+        default = dict(_type = "text",
+                       value = (value != None and str(value)) or "")
+        attr = StringWidget._attributes(field, default, **attributes)
+        attr["_class"] = "hide"
+
+        # Main Input
+        if "_id" in attr:
+            real_input = attr["_id"]
+        else:
+            real_input = str(field).replace(".", "_")
+
+        if self.controller is None:
+            controller = request.controller
+        else:
+            controller = self.controller
+
+        if self.select_existing:
+            # Autocomplete
+            select = '''S3.select_person($('#%s').val())''' % real_input
+            widget = S3PersonAutocompleteWidget(post_process=select,
+                                                hideerror=True)
+            ac_row = TR(TD(LABEL("%s: " % T("Name"),
+                                 _class="hide",
+                                 _id="person_autocomplete_label"),
+                           widget(field,
+                                  None,
+                                  _class="hide")),
+                        TD(),
+                        _id="person_autocomplete_row",
+                        _class="box_top")
+            # Select from registry buttons
+            _class ="box_top"
+            select_row = TR(TD(A(T("Select from registry"),
+                                 _href="#",
+                                 _id="select_from_registry",
+                                 _class="action-btn"),
+                               A(T("Remove selection"),
+                                 _href="#",
+                                 _onclick='''S3.select_person_clear_form();''',
+                                 _id="clear_form_link",
+                                 _class="action-btn hide",
+                                 _style="padding-left:15px;"),
+                               A(T("Edit Details"),
+                                 _href="#",
+                                 _onclick='''S3.select_person_edit_form();''',
+                                 _id="edit_selected_person_link",
+                                 _class="action-btn hide",
+                                 _style="padding-left:15px;"),
+                               DIV(_id="person_load_throbber",
+                                   _class="throbber hide",
+                                   _style="padding-left:85px;"),
+                               _class="w2p_fw"),
+                            TD(),
+                            _id="select_from_registry_row",
+                            _class=_class,
+                            _controller=controller,
+                            _field=real_input,
+                            _value=str(value))
+
+        else:
+            _class = "hide"
+            ac_row = ""
+            select_row = TR(TD(A(T("Edit Details"),
+                                 _href="#",
+                                 _onclick='''S3.select_person_edit_form();''',
+                                 _id="edit_selected_person_link",
+                                 _class="action-btn hide",
+                                 _style="padding-left:15px;"),
+                               DIV(_id="person_load_throbber",
+                                   _class="throbber hide",
+                                   _style="padding-left:85px;"),
+                               _class="w2p_fw"),
+                            TD(),
+                            _id="select_from_registry_row",
+                            _class=_class,
+                            _controller=controller,
+                            _field=real_input,
+                            _value=str(value))
+
+        # Embedded Form
+        s3db = current.s3db
+        ptable = s3db.pr_person
+        ctable = s3db.pr_contact
+        fields = [ptable.first_name,
+                  ptable.middle_name,
+                  ptable.last_name,
+                  ]
+        if settings.get_pr_request_dob():
+            fields.append(ptable.date_of_birth)
+        if settings.get_pr_request_gender():
+            fields.append(ptable.gender)
+
+        if controller == "hrm":
+            emailRequired = settings.get_hrm_email_required()
+        elif controller == "vol":
+            fields.append(s3db.pr_person_details.occupation)
+            emailRequired = settings.get_hrm_email_required()
+        else:
+            emailRequired = False
+        if emailRequired:
+            validator = IS_EMAIL()
+        else:
+            validator = IS_NULL_OR(IS_EMAIL())
+
+        fields.extend([Field("email",
+                             notnull=emailRequired,
+                             requires=validator,
+                             label=T("Email Address")),
+                       Field("mobile_phone",
+                             label=T("Mobile Phone Number"),
+                             # requires=None to work around a web2py bug
+                             requires=None)
+                       ])
+
+        labels, required = s3_mark_required(fields)
+        if required:
+            s3.has_required = True
+
+        if current.request.env.request_method == "POST" and not value:
+            # Read the POST vars:
+            post_vars = current.request.post_vars
+            values = Storage(ptable._filter_fields(post_vars))
+            values["email"] = post_vars["email"]
+            values["mobile_phone"] = post_vars["mobile_phone"]
+
+            # Use the validators to convert the POST vars into
+            # internal format (not validating here):
+            data = Storage()
+            for f in fields:
+                fname = f.name
+                if fname in values:
+                    v, error = values[fname], None
+                    requires = f.requires
+                    if requires:
+                        if not isinstance(requires, (list, tuple)):
+                            requires = [requires]
+                        for validator in requires:
+                            v, error = validator(v)
+                            if error:
+                                break
+                    if not error:
+                        data[fname] = v
+
+            record_id = 0
+        else:
+            data = None
+            record_id = value
+
+        form = SQLFORM.factory(table_name="pr_person",
+                               record=data,
+                               labels=labels,
+                               formstyle=formstyle,
+                               upload="default/download",
+                               separator = "",
+                               record_id = record_id,
+                               *fields)
+        trs = []
+        for tr in form[0]:
+            if "_id" in tr.attributes:
+                # Standard formstyle
+                if tr.attributes["_id"].startswith("submit_record"):
+                    # skip submit row
+                    continue
+            elif "_id" in tr[0][0].attributes:
+                # DIV-based formstyle
+                if tr[0][0].attributes["_id"].startswith("submit_record"):
+                    # skip submit row
+                    continue
+            if "_class" in tr.attributes:
+                tr.attributes["_class"] = "%s box_middle" % \
+                                            tr.attributes["_class"]
+            else:
+                tr.attributes["_class"] = "box_middle"
+            trs.append(tr)
+
+        table = DIV(*trs)
+
+        # Divider
+        divider = TR(TD(_class="subheading"),
+                     TD(),
+                     _class="box_bottom")
+
+        # JS
+        s3.jquery_ready.append('''S3.addPersonWidget()''')
+
+        # Overall layout of components
+        return TAG[""](select_row,
+                       ac_row,
+                       table,
+                       divider)
+
+# =============================================================================
+class S3AddPersonWidget2(FormWidget):
     """
         Renders a person_id field as a Create Person form,
         with an embedded Autocomplete to select existing people.

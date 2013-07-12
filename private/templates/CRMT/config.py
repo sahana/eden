@@ -458,7 +458,13 @@ def customize_event_incident_report(**attr):
 
     tablename = "event_incident_report"
     table = s3db[tablename]
-    table.location_id.label=T("Address")
+    table.location_id.label = T("Address")
+    from s3.s3validators import IS_LOCATION_SELECTOR2
+    from s3.s3widgets import S3LocationSelectorWidget2, S3AddPersonWidget2
+    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
+    table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"])
+    table.person_id.comment = None
+    table.person_id.widget = S3AddPersonWidget2(controller="pr")
     
     current.response.s3.crud_strings[tablename] = Storage(
                 title_create = T("Add Incident"),
