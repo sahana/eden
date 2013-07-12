@@ -3476,7 +3476,7 @@ class org_SiteRepresent(S3Represent):
 
     def __init__(self,
                  translate=False,
-                 show_link=False, # Not yet working as rows not available in fast_select's bulk() call
+                 show_link=True,
                  multiple=False):
 
         # Need a custom lookup
@@ -3490,6 +3490,64 @@ class org_SiteRepresent(S3Represent):
                              show_link=show_link,
                              translate=translate,
                              multiple=multiple)
+
+    # -------------------------------------------------------------------------
+    def bulk(self, values, rows=None, list_type=True, show_link=True):
+        """
+            Represent multiple values as dict {value: representation}
+
+            @param values: list of values
+            @param rows: the referenced rows (if values are foreign keys)
+            @param show_link: render each representation as link
+
+            @return: a dict {value: representation}
+
+            @note: for list-types, the dict keys will be the individual
+                   values within all lists - and not the lists (simply
+                   because lists can not be dict keys). Thus, the caller
+                   would still have to construct the final string/HTML.
+        """
+
+        if show_link and not rows:
+            # Retrieve the rows
+            rows = self.custom_lookup_rows(None, values)
+
+        # Can't just do this due to the use of the joined rows
+        #return super(org_SiteRepresent,
+        #             self).bulk(values, rows, list_type, show_link)
+
+        self._setup()
+        show_link = show_link and self.show_link
+
+        # Get the values
+        if rows and self.table:
+            values = [row["org_site.site_id"] for row in rows]
+        elif self.list_type and list_type:
+            try:
+                hasnone = None in values
+                if hasnone:
+                    values = [i for i in values if i != None]
+                values = list(set(chain.from_iterable(values)))
+                if hasnone:
+                    values.append(None)
+            except TypeError:
+                raise ValueError("List of lists expected, got %s" % values)
+        else:
+            values = [values] if type(values) is not list else values
+
+        # Lookup the representations
+        if values:
+            labels = self._lookup(values, rows=rows)
+            if show_link:
+                link = self.link
+                labels = dict([(v, link(v, r, rows)) for v, r in labels.items()])
+            for v in values:
+                if v not in labels:
+                    labels[v] = self.default
+        else:
+            labels = {}
+        labels[None] = self.none
+        return labels
 
     # -------------------------------------------------------------------------
     def custom_lookup_rows(self, key, values, fields=[]):
@@ -3582,8 +3640,8 @@ class org_SiteRepresent(S3Represent):
         instance_type = row["org_site.instance_type"]
         id = row[instance_type].id
         c, f = instance_type.split("_", 1)
-        # extension="" removes the .aaData extension in paginated views
         return A(v, _href=URL(c=c, f=f, args=[id],
+                              # remove the .aaData extension in paginated views
                               #extension=""
                               ))
 
