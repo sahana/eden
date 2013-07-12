@@ -880,8 +880,8 @@ class S3Importer(S3CRUD):
         if self.ajax:
             resource = self.resource
             resource.add_filter(s3.filter)
-            rows = resource.fast_select(["id", "element", "error"],
-                                        limit=None)["rows"]
+            rows = resource.select(["id", "element", "error"],
+                                   limit=None)["rows"]
             return (upload_id, select_list, rows)
 
         s3.actions = [dict(label=str(self.messages.item_show_details),
@@ -1281,12 +1281,12 @@ class S3Importer(S3CRUD):
         if not orderby:
             orderby = ~(resource.table.error)
 
-        data = resource.fast_select(list_fields,
-                                    start=start,
-                                    limit=limit,
-                                    count=True,
-                                    orderby=orderby,
-                                    left=left)
+        data = resource.select(list_fields,
+                               start=start,
+                               limit=limit,
+                               count=True,
+                               orderby=orderby,
+                               left=left)
         rows = data["rows"]
         
         displayrows = data["numrows"]

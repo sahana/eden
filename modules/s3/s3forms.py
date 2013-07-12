@@ -1546,11 +1546,11 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 if f is not None:
                     component.build_query(filter=f)
 
-                data = component.fast_select(fields,
-                                             limit=None,
-                                             represent=True,
-                                             raw_data=True,
-                                             orderby=orderby)
+                data = component.select(fields,
+                                        limit=None,
+                                        represent=True,
+                                        raw_data=True,
+                                        orderby=orderby)
 
                 records = data["rows"]
                 rfields = data["rfields"]
@@ -2701,9 +2701,9 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                                     _component = components[c]
                                     break
                         if found:
-                            _rows = _component.fast_select(["id"],
-                                                           limit=None,
-                                                           as_rows=True)
+                            _rows = _component.select(["id"],
+                                                      limit=None,
+                                                      as_rows=True)
                             values = [r.id for r in _rows]
                         else:
                             #raise SyntaxError
@@ -2745,10 +2745,10 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                 else:
                     _resource.add_filter(S3FieldSelector(filter_field) == options)
 
-            rows = _resource.fast_select(fields=fields,
-                                         limit=None,
-                                         orderby=table.name,
-                                         as_rows=True)
+            rows = _resource.select(fields=fields,
+                                    limit=None,
+                                    orderby=table.name,
+                                    as_rows=True)
 
         fieldname = data["field"]
         formname = self._formname()

@@ -593,12 +593,12 @@ class S3SearchOptionsWidget(S3SearchWidget):
                 multiple = field_type[:5] == "list:"
                 groupby = field if field and not multiple else None
                 virtual = field is None
-                rows = resource.fast_select([field_name],
-                                            limit=None,
-                                            orderby=field,
-                                            groupby=groupby,
-                                            virtual=virtual,
-                                            as_rows=True)
+                rows = resource.select([field_name],
+                                       limit=None,
+                                       orderby=field,
+                                       groupby=groupby,
+                                       virtual=virtual,
+                                       as_rows=True)
                 opt_values = []
                 if rows:
                     colname = fl.colname

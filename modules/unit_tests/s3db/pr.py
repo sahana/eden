@@ -17,6 +17,7 @@ from s3db.pr import S3SavedSearch
 class PRTests(unittest.TestCase):
     """ PR Tests """
 
+    # -------------------------------------------------------------------------
     def setUp(self):
         """ Set up organisation records """
 
@@ -46,6 +47,7 @@ class PRTests(unittest.TestCase):
         self.org1 = s3db.pr_get_pe_id("org_organisation", org1_id)
         self.org2 = s3db.pr_get_pe_id("org_organisation", org2_id)
 
+    # -------------------------------------------------------------------------
     def testGetRealmUsers(self):
 
         auth = current.auth
@@ -136,6 +138,7 @@ class PRTests(unittest.TestCase):
         users = s3db.pr_realm_users(None)
         self.assertTrue(all([u in users for u in all_users]))
 
+    # -------------------------------------------------------------------------
     def tearDown(self):
 
         current.db.rollback()
@@ -145,6 +148,7 @@ class PRTests(unittest.TestCase):
 class PersonDeduplicateTests(unittest.TestCase):
     """ PR Tests """
 
+    # -------------------------------------------------------------------------
     def setUp(self):
 
         s3db = current.s3db
@@ -152,10 +156,14 @@ class PersonDeduplicateTests(unittest.TestCase):
         ptable = s3db.pr_person
         ctable = s3db.pr_contact
 
+        # Make sure the first record is the older record
+        created_on = current.request.utcnow - datetime.timedelta(hours=1)
+
         person1 = Storage(first_name = "Test",
                           last_name = "UserDEDUP",
                           initials = "TU",
-                          date_of_birth = datetime.date(1974, 4, 13))
+                          date_of_birth = datetime.date(1974, 4, 13),
+                          created_on = created_on)
         person1_id = ptable.insert(**person1)
         person1.update(id=person1_id)
         s3db.update_super(ptable, person1)
@@ -174,6 +182,7 @@ class PersonDeduplicateTests(unittest.TestCase):
         self.person2_id = person2_id
         self.pe2_id = s3db.pr_get_pe_id(ptable, person2_id)
 
+    # -------------------------------------------------------------------------
     def testHook(self):
 
         s3db = current.s3db
@@ -182,6 +191,7 @@ class PersonDeduplicateTests(unittest.TestCase):
         self.assertNotEqual(deduplicate, None)
         self.assertTrue(callable(deduplicate))
 
+    # -------------------------------------------------------------------------
     def testMatchNames(self):
 
         s3db = current.s3db
@@ -207,6 +217,7 @@ class PersonDeduplicateTests(unittest.TestCase):
         self.assertNotEqual(item.id, self.person1_id)
         self.assertNotEqual(item.id, self.person2_id)
 
+    # -------------------------------------------------------------------------
     def testMatchEmail(self):
 
         s3db = current.s3db
@@ -307,6 +318,7 @@ class PersonDeduplicateTests(unittest.TestCase):
         self.assertNotEqual(item.id, self.person1_id)
         self.assertNotEqual(item.id, self.person2_id)
 
+    # -------------------------------------------------------------------------
     def testMatchInitials(self):
 
         s3db = current.s3db
@@ -364,6 +376,7 @@ class PersonDeduplicateTests(unittest.TestCase):
         self.assertEqual(item.id, self.person1_id)
         self.assertEqual(item.method, S3ImportItem.METHOD.UPDATE)
 
+    # -------------------------------------------------------------------------
     def testMatchDOB(self):
 
         s3db = current.s3db
@@ -396,6 +409,7 @@ class PersonDeduplicateTests(unittest.TestCase):
         self.assertNotEqual(item.id, self.person1_id)
         self.assertNotEqual(item.id, self.person2_id)
 
+    # -------------------------------------------------------------------------
     def import_item(self, person, email=None, sms=None):
         """ Construct a fake import item """
 
@@ -418,17 +432,19 @@ class PersonDeduplicateTests(unittest.TestCase):
                                         value = sms)))
         return import_item
 
+    # -------------------------------------------------------------------------
     def tearDown(self):
 
         current.db.rollback()
         self.pe_id = None
         self.person_id = None
 
-
+# =============================================================================
 class SavedSearchTests(unittest.TestCase):
     """
         Test the saved search validation and save functions
     """
+    # -------------------------------------------------------------------------
     def setUp(self):
         s3db = current.s3db
 
@@ -446,9 +462,11 @@ class SavedSearchTests(unittest.TestCase):
         self.person_id = person_id
         self.pe_id = s3db.pr_get_pe_id(ptable, person_id)
 
+    # -------------------------------------------------------------------------
     def testOnValidation(self):
         f = S3SavedSearch.pr_saved_search_onvalidation
 
+    # -------------------------------------------------------------------------
     def testFriendlyQuery(self):
         app = current.request.application
         f = S3SavedSearch.friendly_string_from_field_query
@@ -471,6 +489,7 @@ class SavedSearchTests(unittest.TestCase):
             result,
         )
 
+    # -------------------------------------------------------------------------
     def tearDown(self):
         current.db.rollback()
         self.pe_id = None
@@ -487,7 +506,7 @@ def run_suite(*test_classes):
         tests = loader.loadTestsFromTestCase(test_class)
         suite.addTests(tests)
     if suite is not None:
-        unittest.TextTestRunner().run(suite)
+        unittest.TextTestRunner(verbosity=2).run(suite)
     return
 
 if __name__ == "__main__":

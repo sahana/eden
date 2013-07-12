@@ -42,7 +42,7 @@ class S3DataTableTests(unittest.TestCase):
         self.resource = resource
         self.list_fields = list_fields
 
-        data = resource.fast_select(list_fields)
+        data = resource.select(list_fields)
         
         self.data = data["rows"]
         self.rfields = data["rfields"]

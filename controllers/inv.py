@@ -60,11 +60,11 @@ def index2():
                 resource.add_filter(searchq)
             else:
                 totalrows = None
-            data = resource.fast_select(list_fields,
-                                        start=start,
-                                        limit=limit,
-                                        count=True,
-                                        represent=True)
+            data = resource.select(list_fields,
+                                   start=start,
+                                   limit=limit,
+                                   count=True,
+                                   represent=True)
             filteredrows = data["numrows"]
             if totalrows is None:
                 totalrows = filteredrows
@@ -116,9 +116,9 @@ def index2():
                 else:
                     totalrows = None
                 site_list = {}
-                data = resource.fast_select(list_fields,
-                                            limit=None,
-                                            count=True)
+                data = resource.select(list_fields,
+                                       limit=None,
+                                       count=True)
                 filteredrows = data["numrows"]
                 if totalrows is None:
                     totalrows = filteredrows
@@ -137,11 +137,11 @@ def index2():
                     orderby = [table.site_id, stable.name, ~table.quantity]
                 start = int(vars.iDisplayStart) if vars.iDisplayStart else 0
                 limit = int(vars.iDisplayLength) if vars.iDisplayLength else s3mgr.ROWSPERPAGE
-                data = resource.fast_select(list_fields,
-                                            orderby=orderby,
-                                            start=start,
-                                            limit=limit,
-                                            represent=True)
+                data = resource.select(list_fields,
+                                       orderby=orderby,
+                                       start=start,
+                                       limit=limit,
+                                       represent=True)
                 rfields = data["rfields"]
                 rows = data["rows"]
                 dt = S3DataTable(rfields,
@@ -228,10 +228,10 @@ def index2():
                            "um",
                            "model",
                            ]
-            data = resource.fast_select(list_fields,
-                                        limit=None,
-                                        count=True,
-                                        represent=True)
+            data = resource.select(list_fields,
+                                   limit=None,
+                                   count=True,
+                                   represent=True)
             rows = data["rows"]
             rfields = data["rfields"]
             numrows = data["numrows"]

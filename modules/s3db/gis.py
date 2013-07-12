@@ -845,10 +845,10 @@ class S3LocationModel(S3Model):
                                            orderby=field)
             else:
                 # S3LocationAutocompleteWidget
-                rows = resource.fast_select(fields=fields,
-                                            start=0,
-                                            limit=limit,
-                                            orderby="gis_location.name")["rows"]
+                rows = resource.select(fields=fields,
+                                       start=0,
+                                       limit=limit,
+                                       orderby="gis_location.name")["rows"]
                 items = []
                 iappend = items.append
                 COUNTRY = current.messages.COUNTRY

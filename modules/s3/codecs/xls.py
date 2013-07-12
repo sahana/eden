@@ -87,14 +87,14 @@ class S3XLS(S3Codec):
         if orderby is None:
             orderby = resource.get_config("orderby", None)
 
-        result = resource.fast_select(list_fields,
-                                      left=left,
-                                      limit=None,
-                                      count=True,
-                                      getids=True,
-                                      orderby=orderby,
-                                      represent=True,
-                                      show_links=False)
+        result = resource.select(list_fields,
+                                 left=left,
+                                 limit=None,
+                                 count=True,
+                                 getids=True,
+                                 orderby=orderby,
+                                 represent=True,
+                                 show_links=False)
 
         rfields = result["rfields"]
         items = result["rows"]

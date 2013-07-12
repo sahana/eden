@@ -759,10 +759,10 @@ class S3LocationFilter(S3FilterWidget):
         fields = [field_name] + ["%s$%s" % (field_name, l) for l in levels]
 
         # Find the options
-        rows = resource.fast_select(fields=fields,
-                                    limit=None,
-                                    virtual=False,
-                                    as_rows=True)
+        rows = resource.select(fields=fields,
+                               limit=None,
+                               virtual=False,
+                               as_rows=True)
         # No options?
         if not rows:
             return default
@@ -1076,12 +1076,12 @@ class S3OptionsFilter(S3FilterWidget):
                 multiple = ftype[:5] == "list:"
                 groupby = field if field and not multiple else None
                 virtual = field is None
-                rows = resource.fast_select([selector],
-                                            limit=None,
-                                            orderby=field,
-                                            groupby=groupby,
-                                            virtual=virtual,
-                                            as_rows=True)
+                rows = resource.select([selector],
+                                       limit=None,
+                                       orderby=field,
+                                       groupby=groupby,
+                                       virtual=virtual,
+                                       as_rows=True)
                 opt_keys = []
                 if rows:
                     if multiple:

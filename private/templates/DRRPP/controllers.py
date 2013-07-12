@@ -836,11 +836,11 @@ class organisations():
     def _table(name, resource, field_list, limit=10, orderby="name"):
         """ Generate a datatable in the organisations custom page """
 
-        data = resource.fast_select(field_list,
-                                    limit=None,
-                                    orderby=orderby,
-                                    count=True,
-                                    represent=True)
+        data = resource.select(field_list,
+                               limit=None,
+                               orderby=orderby,
+                               count=True,
+                               represent=True)
 
         rfields = data["rfields"]
         records = data["rows"]

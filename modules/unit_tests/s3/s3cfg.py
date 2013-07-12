@@ -58,7 +58,7 @@ class S3ConfigTests(unittest.TestCase):
             msg = resource.import_xml(tree)
 
             resource = s3db.resource("org_organisation", uid="ExampleRootOrg")
-            org = resource.fast_select(None, as_rows=True)[0]
+            org = resource.select(None, as_rows=True)[0]
             auth.override = False
 
             # Normal user can't see the field by default

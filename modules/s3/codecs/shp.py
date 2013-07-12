@@ -75,12 +75,12 @@ class S3SHP(S3Codec):
         query, orderby, left = resource.datatable_filter(list_fields, get_vars)
         resource.add_filter(query)
 
-        data = resource.fast_select(list_fields,
-                                    left=left,
-                                    limit=None,
-                                    orderby=orderby,
-                                    represent=True,
-                                    show_links=False)
+        data = resource.select(list_fields,
+                               left=left,
+                               limit=None,
+                               orderby=orderby,
+                               represent=True,
+                               show_links=False)
 
         rfields = data["rfields"]
         types = []
