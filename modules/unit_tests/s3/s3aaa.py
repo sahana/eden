@@ -1021,17 +1021,49 @@ class ACLManagementTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def testApplicableACLsPolicy8(self):
 
+        db = current.db
         auth = current.auth
         s3db = current.s3db
 
+        # Create 3 test organisations
+        xmlstr = """
+<s3xml>
+    <resource name="org_organisation" uuid="TAAO1">
+        <data field="name">TestApplicableACLsOrg1</data>
+    </resource>
+    <resource name="org_organisation" uuid="TAAO2">
+        <data field="name">TestApplicableACLsOrg2</data>
+    </resource>
+    <resource name="org_organisation" uuid="TAAO3">
+        <data field="name">TestApplicableACLsOrg3</data>
+    </resource>
+</s3xml>"""
+
+        try:
+            auth.override = True
+            from lxml import etree
+            xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+            resource = s3db.resource("org_organisation")
+            resource.import_xml(xmltree)
+
+            resource = s3db.resource("org_organisation",
+                                     uid=["TAAO1","TAAO2","TAAO3"])
+            rows = resource.select(["pe_id", "uuid"], as_rows=True)
+            orgs = dict((row.uuid, row.pe_id) for row in rows)
+            org1 = orgs["TAAO1"]
+            org2 = orgs["TAAO2"]
+            org3 = orgs["TAAO3"]
+            auth.override = False
+        except:
+            db.rollback()
+            auth.override = False
+            raise
+
         try:
             # Have two orgs, set org2 as OU descendant of org1
-            org1 = s3db.pr_get_pe_id("org_organisation", 1)
-            org2 = s3db.pr_get_pe_id("org_organisation", 2)
             s3db.pr_add_affiliation(org1, org2, role="TestOrgUnit")
 
             # Set org3 as non-OU (role_type=9) partner of org1
-            org3 = s3db.pr_get_pe_id("org_organisation", 3)
             partners = s3db.pr_add_affiliation(org1, org3, role="TestPartners", role_type=9)
             self.assertNotEqual(partners, None)
 
@@ -1097,7 +1129,7 @@ class ACLManagementTests(unittest.TestCase):
             s3db.pr_remove_affiliation(org1, org2, role="TestStaff")
             s3db.pr_remove_affiliation(org1, org3, role="TestPartners")
             auth.s3_delete_role("TESTGROUP")
-            current.db.rollback()
+            db.rollback()
 
 # =============================================================================
 class HasPermissionTests(unittest.TestCase):

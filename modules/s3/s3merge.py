@@ -294,13 +294,13 @@ class S3Merge(S3Method):
             orderby, left = None, None
 
         # Get the records
-        data = resource.fast_select(list_fields,
-                                    start=start,
-                                    limit=limit,
-                                    orderby=orderby,
-                                    left=left,
-                                    count=True,
-                                    represent=True)
+        data = resource.select(list_fields,
+                               start=start,
+                               limit=limit,
+                               orderby=orderby,
+                               left=left,
+                               count=True,
+                               represent=True)
 
         
         displayrows = data["numrows"]

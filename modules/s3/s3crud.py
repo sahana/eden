@@ -1128,9 +1128,9 @@ class S3CRUD(S3Method):
                 else:
                     raise HTTP(404, body="Record not Found")
             else:
-                rows = resource.fast_select(list_fields,
-                                            limit=None,
-                                            as_rows=True)
+                rows = resource.select(list_fields,
+                                       limit=None,
+                                       as_rows=True)
                 if rows:
                     items = rows.as_list()
                 else:
@@ -1313,9 +1313,9 @@ class S3CRUD(S3Method):
                 else:
                     raise HTTP(404, body="Record not Found")
             else:
-                rows = resource.fast_select(list_fields,
-                                            limit=None,
-                                            as_rows=True)
+                rows = resource.select(list_fields,
+                                       limit=None,
+                                       as_rows=True)
                 if rows:
                     items = rows.as_list()
                 else:
@@ -3001,10 +3001,10 @@ class S3CRUD(S3Method):
             # Delete it
             uid = None
             if UID in dresource.table:
-                rows = dresource.fast_select([UID],
-                                             start=0,
-                                             limit=1,
-                                             as_rows=True)
+                rows = dresource.select([UID],
+                                        start=0,
+                                        limit=1,
+                                        as_rows=True)
                 if rows:
                     uid = rows[0][UID]
             numrows = dresource.delete(ondelete=ondelete,

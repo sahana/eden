@@ -1978,9 +1978,9 @@ class GIS(object):
                 if pkey not in fields:
                     fields.insert(0, pkey)
 
-                data = resource.fast_select(fields,
-                                            limit=None,
-                                            represent=True)
+                data = resource.select(fields,
+                                       limit=None,
+                                       represent=True)
 
                 rfields = data["rfields"]
                 popup_cols = []

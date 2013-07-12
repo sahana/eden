@@ -193,13 +193,13 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
                                                           get_vars)
         resource.add_filter(filter)
 
-        data = resource.fast_select(list_fields,
-                                    start=0,
-                                    limit=limit,
-                                    orderby=orderby,
-                                    left=left,
-                                    count=True,
-                                    represent=True)
+        data = resource.select(list_fields,
+                               start=0,
+                               limit=limit,
+                               orderby=orderby,
+                               left=left,
+                               count=True,
+                               represent=True)
         filteredrows = data["numrows"]
         rfields = data["rfields"]
         rows = data["rows"]

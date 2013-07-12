@@ -311,14 +311,14 @@ class S3RL_PDF(S3Codec):
         filter, orderby, left = resource.datatable_filter(list_fields, vars)
         resource.add_filter(filter)
 
-        result = resource.fast_select(list_fields,
-                                      left=left,
-                                      limit=None,
-                                      count=True,
-                                      getids=True,
-                                      orderby=orderby,
-                                      represent=True,
-                                      show_links=False)
+        result = resource.select(list_fields,
+                                 left=left,
+                                 limit=None,
+                                 count=True,
+                                 getids=True,
+                                 orderby=orderby,
+                                 represent=True,
+                                 show_links=False)
 
         # Now generate the PDF table
         pdf_table = S3PDFTable(doc,

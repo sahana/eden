@@ -969,10 +969,10 @@ class S3HRModel(S3Model):
             if show_orgs:
                 fields.append("organisation_id$name")
 
-            rows = resource.fast_select(fields,
-                                        start=0,
-                                        limit=limit,
-                                        orderby="pr_person.first_name")["rows"]
+            rows = resource.select(fields,
+                                   start=0,
+                                   limit=limit,
+                                   orderby="pr_person.first_name")["rows"]
 
             if rows:
                 items = [{"id"     : row["hrm_human_resource.id"],
