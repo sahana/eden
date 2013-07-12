@@ -393,6 +393,9 @@ class S3Config(Storage):
     def get_base_prepopulate(self):
         """ Whether to prepopulate the database &, if so, which set of data to use for this """
         return self.base.get("prepopulate", 1)
+    def get_base_guided_tour(self):
+        """ Whether the guided tours are enabled """
+        return self.base.get("guided_tour", False)
     def get_base_public_url(self):
         return self.base.get("public_url", "http://127.0.0.1:8000")
     def get_base_cdn(self):

@@ -203,6 +203,17 @@ def s3_barchart(r, **attr):
     else:
         raise HTTP(501, body=BADFORMAT)
 
+
+# -----------------------------------------------------------------------------
+def s3_guided_tour(output):
+    """
+        Helper function to attach a guided tour (if required) to the output
+    """
+    if request.get_vars.tour:
+        output = s3db.tour_builder(output)
+
+    return output
+
 # -----------------------------------------------------------------------------
 def s3_rest_controller(prefix=None, resourcename=None, **attr):
     """
@@ -371,6 +382,8 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                         "reject",
                         "deduplicate"):
         s3.actions = None
+
+    output = s3_guided_tour(output)
 
     return output
 

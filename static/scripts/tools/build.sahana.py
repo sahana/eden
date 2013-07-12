@@ -262,6 +262,22 @@ def dojs(dogis = False, warnings = True):
         pass
     shutil.move(outputFilename, "../S3")
 
+    # Guided Tour
+    print "Compressing Guided Tour"
+    sourceDirectory = ".."
+    configFilename = "sahana.js.guidedTour.cfg"
+    outputFilename = "s3.guidedtour.min.js"
+    merged = mergejs.run(sourceDirectory,
+                         None,
+                         configFilename)
+    minimized = minimize(merged)
+    open(outputFilename, "w").write(minimized)
+    try:
+        os.remove("../S3/%s" % outputFilename)
+    except:
+        pass
+    shutil.move(outputFilename, "../S3")
+
     # Vulnerability
     print "Compressing Vulnerability"
     sourceDirectory = "../.."
@@ -532,6 +548,28 @@ def docss():
         pass
     print "Moving new %s." % outputFilenameCSS
     shutil.move(outputFilenameCSS, "../../themes/%s" % theme)
+
+
+    # Guided tour stylesheet
+    listCSS = ["../../styles/plugins/joyride.css"]
+    outputFilenameCSS = "guidedtour.min.css"
+
+    # Merge CSS files
+    print "Merging guided tour styles."
+    mergedCSS = mergeCSS(listCSS, outputFilenameCSS)
+
+    # Compress CSS files
+    print "Writing to %s." % outputFilenameCSS
+    compressCSS(mergedCSS, outputFilenameCSS)
+
+    # Move files to correct locations
+    print "Deleting %s." % outputFilenameCSS
+    try:
+        os.remove("../../styles/plugins/%s" % outputFilenameCSS)
+    except:
+        pass
+    print "Moving new %s." % outputFilenameCSS
+    shutil.move(outputFilenameCSS, "../../styles/plugins")
 
     # Bootstrap
     # - enable as-needed
