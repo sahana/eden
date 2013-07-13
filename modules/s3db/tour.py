@@ -29,7 +29,8 @@
 
 __all__ = ["S3GuidedTourModel",
            "tour_rheader",
-           "tour_builder"]
+           "tour_builder",
+           ]
 
 from gluon import *
 from gluon.storage import Storage
@@ -44,7 +45,7 @@ class S3GuidedTourModel(S3Model):
     names = ["tour_config",
              "tour_details",
              "tour_user",
-            ]
+             ]
 
     def model(self):
 
@@ -454,12 +455,12 @@ def tour_builder(output):
     output["joyride_div"] = joyride_div
     if s3.debug:
         appname = request.application
-        s3.scripts.append("/%s/static/scripts/jquery.joyride-2.0.3.js" % appname)
+        s3.scripts.append("/%s/static/scripts/jquery.joyride.js" % appname)
         s3.scripts.append("/%s/static/scripts/S3/s3.guidedtour.js" % appname)
         s3.stylesheets.append("plugins/guidedtour.min.css")
     else:
         s3.scripts.append("/%s/static/scripts/S3/s3.guidedtour.min.js" % request.application)
-        s3.stylesheets.append("plugins/joyride-2.0.3.css")
+        s3.stylesheets.append("plugins/joyride.css")
     return output
 
 # END =========================================================================

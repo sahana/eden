@@ -205,7 +205,9 @@ $(function() {
 
         // Check and report errors
         var has_errors = false;
-        if (response.hasOwnProperty('_error')) {
+        if (!response) {
+            has_errors = true
+        } else if (response.hasOwnProperty('_error')) {
             has_errors = true;
             inline_append_error(formname, rowindex, null, response['_error']);
         }
