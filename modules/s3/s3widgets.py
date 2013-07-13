@@ -522,9 +522,9 @@ class S3AddPersonWidget(FormWidget):
         if required:
             s3.has_required = True
 
-        if current.request.env.request_method == "POST" and not value:
+        if request.env.request_method == "POST" and not value:
             # Read the POST vars:
-            post_vars = current.request.post_vars
+            post_vars = request.post_vars
             values = Storage(ptable._filter_fields(post_vars))
             values["email"] = post_vars["email"]
             values["mobile_phone"] = post_vars["mobile_phone"]
@@ -587,6 +587,13 @@ class S3AddPersonWidget(FormWidget):
                      _class="box_bottom")
 
         # JS
+        if s3.debug:
+            script = "/%s/static/scripts/S3/s3.select_person.js" % appname
+        else:
+            script = "/%s/static/scripts/S3/s3.select_person.min.js" % appname
+        scripts = s3.scripts
+        if script not in script:
+            scripts.append(script)
         s3.jquery_ready.append('''S3.addPersonWidget()''')
 
         # Overall layout of components
@@ -601,7 +608,7 @@ class S3AddPersonWidget2(FormWidget):
         Renders a person_id field as a Create Person form,
         with an embedded Autocomplete to select existing people.
 
-        It relies on JS code in static/S3/s3.select_person.js
+        It relies on JS code in static/S3/s3.add_person.js
     """
 
     def __init__(self,
@@ -634,83 +641,20 @@ class S3AddPersonWidget2(FormWidget):
         if "_id" in attr:
             real_input = attr["_id"]
         else:
-            real_input = str(field).replace(".", "_")
+            real_input = fieldname.replace(".", "_")
 
         if self.controller is None:
             controller = request.controller
         else:
             controller = self.controller
 
-        if self.select_existing:
-            # Autocomplete
-            select = '''S3.select_person($('#%s').val())''' % real_input
-            widget = S3PersonAutocompleteWidget(post_process=select,
-                                                hideerror=True)
-            ac_row = TR(TD(LABEL("%s: " % T("Name"),
-                                 _class="hide",
-                                 _id="person_autocomplete_label"),
-                           widget(field,
-                                  None,
-                                  _class="hide")),
-                        TD(),
-                        _id="person_autocomplete_row",
-                        _class="box_top")
-            # Select from registry buttons
-            _class ="box_top"
-            select_row = TR(TD(A(T("Select from registry"),
-                                 _href="#",
-                                 _id="select_from_registry",
-                                 _class="action-btn"),
-                               A(T("Remove selection"),
-                                 _href="#",
-                                 _onclick='''S3.select_person_clear_form();''',
-                                 _id="clear_form_link",
-                                 _class="action-btn hide",
-                                 _style="padding-left:15px;"),
-                               A(T("Edit Details"),
-                                 _href="#",
-                                 _onclick='''S3.select_person_edit_form();''',
-                                 _id="edit_selected_person_link",
-                                 _class="action-btn hide",
-                                 _style="padding-left:15px;"),
-                               DIV(_id="person_load_throbber",
-                                   _class="throbber hide",
-                                   _style="padding-left:85px;"),
-                               _class="w2p_fw"),
-                            TD(),
-                            _id="select_from_registry_row",
-                            _class=_class,
-                            _controller=controller,
-                            _field=real_input,
-                            _value=str(value))
-
-        else:
-            _class = "hide"
-            ac_row = ""
-            select_row = TR(TD(A(T("Edit Details"),
-                                 _href="#",
-                                 _onclick='''S3.select_person_edit_form();''',
-                                 _id="edit_selected_person_link",
-                                 _class="action-btn hide",
-                                 _style="padding-left:15px;"),
-                               DIV(_id="person_load_throbber",
-                                   _class="throbber hide",
-                                   _style="padding-left:85px;"),
-                               _class="w2p_fw"),
-                            TD(),
-                            _id="select_from_registry_row",
-                            _class=_class,
-                            _controller=controller,
-                            _field=real_input,
-                            _value=str(value))
-
         # Embedded Form
         s3db = current.s3db
         ptable = s3db.pr_person
         ctable = s3db.pr_contact
-        fields = [ptable.first_name,
-                  ptable.middle_name,
-                  ptable.last_name,
+        fields = [#ptable.first_name,
+                  #ptable.middle_name,
+                  #ptable.last_name,
                   ]
         if settings.get_pr_request_dob():
             fields.append(ptable.date_of_birth)
@@ -743,9 +687,9 @@ class S3AddPersonWidget2(FormWidget):
         if required:
             s3.has_required = True
 
-        if current.request.env.request_method == "POST" and not value:
+        if request.env.request_method == "POST" and not value:
             # Read the POST vars:
-            post_vars = current.request.post_vars
+            post_vars = request.post_vars
             values = Storage(ptable._filter_fields(post_vars))
             values["email"] = post_vars["email"]
             values["mobile_phone"] = post_vars["mobile_phone"]
@@ -773,48 +717,71 @@ class S3AddPersonWidget2(FormWidget):
             data = None
             record_id = value
 
-        form = SQLFORM.factory(table_name="pr_person",
-                               record=data,
-                               labels=labels,
-                               formstyle=formstyle,
-                               upload="default/download",
-                               separator = "",
-                               record_id = record_id,
-                               *fields)
-        trs = []
-        for tr in form[0]:
-            if "_id" in tr.attributes:
-                # Standard formstyle
-                if tr.attributes["_id"].startswith("submit_record"):
-                    # skip submit row
-                    continue
-            elif "_id" in tr[0][0].attributes:
-                # DIV-based formstyle
-                if tr[0][0].attributes["_id"].startswith("submit_record"):
-                    # skip submit row
-                    continue
-            if "_class" in tr.attributes:
-                tr.attributes["_class"] = "%s box_middle" % \
-                                            tr.attributes["_class"]
-            else:
-                tr.attributes["_class"] = "box_middle"
-            trs.append(tr)
+        # Output
+        rows = DIV()
 
-        table = DIV(*trs)
-
+        # Fields
+        # (id, label, widget)
+        fields = [()
+                  ]
+        
+        # Name field
+        # - can search for an existing person
+        # - can create a new person
+        # - multiple names get assigned to first, middle, last
+        id = "%s_%s" % (fieldname, level)
+        label = labels[level]
+        widget = SELECT(OPTION(T("Select %(location)s") % dict(location = label),
+                               _value=""),
+                        _id=id)
+        #comment = T("Select this %(location)s") % dict(location = label)
+        throbber = DIV(_id="%s__throbber" % id,
+                       _class="throbber hide"
+                       )
+        if formstyle == "bootstrap":
+            # We would like to hide the whole original control-group & append rows, but that can't be done directly within a Widget
+            # -> Elements moved via JS after page load
+            label = LABEL("%s:" % label, _class="control-label",
+                                         _for=id)
+            widget.add_class("input-xlarge")
+            # Currently unused, so remove if this remains so
+            #from gluon.html import BUTTON
+            #comment = BUTTON(comment,
+            #                 _class="btn btn-primary hide",
+            #                 _id="%s__button" % id
+            #                 )
+            #_controls = DIV(widget, throbber, comment, _class="controls")
+            _controls = DIV(widget, throbber, _class="controls")
+            row = DIV(label, _controls, _class="control-group hide", _id="%s__row" % id)
+        elif callable(formstyle):
+            # @ToDo: Test
+            row = formstyle(id, label, widget, comment, hidden=hidden)
+        else:
+            # Unsupported
+            raise
+        rows.append(row)
+        
         # Divider
-        divider = TR(TD(_class="subheading"),
-                     TD(),
-                     _class="box_bottom")
+        divider = DIV(DIV(_class="subheading"),
+                      DIV(),
+                      _class="box_bottom")
+        rows.append(divider)
 
         # JS
-        s3.jquery_ready.append('''S3.addPersonWidget()''')
+        if s3.debug:
+            script = "/%s/static/scripts/S3/s3.add_person.js" % appname
+        else:
+            script = "/%s/static/scripts/S3/s3.add_person.min.js" % appname
+        scripts = s3.scripts
+        if script not in scripts:
+            scripts.append(script)
+        s3.jquery_ready.append('''S3.addPersonWidget('%s')''' % fieldname)
 
         # Overall layout of components
-        return TAG[""](select_row,
-                       ac_row,
-                       table,
-                       divider)
+        return TAG[""](DIV(INPUT(**attr), # Real input, hidden
+                           _classs="hidden"),
+                       rows,
+                       )
 
 # =============================================================================
 class S3AutocompleteWidget(FormWidget):
@@ -3597,7 +3564,7 @@ class S3LocationSelectorWidget2(FormWidget):
                 _class = "control-group hide"
                 address_row = DIV(label, _controls, _class=_class, _id="%s__row" % id)
             elif callable(formstyle):
-                # @ToDo
+                # @ToDo: Test
                 comment = ""
                 address_row = formstyle(id, label, widget, comment, hidden=True)
             else:

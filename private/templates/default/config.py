@@ -38,6 +38,9 @@ settings = current.deployment_settings
 # Theme (folder to use for views/layout.html)
 #settings.base.theme = "default"
 
+# Enable Guided Tours
+settings.base.guided_tour = True
+
 # Authentication settings
 # These settings should be changed _after_ the 1st (admin) user is
 # registered in order to secure the deployment

@@ -8,7 +8,7 @@
 
          CSV fields:
          Name....................org_facility.name
-         Type....................org_facility.type
+         Type....................org_facility.type comma-sep list
          Organisation............org_organisation.name
          Building................gis_location.name
          Address.................gis_location.addr_street
@@ -35,8 +35,10 @@
     *********************************************************************** -->
     <xsl:output method="xml"/>
 
-    <xsl:include href="../commons.xsl"/>
+    <xsl:include href="../../xml/commons.xsl"/>
     <xsl:include href="../../xml/countries.xsl"/>
+
+    <xsl:variable name="FacilityTypePrefix" select="'FacilityType:'"/>
 
     <!-- ****************************************************************** -->
     <!-- Lookup column names -->
@@ -55,7 +57,6 @@
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
-    <xsl:key name="facility_type" match="row" use="col[@field='Type']"/>
     <xsl:key name="organisation" match="row" use="col[contains(
                     document('../labels.xml')/labels/column[@name='Organisation']/match/text(),
                     concat('|', @field, '|'))]"/>
@@ -63,11 +64,6 @@
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
-            <!-- Facility Types -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('facility_type', col[@field='Type'])[1])]">
-                <xsl:call-template name="FacilityType" />
-            </xsl:for-each>
-
             <!-- Organisations -->
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('organisation',
@@ -110,13 +106,13 @@
                 </reference>
             </xsl:if>
 
-            <xsl:if test="col[@field='Type']!=''">
-                <reference field="facility_type_id" resource="org_facility_type">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat('[&quot;', 'FacilityType:', $Type, '&quot;]')"/>
-                    </xsl:attribute>
-                </reference>
-            </xsl:if>
+            <!-- Facility Types -->
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list">
+                    <xsl:value-of select="$Type"/>
+                </xsl:with-param>
+                <xsl:with-param name="arg">facility_type_ref</xsl:with-param>
+            </xsl:call-template>
 
             <!-- Site Needs -->
             <xsl:if test="col[@field='Urgently Needed']!='' or 
@@ -142,6 +138,38 @@
 
         <xsl:call-template name="Locations"/>
 
+        <xsl:call-template name="splitList">
+            <xsl:with-param name="list"><xsl:value-of select="$Type"/></xsl:with-param>
+            <xsl:with-param name="arg">facility_type_res</xsl:with-param>
+        </xsl:call-template>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="resource">
+        <xsl:param name="item"/>
+        <xsl:param name="arg"/>
+
+        <xsl:choose>
+            <!-- Facility Types -->
+            <xsl:when test="$arg='facility_type_ref'">
+                <resource name="org_site_facility_type">
+                    <reference field="facility_type_id" resource="org_facility_type">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($FacilityTypePrefix, $item)"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:when>
+            <xsl:when test="$arg='facility_type_res'">
+                <resource name="org_facility_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat($FacilityTypePrefix, $item)"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$item"/></data>
+                </resource>
+            </xsl:when>
+        </xsl:choose>
     </xsl:template>
 
     <!-- ****************************************************************** -->

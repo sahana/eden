@@ -1709,7 +1709,7 @@ class S3ResourceHeader:
                         if isinstance(f, str):
                             fn = f
                             if "." in fn:
-                                tn, fn = col.split(".", 1)
+                                tn, fn = f.split(".", 1)
                                 if fn not in table.fields or \
                                    fn not in record:
                                     continue

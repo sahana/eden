@@ -184,11 +184,10 @@ def facility_marker_fn(record):
     db = current.db
     s3db = current.s3db
     table = db.org_facility_type
-    types = record.facility_type_id
-    if isinstance(types, list):
-        rows = db(table.id.belongs(types)).select(table.name)
-    else:
-        rows = db(table.id == types).select(table.name)
+    ltable = db.org_site_facility_type
+    query = (ltable.site_id == record.site_id) & \
+            (ltable.facility_type_id == table.id)
+    rows = db(query).select(table.name)
     types = [row.name for row in rows]
 
     # Use Marker in preferential order

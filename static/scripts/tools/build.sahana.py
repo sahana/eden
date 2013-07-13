@@ -309,7 +309,8 @@ def dojs(dogis = False, warnings = True):
     shutil.move(outputFilename, "../../themes/Vulnerability/js")
 
     # Single scripts
-    for filename in ["contacts",
+    for filename in ["add_person",
+                     "contacts",
                      "embed_component",
                      "gis",
                      "gis.fullscreen",
@@ -317,6 +318,7 @@ def dojs(dogis = False, warnings = True):
                      "locationselector.widget2",
                      "popup",
                      "register_validation",
+                     "select_person",
                      "timeline",
                      ]:
         print "Compressing s3.%s.js" % filename

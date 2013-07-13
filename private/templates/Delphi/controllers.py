@@ -5,7 +5,7 @@ from os import path
 from gluon import current
 from gluon.html import *
 
-from s3 import s3_represent_facilities, s3_register_validation
+from s3.s3utils import s3_register_validation
 
 # =============================================================================
 class index():

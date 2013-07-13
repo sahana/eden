@@ -52,7 +52,7 @@ __all__ = ["S3OrganisationModel",
            "org_office_controller",
            "org_update_affiliations",
            "org_OrganisationRepresent",
-           #"org_SiteRepresent",
+           "org_SiteRepresent",
            ]
 
 try:
@@ -1791,7 +1791,7 @@ class S3SiteModel(S3Model):
             widget = None
             comment = None
 
-        org_site_represent = org_SiteRepresent()
+        org_site_represent = org_SiteRepresent(show_link=True)
 
         site_id = self.super_link("site_id", "org_site",
                                   #writable = True,
@@ -1811,6 +1811,17 @@ class S3SiteModel(S3Model):
 
         # Components
         add_component = self.add_component
+
+        # Facility Types
+        # Format for S3SQLInlineComponentCheckbox
+        add_component("org_facility_type",
+                      org_site=Storage(link="org_site_facility_type",
+                                       joinby="site_id",
+                                       key="facility_type_id",
+                                       actuate="hide"))
+        # Format for filter_widgets & imports
+        add_component("org_site_facility_type",
+                      org_site="site_id")
 
         # Human Resources
         # - direct component (suitable for Create/List)
@@ -2111,6 +2122,8 @@ class S3FacilityModel(S3Model):
 
     names = ["org_facility_type",
              "org_facility",
+             "org_site_facility_type",
+             "org_facility_type_id", # Passed to global for s3translate
              "org_facility_geojson",
              ]
 
@@ -2118,6 +2131,7 @@ class S3FacilityModel(S3Model):
 
         T = current.T
         db = current.db
+        settings = current.deployment_settings
 
         add_component = self.add_component
         configure = self.configure
@@ -2160,6 +2174,25 @@ class S3FacilityModel(S3Model):
                   deduplicate=self.org_facility_type_duplicate,
                   )
 
+        represent = S3Represent(lookup=tablename, translate=True)
+        facility_type_id = S3ReusableField("facility_type_id", table,
+                                           sortby="name",
+                                           # Only used by org_site_facility_type
+                                           requires=IS_ONE_OF(db, "org_facility_type.id",
+                                                              represent,
+                                                              sort=True,
+                                                              ),
+                                           represent=represent,
+                                           label=T("Facility Type"),
+                                           comment=S3AddResourceLink(
+                                            c="org",
+                                            f="facility_type",
+                                            label=ADD_FAC,
+                                            title=T("Facility Type"),
+                                            tooltip=T("If you don't see the Type in the list, you can add a new one by clicking link 'Add Facility Type'.")),
+                                           ondelete="CASCADE",
+                                           )
+
         # ---------------------------------------------------------------------
         # Facilities (generic)
         #
@@ -2178,19 +2211,6 @@ class S3FacilityModel(S3Model):
                                    #notnull=True, unique=True,
                                    represent = lambda v: v or NONE,
                                    label=T("Code")),
-                             Field("facility_type_id", "list:reference org_facility_type",
-                                   requires=IS_NULL_OR(
-                                                IS_ONE_OF(db, "org_facility_type.id",
-                                                          self.org_facility_type_represent,
-                                                          sort=True,
-                                                          multiple=True)),
-                                   represent=self.org_facility_type_multirepresent,
-                                   widget = CheckboxesWidgetS3.widget,
-                                   comment=S3AddResourceLink(c="org",
-                                                             f="facility_type",
-                                                             label=ADD_FAC,
-                                                             tooltip=T("Select a Facility Type from the list or click 'Add Facility Type'")),
-                                   label=T("Type")),
                              self.org_organisation_id(
                                 #widget=S3OrganisationAutocompleteWidget(
                                             #default_from_profile=True)
@@ -2272,9 +2292,9 @@ class S3FacilityModel(S3Model):
             S3SearchOptionsWidget(
                 name="facility_search_type",
                 label=T("Type"),
-                field="facility_type_id",
+                field="site_facility_type.facility_type_id",
                 options = facility_type_opts,
-                cols=2,
+                cols=3,
             ),
             S3SearchOptionsWidget(
                 name="facility_search_org",
@@ -2309,14 +2329,13 @@ class S3FacilityModel(S3Model):
             ]
 
         report_fields = ["name",
-                         "facility_type_id",
+                         "facility_type.name",
                          "organisation_id",
                          #"location_id$L1",
                          #"location_id$L2",
                          "location_id$L3",
                          "location_id$L4",
                          ]
-        settings = current.deployment_settings
         if settings.has_module("req"):
             # "reqs" virtual field: the highest priority of
             # all open requests for this site:
@@ -2338,7 +2357,12 @@ class S3FacilityModel(S3Model):
         # Custom Form
         crud_form = S3SQLCustomForm("name",
                                     "code",
-                                    "facility_type_id",
+                                    S3SQLInlineComponentCheckbox(
+                                        "facility_type",
+                                        label = T("Facility Type"),
+                                        field = "facility_type_id",
+                                        cols = 3,
+                                    ),
                                     "organisation_id",
                                     "location_id",
                                     "opening_times",
@@ -2365,7 +2389,7 @@ class S3FacilityModel(S3Model):
                          label=T("Name"),
                          _class="filter-search",
                          ),
-            S3OptionsFilter("facility_type_id",
+            S3OptionsFilter("site_facility_type.facility_type_id",
                             label=T("Type"),
                             represent="%(name)s",
                             widget="multiselect",
@@ -2396,7 +2420,7 @@ class S3FacilityModel(S3Model):
                     fact = [("id", "count", T("Number of Facilities")),
                             ("name", "list", T("List of Facilities"))],
                     defaults=Storage(rows="location_id$L4",
-                                     cols="facility_type_id",
+                                     cols="facility_type.name",
                                      fact="name",
                                      aggregate="count")
                     ),
@@ -2420,22 +2444,33 @@ class S3FacilityModel(S3Model):
                   update_realm = True,
                   )
 
-        # Groups
-        add_component("org_group",
-                      org_facility=Storage(link="org_facility_group",
-                                           joinby="facility_id",
-                                           key="group_id",
-                                           actuate="hide"))
-        # Format for filter_widgets
-        add_component("org_facility_group",
-                      org_facility="facility_id")
+        # ---------------------------------------------------------------------
+        # Link Table: Sites <> Facility Types
+        # - currently just used for Facilities but can be easily used by other
+        #   Site types as-required
+        #
+        tablename = "org_site_facility_type"
+        table = define_table(tablename,
+                             # Component not instance
+                             super_link("site_id", "org_site",
+                                        label=settings.get_org_site_label(),
+                                        instance_types = current.auth.org_site_types,
+                                        orderby = "org_site.name",
+                                        not_filterby = "obsolete",
+                                        not_filter_opts = [True],
+                                        readable = True,
+                                        writable = True,
+                                        represent = self.org_site_represent,
+                                        ),
+                             facility_type_id(),
+                             *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                    org_facility_geojson = self.org_facility_geojson
-                )
+        return Storage(org_facility_type_id = facility_type_id,
+                       org_facility_geojson = self.org_facility_geojson
+                       )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2484,47 +2519,6 @@ class S3FacilityModel(S3Model):
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def org_facility_type_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.org_facility_type
-        r = db(table.id == id).select(table.name,
-                                      limitby=(0, 1)).first()
-        try:
-            return current.T(r.name)
-        except:
-            return current.messages.UNKNOWN_OPT
-
-    # -----------------------------------------------------------------------------
-    @staticmethod
-    def org_facility_type_multirepresent(opt):
-        """ Represent a facility type in list views """
-
-        if not opt:
-            return current.messages["NONE"]
-
-        opts = opt if type(opt) is list else [opt]
-
-        table = current.s3db.org_facility_type
-        query = table.id.belongs(opts)
-        rows = current.db(query).select(table.id,
-                                        table.name,
-                                        cacheable=True,
-                                        limitby=(0, len(opts)))
-        vals = dict([(r.id, r.name) for r in rows])
-
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
-        names = [vals[k] if k in vals else UNKNOWN_OPT for k in opts]
-        return ", ".join(names)
-
     # -----------------------------------------------------------------------------
     @staticmethod
     def org_facility_geojson(jsonp=True,
@@ -2540,6 +2534,8 @@ class S3FacilityModel(S3Model):
         db = current.db
         s3db = current.s3db
         stable = s3db.org_facility
+        ltable = db.org_site_facility_type
+        ttable = db.org_facility_type
         gtable = db.gis_location
         ntable = s3db.req_site_needs
 
@@ -2552,10 +2548,13 @@ class S3FacilityModel(S3Model):
                 (gtable.id == stable.location_id)
         lquery = (ntable.deleted != True) & \
                  (ntable.site_id == stable.site_id)
-        left = ntable.on(lquery)
+        left = [ntable.on(lquery),
+                ltable.on(stable.site_id == ltable.site_id),
+                ttable.on(ttable.facility_type_id == ltable.facility_type_id),
+                ]
         facs = db(query).select(stable.id,
                                 stable.name,
-                                stable.facility_type_id,
+                                ttable.name,
                                 stable.comments,
                                 stable.opening_times,
                                 stable.phone1,
@@ -2572,7 +2571,6 @@ class S3FacilityModel(S3Model):
                                 )
         features = []
         append = features.append
-        represent = stable.facility_type_id.represent
         for f in facs:
             g = f.gis_location
             x = g.lon
@@ -2585,12 +2583,11 @@ class S3FacilityModel(S3Model):
             # Compact Encoding
             geojson = dumps(shape, separators=(",", ":"))
             o = f.org_facility
-            properties = {
-                    "id": o.id,
-                    "name": o.name,
-                    }
-            if o.facility_type_id:
-                properties["type"] = represent(o.facility_type_id)
+            properties = {"id": o.id,
+                          "name": o.name,
+                          }
+            if f.get("org_facility_type.name"):
+                properties["type"] = f["org_facility_type.name"]
             if o.opening_times:
                 properties["open"] = o.opening_times
             if o.comments:
@@ -2626,14 +2623,12 @@ class S3FacilityModel(S3Model):
                         properties["need"] = needs["need"]
                     if "no" in needs:
                         properties["no"] = needs["no"]
-            f = dict(
-                type = "Feature",
-                properties = properties,
-                geometry = json.loads(geojson)
-                )
+            f = dict(type = "Feature",
+                     properties = properties,
+                     geometry = json.loads(geojson)
+                     )
             append(f)
-        data = dict(
-                    type = "FeatureCollection",
+        data = dict(type = "FeatureCollection",
                     features = features
                     )
         output = json.dumps(data)
@@ -3476,7 +3471,7 @@ class org_SiteRepresent(S3Represent):
 
     def __init__(self,
                  translate=False,
-                 show_link=True,
+                 show_link=False,
                  multiple=False):
 
         # Need a custom lookup
@@ -3492,7 +3487,7 @@ class org_SiteRepresent(S3Represent):
                              multiple=multiple)
 
     # -------------------------------------------------------------------------
-    def bulk(self, values, rows=None, list_type=True, show_link=True):
+    def bulk(self, values, rows=None, list_type=False, show_link=True):
         """
             Represent multiple values as dict {value: representation}
 
@@ -3501,37 +3496,18 @@ class org_SiteRepresent(S3Represent):
             @param show_link: render each representation as link
 
             @return: a dict {value: representation}
-
-            @note: for list-types, the dict keys will be the individual
-                   values within all lists - and not the lists (simply
-                   because lists can not be dict keys). Thus, the caller
-                   would still have to construct the final string/HTML.
         """
 
+        show_link = show_link and self.show_link
         if show_link and not rows:
             # Retrieve the rows
             rows = self.custom_lookup_rows(None, values)
 
-        # Can't just do this due to the use of the joined rows
-        #return super(org_SiteRepresent,
-        #             self).bulk(values, rows, list_type, show_link)
-
         self._setup()
-        show_link = show_link and self.show_link
 
         # Get the values
         if rows and self.table:
             values = [row["org_site.site_id"] for row in rows]
-        elif self.list_type and list_type:
-            try:
-                hasnone = None in values
-                if hasnone:
-                    values = [i for i in values if i != None]
-                values = list(set(chain.from_iterable(values)))
-                if hasnone:
-                    values.append(None)
-            except TypeError:
-                raise ValueError("List of lists expected, got %s" % values)
         else:
             values = [values] if type(values) is not list else values
 
@@ -3595,26 +3571,27 @@ class org_SiteRepresent(S3Represent):
 
                 if instance_type == "org_facility":
                     # We also need the Facility Types
+                    ltable = db.org_site_facility_type
                     ttable = db.org_facility_type
                     fields.append(ttable.name)
-                    left.append(ttable.on(ttable.id == table.facility_type_id))
+                    left.append(ltable.on(ltable.site_id == stable.site_id))
+                    left.append(ttable.on(ttable.id == ltable.facility_type_id))
             rows = db(query).select(*fields,
                                     left=left,
                                     limitby=limitby)
 
         else:
             # We don't need instance_type IDs
-            # Just do a single join with org_facility
-            ftable = s3db.org_facility
-            ttable = db.org_facility_type
+            # Just do a join with org_facility_type
+            ttable = s3db.org_facility_type
+            ltable = db.org_site_facility_type
 
-            left = [ftable.on(ftable.site_id == stable.site_id),
-                    ttable.on(ttable.id == ftable.facility_type_id)]
+            left = [ltable.on(ltable.site_id == stable.site_id),
+                    ttable.on(ttable.id == ltable.facility_type_id)]
 
             rows = db(query).select(stable.site_id,
                                     stable.instance_type,
                                     stable.name,
-                                    ftable.id,
                                     ttable.name,
                                     left=left,
                                     limitby=limitby)
@@ -3819,8 +3796,20 @@ def org_rheader(r, tabs=[]):
                               ["office_type_id", "location_id", "phone1"],
                               ]
         else:
+            def facility_type_lookup(record):
+                db = current.db
+                ltable = db.org_site_facility_type
+                ttable = db.org_facility_type
+                query = (ltable.site_id == record.site_id) & \
+                        (ltable.facility_type_id == ttable.id)
+                rows = db(query).select(ttable.name)
+                if rows:
+                    return ", ".join([row.name for row in rows])
+                else:
+                    return current.messages["NONE"]
             rheader_fields = [["name", "organisation_id", "email"],
-                              ["facility_type_id", "location_id", "phone1"],
+                              [(T("Facility Type"), facility_type_lookup),
+                               "location_id", "phone1"],
                               ]
 
         rheader_fields, rheader_tabs = S3ResourceHeader(rheader_fields,

@@ -373,10 +373,6 @@ def customize_org_facility(**attr):
     
     from s3.s3fields import S3Represent
     from s3.s3validators import IS_ONE_OF
-    table.facility_type_id.requires = IS_NULL_OR(IS_ONE_OF(db, "org_facility_type.id",
-                                                          S3Represent(lookup=tablename),
-                                                          sort=True))
-    table.facility_type_id.widget = None
 
     s3db.hrm_human_resource.person_id.widget = None
 
@@ -385,7 +381,12 @@ def customize_org_facility(**attr):
     # Custom Crud Form
     crud_form = S3SQLCustomForm(
         "name",
-        "facility_type_id",
+        S3SQLInlineComponentCheckbox(
+            "facility_type",
+            label = T("Facility Type"),
+            field = "facility_type_id",
+            cols = 3,
+        ),
         "organisation_id",
         "location_id",
         S3SQLInlineComponent(
@@ -462,7 +463,8 @@ def customize_event_incident_report(**attr):
     from s3.s3validators import IS_LOCATION_SELECTOR2
     from s3.s3widgets import S3LocationSelectorWidget2, S3AddPersonWidget2
     table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
-    table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"])
+    table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
+                                                         show_address=True)
     table.person_id.comment = None
     table.person_id.widget = S3AddPersonWidget2(controller="pr")
     

@@ -208,23 +208,28 @@ def facility():
             append(TR(TD(B("%s:" % T("Name"))),
                       TD(r.record.name)))
 
-            # Type
-            if r.record.facility_type_id:
-                append(TR(TD(B("%s:" % r.table.facility_type_id.label)),
-                          TD(r.table.facility_type_id.represent(r.record.facility_type_id))))
+            # Type(s)
+            ttable = db.org_facility_type
+            ltable = db.org_site_facility_type
+            query = (ltable.site_id == r.record.site_id) & \
+                    (ltable.facility_type_id == ttable.id)
+            rows = db(query).select(ttable.name)
+            if rows:
+                append(TR(TD(B("%s:" % ltable.facility_type_id.label)),
+                          TD(", ".join([row.name for row in rows]))))
 
             # Comments
             if r.record.comments:
                 append(TR(TD(B("%s:" % r.table.comments.label)),
                           TD(r.record.comments)))
 
-            # Organization (better with just name rather than Represent)
-            # @ToDo: Make this configurable - some deployments will only see
-            #        their staff so this is a meaningless field
-            table = s3db.org_organisation
-            query = (table.id == r.record.organisation_id)
-            org = db(query).select(table.name,
-                                    limitby=(0, 1)).first()
+            # Organisation (better with just name rather than Represent)
+            # @ToDo: Make this configurable - some users will only see
+            #        their staff so this is a meaningless field for them
+            table = db.org_organisation
+            org = db(table.id == r.record.organisation_id).select(table.name,
+                                                                  limitby=(0, 1)
+                                                                  ).first()
             if org:
                 append(TR(TD(B("%s:" % r.table.organisation_id.label)),
                           TD(org.name)))

@@ -5,7 +5,7 @@ from os import path
 from gluon import current
 from gluon.html import *
 
-from s3 import s3_represent_facilities, s3_register_validation
+from s3.s3utils import s3_register_validation
 
 # =============================================================================
 class index():
@@ -90,35 +90,33 @@ class index():
             auth.permission.controller = "org"
             auth.permission.function = "site"
             permitted_facilities = auth.permitted_facilities(redirect_on_error=False)
-            manage_facility_box = ""
             if permitted_facilities:
-                facility_list = s3_represent_facilities(db, permitted_facilities,
-                                                        link=False)
+                facilities = s3db.org_SiteRepresent().bulk(permitted_facilities)
+                facility_list = [(fac, facilities[fac]) for fac in facilities]
                 facility_list = sorted(facility_list, key=lambda fac: fac[1])
-                facility_opts = [OPTION(opt[1], _value = opt[0])
-                                 for opt in facility_list]
-                facility_opts.insert(0, OPTION("Please Select a Warehouse"))
-                if facility_list:
-                    manage_facility_box = DIV(H3(T("Manage Your Warehouse")),
-                                        SELECT(_id = "manage_facility_select",
-                                                _style = "max-width:400px;",
-                                                *facility_opts
-                                                ),
-                                        A(T("Go"),
+                facility_opts = [OPTION(fac[1], _value=fac[0])
+                                 for fac in facility_list]
+                manage_facility_box = DIV(H3(T("Manage Your Facilities")),
+                                          SELECT(_id = "manage_facility_select",
+                                                 _style = "max-width:400px;",
+                                                 *facility_opts
+                                                 ),
+                                          A(T("Go"),
                                             _href = URL(c="default", f="site",
                                                         args=[facility_list[0][0]]),
                                             #_disabled = "disabled",
                                             _id = "manage_facility_btn",
                                             _class = "action-btn"
                                             ),
-                                        _id = "manage_facility_box",
-                                        _class = "menu_box fleft")
-                    s3.jquery_ready.append(
+                                          _id = "manage_facility_box",
+                                          _class = "menu_box fleft"
+                                          )
+                s3.jquery_ready.append(
 '''$('#manage_facility_select').change(function(){
  $('#manage_facility_btn').attr('href',S3.Ap.concat('/default/site/',$('#manage_facility_select').val()))
 })''')
-                else:
-                    manage_facility_box = DIV()
+            else:
+                manage_facility_box = ""
 
         else:
             manage_facility_box = ""
