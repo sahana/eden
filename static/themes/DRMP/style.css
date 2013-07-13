@@ -445,7 +445,7 @@ table.embeddedComponent .add-row td {
 #sub-filedocument .label-row,
 #sub-partnerorganisation .label-row {
     /* Hide the column titles since only 1 column
-        - this should eb done server-side where-possible, but this isn't possible for Partner Orgs as same field as for Donors
+        - this should be done server-side where-possible, but this isn't possible for Partner Orgs as same field as for Donors
     */
     display: none;
 }

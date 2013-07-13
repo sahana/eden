@@ -45,11 +45,13 @@
         var L4_row = $(selector + '_L4__row');
         var L5_row = $(selector + '_L5__row');
         var address_row = $(selector + '_address__row');
+        var postcode_row = $(selector + '_postcode__row');
         var map_icon_row = $(selector + '_map_icon__row');
         var map_div = $(selector + '__row .map_wrapper').attr('id', fieldname + '_map_wrapper');
         $(selector + '__row').hide()
                              .after(map_div)
                              .after(map_icon_row)
+                             .after(postcode_row)
                              .after(address_row)
                              .after(L5_row)
                              .after(L4_row)
@@ -83,14 +85,15 @@
         if (L5) {
             lx_select(fieldname, 5, L5);
         }
-        // Show Address Row
+        // Show Address/Postcode Rows
         showAddress(fieldname);
         // Show Map icon
         map_icon_row.show();
 
         var lat = $(selector + '_lat').val();
         var lon = $(selector + '_lon').val();
-        if (lat || lon) {
+        var wkt = $(selector + '_wkt').val();
+        if (lat || lon || wkt) {
             showMap(fieldname);
         } else {
             $(selector + '_map_icon').click(function() {
@@ -318,9 +321,11 @@
             parent_input.val(parent);
         } else {
             var address = $(selector + '_address').val();
+            var postcode = $(selector + '_postcode').val();
             var lat = $(selector + '_lat').val();
             var lon = $(selector + '_lon').val();
-            if (!address && !lat && !lon) {
+            var wkt = $(selector + '_wkt').val();
+            if (!address && !postcode && !lat && !lon && !wkt) {
                 var id = lookupParent(fieldname);
                 // Update the real_input
                 real_input.val(id);
@@ -337,16 +342,20 @@
     }
 
     /**
-     * Show the Address field
+     * Show the Address & Postcode fields
      */
     var showAddress = function(fieldname) {
         var selector = '#' + fieldname;
 
-        // Display the row
+        // Display the rows
         $(selector + '_address__row').show();
+        $(selector + '_postcode__row').show();
 
-        var addressfield = $(selector + '_address');
-        addressfield.change(function() {
+        // Listen for changes
+        $(selector + '_address').change(function() {
+            resetHidden(fieldname);
+        });
+        $(selector + '_postcode').change(function() {
             resetHidden(fieldname);
         });
     }
@@ -359,15 +368,13 @@
         var selector = '#' + fieldname;
 
         // Reset the Click event
-        var map_icon = $(selector + '_map_icon');
-        map_icon.unbind('click');
-        map_icon.click(function() {
+        $(selector + '_map_icon').unbind('click')
+                                 .click(function() {
             showMap(fieldname);
         });
 
         // Hide the Map
-        var map_wrapper = $(selector + '_map_wrapper');
-        map_wrapper.hide();
+        $(selector + '_map_wrapper').hide();
 
         // Remove the Feature (if-any)
         var map_id = 'location_selector_' + fieldname;
@@ -391,15 +398,13 @@
         var selector = '#' + fieldname;
 
         // Reset the Click event
-        var map_icon = $(selector + '_map_icon');
-        map_icon.unbind('click');
-        map_icon.click(function() {
+        $(selector + '_map_icon').unbind('click')
+                                 .click(function() {
             hideMap(fieldname);
         });
 
         // Show the Map
-        var map_wrapper = $(selector + '_map_wrapper');
-        map_wrapper.show();
+        $(selector + '_map_wrapper').show();
 
         var map_id = 'location_selector_' + fieldname;
         var gis = S3.gis;
@@ -419,32 +424,50 @@
 
             var latfield = $(selector + '_lat');
             var lonfield = $(selector + '_lon');
+            var wktfield = $(selector + '_wkt');
             var lat = latfield.val();
             var lon = lonfield.val();
-            if (lat != undefined) {
+            var wkt = wktfield.val();
+            if (lat || lon || wkt) {
                 // Display feature
-                var geometry = new OpenLayers.Geometry.Point(parseFloat(lon), parseFloat(lat));
-                geometry.transform(gis.proj4326, map.getProjectionObject());
-                var feature = new OpenLayers.Feature.Vector(geometry);
+                if (wkt != undefined) {
+                    var in_options = {
+                        'internalProjection': map.getProjectionObject(),
+                        'externalProjection': gis.proj4326
+                        };
+                    var feature = new OpenLayers.Format.WKT(in_options).read(wkt);
+                } else {
+                    var geometry = new OpenLayers.Geometry.Point(parseFloat(lon), parseFloat(lat));
+                    geometry.transform(gis.proj4326, map.getProjectionObject());
+                    var feature = new OpenLayers.Feature.Vector(geometry);
+                }
                 map.s3.draftLayer.addFeatures([feature]);
                 // Update the Hidden Fields
                 resetHidden(fieldname);
             }
-            // Watch for new points being selected, so that we can store the Lat/Lon
+            // Watch for new features being selected, so that we can store the Lat/Lon/WKT
             var control;
             var controls = map.controls;
             for (var i=0, len=controls.length; i < len; i++) {
                 if (controls[i].CLASS_NAME == 'OpenLayers.Control.DrawFeature') {
                     control = controls[i];
+                    return false;
                 }
             }
             if (control) {
                 var updateForm = function(event) {
                     // Update the Form fields
-                    var centerPoint = event.feature.geometry.getBounds().getCenterLonLat();
-                    centerPoint.transform(map.getProjectionObject(), gis.proj4326);
-                    latfield.val(centerPoint.lat);
-                    lonfield.val(centerPoint.lon);
+                    var geometry = event.feature.geometry;
+                    if (geometry.CLASS_NAME == 'OpenLayers.Geometry.Point') {
+                        var centerPoint = geometry.getBounds().getCenterLonLat();
+                        centerPoint.transform(map.getProjectionObject(), gis.proj4326);
+                        latfield.val(centerPoint.lat);
+                        lonfield.val(centerPoint.lon);
+                    } else {
+                        // Polygon
+                        var WKT = geometry.transform(map.getProjectionObject(), gis.proj4326).toString();
+                        wktfield.val(WKT);
+                    }
                     // Update the Hidden Fields
                     resetHidden(fieldname);
                 }

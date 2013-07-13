@@ -127,8 +127,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var bounds = layer.getDataExtent();
         // Zoom Out to Cluster
         //layer.map.zoomTo(0)
-        // Zoom to Bounds
-        layer.map.zoomToExtent(bounds);
+        if (bounds) {
+            // Zoom to Bounds
+            layer.map.zoomToExtent(bounds);
+        }
         var strategy,
             strategies = layer.strategies;
         for (var i=0, len=strategies.length; i < len; i++) {
@@ -514,6 +516,14 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     var active = false;
                 }
                 addPointControl(map, null, active);
+            }
+            if (options.draw_polygon) {
+                if (options.draw_polygon == 'active') {
+                    var active = true;
+                } else {
+                    var active = false;
+                }
+                addPolygonControl(map, null, active, true);
             }
         }
 
@@ -1043,22 +1053,28 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     // DraftLayer
     // Used for drawing Points/Polygons & for HTML5 GeoLocation
     var addDraftLayer = function(map) {
-        var marker = map.s3.options.marker_default;
-        var iconURL = marker_url_path + marker.i;
-        var marker_height = marker.h;
-        var marker_width = marker.w;
-        // Needs to be uniquely instantiated
-        var style_marker = OpenLayers.Util.extend({}, OpenLayers.Feature.Vector.style['default']);
-        style_marker.graphicOpacity = 1;
-        style_marker.graphicWidth = marker_width;
-        style_marker.graphicHeight = marker_height;
-        style_marker.graphicXOffset = -(marker_width / 2);
-        style_marker.graphicYOffset = -marker_height;
-        style_marker.externalGraphic = iconURL;
+        var options = map.s3.options;
+        if ((options.draw_polygon) && (!options.draw_feature)) {
+            // No Marker for Polygons
+            var marker;
+        } else {
+            // Marker for 
+            var marker = options.marker_default;
+        }
+        // Styling
+        var layer = {
+            'marker': marker
+            }
+        var response = createStyleMap(map, layer);
+        var featureStyleMap = response[0];
+        var marker_url = response[1];
+
         var draftLayer = new OpenLayers.Layer.Vector(
             i18n.gis_draft_layer, {
-                style: style_marker,
-                displayInLayerSwitcher: false
+                displayInLayerSwitcher: false,
+                // This gets picked up after mapPanel instantiates & copied to it's layerRecords
+                legendURL: marker_url,
+                styleMap: featureStyleMap
             }
         );
         draftLayer.setVisibility(true);
@@ -2761,7 +2777,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             }
             //toolbar.add(lineButton);
             if (options.draw_polygon) {
-                addPolygonControl(toolbar, polygon_pressed, true);
+                addPolygonControl(map, toolbar, polygon_pressed, true);
             }
             //toolbar.add(dragButton);
             //toolbar.add(resizeButton);
@@ -3205,7 +3221,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 // Prepare in case user selects a new point
                 map.s3.lastDraftFeature = feature;
             }
-        })
+        });
 
         if (toolbar) {
             // Toolbar Button
@@ -3240,55 +3256,77 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     }
 
     // Polygon Control to select Areas on the Map
-    var addPolygonControl = function(toolbar, polygon_pressed, not_regular) {
-        var map = toolbar.map;
-        // Toolbar Button
-        var polygonButton = new GeoExt.Action({
-            // We'd like to use the Polygon, but this is hard to use server-side as a Resource filter
-            //control: new OpenLayers.Control.DrawFeature(map.s3.draftLayer, OpenLayers.Handler.Polygon, {
-            control: new OpenLayers.Control.DrawFeature(map.s3.draftLayer,
-                              not_regular ? OpenLayers.Handler.Polygon :
-                                            OpenLayers.Handler.RegularPolygon, {
-                handlerOptions: not_regular ? {
-                    sides: 4,
-                    snapAngle: 90
-                } : {},
-                // custom Callback
-                'featureAdded': function(feature) {
-                    // Remove previous polygon
-                    if (map.s3.lastDraftFeature) {
-                        map.s3.lastDraftFeature.destroy();
-                    }
-                    // update Form Field
+    var addPolygonControl = function(map, toolbar, active, not_regular) {
+        var draftLayer = map.s3.draftLayer;
+        var control = new OpenLayers.Control.DrawFeature(draftLayer,
+            not_regular ? OpenLayers.Handler.Polygon :
+                          OpenLayers.Handler.RegularPolygon, {
+            handlerOptions: not_regular ? {
+                sides: 4,
+                snapAngle: 90
+            } : {},
+            // custom Callback
+            'featureAdded': function(feature) {
+                // Remove previous polygon
+                if (map.s3.lastDraftFeature) {
+                    map.s3.lastDraftFeature.destroy();
+                } else if (draftLayer.features.length > 1) {
+                    // Clear the one from the Current Location in S3LocationSelector
+                    draftLayer.features[0].destroy();
+                }
+                var wkt_field = $('#gis_location_wkt');
+                if (wkt_field.length) {
+                    // Update form fields in S3LocationSelectorWidget
+                    // (S3LocationSelectorWidget2 does this in s3.locationselector.widget2.js, which is a better design)
                     var WKT = feature.geometry.transform(map.getProjectionObject(), proj4326).toString();
-                    $('#gis_search_polygon_input').val(WKT).trigger('change');
-                    $('#gis_location_wkt').val(WKT);
+                    wkt_field.val(WKT);
                     $('#gis_location_lat').val('');
                     $('#gis_location_lon').val('');
-                    // Prepare in case user draws a new polygon
-                    map.s3.lastDraftFeature = feature;
-                }
-            }),
-            handler: function(){
-                if (polygonButton.items[0].pressed) {
-                    $('.olMapViewport').addClass('crosshair');
                 } else {
-                    $('.olMapViewport').removeClass('crosshair');
+                    // See if we have a relevant Search Filter
+                    var wkt_search_field = $('#gis_search_polygon_input');
+                    if (wkt_search_field.length) {
+                        var WKT = feature.geometry.transform(map.getProjectionObject(), proj4326).toString();
+                        wkt_search_field.val(WKT).trigger('change');
+                    }
                 }
-            },
-            map: map,
-            iconCls: 'drawpolygon-off',
-            tooltip: i18n.gis_draw_polygon,
-            allowDepress: true,
-            enableToggle: true,
-            toggleGroup: 'controls',
-            pressed: polygon_pressed,
-            activateOnEnable: true,
-            deactivateOnDisable: true
+                // Prepare in case user draws a new polygon
+                map.s3.lastDraftFeature = feature;
+            }
         });
-        toolbar.add(polygonButton);
-        // Pass to global scope
-        map.s3.polygonButton = polygonButton;
+
+        if (toolbar) {
+            // Toolbar Button
+            var polygonButton = new GeoExt.Action({
+                control: control,
+                handler: function(){
+                    if (polygonButton.items[0].pressed) {
+                        $('.olMapViewport').addClass('crosshair');
+                    } else {
+                        $('.olMapViewport').removeClass('crosshair');
+                    }
+                },
+                map: map,
+                iconCls: 'drawpolygon-off',
+                tooltip: i18n.gis_draw_polygon,
+                allowDepress: true,
+                enableToggle: true,
+                toggleGroup: 'controls',
+                pressed: active,
+                activateOnEnable: true,
+                deactivateOnDisable: true
+            });
+            toolbar.add(polygonButton);
+            // Pass to Global scope for LocationSelectorWidget
+            map.s3.polygonButton = polygonButton;
+        } else {
+            // Simply add straight to the map
+            map.addControl(control);
+            if (active) {
+                control.activate();
+                $('.olMapViewport').addClass('crosshair');
+            }
+        }
     }
 
     // Potlatch button for editing OpenStreetMap

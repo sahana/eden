@@ -4,7 +4,6 @@
 }
 
 /* Summary Page */
-
 h2.summary {
     float: left;
 }
@@ -16,6 +15,17 @@ h2.summary {
 }
 .ui-tabs {
     clear: left;
+}
+
+/* Hide the colons for Location Selectors */
+#stats_resident_location_id__label,
+#event_incident_report_location_id__label,
+#vulnerability_risk_location_id__label,
+#project_activity_location_id__label,
+#stats_trained_location_id__label,
+#org_facility_location_id__label,
+#vulnerability_evac_route_location_id__label {
+    display: none;
 }
 
 /* Filter Forms */

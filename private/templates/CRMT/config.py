@@ -13,6 +13,8 @@ from gluon.storage import Storage
 
 from s3.s3filter import S3OptionsFilter
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
+from s3.s3validators import IS_LOCATION_SELECTOR2
+from s3.s3widgets import S3LocationSelectorWidget2, S3AddPersonWidget2
 
 T = current.T
 settings = current.deployment_settings
@@ -189,7 +191,8 @@ settings.hrm.use_skills = False
 settings.hrm.teams = False
 
 # -----------------------------------------------------------------------------
-# Activity
+# Activities
+# -----------------------------------------------------------------------------
 def customize_project_activity(**attr):
     """
         Customize project_project controller
@@ -199,6 +202,12 @@ def customize_project_activity(**attr):
     
     tablename = "project_activity"
     table = s3db[tablename]
+    table.location_id.label = "" # Gets replaced by widget
+    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L1","L2","L3"]) # @ToDo: handle no L2s
+    table.location_id.widget = S3LocationSelectorWidget2(levels=["L1","L2","L3"],
+                                                         show_address=True,
+                                                         show_postcode=True,
+                                                         )
 
     # Remove rheader
     attr["rheader"] = None
@@ -227,7 +236,49 @@ def customize_project_activity(**attr):
 settings.ui.customize_project_activity = customize_project_activity
 
 # -----------------------------------------------------------------------------
-# Organisation
+# Incidents
+# -----------------------------------------------------------------------------
+def customize_event_incident_report(**attr):
+    """
+        Customize project_project controller
+    """
+    
+    # Remove rheader
+    attr["rheader"] = None
+
+    tablename = "event_incident_report"
+    table = current.s3db[tablename]
+    table.location_id.label = "" # Gets replaced by widget
+    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L1","L2","L3"]) # @ToDo: handle no L2s
+    table.location_id.widget = S3LocationSelectorWidget2(levels=["L1","L2","L3"],
+                                                         show_address=True,
+                                                         show_postcode=True,
+                                                         )
+    table.person_id.comment = None
+    table.person_id.widget = S3AddPersonWidget2(controller="pr")
+    
+    current.response.s3.crud_strings[tablename] = Storage(
+                title_create = T("Add Incident"),
+                title_display = T("Incident Details"),
+                title_list = T("Incidents"),
+                title_update = T("Edit Incident"),
+                title_search = T("Search Incidents"),
+                subtitle_create = T("Add New Incident"),
+                label_list_button = T("List Incidents"),
+                label_create_button = T("Add Incident"),
+                label_delete_button = T("Remove Incident"),
+                msg_record_created = T("Incident added"),
+                msg_record_modified = T("Incident updated"),
+                msg_record_deleted = T("Incident removed"),
+                msg_list_empty = T("No Incidents currently recorded"))
+
+    return attr
+
+settings.ui.customize_event_incident_report = customize_event_incident_report
+
+# -----------------------------------------------------------------------------
+# Organisations
+# -----------------------------------------------------------------------------
 def customize_org_organisation(**attr):
     """
         Customize org_organisation controller
@@ -286,7 +337,8 @@ def customize_org_organisation(**attr):
             #comment = "Bob",
             fields = ["name", 
                       "facility_type_id",
-                      "location_id" ],
+                      "location_id",
+                      ],
         ),
         S3SQLInlineComponent(
             "resource",
@@ -294,7 +346,8 @@ def customize_org_organisation(**attr):
             #comment = "Bob",
             fields = ["parameter_id", 
                       "value",
-                      "comments" ],
+                      "comments",
+                      ],
         ),
         "comments",
     ) 
@@ -328,6 +381,7 @@ settings.ui.customize_org_organisation = customize_org_organisation
 
 # -----------------------------------------------------------------------------
 # Coalitions (org_group)
+# -----------------------------------------------------------------------------
 def customize_org_group(**attr):
     """
         Customize org_group controller
@@ -370,13 +424,17 @@ def customize_org_facility(**attr):
 
     tablename = "org_facility"
     table = s3db[tablename]
+    table.location_id.label = "" # Gets replaced by widget
+    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L1","L2","L3"]) # @ToDo: handle no L2s
+    table.location_id.widget = S3LocationSelectorWidget2(levels=["L1","L2","L3"],
+                                                         show_address=True,
+                                                         show_postcode=True,
+                                                         )
     
     from s3.s3fields import S3Represent
     from s3.s3validators import IS_ONE_OF
 
     s3db.hrm_human_resource.person_id.widget = None
-
-    s3db.org_facility.location_id.label = T("Address")
 
     # Custom Crud Form
     crud_form = S3SQLCustomForm(
@@ -443,49 +501,69 @@ def customize_org_facility(**attr):
 
 settings.ui.customize_org_facility = customize_org_facility
 
-# -----------------------------------------------------------------------------
-# Incidents
-# -----------------------------------------------------------------------------
-def customize_event_incident_report(**attr):
+#-----------------------------------------------------------------------------
+# Residents
+#-----------------------------------------------------------------------------
+def customize_stats_resident(**attr):
     """
-        Customize project_project controller
+        Customize stats_resident controller
     """
     
-    s3db = current.s3db
-
-
-    # Remove rheader
-    attr["rheader"] = None
-
-    tablename = "event_incident_report"
-    table = s3db[tablename]
-    table.location_id.label = T("Address")
-    from s3.s3validators import IS_LOCATION_SELECTOR2
-    from s3.s3widgets import S3LocationSelectorWidget2, S3AddPersonWidget2
-    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
-    table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
-                                                         show_address=True)
-    table.person_id.comment = None
-    table.person_id.widget = S3AddPersonWidget2(controller="pr")
-    
-    current.response.s3.crud_strings[tablename] = Storage(
-                title_create = T("Add Incident"),
-                title_display = T("Incident Details"),
-                title_list = T("Incidents"),
-                title_update = T("Edit Incident"),
-                title_search = T("Search Incidents"),
-                subtitle_create = T("Add New Incident"),
-                label_list_button = T("List Incidents"),
-                label_create_button = T("Add Incident"),
-                label_delete_button = T("Remove Incident"),
-                msg_record_created = T("Incident added"),
-                msg_record_modified = T("Incident updated"),
-                msg_record_deleted = T("Incident removed"),
-                msg_list_empty = T("No Incidents currently recorded"))
+    tablename = "stats_resident"
+    table = current.s3db[tablename]
+    table.location_id.label = "" # Gets replaced by widget
+    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L1","L2","L3"]) # @ToDo: handle no L2s
+    table.location_id.widget = S3LocationSelectorWidget2(levels=["L1","L2","L3"],
+                                                         show_address=True,
+                                                         show_postcode=True,
+                                                         )
 
     return attr
 
-settings.ui.customize_event_incident_report = customize_event_incident_report
+settings.ui.customize_stats_resident = customize_stats_resident
+
+#-----------------------------------------------------------------------------
+# Trained People
+#-----------------------------------------------------------------------------
+def customize_stats_trained(**attr):
+    """
+        Customize stats_trained controller
+    """
+    
+    tablename = "stats_trained"
+    table = current.s3db[tablename]
+    table.location_id.label = "" # Gets replaced by widget
+    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L1","L2","L3"]) # @ToDo: handle no L2s
+    table.location_id.widget = S3LocationSelectorWidget2(levels=["L1","L2","L3"],
+                                                         show_address=True,
+                                                         show_postcode=True,
+                                                         )
+
+    return attr
+
+settings.ui.customize_stats_trained = customize_stats_trained
+
+#-----------------------------------------------------------------------------
+# Evacuation Routes
+#-----------------------------------------------------------------------------
+def customize_vulnerability_evac_route(**attr):
+    """
+        Customize stats_trained controller
+    """
+    
+    tablename = "vulnerability_evac_route"
+    table = current.s3db[tablename]
+    table.location_id.label = "" # Gets replaced by widget
+    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L1","L2","L3"]) # @ToDo: handle no L2s
+    table.location_id.widget = S3LocationSelectorWidget2(levels=["L1","L2","L3"],
+                                                         show_address=True,
+                                                         show_postcode=True,
+                                                         polygons=True,
+                                                         )
+
+    return attr
+
+settings.ui.customize_vulnerability_evac_route = customize_vulnerability_evac_route
 
 # =============================================================================
 # Template Modules

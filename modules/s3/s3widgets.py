@@ -638,6 +638,7 @@ class S3AddPersonWidget2(FormWidget):
         attr["_class"] = "hide"
 
         # Main Input
+        fieldname = str(field)
         if "_id" in attr:
             real_input = attr["_id"]
         else:
@@ -729,12 +730,12 @@ class S3AddPersonWidget2(FormWidget):
         # - can search for an existing person
         # - can create a new person
         # - multiple names get assigned to first, middle, last
-        id = "%s_%s" % (fieldname, level)
-        label = labels[level]
-        widget = SELECT(OPTION(T("Select %(location)s") % dict(location = label),
-                               _value=""),
-                        _id=id)
-        #comment = T("Select this %(location)s") % dict(location = label)
+        id = "%s_name" % fieldname
+        label = T("Name")
+        widget = INPUT(_value="",
+                       _id=id,
+                       )
+        comment = T("Select this Person")
         throbber = DIV(_id="%s__throbber" % id,
                        _class="throbber hide"
                        )
@@ -743,6 +744,7 @@ class S3AddPersonWidget2(FormWidget):
             # -> Elements moved via JS after page load
             label = LABEL("%s:" % label, _class="control-label",
                                          _for=id)
+            # @ToDo: Mark Required
             widget.add_class("input-xlarge")
             # Currently unused, so remove if this remains so
             #from gluon.html import BUTTON
@@ -3372,7 +3374,6 @@ class S3LocationSelectorWidget2(FormWidget):
         * Doesn't allow creation of new Lx Locations
         * Doesn't allow selection of existing Locations
         * Doesn't support manual entry of LatLons
-        * Doesn't support creation of Polygons
         * Doesn't support Geocoding
 
         May evolve into a replacement in-time if missing features get migrated here.
@@ -3392,18 +3393,24 @@ class S3LocationSelectorWidget2(FormWidget):
     def __init__(self,
                  levels = ["L1", "L2", "L3"],   # Which levels of the hierarchy to expose?
                  show_address = False,          # Whether to show a field for Street Address
+                 show_postcode = False,         # Whether to show a field for Postcode
                  show_map = True,               # Whether to show a Map to select specific points
+                 polygons = False,              # Whether the Map uses a Polygon draw tool instead of Point
                  ):
 
         self.levels = levels
         self.show_address = show_address
+        self.show_postcode = show_postcode
         self.show_map = show_map
+        self.polygons = polygons
 
     def __call__(self, field, value, **attributes):
 
         levels = self.levels
         show_address = self.show_address
+        show_postcode = self.show_postcode
         show_map = self.show_map
+        polygons = self.polygons
 
         T = current.T
         db = current.db
@@ -3461,11 +3468,13 @@ class S3LocationSelectorWidget2(FormWidget):
                       specific = 0,
                       )
         parent = ""
-        # Keep the selected Lat/Lon/Address during validation errors
+        # Keep the selected Lat/Lon/Address/Postcode during validation errors
         post_vars = request.post_vars
         lat = post_vars.lat
         lon = post_vars.lon
+        wkt = post_vars.wkt
         address = post_vars.address
+        postcode = post_vars.postcode
         if value == "dummy":
             # Validation Error when Creating a specific point
             # Revert to Parent
@@ -3479,9 +3488,9 @@ class S3LocationSelectorWidget2(FormWidget):
                                                    gtable.inherited,
                                                    gtable.lat,
                                                    gtable.lon,
-                                                   # @ToDo: Polygon support
-                                                   #gtable.wkt,
+                                                   gtable.wkt,
                                                    gtable.addr_street,
+                                                   gtable.addr_postcode,
                                                    limitby=(0, 1)).first()
             if not record:
                 raise ValueError
@@ -3499,7 +3508,9 @@ class S3LocationSelectorWidget2(FormWidget):
                 if not record.inherited:
                     lat = record.lat
                     lon = record.lon
+                    wkt = record.wkt if polygons else ""
                 address = record.addr_street
+                postcode = record.addr_postcode
                 values["specific"] = value
                 if len(path) < (len(levels) + 1):
                     # We don't have a full path
@@ -3531,18 +3542,29 @@ class S3LocationSelectorWidget2(FormWidget):
                              value=parent,
                              )
         if show_map:
-            # Lat/Lon INPUT fields, will be hidden
-            lat_input = INPUT(_name="lat",
-                              _id="%s_lat" % fieldname,
-                              value=lat,
-                              )
-            lon_input = INPUT(_name="lon",
-                              _id="%s_lon" % fieldname,
-                              value=lon,
-                              )
+            if polygons:
+                # WKT INPUT field, will be hidden
+                wkt_input = INPUT(_name="wkt",
+                                  _id="%s_wkt" % fieldname,
+                                  value=wkt,
+                                  )
+                lat_input = ""
+                lon_input = ""
+            else:
+                # Lat/Lon INPUT fields, will be hidden
+                lat_input = INPUT(_name="lat",
+                                  _id="%s_lat" % fieldname,
+                                  value=lat,
+                                  )
+                lon_input = INPUT(_name="lon",
+                                  _id="%s_lon" % fieldname,
+                                  value=lon,
+                                  )
+                wkt_input = ""
         else:
             lat_input = ""
             lon_input = ""
+            wkt_input = ""
 
         if show_address:
             # Street Address
@@ -3572,6 +3594,35 @@ class S3LocationSelectorWidget2(FormWidget):
                 raise
         else:
             address_row = ""
+
+        if show_postcode:
+            # Postcode
+            id = "%s_postcode" % fieldname
+            label = settings.get_ui_label_postcode()
+            widget = INPUT(_name="postcode",
+                           _id=id,
+                           value=postcode,
+                           )
+            hidden = not postcode
+            if formstyle == "bootstrap":
+                # We would like to hide the whole original control-group & append rows, but that can't be done directly within a Widget
+                # -> Elements moved via JS after page load
+                label = LABEL("%s:" % label, _class="control-label",
+                                             _for=id)
+                widget.add_class("input-xlarge")
+                _controls = DIV(widget, _class="controls")
+                # Will unhide if dropdowns open accordingly
+                _class = "control-group hide"
+                postcode_row = DIV(label, _controls, _class=_class, _id="%s__row" % id)
+            elif callable(formstyle):
+                # @ToDo: Test
+                comment = ""
+                postcode_row = formstyle(id, label, widget, comment, hidden=True)
+            else:
+                # Unsupported
+                raise
+        else:
+            postcode_row = ""
 
         # Hierarchy Labels
         htable = s3db.gis_hierarchy
@@ -3715,8 +3766,10 @@ class S3LocationSelectorWidget2(FormWidget):
                                collapsed = True,
                                height = 320,
                                width = 480,
-                               add_feature = True,
-                               add_feature_active = True,
+                               add_feature = not polygons,
+                               add_feature_active = not polygons,
+                               add_polygon = polygons,
+                               add_polygon_active = polygons,
                                # Hide controls from toolbar
                                nav = False,
                                area = False,
@@ -3755,10 +3808,12 @@ class S3LocationSelectorWidget2(FormWidget):
         return TAG[""](DIV(INPUT(**attr), # Real input, hidden
                            lat_input,
                            lon_input,
+                           wkt_input,
                            parent_input,
                            _class="hide"),
                        Lx_rows,
                        address_row,
+                       postcode_row,
                        map,
                        requires=field.requires
                        )

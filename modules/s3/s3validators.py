@@ -1560,12 +1560,16 @@ class IS_LOCATION_SELECTOR2(Validator):
 
         vars = current.request.post_vars
         address = vars.get("address", None)
+        postcode = vars.get("postcode", None)
         lat = vars.get("lat", None)
         if lat == "":
             lat = None
         lon = vars.get("lon", None)
         if lon == "":
             lon = None
+        wkt = vars.get("wkt", None)
+        if wkt == "":
+            wkt = None
         parent = vars.get("parent", None)
         # Rough check for valid Lat/Lon
         errors = Storage()
@@ -1579,10 +1583,17 @@ class IS_LOCATION_SELECTOR2(Validator):
                 lon = float(lon)
             except ValueError:
                 errors["lon"] = current.T("Longitude is Invalid!")
+        if wkt:
+            try:
+                from shapely.wkt import loads as wkt_loads
+                polygon = wkt_loads(wkt)
+            except:
+                errors["wkt"] = current.T("WKT is Invalid!")
         if errors:
             return (value, errors)
 
-        if parent or address or (lat is not None and lon is not None):
+        if parent or address or postcode or wkt is not None or \
+           (lat is not None and lon is not None):
             # Specific Location
             db = current.db
             table = db.gis_location
@@ -1592,8 +1603,10 @@ class IS_LOCATION_SELECTOR2(Validator):
                     return (None, current.auth.messages.access_denied)
                 vars = Storage(lat=lat,
                                lon=lon,
+                               wkt=wkt,
                                inherited=False,
                                addr_street=address,
+                               addr_postcode=postcode,
                                parent=parent,
                                )
                 # onvalidation
@@ -1621,7 +1634,9 @@ class IS_LOCATION_SELECTOR2(Validator):
                         (table.level == None) # NB Specific Locations only
                 location = db(query).select(table.lat,
                                             table.lon,
+                                            table.wkt,
                                             table.addr_street,
+                                            table.addr_postcode,
                                             table.parent,
                                             limitby=(0, 1)).first()
                 if location:
@@ -1640,31 +1655,45 @@ class IS_LOCATION_SELECTOR2(Validator):
                         elif address or addr_street:
                             changed = True
                         if not changed:
-                            # Float comparisons need care - just check the 1st 5 decimal points, as that's all we care about
-                            llat = location.lat
-                            if lat is not None and llat is not None:
-                                if round(lat, 5) != round(llat, 5):
+                            addr_postcode = location.addr_postcode
+                            if postcode and addr_postcode:
+                                if postcode != addr_postcode:
                                     changed = True
-                            elif lat is not None or llat is not None:
+                            elif postcode or addr_postcode:
                                 changed = True
                             if not changed:
-                                llon = location.lon
-                                if lon is not None and llon is not None:
-                                    if round(lon, 5) != round(llon, 5):
-                                        changed = True
-                                elif lon is not None or llon is not None:
+                                if wkt and wkt != location.wkt:
                                     changed = True
+                                else:
+                                    # Float comparisons need care - just check the 1st 5 decimal points, as that's all we care about
+                                    llat = location.lat
+                                    if lat is not None and llat is not None:
+                                        if round(lat, 5) != round(llat, 5):
+                                            changed = True
+                                    elif lat is not None or llat is not None:
+                                        changed = True
+                                    if not changed:
+                                        llon = location.lon
+                                        if lon is not None and llon is not None:
+                                            if round(lon, 5) != round(llon, 5):
+                                                changed = True
+                                        elif lon is not None or llon is not None:
+                                            changed = True
 
                     if changed:
                         # Update the record
                         if not current.auth.s3_has_permission("update", table, record_id=value):
                             return (value, current.auth.messages.access_denied)
                         vars = Storage(addr_street=address,
+                                       addr_postcode=postcode,
                                        parent=parent,
                                        )
                         if lat is not None and lon is not None:
                             vars.lat = lat
                             vars.lon = lon
+                            vars.inherited = False
+                        elif wkt is not None:
+                            vars.wkt = wkt
                             vars.inherited = False
                         # onvalidation
                         # - includes detailed bounds check if deployment_setting doesn't disable it
@@ -1699,6 +1728,7 @@ class IS_LOCATION_SELECTOR2(Validator):
                                             table.lat,
                                             table.lon,
                                             table.addr_street,
+                                            table.addr_postcode,
                                             table.parent,
                                             limitby=(0, 1)).first()
                 if not location:
@@ -1712,6 +1742,7 @@ class IS_LOCATION_SELECTOR2(Validator):
                     vars = Storage(lat = None,
                                    lon = None,
                                    addr_street = None,
+                                   addr_postcode = None,
                                    parent = None)
                     db(table.id == value).update(**vars)
                     # Update location tree in case parent has changed
