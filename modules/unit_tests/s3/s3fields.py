@@ -13,6 +13,7 @@ from s3.s3fields import *
 # =============================================================================
 class S3RepresentTests(unittest.TestCase):
 
+    # -------------------------------------------------------------------------
     def setUp(self):
 
         T = current.T
@@ -304,16 +305,38 @@ class S3RepresentTests(unittest.TestCase):
 class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
     """ Test lazy representation of foreign keys in datatables """
 
+    tablename = "export_lazy_fk_represent"
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def setUpClass(cls):
+
+        db = current.db
+        table = db.define_table(cls.tablename,
+                                Field("location_id",
+                                      "reference gis_location"),
+                                Field("organisation_id",
+                                      "reference org_organisation"),
+                                Field("facility_type_id",
+                                      "list:reference org_facility_type"),
+                                *s3_meta_fields())
+                                
+    # -------------------------------------------------------------------------
     def setUp(self):
 
-        current.auth.override = True
+        tablename = self.tablename
 
         s3db = current.s3db
+        table = s3db[tablename]
+        s3db.add_component(tablename,
+                           org_organisation=Storage(name="test",
+                                                    joinby="organisation_id"))
+        current.auth.override = True
 
-        locations = (
-                        Storage(name="FK Represent TestLocation 1"),
-                        Storage(name="FK Represent TestLocation 2"),
-                    )
+
+        # Create locations
+        locations = (Storage(name="FK Represent TestLocation 1"),
+                     Storage(name="FK Represent TestLocation 2"))
         ltable = s3db.gis_location
         for i in xrange(len(locations)):
             location = locations[i]
@@ -321,11 +344,10 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
             location["id"] = location_id
         self.locations = locations
 
-        fac_types = (
-                        Storage(name="FK Represent TestFacType P"),
-                        Storage(name="FK Represent TestFacType Q"),
-                        Storage(name="FK Represent TestFacType R"),
-                    )
+        # Create facility types
+        fac_types = (Storage(name="FK Represent TestFacType P"),
+                     Storage(name="FK Represent TestFacType Q"),
+                     Storage(name="FK Represent TestFacType R"))
         ttable = s3db.org_facility_type
         for i in xrange(len(fac_types)):
             fac_type = fac_types[i]
@@ -333,31 +355,25 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
             fac_type["id"] = fac_type_id
         self.fac_types = fac_types
 
-        org = Storage(name="FK Represent TestOrg 1")
-
+        # Create organisation
+        org = Storage(name="FK Represent TestOrg A")
         otable = s3db.org_organisation
         org_id = otable.insert(**org)
         org["id"] = org_id
         s3db.update_super(otable, org)
         self.org = org
 
-        facs = (
-                    Storage(name="FK RepresentTestFacility X",
-                            organisation_id=org.id,
-                            facility_type_id=[fac_types[0].id, fac_types[1].id],
-                            location_id=locations[0].id),
-                    Storage(name="FK RepresentTestFacility Y",
-                            organisation_id=org.id,
-                            facility_type_id=[fac_types[1].id, fac_types[2].id],
-                            location_id=locations[1].id),
-               )
-
-        ftable = s3db.org_facility
+        # Create test records
+        facs = (Storage(organisation_id=org.id,
+                        facility_type_id=[fac_types[0].id, fac_types[1].id],
+                        location_id=locations[0].id),
+                Storage(organisation_id=org.id,
+                        facility_type_id=[fac_types[1].id, fac_types[2].id],
+                        location_id=locations[1].id))
         for i in xrange(len(facs)):
             fac = facs[i]
-            fac_id = ftable.insert(**fac)
+            fac_id = table.insert(**fac)
             fac["id"] = fac_id
-            s3db.update_super(ftable, fac)
         self.facs = facs
 
     # -------------------------------------------------------------------------
@@ -368,9 +384,11 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         """
 
         s3db = current.s3db
+        tablename = self.tablename
+        fname = "%s.organisation_id" % tablename
 
         fac = self.facs[0]
-        resource = s3db.resource("org_facility", id=fac.id)
+        resource = s3db.resource(tablename, id=fac.id)
 
         renderer = S3Represent(lookup="org_organisation")
         table = resource.table
@@ -386,8 +404,8 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         self.assertEqual(len(result), 1)
         output = result[0]
         self.assertTrue(isinstance(output, Storage))
-        self.assertTrue("org_facility.organisation_id" in output)
-        self.assertEqual(output["org_facility.organisation_id"], self.org.name)
+        self.assertTrue(fname in output)
+        self.assertEqual(output[fname], self.org.name)
 
     # -------------------------------------------------------------------------
     def testRepresentReferenceSingleLinktoOn(self):
@@ -396,9 +414,11 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
             with linkto
         """
         s3db = current.s3db
+        tablename = self.tablename
+        fname = "%s.organisation_id" % tablename
 
         fac = self.facs[0]
-        resource = s3db.resource("org_facility", id=fac.id)
+        resource = s3db.resource(tablename, id=fac.id)
 
         renderer = S3Represent(lookup="org_organisation",
                                #linkto=URL(c="org", f="organisation", args=["[id]"]),
@@ -416,9 +436,9 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         self.assertEqual(len(result), 1)
         output = result[0]
         self.assertTrue(isinstance(output, Storage))
-        self.assertTrue("org_facility.organisation_id" in output)
+        self.assertTrue(fname in output)
 
-        representation = output["org_facility.organisation_id"]
+        representation = output[fname]
         self.assertTrue(isinstance(representation, A))
         self.assertEqual(representation.attributes["_href"],
                          "/%s/org/organisation/%s" %
@@ -432,10 +452,13 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
             Test Representation of reference, single value,
             with linkto + show_link=False
         """
+        
         s3db = current.s3db
+        tablename = self.tablename
+        fname = "%s.organisation_id" % tablename
 
         fac = self.facs[0]
-        resource = s3db.resource("org_facility", id=fac.id)
+        resource = s3db.resource(tablename, id=fac.id)
 
         renderer = S3Represent(lookup="org_organisation",
                                linkto=URL(c="org", f="organisation", args=["[id]"]))
@@ -453,8 +476,9 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         self.assertEqual(len(result), 1)
         output = result[0]
         self.assertTrue(isinstance(output, Storage))
-        self.assertTrue("org_facility.organisation_id" in output)
-        self.assertEqual(output["org_facility.organisation_id"], self.org.name)
+        
+        self.assertTrue(fname in output)
+        self.assertEqual(output[fname], self.org.name)
 
     # -------------------------------------------------------------------------
     def testRepresentReferenceMultipleNoLinkto(self):
@@ -463,14 +487,15 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
             without linkto
         """
         s3db = current.s3db
+        tablename = self.tablename
+        fname = "%s.location_id" % tablename
 
-        ftable = s3db.org_facility
+        ftable = current.db[tablename]
         renderer = S3Represent(lookup="gis_location")
         ftable.location_id.represent = renderer
 
         resource = s3db.resource("org_organisation", id=self.org.id)
-
-        data = resource.select(["id", "name", "facility.location_id"],
+        data = resource.select(["id", "test.location_id"],
                                limit=None,
                                represent=True)
         result = data["rows"]
@@ -478,8 +503,8 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         self.assertEqual(renderer.queries, 1)
         self.assertTrue(len(result), 1)
         output = result[0]
-        self.assertTrue("org_facility.location_id" in output)
-        names = output["org_facility.location_id"].split(", ")
+        self.assertTrue(fname in output)
+        names = output[fname].split(", ")
         self.assertEqual(len(names), 2)
         self.assertTrue(self.locations[0].name in names)
         self.assertTrue(self.locations[1].name in names)
@@ -491,8 +516,10 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
             with linkto
         """
         s3db = current.s3db
+        tablename = self.tablename
+        fname = "%s.location_id" % tablename
 
-        ftable = s3db.org_facility
+        ftable = current.db[tablename]
         renderer = S3Represent(lookup="gis_location",
                                #linkto=URL(c="gis", f="location", args=["[id]"]),
                                show_link=True)
@@ -500,7 +527,7 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
 
         resource = s3db.resource("org_organisation", id=self.org.id)
 
-        data = resource.select(["id", "name", "facility.location_id"],
+        data = resource.select(["id", "name", "test.location_id"],
                                limit=None,
                                represent=True)
         result = data["rows"]
@@ -508,8 +535,8 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         self.assertEqual(renderer.queries, 1)
         self.assertTrue(len(result), 1)
         output = result[0]
-        self.assertTrue("org_facility.location_id" in output)
-        names = output["org_facility.location_id"]
+        self.assertTrue(fname in output)
+        names = output[fname]
         self.assertTrue(isinstance(names, DIV))
         
         from lxml import etree
@@ -535,15 +562,17 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
             with linkto + show_link=False
         """
         s3db = current.s3db
+        tablename = self.tablename
+        fname = "%s.location_id" % tablename
 
-        ftable = s3db.org_facility
+        ftable = current.db[tablename]
         renderer = S3Represent(lookup="gis_location",
                                linkto=URL(c="gis", f="location", args=["[id]"]))
         ftable.location_id.represent = renderer
 
         resource = s3db.resource("org_organisation", id=self.org.id)
 
-        data = resource.select(["id", "name", "facility.location_id"],
+        data = resource.select(["id", "name", "test.location_id"],
                                limit=None,
                                represent=True,
                                show_links=False)
@@ -552,8 +581,8 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         self.assertEqual(renderer.queries, 1)
         self.assertTrue(len(result), 1)
         output = result[0]
-        self.assertTrue("org_facility.location_id" in output)
-        names = output["org_facility.location_id"].split(", ")
+        self.assertTrue(fname in output)
+        names = output[fname].split(", ")
         self.assertEqual(len(names), 2)
         self.assertTrue(self.locations[0].name in names)
         self.assertTrue(self.locations[1].name in names)
@@ -565,9 +594,11 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
             without linkto
         """
         s3db = current.s3db
+        tablename = self.tablename
+        fname = "%s.facility_type_id" % tablename
 
         fac = self.facs[0]
-        resource = s3db.resource("org_facility", id=fac.id)
+        resource = s3db.resource(tablename, id=fac.id)
 
         renderer = S3Represent(lookup="org_facility_type",
                                multiple=True)
@@ -584,9 +615,9 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         self.assertEqual(len(result), 1)
         output = result[0]
         self.assertTrue(isinstance(output, Storage))
-        self.assertTrue("org_facility.facility_type_id" in output)
+        self.assertTrue(fname in output)
 
-        representation = output["org_facility.facility_type_id"].split(", ")
+        representation = output[fname].split(", ")
         self.assertEqual(len(representation), 2)
         self.assertTrue(self.fac_types[0].name in representation)
         self.assertTrue(self.fac_types[1].name in representation)
@@ -598,9 +629,11 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
             with linkto
         """
         s3db = current.s3db
+        tablename = self.tablename
+        fname = "%s.facility_type_id" % tablename
 
         fac = self.facs[0]
-        resource = s3db.resource("org_facility", id=fac.id)
+        resource = s3db.resource(tablename, id=fac.id)
 
         renderer = S3Represent(lookup="org_facility_type",
                                multiple=True,
@@ -620,9 +653,9 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         self.assertEqual(len(result), 1)
         output = result[0]
         self.assertTrue(isinstance(output, Storage))
-        self.assertTrue("org_facility.facility_type_id" in output)
+        self.assertTrue(fname in output)
 
-        names = output["org_facility.facility_type_id"]
+        names = output[fname]
         self.assertTrue(isinstance(names, DIV))
         
         from lxml import etree
@@ -648,9 +681,11 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
             with linkto + show_link=False
         """
         s3db = current.s3db
+        tablename = self.tablename
+        fname = "%s.facility_type_id" % tablename
 
         fac = self.facs[0]
-        resource = s3db.resource("org_facility", id=fac.id)
+        resource = s3db.resource(tablename, id=fac.id)
 
         renderer = S3Represent(lookup="org_facility_type",
                                multiple=True,
@@ -670,9 +705,9 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         self.assertEqual(len(result), 1)
         output = result[0]
         self.assertTrue(isinstance(output, Storage))
-        self.assertTrue("org_facility.facility_type_id" in output)
+        self.assertTrue(fname in output)
 
-        representation = output["org_facility.facility_type_id"].split(", ")
+        representation = output[fname].split(", ")
         self.assertEqual(len(representation), 2)
         self.assertTrue(self.fac_types[0].name in representation)
         self.assertTrue(self.fac_types[1].name in representation)
@@ -685,15 +720,17 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         """
         
         s3db = current.s3db
+        tablename = self.tablename
+        fname = "%s.location_id" % tablename
 
-        ftable = s3db.org_facility
+        ftable = current.db[tablename]
         renderer = S3Represent(lookup="gis_location",
                                linkto=URL(c="gis", f="location", args=["[id]"]))
         ftable.location_id.represent = renderer
 
         resource = s3db.resource("org_organisation", id=self.org.id)
 
-        data = resource.select(["id", "name", "facility.location_id"],
+        data = resource.select(["id", "name", "test.location_id"],
                                limit=None,
                                represent=True,
                                show_links=False)
@@ -703,8 +740,8 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         self.assertEqual(renderer.queries, 1)
         self.assertTrue(len(result), 1)
         output = result[0]
-        self.assertTrue("org_facility.location_id" in output)
-        names = output["org_facility.location_id"].split(", ")
+        self.assertTrue(fname in output)
+        names = output[fname].split(", ")
         self.assertEqual(len(names), 2)
         self.assertTrue(self.locations[0].name in names)
         self.assertTrue(self.locations[1].name in names)
@@ -717,8 +754,10 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         """
 
         s3db = current.s3db
+        tablename = self.tablename
+        fname = "%s.facility_type_id" % tablename
 
-        ftable = s3db.table("org_facility")
+        ftable = current.db[tablename]
         renderer = S3Represent(lookup="org_facility_type",
                                multiple=True)
         ftable.facility_type_id.represent = renderer
@@ -726,7 +765,7 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         org = self.org
         resource = s3db.resource("org_organisation", id=org.id)
 
-        data = resource.select(["id", "facility.facility_type_id"],
+        data = resource.select(["id", "test.facility_type_id"],
                                limit=None,
                                represent=True)
         result = data["rows"]
@@ -737,9 +776,9 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
 
         output = result[0]
         self.assertTrue(isinstance(output, Storage))
-        self.assertTrue("org_facility.facility_type_id" in output)
+        self.assertTrue(fname in output)
 
-        representation = output["org_facility.facility_type_id"].split(", ")
+        representation = output[fname].split(", ")
         self.assertEqual(len(representation), 3)
         self.assertTrue(self.fac_types[0].name in representation)
         self.assertTrue(self.fac_types[1].name in representation)
@@ -753,8 +792,11 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         """
 
         s3db = current.s3db
+        s3db = current.s3db
+        tablename = self.tablename
+        fname = "%s.facility_type_id" % tablename
 
-        ftable = s3db.table("org_facility")
+        ftable = current.db[tablename]
         renderer = S3Represent(lookup="org_facility_type",
                                multiple=True,
                                #linkto=URL(c="org", f="facility_type", args=["[id]"]),
@@ -764,7 +806,7 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         org = self.org
         resource = s3db.resource("org_organisation", id=org.id)
 
-        data = resource.select(["id", "facility.facility_type_id"],
+        data = resource.select(["id", "test.facility_type_id"],
                                limit=None,
                                represent=True)
         result = data["rows"]
@@ -775,9 +817,9 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
 
         output = result[0]
         self.assertTrue(isinstance(output, Storage))
-        self.assertTrue("org_facility.facility_type_id" in output)
+        self.assertTrue(fname in output)
 
-        names = output["org_facility.facility_type_id"]
+        names = output[fname]
         self.assertTrue(isinstance(names, DIV))
 
         from lxml import etree
@@ -800,8 +842,10 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
     def testRepresentListReferenceMultipleLinktoOff(self):
 
         s3db = current.s3db
+        tablename = self.tablename
+        fname = "%s.facility_type_id" % tablename
 
-        ftable = s3db.table("org_facility")
+        ftable = current.db[tablename]
         renderer = S3Represent(lookup="org_facility_type",
                                multiple=True,
                                linkto=URL(c="org", f="facility_type", args=["[id]"]))
@@ -810,7 +854,7 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
         org = self.org
         resource = s3db.resource("org_organisation", id=org.id)
 
-        data = resource.select(["id", "facility.facility_type_id"],
+        data = resource.select(["id", "test.facility_type_id"],
                                limit=None,
                                represent=True,
                                show_links=False)
@@ -822,9 +866,9 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
 
         output = result[0]
         self.assertTrue(isinstance(output, Storage))
-        self.assertTrue("org_facility.facility_type_id" in output)
+        self.assertTrue(fname in output)
 
-        representation = output["org_facility.facility_type_id"].split(", ")
+        representation = output[fname].split(", ")
         self.assertEqual(len(representation), 3)
         self.assertTrue(self.fac_types[0].name in representation)
         self.assertTrue(self.fac_types[1].name in representation)
@@ -832,24 +876,47 @@ class S3ExtractLazyFKRepresentationTests(unittest.TestCase):
 
     # -------------------------------------------------------------------------
     def tearDown(self):
+        
+        del current.model.components["org_organisation"]["test"]
 
         current.db.rollback()
         current.auth.override = False
+        
+    # -------------------------------------------------------------------------
+    @classmethod
+    def tearDownClass(cls):
 
-# =============================================================================
+        try:
+            current.db[cls.tablename].drop()
+        except:
+            pass
+
+
+#=============================================================================
 class S3ExportLazyFKRepresentationTests(unittest.TestCase):
     """ Test lazy representations of foreign keys in exports """
 
+    # -------------------------------------------------------------------------
     def setUp(self):
+
+        self.tablename = tablename = "export_lazy_fk_represent"
+        db = current.db
+        table = db.define_table(tablename,
+                                Field("location_id",
+                                      "reference gis_location"),
+                                Field("organisation_id",
+                                      "reference org_organisation"),
+                                Field("facility_type_id",
+                                      "list:reference org_facility_type"),
+                                *s3_meta_fields())
 
         current.auth.override = True
 
         s3db = current.s3db
 
-        locations = (
-                        Storage(name="FK Represent TestLocation 1"),
-                        Storage(name="FK Represent TestLocation 2"),
-                    )
+        # Create locations
+        locations = (Storage(name="FK Represent TestLocation 1"),
+                     Storage(name="FK Represent TestLocation 2"))
         ltable = s3db.gis_location
         for i in xrange(len(locations)):
             location = locations[i]
@@ -857,11 +924,10 @@ class S3ExportLazyFKRepresentationTests(unittest.TestCase):
             location["id"] = location_id
         self.locations = Storage([(l.id, l) for l in locations])
 
-        fac_types = (
-                        Storage(name="FK Represent TestFacType P"),
-                        Storage(name="FK Represent TestFacType Q"),
-                        Storage(name="FK Represent TestFacType R"),
-                    )
+        # Create facility types
+        fac_types = (Storage(name="FK Represent TestFacType P"),
+                     Storage(name="FK Represent TestFacType Q"),
+                     Storage(name="FK Represent TestFacType R"))
         ttable = s3db.org_facility_type
         for i in xrange(len(fac_types)):
             fac_type = fac_types[i]
@@ -869,31 +935,25 @@ class S3ExportLazyFKRepresentationTests(unittest.TestCase):
             fac_type["id"] = fac_type_id
         self.fac_types = Storage([(t.id, t) for t in fac_types])
 
-        org = Storage(name="FK Represent TestOrg 1")
-
+        # Create organisation
+        org = Storage(name="FK Represent TestOrg B")
         otable = s3db.org_organisation
         org_id = otable.insert(**org)
         org["id"] = org_id
         s3db.update_super(otable, org)
         self.org = org
 
-        facs = (
-                    Storage(name="FK RepresentTestFacility X",
-                            organisation_id=org.id,
-                            facility_type_id=[fac_types[0].id, fac_types[1].id],
-                            location_id=locations[0].id),
-                    Storage(name="FK RepresentTestFacility Y",
-                            organisation_id=org.id,
-                            facility_type_id=[fac_types[1].id, fac_types[2].id],
-                            location_id=locations[1].id),
-               )
-
-        ftable = s3db.org_facility
+        # Create test records
+        facs = (Storage(organisation_id=org.id,
+                        facility_type_id=[fac_types[0].id, fac_types[1].id],
+                        location_id=locations[0].id),
+                Storage(organisation_id=org.id,
+                        facility_type_id=[fac_types[1].id, fac_types[2].id],
+                        location_id=locations[1].id))
         for i in xrange(len(facs)):
             fac = facs[i]
-            fac_id = ftable.insert(**fac)
+            fac_id = table.insert(**fac)
             fac["id"] = fac_id
-            s3db.update_super(ftable, fac)
         self.facs = facs
 
     # -------------------------------------------------------------------------
@@ -905,9 +965,8 @@ class S3ExportLazyFKRepresentationTests(unittest.TestCase):
 
         s3db = current.s3db
 
-        resource = s3db.resource("org_facility",
+        resource = s3db.resource(self.tablename,
                                  id=[fac.id for fac in self.facs])
-
         table = resource.table
 
         # Attach lazy renderers
@@ -915,7 +974,7 @@ class S3ExportLazyFKRepresentationTests(unittest.TestCase):
         table.organisation_id.represent = org_id_renderer
 
         fac_type_renderer = S3Represent(lookup="org_facility_type",
-                               multiple=True)
+                                        multiple=True)
         table.facility_type_id.represent = fac_type_renderer
         
         loc_id_renderer = S3Represent(lookup="gis_location",
@@ -971,8 +1030,13 @@ class S3ExportLazyFKRepresentationTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def tearDown(self):
 
-        current.db.rollback()
+        db = current.db
+        db.rollback()
         current.auth.override = False
+        try:
+            db[self.tablename].drop()
+        except:
+            pass
 
 # =============================================================================
 def run_suite(*test_classes):
