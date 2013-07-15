@@ -368,10 +368,10 @@ def tour_builder(output):
                 pre_step_data.append([cnt, dt_id, row_num])
             if row.redirect:
                 redirect_row = row.redirect.split(",")
-                if len(redirect_row) == 3:
+                if len(redirect_row) >= 3:
                     url = URL(c=redirect_row[0],
                               f=redirect_row[1],
-                              args=redirect_row[2],
+                              args=redirect_row[2:],
                               vars={"tour_running":True,
                                     "tour":tour_id}
                               )
