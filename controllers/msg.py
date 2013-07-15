@@ -62,7 +62,15 @@ def outbox():
 
     s3db.configure(tablename, listadd=False)
     return s3_rest_controller(module, resourcename, add_btn = add_btn)
+# =============================================================================
+def message():
+    """
+        RESTful CRUD controller for the master message log.
+    """
 
+    tablename = "msg_message"
+    s3db.configure(tablename, listadd=False)
+    return s3_rest_controller()
 # =============================================================================
 def log():
     """
@@ -1172,30 +1180,15 @@ def inbox():
     """
         RESTful CRUD controller for the Inbox
         - all Inbound Messages will go here
-        @ToDo: Complete (currently just MobileCommons)
     """
 
     if not auth.s3_logged_in():
         session.error = T("Requires Login!")
         redirect(URL(c="default", f="user", args="login"))
 
-    tablename = "msg_inbox"
-    table = s3db[tablename]
-
-    # CRUD Strings
-    s3.crud_strings[tablename] = Storage(
-        title_display = T("Inbox"),
-        title_list = T("Inbox"),
-        title_update = T("Edit Message"),
-        title_search = T("Search Inbox"),
-        label_list_button = T("View Messages"),
-        msg_record_deleted = T("Message deleted"),
-        msg_list_empty = T("Inbox empty"),
-        msg_record_modified = T("Message updated")
-        )
-
-    s3db.configure(tablename, listadd=False)
-    return s3_rest_controller(module, "")
+    mtable = s3db.msg_message
+    s3.filter = (mtable.inbound == True)
+    return s3_rest_controller(module, "message")
 
 # -----------------------------------------------------------------------------
 def email_inbox():
@@ -1209,9 +1202,10 @@ def email_inbox():
         session.error = T("Requires Login!")
         redirect(URL(c="default", f="user", args="login"))
 
-    tablename = "msg_email_inbox"
-    s3db.configure(tablename, listadd=False)
-    return s3_rest_controller()
+    etable = s3db.msg_email
+    s3.filter = (etable.inbound == True)
+
+    return s3_rest_controller(module, "message")
 
 # -----------------------------------------------------------------------------
 def twilio_inbox():
