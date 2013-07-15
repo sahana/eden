@@ -876,13 +876,11 @@ class S3Resource(object):
                 if limit and start is None:
                     start = 0
                 if start is not None and limit is not None:
-                    #rows = rows[start:start+limit]
                     rows = Rows(db,
                                 records=rows.records[start:start+limit],
                                 colnames=rows.colnames,
                                 compact=False)
                 elif start is not None:
-                    #rows = rows[start:]
                     rows = Rows(db,
                                 records=rows.records[start:],
                                 colnames=rows.colnames,
@@ -916,7 +914,8 @@ class S3Resource(object):
         # Extract the page IDs
         if page is None:
             if ids is None:
-                page = ids = records.keys()
+                key = self._id
+                page = ids = [row[key] for row in rows]
             else:
                 page = ids
                 

@@ -1538,7 +1538,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             if "orderby" in self.options:
                 orderby = self.options["orderby"]
             else:
-                orderby = None
+                orderby = component.get_config("orderby")
 
             if record_id:
                 # Filter
