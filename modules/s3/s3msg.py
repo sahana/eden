@@ -223,7 +223,8 @@ class S3Msg(object):
 
         db = current.db
         s3db = current.s3db
-        ltable = s3db.msg_log
+        ptable = s3db.msg_parsing_status
+        mtable = s3db.msg_message
         wtable = s3db.msg_workflow
         otable = s3db.msg_outbox
         ctable = s3db.pr_contact
@@ -241,13 +242,13 @@ class S3Msg(object):
         wflow = ""
         contact = ""
         for record in records:
-            query = (ltable.is_parsed == False) & \
-                    (ltable.inbound == True) & \
-                    (ltable.source_task_id == record.source_task_id)
+            query = (ptable.is_parsed == False) & \
+                    (ptable.source_task_id == record.source_task_id)
             rows = db(query).select()
 
             for row in rows:
-                message = row.message
+                messages = db(mtable.id == row.message_id).select()
+                message = row.body
                 try:
                     contact = row.sender.split("<")[1].split(">")[0]
                     query = (contact_method == "EMAIL") & \
@@ -1363,8 +1364,8 @@ class S3Msg(object):
         s3db = current.s3db
 
         inbound_status_table = s3db.msg_email_inbound_status
-        inbox_table = s3db.msg_email_inbox
-        log_table = s3db.msg_log
+        inbox_table = s3db.msg_email
+        parsing_table = s3db.msg_parsing_status
         source_task_id = username
         setting_table = s3db.msg_email_inbound_channel
 
@@ -1442,9 +1443,13 @@ class S3Msg(object):
                 textParts = msg.get_payload()
                 body = textParts[0]
                 # Store in DB
-                inbox_table.insert(sender=sender, subject=subject, body=body)
-                log_table.insert(sender=sender, subject=subject, message=body, \
-                                 source_task_id=source_task_id, inbound=True)
+                id = inbox_table.insert(from_address=sender, subject=subject, \
+                                        body=body, inbound=True)
+                records = db(inbox_table.id == id).select()
+                s3db.update_super(inbox_table, records[0])
+                parsing_table.insert(message_id = records[0].message_id, \
+                                     source_task_id = source_task_id, \
+                                     is_parsed = False)
 
                 if delete:
                     # Add it to the list of messages to delete later
@@ -1515,10 +1520,15 @@ class S3Msg(object):
                         textParts = msg.get_payload()
                         body = textParts[0]
                         # Store in DB
-                        inbox_table.insert(sender=sender, subject=subject, body=body)
-                        log_table.insert(sender=sender, subject=subject, \
-                                message=body, source_task_id=source_task_id, \
-                                inbound = True)
+                        id = inbox_table.insert(from_address=sender, \
+                                                subject=subject, body=body, \
+                                                inbound=True)
+                        records = db(inbox_table.id == id).select()
+                        record = records[0]
+                        s3db.update_super(inbox_table, record)
+                        parsing_table.insert(message_id = record.message_id, \
+                                             source_task_id = source_task_id, \
+                                             is_parsed = False)
 
                         if delete:
                             # Add it to the list of messages to delete later
@@ -1635,24 +1645,26 @@ class S3Msg(object):
             urllib2.install_opener(opener)
 
             itable = s3db.msg_twilio_inbox
-            ltable = s3db.msg_log
+            mtable = s3db.msg_message
             query = itable.deleted == False
             messages = db(query).select(itable.sid)
             downloaded_sms = [message.sid for message in messages]
             try:
                 smspage = urllib2.urlopen(url)
                 minsert = itable.insert
-                linsert = ltable.insert
                 sms_list = json.loads(smspage.read())
                 for sms in  sms_list["sms_messages"]:
                     if (sms["direction"] == "inbound") and \
                        (sms["sid"] not in downloaded_sms):
                         sender = "<" + sms["from"] + ">"
-                        minsert(sid=sms["sid"],body=sms["body"], \
-                                status=sms["status"],sender=sender, \
+                        id = minsert(sid=sms["sid"],body=sms["body"], \
+                                status=sms["status"],from_address=sender, \
                                 received_on=sms["date_sent"])
-                        linsert(sender=sender, message=sms["body"], \
-                                 source_task_id=account_name, inbound=True)
+                        records = db(itable.id == id).select()
+                        s3db.update_super(itable, records[0])
+                        message_id = records[0].message_id
+                        ptable.insert(message_id = message_id, \
+                                      source_task_id = sender)
 
             except urllib2.HTTPError, e:
                 return "Error:" + str(e.code)
@@ -1670,6 +1682,7 @@ class S3Msg(object):
         db = current.db
         ctable = s3db.msg_rss_channel
         ftable = s3db.msg_rss_feed
+        ptable = s3db.msg_parsing_status
 
         query = (ctable.deleted == False) & (ctable.subscribed == True)
         links = db(query).select(ctable.url)
@@ -1677,11 +1690,17 @@ class S3Msg(object):
         for link in links:
             d = feedparser.parse(link.url)
             for entry in d.entries:
-                ftable.insert(title = entry.title,
-                              link = entry.link,
-                              description = entry.description,
+                id = ftable.insert(title = entry.title,
+                              from_address = entry.link,
+                              body = entry.description,
                               created_on = request.now)
+                records = db(ftable.id == id).select()
+                s3db.update_super(ftable, records[0])
+                message_id = records[0].message_id
+                ptable.insert(message_id = message_id, \
+                              source_task_id = entry.link)
 
+        db.commit()
         return
 
 # =============================================================================
