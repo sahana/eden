@@ -395,6 +395,26 @@
         if (L0) {
             post_data.L0 = L0;
         }
+        var L1 = $(selector + '_L1').val();
+        if (L1) {
+            post_data.L1 = L1;
+        }
+        var L2 = $(selector + '_L2').val();
+        if (L2) {
+            post_data.L2 = L2;
+        }
+        var L3 = $(selector + '_L3').val();
+        if (L3) {
+            post_data.L3 = L3;
+        }
+        var L4 = $(selector + '_L4').val();
+        if (L4) {
+            post_data.L4 = L4;
+        }
+        var L5 = $(selector + '_L5').val();
+        if (L5) {
+            post_data.L5 = L5;
+        }
 
         // Submit to Geocoder
         var url = S3.Ap.concat('/gis/geocode');
@@ -414,7 +434,6 @@
             if (error == 'UNAUTHORIZED') {
                 msg = i18n.gis_requires_login;
             } else {
-                // Notify results
                 msg = request.responseText;
             }
         });

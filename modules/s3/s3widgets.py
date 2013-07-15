@@ -592,7 +592,7 @@ class S3AddPersonWidget(FormWidget):
         else:
             script = "/%s/static/scripts/S3/s3.select_person.min.js" % appname
         scripts = s3.scripts
-        if script not in script:
+        if script not in scripts:
             scripts.append(script)
         s3.jquery_ready.append('''S3.addPersonWidget()''')
 

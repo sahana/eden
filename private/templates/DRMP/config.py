@@ -3334,15 +3334,25 @@ def customize_pr_person(**attr):
                     ),
                 )
 
-            list_fields = [(current.messages.ORGANISATION, "human_resource.organisation_id"),
-                           "first_name",
-                           #"middle_name",
-                           "last_name",
-                           (T("Job Title"), "human_resource.job_title_id"),
-                           (T("Office"), "human_resource.site_id"),
-                           (MOBILE, "phone.value"),
-                           (EMAIL, "email.value"),
-                           ]
+            if current.auth.is_logged_in():
+                list_fields = [(current.messages.ORGANISATION, "human_resource.organisation_id"),
+                               "first_name",
+                               #"middle_name",
+                               "last_name",
+                               (T("Job Title"), "human_resource.job_title_id"),
+                               (T("Office"), "human_resource.site_id"),
+                               (MOBILE, "phone.value"),
+                               (EMAIL, "email.value"),
+                               ]
+            else:
+                # Don't include Email/Phone for unauthenticated users
+                list_fields = [(current.messages.ORGANISATION, "human_resource.organisation_id"),
+                               "first_name",
+                               #"middle_name",
+                               "last_name",
+                               (T("Job Title"), "human_resource.job_title_id"),
+                               (T("Office"), "human_resource.site_id"),
+                               ]
 
             # Return to List view after create/update/delete (unless done via Modal)
             url_next = URL(c="pr", f="person")
