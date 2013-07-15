@@ -47,8 +47,8 @@ class Point(object):
     >>> p.altitude == p[2]
     True
     
-    When unpacking (or iterating), only latitude and longitude are included:
-    >>> latitude, longitude = p
+    When unpacking (or iterating), a (latitude, longitude, altitude) tuple is returned
+    >>> latitude, longitude, altitude = p
     
     """
     UTIL_PATTERNS = dict(
@@ -100,11 +100,11 @@ class Point(object):
         
         latitude = float(latitude or 0)
         if abs(latitude) > 90:
-            raise ValueError("Latitude out of range [-90, 90]: %r" % latitude)
-        
+            latitude = ((latitude + 90) % 180) - 90
+
         longitude = float(longitude or 0)
         if abs(longitude) > 180:
-            raise ValueError("Longitude out of range [-180, 180]: %r" % longitude)
+            longitude = ((longitude + 180) % 360) - 180
         
         altitude = float(altitude or 0)
         
@@ -132,11 +132,11 @@ class Point(object):
     
     def format(self, altitude=None, deg_char='', min_char='m', sec_char='s'):
         latitude = "%s %s" % (
-            format.angle(abs(self.latitude), deg_char, min_char, sec_char),
+            format.format_degrees(abs(self.latitude), symbols = {'deg': deg_char, 'arcmin': min_char, 'arcsec': sec_char}),
             self.latitude >= 0 and 'N' or 'S'
         )
         longitude = "%s %s" % (
-            format.angle(abs(self.longitude), deg_char, min_char, sec_char),
+            format.format_degrees(abs(self.longitude), symbols = {'deg': deg_char, 'arcmin': min_char, 'arcsec': sec_char}),
             self.longitude >= 0 and 'E' or 'W'
         )
         coordinates = [latitude, longitude]

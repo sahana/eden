@@ -22,6 +22,8 @@
      *
      * Parameters:
      * fieldname - {String} A unique fieldname for a location_id field
+     * hide_lx - {Boolean} Whether to hide lower Lx fields until higher level selected
+     * reverse_lx - {Boolean} Whether to show Lx fields in the order usually used by Street Addresses
      * L0 - {Integer} gis_location.id of the L0
      * L1 - {Integer} gis_location.id of the L1
      * L2 - {Integer} gis_location.id of the L2
@@ -30,7 +32,7 @@
      * L5 - {Integer} gis_location.id of the L5
      * specific - {Integer} gis_location.id of the specific location
      */
-    S3.gis.locationselector = function(fieldname, L0, L1, L2, L3, L4, L5, specific) {
+    S3.gis.locationselector = function(fieldname, hide_lx, reverse_lx, L0, L1, L2, L3, L4, L5, specific) {
         // Function to be called by S3LocationSelectorWidget2
 
         var selector = '#' + fieldname;
@@ -48,18 +50,33 @@
         var postcode_row = $(selector + '_postcode__row');
         var map_icon_row = $(selector + '_map_icon__row');
         var map_div = $(selector + '__row .map_wrapper').attr('id', fieldname + '_map_wrapper');
-        $(selector + '__row').hide()
-                             .after(map_div)
-                             .after(map_icon_row)
-                             .after(postcode_row)
-                             .after(address_row)
-                             .after(L5_row)
-                             .after(L4_row)
-                             .after(L3_row)
-                             .after(L2_row)
-                             .after(L1_row)
-                             .after(L0_row)
-                             .after(error_row);
+        if (reverse_lx) {
+            $(selector + '__row').hide()
+                                 .after(map_div)
+                                 .after(map_icon_row)
+                                 .after(L0_row)
+                                 .after(L1_row)
+                                 .after(L2_row)
+                                 .after(L3_row)
+                                 .after(L4_row)
+                                 .after(L5_row)
+                                 .after(postcode_row)
+                                 .after(address_row)
+                                 .after(error_row);
+        } else {
+            $(selector + '__row').hide()
+                                 .after(map_div)
+                                 .after(map_icon_row)
+                                 .after(postcode_row)
+                                 .after(address_row)
+                                 .after(L5_row)
+                                 .after(L4_row)
+                                 .after(L3_row)
+                                 .after(L2_row)
+                                 .after(L1_row)
+                                 .after(L0_row)
+                                 .after(error_row);
+        }
 
         if (specific) {
             // Store this to retrieve later
@@ -265,9 +282,9 @@
         // Download Location Data
         var url = S3.Ap.concat('/gis/ldata/' + id);
         $.ajax({
-            'async': false,
-            'url': url,
-            'dataType': 'script'
+            async: false,
+            url: url,
+            dataType: 'script'
         }).done(function(data) {
             // Copy the elements across
             for (var prop in n) {
@@ -353,10 +370,53 @@
 
         // Listen for changes
         $(selector + '_address').change(function() {
+            geocode(fieldname);
             resetHidden(fieldname);
         });
         $(selector + '_postcode').change(function() {
             resetHidden(fieldname);
+        });
+    }
+
+    /**
+     * Lookup the Lat/Lon for a Street Address
+     */
+    var geocode = function(fieldname) {
+        var selector = '#' + fieldname;
+
+        // Collect the Address Components
+        var address = $(selector + '_address').val();
+        var post_data = {address: address};
+        var postcode = $(selector + '_postcode').val();
+        if (postcode) {
+            post_data.postcode = postcode;
+        }
+        var L0 = $(selector + '_L0').val();
+        if (L0) {
+            post_data.L0 = L0;
+        }
+
+        // Submit to Geocoder
+        var url = S3.Ap.concat('/gis/geocode');
+        $.ajax({
+            async: false,
+            url: url,
+            type: 'POST',
+            data: post_data,
+            dataType: 'json'
+        }).done(function(data) {
+            // Update fields
+            $(selector + '_lat').val(data.lat);
+            $(selector + '_lon').val(data.lon);
+            // Notify results
+            
+        }).fail(function(request, status, error) {
+            if (error == 'UNAUTHORIZED') {
+                msg = i18n.gis_requires_login;
+            } else {
+                // Notify results
+                msg = request.responseText;
+            }
         });
     }
 

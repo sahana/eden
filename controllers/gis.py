@@ -2637,36 +2637,61 @@ def display_features():
 
 # =============================================================================
 def geocode():
-
     """
-        Call a Geocoder service
+        Geocode a location
+        - designed to be called via AJAX POST
 
-        @param location: a string to search for
-        @param service: the service to call (defaults to Google)
+        Looks up Lx in our own database and returns Bounds
+        Passes on Street names to 3rd party services and returns a Point
+
+        @param L0: Country (as ID)
+        @param L1: State/Province (as ID)
+        @param L2: County/District (as ID)
+        @param L3: City/Town (as ID)
+        @param L4: Village/Neighborhood (as ID)
+        @param L5: Village/Census Tract (as ID)
+        @param street: Street Address
+        @param postcode: Postcode
     """
 
-    if "location" in request.vars:
-        location = request.vars.location
+    # Read the request
+    vars = request.post_vars
+    street = vars.get("street", None)
+    postcode = vars.get("postcode", None)
+    L0 = vars.get("L0", None)
+    L1 = vars.get("L1", None)
+    L2 = vars.get("L2", None)
+    L3 = vars.get("L3", None)
+    L4 = vars.get("L4", None)
+    L5 = vars.get("L5", None)
+    # Is this a Street or Lx?
+    if street:
+        # Send request to external geocoders to get a Point
+        from geopy import geocoders
+        Lx = ",".join([])
+        location = "%s,L3" % (street, Lx)
+        # @ToDo: Extend gis_config to see which geocoders to use for which countries
+        #if google:
+        g = geocoders.GoogleV3()
+        place, (lat, lon) = g.geocode(location)
+        #elif yahoo
+        #    apikey = settings.get_gis_api_yahoo()
+        #    y = geocoders.Yahoo(apikey)
+        #    place, (lat, lon) = y.geocode(location)
+        # @ToDo: Check Results
+        results = dict(lat=lat, lon=lon)
+        results = json.dumps(results)
     else:
-        session.error = T("Need to specify a location to search for.")
-        redirect(URL(f="index"))
+        # Lx: Lookup Bounds in our own database
+        # Not needed by S3LocationSelectorWidget2 as it downloads bounds with options
+        # @ToDo
+        results = "NotImplementedError"
 
-    if "service" in request.vars:
-        service = request.vars.service
-    else:
-        # @ToDo: service=all should be default
-        service = "google"
-
-    if service == "google":
-        return s3base.GoogleGeocoder(location).get_json()
-
-    if service == "yahoo":
-        # @ToDo: Convert this to JSON
-        return s3base.YahooGeocoder(location).get_xml()
+    response.headers["Content-Type"] = "application/json"
+    return results
 
 # -----------------------------------------------------------------------------
 def geocode_manual():
-
     """
         Manually Geocode locations
 

@@ -249,8 +249,10 @@ def customize_event_incident_report(**attr):
     tablename = "event_incident_report"
     table = current.s3db[tablename]
     table.location_id.label = "" # Gets replaced by widget
-    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L1","L2","L3"]) # @ToDo: handle no L2s
-    table.location_id.widget = S3LocationSelectorWidget2(levels=["L1","L2","L3"],
+    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L1", "L2", "L3"]) # @ToDo: handle no L2s
+    table.location_id.widget = S3LocationSelectorWidget2(levels=["L1", "L2", "L3"],
+                                                         hide_lx=False,
+                                                         reverse_lx=True,
                                                          show_address=True,
                                                          show_postcode=True,
                                                          )
@@ -556,8 +558,6 @@ def customize_vulnerability_evac_route(**attr):
     table.location_id.label = "" # Gets replaced by widget
     table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L1","L2","L3"]) # @ToDo: handle no L2s
     table.location_id.widget = S3LocationSelectorWidget2(levels=["L1","L2","L3"],
-                                                         show_address=True,
-                                                         show_postcode=True,
                                                          polygons=True,
                                                          )
 

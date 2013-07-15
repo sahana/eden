@@ -31,8 +31,6 @@
 
 __all__ = ["GIS",
            "S3Map",
-           "GoogleGeocoder",
-           "YahooGeocoder",
            "S3ExportPOI",
            "S3ImportPOI",
            ]
@@ -7606,69 +7604,6 @@ class S3Map(S3Method):
                            callback = callback,
                            )
         return map
-
-# =============================================================================
-class Geocoder(object):
-    """
-        Base class for all Geocoders
-    """
-
-    def __init__(self):
-        " Initializes the page content object "
-        pass
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def get_api_key(type):
-        " Acquire API key from the database "
-        pass
-
-# -----------------------------------------------------------------------------
-class GoogleGeocoder(Geocoder):
-    """
-        Google Geocoder module
-        http://code.google.com/apis/maps/documentation/javascript/v2/reference.html#GGeoStatusCode
-        Should convert this to be a thin wrapper for modules.geopy.geocoders.google
-    """
-
-    def __init__(self, location):
-        " Initialise parent class & make any necessary modifications "
-        Geocoder.__init__(self)
-        api_key = current.deployment_settings.get_gis_api_google()
-        params = {"q": location, "key": api_key}
-        self.url = "http://maps.google.com/maps/geo?%s" % urllib.urlencode(params)
-
-    # -------------------------------------------------------------------------
-    def get_json(self):
-        " Returns the output in JSON format "
-
-        from gluon.tools import fetch
-        url = self.url
-        page = fetch(url)
-        return page
-
-# -----------------------------------------------------------------------------
-class YahooGeocoder(Geocoder):
-    """
-        Yahoo Geocoder module
-        Should convert this to be a thin wrapper for modules.geopy.geocoders.`
-    """
-
-    def __init__(self, location):
-        " Initialise parent class & make any necessary modifications "
-        Geocoder.__init__(self)
-        api_key = current.deployment_settings.get_gis_api_yahoo()
-        params = {"location": location, "appid": api_key}
-        self.url = "http://local.yahooapis.com/MapsService/V1/geocode?%s" % urllib.urlencode(params)
-
-    # -------------------------------------------------------------------------
-    def get_xml(self):
-        " Return the output in XML format "
-
-        from gluon.tools import fetch
-        url = self.url
-        page = fetch(url)
-        return page
 
 # =============================================================================
 class S3ExportPOI(S3Method):

@@ -1,9 +1,14 @@
 import xml.dom.minidom
-from BeautifulSoup import BeautifulSoup
 from geopy.geocoders.base import Geocoder
 from geopy.point import Point
 from geopy.location import Location
 from geopy import util
+
+try:
+    from BeautifulSoup import BeautifulSoup
+except ImportError:
+    util.logger.warn("BeautifulSoup was not found. " \
+          "The SemanticMediaWiki geocoder will not work.")
 
 try:
     set
@@ -72,12 +77,12 @@ class SemanticMediaWiki(Geocoder):
         if attempted is None:
             attempted = set()
 
-        print "Fetching %s..." % url
+        util.logger.debug("Fetching %s..." % url)
         page = urlopen(url)
         soup = BeautifulSoup(page)
 
         rdf_url = self.parse_rdf_link(soup)
-        print "Fetching %s..." % rdf_url
+        util.logger.debug("Fetching %s..." % rdf_url)
         page = urlopen(rdf_url)
 
         things, thing = self.parse_rdf(page)

@@ -3392,6 +3392,8 @@ class S3LocationSelectorWidget2(FormWidget):
 
     def __init__(self,
                  levels = ["L1", "L2", "L3"],   # Which levels of the hierarchy to expose?
+                 hide_lx = True,                # Whether to hide lower Lx fields until higher level selected
+                 reverse_lx = False,            # Whether to show Lx fields in the order usually used by Street Addresses
                  show_address = False,          # Whether to show a field for Street Address
                  show_postcode = False,         # Whether to show a field for Postcode
                  show_map = True,               # Whether to show a Map to select specific points
@@ -3399,6 +3401,8 @@ class S3LocationSelectorWidget2(FormWidget):
                  ):
 
         self.levels = levels
+        self.hide_lx = hide_lx
+        self.reverse_lx = reverse_lx
         self.show_address = show_address
         self.show_postcode = show_postcode
         self.show_map = show_map
@@ -3458,6 +3462,10 @@ class S3LocationSelectorWidget2(FormWidget):
                               ]
             # @ToDo: Lookup Labels dynamically when L0 changes
             raise NotImplementedError
+
+        # @ToDo: Which geocoder(s) should we use?
+        # Lookup country in gis_config
+        geocoder = False
 
         values = dict(L0 = default_L0,
                       L1 = 0,
@@ -3565,6 +3573,17 @@ class S3LocationSelectorWidget2(FormWidget):
             lat_input = ""
             lon_input = ""
             wkt_input = ""
+
+        if "L0" in levels:
+            L0_input = ""
+        else:
+            # Have a hidden L0 input
+            # - used for Geocoder
+            L0_input = INPUT(_name="L0",
+                             _id="%s_L0" % fieldname,
+                             value=default_L0,
+                             )
+        Lx_inputs = TAG[""](L0_input)
 
         if show_address:
             # Street Address
@@ -3743,7 +3762,11 @@ class S3LocationSelectorWidget2(FormWidget):
 
         args = [str(arg) for arg in args]
         args = ''','''.join(args)
-        script = '''S3.gis.locationselector('%s',%s)''' % (fieldname, args)
+        script = '''S3.gis.locationselector('%s',%s,%s,%s)''' % \
+                    (fieldname,
+                     "true" if self.hide_lx else "false",
+                     "true" if self.reverse_lx else "false",
+                     args)
         if show_map and use_callback:
             callback = script
         elif not location_selector_loaded:
@@ -3789,15 +3812,30 @@ class S3LocationSelectorWidget2(FormWidget):
                                _id = row_id,
                                _class = "control-group hide",
                                )
+                if geocoder:
+                    geocode_button = BUTTON(T("Geocode"),
+                                            _id="%s_geocode" % fieldname,
+                                            _class="hide",
+                                            )
+                else:
+                    geocode_button = None
             else:
-                # @ToDo: Icon in CSS, testing
+                # @ToDo: Icon in default CSS
+                # @ToDo: Test
                 label = LABEL(I(_class="icon-map",
                                 _id=icon_id,
                                 ))
                 widget = ""
                 comment = ""
                 map_icon = formstyle(row_id, label, widget, comment)
-            map = TAG[""](map, map_icon)
+                if geocoder:
+                    geocode_button = BUTTON(T("Geocode"),
+                                            _id="%s_geocode" % fieldname,
+                                            _class="hide",
+                                            )
+                else:
+                    geocode_button = None
+            map = TAG[""](map, map_icon, geocode_button)
         else:
             map = ""
 
@@ -3806,6 +3844,7 @@ class S3LocationSelectorWidget2(FormWidget):
 
         # The overall layout of the components
         return TAG[""](DIV(INPUT(**attr), # Real input, hidden
+                           Lx_inputs,
                            lat_input,
                            lon_input,
                            wkt_input,
