@@ -509,7 +509,7 @@ class IS_ONE_OF_EMPTY(Validator):
                 # Represent uses a custom lookup, so we only
                 # retrieve the keys here
                 fields = [kfield]
-                orderby = kfield
+                orderby = field
             else:
                 # Represent uses a standard field lookup, so
                 # we can do that right here
