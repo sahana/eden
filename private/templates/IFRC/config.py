@@ -188,10 +188,10 @@ settings.gis.display_L0 = True
 # -----------------------------------------------------------------------------
 # L10n (Localization) settings
 settings.L10n.languages = OrderedDict([
-    ("zh-cn", "中文 (简体)"),
     ("en-gb", "English"),
     ("es", "Español"),
     ("vi", "Tiếng Việt"),
+    ("zh-cn", "中文 (简体)"),
 ])
 # Default Language
 settings.L10n.default_language = "en-gb"
