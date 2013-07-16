@@ -104,6 +104,7 @@ current.messages = messages
 
 # Import the S3 Framework
 if update_check_needed:
+    import s3 as s3base
     # Reload the Field definitions
     reload(s3base.s3fields)
 else:

@@ -142,6 +142,253 @@ class ComponentLeftJoinConstructionTests(unittest.TestCase):
         self.assertEqual(str(ljoin[1]), str(expected_r))
 
 # =============================================================================
+class DocumentFullTextSearchTests(unittest.TestCase):
+    """ Test for Full-Text Function """
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def setUpClass(cls):
+
+        from shutil import copyfile
+        copyfile(os.path.abspath("applications") + "/" + \
+                    request.application + \
+                        "/private/templates/demo/sample1.pdf", \
+                 os.path.abspath("applications") + "/" + \
+                    request.application + \
+                        "/uploads/sample1.pdf")
+        copyfile(os.path.abspath("applications") + "/" + \
+                    request.application + \
+                        "/private/templates/demo/sample2.doc", \
+                 os.path.abspath("applications") + "/" + \
+                    request.application + \
+                        "/uploads/sample2.doc")
+        copyfile(os.path.abspath("applications") + "/" + \
+                    request.application + \
+                        "/private/templates/demo/sample3.rtf", \
+                 os.path.abspath("applications") + "/" + \
+                    request.application + \
+                        "/uploads/sample3.rtf")
+                        
+                
+        xmlstr = """
+<s3xml>
+    <resource name="project_project" uuid="PROJDOC1">
+        <data field="name">ProjDoc1</data>
+        <reference field="organisation_id" resource="org_organisation">
+            <resource name="org_organisation" uuid="ORG1">
+                <data field="name">LoadTestOrganisation1</data>
+            </resource>
+        </reference>
+        <resource name="doc_document" uuid="DOC1">
+            <data field="name">Doc1</data>
+            <data field="file" url="local" filename="sample1.pdf" />
+        </resource>
+    </resource>    
+    <resource name="project_project" uuid="PROJDOC2">
+        <data field="name">ProjDoc2</data>
+        <reference field="organisation_id" resource="org_organisation">
+            <resource name="org_organisation" uuid="ORG2">
+                <data field="name">LoadTestOrganisation2</data>
+            </resource>
+        </reference>
+        <resource name="doc_document" uuid="DOC2">
+            <data field="name">Doc2</data>
+            <data field="file" url="local" filename="sample2.doc" />
+        </resource>
+    </resource>    
+    <resource name="project_project" uuid="PROJDOC3">
+        <data field="name">ProjDoc3</data>
+        <reference field="organisation_id" resource="org_organisation">
+            <resource name="org_organisation" uuid="ORG3">
+                <data field="name">LoadTestOrganisation3</data>
+            </resource>
+        </reference>
+        <resource name="doc_document" uuid="DOC3">
+            <data field="name">Doc3</data>
+            <data field="file" url="local" filename="sample3.rtf" />
+        </resource>
+    </resource>    
+</s3xml>"""
+
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+
+        current.auth.override = True
+        resource = current.s3db.resource("project_project")
+        resource.import_xml(xmltree)
+
+    # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.get_base_solr_url(), "Full Text Search Disabled")
+    def testFullTextFunctionTestingQueryOutput(self):
+        """ Testing the fulltext() function when tranformed into a query """
+
+        import sunburnt    
+        try: 
+            si = sunburnt.SolrInterface(current.deployment_settings.get_base_solr_url())
+            ft = True
+        except:
+            if current.response.s3.debug:
+                from s3.s3utils import s3_debug
+                s3_debug("Connection Refused: Solr not available.")
+            ft = False
+
+        s3db = current.s3db
+        # Checking the output of .query() method
+        q = ((S3FieldSelector("~.name").text("test")) | (S3FieldSelector("~.document.file").text("test"))) | \
+            ((S3FieldSelector("~.name").text("document")) | (S3FieldSelector("~.document.file").text("document")))
+        
+        resource = s3db.resource("project_project",
+                                  uid=["PROJDOC1",
+                                       "PROJDOC2",
+                                       "PROJDOC3"])
+
+        q = q.transform(resource)
+        query = q.query(resource)
+
+        if ft:
+            expected = "(((project_project.name LIKE '*test*') OR " \
+                        "(doc_document.id IN (1,2,3))) OR "\
+                        "((project_project.name LIKE '*document*') OR "\
+                        "(doc_document.id IN (2))))"
+        else:
+            expected = "((project_project.name LIKE '*test*') OR "\
+                        "(project_project.name LIKE '*document*'))"
+            
+        self.assertEqual(str(expected), str(query))
+
+        
+    # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.get_base_solr_url(), "Full Text Search Disabled")
+    def testFullTextFunctionTestingCallOutput(self):
+        """ Testing the fulltext() function and cheking with __call__ function """
+
+        import sunburnt    
+        try: 
+            si = sunburnt.SolrInterface(current.deployment_settings.get_base_solr_url())
+            ft = True
+        except:
+            if current.response.s3.debug:
+                from s3.s3utils import s3_debug
+                s3_debug("Connection Refused: Solr not available.")
+            ft = False
+
+        s3db = current.s3db
+        db = current.db
+        table = s3db.doc_document
+
+        rows = db(table.id > 0).select()
+
+        q = (S3FieldSelector("~.name").text("document")) | (S3FieldSelector("~.document.file").text("document"))
+        resource = s3db.resource("project_project",
+                                  uid=["PROJDOC1",
+                                       "PROJDOC2",
+                                       "PROJDOC3"])
+        query = q.transform(resource)
+        out = []
+        for row in rows:
+            out.append(query.__call__(resource, row, virtual=False))
+        if ft: 
+            self.assertEqual(str(out[1]), "True")
+        else:
+            self.assertEqual(str(out[1]), "False")
+
+        self.assertEqual(str(out[0]), "False")
+        
+    # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.get_base_solr_url(), "Full Text Search Disabled")
+    def testFullTextFunctionSolrAvailable(self):
+        """ Testing the fulltext() function when Solr is confugured """
+
+        import sunburnt    
+        try:
+            si = sunburnt.SolrInterface(current.deployment_settings.get_base_solr_url())
+            ft = True
+        except:
+            if current.response.s3.debug:
+                from s3.s3utils import s3_debug
+                s3_debug("Connection Refused: Solr not available.")
+            ft = False
+
+        s3db = current.s3db
+        # Normal Query
+        q = (S3FieldSelector("~.document.file").text("test"))
+        resource = s3db.resource("project_project",
+                                  uid=["PROJDOC1",
+                                       "PROJDOC2",
+                                       "PROJDOC3"])
+
+        project_project = resource.table
+        query = q.transform(resource)
+
+        if ft:
+            query = query.represent(resource)
+            expected = "(doc_document.id in [1, 2, 3])"
+        else:
+            expected = "None"
+        self.assertEqual(str(expected), str(query))
+
+        # Nested Query
+        q = ((S3FieldSelector("~.name").text("test")) | (S3FieldSelector("~.document.file").text("test"))) | \
+            ((S3FieldSelector("~.name").text("document")) | (S3FieldSelector("~.document.file").text("document")))
+        
+        resource = s3db.resource("project_project",
+                                  uid=["PROJDOC1",
+                                       "PROJDOC2",
+                                       "PROJDOC3"])
+        query = q.transform(resource)
+        query = query.represent(resource)
+        doc_document = resource.table
+
+        if ft:
+            expected = '(((project_project.name like "*test*") or ' \
+                        '(doc_document.id in [1, 2, 3])) or ' \
+                    '((project_project.name like "*document*") or ' \
+                     '(doc_document.id in [2])))'
+        else:
+            expected = '((project_project.name like "*test*") or ' \
+                    '(project_project.name like "*document*"))'
+            
+        self.assertEqual(str(expected), str(query))
+
+    # -------------------------------------------------------------------------
+    def testFullTextFunctionSolrUnAvailable(self):
+        """ Testing the fulltext() function when Solr maybe confugured, but not available """
+        
+        # Forcing to fail Solr    
+        tempurl = current.deployment_settings.base.solr_url
+        current.deployment_settings.base.solr_url = False
+
+        s3db = current.s3db
+        q = ((S3FieldSelector("~.name").text("test")) | (S3FieldSelector("~.document.file").text("test"))) | \
+            ((S3FieldSelector("~.name").text("document")) | (S3FieldSelector("~.document.file").text("document")))
+        resource = s3db.resource("project_project")
+
+        query = q.transform(resource)
+        query = query.represent(resource)
+#       doc_document = resource.table
+        expected = '((project_project.name like "*test*") or (project_project.name like "*document*"))'
+            
+        current.deployment_settings.base.solr_url = tempurl
+        self.assertEqual(str(expected), str(query))
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def tearDownClass(cls):
+
+        import os
+        os.remove(os.path.abspath("applications") + "/" + \
+                   request.application + \
+                       "/uploads/sample1.pdf")
+        os.remove(os.path.abspath("applications") + "/" + \
+                   request.application + \
+                       "/uploads/sample2.doc")
+        os.remove(os.path.abspath("applications") + "/" + \
+                   request.application + \
+                       "/uploads/sample3.rtf")
+        current.db.rollback()
+        current.auth.override = False
+
+
+# =============================================================================
 class FieldSelectorResolutionTests(unittest.TestCase):
     """ Test field selector resolution """
 
@@ -3761,6 +4008,7 @@ if __name__ == "__main__":
         ComponentJoinConstructionTests,
         ComponentLeftJoinConstructionTests,
 
+	    DocumentFullTextSearchTests,
         FieldSelectorResolutionTests,
 
         ResourceFilterJoinTests,
