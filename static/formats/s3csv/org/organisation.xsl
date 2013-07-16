@@ -171,14 +171,14 @@
             <xsl:if test="$Sectors!=''">
                 <xsl:call-template name="splitList">
                     <xsl:with-param name="list" select="$Sectors"/>
-                    <xsl:with-param name="arg" select="sector"/>
+                    <xsl:with-param name="arg">sector</xsl:with-param>
                 </xsl:call-template>
             </xsl:if>
 
             <xsl:if test="$Services!=''">
                 <xsl:call-template name="splitList">
                     <xsl:with-param name="list" select="$Services"/>
-                    <xsl:with-param name="arg" select="service"/>
+                    <xsl:with-param name="arg">service</xsl:with-param>
                 </xsl:call-template>
             </xsl:if>
 
@@ -244,18 +244,22 @@
             <!-- Sectors -->
             <xsl:when test="$arg='sector'">
                 <resource name="org_sector_organisation">
-                    <resource name="org_sector">
-                        <data field="abrv"><xsl:value-of select="$item"/></data>
-                        <data field="name"><xsl:value-of select="$item"/></data>
-                    </resource>
+                    <reference field="sector_id" resource="org_sector">
+                        <resource name="org_sector">
+                            <data field="abrv"><xsl:value-of select="$item"/></data>
+                            <data field="name"><xsl:value-of select="$item"/></data>
+                        </resource>
+                    </reference>
                 </resource>
             </xsl:when>
             <!-- Services -->
             <xsl:when test="$arg='service'">
                 <resource name="org_service_organisation">
-                    <resource name="org_service">
-                        <data field="name"><xsl:value-of select="$item"/></data>
-                    </resource>
+                    <reference field="service_id" resource="org_service">
+                        <resource name="org_service">
+                            <data field="name"><xsl:value-of select="$item"/></data>
+                        </resource>
+                    </reference>
                 </resource>
             </xsl:when>
         </xsl:choose>
