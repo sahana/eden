@@ -127,11 +127,9 @@ class S3AssetModel(S3Model):
                            ASSET_TYPE_OTHER       : T("Other")
                            }
 
-        asset_item_represent = lambda id, row=None: \
-            self.supply_item_represent(id, row, show_um=False)
-
         ctable = self.supply_item_category
         itable = self.supply_item
+        supply_item_represent = self.supply_item_represent
 
         tablename = "asset_asset"
         table = define_table(tablename,
@@ -149,11 +147,11 @@ class S3AssetModel(S3Model):
                                    represent = lambda opt: \
                                        asset_type_opts.get(opt, UNKNOWN_OPT),
                                    label = T("Type")),
-                             self.supply_item_id(represent = asset_item_represent,
+                             self.supply_item_id(represent = supply_item_represent,
                                                  requires = IS_ONE_OF(db((ctable.can_be_asset == True) & \
                                                                          (itable.item_category_id == ctable.id)),
                                                                       "supply_item.id",
-                                                                      asset_item_represent,
+                                                                      supply_item_represent,
                                                                       sort=True,
                                                                       ),
                                                  widget = None,

@@ -1926,7 +1926,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     var addWMSLayer = function(map, layer) {
         var name = layer.name;
         var url = layer.url;
-        if ((undefined != layer.username) && (undefined != layer.password)) {
+        if (layer.username && layer.password) {
             var username = layer.username;
             var password = layer.password;
             url = url.replace('://', '://' + username + ':' + password + '@');
@@ -1967,13 +1967,13 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         } else {
             var version = '1.1.1';
         }
-        if (undefined != layer.map) {
+        if (layer.map) {
             var wms_map = layer.map;
         } else {
             var wms_map = '';
         }
         // Server-side style NOT an internal JSON one
-        if (undefined != layer.style) {
+        if (layer.style) {
             var style = layer.style;
         } else {
             var style = '';
@@ -2595,7 +2595,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 
     // Toolbar Buttons
     var addToolbar = function(map) {
-        var options = map.s3.options;
+        var s3 = map.s3;
+        var options = s3.options;
 
         //var toolbar = map.s3.mapPanelContainer.getTopToolbar();
         var toolbar = new Ext.Toolbar({
@@ -2604,6 +2605,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             height: 34
         })
         toolbar.map = map;
+        // Allow WMSGetFeatureInfo to find the toolbar
+        s3.portal.toolbar = toolbar;
 
         var zoomfull = new GeoExt.Action({
             control: new OpenLayers.Control.ZoomToMaxExtent(),
@@ -3536,15 +3539,15 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     // WMS GetFeatureInfo control
     var addWMSGetFeatureInfoControl = function(map) {
         var wmsGetFeatureInfo = new gxp.plugins.WMSGetFeatureInfo({
-            actionTarget: 'gis_toolbar',
+            actionTarget: 'toolbar',
             outputTarget: 'map',
             outputConfig: {
                 width: 400,
                 height: 200
             },
             toggleGroup: 'controls',
-            // html not permitted by Proxy
-            format: "grid",
+            // html wasn't permitted by Proxy
+            //format: 'grid',
             infoActionTip: i18n.gis_get_feature_info,
             popupTitle: i18n.gis_feature_info
         });

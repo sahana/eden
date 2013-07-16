@@ -164,14 +164,16 @@ class S3WarehouseModel(S3Model):
         #    msg_record_deleted = T("Warehouse Type deleted"),
         #    msg_list_empty = T("No Warehouse Types currently registered"))
 
+        #represent = S3Represent(lookup=tablename, translate=True)
+
         #warehouse_type_id = S3ReusableField("warehouse_type_id", table,
         #                        sortby="name",
         #                        requires = IS_NULL_OR(
         #                                    IS_ONE_OF(db, "inv_warehouse_type.id",
-        #                                              self.inv_warehouse_type_represent,
+        #                                              represent,
         #                                              sort=True
         #                                              )),
-        #                        represent = self.inv_warehouse_type_represent,
+        #                        represent = represent,
         #                        label = T("Warehouse Type"),
         #                        comment = S3AddResourceLink(c="inv",
         #                                    f="warehouse_type",
@@ -371,25 +373,6 @@ class S3WarehouseModel(S3Model):
     #            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
-    #@staticmethod
-    #def inv_warehouse_type_represent(id, row=None):
-    #    """ FK representation """
-
-    #    if row:
-    #        return row.name
-    #    elif not id:
-    #        return current.messages["NONE"]
-
-    #    db = current.db
-    #    table = db.inv_warehouse_type
-    #    r = db(table.id == id).select(table.name,
-    #                                  limitby = (0, 1)).first()
-    #    try:
-    #        return r.name
-    #    except:
-    #        return current.messages.UNKNOWN_OPT
-
-    # -------------------------------------------------------------------------
     @staticmethod
     def inv_warehouse_onaccept(form):
         """
@@ -397,25 +380,6 @@ class S3WarehouseModel(S3Model):
         """
 
         current.s3db.org_update_affiliations("inv_warehouse", form.vars)
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def inv_warehouse_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.inv_warehouse
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
-        except:
-            return current.messages.UNKNOWN_OPT
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -584,12 +548,13 @@ class S3InventoryModel(S3Model):
             msg_list_empty = T("No Stock currently registered in this Warehouse"))
 
         # Reusable Field
+        represent = self.inv_item_represent
         inv_item_id = S3ReusableField("inv_item_id", table,
                                       requires = IS_ONE_OF(db, "inv_inv_item.id",
-                                                           self.inv_item_represent,
+                                                           represent,
                                                            orderby="inv_inv_item.id",
                                                            sort=True),
-                                      represent = self.inv_item_represent,
+                                      represent = represent,
                                       label = INV_ITEM,
                                       comment = DIV(_class="tooltip",
                                                     _title="%s|%s" % (INV_ITEM,

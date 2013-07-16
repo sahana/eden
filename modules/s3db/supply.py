@@ -37,6 +37,8 @@ __all__ = ["S3SupplyModel",
            "supply_item_entity_organisation",
            "supply_item_entity_contacts",
            "supply_item_entity_status",
+           "supply_ItemRepresent",
+           #"supply_ItemCategoryRepresent",
            ]
 
 import re
@@ -209,6 +211,9 @@ class S3SupplyModel(S3Model):
         asset = settings.has_module("asset")
         vehicle = settings.has_module("vehicle")
 
+        item_category_represent = supply_ItemCategoryRepresent()
+        item_category_represent_nocodes = supply_ItemCategoryRepresent(use_code=False)
+
         tablename = "supply_item_category"
         table = define_table(tablename,
                              catalog_id(),
@@ -216,7 +221,7 @@ class S3SupplyModel(S3Model):
                              Field("parent_item_category_id",
                                    "reference supply_item_category",
                                    label = T("Parent"),
-                                   represent = self.item_category_represent,
+                                   represent = item_category_represent,
                                    ondelete = "RESTRICT",
                                    ),
                              Field("code", length=16,
@@ -260,10 +265,9 @@ class S3SupplyModel(S3Model):
         # Reusable Field
         item_category_requires = IS_NULL_OR(
                                     IS_ONE_OF(db, "supply_item_category.id",
-                                              lambda id, row: \
-                                                self.item_category_represent(id, row,
-                                                                             use_code=False),
-                                              sort=True))
+                                              item_category_represent_nocodes,
+                                              sort=True)
+                                    )
 
         item_category_comment = S3AddResourceLink(c="supply",
                                                   f="item_category",
@@ -277,7 +281,7 @@ class S3SupplyModel(S3Model):
         item_category_id = S3ReusableField("item_category_id", table,
                                            sortby="name",
                                            requires=item_category_requires,
-                                           represent=self.item_category_represent,
+                                           represent=item_category_represent,
                                            label = T("Category"),
                                            comment = item_category_comment,
                                            ondelete = "RESTRICT"
@@ -402,12 +406,14 @@ S3OptionsFilter({
             msg_no_match = T("No Matching Items")
             )
 
+        supply_item_represent = supply_ItemRepresent(show_link=True)
+
         # Reusable Field
         supply_item_id = S3ReusableField("item_id", table, sortby="name", # 'item_id' for backwards-compatibility
                     requires = IS_ONE_OF(db, "supply_item.id",
-                                         self.supply_item_represent,
+                                         supply_item_represent,
                                          sort=True),
-                    represent = self.supply_item_represent,
+                    represent = supply_item_represent,
                     label = T("Item"),
                     widget = S3AutocompleteWidget("supply", "item"),
                     comment=S3AddResourceLink(c="supply",
@@ -568,8 +574,7 @@ S3OptionsFilter({
                          label=T("Category"),
                          comment=T("Search for an item by category."),
                          field="item_category_id",
-                         represent = lambda id: \
-                            self.item_category_represent(id, use_code=False),
+                         represent = item_category_represent_nocodes,
                          cols = 3
                        ),
                        S3SearchOptionsWidget(
@@ -731,38 +736,6 @@ S3OptionsFilter({
             msg_record_deleted = T("Alternative Item deleted"),
             msg_list_empty = T("No Alternative Items currently registered"))
 
-        #def item_alt_represent(id, row=None):
-        #    try:
-        #        return supply_item_represent(db.supply_item_alt[id].item_id)
-        #    except:
-        #        return NONE
-
-        # Reusable Field - probably not needed
-        #item_alt_id = S3ReusableField("item_alt_id", table,
-        #            sortby="name",
-        #            requires = IS_NULL_OR(IS_ONE_OF(db,
-        #                                            "supply_item_alt.id",
-        #                                            item_alt_represent,
-        #                                            sort=True)),
-        #            represent = item_alt_represent,
-        #            label = T("Alternative Item"),
-        #            comment = DIV(DIV( _class="tooltip",
-        #                               _title="%s|%s" % (T("Alternative Item"),
-        #                                                 T("An item which can be used in place of another item"))),
-        #                          A( ADD_ALT_ITEM,
-        #                             _class="s3_add_resource_link",
-        #                             _href=URL(#                                       c="supply",
-        #                                       f="item_alt",
-        #                                       args="create",
-        #                                       vars=dict(format="popup")
-        #                                       ),
-        #                             _target="top",
-        #                             _id = "item_alt_add",
-        #                             _style = "display: none",
-        #                             ),
-        #                          ),
-        #            ondelete = "RESTRICT")
-
         # =====================================================================
         # Item Super-Entity
         #
@@ -780,12 +753,7 @@ S3OptionsFilter({
                                   # @ToDo: Make Items Trackable?
                                   #super_link("track_id", "sit_trackable"),
                                   #location_id(),
-                                  supply_item_id(
-                                    represent = lambda id: \
-                                        self.supply_item_represent(id,
-                                                                   show_um=False,
-                                                                   show_link=True)
-                                    ),
+                                  supply_item_id(),
                                   item_pack_id(),
                                   Field("quantity", "double", notnull=True,
                                         label = T("Quantity"),
@@ -852,8 +820,8 @@ S3OptionsFilter({
                 supply_item_entity_id = item_id,
                 supply_item_category_id = item_category_id,
                 supply_item_pack_id = item_pack_id,
-                supply_item_represent = self.supply_item_represent,
-                supply_item_category_represent = self.item_category_represent,
+                supply_item_represent = supply_item_represent,
+                supply_item_category_represent = item_category_represent,
                 supply_item_pack_quantity = SupplyItemPackQuantity,
                 supply_item_add = self.supply_item_add,
                 supply_item_pack_represent = self.item_pack_represent,
@@ -904,62 +872,6 @@ S3OptionsFilter({
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def item_category_represent(id, row=None, use_code=True):
-        """
-            Represent an Item Category via it's hierarchy
-            @ToDo: Migrate to S3Represent
-        """
-
-        if row:
-            # @ToDo: Optimise so we don't need to do the first query
-            item_category_id = row.id
-        elif not id:
-            return current.messages["NONE"]
-        else:
-            item_category_id = id
-
-        db = current.db
-        table = db.supply_item_category
-        represent = ""
-        while item_category_id:
-            query = (table.id == item_category_id)
-            r = db(query).select(table.catalog_id,
-                                 table.code,
-                                 table.name,
-                                 table.parent_item_category_id,
-                                 # left = table.on(table.id == table.parent_item_category_id), Doesn't work
-                                 limitby=(0, 1)).first()
-
-            if (r.code and use_code) or (not r.name and r.code):
-                represent_append = r.code
-                represent_join = "-"
-            else:
-                represent_append = r.name
-                represent_join = " - "
-
-            if represent:
-                represent = represent_join.join([represent_append,
-                                                 represent])
-            else:
-                represent = represent_append
-
-            # Feed the loop
-            item_category_id = r.parent_item_category_id
-
-        if r.catalog_id:
-            table = db.supply_catalog
-            catalog = db(table.id == r.catalog_id).select(table.name,
-                                                          limitby=(0, 1)
-                                                          ).first()
-            try:
-                return "%s > %s" % (catalog.name, represent)
-            except:
-                return represent
-        else:
-            return represent
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def item_represent(id):
         """
             Represent an item entity in option fields or list views
@@ -1001,56 +913,6 @@ S3OptionsFilter({
             return current.messages.UNKNOWN_OPT
 
         return item_str
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def supply_item_represent(id, row=None,
-                              show_um = False,
-                              show_link = True):
-        """
-            Representation of a supply_item
-            @ToDo: Migrate to S3Represent
-        """
-
-        if row:
-            # @ToDo: Optimised query where we don't need to do the join
-            id = row.id
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.supply_item
-        btable = db.supply_brand
-        r = db(table.id == id).select(table.name,
-                                      table.model,
-                                      table.um,
-                                      btable.name,
-                                      left = btable.on(table.brand_id == btable.id),
-                                      limitby=(0, 1)).first()
-        try:
-            represent = [r.supply_item.name,
-                         r.supply_brand.name,
-                         r.supply_item.model]
-        except:
-            return current.messages.UNKNOWN_OPT
-        represent = [rep for rep in represent if rep]
-        represent = " - ".join(represent)
-
-        if show_um and r.supply_item.um:
-            represent = "%s (%s)" % (represent, r.supply_item.um)
-
-        local_request = current.request
-        local_request.extension = "html"
-        if show_link:
-            return A(represent,
-                     _href = URL(r = local_request,
-                                 c = "supply",
-                                 f = "item",
-                                 args = [id]
-                                 )
-                     )
-        else:
-            return represent
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -1278,6 +1140,235 @@ S3OptionsFilter({
                                    create_next=url,
                                    update_next=url,
                                    )
+
+# =============================================================================
+class supply_ItemRepresent(S3Represent):
+    """ Representation of Supply Items """
+
+    def __init__(self,
+                 translate=False,
+                 show_link=False,
+                 show_um=False,
+                 multiple=False):
+
+        self.show_um = show_um
+
+        # Need a custom lookup to join with Brand
+        self.lookup_rows = self.custom_lookup_rows
+        fields = ["supply_item.id",
+                  "supply_item.name",
+                  "supply_item.model",
+                  "supply_brand.name",
+                  ]
+        if show_um:
+            fields.append("supply_item.um")
+
+        super(supply_ItemRepresent,
+              self).__init__(lookup="supply_item",
+                             fields=fields,
+                             show_link=show_link,
+                             translate=translate,
+                             multiple=multiple)
+
+    # -------------------------------------------------------------------------
+    def custom_lookup_rows(self, key, values, fields=[]):
+        """
+            Custom lookup method for item rows, does a
+            left join with the brand. Parameters
+            key and fields are not used, but are kept for API
+            compatibility reasons.
+
+            @param values: the organisation IDs
+        """
+
+        db = current.db
+        itable = current.s3db.supply_item
+        btable = db.supply_brand
+
+        left = btable.on(btable.id == itable.brand_id)
+
+        qty = len(values)
+        if qty == 1:
+            query = (itable.id == values[0])
+            limitby = (0, 1)
+        else:
+            query = (itable.id.belongs(values))
+            limitby = (0, qty)
+
+        rows = db(query).select(*self.fields,
+                                left=left,
+                                limitby=limitby)
+        self.queries += 1
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a single Row
+
+            @param row: the supply_item Row
+        """
+
+        name = row["supply_item.name"]
+        model = row["supply_item.model"]
+        brand = row["supply_brand.name"]
+
+        fields = []
+        if name:
+            fields.append(name)
+        if model:
+            fields.append(model)
+        if brand:
+            fields.append(brand)
+        name = " - ".join(fields)
+
+        if self.show_um:
+            um = row["supply_item.um"]
+            if um:
+                name = "%s (%s)" % (name, um)
+        return s3_unicode(name)
+
+# =============================================================================
+class supply_ItemCategoryRepresent(S3Represent):
+    """ Representation of Supply Item Categories """
+
+    def __init__(self,
+                 translate=False,
+                 show_link=False,
+                 use_code=True,
+                 multiple=False):
+
+        self.use_code = use_code
+
+        # Need a custom lookup to join with Parent/Catalog
+        self.lookup_rows = self.custom_lookup_rows
+        fields = ["supply_item_category.id",
+                  "supply_item_category.name",
+                  # Always-included since used as fallback if no name
+                  "supply_item_category.code",
+                  "supply_catalog.name",
+                  "supply_parent_item_category.name",
+                  "supply_grandparent_item_category.name",
+                  "supply_grandparent_item_category.parent_item_category_id",
+                  ]
+
+        super(supply_ItemCategoryRepresent,
+              self).__init__(lookup="supply_item_category",
+                             fields=fields,
+                             show_link=show_link,
+                             translate=translate,
+                             multiple=multiple)
+
+    # -------------------------------------------------------------------------
+    def custom_lookup_rows(self, key, values, fields=[]):
+        """
+            Custom lookup method for item category rows, does a
+            left join with the parent category. Parameters
+            key and fields are not used, but are kept for API
+            compatibility reasons.
+
+            @param values: the organisation IDs
+        """
+
+        db = current.db
+        table = current.s3db.supply_item_category
+        ctable = db.supply_catalog
+        ptable = db.supply_item_category.with_alias("supply_parent_item_category")
+        gtable = db.supply_item_category.with_alias("supply_grandparent_item_category")
+
+        left = [ctable.on(ctable.id == table.catalog_id),
+                ptable.on(ptable.id == table.parent_item_category_id),
+                gtable.on(gtable.id == ptable.parent_item_category_id),
+                ]
+
+        qty = len(values)
+        if qty == 1:
+            query = (table.id == values[0])
+            limitby = (0, 1)
+        else:
+            query = (table.id.belongs(values))
+            limitby = (0, qty)
+
+        rows = db(query).select(*self.fields,
+                                left=left,
+                                limitby=limitby)
+        self.queries += 1
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a single Row
+
+            @param row: the supply_item_category Row
+        """
+
+        use_code = self.use_code
+
+        name = row["supply_item_category.name"]
+        code = row["supply_item_category.code"]
+        catalog = row["supply_catalog.name"]
+        parent = row["supply_parent_item_category.name"]
+
+        if use_code:
+            name = code
+        elif not name:
+            name = code
+
+        if parent:
+            if use_code:
+                # Compact format
+                joiner = "-"
+            else:
+                joiner = " - "
+            name = "%s%s%s" % (name, joiner, parent)
+            grandparent = row["supply_grandparent_item_category.name"]
+            if grandparent:
+                name = "%s%s%s" % (name, joiner, grandparent)
+                # Check for Great-grandparent
+                # Trade-off "all in 1 row" vs "too many joins"
+                greatgrandparent = row["supply_grandparent_item_category.parent_item_category_id"]
+                if greatgrandparent:
+                    # Assume no more than 6 levels of interest
+                    db = current.db
+                    table = current.s3db.supply_item_category
+                    ptable = db.supply_item_category.with_alias("supply_parent_item_category")
+                    gtable = db.supply_item_category.with_alias("supply_grandparent_item_category")
+                    left = [ptable.on(ptable.id == table.parent_item_category_id),
+                            gtable.on(gtable.id == ptable.parent_item_category_id),
+                            ]
+                    query = (table.id == greatgrandparent)
+                    fields = [table.name,
+                              table.code,
+                              ptable.name,
+                              ptable.code,
+                              gtable.name,
+                              gtable.code,
+                              ]
+                    row = db(query).select(*fields,
+                                           left=left,
+                                           limitby=(0, 1)).first()
+                    if row:
+                        if use_code:
+                            greatgrandparent = row["supply_item_category.code"]
+                            greatgreatgrandparent = row["supply_parent_item_category.code"]
+                        else:
+                            greatgrandparent = row["supply_item_category.name"] or row["supply_item_category.code"]
+                            greatgreatgrandparent = row["supply_parent_item_category.name"] or row["supply_parent_item_category.code"]
+                        name = "%s%s%s" % (name, joiner, greatgrandparent)
+                        if greatgreatgrandparent:
+                            name = "%s%s%s" % (name, joiner, greatgreatgrandparent)
+                            if use_code:
+                                greatgreatgreatgrandparent = row["supply_grandparent_item_category.code"]
+                            else:
+                                greatgreatgreatgrandparent = row["supply_grandparent_item_category.name"] or row["supply_grandparent_item_category.code"]
+                            if greatgreatgreatgrandparent:
+                                name = "%s%s%s" % (name, joiner, greatgreatgreatgrandparent)
+
+        if catalog:
+            name = "%s > %s" % (catalog, name)
+
+        return s3_unicode(name)
 
 # =============================================================================
 def item_um_from_name(name):
