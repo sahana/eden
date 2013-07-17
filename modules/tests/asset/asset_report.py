@@ -43,7 +43,7 @@ class AssetReport(SeleniumUnitTest):
 
     def test_asset_report(self):
         self.report(None, "Item", "Category", None,
-            ("Motorcyle - Yamaha - DT50MX", "Default > Vehicle", 5))
+            ("Motorcyle - DT50MX - Yamaha", "Default > Vehicle", 5))
 
     def test_asset_report_filter(self):
         self.report(
@@ -51,7 +51,7 @@ class AssetReport(SeleniumUnitTest):
                 "label": "Default > Vehicle",
                 "value": True
             },), "Item", "Category", None,
-            ("Motorcyle - Yamaha - DT50MX", "Default > Vehicle", 5),
+            ("Motorcyle - DT50MX - Yamaha", "Default > Vehicle", 5),
             row_count=1)
 
     def test_asset_report_filter_L0_L1(self):

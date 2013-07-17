@@ -187,7 +187,7 @@ class SeleniumUnitTest(Web2UnitTest):
 
         # Check the result
         try:
-            elem = self.get_confirmation()
+            elem = self.get_confirmation(3)
         except NoSuchElementException:
             self.reporter("Login failed.. so registering account")
             # Try registering
@@ -218,7 +218,7 @@ class SeleniumUnitTest(Web2UnitTest):
 
         # Check the result
         try:
-            elem = self.get_confirmation()
+            elem = self.get_confirmation(3)
         except NoSuchElementException:
             assert 0, "Logout unsuccesful"
         else:
@@ -260,7 +260,7 @@ class SeleniumUnitTest(Web2UnitTest):
 
         # Check the result
         try:
-            elem = self.get_confirmation()
+            elem = self.get_confirmation(3)
         except NoSuchElementException:
             assert 0, "Registration unsuccesful"
         else:
@@ -268,13 +268,16 @@ class SeleniumUnitTest(Web2UnitTest):
             return True
 
     # -------------------------------------------------------------------------
-    def get_confirmation(self):
+    def get_confirmation(self, wait_time):
+        """
+            @param wait_time: The time in seconds to wait for confirmation to appear.
+        """
 
         if current.deployment_settings.get_ui_formstyle() == "bootstrap":
             confirmation_class = "alert alert-success"
         else:
             confirmation_class = "confirmation"
-        return WebDriverWait(self.browser, 3).until(
+        return WebDriverWait(self.browser, wait_time).until(
                     lambda driver:
                                 driver.find_element_by_xpath("//div[@class='%s']" % confirmation_class))
 
@@ -491,7 +494,7 @@ class SeleniumUnitTest(Web2UnitTest):
         datetime_format = str(settings.get_L10n_datetime_format())
         # If a confirmation is shown then clear it so that it doesn't give a false positive later
         try:
-            elem = self.get_confirmation()
+            elem = self.get_confirmation(0.2)
             elem.click()
             time.sleep(1)  # Give it time to dissolve
         except:
@@ -601,7 +604,7 @@ class SeleniumUnitTest(Web2UnitTest):
         # Check & Report the results
         confirm = True
         try:
-            elem = self.get_confirmation()
+            elem = self.get_confirmation(3)
             self.reporter(elem.text)
         except (NoSuchElementException, TimeoutException):
             confirm = False
