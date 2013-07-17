@@ -46,31 +46,31 @@
     <xsl:key name="ous" match="row"
              use="concat(col[@field='OU Type'], '/', col[@field='OU'])"/>
 
-    <xsl:key name="Default L1" match="row"
+    <xsl:key name="DefaultL1" match="row"
              use="concat(col[@field='Default Country'], '/', col[@field='Default L1'])"/>
-    <xsl:key name="Default L2" match="row"
+    <xsl:key name="DefaultL2" match="row"
              use="concat(col[@field='Default Country'], '/', col[@field='Default L1'], '/',
                                                              col[@field='Default L2'])"/>
-    <xsl:key name="Default L3" match="row"
+    <xsl:key name="DefaultL3" match="row"
              use="concat(col[@field='Default Country'], '/', col[@field='Default L1'], '/',
                                                              col[@field='Default L2'], '/',
                                                              col[@field='Default L3'])"/>
-    <xsl:key name="Default L4" match="row"
+    <xsl:key name="DefaultL4" match="row"
              use="concat(col[@field='Default Country'], '/', col[@field='Default L1'], '/',
                                                              col[@field='Default L2'], '/',
                                                              col[@field='Default L3'], '/',
                                                              col[@field='Default L4'])"/>
 
-    <xsl:key name="Region L1" match="row"
+    <xsl:key name="RegionL1" match="row"
              use="concat(col[@field='Region Country'], '/', col[@field='Region L1'])"/>
-    <xsl:key name="Region L2" match="row"
+    <xsl:key name="RegionL2" match="row"
              use="concat(col[@field='Region Country'], '/', col[@field='Region L1'], '/',
                                                             col[@field='Region L2'])"/>
-    <xsl:key name="Region L3" match="row"
+    <xsl:key name="RegionL3" match="row"
              use="concat(col[@field='Region Country'], '/', col[@field='Region L1'], '/',
                                                             col[@field='Region L2'], '/',
                                                             col[@field='Region L3'])"/>
-    <xsl:key name="Region L4" match="row"
+    <xsl:key name="RegionL4" match="row"
              use="concat(col[@field='Region Country'], '/', col[@field='Region L1'], '/',
                                                             col[@field='Region L2'], '/',
                                                             col[@field='Region L3'], '/',
@@ -80,82 +80,82 @@
     <xsl:template match="/">
         <s3xml>
             <!-- L1 -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('Default L1',
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('DefaultL1',
                                                                    concat(col[@field='Default Country'], '/',
                                                                           col[@field='Default L1']))[1])]">
                 <xsl:call-template name="L1">
-                    <xsl:with-param name="prefix" select="Default"/>
+                    <xsl:with-param name="prefix">Default</xsl:with-param>
                 </xsl:call-template>
             </xsl:for-each>
 
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('Region L1',
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('RegionL1',
                                                                    concat(col[@field='Region Country'], '/',
                                                                           col[@field='Region L1']))[1])]">
                 <xsl:call-template name="L1">
-                    <xsl:with-param name="prefix" select="Region"/>
+                    <xsl:with-param name="prefix">Region</xsl:with-param>
                 </xsl:call-template>
             </xsl:for-each>
 
             <!-- L2 -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('Default L2',
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('DefaultL2',
                                                                    concat(col[@field='Default Country'], '/',
                                                                           col[@field='Default L1'], '/',
                                                                           col[@field='Default L2']))[1])]">
                 <xsl:call-template name="L2">
-                    <xsl:with-param name="prefix" select="Default"/>
+                    <xsl:with-param name="prefix">Default</xsl:with-param>
                 </xsl:call-template>
             </xsl:for-each>
 
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('Region L2',
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('RegionL2',
                                                                    concat(col[@field='Region Country'], '/',
                                                                           col[@field='Region L1'], '/',
                                                                           col[@field='Region L2']))[1])]">
                 <xsl:call-template name="L2">
-                    <xsl:with-param name="prefix" select="Region"/>
+                    <xsl:with-param name="prefix">Region</xsl:with-param>
                 </xsl:call-template>
             </xsl:for-each>
 
             <!-- L3 -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('Default L3',
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('DefaultL3',
                                                                    concat(col[@field='Default Country'], '/',
                                                                           col[@field='Default L1'], '/',
                                                                           col[@field='Default L2'], '/',
                                                                           col[@field='Default L3']))[1])]">
                 <xsl:call-template name="L3">
-                    <xsl:with-param name="prefix" select="Default"/>
+                    <xsl:with-param name="prefix">Default</xsl:with-param>
                 </xsl:call-template>
             </xsl:for-each>
 
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('Region L3',
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('RegionL3',
                                                                    concat(col[@field='Region Country'], '/',
                                                                           col[@field='Region L1'], '/',
                                                                           col[@field='Region L2'], '/',
                                                                           col[@field='Region L3']))[1])]">
                 <xsl:call-template name="L3">
-                    <xsl:with-param name="prefix" select="Region"/>
+                    <xsl:with-param name="prefix">Region</xsl:with-param>
                 </xsl:call-template>
             </xsl:for-each>
 
             <!-- L4 -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('Default L4',
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('DefaultL4',
                                                                    concat(col[@field='Default Country'], '/',
                                                                           col[@field='Default L1'], '/',
                                                                           col[@field='Default L2'], '/',
                                                                           col[@field='Default L3'], '/',
                                                                           col[@field='Default L4']))[1])]">
                 <xsl:call-template name="L4">
-                    <xsl:with-param name="prefix" select="Default"/>
+                    <xsl:with-param name="prefix">Default</xsl:with-param>
                 </xsl:call-template>
             </xsl:for-each>
 
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('Region L4',
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('RegionL4',
                                                                    concat(col[@field='Region Country'], '/',
                                                                           col[@field='Region L1'], '/',
                                                                           col[@field='Region L2'], '/',
                                                                           col[@field='Region L3'], '/',
                                                                           col[@field='Region L4']))[1])]">
                 <xsl:call-template name="L4">
-                    <xsl:with-param name="prefix" select="Region"/>
+                    <xsl:with-param name="prefix">Region</xsl:with-param>
                 </xsl:call-template>
             </xsl:for-each>
 
@@ -222,10 +222,10 @@
             </reference>
 
             <xsl:call-template name="LocationReference">
-                <xsl:with-param name="prefix" select="Region"/>
+                <xsl:with-param name="prefix">Region</xsl:with-param>
             </xsl:call-template>
             <xsl:call-template name="LocationReference">
-                <xsl:with-param name="prefix" select="Default"/>
+                <xsl:with-param name="prefix">Default</xsl:with-param>
             </xsl:call-template>
 
             <xsl:if test="$ou!=''">
@@ -397,7 +397,7 @@
                 <data field="name"><xsl:value-of select="$l2"/></data>
                 <data field="level"><xsl:text>L2</xsl:text></data>
                 <xsl:choose>
-                    <xsl:when test="col[@field='L1']!=''">
+                    <xsl:when test="$l1!=''">
                         <!-- Parent to L1 -->
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
@@ -469,7 +469,7 @@
                 <data field="name"><xsl:value-of select="$l3"/></data>
                 <data field="level"><xsl:text>L3</xsl:text></data>
                 <xsl:choose>
-                    <xsl:when test="col[@field='L2']!=''">
+                    <xsl:when test="$l2!=''">
                         <!-- Parent to L2 -->
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
@@ -477,7 +477,7 @@
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
-                    <xsl:when test="col[@field='L1']!=''">
+                    <xsl:when test="$l1!=''">
                         <!-- Parent to L1 -->
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
@@ -553,7 +553,7 @@
                 <data field="name"><xsl:value-of select="$l4"/></data>
                 <data field="level"><xsl:text>L4</xsl:text></data>
                 <xsl:choose>
-                    <xsl:when test="col[@field='L3']!=''">
+                    <xsl:when test="$l3!=''">
                         <!-- Parent to L3 -->
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
@@ -561,7 +561,7 @@
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
-                    <xsl:when test="col[@field='L2']!=''">
+                    <xsl:when test="$l2!=''">
                         <!-- Parent to L2 -->
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
@@ -569,7 +569,7 @@
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
-                    <xsl:when test="col[@field='L1']!=''">
+                    <xsl:when test="$l1!=''">
                         <!-- Parent to L1 -->
                         <reference field="parent" resource="gis_location">
                             <xsl:attribute name="tuid">
@@ -642,39 +642,47 @@
 
         <xsl:variable name="field">
             <xsl:choose>
-                <xsl:when test="$prefix='Region'">
-                    <xsl:value-of select="region_location_id"/>
-                </xsl:when>
-                <xsl:when test="$prefix='Default'">
-                    <xsl:value-of select="default_location_id"/>
-                </xsl:when>
+                <xsl:when test="$prefix='Region'">region_location_id</xsl:when>
+                <xsl:when test="$prefix='Default'">default_location_id</xsl:when>
             </xsl:choose>
         </xsl:variable>
 
         <xsl:choose>
             <xsl:when test="$l4!=''">
-                <reference field="$field" resource="gis_location">
+                <reference resource="gis_location">
+                    <xsl:attribute name="field">
+                        <xsl:value-of select="$field"/>
+                    </xsl:attribute>
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$l4id"/>
                     </xsl:attribute>
                 </reference>
             </xsl:when>
             <xsl:when test="$l3!=''">
-                <reference field="$field" resource="gis_location">
+                <reference resource="gis_location">
+                    <xsl:attribute name="field">
+                        <xsl:value-of select="$field"/>
+                    </xsl:attribute>
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$l3id"/>
                     </xsl:attribute>
                 </reference>
             </xsl:when>
             <xsl:when test="$l2!=''">
-                <reference field="$field" resource="gis_location">
+                <reference resource="gis_location">
+                    <xsl:attribute name="field">
+                        <xsl:value-of select="$field"/>
+                    </xsl:attribute>
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$l2id"/>
                     </xsl:attribute>
                 </reference>
             </xsl:when>
             <xsl:when test="$l1!=''">
-                <reference field="$field" resource="gis_location">
+                <reference resource="gis_location">
+                    <xsl:attribute name="field">
+                        <xsl:value-of select="$field"/>
+                    </xsl:attribute>
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$l1id"/>
                     </xsl:attribute>
@@ -682,7 +690,10 @@
             </xsl:when>
             <xsl:when test="$l0!=''">
                 <xsl:variable name="country" select="concat('urn:iso:std:iso:3166:-1:code:', $countrycode)"/>
-                <reference field="$field" resource="gis_location">
+                <reference resource="gis_location">
+                    <xsl:attribute name="field">
+                        <xsl:value-of select="$field"/>
+                    </xsl:attribute>
                     <xsl:attribute name="uuid">
                         <xsl:value-of select="$country"/>
                     </xsl:attribute>

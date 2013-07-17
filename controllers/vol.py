@@ -56,8 +56,7 @@ def human_resource():
                 pass
             elif r.id:
                 # Redirect to person controller
-                vars = {
-                        "human_resource.id" : r.id,
+                vars = {"human_resource.id" : r.id,
                         "group" : "volunteer"
                         }
                 redirect(URL(f="person",
@@ -115,7 +114,7 @@ def volunteer():
     get_config = s3db.get_config
     # Modify list_fields, search_method & report_options based on Settings
     search_method = get_config(tablename,
-                                       "search_method")
+                               "search_method")
     report_options = get_config(tablename,
                                 "report_options")
     if settings.get_hrm_vol_experience() == "programme":
@@ -141,16 +140,15 @@ def volunteer():
             YES = T("Yes")
             NO = T("No")
             widget = s3base.S3SearchOptionsWidget(
-                                name="human_resource_search_active",
-                                label=T("Active?"),
-                                field="details.active",
-                                cols = 2,
-                                # T on both sides here to match the output of the represent
-                                options = {
-                                        YES: YES,
-                                        NO: NO
-                                    }
-                              ),
+                        name="human_resource_search_active",
+                        label=T("Active?"),
+                        field="details.active",
+                        cols = 2,
+                        # T on both sides here to match the output of the represent
+                        options = {YES: YES,
+                                   NO: NO
+                                   }
+                        ),
             search_widget = ("human_resource_search_active", widget[0])
             search_method.advanced.insert(1, search_widget)
 
