@@ -83,6 +83,9 @@
             real_input.data('specific', specific);
         }
 
+        // Store whether we hide_lx
+        real_input.data('hide_lx', hide_lx);
+
         // Initial population of dropdown(s)
         if (L0) {
             lx_select(fieldname, 0, L0);
@@ -148,6 +151,10 @@
 
         var selector = '#' + fieldname;
 
+        // Read options
+        var real_input = $(selector);
+        var hide_lx = real_input.data('hide_lx');
+
         if (id) {
             // Set this dropdown to this value
             // - this is being set from outside the dropdown, e.g. an update form or using a visible default location
@@ -171,7 +178,13 @@
             // & remove their values
             for (var lev=level + 1; lev < 6; lev++) {
                 var s = selector + '_L' + lev;
-                $(s + '__row').hide();
+                if (hide_lx) {
+                    $(s + '__row').hide();
+                } else {
+                    // Hide the limited options
+                    $(s + ' option').remove('[value != ""]');
+                    // @ToDo: Read the full set of options via a new call
+                }
                 $(s).val('');
             }
             // Set the real or parent input to this value
@@ -240,7 +253,13 @@
             // & remove their values
             for (var lev=level + 1; lev < 6; lev++) {
                 var s = selector + '_L' + lev;
-                $(s + '__row').hide();
+                if (hide_lx) {
+                    $(s + '__row').hide();
+                } else {
+                    // Hide the limited options
+                    $(s + ' option').remove('[value != ""]');
+                    // @ToDo: Read the full set of options via a new call
+                }
                 $(s).val('');
             }
         }
@@ -373,9 +392,6 @@
             geocode(fieldname);
             resetHidden(fieldname);
         });
-        $(selector + '_postcode').change(function() {
-            resetHidden(fieldname);
-        });
     }
 
     /**
@@ -383,6 +399,16 @@
      */
     var geocode = function(fieldname) {
         var selector = '#' + fieldname;
+
+        // Hide old messages
+        var fail = $(selector + '_geocode .geocode_fail');
+        var success = $(selector + '_geocode .geocode_success');
+        fail.hide();
+        success.hide();
+
+        // Show Throbber
+        var throbber = $(selector + '_geocode .throbber');
+        throbber.removeClass('hide').show();
 
         // Collect the Address Components
         var address = $(selector + '_address').val();
@@ -425,17 +451,117 @@
             data: post_data,
             dataType: 'json'
         }).done(function(data) {
-            // Update fields
-            $(selector + '_lat').val(data.lat);
-            $(selector + '_lon').val(data.lon);
-            // Notify results
-            
+            var lat = data.lat;
+            var lon = data.lon;
+            if (lat || lon) {
+                // Update fields
+                $(selector + '_lat').val(lat);
+                $(selector + '_lon').val(lon);
+                // If Map Showing then add/move Point
+                gis = S3.gis
+                if (gis.maps) {
+                    var map_id = 'location_selector_' + fieldname;
+                    var map = gis.maps[map_id];
+                    if (map) {
+                        var draftLayer = map.s3.draftLayer
+                        draftLayer.removeAllFeatures();
+                        var geometry = new OpenLayers.Geometry.Point(parseFloat(lon), parseFloat(lat));
+                        geometry.transform(gis.proj4326, map.getProjectionObject());
+                        var feature = new OpenLayers.Feature.Vector(geometry);
+                        draftLayer.addFeatures([feature]);
+                    }
+                }
+                // Notify results
+                throbber.hide();
+                success.removeClass('hide').show();
+            } else {
+                // Notify results
+                throbber.hide();
+                fail.removeClass('hide').show();
+                s3_debug(data);
+            }
         }).fail(function(request, status, error) {
             if (error == 'UNAUTHORIZED') {
                 msg = i18n.gis_requires_login;
             } else {
                 msg = request.responseText;
             }
+            // Notify results
+            throbber.hide();
+            fail.removeClass('hide').show();
+            s3_debug(msg);
+        });
+    }
+
+    /**
+     * Lookup the Location of a Lat/Lon
+     */
+    var geocode_r = function(fieldname) {
+        var selector = '#' + fieldname;
+
+        // Hide old messages
+        var fail = $(selector + '_geocode .geocode_fail');
+        var success = $(selector + '_geocode .geocode_success');
+        fail.hide();
+        success.hide();
+
+        // Show Throbber
+        var throbber = $(selector + '_geocode .throbber');
+        throbber.removeClass('hide').show();
+
+        // Collect the Lat/Lon
+        post_data = {lat: $(selector + '_lat').val(),
+                     lon: $(selector + '_lon').val()
+                     }
+
+        // Submit to Geocoder
+        var url = S3.Ap.concat('/gis/geocode_r');
+        $.ajax({
+            async: false,
+            url: url,
+            type: 'POST',
+            data: post_data,
+            dataType: 'json'
+        }).done(function(data) {
+            if (data.L0) {
+                // Update fields
+                $(selector + '_L0_input').val(data.L0);
+                $(selector + '_L0').val(data.L0);
+                if (data.L1) {
+                    $(selector + '_L1_input').val(data.L1);
+                    $(selector + '_L1').val(data.L1);
+                }
+                if (data.L2) {
+                    $(selector + '_L2').val(data.L2);
+                }
+                if (data.L3) {
+                    $(selector + '_L3').val(data.L3);
+                }
+                if (data.L4) {
+                    $(selector + '_L4').val(data.L4);
+                }
+                if (data.L5) {
+                    $(selector + '_L5').val(data.L5);
+                }
+                // Notify results
+                throbber.hide();
+                success.removeClass('hide').show();
+            } else {
+                // Notify results
+                throbber.hide();
+                fail.removeClass('hide').show();
+                s3_debug(data);
+            }
+        }).fail(function(request, status, error) {
+            if (error == 'UNAUTHORIZED') {
+                msg = i18n.gis_requires_login;
+            } else {
+                msg = request.responseText;
+            }
+            // Notify results
+            throbber.hide();
+            fail.removeClass('hide').show();
+            s3_debug(msg);
         });
     }
 
@@ -534,7 +660,10 @@
                 }
             }
             if (control) {
-                var updateForm = function(event) {
+                var pointPlaced = function(event) {
+                    // Hide any Geocoder messages
+                    $(selector + '_geocode .geocode_fail').hide();
+                    $(selector + '_geocode .geocode_success').hide();
                     // Update the Form fields
                     var geometry = event.feature.geometry;
                     if (geometry.CLASS_NAME == 'OpenLayers.Geometry.Point') {
@@ -542,6 +671,8 @@
                         centerPoint.transform(map.getProjectionObject(), gis.proj4326);
                         latfield.val(centerPoint.lat);
                         lonfield.val(centerPoint.lon);
+                        // Reverse Geocode the Point
+                        geocode_r(fieldname);
                     } else {
                         // Polygon
                         var WKT = geometry.transform(map.getProjectionObject(), gis.proj4326).toString();
@@ -550,7 +681,7 @@
                     // Update the Hidden Fields
                     resetHidden(fieldname);
                 }
-                control.events.register('featureadded', null, updateForm);
+                control.events.register('featureadded', null, pointPlaced);
             }
         } else {
             // Map already instantiated

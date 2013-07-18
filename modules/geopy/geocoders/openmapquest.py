@@ -4,7 +4,7 @@ except ImportError:
     try:
         import simplejson as json
     except ImportError:
-        from django.utils import simplejson as json
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from urllib import urlencode
 from urllib2 import urlopen

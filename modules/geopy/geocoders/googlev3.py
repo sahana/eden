@@ -18,10 +18,10 @@ except ImportError:
     try:
         import simplejson as json
     except ImportError:
-        from django.utils import simplejson as json
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
-from geopy.geocoders.base import Geocoder, GeocoderResultError
-from geopy import util
+from base import Geocoder, GeocoderResultError
+from .. import util
 
 
 

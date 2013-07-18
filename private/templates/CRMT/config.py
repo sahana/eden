@@ -14,7 +14,7 @@ from gluon.storage import Storage
 from s3.s3filter import S3OptionsFilter
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
 from s3.s3validators import IS_LOCATION_SELECTOR2
-from s3.s3widgets import S3LocationSelectorWidget2, S3AddPersonWidget, S3AddPersonWidget2
+from s3.s3widgets import S3LocationSelectorWidget2, S3AddPersonWidget2
 
 T = current.T
 settings = current.deployment_settings
@@ -203,8 +203,10 @@ def customize_project_activity(**attr):
     tablename = "project_activity"
     table = s3db[tablename]
     table.location_id.label = "" # Gets replaced by widget
-    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L1","L2","L3"]) # @ToDo: handle no L2s
-    table.location_id.widget = S3LocationSelectorWidget2(levels=["L1","L2","L3"],
+    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
+    table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
+                                                         hide_lx=False,
+                                                         reverse_lx=True,
                                                          show_address=True,
                                                          show_postcode=True,
                                                          )
@@ -249,15 +251,16 @@ def customize_event_incident_report(**attr):
     tablename = "event_incident_report"
     table = current.s3db[tablename]
     table.location_id.label = "" # Gets replaced by widget
-    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L1", "L2", "L3"]) # @ToDo: handle no L2s
-    table.location_id.widget = S3LocationSelectorWidget2(levels=["L1", "L2", "L3"],
+    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
+    table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
                                                          hide_lx=False,
                                                          reverse_lx=True,
                                                          show_address=True,
                                                          show_postcode=True,
                                                          )
     table.person_id.comment = None
-    table.person_id.widget = S3AddPersonWidget(controller="pr")
+    #table.person_id.widget = S3AddPersonWidget2(controller="pr")
+    table.person_id.widget = None
     
     current.response.s3.crud_strings[tablename] = Storage(
                 title_create = T("Add Incident"),
@@ -433,8 +436,10 @@ def customize_org_facility(**attr):
     tablename = "org_facility"
     table = s3db[tablename]
     table.location_id.label = "" # Gets replaced by widget
-    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L1","L2","L3"]) # @ToDo: handle no L2s
-    table.location_id.widget = S3LocationSelectorWidget2(levels=["L1","L2","L3"],
+    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
+    table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
+                                                         hide_lx=False,
+                                                         reverse_lx=True,
                                                          show_address=True,
                                                          show_postcode=True,
                                                          )
@@ -522,8 +527,10 @@ def customize_stats_resident(**attr):
     tablename = "stats_resident"
     table = current.s3db[tablename]
     table.location_id.label = "" # Gets replaced by widget
-    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L1","L2","L3"]) # @ToDo: handle no L2s
-    table.location_id.widget = S3LocationSelectorWidget2(levels=["L1","L2","L3"],
+    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
+    table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
+                                                         hide_lx=False,
+                                                         reverse_lx=True,
                                                          show_address=True,
                                                          show_postcode=True,
                                                          )
@@ -543,8 +550,10 @@ def customize_stats_trained(**attr):
     tablename = "stats_trained"
     table = current.s3db[tablename]
     table.location_id.label = "" # Gets replaced by widget
-    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L1","L2","L3"]) # @ToDo: handle no L2s
-    table.location_id.widget = S3LocationSelectorWidget2(levels=["L1","L2","L3"],
+    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
+    table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
+                                                         hide_lx=False,
+                                                         reverse_lx=True,
                                                          show_address=True,
                                                          show_postcode=True,
                                                          )
@@ -564,8 +573,8 @@ def customize_vulnerability_evac_route(**attr):
     tablename = "vulnerability_evac_route"
     table = current.s3db[tablename]
     table.location_id.label = "" # Gets replaced by widget
-    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L1","L2","L3"]) # @ToDo: handle no L2s
-    table.location_id.widget = S3LocationSelectorWidget2(levels=["L1","L2","L3"],
+    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
+    table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
                                                          polygons=True,
                                                          )
 

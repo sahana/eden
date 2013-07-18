@@ -1,6 +1,6 @@
-from geopy.point import Point
-from geopy.location import Location
-from geopy import geocoders
+from point import Point
+from location import Location
+import geocoders
 
 VERSION = (0, 95, 1)
 

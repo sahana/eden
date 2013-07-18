@@ -1,4 +1,4 @@
-from geopy.point import Point
+from point import Point
 
 class Location(object):
     def __init__(self, name="", point=None, attributes=None, **kwargs):

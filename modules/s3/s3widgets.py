@@ -3411,6 +3411,7 @@ class S3LocationSelectorWidget2(FormWidget):
     def __call__(self, field, value, **attributes):
 
         levels = self.levels
+        hide_lx = self.hide_lx
         show_address = self.show_address
         show_postcode = self.show_postcode
         show_map = self.show_map
@@ -3426,10 +3427,12 @@ class S3LocationSelectorWidget2(FormWidget):
         formstyle = s3.crud.formstyle # Currently only Bootstrap has been tested
         request = current.request
 
+        # Read the currently active GIS config
+        config = gis.get_config()
+
         default = field.default
         if not default:
             # Check for a default location in the active gis_config
-            config = gis.get_config()
             default = config.default_location_id
 
         gtable = s3db.gis_location
@@ -3454,7 +3457,6 @@ class S3LocationSelectorWidget2(FormWidget):
                               ]
         else:
             default_L0 = 0
-            config = gis.get_config()
             default_bounds = [config.lon_min,
                               config.lat_min,
                               config.lon_max,
@@ -3463,9 +3465,8 @@ class S3LocationSelectorWidget2(FormWidget):
             # @ToDo: Lookup Labels dynamically when L0 changes
             raise NotImplementedError
 
-        # @ToDo: Which geocoder(s) should we use?
-        # Lookup country in gis_config
-        geocoder = False
+        # Should we use a Geocoder?
+        geocoder = config.geocoder
 
         values = dict(L0 = default_L0,
                       L1 = 0,
@@ -3583,7 +3584,18 @@ class S3LocationSelectorWidget2(FormWidget):
                              _id="%s_L0" % fieldname,
                              value=default_L0,
                              )
-        Lx_inputs = TAG[""](L0_input)
+        if "L1" in levels:
+            L1_input = ""
+        else:
+            # Have a hidden L1 input
+            # - used for Geocoder
+            L1_input = INPUT(_name="L1",
+                             _id="%s_L1" % fieldname,
+                             value=default_L1,
+                             )
+        Lx_inputs = TAG[""](L0_input,
+                            L1_input,
+                            )
 
         if show_address:
             # Street Address
@@ -3636,7 +3648,7 @@ class S3LocationSelectorWidget2(FormWidget):
             elif callable(formstyle):
                 # @ToDo: Test
                 comment = ""
-                postcode_row = formstyle(id, label, widget, comment, hidden=True)
+                postcode_row = formstyle(id, label, widget, comment, hidden=hidden)
             else:
                 # Unsupported
                 raise
@@ -3687,7 +3699,7 @@ class S3LocationSelectorWidget2(FormWidget):
             Lx_rows.append(row)
             # Subsequent levels are hidden by default
             # (client-side JS will open when-needed)
-            hidden = True
+            hidden = hide_lx
 
         # @ToDo: Don't assume we start at L1
         query = (gtable.deleted == False) & \
@@ -3812,13 +3824,6 @@ class S3LocationSelectorWidget2(FormWidget):
                                _id = row_id,
                                _class = "control-group hide",
                                )
-                if geocoder:
-                    geocode_button = BUTTON(T("Geocode"),
-                                            _id="%s_geocode" % fieldname,
-                                            _class="hide",
-                                            )
-                else:
-                    geocode_button = None
             else:
                 # @ToDo: Icon in default CSS
                 # @ToDo: Test
@@ -3828,14 +3833,16 @@ class S3LocationSelectorWidget2(FormWidget):
                 widget = ""
                 comment = ""
                 map_icon = formstyle(row_id, label, widget, comment)
-                if geocoder:
-                    geocode_button = BUTTON(T("Geocode"),
-                                            _id="%s_geocode" % fieldname,
-                                            _class="hide",
-                                            )
-                else:
-                    geocode_button = None
-            map = TAG[""](map, map_icon, geocode_button)
+            if geocoder:
+                map_icon.append(DIV(DIV(T("Address Mapped"),
+                                        _class="geocode_success hide"),
+                                    DIV(T("Address NOT Mapped"),
+                                        _class="geocode_fail hide"),
+                                    BUTTON(T("Geocode"),
+                                           _class="hide"),
+                                    _id="%s_geocode" % fieldname,
+                                    ))
+            map = TAG[""](map, map_icon)
         else:
             map = ""
 

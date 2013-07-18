@@ -1,2 +1,2 @@
 Name,Description,URL,Layers,Folder,Enabled,Visible,Base,Transparent,Opacity,Format,Queryable,LegendURL,Tiled,Map
-Population,"2010 Census","http://lacrmt.sahanafoundation.org:8080/geoserver/gwc/service/wms","lacrmt:population",Demographics,True,False,False,True,,"image/png",True,,True,
+Population,"2010 Census, http://www.census.gov/2010census/ DP0010001","http://lacrmt.sahanafoundation.org:8080/geoserver/gwc/service/wms","lacrmt:population",Demographics,True,False,False,True,,"image/png",True,,True,
