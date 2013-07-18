@@ -1069,6 +1069,14 @@ ul.x-tree-root-ct {
     list-style: none outside none;
 }
 
+/* LocationSelector 2 */
+.geocode_success {
+    color: #0a0;
+}
+.geocode_fail {
+    color: #f00;
+}
+
 /* Search Form */
 .search_select_letter_label,
 .s3-grouped-checkboxes-widget-label,

@@ -389,7 +389,20 @@
 
         // Listen for changes
         $(selector + '_address').change(function() {
-            geocode(fieldname);
+            var real_input = $(selector);
+            var manually_geocoded = real_input.data('manually_geocoded');
+            if (manually_geocoded) {
+                // Show a button to allow the user to do a new automatic Geocode
+                $(selector + '_geocode button').removeClass('hide')
+                                               .show()
+                                               .click(function() {
+                    geocode(fieldname);
+                    resetHidden(fieldname);
+                });
+            } else {
+                // Do an Automatic Geocode
+                geocode(fieldname);
+            }
             resetHidden(fieldname);
         });
     }
@@ -671,6 +684,8 @@
                         centerPoint.transform(map.getProjectionObject(), gis.proj4326);
                         latfield.val(centerPoint.lat);
                         lonfield.val(centerPoint.lon);
+                        // Store the fact that we've now added Marker manually
+                        real_input.data('manually_geocoded', true);
                         // Reverse Geocode the Point
                         geocode_r(fieldname);
                     } else {

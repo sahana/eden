@@ -199,9 +199,7 @@ class S3ProjectModel(S3Model):
                                     updateable = True,
                                     ),
                                 ),
-                             Field("name",
-                                   length = 255,
-                                   unique = True,
+                             Field("name", unique=True, length=255,
                                    label = T("Name"),
                                    # Require unique=True if using IS_NOT_ONE_OF like here (same table,
                                    # no filter) in order to allow both automatic indexing (faster)

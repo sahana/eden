@@ -71,7 +71,7 @@ class S3XLS(S3Codec):
     # -------------------------------------------------------------------------
     def extractResource(self, resource, list_fields):
         """
-            Extract the items from the resource
+            Extract the rows from the resource
 
             @param resource: the resource
             @param list_fields: fields to include in list views
@@ -87,6 +87,8 @@ class S3XLS(S3Codec):
         if orderby is None:
             orderby = resource.get_config("orderby", None)
 
+        #from ..s3utils import s3_debug
+        #s3_debug("left", [str(l) for l in left])
         result = resource.select(list_fields,
                                  left=left,
                                  limit=None,
@@ -97,7 +99,7 @@ class S3XLS(S3Codec):
                                  show_links=False)
 
         rfields = result["rfields"]
-        items = result["rows"]
+        rows = result["rows"]
         
         types = []
         lfields = []
@@ -111,7 +113,7 @@ class S3XLS(S3Codec):
                 else:
                     types.append(rfield.ftype)
 
-        return (title, types, lfields, heading, items)
+        return (title, types, lfields, heading, rows)
 
     # -------------------------------------------------------------------------
     def encode(self, data_source, **attr):
@@ -133,21 +135,33 @@ class S3XLS(S3Codec):
                  * use_colour:     True to add colour to the cells. default False
         """
 
+        request = current.request
+
         import datetime
         try:
             import xlwt
         except ImportError:
-            current.session.error = self.ERROR.XLWT_ERROR
-            redirect(URL(extension=""))
+            if current.auth.permission.format in request.INTERACTIVE_FORMATS:
+                current.session.error = self.ERROR.XLWT_ERROR
+                redirect(URL(extension=""))
+            else:
+                from ..s3utils import s3_debug
+                error = self.ERROR.XLWT_ERROR
+                s3_debug(error)
+                return error
         try:
             from xlrd.xldate import xldate_from_date_tuple, \
                                     xldate_from_time_tuple, \
                                     xldate_from_datetime_tuple
         except ImportError:
-            current.session.error = self.ERROR.XLRD_ERROR
-            redirect(URL(extension=""))
-
-        request = current.request
+            if current.auth.permission.format in request.INTERACTIVE_FORMATS:
+                current.session.error = self.ERROR.XLRD_ERROR
+                redirect(URL(extension=""))
+            else:
+                from ..s3utils import s3_debug
+                error = self.ERROR.XLRD_ERROR
+                s3_debug(error)
+                return error
 
         # The xlwt library supports a maximum of 182 characters in a single cell
         max_cell_size = 182
@@ -166,12 +180,12 @@ class S3XLS(S3Codec):
         if isinstance(data_source, (list, tuple)):
             headers = data_source[0]
             types = data_source[1]
-            items = data_source[2:]
+            rows = data_source[2:]
         else:
-            (title, types, lfields, headers, items) = self.extractResource(data_source,
-                                                                           list_fields)
+            (title, types, lfields, headers, rows) = self.extractResource(data_source,
+                                                                          list_fields)
         report_groupby = lfields[group] if group else None
-        if len(items) > 0 and len(headers) != len(items[0]):
+        if len(rows) > 0 and len(headers) != len(rows[0]):
             from ..s3utils import s3_debug
             msg = """modules/s3/codecs/xls: There is an error in the list_items, a field doesn't exist"
 requesting url %s
@@ -183,7 +197,9 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
 
         # Date/Time formats from L10N deployment settings
         settings = current.deployment_settings
-        date_format = S3XLS.dt_format_translate(settings.get_L10n_date_format())
+        date_format = settings.get_L10n_date_format()
+        date_format_str = str(date_format)
+        date_format = S3XLS.dt_format_translate(date_format)
         time_format = S3XLS.dt_format_translate(settings.get_L10n_time_format())
         datetime_format = S3XLS.dt_format_translate(settings.get_L10n_datetime_format())
 
@@ -285,7 +301,7 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
         rowCnt = 0
 
         subheading = None
-        for item in items:
+        for row in rows:
             # Item details
             rowCnt += 1
             currentRow = sheet1.row(rowCnt)
@@ -295,7 +311,7 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
             else:
                 style = styleOdd
             if report_groupby:
-                represent = s3_strip_markup(s3_unicode(item[report_groupby]))
+                represent = s3_strip_markup(s3_unicode(row[report_groupby]))
                 if subheading != represent:
                     subheading = represent
                     sheet1.write_merge(rowCnt, rowCnt, 0, totalCols,
@@ -315,7 +331,7 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                     # Skip the ID column from XLS exports
                     colCnt += 1
                     continue
-                represent = s3_strip_markup(s3_unicode(item[field]))
+                represent = s3_strip_markup(s3_unicode(row[field]))
                 coltype = types[colCnt]
                 if coltype == "sort":
                     continue
@@ -324,9 +340,8 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                 value = represent
                 if coltype == "date":
                     try:
-                        format = str(settings.get_L10n_date_format())
                         cell_datetime = datetime.datetime.strptime(value,
-                                                                   format)
+                                                                   date_format_str)
                         date_tuple = (cell_datetime.year,
                                       cell_datetime.month,
                                       cell_datetime.day)
@@ -336,9 +351,8 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                         pass
                 elif coltype == "datetime":
                     try:
-                        format = str(settings.get_L10n_date_format())
                         cell_datetime = datetime.datetime.strptime(value,
-                                                                   format)
+                                                                   date_format_str)
                         date_tuple = (cell_datetime.year,
                                       cell_datetime.month,
                                       cell_datetime.day,
@@ -351,9 +365,8 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                         pass
                 elif coltype == "time":
                     try:
-                        format = str(settings.get_L10n_date_format())
                         cell_datetime = datetime.datetime.strptime(value,
-                                                                   format)
+                                                                   date_format_str)
                         date_tuple = (cell_datetime.hour,
                                       cell_datetime.minute,
                                       cell_datetime.second)

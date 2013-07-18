@@ -3430,6 +3430,21 @@ class S3LocationSelectorWidget2(FormWidget):
         # Read the currently active GIS config
         config = gis.get_config()
 
+        # Should we use a Geocoder?
+        geocoder = config.geocoder
+
+        # List of all levels up to the lowest we specify
+        if "L5" in levels:
+            _levels = ["L0", "L1", "L2", "L3", "L4", "L5"]
+        elif "L4" in levels:
+            _levels = ["L0", "L1", "L2", "L3", "L4"]
+        elif "L3" in levels:
+            _levels = ["L0", "L1", "L2", "L3"]
+        elif "L2" in levels:
+            _levels = ["L0", "L1", "L2"]
+        elif "L1" in levels:
+            _levels = ["L0", "L1"]
+
         default = field.default
         if not default:
             # Check for a default location in the active gis_config
@@ -3437,38 +3452,7 @@ class S3LocationSelectorWidget2(FormWidget):
 
         gtable = s3db.gis_location
 
-        countries = settings.get_gis_countries()
-        if len(countries) == 1:
-            ttable = s3db.gis_location_tag
-            query = (ttable.tag == "ISO2") & \
-                    (ttable.value == countries[0]) & \
-                    (ttable.location_id == gtable.id)
-            country = db(query).select(gtable.id,
-                                       gtable.lat_min,
-                                       gtable.lon_min,
-                                       gtable.lat_max,
-                                       gtable.lon_max,
-                                       limitby=(0, 1)).first()
-            default_L0 = country.id
-            default_bounds = [country.lon_min,
-                              country.lat_min,
-                              country.lon_max,
-                              country.lat_max
-                              ]
-        else:
-            default_L0 = 0
-            default_bounds = [config.lon_min,
-                              config.lat_min,
-                              config.lon_max,
-                              config.lat_max
-                              ]
-            # @ToDo: Lookup Labels dynamically when L0 changes
-            raise NotImplementedError
-
-        # Should we use a Geocoder?
-        geocoder = config.geocoder
-
-        values = dict(L0 = default_L0,
+        values = dict(L0 = 0,
                       L1 = 0,
                       L2 = 0,
                       L3 = 0,
@@ -3476,6 +3460,163 @@ class S3LocationSelectorWidget2(FormWidget):
                       L5 = 0,
                       specific = 0,
                       )
+        if default:
+            fields = [gtable.path,
+                      gtable.level,
+                      gtable.lat_min,
+                      gtable.lon_min,
+                      gtable.lat_max,
+                      gtable.lon_max,
+                      ]
+            if not value or value == default:
+                fields += [gtable.parent,
+                           gtable.inherited,
+                           gtable.lat,
+                           gtable.lon,
+                           gtable.wkt,
+                           gtable.addr_street,
+                           gtable.addr_postcode,
+                           ]
+            record = db(gtable.id == default).select(*fields,
+                                                     limitby=(0, 1)).first()
+            level = record.level
+            
+            path = record.path.split("/")
+            default_L0_bounds = None
+            default_L1_bounds = None
+            default_L2_bounds = None
+            default_L3_bounds = None
+            default_L4_bounds = None
+            path_ok = True
+            if level:
+                if len(path) != (int(level[1:]) + 1):
+                    # We don't have a full path
+                    path_ok = False
+                bounds = [record.lon_min,
+                          record.lat_min,
+                          record.lon_max,
+                          record.lat_max
+                          ]
+                if level == "L0":
+                    default_L0_bounds = [b for b in bounds]
+                elif level == "L1":
+                    default_L1_bounds = [b for b in bounds]
+                elif level == "L2":
+                    default_L2_bounds = [b for b in bounds]
+                elif level == "L3":
+                    default_L3_bounds = [b for b in bounds]
+                elif level == "L4":
+                    default_L4_bounds = [b for b in bounds]
+            else:
+                # Specific location
+                if len(path) < (len(_levels) + 1):
+                    # We don't have a full path
+                    path_ok = False
+
+            if path_ok:
+                for _level in _levels:
+                    l = int(_level[1:])
+                    if len(path) > l:
+                        id = path[l]
+                        values[_level] = id
+                        if _level == "L0" and not default_L0_bounds or \
+                           _level == "L1" and not default_L1_bounds or \
+                           _level == "L2" and not default_L2_bounds or \
+                           _level == "L3" and not default_L3_bounds or \
+                           _level == "L4" and not default_L4_bounds:
+                            row = db(gtable.id == id).select(gtable.lat_min,
+                                                             gtable.lon_min,
+                                                             gtable.lat_max,
+                                                             gtable.lon_max,
+                                                             limitby=(0, 1)
+                                                             ).first()
+                            if row:
+                                bounds = [row.lon_min,
+                                          row.lat_min,
+                                          row.lon_max,
+                                          row.lat_max
+                                          ]
+                                if _level == "L0":
+                                    default_L0_bounds = [b for b in bounds]
+                                elif _level == "L1":
+                                    default_L1_bounds = [b for b in bounds]
+                                elif _level == "L2":
+                                    default_L2_bounds = [b for b in bounds]
+                                elif _level == "L3":
+                                    default_L3_bounds = [b for b in bounds]
+                                elif _level == "L4":
+                                    default_L4_bounds = [b for b in bounds]
+            else:
+                # Retrieve all records in the path to match them up to their Lx
+                rows = db(gtable.id.belongs(path)).select(gtable.id,
+                                                          gtable.level,
+                                                          gtable.lat_min,
+                                                          gtable.lon_min,
+                                                          gtable.lat_max,
+                                                          gtable.lon_max,
+                                                          )
+                for row in rows:
+                    level = row.level
+                    bounds = [row.lon_min,
+                              row.lat_min,
+                              row.lon_max,
+                              row.lat_max
+                              ]
+                    if level == "L0":
+                        default_L0_bounds = [b for b in bounds]
+                    elif level == "L1":
+                        default_L1_bounds = [b for b in bounds]
+                    elif level == "L2":
+                        default_L2_bounds = [b for b in bounds]
+                    elif level == "L3":
+                        default_L3_bounds = [b for b in bounds]
+                    elif level == "L4":
+                        default_L4_bounds = [b for b in bounds]
+                    values[level] = row.id
+            default_L0 = values["L0"]
+            default_L1 = values["L1"]
+            default_L2 = values["L2"]
+            default_L3 = values["L3"]
+            default_L4 = values["L4"]
+            default_L5 = values["L5"]
+        else:
+            default_L0 = 0
+            default_L1 = 0
+            default_L2 = 0
+            default_L3 = 0
+            default_L4 = 0
+            default_L5 = 0
+
+        if not default_L0:
+            countries = settings.get_gis_countries()
+            if len(countries) == 1:
+                ttable = s3db.gis_location_tag
+                query = (ttable.tag == "ISO2") & \
+                        (ttable.value == countries[0]) & \
+                        (ttable.location_id == gtable.id)
+                country = db(query).select(gtable.id,
+                                           gtable.lat_min,
+                                           gtable.lon_min,
+                                           gtable.lat_max,
+                                           gtable.lon_max,
+                                           limitby=(0, 1)).first()
+                default_L0 = country.id
+                values["L0"] = default_L0
+                default_L0_bounds = [country.lon_min,
+                                     country.lat_min,
+                                     country.lon_max,
+                                     country.lat_max
+                                     ]
+            else:
+                # @ToDo: Lookup Labels dynamically when L0 changes
+                raise NotImplementedError
+                default_L0 = 0
+                default_bounds = [config.lon_min,
+                                  config.lat_min,
+                                  config.lon_max,
+                                  config.lat_max
+                                  ]
+
         parent = ""
         # Keep the selected Lat/Lon/Address/Postcode during validation errors
         post_vars = request.post_vars
@@ -3491,28 +3632,61 @@ class S3LocationSelectorWidget2(FormWidget):
         if not value:
             value = default
         if value:
-            record = db(gtable.id == value).select(gtable.path,
-                                                   gtable.parent,
-                                                   gtable.level,
-                                                   gtable.inherited,
-                                                   gtable.lat,
-                                                   gtable.lon,
-                                                   gtable.wkt,
-                                                   gtable.addr_street,
-                                                   gtable.addr_postcode,
-                                                   limitby=(0, 1)).first()
-            if not record:
-                raise ValueError
-            parent = record.parent
-            level = record.level
-            path = record.path.split("/")
-            path_ok = True
-            if level:
-                if len(path) != (int(level[1:]) + 1):
-                    # We don't have a full path
-                    path_ok = False
-            else:
-                # Specific location
+            if value != default:
+                values = dict(L0 = 0,
+                              L1 = 0,
+                              L2 = 0,
+                              L3 = 0,
+                              L4 = 0,
+                              L5 = 0,
+                              specific = 0,
+                              )
+                record = db(gtable.id == value).select(gtable.path,
+                                                       gtable.parent,
+                                                       gtable.level,
+                                                       gtable.inherited,
+                                                       gtable.lat,
+                                                       gtable.lon,
+                                                       gtable.wkt,
+                                                       gtable.addr_street,
+                                                       gtable.addr_postcode,
+                                                       limitby=(0, 1)).first()
+                if not record:
+                    raise ValueError
+                level = record.level
+                path = record.path.split("/")
+                path_ok = True
+                if level:
+                    if len(path) != (int(level[1:]) + 1):
+                        # We don't have a full path
+                        path_ok = False
+                else:
+                    # Specific location
+                    # Only use a specific Lat/Lon when they are not inherited
+                    if not record.inherited:
+                        lat = record.lat
+                        lon = record.lon
+                        wkt = record.wkt if polygons else ""
+                    address = record.addr_street
+                    postcode = record.addr_postcode
+                    values["specific"] = value
+                    if len(path) < (len(_levels) + 1):
+                        # We don't have a full path
+                        path_ok = False
+
+                if path_ok:
+                    for _level in _levels:
+                        l = int(_level[1:])
+                        if len(path) > l:
+                            id = path[l]
+                            values[_level] = id
+                else:
+                    # Retrieve all records in the path to match them up to their Lx
+                    rows = db(gtable.id.belongs(path)).select(gtable.id,
+                                                              gtable.level)
+                    for row in rows:
+                        values[row.level] = row.id
+            elif not level:
                 # Only use a specific Lat/Lon when they are not inherited
                 if not record.inherited:
                     lat = record.lat
@@ -3521,22 +3695,7 @@ class S3LocationSelectorWidget2(FormWidget):
                 address = record.addr_street
                 postcode = record.addr_postcode
                 values["specific"] = value
-                if len(path) < (len(levels) + 1):
-                    # We don't have a full path
-                    path_ok = False
-
-            if path_ok:
-                for l in levels:
-                    try:
-                        values[l] = path[int(l[1:])]
-                    except:
-                        pass
-            else:
-                # Retrieve all records in the path to match them up to their Lx
-                rows = db(gtable.id.belongs(path)).select(gtable.id,
-                                                          gtable.level)
-                for row in rows:
-                    values[row.level] = row.id
+            parent = record.parent
 
         fieldname = str(field).replace(".", "_")
 
@@ -3584,17 +3743,55 @@ class S3LocationSelectorWidget2(FormWidget):
                              _id="%s_L0" % fieldname,
                              value=default_L0,
                              )
-        if "L1" in levels:
-            L1_input = ""
-        else:
+        if "L1" not in levels and \
+           "L1" in _levels:
             # Have a hidden L1 input
             # - used for Geocoder
             L1_input = INPUT(_name="L1",
                              _id="%s_L1" % fieldname,
                              value=default_L1,
                              )
+        else:
+            L1_input = ""
+
+        if "L2" not in levels and \
+           "L2" in _levels:
+            # Have a hidden L2 input
+            # - used for Geocoder & to attach Street Addresses to
+            L2_input = INPUT(_name="L2",
+                             _id="%s_L2" % fieldname,
+                             value=default_L2,
+                             )
+        else:
+            L2_input = ""
+
+        if "L3" not in levels and \
+           "L3" in _levels:
+            # Have a hidden L3 input
+            # - used for Geocoder & to attach Street Addresses to
+            L3_input = INPUT(_name="L3",
+                             _id="%s_L3" % fieldname,
+                             value=default_L3,
+                             )
+        else:
+            L3_input = ""
+
+        if "L4" not in levels and \
+           "L4" in _levels:
+            # Have a hidden L4 input
+            # - used for Geocoder & to attach Street Addresses to
+            L4_input = INPUT(_name="L4",
+                             _id="%s_L4" % fieldname,
+                             value=default_L4,
+                             )
+        else:
+            L4_input = ""
+
         Lx_inputs = TAG[""](L0_input,
                             L1_input,
+                            L2_input,
+                            L3_input,
+                            L4_input,
                             )
 
         if show_address:
@@ -3657,13 +3854,13 @@ class S3LocationSelectorWidget2(FormWidget):
 
         # Hierarchy Labels
         htable = s3db.gis_hierarchy
-        fields = [htable[level] for level in levels]
+        fields = [htable[level] for level in levels if level != "L0"]
         labels = db(htable.location_id == default_L0).select(*fields,
                                                              limitby=(0, 1)).first()
 
         # Lx Dropdowns
         Lx_rows = DIV()
-        # 1st level is always visible (except in Bootstrap)
+        # 1st level is always visible (except in Bootstrap where all hidden until moved)
         hidden = False
         for level in levels:
             id = "%s_%s" % (fieldname, level)
@@ -3702,9 +3899,22 @@ class S3LocationSelectorWidget2(FormWidget):
             hidden = hide_lx
 
         # @ToDo: Don't assume we start at L1
-        query = (gtable.deleted == False) & \
-                (gtable.level == "L1") & \
-                (gtable.parent == default_L0)
+        if default_L0 and "L1" in levels:
+            query = (gtable.level == "L1") & \
+                    (gtable.parent == default_L0)
+        elif default_L1 and "L2" in levels:
+            query = (gtable.level == "L2") & \
+                    (gtable.parent == default_L1)
+        elif default_L2 and "L3" in levels:
+            query = (gtable.level == "L3") & \
+                    (gtable.parent == default_L2)
+        elif default_L3 and "L4" in levels:
+            query = (gtable.level == "L4") & \
+                    (gtable.parent == default_L3)
+        elif default_L4 and "L5" in levels:
+            query = (gtable.level == "L5") & \
+                    (gtable.parent == default_L4)
+        query &= (gtable.deleted == False)
         locations = db(query).select(gtable.id,
                                      gtable.name,
                                      gtable.level,
@@ -3716,7 +3926,7 @@ class S3LocationSelectorWidget2(FormWidget):
                                      gtable.lon_max,
                                      )
         top = dict(id = default_L0,
-                   b = default_bounds)
+                   b = default_L0_bounds)
         location_dict = dict(d=top)
         for location in locations:
             if location.inherited:
@@ -3736,7 +3946,19 @@ class S3LocationSelectorWidget2(FormWidget):
                                                        )
         if default_L0 and default_L0 not in location_dict:
             location_dict[default_L0] = dict(l=0,
-                                             b=default_bounds)
+                                             b=default_L0_bounds)
+        if default_L1 and default_L1 not in location_dict:
+            location_dict[default_L1] = dict(l=1,
+                                             b=default_L1_bounds)
+        if default_L2 and default_L2 not in location_dict:
+            location_dict[default_L2] = dict(l=2,
+                                             b=default_L2_bounds)
+        if default_L3 and default_L3 not in location_dict:
+            location_dict[default_L3] = dict(l=3,
+                                             b=default_L3_bounds)
+        if default_L4 and default_L4 not in location_dict:
+            location_dict[default_L4] = dict(l=4,
+                                             b=default_L4_bounds)
 
         if not location_selector_loaded:
             script = '''l=%s''' % json.dumps(location_dict)
@@ -3754,7 +3976,7 @@ class S3LocationSelectorWidget2(FormWidget):
         specific = values["specific"]
         args = [default_L0]
         if specific:
-            # We need to proivde all args
+            # We need to provide all args
             args += [L1, values["L2"], values["L3"], values["L4"], values["L5"], specific]
         elif L1:
             # Add only required args
@@ -3841,6 +4063,7 @@ class S3LocationSelectorWidget2(FormWidget):
                                     BUTTON(T("Geocode"),
                                            _class="hide"),
                                     _id="%s_geocode" % fieldname,
+                                    _class="controls",
                                     ))
             map = TAG[""](map, map_icon)
         else:
