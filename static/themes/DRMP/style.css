@@ -484,6 +484,21 @@ table.embeddedComponent .add-row td {
     margin-bottom: -6px;
 }
 
+/* Multi Select */
+
+label.ui-corner-all {
+    margin-left: 5px;
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+label.ui-corner-all span {
+    position: relative;
+    top: 5px;
+    left: 10px;
+    font-size: 12px;
+}
+
 /* Updates */
 #body__error,
 #name__error,

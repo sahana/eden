@@ -610,14 +610,13 @@ class S3CMS(S3Method):
         if _item:
             if ADMIN:
                 item = DIV(XML(_item.body),
-                           BR(),
                            A(current.T("Edit"),
                              _href=URL(c="cms", f="post",
                                        args=[_item.id, "update"],
                                        vars={"module": module,
                                              "resource": resource
                                              }),
-                             _class="action-btn"))
+                             _class="action-btn cms-edit"))
             else:
                 item = XML(_item.body)
         elif ADMIN:

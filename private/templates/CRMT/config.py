@@ -138,6 +138,10 @@ settings.ui.summary = [{"common": True,
 # View Settings
 
 current.response.menu = [
+                {"name": T("Locations"),
+                 "url": URL(c="org", f="facility"),
+                 "icon": "icon-home"
+                 },
                 {"name": T("Residents"),
                  "url": URL(c="stats", f="resident"),
                  "icon": "icon-group"
@@ -154,17 +158,13 @@ current.response.menu = [
                  "url": URL(c="project", f="activity"),
                  "icon": "icon-star-empty"
                  },
-                {"name": T("Organizations"),
-                 "url": URL(c="org", f="organisation"),
-                 "icon": "icon-sitemap"
-                 },
+                #{"name": T("Organizations"),
+                # "url": URL(c="org", f="organisation"),
+                # "icon": "icon-sitemap"
+                # },
                 {"name": T("Trained People"),
                  "url": URL(c="stats", f="trained"),
                  "icon": "icon-user"
-                 },
-                {"name": T("Locations"),
-                 "url": URL(c="org", f="facility"),
-                 "icon": "icon-home"
                  },
                 {"name": T("Evacuation Routes"),
                  "url": URL(c="vulnerability", f="evac_route"),
