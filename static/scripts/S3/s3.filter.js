@@ -646,7 +646,7 @@ S3.search = {};
                 // Update all just-unhidden widgets which have pending updates
                 updatePendingTargets(form);
             }
-        });
+        }).show();
     };
 
     /**

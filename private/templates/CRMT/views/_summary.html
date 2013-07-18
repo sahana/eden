@@ -1,18 +1,18 @@
 {{try:}}{{=H2(title, _class="summary")}}{{except:}}{{pass}}
 <a href='{{=URL(c=request.controller, f=request.function, args="create")}}' class="btn btn-info summary-create" type="button"><i class='icon-plus'></i></a>
-<div id='summary-tabs'>
 <div id='summary-common'>
 {{try:}}{{for section in common:}}{{=section}}{{pass}}{{except:}}{{pass}}
-<div id='filter-form' class='form-container'>
-{{try:}}{{=filter_form}}{{except:}}{{pass}}
 </div>
-</div>
-<div id='summary-tab-headers'>
-{{try:}}{{=tabs}}{{except:}}{{pass}}
-</div>
-<div id='summary-sections'>
-{{try:}}{{for section in sections:}}{{=section}}{{pass}}{{except:}}{{pass}}
-</div>
+<div id='summary-tabs'>
+ <div id='summary-tab-headers'>
+  {{try:}}{{=tabs}}{{except:}}{{pass}}
+ </div>
+ <div id='summary-sections'>
+  {{try:}}{{for section in sections:}}{{=section}}{{pass}}{{except:}}{{pass}}
+ </div>
+ <div id='filter-form' class='form-container'>
+  {{try:}}{{=filter_form}}{{except:}}{{pass}}
+ </div>
 </div>
 {{include "dataTables.html"}}
 {{include "dataLists.html"}}
