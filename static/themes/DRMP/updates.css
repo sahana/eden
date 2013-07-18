@@ -227,19 +227,6 @@ button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
     width: 15% !important;
 }
 
-label.ui-corner-all {
-    margin-left: 5px;
-    margin-bottom: 0;
-    margin-top: 0;
-}
-
-label.ui-corner-all span {
-    position: relative;
-    top: 5px;
-    left: 10px;
-    font-size: 12px;
-}
-
 label#post-auth_user_organisation_id-options-filter__label,
 label#post-cms_post_series_id-options-filter__label,
 label#post-cms_post_created_on-date-filter__label,

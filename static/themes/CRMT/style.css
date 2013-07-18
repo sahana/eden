@@ -2,6 +2,9 @@
 #alert-space {
     padding-top: 20px;
 }
+body {
+    padding-top: 60px;
+}
 
 /* Summary Page */
 h2.summary {
@@ -12,9 +15,67 @@ h2.summary {
     background: linear-gradient(to bottom, #3788B3 0%, #235482 100%) repeat scroll 0 0 transparent;
     margin: 15px;
     padding: 4px 6px;
+    float: left;
 }
+
+#summary-common { 
+    float: left;
+    margin-top: 20px;
+}
+
+/* Hide while loading */
+#summary-tabs {
+    disaply: none;
+}
+
+#summary-tabs.ui-widget-content {
+    width: 100%;
+    background: none;
+    float: left;
+    margin-top: -33px;
+}
+
+#summary-tabs .ui-tabs-nav {
+    border: none;
+    margin-bottom: 0;
+}
+
 .ui-tabs {
     clear: left;
+}
+
+.ui-tabs .ui-tabs-nav li {
+    float: right;
+}
+
+#summary-sections {
+    background-color: white;
+}
+
+#summary-tabs #map {
+    margin-top: 0;
+}
+
+#summary-tabs #filter-form {
+    margin: 0 50px;
+    position: absolute;
+    top: 53px;
+    width: auto;
+    z-index: 1;
+}
+
+/* Hide Map Control - @ToDo in JS?*/
+#summary-tabs .x-panel-tbar {
+    display: none;
+}
+
+#summary-tabs .x-panel-body {
+    border: none;
+}
+
+#summary-tabs #table {
+    margin: 0 20px;
+    padding: 200px 0 20px;
 }
 
 /* Hide the colons for Location Selectors */
