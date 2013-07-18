@@ -23,11 +23,6 @@ h2.summary {
     margin-top: 20px;
 }
 
-/* Hide while loading */
-#summary-tabs {
-    disaply: none;
-}
-
 #summary-tabs.ui-widget-content {
     width: 100%;
     background: none;
@@ -52,21 +47,12 @@ h2.summary {
     background-color: white;
 }
 
-#summary-tabs #map {
-    margin-top: 0;
-}
-
 #summary-tabs #filter-form {
     margin: 0 50px;
     position: absolute;
     top: 53px;
     width: auto;
     z-index: 1;
-}
-
-/* Hide Map Control - @ToDo in JS?*/
-#summary-tabs .x-panel-tbar {
-    display: none;
 }
 
 #summary-tabs .x-panel-body {

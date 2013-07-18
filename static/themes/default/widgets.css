@@ -155,10 +155,16 @@ table.embeddedComponent tr.label-row td {
 }
 
 /* Summary Page */
+#summary-tabs {
+    /* Hide while loading */
+    display: none;
+}
+
 #summary-filter-form {
     margin: 0;
 }
 #summary-sections #map{
+    margin-top: 0;
     padding: 0;
 }
 
