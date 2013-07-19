@@ -801,10 +801,18 @@ class S3Resource(object):
                 fname = str(f)
                 qfields[fname] = f
 
-                if not tname:
-                    tname = fname.split(".", 1)[0]
-                if tname != tablename:
-                    qtables.append(tname)
+                tnames = None
+                for dfield in dfields:
+                    if dfield.colname == fname:
+                        tnames = dfield.left.keys()
+                        break
+                if not tnames:
+                    if not tname:
+                        tname = fname.split(".", 1)[0]
+                    if tname != tablename:
+                        qtables.append(tname)
+                else:
+                    qtables.extend([tn for tn in tnames if tn != tablename])
                     
             mfields.update(qfields)
 
