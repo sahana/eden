@@ -368,25 +368,25 @@ def organisation():
 
     request = current.request
     get_vars = request.get_vars
+    representation = request.extension
 
     resource = current.s3db.resource("org_organisation")
     totalrows = resource.count()
-    if "iDisplayLength" in get_vars:
-        display_length = int(request.get_vars["iDisplayLength"])
-    else:
-        display_length = 10
+    display_start = int(get_vars.iDisplayStart) if get_vars.iDisplayStart else 0
+    display_length = int(get_vars.iDisplayLength) if get_vars.iDisplayLength else 1
     limit = 4 * display_length
 
     list_fields = ["id", "name"]
-    filter, orderby, left = resource.datatable_filter(list_fields,
-                                                        get_vars)
-    resource.add_filter(filter)
+    default_orderby = orderby = "org_organisation.name asc"
+    if representation == "aadata":
+        query, orderby, left = resource.datatable_filter(list_fields, get_vars)
+        if orderby is None:
+            orderby = default_orderby
 
     data = resource.select(list_fields,
-                           start=0,
+                           start=display_start,
                            limit=limit,
                            orderby=orderby,
-                           left=left,
                            count=True,
                            represent=True)
     filteredrows = data["numrows"]
@@ -397,7 +397,7 @@ def organisation():
     dt.defaultActionButtons(resource)
     current.response.s3.no_formats = True
 
-    if request.extension == "html":
+    if representation == "html":
         items = dt.html(totalrows,
                         totalrows,
                         "org_dt",
@@ -409,7 +409,7 @@ def organisation():
                                         ),
                         dt_pagination="true",
                         )
-    elif request.extension.lower() == "aadata":
+    elif representation == "aadata":
         if "sEcho" in request.vars:
             echo = int(request.vars.sEcho)
         else:

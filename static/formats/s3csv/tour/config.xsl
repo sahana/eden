@@ -22,7 +22,7 @@
          Controller......................tour_config.controller
          Function........................tour_config.function
          Autostart.......................tour_config.autostart
-         Authenticated...................tour_config.authenticated
+         Role............................tour_config.role
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -47,9 +47,7 @@
             <xsl:if test="col[@field='Autostart']='T'">
                 <data field="autostart" value="true">True</data>
             </xsl:if>
-            <xsl:if test="col[@field='Authenticated']='T'">
-                <data field="authenticated" value="true">True</data>
-            </xsl:if>
+            <data field="role"><xsl:value-of select="col[@field='Role']"/></data>
         </resource>
 
     </xsl:template>
