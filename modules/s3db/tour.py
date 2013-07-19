@@ -86,11 +86,9 @@ class S3GuidedTourModel(S3Model):
                                         represent=lambda v: \
                                             T("Yes") if v else T("No"),
                                         label=T("Auto start")),
-                                  Field("authenticated", "boolean",
-                                        default=False,
-                                        represent=lambda v: \
-                                            T("Yes") if v else T("No"),
-                                        label=T("Authenticated user")),
+                                  Field("role", "string",
+                                        represent=lambda v: v or NONE,
+                                        label=T("User's role")),
                                   * s3_meta_fields()
                                   )
 

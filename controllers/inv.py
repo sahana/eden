@@ -46,23 +46,25 @@ def index2():
         #this also required views/inv/index.html to be modified
         from s3.s3data import S3DataTable
         vars = request.get_vars
-        if request.extension == "html" or request.vars.id == "warehouse_list_1":
+        representation = request.extension
+        if representation == "html" or request.vars.id == "warehouse_list_1":
             resource = s3db.resource("inv_warehouse")
+            totalrows = resource.count()
             list_fields = ["id",
                            "name",
                            "organisation_id",
                            ]
+            orderby = "inv_warehouse.name asc"
+            if representation == "aadata":
+                query, orderby, left = resource.datatable_filter(list_fields, request.get_vars)
+                if orderby is None:
+                    orderby = default_orderby
             start = int(vars.iDisplayStart) if vars.iDisplayStart else 0
             limit = int(vars.iDisplayLength) if vars.iDisplayLength else s3mgr.ROWSPERPAGE
-            searchq, orderby, left_joins = resource.datatable_filter(list_fields, request.get_vars)
-            if searchq:
-                totalrows = resource.count()
-                resource.add_filter(searchq)
-            else:
-                totalrows = None
             data = resource.select(list_fields,
                                    start=start,
                                    limit=limit,
+                                   orderby=orderby,
                                    count=True,
                                    represent=True)
             filteredrows = data["numrows"]
@@ -72,14 +74,14 @@ def index2():
             rows = data["rows"]
             dt = S3DataTable(rfields, rows)
             dt.defaultActionButtons(resource)
-            if request.extension == "html":
+            if representation == "html":
                 warehouses = dt.html(totalrows,
                                      filteredrows,
                                      "warehouse_list_1",
                                      dt_bFilter="true",
                                      dt_group=2,
                                      dt_ajax_url=URL(c="inv",
-                                                  f="index",
+                                                  f="index2",
                                                   extension="aadata",
                                                   vars={"id":"warehouse_list_1"},
                                                   ),
@@ -92,7 +94,7 @@ def index2():
                                     )
                 return warehouse
         # Second Table
-        if request.extension == "html" or request.vars.id == "inventory_list_1":
+        if representation == "html" or request.vars.id == "inventory_list_1":
             if "Adjust" in request.post_vars:
                 if request.post_vars.selected == "":
                     inventory = "Well you could have selected something :("
@@ -100,6 +102,7 @@ def index2():
                     inventory = "Adjustment not currently supported... :-) you selected the following items: %s" % request.post_vars.selected
             else:
                 resource = s3db.resource("inv_inv_item")
+                totalrows = resource.count()
                 table = resource.table
                 stable = s3db.supply_item
                 list_fields = ["id",
@@ -109,15 +112,15 @@ def index2():
                                "pack_value",
                                "total_value",
                                ]
-                searchq, orderby, left_joins = resource.datatable_filter(list_fields, request.get_vars)
-                if searchq:
-                    totalrows = resource.count()
-                    resource.add_filter(searchq)
-                else:
-                    totalrows = None
+                orderby = "inv_inv_item.site_id asc"
+                if representation == "aadata":
+                    query, orderby, left = resource.datatable_filter(list_fields, request.get_vars)
+                    if orderby is None:
+                        orderby = default_orderby
                 site_list = {}
                 data = resource.select(list_fields,
                                        limit=None,
+                                       orderby=orderby,
                                        count=True)
                 filteredrows = data["numrows"]
                 if totalrows is None:
@@ -157,7 +160,7 @@ def index2():
                                   ),
                                  ]
                 dt.defaultActionButtons(resource, custom_actions)
-                if request.extension == "html":
+                if representation == "html":
                     rows = current.db(table.quantity<100.0).select(table.id, table.quantity)
                     errorList = []
                     warningList = []
@@ -177,7 +180,7 @@ def index2():
                                         dt_group_totals=[formatted_site_list],
                                         dt_action_col=-1,
                                         dt_ajax_url=URL(c="inv",
-                                                     f="index",
+                                                     f="index2",
                                                      extension="aadata",
                                                      vars={"id":"inventory_list_1"},
                                                      ),
@@ -194,7 +197,7 @@ def index2():
                                         )
 
                     s3.actions = None
-                elif request.extension == "aadata":
+                elif representation == "aadata":
                     inventory = dt.json(totalrows,
                                         filteredrows,
                                         "inventory_list_1",
@@ -221,15 +224,21 @@ def index2():
                                )
                     return output
         # Third table
-        if request.extension == "html" or request.vars.id == "supply_list_1":
+        if representation == "html" or request.vars.id == "supply_list_1":
             resource = s3db.resource("supply_item")
             list_fields = ["id",
                            "name",
                            "um",
                            "model",
                            ]
+            orderby = "inv_inv_item.site_id asc"
+            if representation == "aadata":
+                query, orderby, left = resource.datatable_filter(list_fields, request.get_vars)
+                if orderby is None:
+                    orderby = default_orderby
             data = resource.select(list_fields,
                                    limit=None,
+                                   orderby=orderby,
                                    count=True,
                                    represent=True)
             rows = data["rows"]
@@ -237,14 +246,14 @@ def index2():
             numrows = data["numrows"]
             dt = S3DataTable(rfields, rows)
             dt.defaultActionButtons(resource)
-            if request.extension == "html":
+            if representation == "html":
                 supply_items = dt.html(numrows,
                                        numrows,
                                        "supply_list_1",
                                        dt_displayLength=10,
                                        dt_action_col=1,
                                        dt_ajax_url=URL(c="inv",
-                                                       f="index",
+                                                       f="index2",
                                                        extension="aadata",
                                                        vars={"id": "supply_list_1"},
                                                        ),
