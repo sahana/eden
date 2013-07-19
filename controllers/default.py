@@ -373,7 +373,7 @@ def organisation():
     resource = current.s3db.resource("org_organisation")
     totalrows = resource.count()
     display_start = int(get_vars.iDisplayStart) if get_vars.iDisplayStart else 0
-    display_length = int(get_vars.iDisplayLength) if get_vars.iDisplayLength else 1
+    display_length = int(get_vars.iDisplayLength) if get_vars.iDisplayLength else 10
     limit = 4 * display_length
 
     list_fields = ["id", "name"]
