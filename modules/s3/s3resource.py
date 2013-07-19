@@ -4127,7 +4127,7 @@ class S3Resource(object):
 
         db = current.db
 
-        left_joins = {}
+        left_joins = S3LeftJoins(self.tablename)
 
         sSearch = "sSearch"
         iColumns = "iColumns"
@@ -4143,10 +4143,7 @@ class S3Resource(object):
             skip = None
 
         # Resolve the list fields
-        rfields, joins, ljoins, distinct = self.resolve_selectors(fields)
-
-        # @todo: only include left joins which are actually in the query
-        left_joins.update(ljoins)
+        rfields, j, l, d = self.resolve_selectors(fields)
 
         # FILTER --------------------------------------------------------------
 
@@ -4174,9 +4171,14 @@ class S3Resource(object):
                         continue
                     ftype = str(field.type)
 
-                    # For foreign keys, we search through their sortby
+                    # Add left joins
+                    left_joins.extend(rfield.left)
+
                     if ftype[:9] == "reference" and \
                        hasattr(field, "sortby") and field.sortby:
+                        # For foreign keys, we search through their sortby
+
+                        # Get the lookup table
                         tn = ftype[10:]
                         if parent is not None and \
                            parent.tablename == tn and field.name != fkey:
@@ -4187,15 +4189,9 @@ class S3Resource(object):
                         else:
                             ktable = db[tn]
 
-                        # Add left joins for key table
-                        if tn != skip and tn not in left_joins:
-                            left_joins[tn] = ktable.on(field == ktable._id)
-                            if rfield.left:
-                                for joins in rfield.left.values():
-                                    for join in joins:
-                                        tname = join.first._tablename
-                                        if tname not in left_joins:
-                                            left_joins[tname] = join
+                        # Add left join for lookup table
+                        if tn != skip:
+                            left_joins.add(ktable.on(field == ktable._id))
 
                         if isinstance(field.sortby, (list, tuple)):
                             flist.extend([ktable[f] for f in field.sortby
@@ -4204,8 +4200,8 @@ class S3Resource(object):
                             if field.sortby in ktable.fields:
                                 flist.append(ktable[field.sortby])
 
-                    # Otherwise, we search through the field itself
                     else:
+                        # Otherwise, we search through the field itself
                         flist.append(field)
                         
             # Build search query
@@ -4293,11 +4289,11 @@ class S3Resource(object):
                     continue
                 ftype = str(field.type)
 
-                # Foreign keys with sortby will be ordered by sortby
                 if ftype[:9] == "reference" and \
                    hasattr(field, "sortby") and field.sortby:
-
-                    # Get the key table
+                    # Foreign keys with sortby will be sorted by sortby
+                    
+                    # Get the lookup table
                     tn = ftype[10:]
                     if parent is not None and \
                        parent.tablename == tn and field.name != fkey:
@@ -4308,15 +4304,10 @@ class S3Resource(object):
                     else:
                         ktable = db[tn]
 
-                    # Add left joins for key table
-                    if tn != skip and tn not in left_joins:
-                        left_joins[tn] = ktable.on(field == ktable._id)
-                        if rfield.left:
-                            for joins in rfield.left.values():
-                                for join in joins:
-                                    tname = join.first._tablename
-                                    if tname not in left_joins:
-                                        left_joins[tname] = join
+                    # Add left joins for lookup table
+                    if tn != skip:
+                        left_joins.extend(rfield.left)
+                        left_joins.add(ktable.on(field == ktable._id))
 
                     # Construct orderby from sortby
                     if not isinstance(field.sortby, (list, tuple)):
@@ -4326,8 +4317,8 @@ class S3Resource(object):
                                                   (tn, fn, direction(i))
                                                   for fn in field.sortby]))
 
-                # otherwise, order by the field itself
                 else:
+                    # Otherwise, we sort by the field itself
                     orderby.append("%s%s" % (field, direction(i)))
 
         if orderby:
@@ -4335,7 +4326,7 @@ class S3Resource(object):
         else:
             orderby = None
 
-        left_joins = list(s3_flatlist(left_joins.values()))
+        left_joins = left_joins.as_list(tablenames=left_joins.joins.keys())
         return (searchq, orderby, left_joins)
 
     # -------------------------------------------------------------------------

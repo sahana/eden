@@ -87,8 +87,6 @@ class S3XLS(S3Codec):
         if orderby is None:
             orderby = resource.get_config("orderby", None)
 
-        #from ..s3utils import s3_debug
-        #s3_debug("left", [str(l) for l in left])
         result = resource.select(list_fields,
                                  left=left,
                                  limit=None,
