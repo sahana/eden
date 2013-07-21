@@ -890,27 +890,34 @@ class TranslateReadFiles:
 
                     # if translate attribute is set to True
                     if translate:
+                        if hasattr(represent, "fields") == False:
+                            continue
+
                         # Consider it for transation (csv[3])
                         obj = CsvToWeb2py()
                         data = obj.read_csvfile(csv[3])
                         # Translating only "name" column for now.
                         title_row = data[0]
                         idx = 0
+                        fields = represent.fields
+                        idxlist = []
+                        idxappend = idxlist.append
                         for e in title_row:
-                            if e.lower() == "name":
-                                break
+                            if e.lower() in fields:
+                                idxappend(idx)
                             idx += 1
 
-                        # If "name" column is found
-                        if idx != len(title_row):
+                        # if list is not empty
+                        if idxlist:
                             # Line number of string retreived.
                             line_number = 1
                             for row in data[1:]:
                                 line_number += 1
                                 # If string is not empty
-                                if row[idx] != "":
-                                    loc = "%s:%s" %(csv[3], str(line_number))
-                                    database_strings.append((loc, row[idx]))
+                                for idx in idxlist:
+                                    if row[idx] != "":
+                                        loc = "%s:%s" %(csv[3], str(line_number))
+                                        database_strings.append((loc, row[idx]))
 
             return database_strings
 
