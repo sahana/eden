@@ -142,7 +142,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 strategy.features = layer.features;
                 // Re-Cluster
                 strategy.recluster();
-                return false;
+                break;
             }
         }
         // Disable this event
@@ -4040,7 +4040,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                                             if (undefined != elem.graphic) {
                                                 graphic = style.graphic;
                                             }
-                                            return false;
+                                            break;
                                         }
                                     } else {
                                         // Range-based style
@@ -4048,7 +4048,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                                             if (undefined != elem.graphic) {
                                                 graphic = style.graphic;
                                             }
-                                            return false;
+                                            break;
                                         }
                                     }
                                 }); */
@@ -4090,7 +4090,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                                             if (undefined != elem.externalGraphic) {
                                                 url = S3.Ap.concat('/static/' + elem.externalGraphic);
                                             }
-                                            return false;
+                                            break;
                                         }
                                     } else {
                                         // Range-based style
@@ -4098,7 +4098,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                                             if (undefined != elem.externalGraphic) {
                                                 url = S3.Ap.concat('/static/' + elem.externalGraphic);
                                             }
-                                            return false;
+                                            break;
                                         }
                                     }
                                 }); */
@@ -4138,13 +4138,13 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                                         // Category-based style
                                         if (value == elem.cat) {
                                             pix = elem.size;
-                                            return false;
+                                            break;
                                         }
                                     } else {
                                         // Range-based style
                                         if ((value >= elem.low) && (value < elem.high)) {
                                             pix = elem.size;
-                                            return false;
+                                            break;
                                         }
                                     }
                                 }); */
@@ -4185,13 +4185,13 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                                         // Category-based style
                                         if (value == elem.cat) {
                                             color = elem.fill;
-                                            return false;
+                                            break;
                                         }
                                     } else {
                                         // Range-based style
                                         if ((value >= elem.low) && (value < elem.high)) {
                                             color = elem.fill;
-                                            return false;
+                                            break;
                                         }
                                     }
                                 }); */
@@ -4241,13 +4241,13 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                                         // Category-based style
                                         if (value == elem.cat) {
                                             fillOpacity = elem.fillOpacity;
-                                            return false;
+                                            break;
                                         }
                                     } else {
                                         // Range-based style
                                         if ((value >= elem.low) && (value < elem.high)) {
                                             fillOpacity = elem.fillOpacity;
-                                            return false;
+                                            break;
                                         }
                                     }
                                 }); */
@@ -4289,13 +4289,13 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                                         // Category-based style
                                         if (value == elem.cat) {
                                             color = elem.stroke || elem.fill;
-                                            return false;
+                                            break;
                                         }
                                     } else {
                                         // Range-based style
                                         if ((value >= elem.low) && (value < elem.high)) {
                                             color = elem.stroke || elem.fill;
-                                            return false;
+                                            break;
                                         }
                                     }
                                 }); */
@@ -4343,13 +4343,13 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                                         // Category-based style
                                         if (value == elem.cat) {
                                             width = elem.strokeWidth;
-                                            return false;
+                                            break;
                                         }
                                     } else {
                                         // Range-based style
                                         if ((value >= elem.low) && (value < elem.high)) {
                                             width = elem.strokeWidth;
-                                            return false;
+                                            break;
                                         }
                                     }
                                 }); */
@@ -4391,7 +4391,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                                             if (elem.show_label) {
                                                 label = elem.label;
                                             }
-                                            return false
+                                            break;
                                         }
                                     } else {
                                         // Range-based style
@@ -4399,7 +4399,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                                             if (elem.show_label) {
                                                 label = elem.label;
                                             }
-                                            return false
+                                            break;
                                         }
                                     }
                                 }); */

@@ -669,7 +669,7 @@
             for (var i=0, len=controls.length; i < len; i++) {
                 if (controls[i].CLASS_NAME == 'OpenLayers.Control.DrawFeature') {
                     control = controls[i];
-                    return false;
+                    break;
                 }
             }
             if (control) {
