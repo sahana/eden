@@ -1231,20 +1231,36 @@ class S3FilterForm(object):
             @param alias: the resource alias to use in widgets
         """
 
+        attr = self.attr
+        form_id = attr.get("_id")
+        if not form_id:
+            form_id = "filter-form"
+        attr["_id"] = form_id
+
         opts = self.opts
         formstyle = opts.get("formstyle", None)
         if not formstyle:
             formstyle = self._formstyle
 
-        rows = self._render_widgets(resource,
-                                    get_vars=get_vars or {},
-                                    alias=alias,
-                                    formstyle=formstyle)
+        # Filter Manager (load/apply/save filters)
+        filter_manager = None #self._render_filters(resource, form_id)
+        if filter_manager:
+            rows = [formstyle(None, "", filter_manager, "")]
+        else:
+            rows = []
 
+        # Filter widgets
+        rows.extend(self._render_widgets(resource,
+                                         get_vars=get_vars or {},
+                                         alias=alias,
+                                         formstyle=formstyle))
+
+        # Other filter form controls
         controls = self._render_controls()
         if controls:
             rows.append(formstyle(None, "", controls, ""))
 
+        # Submit button
         submit = opts.get("submit", False)
         if submit:
             _class = "filter-submit"
@@ -1261,7 +1277,7 @@ class S3FilterForm(object):
             # Where to request filtered data from:
             submit_url = opts.get("url", URL(vars={}))
             # Where to request updated options from:
-            ajax_url = opts.get("ajaxurl", URL(args=["filter.json"], vars={}))
+            ajax_url = opts.get("ajaxurl", URL(args=["filter.options"], vars={}))
             submit = TAG[""](
                         INPUT(_type="button",
                               _value=label,
@@ -1288,9 +1304,9 @@ class S3FilterForm(object):
             n = len(elements)
             if n > 0 and elements[0].tag == "tr" or \
                n > 1 and elements[0].tag == "" and elements[1].tag == "tr":
-                form = FORM(TABLE(TBODY(rows)), **self.attr)
+                form = FORM(TABLE(TBODY(rows)), **attr)
             else:
-                form = FORM(DIV(rows), **self.attr)
+                form = FORM(DIV(rows), **attr)
             form.add_class("filter-form")
 
         # Put a copy of formstyle into the form for access by the view
@@ -1369,7 +1385,7 @@ class S3FilterForm(object):
         if clear:
             _class = "filter-clear"
             if clear is True:
-                label = current.T("Reset all filters")
+                label = current.T("Reset filter")
             elif isinstance(clear, (list, tuple)):
                 label = clear[0]
                 _class = "%s %s" % (clear[1], _class)
@@ -1429,6 +1445,63 @@ class S3FilterForm(object):
             self.opts["advanced"] = resource.get_config("filter_advanced", True)
         return rows
             
+    # -------------------------------------------------------------------------
+    def _render_filters(self, resource, form_id):
+        """
+            Render a filter manager widget
+
+            @param resource: the resource
+            @return: the widget
+        """
+
+        SELECT_FILTER = current.T("Choose filter...")
+
+        ajaxurl = self.opts.get("saveurl", URL(args=["filter.json"], vars={}))
+        
+        # Current user
+        auth = current.auth
+        pe_id = auth.user.pe_id if auth.s3_logged_in() else None
+        if not pe_id:
+            return None
+    
+        table = current.s3db.pr_filter
+        query = (table.deleted != True) & \
+                (table.pe_id == pe_id) & \
+                (table.resource == resource.tablename)
+
+        rows = current.db(query).select(table._id,
+                                        table.title,
+                                        table.query,
+                                        orderby=table.title)
+                                        
+        options = [OPTION(SELECT_FILTER, _value="")]
+        add_option = options.append
+        filters = {}
+        for row in rows:
+            filter_id = row[table._id]
+            add_option(OPTION(row.title, _value=filter_id))
+            query = row.query
+            if query:
+                query = json.loads(query)
+            filters[filter_id] = query
+        widget_id = "%s-fm" % form_id
+        widget = SELECT(options,
+                        _id=widget_id,
+                        _class="filter-manager-widget")
+        
+        script = """
+$("#%(widget_id)s").filtermanager({
+  filters: %(filters)s,
+  ajaxURL: "%(ajaxurl)s"
+})""" % dict(
+            widget_id = widget_id,
+            filters = json.dumps(filters),
+            ajaxurl = ajaxurl,
+        )
+        current.response.s3.jquery_ready.append(script)
+
+        return widget
+
     # -------------------------------------------------------------------------
     def json(self, resource, get_vars=None):
         """

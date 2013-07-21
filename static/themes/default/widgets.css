@@ -1274,3 +1274,34 @@ select#sub_defaulttime_defaulttime_person_id_edit_none {
 input#sub_defaulttime_defaulttime_hours_edit_none {
     width: 60px;
 }
+
+/* Filter Manager */
+.filter-manager-widget {
+    float: left;
+}
+.fm-load,
+.fm-save,
+.fm-create,
+.fm-accept,
+.fm-cancel {
+    float: left;
+    margin-top: 7px;
+    margin-left: 5px;
+    width: 16px;
+    height: 16px;
+}
+.fm-load {
+    background: url(../../img/filter/load.png) no-repeat;
+}
+.fm-save {
+    background: url(../../img/filter/save.png) no-repeat;
+}
+.fm-create {
+    background: url(../../img/filter/create.png) no-repeat;
+}
+.fm-accept {
+    background: url(../../img/crud/apply.png) no-repeat;
+}
+.fm-cancel {
+    background: url(../../img/crud/cancel.png) no-repeat;
+}
