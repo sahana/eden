@@ -3749,102 +3749,112 @@ settings.ui.customize_project_project = customize_project_project
 settings.modules = OrderedDict([
     # Core modules which shouldn't be disabled
     ("default", Storage(
-            name_nice = "Home",
-            restricted = False, # Use ACLs to control access to this module
-            access = None,      # All Users (inc Anonymous) can see this module in the default menu & access the controller
-            module_type = None  # This item is not shown in the menu
-        )),
+        name_nice = "Home",
+        restricted = False, # Use ACLs to control access to this module
+        access = None,      # All Users (inc Anonymous) can see this module in the default menu & access the controller
+        module_type = None  # This item is not shown in the menu
+    )),
     ("admin", Storage(
-            name_nice = "Administration",
-            #description = "Site Administration",
-            restricted = True,
-            access = "|1|",     # Only Administrators can see this module in the default menu & access the controller
-            module_type = None  # This item is handled separately for the menu
-        )),
+        name_nice = "Administration",
+        #description = "Site Administration",
+        restricted = True,
+        access = "|1|",     # Only Administrators can see this module in the default menu & access the controller
+        module_type = None  # This item is handled separately for the menu
+    )),
     ("appadmin", Storage(
-            name_nice = "Administration",
-            #description = "Site Administration",
-            restricted = True,
-            module_type = None  # No Menu
-        )),
+        name_nice = "Administration",
+        #description = "Site Administration",
+        restricted = True,
+        module_type = None  # No Menu
+    )),
     ("errors", Storage(
-            name_nice = "Ticket Viewer",
-            #description = "Needed for Breadcrumbs",
-            restricted = False,
-            module_type = None  # No Menu
-        )),
+        name_nice = "Ticket Viewer",
+        #description = "Needed for Breadcrumbs",
+        restricted = False,
+        module_type = None  # No Menu
+    )),
     ("sync", Storage(
-            name_nice = "Synchronization",
-            #description = "Synchronization",
-            restricted = True,
-            access = "|1|",     # Only Administrators can see this module in the default menu & access the controller
-            module_type = None  # This item is handled separately for the menu
-        )),
+        name_nice = "Synchronization",
+        #description = "Synchronization",
+        restricted = True,
+        access = "|1|",     # Only Administrators can see this module in the default menu & access the controller
+        module_type = None  # This item is handled separately for the menu
+    )),
     ("translate", Storage(
-            name_nice = "Translation Functionality",
-            #description = "Selective translation of strings based on module.",
-            module_type = None,
-        )),
+        name_nice = "Translation Functionality",
+        #description = "Selective translation of strings based on module.",
+        module_type = None,
+    )),
     ("gis", Storage(
-            name_nice = "Map",
-            #description = "Situation Awareness & Geospatial Analysis",
-            restricted = True,
-            module_type = 1,     # 1st item in the menu
-        )),
+        name_nice = "Map",
+        #description = "Situation Awareness & Geospatial Analysis",
+        restricted = True,
+        module_type = 1,     # 1st item in the menu
+    )),
     ("pr", Storage(
-            name_nice = "Persons",
-            #description = "Central point to record details on People",
-            restricted = True,
-            access = "|1|",     # Only Administrators can see this module in the default menu (access to controller is possible to all still)
-            module_type = None
-        )),
+        name_nice = "Persons",
+        #description = "Central point to record details on People",
+        restricted = True,
+        access = "|1|",     # Only Administrators can see this module in the default menu (access to controller is possible to all still)
+        module_type = None
+    )),
     ("org", Storage(
-            name_nice = "Organizations",
-            #description = 'Lists "who is doing what & where". Allows relief agencies to coordinate their activities',
-            restricted = True,
-            module_type = None
-        )),
+        name_nice = "Organizations",
+        #description = 'Lists "who is doing what & where". Allows relief agencies to coordinate their activities',
+        restricted = True,
+        module_type = None
+    )),
     # All modules below here should be possible to disable safely
     ("hrm", Storage(
-            name_nice = "Contacts",
-            #description = "Human Resources Management",
-            restricted = True,
-            module_type = None,
-        )),
+        name_nice = "Contacts",
+        #description = "Human Resources Management",
+        restricted = True,
+        module_type = None,
+    )),
     ("cms", Storage(
-            name_nice = "Content Management",
-            restricted = True,
-            module_type = None,
-        )),
+        name_nice = "Content Management",
+        restricted = True,
+        module_type = None,
+    )),
     ("doc", Storage(
-            name_nice = "Documents",
-            #description = "A library of digital resources, such as photos, documents and reports",
-            restricted = True,
-            module_type = None,
-        )),
+        name_nice = "Documents",
+        #description = "A library of digital resources, such as photos, documents and reports",
+        restricted = True,
+        module_type = None,
+    )),
     ("msg", Storage(
-            name_nice = "Messaging",
-            #description = "Sends & Receives Alerts via Email & SMS",
-            restricted = True,
-            # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
-            module_type = None,
-        )),
+        name_nice = "Messaging",
+        #description = "Sends & Receives Alerts via Email & SMS",
+        restricted = True,
+        # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
+        module_type = None,
+    )),
     ("event", Storage(
-            name_nice = "Disasters",
-            #description = "Events",
-            restricted = True,
-            module_type = None
-        )),
+        name_nice = "Disasters",
+        #description = "Events",
+        restricted = True,
+        module_type = None
+    )),
     ("project", Storage(
-            name_nice = "Projects",
-            restricted = True,
-            module_type = None
-        )),
+        name_nice = "Projects",
+        restricted = True,
+        module_type = None
+    )),
     ("stats", Storage(
-            name_nice = "Statistics",
-            restricted = True,
-            module_type = None
-        )),
+        name_nice = "Statistics",
+        restricted = True,
+        module_type = None
+    )),
+    ("transport", Storage(
+        name_nice = "Transport",
+        restricted = True,
+        module_type = None
+    )),
+    ("hms", Storage(
+        name_nice = "Hospitals",
+        restricted = True,
+        module_type = None
+    )),
 #    ("vulnerability", Storage(
 #            name_nice = "Vulnerability",
 #            restricted = True,
