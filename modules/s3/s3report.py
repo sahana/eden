@@ -357,18 +357,11 @@ class S3Report(S3CRUD):
                 r.error(501, current.manager.ERROR.BAD_FORMAT)
 
         elif representation in ("html", "iframe"):
-
-            # Fallback to list view
-            current.s3db.configure(tablename, insertable=False)
-            output = self.select(r, **attr)
-            output["json_data"] = json.dumps({})
-            response.s3.actions = [
-                dict(url = r.url(method="",
-                                 id="[id]",
-                                 vars=r.get_vars),
-                     label = str(T("Details")),
-                     _class="action-btn")
-            ]
+           
+            output = dict(pivot_table="",
+                          chart_opts=None,
+                          report_data=None,
+                          json_data = """{}""")
 
         else:
             r.error(501, current.manager.ERROR.BAD_METHOD)
