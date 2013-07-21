@@ -23,7 +23,7 @@ s3 = current.response.s3
 settings = current.deployment_settings
 
 """
-    Template settings for DRM Portal
+    Template settings for NEREIDS
 """
 
 datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
@@ -89,14 +89,14 @@ settings.auth.realm_entity = drmp_realm_entity
 
 # -----------------------------------------------------------------------------
 # Pre-Populate
-settings.base.prepopulate = ["DRMP"]
+settings.base.prepopulate = ["NEREIDS"]
 
-settings.base.system_name = T("Timor Leste Disaster Risk Management Information System ")
+settings.base.system_name = T("Eastern Mediterranean Disaster Risk Management Information System ")
 settings.base.system_name_short = T("DRMIS")
 
 # -----------------------------------------------------------------------------
 # Theme (folder to use for views/layout.html)
-settings.base.theme = "DRMP"
+settings.base.theme = "NEREIDS"
 settings.ui.formstyle_row = "bootstrap"
 settings.ui.formstyle = "bootstrap"
 #settings.gis.map_height = 600
@@ -106,12 +106,12 @@ settings.ui.formstyle = "bootstrap"
 # L10n (Localization) settings
 settings.L10n.languages = OrderedDict([
     ("en", "English"),
-    #("tet", "Tetum"),
+    ("el", "ελληνικά"),
 ])
 # Default Language
 settings.L10n.default_language = "en"
 # Default timezone for users
-settings.L10n.utc_offset = "UTC +0900"
+settings.L10n.utc_offset = "UTC +0200"
 # Unsortable 'pretty' date format
 settings.L10n.date_format = "%d %b %y"
 # Number formats (defaults to ISO 31-0)
@@ -121,7 +121,7 @@ settings.L10n.decimal_separator = "."
 settings.L10n.thousands_separator = ","
 
 # Restrict the Location Selector to just certain countries
-settings.gis.countries = ["TL"]
+settings.gis.countries = ["GR"] # ["GR", "CY"]
 
 # Until we add support to LocationSelector2 to set dropdowns from LatLons
 settings.gis.check_within_parent_boundaries = False
@@ -132,7 +132,6 @@ settings.gis.nav_controls = False
 # -----------------------------------------------------------------------------
 # Finance settings
 settings.fin.currencies = {
-    "AUD" : T("Australian Dollars"),
     "EUR" : T("Euros"),
     "GBP" : T("Great British Pounds"),
     "USD" : T("United States Dollars"),
@@ -142,7 +141,7 @@ settings.fin.currencies = {
 # Enable this for a UN-style deployment
 #settings.ui.cluster = True
 # Enable this to use the label 'Camp' instead of 'Shelter'
-settings.ui.camp = True
+#settings.ui.camp = True
 
 # -----------------------------------------------------------------------------
 # Uncomment to restrict the export formats available
@@ -184,12 +183,10 @@ def currency_represent(v):
         Custom Representation of Currencies
     """
 
-    if v == "USD":
-        return "$"
-    elif v == "AUD":
-        return "A$"
-    elif v == "EUR":
+    if v == "EUR":
         return "€"
+    elif v == "USD":
+        return "$"
     elif v == "GBP":
         return "£"
     else:
@@ -625,6 +622,7 @@ def render_locations(listid, resource, rfields, record, **attr):
 
     # https://code.google.com/p/web2py/issues/detail?id=1533
     public_url = current.deployment_settings.get_base_public_url()
+    name = name.replace(" ", "_")
     if public_url.startswith("http://127.0.0.1"):
         # Assume Rocket
         image = quote_unicode(s3_unicode(name))
@@ -636,7 +634,7 @@ def render_locations(listid, resource, rfields, record, **attr):
     item = DIV(DIV(A(IMG(_class="media-object",
                          _src="%s/%s.png" % (URL(c="static",
                                                  f="themes",
-                                                 args=["DRMP", "img"]),
+                                                 args=["NEREIDS", "img"]),
                                              image),
                          ),
                      _class="pull-left",
@@ -2001,9 +1999,9 @@ def customize_cms_post(**attr):
                 (T("Disaster"), "event_post.event_id"),
                 (T("Type"), "series_id"),
                 (T("Details"), "body"),
-                (T("District"), "location_id$L1"),
-                (T("Sub-District"), "location_id$L2"),
-                (T("Suco"), "location_id$L3"),
+                (T("Decentralized Administration"), "location_id$L1"),
+                (T("Region"), "location_id$L2"),
+                (T("Regional Unit"), "location_id$L3"),
                 (T("Author"), "created_by"),
                 (T("Organization"), "created_by$organisation_id"),
                 ]
@@ -2269,7 +2267,7 @@ def customize_event_event(**attr):
                     "closed",
                     S3SQLInlineComponent(
                         "event_location",
-                        label = T("District"),
+                        label = T("Decentralized Administration"),
                         multiple = False,
                         fields = ["location_id"],
                     ),
@@ -2336,15 +2334,15 @@ def customize_gis_location(**attr):
             s3db = current.s3db
             table = s3db.gis_location
 
-            s3.crud_strings["gis_location"].title_list = T("Districts")
+            s3.crud_strings["gis_location"].title_list = T("Decentralized Administrations")
 
             if r.method == "datalist":
-                # District selection page
+                # Decentralized Administration selection page
                 # 2-column datalist, 6 rows per page
                 s3.dl_pagelength = 12
                 s3.dl_rowsize = 2
 
-                # Just show L1s (Districts)
+                # Just show L1s (Decentralized Administrations)
                 s3.filter = (table.level == "L1")
                 # Default 5 triggers an AJAX call, we should load all by default
                 s3.dl_pagelength = 13
@@ -2464,12 +2462,13 @@ def customize_gis_location(**attr):
                 name = location.name
                 # https://code.google.com/p/web2py/issues/detail?id=1533
                 public_url = current.deployment_settings.get_base_public_url()
+                _name = name.replace(" ", "_")
                 if public_url.startswith("http://127.0.0.1"):
                     # Assume Rocket
-                    image = quote_unicode(s3_unicode(name))
+                    image = quote_unicode(s3_unicode(_name))
                 else:
                     # Assume Apache or Cherokee
-                    image = s3_unicode(name)
+                    image = s3_unicode(_name)
                 s3db.configure("gis_location",
                                list_fields = list_fields,
                                profile_title = "%s : %s" % (s3.crud_strings["gis_location"].title_list, 
@@ -2477,7 +2476,7 @@ def customize_gis_location(**attr):
                                profile_header = DIV(A(IMG(_class="media-object",
                                                           _src="%s/%s.png" % (URL(c="static",
                                                                                   f="themes",
-                                                                                  args=["DRMP", "img"]),
+                                                                                  args=["NEREIDS", "img"]),
                                                                               image),
                                                           ),
                                                       _class="pull-left",
@@ -3095,7 +3094,7 @@ def customize_org_resource(**attr):
             # Configure fields
             #table.site_id.readable = table.site_id.readable = False
             location_field = table.location_id
-            location_field.label = T("District")
+            location_field.label = T("Decentralized Administration")
 
             # Filter from a Profile page?
             # If so, then default the fields we know
@@ -3542,7 +3541,7 @@ def customize_project_project(**attr):
                     "name",
                     S3SQLInlineComponent(
                         "location",
-                        label = T("Districts"),
+                        label = T("Decentralized Administrations"),
                         fields = ["location_id"],
                         orderby = "location_id$name",
                         render_list = True
@@ -3608,7 +3607,7 @@ def customize_project_project(**attr):
                     "organisation_id",
                     S3SQLInlineComponent(
                         "location",
-                        label = T("Districts"),
+                        label = T("Decentralized Administrations"),
                         fields = ["location_id"],
                         orderby = "location_id$name",
                         render_list = True
@@ -3653,7 +3652,7 @@ def customize_project_project(**attr):
             list_fields = ["name",
                            "organisation_id",
                            "human_resource_id",
-                           (T("Districts"), "location.location_id"),
+                           (T("Decentralized Administrations"), "location.location_id"),
                            "start_date",
                            "end_date",
                            "budget",
@@ -3846,9 +3845,19 @@ settings.modules = OrderedDict([
             restricted = True,
             module_type = None
         )),
-    ("vulnerability", Storage(
-            name_nice = "Vulnerability",
-            restricted = True,
-            module_type = None
-        )),
+#    ("vulnerability", Storage(
+#            name_nice = "Vulnerability",
+#            restricted = True,
+#            module_type = None
+#        )),
+#    ("asset", Storage(
+#            name_nice = "Assets",
+#            restricted = True,
+#            module_type = None
+#        )),
+#    ("supply", Storage(
+#            name_nice = "Supply",
+#            restricted = True,
+#            module_type = None
+#        )),
 ])
