@@ -27,14 +27,34 @@ h4.latest-updates {
 	box-shadow: 0 1px 1px #aaaaa7;
 }
 
+h4.latest-disasters{
+	margin-right: -6px;
+}
+
+@media screen and (max-width: 767px){
+	h4.latest-disasters {
+		display: inline-block;
+	
+	}
+}
+
 #event_datalist a:hover  {
 	text-decoration: none;
 }
 
+/* Show a border around active disasters */
+.thumbnail.disaster {
+    border: 3px solid #E67E22;
+	padding-right: 5px;
+	padding-left: px;
+}
+
 /* Cards */
+
 .card-person {
     margin-top: 5px;
 }
+
 .card-person a {
     font-size: 11px;
     color: #7b7b78;
@@ -250,9 +270,6 @@ input.btn.btn-primary.filter-submit.filter-ajax {
 	margin-left: -1px;
 }
 
-.filter-controls {
-    clear: both;
-}
 
 /* Large desktop */
 @media (min-width: 1200px) { 

@@ -175,12 +175,6 @@ a i.icon.icon-plus-sign.big-add:hover {
     text-decoration: none;
 }
 
-/* Show a border around active disasters */
-.thumbnail.disaster {
-    border: 3px solid #E67E22;
-    margin: -2px 6px 6px -2px;
-}
-
 /* Modals */
 /* Imitate Bootstrap in jQueryUI Modal */
 #popup #submit_record__row {
@@ -203,14 +197,17 @@ a i.icon.icon-plus-sign.big-add:hover {
 /* Forms */
 .form-horizontal {  /*temporary we need to pass another class to the form so it can be styled without problems*/
     background-color: #fff;
-    border: 1px solid #b2b2b2;
+	border: 1px solid #b2b2b2;
+	box-shadow: none;
     border-radius: 5px;
     box-shadow: none;
     position: relative;
     top: 11px;
     padding-top: 7px;
     padding-left: 9px;
+	
 }
+
 .form-container form fieldset {
     border: none;
 	font-size: 13px;
@@ -330,6 +327,35 @@ a.action-btn:hover {
     *background-color: #a9302a;
 }
 
+.ui-datepicker-trigger {
+    margin-left: 10px;
+}
+
+#body__error,
+#name__error,
+#location_id__error {
+	width: 50%;
+	padding: 5px;
+	border-radius: 4px;
+	border: 1px solid #b2b2b2;
+	font-weight: normal;
+	font-style: normal;
+	color: #b84947;
+	background-color: #f2dedd;
+	margin-top: 7px;
+}
+
+div.defaultlocation_error.error{
+	padding: 5px;
+	border-radius: 4px;
+	border: 1px solid #b2b2b2;
+	font-weight: normal;
+	font-style: normal;
+	color: #b84947;
+	background-color: #f2dedd;
+	margin-top: 7px;
+}
+
 /* Required Fields */
 b.red {
     position: absolute;
@@ -399,13 +425,13 @@ b.red {
 
 /* S3SQLCustomForm */
 table.embeddedComponent {
+    border: 0;
     display: inline-block;
     margin-bottom: 10px;
     margin-top: 1px;
     border-radius: 4px;
     -webkit-border-radius: 4px;
     -moz-border-radius: 4px;
-    padding: 4px 0 2px 4px;
 }
 
 table.embeddedComponent tr.label-row td {
@@ -460,6 +486,21 @@ table.embeddedComponent .add-row td {
     top: 0;
 }
 
+/* Multi Select */
+
+label.ui-corner-all {
+    margin-left: 5px;
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+label.ui-corner-all span {
+    position: relative;
+    top: 5px;
+    left: 10px;
+    font-size: 12px;
+}
+
 #list-add h3 {
     text-align: center;
     border-bottom: solid 1px #c9ccd0;
@@ -482,21 +523,6 @@ table.embeddedComponent .add-row td {
     box-shadow: 0 1px 1px #aaaaa7;
     padding: 7px 6px;
     margin-bottom: -6px;
-}
-
-/* Multi Select */
-
-label.ui-corner-all {
-    margin-left: 5px;
-    margin-bottom: 0;
-    margin-top: 0;
-}
-
-label.ui-corner-all span {
-    position: relative;
-    top: 5px;
-    left: 10px;
-    font-size: 12px;
 }
 
 /* Updates */
@@ -808,3 +834,67 @@ div.defaultlocation_error.error{
 #auth_user_utc_offset__row td.w2p_fc div.tooltip {
     margin-left: 15px;
 }
+
+#submit_record__row td.w2p_fw {
+    padding-top: 15px;
+    padding-left: 12px;
+}
+
+/*Help Pop-Overboxes*/
+
+h3.cluetip-title.ui-widget-header.ui-cluetip-header {
+	padding: 8px 14px;
+	margin: 0;
+	font-size: 14px;
+	font-weight: bold;
+	line-height: 18px;
+	background-color: #ededed;
+	border: 1px solid #ccc;
+	border: 1px solid rgba(0, 0, 0, 0.2);
+	border-bottom: 1px solid #ebebeb;
+	-webkit-border-radius: 5px 5px 0 0;
+	   -moz-border-radius: 5px 5px 0 0;
+	        border-radius: 5px 5px 0 0;
+}
+
+#cluetip div.cluetip-outer div.cluetip-inner.ui-widget-content.ui-cluetip-content {
+	font-size: 13px;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	border: 1px solid #ccc;
+	border: 1px solid rgba(0, 0, 0, 0.2);
+	border-bottom-left-radius: 6px;
+	border-bottom-right-radius: 6px;
+}
+
+span.password-min-char {
+	font-size: 12px;
+}
+
+div#password-strength {
+	margin-left: 5px;
+	padding-left: 5px;
+}
+
+span.password-strength-bar {
+	color: #2d2d2c;
+	padding-left: 12px;
+	border-radius: 3px;
+}
+
+label.ui-corner-all {
+    margin-left: 5px;
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+label.ui-corner-all span {
+    position: relative;
+    top: 5px;
+    left: 10px;
+    font-size: 12px;
+}
+
+
+
+
