@@ -91,7 +91,7 @@ settings.auth.realm_entity = drmp_realm_entity
 # Pre-Populate
 settings.base.prepopulate = ["NEREIDS"]
 
-settings.base.system_name = T("Eastern Mediterranean Disaster Risk Management Information System ")
+settings.base.system_name = T("Eastern Mediterranean Disaster Risk Management Information System")
 settings.base.system_name_short = T("DRMIS")
 
 # -----------------------------------------------------------------------------
@@ -185,10 +185,10 @@ def currency_represent(v):
 
     if v == "EUR":
         return "€"
-    elif v == "USD":
-        return "$"
     elif v == "GBP":
         return "£"
+    elif v == "USD":
+        return "$"
     else:
         return current.messages["NONE"]
 
@@ -629,6 +629,17 @@ def render_locations(listid, resource, rfields, record, **attr):
     else:
         # Assume Apache or Cherokee
         image = s3_unicode(name)
+    language = current.session.s3.language
+    if language != "en":
+        # Local name available?
+        table = s3db.gis_location_name
+        query = (table.deleted == False) & \
+                (table.language == language) & \
+                (table.location_id == record_id)
+        row = db(query).select(table.name_l10n,
+                               limitby=(0, 1)).first()
+        if row:
+            represent = row.name_l10n
 
     # Render the item
     item = DIV(DIV(A(IMG(_class="media-object",
@@ -1663,7 +1674,9 @@ def customize_cms_post_fields():
     field.requires = IS_NULL_OR(
                         IS_LOCATION_SELECTOR2(levels=["L1", "L2", "L3"])
                      )
-    field.widget = S3LocationSelectorWidget2(levels=["L1", "L2", "L3"])
+    field.widget = S3LocationSelectorWidget2(levels=["L1", "L2", "L3"],
+                                             #polygons=True,
+                                             )
 
     table.created_by.represent = s3_auth_user_represent_name
 
@@ -2469,6 +2482,17 @@ def customize_gis_location(**attr):
                 else:
                     # Assume Apache or Cherokee
                     image = s3_unicode(_name)
+                language = current.session.s3.language
+                if language != "en":
+                    # Local name available?
+                    table = s3db.gis_location_name
+                    query = (table.deleted == False) & \
+                            (table.language == language) & \
+                            (table.location_id == location.id)
+                    row = current.db(query).select(table.name_l10n,
+                                                   limitby=(0, 1)).first()
+                    if row:
+                        name= row.name_l10n
                 s3db.configure("gis_location",
                                list_fields = list_fields,
                                profile_title = "%s : %s" % (s3.crud_strings["gis_location"].title_list, 

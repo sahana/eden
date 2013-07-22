@@ -5,35 +5,29 @@
     <!-- **********************************************************************
          Location - CSV Import Stylesheet
 
-         - use for import to gis/location resource
-         - example raw URL usage:
-           Let URLpath be the URL to Sahana Eden appliation
-           Let Resource be org/organisation/create
-           Let Type be s3csv
-           Let CSVPath be the path on the server to the CSV file to be imported
-           Let XSLPath be the path on the server to the XSL transform file
-           Then in the browser type:
-
-           URLpath/Resource.Type?filename=CSVPath&transform=XSLPath
-
-           You can add a third argument &ignore_errors
-
          CSV fields:
          L0.................L0 Name
          L0 KV:XX...........L0 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
+         L0 L10n:XX.........L0 name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          L1.................L1 Name
          L1 KV:XX ..........L1 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
+         L1 L10n:XX.........L1 name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          L2.................L2 Name
          L2 KV:XX ..........L2 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
+         L2 L10n:XX.........L2 name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          L3.................L3 Name
          L3 KV:XX ..........L3 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
+         L3 L10n:XX.........L3 name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          L4.................L4 Name
          L4 KV:XX ..........L4 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
+         L4 L10n:XX.........L4 name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          L5.................L5 Name
          L5 KV:XX ..........L5 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
+         L5 L10n:XX.........L5 name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          For specific locations:
          Name...............Location Name
          KV:XX..............Key,Value
+         L10n:XX............name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          For lowest-level specified:
          WKT................WKT
          Lat................Lat
@@ -172,6 +166,19 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="L10n">
+        <xsl:variable name="Lang" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="Value" select="text()"/>
+
+        <xsl:if test="$Value!=''">
+            <resource name="gis_location_name">
+                <data field="language"><xsl:value-of select="$Lang"/></data>
+                <data field="name_l10n"><xsl:value-of select="$Value"/></data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="L0">
 
         <xsl:variable name="l0" select="col[@field='L0']/text()"/>
@@ -217,6 +224,10 @@
                                 <data field="value"><xsl:value-of select="col[@field='Population']"/></data>
                             </resource>
                         </xsl:if>
+                        <!-- L10n -->
+                        <xsl:for-each select="col[starts-with(@field, 'L0 L10n')]">
+                            <xsl:call-template name="L10n"/>
+                        </xsl:for-each>
                         <!-- Arbitrary Tags -->
                         <xsl:for-each select="col[starts-with(@field, 'L0 KV')]">
                             <xsl:call-template name="KeyValue"/>
@@ -279,6 +290,10 @@
                 <!-- Arbitrary Tags -->
                 <xsl:for-each select="col[starts-with(@field, 'L1 KV')]">
                     <xsl:call-template name="KeyValue"/>
+                </xsl:for-each>
+                <!-- L10n -->
+                <xsl:for-each select="col[starts-with(@field, 'L1 L10n')]">
+                    <xsl:call-template name="L10n"/>
                 </xsl:for-each>
                 <!-- If this is the import level then add the details -->
                 <xsl:choose>
@@ -377,6 +392,10 @@
                 <!-- Arbitrary Tags -->
                 <xsl:for-each select="col[starts-with(@field, 'L2 KV')]">
                     <xsl:call-template name="KeyValue"/>
+                </xsl:for-each>
+                <!-- L10n -->
+                <xsl:for-each select="col[starts-with(@field, 'L2 L10n')]">
+                    <xsl:call-template name="L10n"/>
                 </xsl:for-each>
 
                 <!-- If this is the import level then add the details -->
@@ -481,6 +500,10 @@
                 <!-- Arbitrary Tags -->
                 <xsl:for-each select="col[starts-with(@field, 'L3 KV')]">
                     <xsl:call-template name="KeyValue"/>
+                </xsl:for-each>
+                <!-- L10n -->
+                <xsl:for-each select="col[starts-with(@field, 'L3 L10n')]">
+                    <xsl:call-template name="L10n"/>
                 </xsl:for-each>
 
                 <!-- If this is the import level then add the details -->
@@ -594,6 +617,10 @@
                 <!-- Arbitrary Tags -->
                 <xsl:for-each select="col[starts-with(@field, 'L4 KV')]">
                     <xsl:call-template name="KeyValue"/>
+                </xsl:for-each>
+                <!-- L10n -->
+                <xsl:for-each select="col[starts-with(@field, 'L4 L10n')]">
+                    <xsl:call-template name="L10n"/>
                 </xsl:for-each>
 
                 <!-- If this is the import level then add the details -->
@@ -717,6 +744,10 @@
                 <xsl:for-each select="col[starts-with(@field, 'L5 KV')]">
                     <xsl:call-template name="KeyValue"/>
                 </xsl:for-each>
+                <!-- L10n -->
+                <xsl:for-each select="col[starts-with(@field, 'L5 L10n')]">
+                    <xsl:call-template name="L10n"/>
+                </xsl:for-each>
 
                 <!-- If this is the import level then add the details -->
                 <xsl:choose>
@@ -820,6 +851,10 @@
                 <!-- Arbitrary Tags -->
                 <xsl:for-each select="col[starts-with(@field, 'KV')]">
                     <xsl:call-template name="KeyValue"/>
+                </xsl:for-each>
+                <!-- L10n -->
+                <xsl:for-each select="col[starts-with(@field, 'L10n')]">
+                    <xsl:call-template name="L10n"/>
                 </xsl:for-each>
                 <xsl:choose>
                     <xsl:when test="$l5!=''">

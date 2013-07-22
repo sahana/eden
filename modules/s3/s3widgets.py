@@ -1396,27 +1396,27 @@ class S3DateTimeWidget(FormWidget):
 
         current.response.s3.jquery_ready.append(
 """$('#%(selector)s').%(widget)s({
-   showSecond: false,
-   firstDay: %(firstDOW)s,
-   min%(limit)s: new Date(Date.parse('%(earliest)s')),
-   max%(limit)s: new Date(Date.parse('%(latest)s')),
-   dateFormat: '%(date_format)s',
-   timeFormat: '%(time_format)s',
-   separator: '%(separator)s',
-   stepMinute: %(minute_step)s,
-   showWeek: %(weeknumber)s,
-   showButtonPanel: %(buttons)s,
-   changeMonth: %(month_selector)s,
-   changeYear: %(year_selector)s,
-   yearRange: '%(year_range)s',
-   useLocalTimezone: true,
-   defaultValue: '%(default)s',
-   onClose: %(onclose)s
+ showSecond:false,
+ firstDay:%(firstDOW)s,
+ min%(limit)s:new Date(Date.parse('%(earliest)s')),
+ max%(limit)s:new Date(Date.parse('%(latest)s')),
+ dateFormat:'%(date_format)s',
+ timeFormat:'%(time_format)s',
+ separator:'%(separator)s',
+ stepMinute:%(minute_step)s,
+ showWeek:%(weeknumber)s,
+ showButtonPanel:%(buttons)s,
+ changeMonth:%(month_selector)s,
+ changeYear:%(year_selector)s,
+ yearRange:'%(year_range)s',
+ useLocalTimezone:true,
+ defaultValue:'%(default)s',
+ onClose:%(onclose)s
 });
 var clear_button=$('<input id="%(selector)s_clear" type="button" value="clear"/>').click(function(){
  $('#%(selector)s').val('');%(onclear)s
 });
-if($('#%(selector)s_clear').length == 0){
+if($('#%(selector)s_clear').length==0){
  $('#%(selector)s').after(clear_button)
 }""" % \
             dict(selector=selector,
@@ -3741,7 +3741,7 @@ class S3LocationSelectorWidget2(FormWidget):
             # - used for Geocoder
             L0_input = INPUT(_name="L0",
                              _id="%s_L0" % fieldname,
-                             value=default_L0,
+                             fvalue=default_L0,
                              )
         if "L1" not in levels and \
            "L1" in _levels:
@@ -3964,9 +3964,9 @@ class S3LocationSelectorWidget2(FormWidget):
             script = '''l=%s''' % json.dumps(location_dict)
             s3.js_global.append(script)
 
-        # If we need to show the map since we have an existing lat/lon
+        # If we need to show the map since we have an existing lat/lon/wkt
         # then we need to launch the client-side JS as a callback to the MapJS loader
-        if lat is not None or lon is not None:
+        if lat is not None or lon is not None or wkt is not None:
             use_callback = True
         else:
             use_callback = False
