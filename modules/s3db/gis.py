@@ -925,11 +925,38 @@ class S3LocationNameModel(S3Model):
                                   s3_comments(),
                                   *s3_meta_fields())
 
+        self.configure(tablename,
+                       deduplicate=self.gis_location_name_deduplicate)
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                )
+        return Storage()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_location_name_deduplicate(job):
+        """
+           If the record is a duplicate then it will set the job method to update
+        """
+
+        if job.tablename == "gis_location_name":
+            table = job.table
+            data = job.data
+            language = "language" in data and data.language or None
+            location = "location_id" in data and data.location_id or None
+
+            if not language or not location:
+                return
+
+            query = (table.language == language) & \
+                    (table.location_id == location)
+
+            _duplicate = current.db(query).select(table.id,
+                                                  limitby=(0, 1)).first()
+            if _duplicate:
+                job.id = _duplicate.id
+                job.method = job.METHOD.UPDATE
 
 # =============================================================================
 class S3LocationTagModel(S3Model):
