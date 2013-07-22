@@ -428,7 +428,7 @@ S3.search = {};
             }
         });
 
-        /* @todo: location filter widget */
+        // @todo: location filter widget
     };
     
     S3.search.setCurrentFilters = setCurrentFilters;
@@ -1273,7 +1273,7 @@ S3.search = {};
                 this.throbber.remove();
             }
             this.throbber = $('<div class="inline-throbber" id="fm-throbber-' + id + '">')
-                            .css({float: 'left'});
+                            .css({'float': 'left'});
             
             if (this.create_btn) {
                 this.create_btn.remove();
@@ -1316,7 +1316,7 @@ S3.search = {};
             
             var input = $('<input type="text" id="fm-title-input-' + this.id + '">')
                         .val('Enter title...')
-                        .css({color: 'grey', float: 'left'})
+                        .css({color: 'grey', 'float': 'left'})
                         .focusin(function() {
                             $(this).css({color: 'black'}).val('').unbind('focusin');
                         });
@@ -1350,7 +1350,7 @@ S3.search = {};
                 'url': this.options.ajaxURL,
                 'type': 'POST',
                 'dataType': 'json',
-                'data': JSON.stringify(filter),
+                'data': JSON.stringify(filter)
             })
             .done(function(data) {
                 var new_id = data.created;
@@ -1407,7 +1407,7 @@ S3.search = {};
                 'url': this.options.ajaxURL,
                 'type': 'POST',
                 'dataType': 'json',
-                'data': JSON.stringify(filter),
+                'data': JSON.stringify(filter)
             })
             .done(function(data) {
                 // Store filter
