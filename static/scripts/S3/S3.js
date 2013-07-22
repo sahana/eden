@@ -489,6 +489,7 @@ function S3EnableNavigateAwayConfirm() {
     $.ajaxS3 = function(s) {
         var options = $.extend( {}, $.ajaxS3Settings, s );
         options.tryCount = 0;
+        options.error = null;   // prevent callback from being executed twice
         options.success = null; // prevent callback from being executed twice
         if (s.message) {
             s3_showStatus(i18n.ajax_get + ' ' + (s.message ? s.message : i18n.ajax_fmd) + '...', this.ajaxS3Settings.msgTimeout);
@@ -512,12 +513,18 @@ function S3EnableNavigateAwayConfirm() {
                 }
                 s3_showStatus(i18n.ajax_wht + ' ' + (this.retryLimit + 1) + ' ' + i18n.ajax_gvn,
                     $.ajaxS3Settings.msgTimeout, false, true);
+                if (s.error) {
+                    s.error(jqXHR, textStatus, errorThrown);
+                }
                 return;
             }
             if (jqXHR.status == 500) {
                 s3_showStatus(i18n.ajax_500, $.ajaxS3Settings.msgTimeout, false, true);
             } else {
                 s3_showStatus(i18n.ajax_dwn, $.ajaxS3Settings.msgTimeout, false, true);
+            }
+            if (s.error) {
+                s.error(jqXHR, textStatus, errorThrown);
             }
         });
     };

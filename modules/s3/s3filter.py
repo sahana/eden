@@ -1243,11 +1243,12 @@ class S3FilterForm(object):
             formstyle = self._formstyle
 
         # Filter Manager (load/apply/save filters)
-        filter_manager = None #self._render_filters(resource, form_id)
-        if filter_manager:
-            rows = [formstyle(None, "", filter_manager, "")]
-        else:
-            rows = []
+        if opts.get("filter_manager", True): #False):
+            filter_manager = self._render_filters(resource, form_id)
+            if filter_manager:
+                rows = [formstyle(None, "", filter_manager, "")]
+            else:
+                rows = []
 
         # Filter widgets
         rows.extend(self._render_widgets(resource,
@@ -1488,15 +1489,24 @@ class S3FilterForm(object):
         widget = SELECT(options,
                         _id=widget_id,
                         _class="filter-manager-widget")
-        
+
+        T = current.T
         script = """
 $("#%(widget_id)s").filtermanager({
   filters: %(filters)s,
-  ajaxURL: "%(ajaxurl)s"
+  ajaxURL: "%(ajaxurl)s",
+  saveTooltip: "%(save_tooltip)s",
+  loadTooltip: "%(load_tooltip)s",
+  createTooltip: "%(create_tooltip)s",
+  titleHint: "%(title_hint)s"
 })""" % dict(
             widget_id = widget_id,
             filters = json.dumps(filters),
             ajaxurl = ajaxurl,
+            save_tooltip = T("Update filter"),
+            load_tooltip = T("Load filter"),
+            create_tooltip = T("Create a new filter from current options"),
+            title_hint = T("Enter a title..."),
         )
         current.response.s3.jquery_ready.append(script)
 
@@ -1635,7 +1645,7 @@ class S3Filter(S3Method):
         else:
             pe_id = None
         if not pe_id:
-            r.unauthorized()
+            r.unauthorised()
 
         # Read the source
         source = r.body

@@ -4386,12 +4386,13 @@ def org_office_controller():
         return output
     s3.postp = postp
 
-    if "map" in request.args:
-        # S3Map has migrated
-        hide_filter = False
-    else:
-        # Not yet ready otherwise
-        hide_filter = True
+    #if "map" in request.args:
+        ## S3Map has migrated
+        #hide_filter = False
+    #else:
+        ## Not yet ready otherwise
+        #hide_filter = True
+    hide_filter = False
 
     output = current.rest_controller("org", "office",
                                      hide_filter=hide_filter,
