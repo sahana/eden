@@ -1475,7 +1475,7 @@ class S3FilterForm(object):
                                         table.query,
                                         orderby=table.title)
                                         
-        options = [OPTION(SELECT_FILTER, _value="")]
+        options = [OPTION(SELECT_FILTER, _value="", _disabled="disabled")]
         add_option = options.append
         filters = {}
         for row in rows:
