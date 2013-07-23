@@ -99,7 +99,7 @@ def user():
         lappend("organisation_id")
     if settings.get_auth_registration_requests_site():
         lappend("site_id")
-    if settings.get_auth_registration_link_user_to():
+    if settings.get_auth_registration_link_user_to() and settings.get_auth_show_link():
         lappend("link_user_to")
     lappend((T("Roles"), "membership.group_id"))
 
