@@ -539,6 +539,9 @@ def user():
     elif arg == "profile":
         title = response.title = T("User Profile")
         form = auth.profile()
+    elif arg == "options.s3json":
+        # To support adding orgnaisations from registration form
+        return s3_rest_controller(prefix="auth", resourcename="user")
     else:
         # logout
         title = ""

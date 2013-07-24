@@ -18,6 +18,11 @@ h2.summary {
     float: left;
 }
 
+#summary-tabs .ui-tabs-nav {
+    border: none;
+    margin-bottom: 0;
+}
+
 #summary-common { 
     float: left;
     margin-top: 20px;
@@ -28,6 +33,7 @@ h2.summary {
     background: none;
     float: left;
     margin-top: -33px;
+    border: none;
 }
 
 #summary-tabs .ui-tabs-nav {

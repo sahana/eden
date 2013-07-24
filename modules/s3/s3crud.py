@@ -1938,17 +1938,17 @@ class S3CRUD(S3Method):
                 dt_pagination = "true"
                 if not limit:
                     limit = 2 * display_length
-                session.s3.filter = vars
+                session.s3.filter = get_vars
                 if orderby is None:
                     # Default initial sorting
                     scol = len(list_fields) > 1 and "1" or "0"
-                    vars.update(iSortingCols="1",
+                    get_vars.update(iSortingCols="1",
                                 iSortCol_0=scol,
                                 sSortDir_0="asc")
-                    q, orderby, left = resource.datatable_filter(list_fields, vars)
-                    del vars["iSortingCols"]
-                    del vars["iSortCol_0"]
-                    del vars["sSortDir_0"]
+                    q, orderby, left = resource.datatable_filter(list_fields, get_vars)
+                    del get_vars["iSortingCols"]
+                    del get_vars["iSortCol_0"]
+                    del get_vars["sSortDir_0"]
                 if r.method == "search" and not orderby:
                     orderby = fields[0]
             else:
@@ -1985,7 +1985,7 @@ class S3CRUD(S3Method):
             resource.build_query(filter=s3.filter, vars=session.s3.filter)
 
             # Apply datatable filters
-            searchq, orderby, left = resource.datatable_filter(list_fields, vars)
+            searchq, orderby, left = resource.datatable_filter(list_fields, get_vars)
             if searchq is not None:
                 totalrows = resource.count()
                 resource.add_filter(searchq)
@@ -2012,7 +2012,7 @@ class S3CRUD(S3Method):
                 totalrows = displayrows
 
             # Echo
-            sEcho = int(vars.sEcho or 0)
+            sEcho = int(get_vars.sEcho or 0)
 
             # Representation
             if dt is not None:
@@ -2167,13 +2167,13 @@ class S3CRUD(S3Method):
         output = Storage()
         resource = self.resource
 
-        vars = r.get_vars
-        if "component" in vars:
-            alias = vars["component"]
+        get_vars = r.get_vars
+        if "component" in get_vars:
+            alias = get_vars["component"]
         else:
             alias = None
-        if "resource" in vars:
-            tablename = vars["resource"]
+        if "resource" in get_vars:
+            tablename = get_vars["resource"]
             components = [alias] if alias else None
             try:
                 resource = current.s3db.resource(tablename,
@@ -2432,8 +2432,8 @@ class S3CRUD(S3Method):
 
         record_id = attr.get("record_id", None)
 
-        remove_filters = lambda vars: dict([(k, vars[k])
-                                            for k in vars if "." not in k])
+        remove_filters = lambda get_vars: dict([(k, get_vars[k])
+                                            for k in get_vars if "." not in k])
 
         # Button labels
         crud_string = self.crud_string

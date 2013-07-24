@@ -47,7 +47,7 @@ settings.auth.show_utc_offset = False
 
 settings.auth.show_link = False
 
-settings.auth.record_approval = False
+settings.auth.record_approval = True
 settings.auth.record_approval_required_for = ["org_organisation"]
 
 # -----------------------------------------------------------------------------
@@ -3291,7 +3291,9 @@ def customize_pr_person(**attr):
                     field.readable = field.writable = False
                     hr_fields.remove("organisation_id")
 
-            crud_form = S3SQLCustomForm(
+            
+
+            s3_sql_costum_fields = [
                     "first_name",
                     #"middle_name",
                     "last_name",
@@ -3306,53 +3308,49 @@ def customize_pr_person(**attr):
                                         )
                     ),
                     S3SQLInlineComponent(
-                        "contact",
-                        name = "phone",
-                        label = MOBILE,
-                        multiple = False,
-                        fields = ["value"],
-                        filterby = dict(field = "contact_method",
-                                        options = "SMS"
-                                        )
-                    ),
-                    S3SQLInlineComponent(
-                        "contact",
-                        name = "email",
-                        label = EMAIL,
-                        multiple = False,
-                        fields = ["value"],
-                        filterby = dict(field = "contact_method",
-                                        options = "EMAIL"
-                                        )
-                    ),
-                    S3SQLInlineComponent(
                         "image",
                         name = "image",
                         label = T("Photo"),
                         multiple = False,
                         fields = ["image"],
                     ),
-                )
+                ]
 
+            list_fields = [(current.messages.ORGANISATION, "human_resource.organisation_id"),
+                           "first_name",
+                           #"middle_name",
+                           "last_name",
+                           (T("Job Title"), "human_resource.job_title_id"),
+                           (T("Office"), "human_resource.site_id"),
+                           ]
+            
+            # Don't include Email/Phone for unauthenticated users
             if current.auth.is_logged_in():
-                list_fields = [(current.messages.ORGANISATION, "human_resource.organisation_id"),
-                               "first_name",
-                               #"middle_name",
-                               "last_name",
-                               (T("Job Title"), "human_resource.job_title_id"),
-                               (T("Office"), "human_resource.site_id"),
-                               (MOBILE, "phone.value"),
-                               (EMAIL, "email.value"),
-                               ]
-            else:
-                # Don't include Email/Phone for unauthenticated users
-                list_fields = [(current.messages.ORGANISATION, "human_resource.organisation_id"),
-                               "first_name",
-                               #"middle_name",
-                               "last_name",
-                               (T("Job Title"), "human_resource.job_title_id"),
-                               (T("Office"), "human_resource.site_id"),
-                               ]
+                list_fields.extend( [(MOBILE, "phone.value"),
+                                     (EMAIL, "email.value"),
+                                     ])
+                s3_sql_costum_fields.insert(3,
+                                            S3SQLInlineComponent(
+                                            "contact",
+                                            name = "phone",
+                                            label = MOBILE,
+                                            multiple = False,
+                                            fields = ["value"],
+                                            filterby = dict(field = "contact_method",
+                                                            options = "SMS")),
+                                            )
+                s3_sql_costum_fields.insert(3,
+                                            S3SQLInlineComponent(
+                                            "contact",
+                                            name = "email",
+                                            label = EMAIL,
+                                            multiple = False,
+                                            fields = ["value"],
+                                            filterby = dict(field = "contact_method",
+                                                            options = "EMAIL")),
+                                            )
+
+            crud_form = S3SQLCustomForm(*s3_sql_costum_fields)
 
             # Return to List view after create/update/delete (unless done via Modal)
             url_next = URL(c="pr", f="person")

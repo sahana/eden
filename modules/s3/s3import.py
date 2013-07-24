@@ -3855,6 +3855,10 @@ class S3BulkImporter(object):
                     aclValue = aclValue | acl.UPDATE
                 if permission == "DELETE":
                     aclValue = aclValue | acl.DELETE
+                if permission == "REVIEW":
+                    aclValue = aclValue | acl.REVIEW
+                if permission == "APPROVE":
+                    aclValue = aclValue | acl.APPROVE
                 if permission == "ALL":
                     aclValue = aclValue | acl.ALL
             return aclValue

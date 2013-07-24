@@ -99,6 +99,7 @@
        <li role='menuitem'><a href='/{{=appname}}/org/resource' tabindex='-1' class='menu-item'><i class='icon-resource'></i> {{=T("Resource Inventory")}}</a></li>
        <li role='menuitem'><a href='/{{=appname}}/pr/person' tabindex='-1' class='menu-item'><i class='icon-contact'></i> {{=T("Contact Directory")}}</a></li>
        <li role='menuitem'><a href='/{{=appname}}/default/index/glossary' tabindex='-1' class='menu-item'><i class='icon-list'></i> {{=T("Glossary")}}</a></li>
+       <li role='menuitem'><a href='/{{=appname}}/default/index/links' tabindex='-1' class='menu-item'><i class='icon-external-link'></i> {{=T("Links")}}</a></li>
       </ul>
      </li>
     </ul>
@@ -108,6 +109,7 @@
       <li class='dropdown'><a href='#' class='dropdown-toggle disabled' data-toggle='dropdown'><i class='icon-cog'></i><b class='caret'></b></a>
        <ul class='dropdown-menu'>
         <li><a href='/{{=appname}}/default/user/profile'><i class='icon-cog'></i> {{=T("Profile")}}</a></li>
+        <li><a href='/{{=appname}}/default/user/change_password'><i class='icon-lock'></i> {{=T("Change Password")}}</a></li>
         {{if auth.s3_has_role("ADMIN"):}}
         <li><a href='/{{=appname}}/admin/user'><i class='icon-cogs'></i> {{=T("Admin")}}</a></li>
         {{pass}}
