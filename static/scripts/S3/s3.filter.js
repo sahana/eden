@@ -82,6 +82,9 @@ S3.search = {};
                     $(this).click();
                 });
             }
+            if ($(this).hasClass('location-filter')) {
+                hierarchical_location_change(this);
+            }
         });
         form.find('.range-filter-input').each(function() {
             $(this).val('');
@@ -90,6 +93,12 @@ S3.search = {};
             $(this).val('');
         });
         // Other widgets go here
+        form.find('.filter-manager-widget').each(function() {
+            var that = $(this);
+            if (that.filtermanager !== undefined) {
+                that.filtermanager('clear');
+            }
+        });
     };
     
     /**
@@ -428,9 +437,57 @@ S3.search = {};
             }
         });
 
-        // @todo: location filter widget
+        // Location filter widget
+        form.find('.ui-multiselect:visible').prev(
+          '.location-filter.multiselect-filter-widget,' +
+          '.location-filter.groupedopts-filter-widget')
+        .add(
+        form.find('.location-filter:visible,' +
+          '.location-filter.multiselect-filter-widget.active,' +
+          '.location-filter.multiselect-filter-bootstrap.active'))
+        .each(function() {
+            var id = $(this).attr('id');
+            var expression = $('#' + id + '-data').val(),
+                operator = $('input:radio[name="' + id + '_filter"]:checked').val();
+
+            var that = $(this);
+            if (this.tagName && this.tagName.toLowerCase() == 'select') {
+                var refresh = false;
+
+                if (q.hasOwnProperty(expression)) {
+                    values = q[expression];
+                    refresh = true;
+                } else
+                if (operator == 'any' || operator == 'all') {
+                    var selector = expression.split('__')[0];
+                    if (q.hasOwnProperty(selector + '__anyof')) {
+                        values = q[selector + '__anyof'];
+                        refresh = true;
+                        $('input:radio[name="' + id + '_filter"][value="any"]')
+                         .prop('checked', true);
+                    } else if (q.hasOwnProperty(selector + '__contains')) {
+                        values = q[selector + '__contains'];
+                        refresh = true;
+                        $('input:radio[name="' + id + '_filter"][value="all"]')
+                         .prop('checked', true);
+                    }
+                }
+                if (refresh) {
+                    that.val(values);
+                    if (that.hasClass('groupedopts-filter-widget') &&
+                        typeof that.groupedopts != 'undefined') {
+                        that.groupedopts('refresh');
+                    } else
+                    if (that.hasClass('multiselect-filter-widget') &&
+                        typeof that.multiselect != 'undefined') {
+                        that.multiselect('refresh');
+                    }
+                    hierarchical_location_change(this);
+                }
+            }
+        });
     };
-    
+
     S3.search.setCurrentFilters = setCurrentFilters;
 
     /**
@@ -889,7 +946,7 @@ S3.search = {};
                         for (option in _hierarchy[opt]) {
                             if (_hierarchy[opt].hasOwnProperty(option)) {
                                 new_level = level + 1;
-                                if (option) {
+                                if (option && option != 'null') {
                                     widget['options' + new_level].push(option);
                                 }
                                 if (typeof(_hierarchy[opt][option]) === 'object') {
@@ -897,7 +954,7 @@ S3.search = {};
                                     for (_opt in __hierarchy) {
                                         if (__hierarchy.hasOwnProperty(_opt)) {
                                             new_level = level + 2;
-                                            if (_opt) {
+                                            if (_opt && _opt != 'null') {
                                                 widget['options' + new_level].push(_opt);
                                             }
                                             // @ToDo: Greater recursion
@@ -914,7 +971,7 @@ S3.search = {};
                                 for (option in _hierarchy[opt]) {
                                     if (_hierarchy[opt].hasOwnProperty(option)) {
                                         new_level = level + 1;
-                                        if (option) {
+                                        if (option && option != 'null') {
                                             widget['options' + new_level].push(option);
                                         }
                                         if (typeof(_hierarchy[opt][option]) === 'object') {
@@ -922,7 +979,7 @@ S3.search = {};
                                             for (_opt in __hierarchy) {
                                                 if (__hierarchy.hasOwnProperty(_opt)) {
                                                     new_level = level + 2;
-                                                    if (_opt) {
+                                                    if (_opt && _opt != 'null') {
                                                         widget['options' + new_level].push(_opt);
                                                     }
                                                     // @ToDo: Greater recursion
@@ -957,7 +1014,7 @@ S3.search = {};
                                     var __hierarchy = _hierarchy[opt][option];
                                     for (_opt in __hierarchy) {
                                         if (__hierarchy.hasOwnProperty(_opt)) {
-                                            if (_opt) {
+                                            if (_opt && _opt != 'null') {
                                                 widget['options' + new_level].push(_opt);
                                             }
                                         }
@@ -979,7 +1036,7 @@ S3.search = {};
                                                     var __hierarchy = _hierarchy[opt][option];
                                                     for (_opt in __hierarchy) {
                                                         if (__hierarchy.hasOwnProperty(_opt)) {
-                                                            if (_opt) {
+                                                            if (_opt && _opt != 'null') {
                                                                 widget['options' + new_level].push(_opt);
                                                             }
                                                             // @ToDo: Greater recursion
@@ -996,7 +1053,7 @@ S3.search = {};
                                                     var __hierarchy = _hierarchy[opt][option];
                                                     for (_opt in __hierarchy) {
                                                         if (__hierarchy.hasOwnProperty(_opt)) {
-                                                            if (_opt) {
+                                                            if (_opt && _opt != 'null') {
                                                                 widget['options' + new_level].push(_opt);
                                                             }
                                                             // @ToDo: Greater recursion
@@ -1255,75 +1312,102 @@ S3.search = {};
 
     $.widget('s3.filtermanager', {
 
-        // Default options
+        /**
+         * options: default options
+         */
         options: {
-            filters: {},        // the available filters
-            readOnly: false,    // do not allow to save/update filters
-            ajaxURL: null,      // URL to save filters
-            loadTooltip: "Load",
-            saveTooltip: "Update filter",
-            createTooltip: "Create new filter from current options",
-            explicitLoad: false
+            filters: {},                // the available filters
+            readOnly: false,            // do not allow to save/update filters
+            ajaxURL: null,              // URL to save filters
+            loadTooltip: null,          // tooltip for load-button
+            saveTooltip: null,          // tooltip for save-button
+            createTooltip: null,        // tooltip for create-button
+            explicitLoad: false,        // load filters via load-button rather than immediately
+            confirmUpdate: false,       // user must confirm update of existing filters
+            titleHint: 'Enter a title'  // hint (watermark) in the title input field
         },
 
+        /**
+         * _create: create the widget
+         */
         _create: function() {
-            // Create the widget
 
             this.id = filterManagerID++;
-
         },
 
+        /**
+         * _init: update widget options
+         */
         _init: function() {
-            // Update widget options
 
-            var el = this.element; // this is the SELECT
-            
-            // Render all initial contents
             this.refresh();
         },
 
+        /**
+         * _destroy: remove generated elements & reset other changes
+         */
         _destroy: function() {
-            // Remove generated elements & reset other changes
+            // @todo: implement
         },
 
+        /**
+         * refresh: re-draw contents
+         */
         refresh: function() {
-            // Rre-draw contents
-            var el = this.element; // this is the SELECT
+            
+            var id = this.id,
+                el = this.element,
+                options = this.options;
 
             this._unbindEvents();
 
-            id = this.id
-            
+            // SAVE-button
             if (this.save_btn) {
                 this.save_btn.remove();
             }
+            this.save_btn = $('<div class="fm-save" id="fm-save-' + id + '">');
+            if (options.saveTooltip) {
+                this.save_btn.attr('title', options.saveTooltip);
+            }
+
+            // LOAD-button
             if (this.load_btn) {
                 this.load_btn.remove();
             }
-            this.save_btn = $('<div class="fm-save" id="fm-save-' + id + '">');
             this.load_btn = $('<div class="fm-load" id="fm-load-' + id + '">');
+            if (options.loadTooltip) {
+                this.load_btn.attr('title', options.loadTooltip);
+            }
 
+            // Throbber
             if (this.throbber) {
                 this.throbber.remove();
             }
             this.throbber = $('<div class="inline-throbber" id="fm-throbber-' + id + '">')
                             .css({'float': 'left'});
             
+            // CREATE-button
             if (this.create_btn) {
                 this.create_btn.remove();
             }
+            this.create_btn = $('<div class="fm-create" id="fm-create-' + id + '">');
+            if (options.createTooltip) {
+                this.create_btn.attr('title', options.createTooltip);
+            }
 
-    if (this.accept_btn) {
+            // ACCEPT button for create-dialog
+            if (this.accept_btn) {
                 this.accept_btn.remove();
             }
+            this.accept_btn = $('<div class="fm-accept" id="fm-accept-' + id + '">');
+
+            // CANCEL button for create-dialog
             if (this.cancel_btn) {
                 this.cancel_btn.remove();
             }
-            
-            this.create_btn = $('<div class="fm-create" id="fm-create-' + id + '">');
-            this.accept_btn = $('<div class="fm-accept" id="fm-accept-' + id + '">');
             this.cancel_btn = $('<div class="fm-cancel" id="fm-cancel-' + id + '">');
 
+            // Insert buttons into widget
             $(el).after(this.load_btn.hide(),
                         this.save_btn.hide(),
                         this.throbber.hide(),
@@ -1331,13 +1415,20 @@ S3.search = {};
                         this.accept_btn.hide(),
                         this.cancel_btn.hide());
 
+            // @todo: hide create if readOnly
+
+            // Reset status
             this._cancel();
 
-            // Do something
             this._bindEvents();
         },
 
+        /**
+         * _newFilter: dialog to create a new filter from current options
+         */
         _newFilter: function() {
+
+            // @todo: ignore if readOnly
 
             // Hide selector and buttons
             var el = this.element.hide();
@@ -1348,23 +1439,48 @@ S3.search = {};
             // Show accept/cancel
             this.accept_btn.show();
             this.cancel_btn.show();
-            
+
+            // Input field
+            var hint = this.options.titleHint;
             var input = $('<input type="text" id="fm-title-input-' + this.id + '">')
-                        .val('Enter title...')
+                        .val(hint)
                         .css({color: 'grey', 'float': 'left'})
                         .focusin(function() {
-                            $(this).css({color: 'black'}).val('').unbind('focusin');
+                            if (!$(this).hasClass('changed')) {
+                                $(this).css({color: 'black'}).val('');
+                            }
+                        })
+                        .change(function() {
+                            $(this).addClass('changed');
+                        })
+                        .focusout(function() {
+                            if ($(this).val() === '') {
+                                $(this).removeClass('changed')
+                                       .css({color: 'grey'})
+                                       .val(hint);
+                            }
                         });
-
             this.input = input;
             $(el).after(input);
-
         },
 
+        /**
+         * _accept: accept create-dialog and store current options as new filter
+         */
         _accept: function () {
 
-            var el = this.element;
+            // @todo: ignore if readOnly
 
+            var el = this.element,
+                fm = this,
+                title = this.input.val();
+                
+            if (!$(this.input).hasClass('changed') || !title) {
+                return;
+            } else {
+                $(this.input).removeClass('changed');
+            }
+            
             // Hide accept/cancel
             this.accept_btn.hide();
             this.cancel_btn.hide();
@@ -1372,54 +1488,50 @@ S3.search = {};
             // Show throbber
             this.throbber.show();
 
+
             // Collect data
             var filter = {
-                title: this.input.val(),
+                title: title,
                 query: S3.search.getCurrentFilters($(el).closest('form'))
             }
 
-            // @todo: check that title is not empty
-            
-            // Ajax-save current Filters
-            $.ajax({
+            // Ajax-save
+            $.ajaxS3({
                 'url': this.options.ajaxURL,
                 'type': 'POST',
                 'dataType': 'json',
-                'data': JSON.stringify(filter)
-            })
-            .done(function(data) {
-                var new_id = data.created;
-
-                if (new_id) {
-                    // Store filter
-                    fm.options.filters[new_id] = filter.query;
-
-                    // Append filter to SELECT + select it
-                    var new_opt = $('<option value="' + new_id + '">' + filter.title + '</option>');
-                    $(el).append(new_opt).val(new_id).change();
+                'data': JSON.stringify(filter),
+                'success': function(data) {
+                    var new_id = data.created;
+                    if (new_id) {
+                        // Store filter
+                        fm.options.filters[new_id] = filter.query;
+                        // Append filter to SELECT + select it
+                        var new_opt = $('<option value="' + new_id + '">' + filter.title + '</option>');
+                        $(el).append(new_opt).val(new_id).change();
+                    }
+                    // Close save-dialog
+                    fm._cancel();
+                },
+                'error': function () {
+                    fm._cancel();
                 }
-                // Close save-dialog
-                fm._cancel();
-            })
-            .fail(function() {
-                // Remove throbber
-                fm.throbber.hide();
-
-                // @todo: show error
             });
         },
 
         /**
          * _save: update the currently selected filter with current options
          */
-        
         _save: function() {
 
-            var el = this.element;
+            // @todo: ignore if readOnly
+
+            var el = this.element, fm = this;
 
             var id = $(el).val();
-            // @todo: i18n, use title for this filter, make confirmation optional
-            if (!id || !confirm("Update this filter?")) {
+            
+            // @todo: i18n, use title for this filter
+            if (!id || this.options.confirmUpdate && !confirm("Update this filter?")) {
                 return;
             }
 
@@ -1438,37 +1550,24 @@ S3.search = {};
             }
 
             // Ajax-save current Filters
-            $.ajax({
+            $.ajaxS3({
                 'url': this.options.ajaxURL,
                 'type': 'POST',
                 'dataType': 'json',
-                'data': JSON.stringify(filter)
-            })
-            .done(function(data) {
-                // Store filter
-                fm.options.filters[id] = filter.query;
-                fm._cancel();
-            })
-            .fail(function() {
-                fm.throbber.hide();
-
-                // @todo: show error
+                'data': JSON.stringify(filter),
+                'success': function() {
+                    fm.options.filters[id] = filter.query;
+                    fm._cancel();
+                },
+                'error': function () {
+                    fm._cancel();
+                }
             });
         },
 
-        _load: function() {
-
-            var el = this.element,
-                filters = this.options.filters;
-
-            var filter_id = $(el).val();
-            if (filter_id && filters.hasOwnProperty(filter_id)) {
-                S3.search.setCurrentFilters($(el).closest('form'), filters[filter_id]);
-            } else {
-                // @todo: clear filters
-            }
-        },
-
+        /**
+         * _cancel: cancel create-dialog and return to filter selection
+         */
         _cancel: function() {
 
             // Hide throbber
@@ -1486,10 +1585,45 @@ S3.search = {};
             this.element.show();
             this.create_btn.show();
 
+            // @todo: hide create-button if readOnly
+
             this._showLoadSaveButtons();
         },
 
+        /**
+         * _load: load the selected filter
+         */
+        _load: function() {
+
+            var el = this.element,
+                filters = this.options.filters;
+
+            var filter_id = $(el).val();
+            if (filter_id && filters.hasOwnProperty(filter_id)) {
+                S3.search.setCurrentFilters($(el).closest('form'), filters[filter_id]);
+            } else {
+                // @todo: clear filters? => not in global scope
+                // S3.search.clearFilters($(this).closest('form'));
+            }
+        },
+
+        /**
+         * clear: clear current selection
+         */
+        clear: function() {
+
+            var el = this.element;
+
+            $(el).val('');
+            this._cancel();
+        },
+
+        /**
+         * _showLoadSaveButtons: show (unhide) load/save buttons
+         */
         _showLoadSaveButtons: function() {
+
+            // @todo: render save-button only if not readOnly
 
             if ($(this.element).val()) {
                 if (this.options.explicitLoad) {
@@ -1503,10 +1637,14 @@ S3.search = {};
             
         },
 
+        /**
+         * _bindEvents: bind events to generated elements (after refresh)
+         */
         _bindEvents: function() {
-            // Bind events to generated elements (after refresh)
-            fm = this;
             
+            var fm = this;
+            
+            // @todo: don't bind create if readOnly
             this.create_btn.click(function() {
                 fm._newFilter();
             });
@@ -1527,13 +1665,16 @@ S3.search = {};
                     fm._load();
                 });
             }
+            // @todo: don't bind save if readOnly
             this.save_btn.click(function() {
                 fm._save();
             });
         },
 
+        /**
+         * _unbindEvents: remove events from generated elements (before refresh)
+         */
         _unbindEvents: function() {
-            // Unbind events (before refresh)
 
             if (this.create_btn) {
                 this.create_btn.unbind('click');
