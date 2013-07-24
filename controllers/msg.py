@@ -42,7 +42,7 @@ def outbox():
 
     # Subject works for Email but not SMS
     table.message_id.represent = lambda id: db(db.msg_log.id == id).select(db.msg_log.message, limitby=(0, 1)).first().message
-    table.pe_id.represent = s3db.pr_pentity_represent
+    table.pe_id.represent = s3db.pr_PersonEntityRepresent(default_label="")
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
@@ -62,6 +62,15 @@ def outbox():
 
     s3db.configure(tablename, listadd=False)
     return s3_rest_controller(module, resourcename, add_btn = add_btn)
+# =============================================================================
+def message():
+    """
+        RESTful CRUD controller for the master message log.
+    """
+
+    tablename = "msg_message"
+    s3db.configure(tablename, listadd=False)
+    return s3_rest_controller()
 
 # =============================================================================
 def log():
@@ -856,6 +865,8 @@ def workflow():
 
             mtable = s3db.msg_email_inbound_channel
             ttable = s3db.msg_twilio_inbound_channel
+            rtable = s3db.msg_rss_channel
+
             source_opts = []
             append = source_opts.append
             records = db(mtable.id > 0).select(mtable.username)
@@ -866,8 +877,14 @@ def workflow():
             for record in records:
                 append(record.account_name)
 
+            records = db(rtable.deleted == False).select(rtable.name, \
+                                                         rtable.url)
+            for record in records:
+                append(str(record.name) + "(" + str(record.url) + ")")
+
             # Dynamic lookup of the parsing functions in S3Parsing class.
-            parsers = inspect.getmembers(S3Parsing, predicate=inspect.isfunction)
+            parsers = inspect.getmembers(S3Parsing, \
+                                         predicate=inspect.isfunction)
             parse_opts = []
             for parser in parsers:
                 parse_opts += [parser[0]]
@@ -1164,30 +1181,15 @@ def inbox():
     """
         RESTful CRUD controller for the Inbox
         - all Inbound Messages will go here
-        @ToDo: Complete (currently just MobileCommons)
     """
 
     if not auth.s3_logged_in():
         session.error = T("Requires Login!")
         redirect(URL(c="default", f="user", args="login"))
 
-    tablename = "msg_inbox"
-    table = s3db[tablename]
-
-    # CRUD Strings
-    s3.crud_strings[tablename] = Storage(
-        title_display = T("Inbox"),
-        title_list = T("Inbox"),
-        title_update = T("Edit Message"),
-        title_search = T("Search Inbox"),
-        label_list_button = T("View Messages"),
-        msg_record_deleted = T("Message deleted"),
-        msg_list_empty = T("Inbox empty"),
-        msg_record_modified = T("Message updated")
-        )
-
-    s3db.configure(tablename, listadd=False)
-    return s3_rest_controller(module, "")
+    mtable = s3db.msg_message
+    s3.filter = (mtable.inbound == True)
+    return s3_rest_controller(module, "message")
 
 # -----------------------------------------------------------------------------
 def email_inbox():
@@ -1201,9 +1203,10 @@ def email_inbox():
         session.error = T("Requires Login!")
         redirect(URL(c="default", f="user", args="login"))
 
-    tablename = "msg_email_inbox"
-    s3db.configure(tablename, listadd=False)
-    return s3_rest_controller()
+    etable = s3db.msg_email
+    s3.filter = (etable.inbound == True)
+
+    return s3_rest_controller(module, "message")
 
 # -----------------------------------------------------------------------------
 def twilio_inbox():
