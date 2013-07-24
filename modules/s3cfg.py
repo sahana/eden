@@ -720,6 +720,17 @@ class S3Config(Storage):
     def get_L10n_decimal_separator(self):
         return self.L10n.get("decimal_separator", ",")
 
+    def get_L10n_translate_cms_series(self):
+        """
+            Whether to translate CMS Series names
+        """
+        return self.L10n.get("translate_cms_series", False)
+    def get_L10n_translate_gis_location(self):
+        """
+            Whether to translate Location names
+        """
+        return self.L10n.get("translate_gis_location", False)
+
     # -------------------------------------------------------------------------
     # PDF settings
     def get_paper_size(self):
@@ -1005,7 +1016,7 @@ class S3Config(Storage):
     # Modules
 
     # -------------------------------------------------------------------------
-    # Alert
+    # CAP
     def get_cap_identifier_prefix(self):
         """
             Prefix to be prepended to identifiers of CAP alerts

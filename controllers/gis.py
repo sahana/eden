@@ -427,43 +427,87 @@ def ldata():
 
     id = args[0]
 
+    # Translate options using gis_location_name?
+    translate = settings.get_L10n_translate_gis_location()
+    if translate:
+        language = current.session.s3.language
+        if language == current.deployment_settings.get_L10n_default_language():
+            translate = False
+
     table = s3db.gis_location
     query = (table.deleted == False) & \
             ((table.parent == id) | \
              (table.id == id))
-    locations = db(query).select(table.id,
-                                 table.name,
-                                 table.level,
-                                 table.parent,
-                                 table.lon_min,
-                                 table.lat_min,
-                                 table.lon_max,
-                                 table.lat_max,
-                                 )
-    try:
-        id_level = int(locations.as_dict()[int(id)]["level"][1:])
-    except:
-        return ""
+    fields = [table.id,
+              table.name,
+              table.level,
+              table.parent,
+              table.lon_min,
+              table.lat_min,
+              table.lon_max,
+              table.lat_max,
+              ]
+    if translate:
+        ntable = s3db.gis_location_name
+        fields.append(ntable.name_l10n)
+        left = ntable.on((ntable.deleted == False) & \
+                         (ntable.language == language) & \
+                         (ntable.location_id == table.id))
+    else:
+        left = None
+    locations = db(query).select(*fields,
+                                 left=left)
+    if translate:
+        try:
+            id_level = int(locations.as_dict(key="gis_location.id")[int(id)]["gis_location"]["level"][1:])
+        except:
+            return ""
+    else:
+        try:
+            id_level = int(locations.as_dict()[int(id)]["level"][1:])
+        except:
+            return ""
     output_level = id_level + 1
     search_level = "L%s" % output_level
     location_dict = {}
-    for location in locations:
-        if location.level == search_level:
-            if location.lon_min is not None:
-                location_dict[int(location.id)] = dict(n=location.name,
-                                                       l=output_level,
-                                                       f=int(location.parent),
-                                                       b=[location.lon_min,
-                                                          location.lat_min,
-                                                          location.lon_max,
-                                                          location.lat_max
-                                                          ],
-                                                       )
-            else:
-                location_dict[int(location.id)] = dict(n=location.name,
-                                                       l=output_level,
-                                                       f=int(location.parent),
-                                                       )
+    if translate:
+        for location in locations:
+            l = location["gis_location"]
+            if l.level == search_level:
+                name = location["gis_location_name.name_l10n"] or l.name
+                if l.lon_min is not None:
+                    location_dict[int(l.id)] = dict(n=name,
+                                                    l=output_level,
+                                                    f=int(l.parent),
+                                                    b=[l.lon_min,
+                                                       l.lat_min,
+                                                       l.lon_max,
+                                                       l.lat_max
+                                                       ],
+                                                    )
+                else:
+                    location_dict[int(l.id)] = dict(n=name,
+                                                    l=output_level,
+                                                    f=int(l.parent),
+                                                    )
+    else:
+        for l in locations:
+            if l.level == search_level:
+                if l.lon_min is not None:
+                    location_dict[int(l.id)] = dict(n=l.name,
+                                                    l=output_level,
+                                                    f=int(l.parent),
+                                                    b=[l.lon_min,
+                                                       l.lat_min,
+                                                       l.lon_max,
+                                                       l.lat_max
+                                                       ],
+                                                    )
+                else:
+                    location_dict[int(l.id)] = dict(n=l.name,
+                                                    l=output_level,
+                                                    f=int(l.parent),
+                                                    )
 
     script = '''n=%s\n''' % json.dumps(location_dict)
     response.headers["Content-Type"] = "application/json"

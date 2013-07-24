@@ -156,6 +156,10 @@ settings.L10n.decimal_separator = "."
 #                "bahai": T("Bahai"),
 #                "other": T("other")
 #            })
+# Uncomment this to Translate CMS Series Names
+#settings.L10n.translate_cms_series = True
+# Uncomment this to Translate Location Names
+#settings.L10n.translate_gis_location = True
 
 # Finance settings
 #settings.fin.currencies = {

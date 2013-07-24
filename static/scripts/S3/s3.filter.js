@@ -866,13 +866,19 @@ S3.search = {};
         var base = name.slice(0, -1);
         var level = parseInt(name.slice(-1));
         var hierarchy = S3.location_filter_hierarchy;
+        if (S3.location_name_l10n != undefined) {
+            var translate = true;
+            var location_name_l10n = S3.location_name_l10n;
+        } else {
+            var translate = false;
+        }
         // Initialise vars in a way in which we can access them via dynamic names
         widget.options1 = [];
         widget.options2 = [];
         widget.options3 = [];
         widget.options4 = [];
         widget.options5 = [];
-        var new_level;
+        var new_level, opt, _opt, i;
         if (hierarchy.hasOwnProperty('L' + level)) {
             // Top-level
             var _hierarchy = hierarchy['L' + level];
@@ -939,44 +945,64 @@ S3.search = {};
             var _values = $('#' + base + (level - 1)).val();
             for (opt in _hierarchy) {
                 if (_hierarchy.hasOwnProperty(opt)) {
-                    /* Only needed if not hiding
                     if (_values === null) {
-                    } else { */
-                    for (var i in _values) {
-                        if (_values[i] === opt) {
-                            for (option in _hierarchy[opt]) {
-                                if (_hierarchy[opt].hasOwnProperty(option)) {
-                                    if (values === null) {
-                                        // Show all subsequent Options
-                                        for (option in _hierarchy[opt]) {
-                                            if (_hierarchy[opt].hasOwnProperty(option)) {
-                                                var __hierarchy = _hierarchy[opt][option];
-                                                for (_opt in __hierarchy) {
-                                                    if (__hierarchy.hasOwnProperty(_opt)) {
-                                                        new_level = level + 1;
-                                                        if (_opt) {
-                                                            widget['options' + new_level].push(_opt);
+                        // We can't be hiding
+                        // Read this level
+                        _values = $('#' + base + level).val();
+                        for (option in _hierarchy[opt]) {
+                            for (i in _values) {
+                                if (_values[i] === option) {
+                                    new_level = level + 1;
+                                    // Read the options for this level
+                                    var __hierarchy = _hierarchy[opt][option];
+                                    for (_opt in __hierarchy) {
+                                        if (__hierarchy.hasOwnProperty(_opt)) {
+                                            if (_opt) {
+                                                widget['options' + new_level].push(_opt);
+                                            }
+                                        }
+                                    }
+                                    // @ToDo: Read the options for subsequent levels
+                                }
+                            }                            
+                        }
+                    } else {
+                        for (i in _values) {
+                            if (_values[i] === opt) {
+                                for (option in _hierarchy[opt]) {
+                                    if (_hierarchy[opt].hasOwnProperty(option)) {
+                                        if (values === null) {
+                                            // Show all subsequent Options
+                                            for (option in _hierarchy[opt]) {
+                                                if (_hierarchy[opt].hasOwnProperty(option)) {
+                                                    new_level = level + 1;
+                                                    var __hierarchy = _hierarchy[opt][option];
+                                                    for (_opt in __hierarchy) {
+                                                        if (__hierarchy.hasOwnProperty(_opt)) {
+                                                            if (_opt) {
+                                                                widget['options' + new_level].push(_opt);
+                                                            }
+                                                            // @ToDo: Greater recursion
+                                                            //if (typeof(__hierarchy[_opt]) === 'object') {
+                                                            //}
                                                         }
-                                                        // @ToDo: Greater recursion
-                                                        //if (typeof(__hierarchy[_opt]) === 'object') {
-                                                        //}
                                                     }
                                                 }
                                             }
-                                        }
-                                    } else {
-                                        for (i in values) {
-                                            if (values[i] === option) {
-                                                var __hierarchy = _hierarchy[opt][option];
-                                                for (_opt in __hierarchy) {
-                                                    if (__hierarchy.hasOwnProperty(_opt)) {
-                                                        new_level = level + 1;
-                                                        if (_opt) {
-                                                            widget['options' + new_level].push(_opt);
+                                        } else {
+                                            for (i in values) {
+                                                if (values[i] === option) {
+                                                    new_level = level + 1;
+                                                    var __hierarchy = _hierarchy[opt][option];
+                                                    for (_opt in __hierarchy) {
+                                                        if (__hierarchy.hasOwnProperty(_opt)) {
+                                                            if (_opt) {
+                                                                widget['options' + new_level].push(_opt);
+                                                            }
+                                                            // @ToDo: Greater recursion
+                                                            //if (typeof(__hierarchy[_opt]) === 'object') {
+                                                            //}
                                                         }
-                                                        // @ToDo: Greater recursion
-                                                        //if (typeof(__hierarchy[_opt]) === 'object') {
-                                                        //}
                                                     }
                                                 }
                                             }
@@ -991,15 +1017,23 @@ S3.search = {};
         } else if (hierarchy.hasOwnProperty('L' + (level - 2))) {
             // @ToDo
         }
+        var name, name_l10n, options, _options;
         for (var l = level + 1; l <= 5; l++) {
             var select = $('#' + base + l);
             if (typeof(select) != 'undefined') {
-                var options = widget['options' + l];
+                options = widget['options' + l];
+                // @ToDo: Sort by name_l10n not by name
                 options.sort();
                 _options = '';
                 for (i in options) {
                     if (options.hasOwnProperty(i)) {
-                        _options += '<option value="' + options[i] + '">' + options[i] + '</option>';
+                        name = options[i];
+                        if (translate) {
+                            name_l10n = location_name_l10n[name] || name;
+                        } else {
+                            name_l10n = name;
+                        }
+                        _options += '<option value="' + name + '">' + name_l10n + '</option>';
                     }
                 }
                 select.html(_options);
@@ -1212,7 +1246,7 @@ S3.search = {};
 
 /**
  * Filter Manager Widget:
- *      - Filter form widget to save/load/apply saved filters
+ *  - Filter form widget to save/load/apply saved filters
  */
 
 (function($, undefined) {
@@ -1278,7 +1312,8 @@ S3.search = {};
             if (this.create_btn) {
                 this.create_btn.remove();
             }
-            if (this.accept_btn) {
+
+    if (this.accept_btn) {
                 this.accept_btn.remove();
             }
             if (this.cancel_btn) {

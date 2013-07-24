@@ -4329,11 +4329,13 @@ class gis_LocationRepresent(S3Represent):
     """ Representation of Locations """
 
     def __init__(self,
-                 translate=False,
                  show_link=False,
                  multiple=False,
                  sep=None
                  ):
+
+        # Translation uses gis_location_name & not T()
+        translate = current.deployment_settings.get_L10n_translate_gis_location() 
 
         self.sep = sep
 
@@ -4341,6 +4343,7 @@ class gis_LocationRepresent(S3Represent):
             # Separator to place between all elements in the hierarchy
             fields = ["name",
                       "level",
+                      "path",
                       "L0",
                       "L1",
                       "L2",
@@ -4442,63 +4445,90 @@ class gis_LocationRepresent(S3Represent):
         """
 
         sep = self.sep
-        name = row.name or ""
+        translate = self.translate
+        path = row.path
+        ids = path.split("/")
+        if translate:
+            language = current.session.s3.language
+            if language == current.deployment_settings.get_L10n_default_language():
+                translate = False
+            else:
+                s3db = current.s3db
+                table = s3db.gis_location_name
+                query = (table.deleted == False) & \
+                        (table.language == language)
+                if len(ids) == 1:
+                    query &= (table.location_id == row.id)
+                    limitby = (0, 1)
+                else:
+                    query &= (table.location_id.belongs(ids))
+                    limitby = (0, len(ids))
+                l10n = current.db(query).select(table.location_id,
+                                                table.name_l10n,
+                                                limitby = limitby,
+                                                ).as_dict(key="location_id")
+        if translate:
+            loc = l10n.get(row.id, None)
+            if loc:
+                name = loc["name_l10n"]
+            else:
+                name = row.name or ""
+        else:
+            name = row.name or ""
         level = row.level
         if sep:
             if level == "L0":
                 return name
+            # Remove the last ID as this is 'name'
+            ids.pop()
             locations = [name]
             lappend = locations.append
-            matched = False
             L5 = row.L5
-            if L5:
-                if L5 == name:
-                    matched = True
-                else:
-                    lappend(L5)
+            if L5 and level != "L5":
+                if translate:
+                    loc = l10n.get(int(ids.pop()), None) 
+                    if loc:
+                        L5 = loc["name_l10n"]
+                lappend(L5)
             L4 = row.L4
-            if L4:
-                if L4 == name:
-                    if matched:
-                        lappend(L4)
-                    matched = True
-                else:
-                    lappend(L4)
+            if L4 and level != "L4":
+                if translate:
+                    loc = l10n.get(int(ids.pop()), None) 
+                    if loc:
+                        L4 = loc["name_l10n"]
+                lappend(L4)
             L3 = row.L3
-            if L3:
-                if L3 == name:
-                    if matched:
-                        lappend(L3)
-                    matched = True
-                else:
-                    lappend(L3)
+            if L3 and level != "L3":
+                if translate:
+                    loc = l10n.get(int(ids.pop()), None) 
+                    if loc:
+                        L3 = loc["name_l10n"]
+                lappend(L3)
             L2 = row.L2
-            if L2:
-                if L2 == name:
-                    if matched:
-                        lappend(L2)
-                    matched = True
-                else:
-                    lappend(L2)
+            if L2 and level != "L2":
+                if translate:
+                    loc = l10n.get(int(ids.pop()), None) 
+                    if loc:
+                        L2 = loc["name_l10n"]
+                lappend(L2)
             L1 = row.L1
-            if L1:
-                if L1 == name:
-                    if matched:
-                        lappend(L1)
-                    matched = True
-                else:
-                    lappend(L1)
+            if L1 and level != "L1":
+                if translate:
+                    loc = l10n.get(int(ids.pop()), None) 
+                    if loc:
+                        L1 = loc["name_l10n"]
+                lappend(L1)
             if self.multi_country:
                 L0 = row.L0
                 if L0:
-                    if L0 == name:
-                        if matched:
-                            lappend(L0)
-                        matched = True
-                    else:
-                        lappend(L0)
+                    if translate:
+                        loc = l10n.get(int(ids.pop()), None) 
+                        if loc:
+                            L0 = loc["name_l10n"]
+                    lappend(L0)
             represent = sep.join(locations)
         else:
+            # @ToDo: Support translate=True
             if level == "L0":
                 represent = "%s (%s)" % (name, current.messages.COUNTRY)
             else:
@@ -4508,7 +4538,7 @@ class gis_LocationRepresent(S3Represent):
                     htable = s3db.gis_hierarchy
                     L0_name = row.L0
                     if L0_name:
-                        path = row.path.split("/")
+                        path = path.split("/")
                         L0_id = path[0]
                         level_name = current.gis.get_location_hierarchy(level,
                                                                         L0_id)
@@ -4539,7 +4569,7 @@ class gis_LocationRepresent(S3Represent):
                         represent = self.lat_lon_represent(row)
                     if row.parent:
                         # @ToDo: Assumes no missing levels in PATH
-                        path = row.path.split("/")
+                        path = path.split("/")
                         parent_level = "L%s" % (len(path) - 2)
                         parent_name = row[parent_level]
                         if parent_name:

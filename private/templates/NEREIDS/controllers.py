@@ -307,6 +307,8 @@ def _updates():
                                                    listid="event_datalist",
                                                    orderby=orderby,
                                                    layout=render_events)
+        # Render the list
+        data = datalist.html()
         if numrows == 0:
             # Empty table or just no match?
             table = resource.table
@@ -323,11 +325,7 @@ def _updates():
                 msg = DIV(S3CRUD.crud_string(resource.tablename,
                                              "msg_list_empty"),
                           _class="empty")
-            data = msg
-        else:
-            # Render the list
-            dl = datalist.html()
-            data = dl
+            data.insert(1, msg)
         output["disasters"] = data
 
     return output

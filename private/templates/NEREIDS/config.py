@@ -120,6 +120,12 @@ settings.L10n.decimal_separator = "."
 # Thousands separator for numbers (defaults to space)
 settings.L10n.thousands_separator = ","
 
+# Uncomment this to Translate CMS Series Names
+# - we want this on when running s3translate but off in normal usage as we use the English names to lookup icons in render_posts
+#settings.L10n.translate_cms_series = True
+# Uncomment this to Translate Location Names
+settings.L10n.translate_gis_location = True
+
 # Restrict the Location Selector to just certain countries
 settings.gis.countries = ["GR"] # ["GR", "CY"]
 
@@ -621,7 +627,8 @@ def render_locations(listid, resource, rfields, record, **attr):
             tally_reports += 1
 
     # https://code.google.com/p/web2py/issues/detail?id=1533
-    public_url = current.deployment_settings.get_base_public_url()
+    settings = current.deployment_settings
+    public_url = settings.get_base_public_url()
     name = name.replace(" ", "_")
     if public_url.startswith("http://127.0.0.1"):
         # Assume Rocket
@@ -630,7 +637,7 @@ def render_locations(listid, resource, rfields, record, **attr):
         # Assume Apache or Cherokee
         image = s3_unicode(name)
     language = current.session.s3.language
-    if language != "en":
+    if language != settings.get_L10n_default_language():
         # Local name available?
         table = s3db.gis_location_name
         query = (table.deleted == False) & \
@@ -2474,7 +2481,8 @@ def customize_gis_location(**attr):
                                          )
                 name = location.name
                 # https://code.google.com/p/web2py/issues/detail?id=1533
-                public_url = current.deployment_settings.get_base_public_url()
+                settings = current.deployment_settings
+                public_url = settings.get_base_public_url()
                 _name = name.replace(" ", "_")
                 if public_url.startswith("http://127.0.0.1"):
                     # Assume Rocket
@@ -2483,7 +2491,7 @@ def customize_gis_location(**attr):
                     # Assume Apache or Cherokee
                     image = s3_unicode(_name)
                 language = current.session.s3.language
-                if language != "en":
+                if language != settings.get_L10n_default_language():
                     # Local name available?
                     table = s3db.gis_location_name
                     query = (table.deleted == False) & \

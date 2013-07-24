@@ -1173,11 +1173,10 @@ class S3DateWidget(FormWidget):
         else:
             format = _format.replace("%Y", "yy").replace("%y", "y").replace("%m", "mm").replace("%d", "dd").replace("%b", "M")
 
-        default = dict(
-                        _type = "text",
-                        value = (value != None and str(value)) or "",
-                    )
-                    
+        default = dict(_type = "text",
+                       value = (value != None and str(value)) or "",
+                       )
+
         attr = StringWidget._attributes(field, default, **attributes)
         
         widget = INPUT(**attr)
@@ -1357,17 +1356,17 @@ class S3DateTimeWidget(FormWidget):
         # Update limits of another widget?
         set_min = opts.get("set_min", None)
         set_max = opts.get("set_max", None)
-        onclose = """function(selectedDate) {"""
+        onclose = """function(selectedDate){"""
         onclear = ""
         if set_min:
-            onclose += """$('#%s').%s('option', 'minDate', selectedDate);""" % \
+            onclose += """$('#%s').%s('option','minDate',selectedDate)\n""" % \
                        (set_min, widget)
-            onclear += """$('#%s').%s('option', 'minDate', null);""" % \
+            onclear += """$('#%s').%s('option','minDate',null)\n""" % \
                        (set_min, widget)
         if set_max:
-            onclose += """$('#%s').%s('option', 'maxDate', selectedDate);""" % \
+            onclose += """$('#%s').%s('option','maxDate',selectedDate)""" % \
                        (set_max, widget)
-            onclear += """$('#%s').%s('option', 'minDate', null);""" % \
+            onclear += """$('#%s').%s('option','minDate',null)""" % \
                        (set_max, widget)
         onclose += """}"""
 
@@ -1418,31 +1417,25 @@ var clear_button=$('<input id="%(selector)s_clear" type="button" value="clear"/>
 });
 if($('#%(selector)s_clear').length==0){
  $('#%(selector)s').after(clear_button)
-}""" % \
-            dict(selector=selector,
-                 widget=widget,
-
-                 date_format=date_format,
-                 time_format=time_format,
-                 separator=separator,
-
-                 weeknumber = getopt("weeknumber", False),
-                 month_selector = getopt("month_selector", False),
-                 year_selector = getopt("year_selector", True),
-                 buttons = getopt("buttons", True),
-
-                 firstDOW=firstDOW,
-                 year_range=year_range,
-                 minute_step=minute_step,
-
-                 limit=limit,
-                 earliest=earliest.strftime(ISO),
-                 latest=latest.strftime(ISO),
-                 default=default,
-
-                 onclose=onclose,
-                 onclear=onclear,
-            )
+}""" %  dict(selector=selector,
+             widget=widget,
+             date_format=date_format,
+             time_format=time_format,
+             separator=separator,
+             weeknumber = getopt("weeknumber", False),
+             month_selector = getopt("month_selector", False),
+             year_selector = getopt("year_selector", True),
+             buttons = getopt("buttons", True),
+             firstDOW=firstDOW,
+             year_range=year_range,
+             minute_step=minute_step,
+             limit=limit,
+             earliest=earliest.strftime(ISO),
+             latest=latest.strftime(ISO),
+             default=default,
+             onclose=onclose,
+             onclear=onclear,
+             )
         )
 
         return
@@ -3427,6 +3420,12 @@ class S3LocationSelectorWidget2(FormWidget):
         formstyle = s3.crud.formstyle # Currently only Bootstrap has been tested
         request = current.request
 
+        # Translate options using gis_location_name?
+        translate = settings.get_L10n_translate_gis_location()
+        language = current.session.s3.language
+        if language == settings.get_L10n_default_language():
+            translate = False 
+
         # Read the currently active GIS config
         config = gis.get_config()
 
@@ -3864,6 +3863,7 @@ class S3LocationSelectorWidget2(FormWidget):
         hidden = False
         for level in levels:
             id = "%s_%s" % (fieldname, level)
+            # @ToDo: Translate Labels
             label = labels[level]
             widget = SELECT(OPTION(T("Select %(location)s") % dict(location = label),
                                    _value=""),
@@ -3915,35 +3915,65 @@ class S3LocationSelectorWidget2(FormWidget):
             query = (gtable.level == "L5") & \
                     (gtable.parent == default_L4)
         query &= (gtable.deleted == False)
-        locations = db(query).select(gtable.id,
-                                     gtable.name,
-                                     gtable.level,
-                                     gtable.parent,
-                                     gtable.inherited,
-                                     gtable.lat_min,
-                                     gtable.lon_min,
-                                     gtable.lat_max,
-                                     gtable.lon_max,
-                                     )
+        fields = [gtable.id,
+                  gtable.name,
+                  gtable.level,
+                  gtable.parent,
+                  gtable.inherited,
+                  gtable.lat_min,
+                  gtable.lon_min,
+                  gtable.lat_max,
+                  gtable.lon_max,
+                  ]
+        if translate:
+            ntable = s3db.gis_location_name
+            fields.append(ntable.name_l10n)
+            left = ntable.on((ntable.deleted == False) & \
+                             (ntable.language == language) & \
+                             (ntable.location_id == gtable.id))
+        else:
+            left = None
+        locations = db(query).select(*fields,
+                                     left=left)
         top = dict(id = default_L0,
                    b = default_L0_bounds)
         location_dict = dict(d=top)
-        for location in locations:
-            if location.inherited:
-                location_dict[int(location.id)] = dict(n=location.name,
-                                                       l=int(location.level[1]),
-                                                       f=int(location.parent),
-                                                       )
-            else:
-                location_dict[int(location.id)] = dict(n=location.name,
-                                                       l=int(location.level[1]),
-                                                       f=int(location.parent),
-                                                       b=[location.lon_min,
-                                                          location.lat_min,
-                                                          location.lon_max,
-                                                          location.lat_max,
-                                                          ],
-                                                       )
+        if translate:
+            for location in locations:
+                l = location["gis_location"]
+                name = location["gis_location_name.name_l10n"] or l.name
+                if l.inherited:
+                    location_dict[int(l.id)] = dict(n=name,
+                                                    l=int(l.level[1]),
+                                                    f=int(l.parent),
+                                                    )
+                else:
+                    location_dict[int(l.id)] = dict(n=name,
+                                                    l=int(l.level[1]),
+                                                    f=int(l.parent),
+                                                    b=[l.lon_min,
+                                                       l.lat_min,
+                                                       l.lon_max,
+                                                       l.lat_max,
+                                                       ],
+                                                    )
+        else:
+            for l in locations:
+                if l.inherited:
+                    location_dict[int(l.id)] = dict(n=l.name,
+                                                    l=int(l.level[1]),
+                                                    f=int(l.parent),
+                                                    )
+                else:
+                    location_dict[int(l.id)] = dict(n=l.name,
+                                                    l=int(l.level[1]),
+                                                    f=int(l.parent),
+                                                    b=[l.lon_min,
+                                                       l.lat_min,
+                                                       l.lon_max,
+                                                       l.lat_max,
+                                                       ],
+                                                    )
         if default_L0 and default_L0 not in location_dict:
             location_dict[default_L0] = dict(l=0,
                                              b=default_L0_bounds)
