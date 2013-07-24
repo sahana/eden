@@ -3291,9 +3291,7 @@ def customize_pr_person(**attr):
                     field.readable = field.writable = False
                     hr_fields.remove("organisation_id")
 
-            
-
-            s3_sql_costum_fields = [
+            s3_sql_custom_fields = [
                     "first_name",
                     #"middle_name",
                     "last_name",
@@ -3326,10 +3324,10 @@ def customize_pr_person(**attr):
             
             # Don't include Email/Phone for unauthenticated users
             if current.auth.is_logged_in():
-                list_fields.extend( [(MOBILE, "phone.value"),
-                                     (EMAIL, "email.value"),
-                                     ])
-                s3_sql_costum_fields.insert(3,
+                list_fields += [(MOBILE, "phone.value"),
+                                (EMAIL, "email.value"),
+                                ]
+                s3_sql_custom_fields.insert(3,
                                             S3SQLInlineComponent(
                                             "contact",
                                             name = "phone",
@@ -3339,7 +3337,7 @@ def customize_pr_person(**attr):
                                             filterby = dict(field = "contact_method",
                                                             options = "SMS")),
                                             )
-                s3_sql_costum_fields.insert(3,
+                s3_sql_custom_fields.insert(3,
                                             S3SQLInlineComponent(
                                             "contact",
                                             name = "email",
@@ -3350,7 +3348,7 @@ def customize_pr_person(**attr):
                                                             options = "EMAIL")),
                                             )
 
-            crud_form = S3SQLCustomForm(*s3_sql_costum_fields)
+            crud_form = S3SQLCustomForm(*s3_sql_custom_fields)
 
             # Return to List view after create/update/delete (unless done via Modal)
             url_next = URL(c="pr", f="person")

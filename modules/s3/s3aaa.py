@@ -69,7 +69,6 @@ from s3rest import S3Method
 from s3track import S3Tracker
 from s3utils import s3_mark_required
 
-
 DEFAULT = lambda: None
 #table_field = re.compile("[\w_]+\.[\w_]+")
 

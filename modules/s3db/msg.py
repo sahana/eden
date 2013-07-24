@@ -108,13 +108,13 @@ class S3MessagingModel(S3Model):
                                "from_address",
                                "to_address",
                                "inbound",
--                              #"pe_id",
--                              #"recipient",
--                              #"subject",
--                              #"priority",
--                              #"is_parsed",
--                              #"reply",
--                              #"source_task_id"
+                               #"pe_id",
+                               #"recipient",
+                               #"subject",
+                               #"priority",
+                               #"is_parsed",
+                               #"reply",
+                               #"source_task_id"
                                ])
 
         # Reusable Message ID

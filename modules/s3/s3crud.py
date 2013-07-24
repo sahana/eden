@@ -1498,10 +1498,9 @@ class S3CRUD(S3Method):
                     limit = 2 * display_length
                 session.s3.filter = get_vars
                 if orderby is None:
-                    dt_sorting = {
-                        "iSortingCols": "1",
-                        "sSortDir_0": "asc"
-                    }
+                    dt_sorting = {"iSortingCols": "1",
+                                  "sSortDir_0": "asc"
+                                  }
 
                     if len(list_fields) > 1:
                         dt_sorting["bSortable_0"] = "false"
@@ -1943,8 +1942,8 @@ class S3CRUD(S3Method):
                     # Default initial sorting
                     scol = len(list_fields) > 1 and "1" or "0"
                     get_vars.update(iSortingCols="1",
-                                iSortCol_0=scol,
-                                sSortDir_0="asc")
+                                    iSortCol_0=scol,
+                                    sSortDir_0="asc")
                     q, orderby, left = resource.datatable_filter(list_fields, get_vars)
                     del get_vars["iSortingCols"]
                     del get_vars["iSortCol_0"]
