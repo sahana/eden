@@ -69,6 +69,7 @@ from s3rest import S3Method
 from s3track import S3Tracker
 from s3utils import s3_mark_required
 
+
 DEFAULT = lambda: None
 #table_field = re.compile("[\w_]+\.[\w_]+")
 
@@ -1105,6 +1106,11 @@ Thank you
             utable.utc_offset.readable = True
             utable.utc_offset.writable = True
 
+        utable.organisation_id.requires = \
+            current.s3db.org_organisation_requires(# Only allowed to select Orgs that the user has update access to
+                                                   updateable = True,
+                                                   )
+
         if next == DEFAULT:
             next = request.get_vars._next \
                 or request.post_vars._next \
@@ -1307,6 +1313,12 @@ Thank you
                                                  sort=True)
             organisation_id.represent = org_represent
             organisation_id.default = deployment_settings.get_auth_registration_organisation_id_default()
+            from s3layouts import S3AddResourceLink
+
+            organisation_id.comment = S3AddResourceLink(c="org",
+                                                        f="organisation",
+                                                        label=s3db.crud_strings["org_organisation"].title_create,
+                                                        title=s3db.crud_strings["org_organisation"].title_list,)
             # no permissions for autocomplete on registration page yet
             #from s3widgets import S3OrganisationAutocompleteWidget
             #organisation_id.widget = S3OrganisationAutocompleteWidget()
@@ -1624,6 +1636,10 @@ S3OptionsFilter({
 
         # Allow them to login
         db(utable.id == user_id).update(registration_key = "")
+
+        # Approve User's Organisation
+        if user.organisation_id and "org_organisation" in deployment_settings.get_auth_record_approval_required_for():
+            s3db.resource("org_organisation", user.organisation_id, unapproved=True).approve()
 
         # Send Welcome mail
         self.s3_send_welcome_email(user)
