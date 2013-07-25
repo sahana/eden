@@ -323,7 +323,7 @@ class S3OrganisationModel(S3Model):
                                             joinby="organisation_id",
                                             key="group_id",
                                             actuate="hide"))
-        # Format for filter_widget
+        # Format for InlineComponent/filter_widget
         add_component("org_group_membership",
                       org_organisation="organisation_id")
 
@@ -498,14 +498,11 @@ class S3OrganisationModel(S3Model):
                              organisation_id(),
                              *s3_meta_fields())
 
-        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        #
-        return Storage(
-                    org_organisation_type_id=organisation_type_id,
+        return dict(org_organisation_type_id=organisation_type_id,
                     org_organisation_id=organisation_id,
                     org_organisation_represent=org_organisation_represent,
-                )
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -912,8 +909,7 @@ class S3OrganisationGroupModel(S3Model):
                                    label=T("Name")),
                              #self.gis_location_id(),
                              s3_comments(),
-                             *s3_meta_fields()
-                             )
+                             *s3_meta_fields())
 
         # CRUD Strings not defined to allow each template to define as-required
 
@@ -1193,9 +1189,7 @@ class S3OrganisationResourceModel(S3Model):
                              },
                   )
 
-        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        #
         return dict()
 
 # =============================================================================
@@ -1679,9 +1673,7 @@ class S3OrganisationSummaryModel(S3Model):
                                         label=T("# of International Staff")),
                                   *s3_meta_fields())
 
-        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        #
         return dict()
 
 # =============================================================================
@@ -1715,9 +1707,7 @@ class S3OrganisationTypeTagModel(S3Model):
                                   s3_comments(),
                                   *s3_meta_fields())
 
-        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        #
         return dict()
 
 # =============================================================================
@@ -1870,12 +1860,20 @@ class S3SiteModel(S3Model):
                                     "location_id"]
                        )
 
-        # ---------------------------------------------------------------------
+        # Coalitions
+        add_component("org_group",
+                      org_site=dict(link="org_site_org_group",
+                                    joinby="site_id",
+                                    key="group_id",
+                                    actuate="hide"))
+        # Format for InlineComponent/filter_widget
+        add_component("org_site_org_group",
+                      org_site="site_id")
+
         # Pass names back to global scope (s3.*)
-        #
-        return Storage(org_site_id=site_id,
-                       org_site_represent=org_site_represent,
-                       )
+        return dict(org_site_id=site_id,
+                    org_site_represent=org_site_represent,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2060,26 +2058,30 @@ class S3SiteDetailsModel(S3Model):
     """ Extra optional details for Sites """
 
     names = ["org_site_details",
+             "org_site_org_group",
              ]
 
     def model(self):
 
         T = current.T
-        settings = current.deployment_settings
 
+        define_table = self.define_table
+        super_link = self.super_link
+
+        settings = current.deployment_settings
         last_contacted = settings.get_org_site_last_contacted()
 
         # ---------------------------------------------------------------------
         # Details
         tablename = "org_site_details"
-        table = self.define_table(tablename,
-                                  # Component not instance
-                                  self.super_link("site_id", "org_site"),
-                                  s3_date("last_contacted",
-                                          readable = last_contacted,
-                                          writable = last_contacted,
-                                          label = T("Last Contacted")),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             # Component not instance
+                             super_link("site_id", "org_site"),
+                             s3_date("last_contacted",
+                                     readable = last_contacted,
+                                     writable = last_contacted,
+                                     label = T("Last Contacted")),
+                             *s3_meta_fields())
 
         # CRUD Strings
         site_label = settings.get_org_site_label()
@@ -2099,13 +2101,17 @@ class S3SiteDetailsModel(S3Model):
             msg_list_empty = T("There are no details for this %(site_label)s yet. Add %(site_label)s Details.") % site_label
             )
 
-        # Resource configuration
-        #self.configure(tablename,
-        #               )
-
         # ---------------------------------------------------------------------
-        # Return model-global names to s3db.*
+        # Sites <> Coalitions link table
         #
+        tablename = "org_site_org_group"
+        table = define_table(tablename,
+                             # Component not instance
+                             super_link("site_id", "org_site"),
+                             self.org_group_id(empty=False),
+                             *s3_meta_fields())
+
+        # Pass names back to global scope (s3.*)
         return dict()
 
 # =============================================================================
@@ -2459,12 +2465,10 @@ class S3FacilityModel(S3Model):
                              facility_type_id(),
                              *s3_meta_fields())
 
-        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        #
-        return Storage(org_facility_type_id = facility_type_id,
-                       org_facility_geojson = self.org_facility_geojson
-                       )
+        return dict(org_facility_type_id = facility_type_id,
+                    org_facility_geojson = self.org_facility_geojson
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2742,12 +2746,9 @@ class S3RoomModel(S3Model):
                        deduplicate=self.org_room_duplicate,
                        )
 
-        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        #
-        return Storage(
-                    org_room_id=room_id,
-                )
+        return dict(org_room_id=room_id,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3041,12 +3042,9 @@ class S3OfficeModel(S3Model):
                           org_office=dict(name="summary",
                                           joinby="office_id"))
 
-        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        #
-        return Storage(
-                    org_office_type_id=office_type_id,
-                )
+        return dict(org_office_type_id=office_type_id,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3174,11 +3172,8 @@ class S3OfficeSummaryModel(S3Model):
                                         label=T("# of International Staff")),
                                   *s3_meta_fields())
 
-        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        #
-        return Storage(
-                )
+        return dict()
 
 # =============================================================================
 class S3OfficeTypeTagModel(S3Model):
@@ -3208,11 +3203,8 @@ class S3OfficeTypeTagModel(S3Model):
                                   s3_comments(),
                                   *s3_meta_fields())
 
-        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        #
-        return Storage(
-                )
+        return dict()
 
 # =============================================================================
 def org_organisation_address(row):

@@ -173,7 +173,7 @@ current.response.menu = [
                  "url": URL(c="vulnerability", f="evac_route"),
                  "icon": "icon-road"
                  },
-                 ]
+                ]
 
 # =============================================================================
 # Module Settings
@@ -200,9 +200,8 @@ def customize_project_activity(**attr):
     """
         Customize project_project controller
     """
-    
+
     s3db = current.s3db
-    
     tablename = "project_activity"
     table = s3db[tablename]
     table.location_id.label = "" # Gets replaced by widget
@@ -218,10 +217,17 @@ def customize_project_activity(**attr):
     attr["rheader"] = None
 
     # Custom Crud Form
+    s3db.project_activity_group.group_id.label = ""
     crud_form = S3SQLCustomForm(
         "date",
         "name",
         "activity_type_id",
+        S3SQLInlineComponent(
+            "activity_group",
+            label = T("Coalition"),
+            fields = ["group_id"],
+            multiple = False,
+        ),
         "location_id",
         "person_id",
         S3SQLInlineComponent(
@@ -232,8 +238,22 @@ def customize_project_activity(**attr):
         "comments",
     ) 
 
+    filter_widgets = [S3OptionsFilter("activity_group.group_id",
+                                      label=T("Coalition"),
+                                      represent="%(name)s",
+                                      widget="multiselect",
+                                      ),
+                      S3OptionsFilter("activity_type_id",
+                                      label=T("Type"),
+                                      represent="%(name)s",
+                                      widget="multiselect",
+                                      ),
+                      ]
+
     s3db.configure(tablename,
-                   crud_form = crud_form)
+                   crud_form = crud_form,
+                   filter_widgets = filter_widgets,
+                   )
 
     return attr
 
@@ -246,12 +266,13 @@ def customize_event_incident_report(**attr):
     """
         Customize project_project controller
     """
-    
+
     # Remove rheader
     attr["rheader"] = None
 
+    s3db = current.s3db
     tablename = "event_incident_report"
-    table = current.s3db[tablename]
+    table = s3db[tablename]
     table.location_id.label = "" # Gets replaced by widget
     table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
     table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
@@ -265,19 +286,54 @@ def customize_event_incident_report(**attr):
     table.person_id.widget = None
     
     current.response.s3.crud_strings[tablename] = Storage(
-                title_create = T("Add Incident"),
-                title_display = T("Incident Details"),
-                title_list = T("Incidents"),
-                title_update = T("Edit Incident"),
-                title_search = T("Search Incidents"),
-                subtitle_create = T("Add New Incident"),
-                label_list_button = T("List Incidents"),
-                label_create_button = T("Add Incident"),
-                label_delete_button = T("Remove Incident"),
-                msg_record_created = T("Incident added"),
-                msg_record_modified = T("Incident updated"),
-                msg_record_deleted = T("Incident removed"),
-                msg_list_empty = T("No Incidents currently recorded"))
+        title_create = T("Add Incident"),
+        title_display = T("Incident Details"),
+        title_list = T("Incidents"),
+        title_update = T("Edit Incident"),
+        title_search = T("Search Incidents"),
+        subtitle_create = T("Add New Incident"),
+        label_list_button = T("List Incidents"),
+        label_create_button = T("Add Incident"),
+        label_delete_button = T("Remove Incident"),
+        msg_record_created = T("Incident added"),
+        msg_record_modified = T("Incident updated"),
+        msg_record_deleted = T("Incident removed"),
+        msg_list_empty = T("No Incidents currently recorded")
+        )
+
+    # Custom Crud Form
+    s3db.event_incident_report_group.group_id.label = ""
+    crud_form = S3SQLCustomForm(
+        "date",
+        "name",
+        "incident_type_id",
+        S3SQLInlineComponent(
+            "incident_report_group",
+            label = T("Coalition"),
+            fields = ["group_id"],
+            multiple = False,
+        ),
+        "location_id",
+        "person_id",
+        "comments",
+    ) 
+
+    filter_widgets = [S3OptionsFilter("activity_group.group_id",
+                                      label=T("Coalition"),
+                                      represent="%(name)s",
+                                      widget="multiselect",
+                                      ),
+                      S3OptionsFilter("incident_type_id",
+                                      label=T("Type"),
+                                      represent="%(name)s",
+                                      widget="multiselect",
+                                      ),
+                      ]
+
+    s3db.configure(tablename,
+                   crud_form = crud_form,
+                   filter_widgets = filter_widgets,
+                   )
 
     return attr
 
@@ -314,6 +370,12 @@ def customize_org_organisation(**attr):
     crud_form = S3SQLCustomForm(
         "name",
         "logo",
+        S3SQLInlineComponentCheckbox(
+            "group",
+            label = T("Coalitions"),
+            field = "group_id",
+            cols = 3,
+        ),
         S3SQLInlineComponentCheckbox(
             "sector",
             label = T("Sectors"),
@@ -355,7 +417,12 @@ def customize_org_organisation(**attr):
         "comments",
     ) 
 
-    filter_widgets = [S3OptionsFilter("sector_organisation.sector_id",
+    filter_widgets = [S3OptionsFilter("group_membership.group_id",
+                                      label=T("Coalition"),
+                                      represent="%(name)s",
+                                      widget="multiselect",
+                                      ),
+                      S3OptionsFilter("sector_organisation.sector_id",
                                       label=T("Sector"),
                                       represent="%(name)s",
                                       widget="multiselect",
@@ -432,7 +499,6 @@ def customize_org_facility(**attr):
     """
     
     s3db = current.s3db
-    db = current.db
 
     # Remove rheader
     attr["rheader"] = None
@@ -448,12 +514,10 @@ def customize_org_facility(**attr):
                                                          show_postcode=True,
                                                          )
     
-    from s3.s3fields import S3Represent
-    from s3.s3validators import IS_ONE_OF
-
     s3db.hrm_human_resource.person_id.widget = None
 
     # Custom Crud Form
+    s3db.org_site_org_group.group_id.label = ""
     crud_form = S3SQLCustomForm(
         "name",
         S3SQLInlineComponentCheckbox(
@@ -463,6 +527,12 @@ def customize_org_facility(**attr):
             cols = 3,
         ),
         "organisation_id",
+        S3SQLInlineComponent(
+            "site_org_group",
+            label = T("Coalition"),
+            fields = ["group_id"],
+            multiple = False,
+        ),
         "location_id",
         S3SQLInlineComponent(
             "human_resource",
@@ -476,7 +546,7 @@ def customize_org_facility(**attr):
         "comments",
     ) 
 
-    filter_widgets = [S3OptionsFilter("(org_group)",
+    filter_widgets = [S3OptionsFilter("site_org_group.group_id",
                                       label=T("Coalition"),
                                       represent="%(name)s",
                                       widget="multiselect",
@@ -526,9 +596,10 @@ def customize_stats_resident(**attr):
     """
         Customize stats_resident controller
     """
-    
+
+    s3db = current.s3db
     tablename = "stats_resident"
-    table = current.s3db[tablename]
+    table = s3db[tablename]
     table.location_id.label = "" # Gets replaced by widget
     table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
     table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
@@ -537,6 +608,25 @@ def customize_stats_resident(**attr):
                                                          show_address=True,
                                                          show_postcode=True,
                                                          )
+    # Custom Crud Form
+    current.db.stats_resident_group.group_id.label = ""
+    crud_form = S3SQLCustomForm(
+        "name",
+        "parameter_id",
+        "value",
+        S3SQLInlineComponent(
+            "resident_group",
+            label = T("Coalition"),
+            fields = ["group_id"],
+            multiple = False,
+        ),
+        "location_id",
+        "person_id",
+        "comments",
+    )
+    s3db.configure(tablename,
+                   crud_form = crud_form,
+                   )
 
     return attr
 
@@ -549,9 +639,10 @@ def customize_stats_trained(**attr):
     """
         Customize stats_trained controller
     """
-    
+
+    s3db = current.s3db
     tablename = "stats_trained"
-    table = current.s3db[tablename]
+    table = s3db[tablename]
     table.location_id.label = "" # Gets replaced by widget
     table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
     table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
@@ -560,6 +651,28 @@ def customize_stats_trained(**attr):
                                                          show_address=True,
                                                          show_postcode=True,
                                                          )
+
+    # Custom Crud Form
+    current.db.stats_trained_group.group_id.label = ""
+    crud_form = S3SQLCustomForm(
+        "name",
+        "parameter_id",
+        "value",
+        S3SQLInlineComponent(
+            "trained_group",
+            label = T("Coalition"),
+            fields = ["group_id"],
+            multiple = False,
+        ),
+        "organisation_id",
+        "location_id",
+        "person_id",
+        "comments",
+    )
+
+    s3db.configure(tablename,
+                   crud_form = crud_form,
+                   )
 
     return attr
 
@@ -570,20 +683,106 @@ settings.ui.customize_stats_trained = customize_stats_trained
 #-----------------------------------------------------------------------------
 def customize_vulnerability_evac_route(**attr):
     """
-        Customize stats_trained controller
+        Customize vulnerability_evac_route controller
     """
-    
+
+    s3db = current.s3db
     tablename = "vulnerability_evac_route"
-    table = current.s3db[tablename]
+    table = s3db[tablename]
     table.location_id.label = "" # Gets replaced by widget
     table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
     table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
                                                          polygons=True,
                                                          )
 
+    # Custom Crud Form
+    current.db.vulnerability_evac_route_group.group_id.label = ""
+    crud_form = S3SQLCustomForm(
+        "name",
+        "hazard_id",
+        S3SQLInlineComponent(
+            "evac_route_group",
+            label = T("Coalition"),
+            fields = ["group_id"],
+            multiple = False,
+        ),
+        "location_id",
+        "comments",
+    )
+
+    filter_widgets = [S3OptionsFilter("evac_route_group.group_id",
+                                      label=T("Coalition"),
+                                      represent="%(name)s",
+                                      widget="multiselect",
+                                      ),
+                      S3OptionsFilter("hazard_id",
+                                      label=T("Type"),
+                                      represent="%(name)s",
+                                      widget="multiselect",
+                                      ),
+                      ]
+
+    s3db.configure(tablename,
+                   crud_form = crud_form,
+                   filter_widgets = filter_widgets,
+                   )
+
     return attr
 
 settings.ui.customize_vulnerability_evac_route = customize_vulnerability_evac_route
+
+#-----------------------------------------------------------------------------
+# Risks
+#-----------------------------------------------------------------------------
+def customize_vulnerability_risk(**attr):
+    """
+        Customize vulnerability_risk controller
+    """
+
+    s3db = current.s3db
+    tablename = "vulnerability_risk"
+    table = s3db[tablename]
+    table.location_id.label = "" # Gets replaced by widget
+    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
+    table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
+                                                         polygons=True,
+                                                         )
+
+    # Custom Crud Form
+    current.db.vulnerability_risk_group.group_id.label = ""
+    crud_form = S3SQLCustomForm(
+        "name",
+        "hazard_id",
+        S3SQLInlineComponent(
+            "risk_group",
+            label = T("Coalition"),
+            fields = ["group_id"],
+            multiple = False,
+        ),
+        "location_id",
+        "comments",
+    )
+
+    filter_widgets = [S3OptionsFilter("risk_group.group_id",
+                                      label=T("Coalition"),
+                                      represent="%(name)s",
+                                      widget="multiselect",
+                                      ),
+                      S3OptionsFilter("hazard_id",
+                                      label=T("Type"),
+                                      represent="%(name)s",
+                                      widget="multiselect",
+                                      ),
+                      ]
+
+    s3db.configure(tablename,
+                   crud_form = crud_form,
+                   filter_widgets = filter_widgets,
+                   )
+
+    return attr
+
+settings.ui.customize_vulnerability_risk = customize_vulnerability_risk
 
 # =============================================================================
 # Template Modules
