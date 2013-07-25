@@ -41,7 +41,7 @@ def outbox():
     table.pe_id.label = T("Recipient")
 
     # Subject works for Email but not SMS
-    table.message_id.represent = lambda id: db(db.msg_log.id == id).select(db.msg_log.message, limitby=(0, 1)).first().message
+    #table.message_id.represent = lambda id: db(db.msg_log.id == id).select(db.msg_log.message, limitby=(0, 1)).first().message
     table.pe_id.represent = s3db.pr_PersonEntityRepresent(default_label="")
 
     # CRUD Strings
@@ -62,6 +62,7 @@ def outbox():
 
     s3db.configure(tablename, listadd=False)
     return s3_rest_controller(module, resourcename, add_btn = add_btn)
+
 # =============================================================================
 def message():
     """
@@ -135,9 +136,9 @@ def tropo():
             # Update status to sent in Outbox
             outbox = s3db.msg_outbox
             db(outbox.id == row.row_id).update(status=2)
-            # Set message log to actioned
-            log = s3db.msg_log
-            db(log.id == row.message_id).update(actioned=True)
+            # @ToDo: Set message log to actioned
+            #log = s3db.msg_log
+            #db(log.id == row.message_id).update(actioned=True)
             # Clear the Scratchpad
             db(query).delete()
             return t.RenderJson()
@@ -154,9 +155,10 @@ def tropo():
                 except:
                     # SyntaxError: s.from => invalid syntax (why!?)
                     fromaddress = ""
-                s3db.msg_log.insert(uuid=uuid, fromaddress=fromaddress,
-                                    recipient=recipient, message=message,
-                                    inbound=True)
+                # @ToDo: Update to new model
+                #s3db.msg_log.insert(uuid=uuid, fromaddress=fromaddress,
+                #                    recipient=recipient, message=message,
+                #                    inbound=True)
                 # Send the message to the parser
                 reply = msg.parse_message(message)
                 t.say([reply])

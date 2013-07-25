@@ -684,25 +684,36 @@ class S3Msg(object):
         ptable = s3db.pr_person
         petable = s3db.pr_pentity
 
+        fields = [table.id,
+                  table.message_id,
+                  table.pe_id,
+                  ]
         query = (table.deleted == False) & \
                 (table.status == 1) & \
                 (table.pr_message_method == contact_method)
-        rows = db(query).select(table.id,
-                                table.message_id,
-                                table.pe_id)
+
+        if contact_method == "EMAIL":
+            mailbox = s3db.msg_email
+            fields += [mailbox.subject,
+                       mailbox.body,
+                       ]
+            left = mailbox.on(mailbox.message_id == table.message_id)
+        else:
+            # @ToDo
+            return
+
+        rows = db(query).select()
         chainrun = False # Used to fire process_outbox again - Used when messages are sent to groups
         for row in rows:
             status = True
-            message_id = row.message_id
-            query = (mtable.id == message_id)
-            msgrow = db(query).select(mtable.body,
-                                      limitby=(0, 1)).first()
-            if not msgrow:
-                s3_debug("s3msg", "msgrow not found")
+            if contact_method == "EMAIL":
+                subject = row["msg_mail.subject"]
+                message = row["msg_mail.body"]
+            else:
+                # @ToDo
                 continue
-            # Get message from msg_message
-            message = msgrow.body
-            #subject = msgrow.subject
+            row = row["msg_outbox"]
+            message_id = row.message_id
             #sender_pe_id = logrow.pe_id
             # Determine list of users
             entity = row.pe_id
