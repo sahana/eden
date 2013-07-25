@@ -941,7 +941,8 @@ class S3OrganisationGroupModel(S3Model):
         define_table(tablename,
                      group_id(),
                      self.org_organisation_id(),
-                     *s3_meta_fields())
+                     *s3_meta_fields()
+                     )
 
         configure(tablename,
                   onaccept = self.group_membership_onaccept,
@@ -949,9 +950,8 @@ class S3OrganisationGroupModel(S3Model):
                   )
 
         # Pass names back to global scope (s3.*)
-        return dict(
-                org_group_id = group_id,
-            )
+        return dict(org_group_id = group_id,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1038,8 +1038,7 @@ class S3OrganisationLocationModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict(
-            )
+        return dict()
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1197,8 +1196,7 @@ class S3OrganisationResourceModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                )
+        return dict()
 
 # =============================================================================
 class S3OrganisationSectorModel(S3Model):
@@ -1430,10 +1428,9 @@ class S3OrganisationSectorModel(S3Model):
                   )
 
         # Pass names back to global scope (s3.*)
-        return dict(
-                org_sector_id=sector_id,
-                org_sector_opts=self.org_sector_opts,
-            )
+        return dict(org_sector_id=sector_id,
+                    org_sector_opts=self.org_sector_opts,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1627,8 +1624,7 @@ class S3OrganisationServiceModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict(
-            )
+        return dict()
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1686,8 +1682,7 @@ class S3OrganisationSummaryModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                )
+        return dict()
 
 # =============================================================================
 class S3OrganisationTypeTagModel(S3Model):
@@ -1723,8 +1718,7 @@ class S3OrganisationTypeTagModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                )
+        return dict()
 
 # =============================================================================
 class S3SiteModel(S3Model):
@@ -2112,7 +2106,7 @@ class S3SiteDetailsModel(S3Model):
         # ---------------------------------------------------------------------
         # Return model-global names to s3db.*
         #
-        return Storage()
+        return dict()
 
 # =============================================================================
 class S3FacilityModel(S3Model):

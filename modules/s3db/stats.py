@@ -169,21 +169,20 @@ class S3StatsModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                stats_source_superlink = source_superlink,
-                stats_source_id = source_id,
-            )
+        return Storage(stats_source_superlink = source_superlink,
+                       stats_source_id = source_id,
+                       )
 
     # -------------------------------------------------------------------------
     def defaults(self):
         """ Safe defaults if module is disabled """
 
         return Storage(
-                # Needed for doc
-                stats_source_superlink = S3ReusableField("source_id", "integer",
-                                                         readable=False,
-                                                         writable=False,
-                                                         )(),
+            # Needed for doc
+            stats_source_superlink = S3ReusableField("source_id", "integer",
+                                                     readable=False,
+                                                     writable=False,
+                                                     )(),
             )
 
 # =============================================================================
@@ -1207,8 +1206,11 @@ class S3StatsResidentModel(S3Model):
                   filter_widgets = filter_widgets,
                   )
 
-        return Storage(
-        )
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return dict()
+
 # =============================================================================
 class S3StatsTrainedPeopleModel(S3Model):
     """
@@ -1327,7 +1329,9 @@ class S3StatsTrainedPeopleModel(S3Model):
                   filter_widgets = filter_widgets,
                   )
 
-        return Storage(
-        )
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return dict()
 
 # END =========================================================================

@@ -702,7 +702,8 @@ class S3Msg(object):
             # @ToDo
             return
 
-        rows = db(query).select()
+        rows = db(query).select(*fields,
+                                left=left)
         chainrun = False # Used to fire process_outbox again - Used when messages are sent to groups
         for row in rows:
             status = True
