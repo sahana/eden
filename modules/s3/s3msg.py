@@ -571,24 +571,30 @@ class S3Msg(object):
         db = current.db
         s3db = current.s3db
 
-        # Put the Message in the Log
-        table = s3db.msg_log
-        try:
-            message_log_id = table.insert(pe_id = sender_pe_id,
-                                          subject = subject,
-                                          message = message,
-                                          sender  = sender,
-                                          fromaddress = fromaddress)
-        except:
-            return False
+        # Place the Message in the appropriate Log
+        if pr_message_method == "EMAIL":
+            table = s3db.msg_email
+            id = table.insert(body=message,
+                              subject=subject,
+                              #from_address= @ToDo,
+                              inbound=False,
+                              )
+            record = db(table.id == id).select(table.message_id,
+                                               limitby=(0, 1)).first()
+            s3db.update_super(table, record)
+            message_id = record.message_id
+        else:
+            # @ToDo!!
+            pass
 
         # Place the Message in the OutBox
         table = s3db.msg_outbox
         if isinstance(pe_id, list):
+            # Add an entry per recipient
             listindex = 0
             for id in pe_id:
                 try:
-                    table.insert(message_id = message_log_id,
+                    table.insert(message_id = message_id,
                                  pe_id = id,
                                  pr_message_method = pr_message_method,
                                  system_generated = system_generated)
@@ -597,7 +603,7 @@ class S3Msg(object):
                     return listindex
         else:
             try:
-                table.insert(message_id = message_log_id,
+                table.insert(message_id = message_id,
                              pe_id = pe_id,
                              pr_message_method = pr_message_method,
                              system_generated = system_generated)
@@ -672,29 +678,32 @@ class S3Msg(object):
             return False
 
         table = s3db.msg_outbox
-        ltable = s3db.msg_log
+        mtable = s3db.msg_message
         ptable = s3db.pr_person
         petable = s3db.pr_pentity
 
         query = (table.status == 1) & \
                 (table.pr_message_method == contact_method)
-        rows = db(query).select()
+        rows = db(query).select(table.id,
+                                table.message_id,
+                                table.pe_id)
         chainrun = False # Used to fire process_outbox again - Used when messages are sent to groups
         for row in rows:
             status = True
             message_id = row.message_id
-            query = (ltable.id == message_id)
-            logrow = db(query).select(limitby=(0, 1)).first()
-            if not logrow:
-                s3_debug("s3msg", "logrow not found")
+            query = (mtable.id == message_id)
+            msgrow = db(query).select(mtable.body,
+                                      limitby=(0, 1)).first()
+            if not msgrow:
+                s3_debug("s3msg", "msgrow not found")
                 continue
-            # Get message from msg_log
-            message = logrow.message
-            subject = logrow.subject
-            sender_pe_id = logrow.pe_id
+            # Get message from msg_message
+            message = msgrow.body
+            #subject = msgrow.subject
+            #sender_pe_id = logrow.pe_id
             # Determine list of users
             entity = row.pe_id
-            query = petable.id == entity
+            query = (petable.id == entity)
             entity_type = db(query).select(petable.instance_type,
                                            limitby=(0, 1)).first()
             if entity_type:
@@ -756,7 +765,7 @@ class S3Msg(object):
                 # Update status to sent in Outbox
                 db(table.id == row.id).update(status=2)
                 # Set message log to actioned
-                db(ltable.id == message_id).update(actioned=True)
+                #db(ltable.id == message_id).update(actioned=True)
                 # Explicitly commit DB operations when running from Cron
                 db.commit()
 
@@ -1444,14 +1453,16 @@ class S3Msg(object):
                 textParts = msg.get_payload()
                 body = textParts[0]
                 # Store in DB
-                id = inbox_table.insert(from_address=sender, subject=subject, \
-                                        body=body, inbound=True)
-                query = (inbox_table.id == id)
-                record = db(query).select(inbox_table.message_id, \
-                                          limitby=(0, 1)).first()
+                id = inbox_table.insert(from_address=sender,
+                                        subject=subject,
+                                        body=body,
+                                        inbound=True)
+                record = db(inbox_table.id == id).select(inbox_table.message_id,
+                                                         limitby=(0, 1)
+                                                         ).first()
                 update_super(inbox_table, record)
-                parsing_table.insert(message_id = record.message_id, \
-                                     source_task_id = source_task_id, \
+                parsing_table.insert(message_id = record.message_id,
+                                     source_task_id = source_task_id,
                                      is_parsed = False)
 
                 if delete:
@@ -1525,15 +1536,16 @@ class S3Msg(object):
                         textParts = msg.get_payload()
                         body = textParts[0]
                         # Store in DB
-                        id = inbox_table.insert(from_address=sender, \
-                                                subject=subject, body=body, \
+                        id = inbox_table.insert(from_address=sender,
+                                                subject=subject,
+                                                body=body,
                                                 inbound=True)
-                        query = (inbox_table.id == id)
-                        record = db(query).select(inbox_table.message_id, \
-                                                  limitby=(0, 1)).first()
+                        record = db(inbox_table.id == id).select(inbox_table.message_id,
+                                                                 limitby=(0, 1)
+                                                                 ).first()
                         update_super(inbox_table, record)
-                        parsing_table.insert(message_id = record.message_id, \
-                                             source_task_id = source_task_id, \
+                        parsing_table.insert(message_id = record.message_id,
+                                             source_task_id = source_task_id,
                                              is_parsed = False)
 
                         if delete:
@@ -1665,12 +1677,14 @@ class S3Msg(object):
                     if (sms["direction"] == "inbound") and \
                        (sms["sid"] not in downloaded_sms):
                         sender = "<" + sms["from"] + ">"
-                        id = minsert(sid=sms["sid"],body=sms["body"], \
-                                status=sms["status"],from_address=sender, \
-                                received_on=sms["date_sent"])
-                        query = (itable.id == id)
-                        record = db(query).select(itable.message_id, \
-                                                  limitby=(0, 1)).first()
+                        id = minsert(sid=sms["sid"],
+                                     body=sms["body"],
+                                     status=sms["status"],
+                                     from_address=sender,
+                                     received_on=sms["date_sent"])
+                        record = db(itable.id == id).select(itable.message_id,
+                                                            limitby=(0, 1)
+                                                            ).first()
                         update_super(itable, record)
                         message_id = record.message_id
                         ptable.insert(message_id = message_id, \
@@ -1702,15 +1716,15 @@ class S3Msg(object):
         for link in links:
             d = feedparser.parse(link.url)
             for entry in d.entries:
-                id = ftable.insert(title = entry.title, \
-                                   from_address = entry.link, \
-                                   body = entry.description, \
+                id = ftable.insert(title = entry.title,
+                                   from_address = entry.link,
+                                   body = entry.description,
                                    created_on = request.now)
-                record = db(ftable.id == id).select(ftable.message_id, \
+                record = db(ftable.id == id).select(ftable.message_id,
                                                      limitby=(0, 1)).first()
                 update_super(ftable, record)
                 message_id = records.message_id
-                ptable.insert(message_id = message_id, \
+                ptable.insert(message_id = message_id,
                               source_task_id = entry.link)
 
         # Commit as this is a task normally run async

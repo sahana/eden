@@ -55,9 +55,9 @@ class S3MessagingModel(S3Model):
     """
 
     names = ["msg_limit",
-             "msg_outbox",
              "msg_message",
              "msg_message_id",
+             "msg_outbox",
              "msg_parsing_status"
              ]
 
@@ -99,7 +99,7 @@ class S3MessagingModel(S3Model):
                                         (direction and [T("In")] or \
                                                        [T("Out")])[0],
                                         label = T("Direction")),
-                                 )
+                                  )
 
         table.instance_type.readable = True
 
@@ -129,7 +129,7 @@ class S3MessagingModel(S3Model):
         #
 
         # Components
-        self.add_component("msg_parsing_status", msg_log="message_id")
+        #self.add_component("msg_parsing_status", msg_log="message_id")
 
         # Parsing status of all the messages
         tablename = "msg_parsing_status"
@@ -174,9 +174,9 @@ class S3MessagingModel(S3Model):
                                             msg_status_type_opts.get(opt, UNKNOWN_OPT))
 
         # Components
-        self.add_component("msg_outbox", msg_log="message_id")
+        #self.add_component("msg_outbox", msg_log="message_id")
 
-        # Outbox - needs to be separate to Log since a single message sent needs different outbox entries for each recipient
+        # Outbox - needs to be separate to Message since a single message sent needs different outbox entries for each recipient
         tablename = "msg_outbox"
         table = define_table(tablename,
                              message_id(),
@@ -190,7 +190,8 @@ class S3MessagingModel(S3Model):
                                    represent = lambda opt: \
                                         msg_contact_method_opts.get(opt, UNKNOWN_OPT)),
                              opt_msg_status(),
-                             Field("system_generated", "boolean", default = False),
+                             Field("system_generated", "boolean",
+                                   default=False),
                              Field("log"),
                              *s3_meta_fields())
 
