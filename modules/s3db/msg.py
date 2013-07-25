@@ -673,12 +673,15 @@ class S3EmailInboundModel(S3ChannelModel):
         # ---------------------------------------------------------------------
         # Email Inbox
         #
+        sender = current.deployment_settings.mail.get("sender", None)
+
         tablename = "msg_email"
         table = define_table(tablename,
                              self.super_link("message_id", "msg_message"),
                              Field("body", "text",
                                    label = T("Body")),
                              Field("from_address", notnull=True,
+                                   default = sender,
                                    label = T("Sender"),
                                    requires = IS_EMAIL()),
                              Field("subject", length=78,    # RFC 2822

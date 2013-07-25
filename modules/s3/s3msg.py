@@ -579,9 +579,11 @@ class S3Msg(object):
                               #from_address= @ToDo,
                               inbound=False,
                               )
-            record = db(table.id == id).select(table.message_id,
+            record = db(table.id == id).select(table.id,
                                                limitby=(0, 1)).first()
             s3db.update_super(table, record)
+            record = db(table.id == id).select(table.message_id,
+                                               limitby=(0, 1)).first()
             message_id = record.message_id
         else:
             # @ToDo!!
@@ -682,7 +684,8 @@ class S3Msg(object):
         ptable = s3db.pr_person
         petable = s3db.pr_pentity
 
-        query = (table.status == 1) & \
+        query = (table.deleted == False) & \
+                (table.status == 1) & \
                 (table.pr_message_method == contact_method)
         rows = db(query).select(table.id,
                                 table.message_id,
