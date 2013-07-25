@@ -27,6 +27,17 @@ h4.latest-updates {
 	box-shadow: 0 1px 1px #aaaaa7;
 }
 
+h4.latest-disasters{
+    margin-right: -6px;
+}
+
+@media screen and (max-width: 767px){
+    h4.latest-disasters {
+        display: inline-block;
+
+    }
+}
+
 #event_datalist a:hover  {
 	text-decoration: none;
 }
@@ -250,9 +261,6 @@ input.btn.btn-primary.filter-submit.filter-ajax {
 	margin-left: -1px;
 }
 
-.filter-controls {
-    clear: both;
-}
 
 /* Large desktop */
 @media (min-width: 1200px) { 

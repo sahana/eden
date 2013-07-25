@@ -91,7 +91,7 @@ settings.auth.realm_entity = drmp_realm_entity
 # Pre-Populate
 settings.base.prepopulate = ["DRMP"]
 
-settings.base.system_name = T("Timor Leste Disaster Risk Management Information System ")
+settings.base.system_name = T("Timor-Leste Disaster Risk Management Information System ")
 settings.base.system_name_short = T("DRMIS")
 
 # -----------------------------------------------------------------------------

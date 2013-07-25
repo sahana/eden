@@ -72,7 +72,7 @@ img.media-object {
     width: 44px;
     height: 44px;
     margin-top: 3px;
-    margin-left: 3px;
+    margin-left: 2px;
     margin-bottom: 2px;
 }
 
@@ -118,4 +118,14 @@ a h5.media-heading:hover {
     font: 13px/17px "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
     color: #333;
     word-spacing: -1px;
+}
+
+@media (max-width: 480px) {
+    div.media-body div.media {
+        padding-left: 6px;
+        margin-top: -3px;
+    }	
+    div.media a.pull-left img.media-object {
+        float: left;
+    }
 }

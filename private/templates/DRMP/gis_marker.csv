@@ -11,5 +11,6 @@ Name,Height,Width,Image
 "office",34,20,"gis_marker.image.DRMP_Office.png"
 "project",34,20,"gis_marker.image.DRMP_Project.png"
 "report",34,20,"gis_marker.image.DRMP_Report.png"
+"resource",34,20,"gis_marker.image.DRMP_Report.png"
 "seaport",40,40,"gis_marker.image.Logistics_Port.png"
 "training",34,20,"gis_marker.image.DRMP_Training.png"
