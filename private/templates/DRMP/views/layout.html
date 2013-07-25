@@ -103,11 +103,15 @@
       </ul>
      </li>
     </ul>
-    {{if auth.is_logged_in():}}
     <div class='pull-right'>
      <ul class='nav pull-right'>
       <li class='dropdown'><a href='#' class='dropdown-toggle disabled' data-toggle='dropdown'><i class='icon-cog'></i><b class='caret'></b></a>
-       <ul class='dropdown-menu'>
+       <ul class='dropdown-menu'>{{vars=request.vars}}
+       {{if response.s3.language == "en":}}{{tet_vars=dict(_language="tet")}}{{for var in vars:}}{{tet_vars[var]=vars[var]}}{{pass}}
+        <li><a href='{{=URL(args=request.args, vars=tet_vars)}}'><i class='icon-comment-alt'></i> Tetum</a></li>
+       {{else:}}{{en_vars=dict(_language="en")}}{{for var in vars:}}{{en_vars[var]=vars[var]}}{{pass}}
+        <li><a href='{{=URL(args=request.args, vars=en_vars)}}'><i class='icon-comment-alt'></i> English</a></li>{{pass}}
+       {{if auth.is_logged_in():}}
         <li><a href='/{{=appname}}/default/user/profile'><i class='icon-cog'></i> {{=T("Profile")}}</a></li>
         <li><a href='/{{=appname}}/default/user/change_password'><i class='icon-lock'></i> {{=T("Change Password")}}</a></li>
         {{if auth.s3_has_role("ADMIN"):}}
@@ -115,11 +119,13 @@
         {{pass}}
         <li class='divider'></li>
         <li><a href='/{{=appname}}/default/user/logout'><i class='icon-off'></i> {{=T("Logout")}}</a></li>
+       {{else:}}
+        <li><a href='/{{=appname}}/default/user/login'><i class='icon-signin'></i> {{=T("Login")}}</a></li>
+       {{pass}}
        </ul>
       </li>
      </ul>
     </div>
-    {{pass}}
    </div>
   </div>
  </div>

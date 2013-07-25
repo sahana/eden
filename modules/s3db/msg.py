@@ -242,7 +242,10 @@ class S3MessagingModel(S3Model):
         #    return current.messages.UNKNOWN_OPT
 
         # SMS/Tweet will use 1st 80 characters from body
-        text = record.body
+        try:
+            text = record.body
+        except:
+            return current.messages.UNKNOWN_OPT
         if len(text) < 80:
             return text
         else:

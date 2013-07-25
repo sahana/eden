@@ -106,7 +106,7 @@ settings.ui.formstyle = "bootstrap"
 # L10n (Localization) settings
 settings.L10n.languages = OrderedDict([
     ("en", "English"),
-    #("tet", "Tetum"),
+    ("tet", "Tetum"),
 ])
 # Default Language
 settings.L10n.default_language = "en"
