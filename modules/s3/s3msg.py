@@ -707,8 +707,8 @@ class S3Msg(object):
         for row in rows:
             status = True
             if contact_method == "EMAIL":
-                subject = row["msg_mail.subject"]
-                message = row["msg_mail.body"]
+                subject = row["msg_email.subject"]
+                message = row["msg_email.body"]
             else:
                 # @ToDo
                 continue
