@@ -553,7 +553,6 @@ def customize_project_project(**attr):
         S3SQLInlineComponent(
             "output",
             label = T("Outputs"),
-            #comment = "Bob",
             fields = ["name", "status"],
         ),
         "drr.hfa",
@@ -578,7 +577,10 @@ def customize_project_project(**attr):
             "organisation",
             name = "donor",
             label = T("Donor(s)"),
-            fields = ["organisation_id", "amount", "currency"],
+            fields = ["organisation_id",
+                      "amount",
+                      "currency",
+                      ],
             filterby = dict(field = "role",
                             options = [3]),
             default = {"role": 3}

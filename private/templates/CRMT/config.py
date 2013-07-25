@@ -118,6 +118,9 @@ settings.fin.currencies = {
     "USD" : T("United States Dollars"),
 }
 
+# Disabled until ready for prime-time
+settings.search.save_widget = False
+
 # -----------------------------------------------------------------------------
 # Summary Pages
 settings.ui.summary = [{"common": True,
@@ -224,7 +227,6 @@ def customize_project_activity(**attr):
         S3SQLInlineComponent(
             "activity_organisation",
             label = T("Participating Organizations"),
-            #comment = "Bob",
             fields = ["organisation_id"],
         ),
         "comments",
@@ -297,11 +299,16 @@ def customize_org_organisation(**attr):
     tablename = "org_organisation"
     table = s3db[tablename]
 
+    field = s3db.org_facility.location_id
+    field.label = T("Address")
+    from s3.s3validators import IS_LOCATION
+    field.requires = IS_LOCATION()
+    #field.widget = None
     from s3.s3widgets import S3LocationAutocompleteWidget
-    s3db.org_facility.location_id.widget = S3LocationAutocompleteWidget()
-    s3db.org_facility.location_id.label = T("Address")
-    s3db.hrm_human_resource.person_id.widget = None
-    s3db.hrm_human_resource.site_id.label = T("Location")
+    field.widget = S3LocationAutocompleteWidget()
+    hrtable = s3db.hrm_human_resource
+    hrtable.person_id.widget = None
+    hrtable.site_id.label = T("Location")
 
     # Custom Crud Form
     crud_form = S3SQLCustomForm(
@@ -322,10 +329,9 @@ def customize_org_organisation(**attr):
         S3SQLInlineComponent(
             "human_resource",
             label = T("Organization's Contacts"),
-            #comment = "Bob",
             fields = ["person_id",
                       "site_id",
-                      "hrm_job_title_id",
+                      "job_title_id",
                       #"email",
                       #"phone",
                       ],
@@ -333,16 +339,14 @@ def customize_org_organisation(**attr):
         S3SQLInlineComponent(
             "facility",
             label = T("Organization's Locations"),
-            #comment = "Bob",
             fields = ["name", 
-                      "site_facility_type.facility_type_id",
+                      #"facility_type.facility_type_id",
                       "location_id",
                       ],
         ),
         S3SQLInlineComponent(
             "resource",
             label = T("Organization's Resources"),
-            #comment = "Bob",
             fields = ["parameter_id", 
                       "value",
                       "comments",
@@ -463,9 +467,8 @@ def customize_org_facility(**attr):
         S3SQLInlineComponent(
             "human_resource",
             label = T("Location's Contacts"),
-            #comment = "Bob",
             fields = ["person_id",
-                      "hrm_job_title_id",
+                      "job_title_id",
                       #"email",
                       #"phone",
                       ],

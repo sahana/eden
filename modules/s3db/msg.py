@@ -230,19 +230,19 @@ class S3MessagingModel(S3Model):
             return current.messages["NONE"]
 
         db = current.db
-        table = db.msg_log
-        record = db(table.id == id).select(table.subject,
-                                           table.message,
+        table = db.msg_message
+        record = db(table.id == id).select(#table.subject,
+                                           table.body,
                                            limitby=(0, 1)).first()
-        try:
-            if record.subject:
-                # EMail will use Subject
-                return record.subject
-        except:
-            return current.messages.UNKNOWN_OPT
+        #try:
+        #    if record.subject:
+        #        # EMail will use Subject
+        #        return record.subject
+        #except:
+        #    return current.messages.UNKNOWN_OPT
 
         # SMS/Tweet will use 1st 80 characters from body
-        text = record.message
+        text = record.body
         if len(text) < 80:
             return text
         else:
