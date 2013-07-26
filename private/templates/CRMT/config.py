@@ -472,19 +472,19 @@ def customize_org_group(**attr):
     tablename = "org_group"
     # CRUD Strings
     current.response.s3.crud_strings[tablename] = Storage(
-                title_create = T("Add Coalition"),
-                title_display = T("Coalition Details"),
-                title_list = T("Coalitions"),
-                title_update = T("Edit Coalition"),
-                title_search = T("Search Coalitions"),
-                subtitle_create = T("Add New Coalition"),
-                label_list_button = T("List Coalitions"),
-                label_create_button = T("Add Coalition"),
-                label_delete_button = T("Remove Coalition"),
-                msg_record_created = T("Coalition added"),
-                msg_record_modified = T("Coalition updated"),
-                msg_record_deleted = T("Coalition removed"),
-                msg_list_empty = T("No Coalitions currently recorded"))
+        title_create = T("Add Coalition"),
+        title_display = T("Coalition Details"),
+        title_list = T("Coalitions"),
+        title_update = T("Edit Coalition"),
+        title_search = T("Search Coalitions"),
+        subtitle_create = T("Add New Coalition"),
+        label_list_button = T("List Coalitions"),
+        label_create_button = T("Add Coalition"),
+        label_delete_button = T("Remove Coalition"),
+        msg_record_created = T("Coalition added"),
+        msg_record_modified = T("Coalition updated"),
+        msg_record_deleted = T("Coalition removed"),
+        msg_list_empty = T("No Coalitions currently recorded"))
 
     return attr
 
@@ -571,19 +571,19 @@ def customize_org_facility(**attr):
     attr["hide_filter"] = False
 
     current.response.s3.crud_strings[tablename] = Storage(
-                title_create = T("Add Location"),
-                title_display = T("Location Details"),
-                title_list = T("Locations"),
-                title_update = T("Edit Location"),
-                title_search = T("Search Locations"),
-                subtitle_create = T("Add New Location"),
-                label_list_button = T("List Locations"),
-                label_create_button = T("Add Location"),
-                label_delete_button = T("Remove Location"),
-                msg_record_created = T("Location added"),
-                msg_record_modified = T("Location updated"),
-                msg_record_deleted = T("Location removed"),
-                msg_list_empty = T("No Locations currently recorded"))
+        title_create = T("Add Location"),
+        title_display = T("Location Details"),
+        title_list = T("Locations"),
+        title_update = T("Edit Location"),
+        title_search = T("Search Locations"),
+        subtitle_create = T("Add New Location"),
+        label_list_button = T("List Locations"),
+        label_create_button = T("Add Location"),
+        label_delete_button = T("Remove Location"),
+        msg_record_created = T("Location added"),
+        msg_record_modified = T("Location updated"),
+        msg_record_deleted = T("Location removed"),
+        msg_list_empty = T("No Locations currently recorded"))
 
     return attr
 

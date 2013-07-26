@@ -2861,11 +2861,12 @@ class GIS(object):
             import tempfile
             TEMP = tempfile.gettempdir()
         tempPath = os.path.join(TEMP, "GADMv1")
-        try:
-            os.mkdir(tempPath)
-        except OSError:
-            # Folder already exists - reuse
-            pass
+        if not os.path.exists(tempPath):
+            try:
+                os.mkdir(tempPath)
+            except OSError:
+                s3_debug("Unable to create temp folder %s!" % tempPath)
+                return
 
         # Set the current working directory
         os.chdir(tempPath)
@@ -3057,11 +3058,12 @@ class GIS(object):
             import tempfile
             TEMP = tempfile.gettempdir()
         tempPath = os.path.join(TEMP, "GADMv1")
-        try:
-            os.mkdir(tempPath)
-        except OSError:
-            # Folder already exists - reuse
-            pass
+        if not os.path.exists(tempPath):
+            try:
+                os.mkdir(tempPath)
+            except OSError:
+                s3_debug("Unable to create temp folder %s!" % tempPath)
+                return
 
         # Set the current working directory
         os.chdir(tempPath)
@@ -7599,8 +7601,8 @@ class S3Map(S3Method):
                            #catalogue_layers = True,
                            collapsed = True,
                            legend = True,
-                           toolbar = True,
-                           search = True,
+                           #toolbar = True,
+                           #search = True,
                            callback = callback,
                            )
         return map

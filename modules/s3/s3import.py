@@ -38,6 +38,7 @@ import cPickle
 import os
 import sys
 import tempfile
+import urllib2          # Needed for error handling on fetch
 import uuid
 from copy import deepcopy
 from datetime import datetime
@@ -63,7 +64,7 @@ except ImportError:
 from gluon import *
 from gluon.serializers import json as jsons
 from gluon.storage import Storage, Messages
-from gluon.tools import callback
+from gluon.tools import callback, fetch
 
 from s3crud import S3CRUD
 from s3resource import S3Resource
@@ -3657,13 +3658,14 @@ class S3BulkImporter(object):
         csv = None
         if len(details) >= 3:
             fileName = details[2].strip('" ')
-            (csvPath, csvFile) = os.path.split(fileName)
-            if csvPath != "":
-                path = os.path.join(current.request.folder,
-                                    "private",
-                                    "templates",
-                                    csvPath)
-            csv = os.path.join(path, csvFile)
+            if fileName != "":
+                (csvPath, csvFile) = os.path.split(fileName)
+                if csvPath != "":
+                    path = os.path.join(current.request.folder,
+                                        "private",
+                                        "templates",
+                                        csvPath)
+                csv = os.path.join(path, csvFile)
         extraArgs = None
         if len(details) >= 4:
             extraArgs = details[3:]
@@ -3782,7 +3784,7 @@ class S3BulkImporter(object):
             duration = end - start
             csvName = task[3][task[3].rfind("/") + 1:]
             try:
-                # Python-2.7
+                # Python 2.7
                 duration = '{:.2f}'.format(duration.total_seconds()/60)
                 msg = "%s import job completed in %s mins" % (csvName, duration)
             except AttributeError:
@@ -3819,7 +3821,7 @@ class S3BulkImporter(object):
             end = datetime.now()
             duration = end - start
             try:
-                # Python-2.7
+                # Python 2.7
                 duration = '{:.2f}'.format(duration.total_seconds()/60)
                 msg = "%s import job completed in %s mins" % (fun, duration)
             except AttributeError:
@@ -3919,7 +3921,7 @@ class S3BulkImporter(object):
                             *acls[rulelist[0]])
     # -------------------------------------------------------------------------
     def import_user(self, csv_filename):
-        """ Import Roles from CSV """
+        """ Import Users from CSV """
 
         current.manager.import_prep = current.auth.s3_membership_import_prep
         user_task = [1,
@@ -3936,7 +3938,7 @@ class S3BulkImporter(object):
                      None
                      ]
         self.execute_import_task(user_task)
-        
+
     # -------------------------------------------------------------------------
     def import_image(self,
                      filename,
@@ -4037,6 +4039,80 @@ class S3BulkImporter(object):
                 else:
                     for (key, error) in form.errors.items():
                         s3_debug("error importing logo %s: %s %s" % (image, key, error))
+
+    # -------------------------------------------------------------------------
+    def import_remote_csv(self, url, prefix, resource, stylesheet):
+        """ Import CSV files from remote servers """
+
+        extension = url.split(".")[-1]
+        if extension not in ("csv", "zip"):
+            s3_debug("error importing remote file %s: invalid extension" % (url))
+            return
+
+        # Copy the current working directory to revert back to later
+        cwd = os.getcwd()
+
+        # Create the working directory
+        TEMP = os.path.join(cwd, "temp")
+        if not os.path.exists(TEMP): # use web2py/temp/remote_csv as a cache
+            import tempfile
+            TEMP = tempfile.gettempdir()
+        tempPath = os.path.join(TEMP, "remote_csv")
+        if not os.path.exists(tempPath):
+            try:
+                os.mkdir(tempPath)
+            except OSError:
+                s3_debug("Unable to create temp folder %s!" % tempPath)
+                return
+
+        # Set the current working directory
+        os.chdir(tempPath)
+
+        try:
+            file = fetch(url)
+        except urllib2.URLError, exception:
+            s3_debug(exception)
+            # Revert back to the working directory as before.
+            os.chdir(cwd)
+            return
+
+        fp = StringIO(file)
+        if extension == "zip":
+            # Need to unzip
+            import zipfile
+            myfile = zipfile.ZipFile(fp)
+            files = myfile.infolist()
+            for _file in files:
+                filename = _file.filename
+                extension = filename.split(".")[-1]
+                if extension == "csv":
+                    file = myfile.read(filename)
+                    f = open(filename, "w")
+                    f.write(file)
+                    f.close()
+                    break
+            myfile.close()
+        else:
+            filename = url.split("/")[-1]
+            f = open(filename, "w")
+            f.write(file)
+            f.close()
+
+        # Revert back to the working directory as before.
+        os.chdir(cwd)
+
+        task = [1, prefix, resource,
+                os.path.join(tempPath, filename),
+                os.path.join(current.request.folder,
+                             "static",
+                             "formats",
+                             "s3csv",
+                             prefix,
+                             stylesheet
+                             ),
+                None
+                ]
+        self.execute_import_task(task)
 
     # -------------------------------------------------------------------------
     def perform_tasks(self, path):

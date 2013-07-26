@@ -7,7 +7,9 @@ except:
     # Python 2.6
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
-from gluon import current, URL
+from datetime import timedelta
+
+from gluon import current, Field, URL
 from gluon.html import *
 from gluon.storage import Storage
 from gluon.validators import IS_NULL_OR
@@ -1873,12 +1875,107 @@ def cms_post_popup(r):
     return item
     
 # -----------------------------------------------------------------------------
+def cms_post_marker_fn(record):
+    """
+        Function to decide which Marker to use for Posts
+        Alerts & Incidents vary colour by age
+
+        @ToDo: A Bulk function
+
+
+        Using Style instead
+    """
+
+    db = current.db
+    s3db = current.s3db
+    table = s3db.cms_post
+    stable = db.cms_series
+    series = db(stable.id == record.series_id).select(stable.name,
+                                                      limitby=(0, 1),
+                                                      cache=s3db.cache
+                                                      ).first().name
+    if series == "Alert":
+        marker = "alert"
+    elif series == "Activity":
+        marker = "activity"
+    elif series == "Assessment":
+        marker = "assessment"
+    #elif series == "Event":
+    #    marker = "event"
+    elif series == "Incident":
+        marker = "incident"
+    #elif series == "Plan":
+    #    marker = "plan"
+    elif series == "Report":
+        marker = "report"
+    elif series == "Training Material":
+        marker = "training"
+
+    if series in ("Alert", "Incident"):
+        # Colour code by open/priority requests
+        date = record.date
+        now = current.request.utcnow
+        age = now - date
+        if age < timedelta(days=2):
+            marker = "%s_red" % marker
+        elif age < timedelta(days=7):
+            marker = "%s_yellow" % marker
+        else:
+            marker = "%s_green" % marker
+
+    mtable = db.gis_marker
+    try:
+        marker = db(mtable.name == marker).select(mtable.image,
+                                                  mtable.height,
+                                                  mtable.width,
+                                                  cache=s3db.cache,
+                                                  limitby=(0, 1)
+                                                  ).first()
+    except:
+        marker = db(mtable.name == "marker_red").select(mtable.image,
+                                                        mtable.height,
+                                                        mtable.width,
+                                                        cache=s3db.cache,
+                                                        limitby=(0, 1)
+                                                        ).first()
+    return marker
+
+# =============================================================================
+def cms_post_age(row):
+    """
+        The age of the post
+        - used for colour-coding markers of Alerts & Incidents
+    """
+
+    if hasattr(row, "cms_post"):
+        row = row.cms_post
+    try:
+        date = row.date
+    except:
+        # not available
+        return current.messages["NONE"]
+
+    now = current.request.utcnow
+    age = now - date
+    if age < timedelta(days=2):
+        return 1
+    elif age < timedelta(days=7):
+        return 2
+    else:
+        return 3
+
+# -----------------------------------------------------------------------------
 def customize_cms_post(**attr):
     """
         Customize cms_post controller
     """
 
+    s3db = current.s3db
     s3 = current.response.s3
+
+    #s3db.configure("cms_post",
+    #               marker_fn=cms_post_marker_fn,
+    #               )
 
     # Custom PreP
     standard_prep = s3.prep
@@ -1925,7 +2022,6 @@ def customize_cms_post(**attr):
 
             # Filter from a Profile page?
             # If so, then default the fields we know
-            s3db = current.s3db
             location_id = get_vars.get("~.(location)", None)
             if location_id:
                 table.location_id.default = location_id
@@ -1992,7 +2088,6 @@ def customize_cms_post(**attr):
 
             s3.cancel = True
         elif r.representation == "xls":
-            s3db = current.s3db
             table = r.table
             table.created_by.represent = s3_auth_user_represent_name
             #table.created_on.represent = datetime_represent
@@ -2017,14 +2112,15 @@ def customize_cms_post(**attr):
         elif r.representation == "plain" and \
              r.method != "search":
             # Map Popups
-            s3db = current.s3db
             table = r.table
             table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
             table.created_by.represent = s3_auth_user_represent_name
             # Used by default popups
             series = T(table.series_id.represent(r.record.series_id))
             s3.crud_strings["cms_post"].title_display = "%(series)s Details" % dict(series=series)
-            s3db.configure("cms_post", popup_url="")
+            s3db.configure("cms_post",
+                           popup_url="",
+                           )
             table.avatar.readable = False
             table.body.label = ""
             table.expired.readable = False
@@ -2033,6 +2129,9 @@ def customize_cms_post(**attr):
             table.created_by.label = T("Author")
             # Used by cms_post_popup
             #table.created_on.represent = datetime_represent
+
+        elif r.representation == "geojson":
+            r.table.age = Field.Lazy(cms_post_age)
 
         return True
     s3.prep = custom_prep

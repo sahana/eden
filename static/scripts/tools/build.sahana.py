@@ -516,6 +516,14 @@ def dojs(dogis = False, warnings = True):
         print "Moving new gxp JS files"
         shutil.move(outputFilenameGxp, "../gis")
 
+        print "Deleting %s." % outputFilenameGxp2
+        try:
+            os.remove("../gis/%s" % outputFilenameGxp2)
+        except:
+            pass
+        print "Moving new gxp2 JS files"
+        shutil.move(outputFilenameGxp2, "../gis")
+
 def docss():
     """ Compresses the  CSS files """
 

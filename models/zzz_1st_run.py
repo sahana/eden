@@ -149,6 +149,10 @@ if len(pop_list) > 0:
     # Load all Models to ensure all DB tables present
     s3db.load_all_models()
 
+    # Shortcuts
+    path_join = os.path.join
+    request_folder = request.folder
+
     if settings.get_auth_opt_in_to_email():
         table = db.pr_group
         for team in settings.get_auth_opt_in_team_list():
@@ -170,9 +174,9 @@ if len(pop_list) > 0:
 
     # GIS
     # L0 Countries
-    resource = s3base.S3Resource("gis_location")
-    stylesheet = os.path.join(request.folder, "static", "formats", "s3csv", "gis", "location.xsl")
-    import_file = os.path.join(request.folder, "private", "templates", "locations", "countries.csv")
+    resource = s3db.resource("gis_location")
+    stylesheet = path_join(request_folder, "static", "formats", "s3csv", "gis", "location.xsl")
+    import_file = path_join(request_folder, "private", "templates", "locations", "countries.csv")
     File = open(import_file, "r")
     resource.import_xml(File, format="csv", stylesheet=stylesheet)
     db(db.gis_location.level == "L0").update(owned_by_group=map_admin)
@@ -244,6 +248,7 @@ if len(pop_list) > 0:
     s3.import_role = bi.import_role
     s3.import_user = bi.import_user
     s3.import_image = bi.import_image
+    s3.import_remote_csv = bi.import_remote_csv
 
     # Disable table protection
     protected = s3mgr.PROTECTED
@@ -262,124 +267,33 @@ if len(pop_list) > 0:
     if not request.env.request_method:
         request.env.request_method = "GET"
 
-    _debug = settings.get_base_debug()
-
     grandTotalStart = datetime.datetime.now()
     for pop_setting in pop_list:
         start = datetime.datetime.now()
         # Clear Tasklist
         bi.tasks = []
         # Import data specific to the prepopulate setting
-        if isinstance(pop_setting, str):
-            path = os.path.join(request.folder,
-                                "private",
-                                "templates",
-                                pop_setting)
+        if pop_setting == 1:
+            # Populate with the default data
+            path = path_join(request_folder,
+                             "private",
+                             "templates",
+                             "default")
+            bi.perform_tasks(path)
+        else:
+            path = path_join(request_folder,
+                             "private",
+                             "templates",
+                             pop_setting)
             if os.path.exists(path):
                 bi.perform_tasks(path)
             else:
                 print >> sys.stderr, "Unable to install data %s no valid directory found" % pop_setting
-        elif pop_setting == 1:
-            # Populate with the default data
-            path = os.path.join(request.folder,
-                                "private",
-                                "templates",
-                                "default")
-            bi.perform_tasks(path)
 
-        elif pop_setting == 2:
-            # Populate data for the regression tests
-            path = os.path.join(request.folder,
-                                "private",
-                                "templates",
-                                "regression")
-            bi.perform_tasks(path)
-            print >> sys.stdout, "Installed Regression Test Data"
-
-        elif pop_setting == 3:
-            # Populate data for scalability testing
-            # This is different from the repeatable imports that use csv files
-            # This will generate millions of records of data for selected tables.
-
-            # Code needs to go here to generate a large volume of test data
-            pass
-
-        elif pop_setting == 4:
-            # Populate data for the user roles
-            path = os.path.join(request.folder,
-                                "private",
-                                "templates",
-                                "roles")
-            bi.perform_tasks(path)
-            end = datetime.datetime.now()
-            duration = end - start
-            print >> sys.stdout, "Installed Authorisation Roles completed in %s" % \
-                                    (duration)
-
-        elif pop_setting == 10:
-            # Populate data for user specific data
-            path = os.path.join(request.folder,
-                                "private",
-                                "templates",
-                                "user")
-            bi.perform_tasks(path)
-            end = datetime.datetime.now()
-            duration = end - start
-            print >> sys.stdout, "Installed Private User Data completed in %s" % \
-                                    (duration)
-
-        elif pop_setting >= 20:
-            # Populate data for a template
-            # Read the folders.cfg file and extract the folder for the specific template
-            file = os.path.join(request.folder,
-                                "private",
-                                "templates",
-                                "folders.cfg")
-            source = open(file, "r")
-            values = source.readlines()
-            source.close()
-            template = ""
-            for templates in values:
-                # strip out the new line
-                templates = templates.strip()
-                if templates == "":
-                    continue
-                # split at the comma
-                details = templates.split(",")
-                if len(details) == 2:
-                     # remove any spaces and enclosing double quote
-                    index = details[0].strip('" ')
-                    if int(index) == pop_setting:
-                        directory = details[1].strip('" ')
-                        path = os.path.join(request.folder,
-                                            "private",
-                                            "templates",
-                                            directory)
-                        template = directory
-                        if os.path.exists(path):
-                            bi.perform_tasks(path)
-                        else:
-                            print >> sys.stderr, "Unable to install template %s no template directory found" \
-                                                    % index
-            if template == "":
-                print >> sys.stderr, "Unable to install a template with of an id '%s', please check 000_config and folders.cfg" \
-                                        % pop_setting
-            else:
-                end = datetime.datetime.now()
-                duration = end - start
-                try:
-                    # Python-2.7
-                    duration = '{:.2f}'.format(duration.total_seconds()/60)
-                    print >> sys.stdout, "Installed template '%s' completed in %s mins" % \
-                                            (template, duration)
-                except AttributeError:
-                    # older Python
-                    print >> sys.stdout, "Installed template '%s' completed in %s" % \
-                                            (template, duration)
         grandTotalEnd = datetime.datetime.now()
         duration = grandTotalEnd - grandTotalStart
         try:
-            # Python-2.7
+            # Python 2.7
             duration = '{:.2f}'.format(duration.total_seconds()/60)
             print >> sys.stdout, "Pre-populate task completed in %s mins" % duration
         except AttributeError:
@@ -433,7 +347,7 @@ if len(pop_list) > 0:
     grandTotalEnd = datetime.datetime.now()
     duration = grandTotalEnd - grandTotalStart
     try:
-        # Python-2.7
+        # Python 2.7
         duration = '{:.2f}'.format(duration.total_seconds()/60)
         print >> sys.stdout, "Pre-populate completed in %s mins" % duration
     except AttributeError:

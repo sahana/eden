@@ -86,10 +86,9 @@ class S3Summary(S3Method):
 
         # Active tab
         if "t" in r.get_vars:
-            active = r.get_vars["t"]
+            active_tab = int(r.get_vars["t"])
         else:
-            active = None
-        active_tab = 0
+            active_tab = 0
         active_map = None
 
         # Render sections
@@ -116,9 +115,6 @@ class S3Summary(S3Method):
 
                 # Add tab
                 tablist.append(LI(A(label, _href="#%s" % section_id)))
-                # Active tab?
-                if active and active == str(tab_idx):
-                    active_tab = tab_idx
 
             if common or active_tab == tab_idx:
                 visible = True
@@ -184,7 +180,7 @@ class S3Summary(S3Method):
         if len(sections) > 1:
             output["tabs"] = tablist
             # Hide tabbed sections initially to avoid visible artifacts
-            # in slow page loads (tabs-script will un-hide the active one):
+            # in slow page loads (S3.search.summary_tabs will un-hide the active one):
             for s in sections:
                 s.add_class("hide")
         else:
@@ -314,11 +310,10 @@ class S3Summary(S3Method):
         if not config:
             config = [{"name": "table",
                        "label": "Table",
-                       "widgets": [
-                            {"name": "datatable",
-                             "method": "datatable"
-                            }
-                       ]}]
+                       "widgets": [{"name": "datatable",
+                                    "method": "datatable",
+                                    }]
+                       }]
         return config
 
 # END =========================================================================

@@ -643,8 +643,12 @@ class S3LocationModel(S3Model):
             if not name:
                 return
 
+            if not level:
+                # Don't deduplicate precise locations as hard to ensure these have unique names
+                return
+
             # Don't try to update Countries
-            if level and level == "L0":
+            if level == "L0":
                 job.method = None
                 return
 
@@ -655,11 +659,10 @@ class S3LocationModel(S3Model):
             # Try the Name
             # @ToDo: Hook for possible duplicates vs definite?
             #query = (table.name.lower().like('%%%s%%' % name.lower()))
-            query = (table.name.lower() == name.lower())
+            query = (table.name.lower() == name.lower()) & \
+                    (table.level == level)
             if parent:
-                query = query & (table.parent == parent)
-            if level:
-                query = query & (table.level == level)
+                query &= (table.parent == parent)
 
             _duplicate = current.db(query).select(table.id,
                                                   limitby=(0, 1)).first()
@@ -3794,11 +3797,12 @@ class S3MapModel(S3Model):
                 import tempfile
                 TEMP = tempfile.gettempdir()
             tempPath = os.path.join(TEMP, "Shapefiles")
-            try:
-                os.mkdir(tempPath)
-            except OSError:
-                # Folder already exists - reuse
-                pass
+            if not os.path.exists(tempPath):
+                try:
+                    os.mkdir(tempPath)
+                except OSError:
+                    s3_debug("Unable to create temp folder %s!" % tempPath)
+                    return
             # Set the current working directory
             os.chdir(tempPath)
 

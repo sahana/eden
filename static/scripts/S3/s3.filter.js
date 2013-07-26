@@ -848,15 +848,16 @@ S3.search = {};
         $('#summary-tabs').tabs({
             active: active_tab,
             activate: function(event, ui) {
+                var newPanel = $(ui.newPanel);
                 // Unhide the section (.ui-tab's display: block overrides anyway but hey ;)
-                $(ui.newPanel).removeClass('hide');
+                newPanel.removeClass('hide');
                 // A New Tab has been selected
                 if (ui.newTab.length) {
                     // Update the Filter Query URL to show which tab is active
                     updateFilterSubmitURL(form, 't', $(ui.newTab).index());
                 }
                 // Find any Map widgets in this section
-                var maps = $(ui.newPanel).find('.map_wrapper');
+                var maps = newPanel.find('.map_wrapper');
                 var gis = S3.gis;
                 for (var i=0; i < maps.length; i++) {
                     var map_id = maps[i].attributes['id'].value;
@@ -1254,6 +1255,9 @@ S3.search = {};
                         }
                     } else if (t.hasClass('map_wrapper')) {
                         // maps do not need page reload
+                        needs_reload = false;
+                    } else if (t.hasClass('cms_content')) {
+                        // CMS widgets do not need page reload
                         needs_reload = false;
                     } else {
                         // all other targets need page reload
