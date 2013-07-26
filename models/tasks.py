@@ -37,8 +37,12 @@ def document_create_index(document, user_id=None):
     filename = "%s/%s/uploads/%s" % (os.path.abspath("applications"), \
                                     request.application, filename)
 
-    si = sunburnt.SolrInterface(settings.get_base_solr_url())
-
+    try:
+        si = sunburnt.SolrInterface(settings.get_base_solr_url())
+    except:
+        from s3.s3utils import s3_debug
+        s3_debug("Connection Error: Solr not connected")
+        return
     extension = os.path.splitext(filename)[1][1:]
 
     if extension == "pdf":
