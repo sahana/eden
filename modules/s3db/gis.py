@@ -4208,8 +4208,8 @@ def cluster_threshold():
                            label = CLUSTER_THRESHOLD,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (CLUSTER_THRESHOLD,
-                                                           T("The minimum number of features to form a cluster."))),
-                           requires = IS_INT_IN_RANGE(1, 10),
+                                                           T("The minimum number of features to form a cluster. 0 to disable."))),
+                           requires = IS_INT_IN_RANGE(0, 10),
                            default = 2)
 
 # =============================================================================

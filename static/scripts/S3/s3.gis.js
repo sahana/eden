@@ -736,11 +736,11 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         s3.layers_loading = [];
 
         // @ToDo: Strategy to allow common clustering of multiple layers
-        s3.common_cluster_strategy = new OpenLayers.Strategy.AttributeClusterMultiple({
-            attribute: 'colour',
-            distance: cluster_distance_default,
-            threshold: cluster_threshold_default
-        })
+        //s3.common_cluster_strategy = new OpenLayers.Strategy.AttributeClusterMultiple({
+        //    attribute: 'colour',
+        //    distance: cluster_distance_default,
+        //    threshold: cluster_threshold_default
+        //})
 
         var i;
         /* Base Layers */
@@ -1152,6 +1152,42 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var featureStyleMap = response[0];
         var marker_url = response[1];
 
+        // Strategies
+        var strategies = [
+            // Need to be uniquely instantiated
+            new OpenLayers.Strategy.BBOX({
+                // load features for a wider area than the visible extent to reduce calls
+                ratio: 1.5
+                // don't fetch features after every resolution change
+                //resFactor: 1
+            })
+        ]
+        if (refresh) {
+            strategies.push(new OpenLayers.Strategy.Refresh({
+                force: true,
+                interval: refresh * 1000 // milliseconds
+                // Close any open Popups to prevent them getting orphaned
+                // - annoying to have this happen automatically, so we handle it in onPopupClose() instead
+                //refresh: function() {
+                //    if (this.layer && this.layer.refresh) {
+                //        while (this.layer.map.popups.length) {
+                //            this.layer.map.removePopup(this.layer.map.popups[0]);
+                //        }
+                //    this.layer.refresh({force: this.force});
+                //    }
+                //}
+            }));
+        }
+        if (cluster_threshold) {
+            // Common Cluster Strategy for all layers
+            //map.s3.common_cluster_strategy
+            strategies.push(new OpenLayers.Strategy.AttributeCluster({
+                attribute: cluster_attribute,
+                distance: cluster_distance,
+                threshold: cluster_threshold
+            }))
+        }
+
         // Instantiate Layer
         var geojsonLayer = new OpenLayers.Layer.Vector(
             name, {
@@ -1161,36 +1197,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     url: url,
                     format: format_geojson
                 }),
-                strategies: [
-                    // Need to be uniquely instantiated
-                    new OpenLayers.Strategy.BBOX({
-                        // load features for a wider area than the visible extent to reduce calls
-                        ratio: 1.5
-                        // don't fetch features after every resolution change
-                        //resFactor: 1
-                    }),
-                    new OpenLayers.Strategy.Refresh({
-                        force: true,
-                        interval: refresh * 1000 // milliseconds
-                        // Close any open Popups to prevent them getting orphaned
-                        // - annoying to have this happen automatically, so we handle it in onPopupClose() instead
-                        //refresh: function() {
-                        //    if (this.layer && this.layer.refresh) {
-                        //        while (this.layer.map.popups.length) {
-                        //            this.layer.map.removePopup(this.layer.map.popups[0]);
-                        //        }
-                        //    this.layer.refresh({force: this.force});
-                        //    }
-                        //}
-                    }),
-                    // Common Cluster Strategy for all layers
-                    //map.s3.common_cluster_strategy
-                    new OpenLayers.Strategy.AttributeCluster({
-                        attribute: cluster_attribute,
-                        distance: cluster_distance,
-                        threshold: cluster_threshold
-                    })
-                ],
+                strategies: strategies,
                 // This gets picked up after mapPanel instantiates & copied to it's layerRecords
                 legendURL: marker_url,
                 styleMap: featureStyleMap,
@@ -4412,13 +4419,15 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 });
                 rules.push(rule);
             });
-            // Default Rule (e.g. for Clusters)
-            rule = new OpenLayers.Rule({
-                elseFilter: true,
-                title: ' '
-            });
-            rules.push(rule);
-            featureStyle.addRules(rules);
+            if (layer.cluster_threshold != 0) {
+                // Default Rule (e.g. for Clusters)
+                rule = new OpenLayers.Rule({
+                    elseFilter: true,
+                    title: ' '
+                });
+                rules.push(rule);
+                featureStyle.addRules(rules);
+            }
         }
 
         // @ToDo: Allow customisation of the Select Style

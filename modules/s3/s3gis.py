@@ -5266,7 +5266,7 @@ class GIS(object):
                   "cluster_attribute",        # Optional (overrides layer_id if-set)
                   "cluster_distance",         # Optional (overrides layer_id if-set)
                   "cluster_threshold",        # Optional (overrides layer_id if-set)
-                  "dir",                    # Optional (overrides layer_id if-set)
+                  "dir",                      # Optional (overrides layer_id if-set)
                   "style",                    # Optional (overrides layer_id if-set)
                 }]
             @param wms_browser: WMS Server's GetCapabilities & options (dict)

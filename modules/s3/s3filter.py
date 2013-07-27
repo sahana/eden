@@ -1310,7 +1310,7 @@ class S3FilterForm(object):
             formstyle = self._formstyle
 
         # Filter Manager (load/apply/save filters)
-        if opts.get("filter_manager", True): #False):
+        if opts.get("filter_manager", False): #True):
             filter_manager = self._render_filters(resource, form_id)
             if filter_manager:
                 rows = [formstyle(None, "", filter_manager, "")]
