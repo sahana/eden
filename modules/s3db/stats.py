@@ -209,7 +209,7 @@ class S3StatsDemographicModel(S3Model):
 
         location_id = self.gis_location_id
 
-        stats_parameter_represent = S3Represent(lookup="stats_parameter"),
+        stats_parameter_represent = S3Represent(lookup="stats_parameter")
 
         #----------------------------------------------------------------------
         # Demographic
