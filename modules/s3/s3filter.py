@@ -1316,6 +1316,8 @@ class S3FilterForm(object):
                 rows = [formstyle(None, "", filter_manager, "")]
             else:
                 rows = []
+        else:
+            rows = []
 
         # Filter widgets
         rows.extend(self._render_widgets(resource,
