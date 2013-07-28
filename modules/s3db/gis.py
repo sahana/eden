@@ -72,6 +72,7 @@ class S3LocationModel(S3Model):
              "gis_country_id",
              "gis_country_requires",
              "gis_country_code_represent",
+             "gis_location_represent",
              "gis_location_onvalidation",
              "gis_feature_type_opts",
              ]
@@ -346,14 +347,13 @@ class S3LocationModel(S3Model):
                              # s3_comments(),
                              # *s3_meta_fields())
 
-        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        #
-        return Storage(
+        return dict(
                 gis_location_id = location_id,
                 gis_country_id = country_id,
                 gis_country_requires = country_requires,
                 gis_country_code_represent = self.gis_country_code_represent,
+                gis_location_represent = gis_location_represent,
                 gis_location_onvalidation = self.gis_location_onvalidation,
                 gis_feature_type_opts = gis_feature_type_opts,
             )
@@ -931,10 +931,8 @@ class S3LocationNameModel(S3Model):
         self.configure(tablename,
                        deduplicate=self.gis_location_name_deduplicate)
 
-        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        #
-        return Storage()
+        return dict()
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1004,12 +1002,9 @@ class S3LocationTagModel(S3Model):
         self.configure(tablename,
                        deduplicate=self.gis_location_tag_deduplicate)
 
-        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        #
-        return Storage(
-                    gis_country_opts = self.gis_country_opts,
-                )
+        return dict(gis_country_opts = self.gis_country_opts,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1107,11 +1102,8 @@ class S3LocationGroupModel(S3Model):
                              s3_comments(),
                              *s3_meta_fields())
 
-        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        #
-        return Storage(
-                )
+        return dict()
 
 # =============================================================================
 class S3LocationHierarchyModel(S3Model):
@@ -1181,12 +1173,9 @@ class S3LocationHierarchyModel(S3Model):
                        onvalidation=self.gis_hierarchy_onvalidation,
                        )
 
-        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        #
-        return Storage(
-                gis_hierarchy_form_setup = self.gis_hierarchy_form_setup,
-                )
+        return dict(gis_hierarchy_form_setup = self.gis_hierarchy_form_setup,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1717,16 +1706,13 @@ class S3GISConfigModel(S3Model):
             # msg_record_deleted = T("Menu Entry deleted"),
             # msg_list_empty = T("No Menu Entries currently defined"))
 
-        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        #
-        return Storage(
-                gis_config_form_setup = self.gis_config_form_setup,
-                gis_config_id = config_id,
-                gis_marker_id = marker_id,
-                gis_projection_id = projection_id,
-                gis_symbology_id = symbology_id,
-            )
+        return dict(gis_config_form_setup = self.gis_config_form_setup,
+                    gis_config_id = config_id,
+                    gis_marker_id = marker_id,
+                    gis_projection_id = projection_id,
+                    gis_symbology_id = symbology_id,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2326,12 +2312,11 @@ class S3LayerEntityModel(S3Model):
             msg_list_empty = T("No Symbologies currently defined for this Layer")
             )
 
-        # ---------------------------------------------------------------------
-        return Storage(
-                gis_layer_types = layer_types,
-                # Run from config() controller when saving state
-                gis_layer_config_onaccept = self.gis_layer_config_onaccept
-            )
+        # Pass names back to global scope (s3.*)
+        return dict(gis_layer_types = layer_types,
+                    # Run from config() controller when saving state
+                    gis_layer_config_onaccept = self.gis_layer_config_onaccept,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2531,11 +2516,8 @@ class S3FeatureLayerModel(S3Model):
                                                 autocomplete="name",
                                                 autodelete=False))
 
-        # ---------------------------------------------------------------------
-        # Pass model-global names to response.s3
-        #
-        return Storage(
-                )
+        # Pass names back to global scope (s3.*)
+        return dict()
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3656,10 +3638,8 @@ class S3MapModel(S3Model):
         #                     Field("xml", "text"),
         #                     *s3_meta_fields())
 
-        # ---------------------------------------------------------------------
-        return Storage(
-            )
-
+        # Pass names back to global scope (s3.*)
+        return dict()
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4088,13 +4068,9 @@ class S3GISThemeModel(S3Model):
             msg_list_empty = T("No Data currently defined for this Theme Layer")
         )
 
-        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        #
-        return Storage(
-                    gis_layer_theme_id = layer_theme_id,
-                )
-
+        return dict(gis_layer_theme_id = layer_theme_id,
+                    )
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -4132,8 +4108,8 @@ class S3POIFeedModel(S3Model):
                                   Field("last_update", "datetime"),
                                   *s3_meta_fields())
 
-        # ---------------------------------------------------------------------
-        return Storage()
+        # Pass names back to global scope (s3.*)
+        return dict()
 
 # =============================================================================
 def name_field():

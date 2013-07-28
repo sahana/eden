@@ -1,4 +1,5 @@
 "uid","role","description","controller","function","table","entity","uacl","oacl","hidden","system","protected","Notes"
+ANONYMOUS,Anonymous,,org,group,,,READ,,,,,Allow display of Coalition Polygons on homepage
 "AUTHENTICATED","Authenticated",,"default","person",,,"READ|CREATE|UPDATE",,,,,
 "AUTHENTICATED","Authenticated",,"default","person","gis_location",,"READ|CREATE|UPDATE",,,,,
 "AUTHENTICATED","Authenticated",,"default","person","pr_saved_search",,,"READ|CREATE|UPDATE",,,,

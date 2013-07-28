@@ -1,7 +1,8 @@
 /* Override DRMP */
+/* Breaks access to menu
 #alert-space {
     padding-top: 20px;
-}
+}*/
 body {
     padding-top: 60px;
 }

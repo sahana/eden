@@ -431,25 +431,23 @@ class S3OrganisationModel(S3Model):
         if use_branches:
             # Branches
             add_component("org_organisation",
-                          org_organisation=Storage(
-                                        name="branch",
-                                        link="org_organisation_branch",
-                                        joinby="organisation_id",
-                                        key="branch_id",
-                                        actuate="embed",
-                                        autocomplete="name",
-                                        autodelete=True))
+                          org_organisation=dict(name="branch",
+                                                link="org_organisation_branch",
+                                                joinby="organisation_id",
+                                                key="branch_id",
+                                                actuate="embed",
+                                                autocomplete="name",
+                                                autodelete=True))
 
             # For imports
             add_component("org_organisation",
-                          org_organisation=Storage(
-                                        name="parent",
-                                        link="org_organisation_branch",
-                                        joinby="branch_id",
-                                        key="organisation_id",
-                                        actuate="embed",
-                                        autocomplete="name",
-                                        autodelete=False))
+                          org_organisation=dict(name="parent",
+                                                link="org_organisation_branch",
+                                                joinby="branch_id",
+                                                key="organisation_id",
+                                                actuate="embed",
+                                                autocomplete="name",
+                                                autodelete=False))
 
             # ---------------------------------------------------------------------
             # Organisation Branches
@@ -907,7 +905,11 @@ class S3OrganisationGroupModel(S3Model):
                              Field("name", notnull=True, unique=True,
                                    length=128,
                                    label=T("Name")),
-                             #self.gis_location_id(),
+                             self.gis_location_id(
+                                widget = S3LocationSelectorWidget(
+                                    #catalog_layers=True,
+                                    polygon=True
+                                    )),
                              s3_comments(),
                              *s3_meta_fields())
 
@@ -929,6 +931,10 @@ class S3OrganisationGroupModel(S3Model):
                                    # Always links via Link Tables
                                    ondelete="CASCADE",
                                    )
+
+        self.add_component("org_group_membership",
+                           org_group=dict(name="membership",
+                                          joinby="group_id"))
 
         # ---------------------------------------------------------------------
         # Group membership
@@ -1306,29 +1312,25 @@ class S3OrganisationSectorModel(S3Model):
 
         # Components
         add_component("org_organisation",
-                      org_sector=Storage(
-                                link="org_sector_organisation",
-                                joinby="sector_id",
-                                key="organisation_id",
-                                actuate="hide"))
+                      org_sector=dict(link="org_sector_organisation",
+                                      joinby="sector_id",
+                                      key="organisation_id",
+                                      actuate="hide"))
         add_component("project_project",
-                      org_sector=Storage(
-                                link="project_sector_project",
-                                joinby="sector_id",
-                                key="project_id",
-                                actuate="hide"))
+                      org_sector=dict(link="project_sector_project",
+                                      joinby="sector_id",
+                                      key="project_id",
+                                      actuate="hide"))
         #add_component("project_activity_type",
-        #              org_sector=Storage(
-        #                        link="project_activity_type_sector",
-        #                        joinby="sector_id",
-        #                        key="activity_type_id",
-        #                        actuate="hide"))
+        #              org_sector=dict(link="project_activity_type_sector",
+        #                              joinby="sector_id",
+        #                              key="activity_type_id",
+        #                              actuate="hide"))
         #add_component("project_theme",
-        #              org_sector=Storage(
-        #                        link="project_theme_sector",
-        #                        joinby="sector_id",
-        #                        key="theme_id",
-        #                        actuate="hide"))
+        #              org_sector=dict(link="project_theme_sector",
+        #                              joinby="sector_id",
+        #                              key="theme_id",
+        #                              actuate="hide"))
 
         # =====================================================================
         # (Cluster) Subsector
@@ -1799,10 +1801,10 @@ class S3SiteModel(S3Model):
         # Facility Types
         # Format for S3SQLInlineComponentCheckbox
         add_component("org_facility_type",
-                      org_site=Storage(link="org_site_facility_type",
-                                       joinby="site_id",
-                                       key="facility_type_id",
-                                       actuate="hide"))
+                      org_site=dict(link="org_site_facility_type",
+                                    joinby="site_id",
+                                    key="facility_type_id",
+                                    actuate="hide"))
         # Format for filter_widgets & imports
         add_component("org_site_facility_type",
                       org_site="site_id")

@@ -64,7 +64,7 @@ settings.auth.record_approval = False
 
 # -----------------------------------------------------------------------------
 # Security Policy
-settings.security.policy = 3 # Controllers
+settings.security.policy = 5 # Tables
 settings.security.map = True
 
 # Owner Entity
@@ -342,119 +342,160 @@ settings.ui.customize_event_incident_report = customize_event_incident_report
 # -----------------------------------------------------------------------------
 # Organisations
 # -----------------------------------------------------------------------------
+def org_facility_types(row):
+    """
+        The Types of the Facility
+        - requried since we can't have a component within an Inline Component
+    """
+
+    if hasattr(row, "org_facility"):
+        row = row.org_facility
+    try:
+       site_id = row.site_id
+    except:
+        # not available
+        return current.messages["NONE"]
+
+    table = s3db.org_facility_type
+    ltable = s3db.org_site_facility_type
+    query = (ltable.site_id == site_id) & \
+            (ltable.facility_type_id == table.id)
+    rows = current.db(query).select(table.name)
+    return "".join([r.name for r in rows])
+
+# -----------------------------------------------------------------------------
 def customize_org_organisation(**attr):
     """
         Customize org_organisation controller
     """
-    
-    s3db = current.s3db
+
+    s3 = current.response.s3
+
+    # Custom PreP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+
+        if r.interactive and \
+           not r.component:
+            s3db = current.s3db
+            ftable = s3db.org_facility
+            ftable.location_id.label = T("Address")
+            ftable.location_id.widget = None
+            # We don't have a widget capable of creating/editing Locations inline
+            s3db.configure("org_facility",
+                           editable=False,
+                           insertable=False,
+                           )
+            # We can't include components in an Inline Component
+            # Virtual fields also don't work
+            #from gluon import Field
+            #ftable.facility_types = Field.Lazy(org_facility_types)
+            hrtable = s3db.hrm_human_resource
+            hrtable.person_id.widget = None
+            hrtable.site_id.label = T("Location")
+
+            # Custom Crud Form
+            crud_form = S3SQLCustomForm(
+                "name",
+                "logo",
+                S3SQLInlineComponentCheckbox(
+                    "group",
+                    label = T("Coalitions"),
+                    field = "group_id",
+                    cols = 3,
+                ),
+                S3SQLInlineComponentCheckbox(
+                    "sector",
+                    label = T("Sectors"),
+                    field = "sector_id",
+                    cols = 4,
+                ),
+                S3SQLInlineComponentCheckbox(
+                    "service",
+                    label = T("Services"),
+                    field = "service_id",
+                    cols = 4,
+                ),
+                S3SQLInlineComponent(
+                    "human_resource",
+                    label = T("Organization's Contacts"),
+                    fields = ["person_id",
+                              "site_id",
+                              "job_title_id",
+                              #"email",
+                              #"phone",
+                              ],
+                ),
+                S3SQLInlineComponent(
+                    "facility",
+                    label = T("Organization's Locations"),
+                    fields = ["name", 
+                              # Only fields within the table are supported
+                              #"facility_type.facility_type_id",
+                              #"facility_types",
+                              "location_id",
+                              ],
+                ),
+                S3SQLInlineComponent(
+                    "resource",
+                    label = T("Organization's Resources"),
+                    fields = ["parameter_id", 
+                              "value",
+                              "comments",
+                              ],
+                ),
+                "comments",
+            ) 
+
+            filter_widgets = [S3OptionsFilter("group_membership.group_id",
+                                              label=T("Coalition"),
+                                              represent="%(name)s",
+                                              widget="multiselect",
+                                              ),
+                              S3OptionsFilter("sector_organisation.sector_id",
+                                              label=T("Sector"),
+                                              represent="%(name)s",
+                                              widget="multiselect",
+                                              ),
+                              S3OptionsFilter("service_organisation.service_id",
+                                              label=T("Service"),
+                                              represent="%(name)s",
+                                              widget="multiselect",
+                                              ),
+                              ]
+
+            # Custom Report Fields
+            report_fields = ["name",
+                             (T("Sectors"), "sector_organisation.sector_id"),
+                             (T("Services"), "service_organisation.service_id"),
+                             ]
+
+            report_options = Storage(rows = report_fields,
+                                     cols = report_fields,
+                                     fact = report_fields,
+                                     defaults = Storage(rows = "service_organisation.service_id",
+                                                        cols = "sector_organisation.sector_id",
+                                                        fact = "list(name)",
+                                                        totals = True
+                                                        )
+                                     )
+
+            s3db.configure("org_organisation",
+                           crud_form = crud_form,
+                           filter_widgets = filter_widgets,
+                           report_options = report_options,
+                           )
+
+        return True
+    s3.prep = custom_prep
 
     # Remove rheader
     attr["rheader"] = None
-
-    tablename = "org_organisation"
-    table = s3db[tablename]
-
-    field = s3db.org_facility.location_id
-    field.label = T("Address")
-    from s3.s3validators import IS_LOCATION
-    field.requires = IS_LOCATION()
-    #field.widget = None
-    from s3.s3widgets import S3LocationAutocompleteWidget
-    field.widget = S3LocationAutocompleteWidget()
-    hrtable = s3db.hrm_human_resource
-    hrtable.person_id.widget = None
-    hrtable.site_id.label = T("Location")
-
-    # Custom Crud Form
-    crud_form = S3SQLCustomForm(
-        "name",
-        "logo",
-        S3SQLInlineComponentCheckbox(
-            "group",
-            label = T("Coalitions"),
-            field = "group_id",
-            cols = 3,
-        ),
-        S3SQLInlineComponentCheckbox(
-            "sector",
-            label = T("Sectors"),
-            field = "sector_id",
-            cols = 4,
-        ),
-        S3SQLInlineComponentCheckbox(
-            "service",
-            label = T("Services"),
-            field = "service_id",
-            cols = 4,
-        ),
-        S3SQLInlineComponent(
-            "human_resource",
-            label = T("Organization's Contacts"),
-            fields = ["person_id",
-                      "site_id",
-                      "job_title_id",
-                      #"email",
-                      #"phone",
-                      ],
-        ),
-        S3SQLInlineComponent(
-            "facility",
-            label = T("Organization's Locations"),
-            fields = ["name", 
-                      #"facility_type.facility_type_id",
-                      "location_id",
-                      ],
-        ),
-        S3SQLInlineComponent(
-            "resource",
-            label = T("Organization's Resources"),
-            fields = ["parameter_id", 
-                      "value",
-                      "comments",
-                      ],
-        ),
-        "comments",
-    ) 
-
-    filter_widgets = [S3OptionsFilter("group_membership.group_id",
-                                      label=T("Coalition"),
-                                      represent="%(name)s",
-                                      widget="multiselect",
-                                      ),
-                      S3OptionsFilter("sector_organisation.sector_id",
-                                      label=T("Sector"),
-                                      represent="%(name)s",
-                                      widget="multiselect",
-                                      ),
-                      S3OptionsFilter("service_organisation.service_id",
-                                      label=T("Service"),
-                                      represent="%(name)s",
-                                      widget="multiselect",
-                                      ),
-                      ]
-
-    # Custom Report Fields
-    report_fields = ["name",
-                     (T("Sectors"), "sector_organisation.sector_id"),
-                     (T("Services"), "service_organisation.service_id"),
-                     ]
-
-    report_options = Storage(rows = report_fields,
-                             cols = report_fields,
-                             fact = report_fields,
-                             defaults = Storage(rows = "service_organisation.service_id",
-                                                cols = "sector_organisation.sector_id",
-                                                fact = "list(name)",
-                                                totals = True
-                                                )
-                             )
-
-    s3db.configure(tablename,
-                   crud_form = crud_form,
-                   filter_widgets = filter_widgets,
-                   report_options = report_options,
-                   )
 
     attr["hide_filter"] = False
     return attr

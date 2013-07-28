@@ -6682,14 +6682,14 @@ class LayerFeature(Layer):
     # -------------------------------------------------------------------------
     class SubLayer(Layer.SubLayer):
         def __init__(self, tablename, record):
-            record_module = record.controller
+            controller = record.controller
             self.skip = False
-            if record_module is not None:
-                if record_module not in current.deployment_settings.modules:
+            if controller is not None:
+                if controller not in current.deployment_settings.modules:
                     # Module is disabled
                     self.skip = True
                 if not current.auth.permission.has_permission("read",
-                                                              c=record_module,
+                                                              c=controller,
                                                               f=record.function):
                     # User has no permission to this resource (in ACL)
                     self.skip = True

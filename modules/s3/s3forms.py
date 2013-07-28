@@ -1702,6 +1702,13 @@ class S3SQLInlineComponent(S3SQLSubForm):
         permit = component.permit
         tablename = component.tablename
 
+        get_config = current.s3db.get_config
+        _editable = get_config(tablename, "editable")
+        if _editable is None:
+            _editable = True
+        _deletable = get_config(tablename, "deletable")
+        if _deletable is None:
+            _deletable = True
         for i in xrange(len(items)):
             has_rows = True
             item = items[i]
@@ -1709,11 +1716,24 @@ class S3SQLInlineComponent(S3SQLSubForm):
             if "_id" in item:
                 record_id = item["_id"]
                 # Check permissions to edit this item
-                editable = permit("update", tablename, record_id)
-                deletable = permit("delete", tablename, record_id)
+                if _editable:
+                    editable = permit("update", tablename, record_id)
+                else:
+                    editable = False
+                if _deletable:
+                    deletable = permit("delete", tablename, record_id)
+                else:
+                    deletable = False
             else:
                 record_id = None
-                editable = deletable = True
+                if _editable:
+                    editable = True
+                else:
+                    editable = False
+                if _deletable:
+                    deletable = True
+                else:
+                    deletable = False
 
             # Render read-row accordingly
             rowname = "%s-%s" % (formname, i)
@@ -1735,8 +1755,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         # Edit-row
         edit_row = self._render_item(table, None, fields,
-                                     editable=True,
-                                     deletable=True,
+                                     editable=_editable,
+                                     deletable=_deletable,
                                      readonly=False,
                                      multiple=multiple,
                                      index=0,
@@ -1745,8 +1765,12 @@ class S3SQLInlineComponent(S3SQLSubForm):
         action_rows.append(edit_row)
 
         # Add-row
-        permitted = permit("create", tablename)
-        if permitted:
+        insertable = get_config(tablename, "insertable")
+        if insertable is None:
+            insertable = True
+        if insertable:
+            insertable = permit("create", tablename)
+        if insertable:
             _class = "add-row inline-form"
             if not multiple and has_rows:
                 _class = "%s hide" % _class
@@ -1763,8 +1787,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         # Empty edit row
         empty_row = self._render_item(table, None, fields,
-                                      editable=True,
-                                      deletable=True,
+                                      editable=_editable,
+                                      deletable=_deletable,
                                       readonly=False,
                                       multiple=multiple,
                                       index="default",
@@ -1774,8 +1798,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         # Empty read row
         empty_row = self._render_item(table, None, fields,
-                                      editable=True,
-                                      deletable=True,
+                                      editable=_editable,
+                                      deletable=_deletable,
                                       readonly=True,
                                       multiple=multiple,
                                       index="none",
