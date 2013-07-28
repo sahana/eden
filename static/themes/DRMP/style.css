@@ -896,3 +896,7 @@ label.ui-corner-all span {
     left: 10px;
     font-size: 12px;
 }
+
+.filter-controls {
+    clear: both;
+}
