@@ -1304,3 +1304,7 @@ input#sub_defaulttime_defaulttime_hours_edit_none {
 .fm-cancel {
     background: url(../../img/crud/cancel.png) no-repeat;
 }
+
+.cms-edit {
+    display: table;
+}

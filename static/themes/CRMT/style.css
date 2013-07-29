@@ -33,13 +33,18 @@ h2.summary {
     width: 100%;
     background: none;
     float: left;
-    margin-top: -33px;
+    margin: -33px;
     border: none;
 }
 
 #summary-tabs .ui-tabs-nav {
     border: none;
-    margin-bottom: 0;
+    margin: 0 10px 0 0;
+}
+
+.ui-tabs .ui-tabs-nav li a,
+.ui-tabs .ui-tabs-nav li.ui-tabs-active a {
+    border-color: #B2B2B2 #B2B2B2 white #B2B2B2
 }
 
 .ui-tabs {
@@ -52,6 +57,11 @@ h2.summary {
 
 #summary-sections {
     background-color: white;
+    border: 1px solid #b2b2b2;
+    box-shadow: none;
+    border-radius: 5px;
+    box-shadow: none;
+    min-height: 200px;
 }
 
 #summary-tabs #filter-form {
@@ -62,13 +72,20 @@ h2.summary {
     z-index: 1;
 }
 
+#summary-sections .map_loader { 
+    margin-top: 125px;
+}
+
 #summary-tabs .x-panel-body {
     border: none;
 }
 
 #summary-tabs #table {
-    margin: 0 20px;
-    padding: 200px 0 20px;
+    padding: 100px 0 20px;
+}
+
+#summary-2_filter {
+    margin-left: 10px;
 }
 
 /* Hide the colons for Location Selectors */
@@ -146,4 +163,28 @@ button.ui-multiselect.ui-state-default.ui-corner-all:hover {
 
 button.ui-multiselect.ui-state-default.ui-corner-all {
     margin-bottom: 10px;
+}
+
+/* Summary Page - Filter Form */
+form#summary-filter-form {
+    height: 60px;
+    background-color: white;
+    padding: 5px 10px;
+        border-radius: 5px;
+}
+
+.horiz_filter_form {
+    float: left;
+    margin-right: 20px;
+}
+
+.horiz_filter_form .filter-controls,
+.horiz_filter_form .filter-submit {
+    margin-top: 30px;
+}
+
+/* Read & Update - Migrate to DRMP */ 
+
+#edit-btn {
+    float: left;
 }
