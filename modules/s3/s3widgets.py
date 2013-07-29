@@ -4086,14 +4086,15 @@ class S3LocationSelectorWidget2(FormWidget):
                 comment = ""
                 map_icon = formstyle(row_id, label, widget, comment)
             if geocoder:
-                map_icon.append(DIV(DIV(T("Address Mapped"),
+                map_icon.append(DIV(DIV(_class="throbber hide"),
+                                    DIV(T("Address Mapped"),
                                         _class="geocode_success hide"),
                                     DIV(T("Address NOT Mapped"),
                                         _class="geocode_fail hide"),
                                     BUTTON(T("Geocode"),
                                            _class="hide"),
                                     _id="%s_geocode" % fieldname,
-                                    _class="controls",
+                                    _class="controls geocode",
                                     ))
             map = TAG[""](map, map_icon)
         else:

@@ -30,6 +30,7 @@
          LatMax...............float...........gis_config.lat_max
          LonMin...............float...........gis_config.lon_min
          LonMax...............float...........gis_config.lon_max
+         Geocoder.............boolean.........gis_config.geocoder
          WMS Browser..........float...........gis_config.wmsbrowser_url
          
 
@@ -191,6 +192,8 @@
         <xsl:variable name="ou_type" select="col[@field='OU Type']/text()"/>
         <xsl:variable name="Projection" select="col[@field='Projection']/text()"/>
         <xsl:variable name="Symbology" select="col[@field='Symbology']/text()"/>
+        <xsl:variable name="Geocoder" select="col[@field='Geocoder']/text()"/>
+        <xsl:variable name="WMSBrowser" select="col[@field='WMS Browser']/text()"/>
     
         <resource name="gis_config">
             <xsl:if test="col[@field='UUID']!=''">
@@ -206,8 +209,11 @@
             <data field="lon_min"><xsl:value-of select="col[@field='LonMin']"/></data>
             <data field="lat_max"><xsl:value-of select="col[@field='LatMax']"/></data>
             <data field="lon_max"><xsl:value-of select="col[@field='LonMax']"/></data>
-            <xsl:if test="col[@field='WMS Browser']!=''">
-                <data field="wmsbrowser_url"><xsl:value-of select="col[@field='WMS Browser']"/></data>
+            <xsl:if test="$Geocoder!=''">
+                <data field="geocoder"><xsl:value-of select="$Geocoder"/></data>
+            </xsl:if>
+            <xsl:if test="$WMSBrowser!=''">
+                <data field="wmsbrowser_url"><xsl:value-of select="$WMSBrowser"/></data>
             </xsl:if>
 
             <reference field="projection_id" resource="gis_projection">

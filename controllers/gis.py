@@ -1044,7 +1044,7 @@ def layer_entity():
                               "gis_layer_google",
                               "gis_layer_tms",
                               ):
-                    ltable.visible.writable = table.visible.readable = False
+                    ltable.visible.writable = ltable.visible.readable = False
                 if r.method =="update":
                     # Existing records don't need to change the config pointed to (confusing UI & adds validation overheads)
                     ltable.config_id.writable = False
@@ -1238,7 +1238,7 @@ def layer_bing():
         if r.interactive:
             if r.component_name == "config":
                 ltable = s3db.gis_layer_config
-                ltable.visible.writable = table.visible.readable = False
+                ltable.visible.writable = ltable.visible.readable = False
                 if r.method != "update":
                     # Only show Configs with no definition yet for this layer
                     table = r.table
@@ -1294,7 +1294,7 @@ def layer_empty():
         if r.interactive:
             if r.component_name == "config":
                 ltable = s3db.gis_layer_config
-                ltable.visible.writable = table.visible.readable = False
+                ltable.visible.writable = ltable.visible.readable = False
                 if r.method != "update":
                     # Only show Configs with no definition yet for this layer
                     table = r.table
@@ -1341,7 +1341,7 @@ def layer_google():
         if r.interactive:
             if r.component_name == "config":
                 ltable = s3db.gis_layer_config
-                ltable.visible.writable = table.visible.readable = False
+                ltable.visible.writable = ltable.visible.readable = False
                 if r.method != "update":
                     # Only show Configs with no definition yet for this layer
                     table = r.table
@@ -2899,7 +2899,7 @@ def geocode_r():
                     query &= (table.lat_min < lat) & \
                              (table.lat_max > lat) & \
                              (table.lon_min < lon) & \
-                             (table.lon_min > lon)
+                             (table.lon_max > lon)
                     rows = db(query).select(table.id,
                                             table.level,
                                             table.wkt,

@@ -103,6 +103,10 @@ h2.summary {
     display: block;
 }
 
+.geocode {
+    height: 32px;
+}
+
 /* Filter Forms */
 #filter-form td {
     border: none;
