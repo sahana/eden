@@ -14,8 +14,8 @@ from gluon.storage import Storage
 
 from s3.s3filter import S3OptionsFilter
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
-from s3.s3validators import IS_LOCATION_SELECTOR2
-from s3.s3widgets import S3LocationSelectorWidget2, S3AddPersonWidget2
+from s3.s3validators import IS_ADD_PERSON_WIDGET2, IS_LOCATION_SELECTOR2
+from s3.s3widgets import S3AddPersonWidget2, S3LocationSelectorWidget2
 
 T = current.T
 settings = current.deployment_settings
@@ -299,6 +299,7 @@ def customize_event_incident_report(**attr):
                                                          show_postcode=True,
                                                          )
     table.person_id.comment = None
+    #table.person_id.requires = IS_ADD_PERSON_WIDGET2()
     #table.person_id.widget = S3AddPersonWidget2(controller="pr")
     table.person_id.widget = None
     
