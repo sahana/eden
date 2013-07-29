@@ -104,8 +104,16 @@ settings.L10n.thousands_separator = ","
 # e.g. Activities filtered to those of parent Project
 settings.gis.countries = ["US"]
 
+# Uncomment to Hide the Toolbar from the main Map
+settings.gis.toolbar = False
 # Hide unnecessary Toolbar items
 settings.gis.nav_controls = False
+# Mouse Position: 'normal', 'mgrs' or None
+settings.gis.mouse_position = None
+# Uncomment to hide the permalink control
+settings.gis.permalink = False
+# Uncomment to rename Overlays in Layer Tree
+settings.gis.label_overlays = "Community Data"
 
 # Set Map to fill the container
 settings.gis.map_width = 1170

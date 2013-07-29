@@ -20,18 +20,19 @@ def index():
     vars = request.get_vars
     height = vars.get("height", None)
     width = vars.get("width", None)
-    iframe = vars.get("iframe", False)
-    toolbar = vars.get("toolbar", True)
-    collapsed = vars.get("collapsed", False)
-
-    if collapsed:
-        collapsed = True
-
-    if toolbar == "0":
+    toolbar = vars.get("toolbar", None)
+    if toolbar is None:
+        toolbar = settings.get_gis_toolbar()
+    elif toolbar == "0":
         toolbar = False
     else:
         toolbar = True
 
+    collapsed = vars.get("collapsed", False)
+    if collapsed:
+        collapsed = True
+
+    iframe = vars.get("iframe", False)
     if iframe:
         response.view = "gis/iframe.html"
     else:
@@ -83,7 +84,7 @@ def define_map(height = None,
                config = None):
     """
         Define the main Situation Map
-        This can then be called from both the Index page (embedded)
+        This is called from both the Index page (embedded)
         & the Map_Viewing_Client (fullscreen)
     """
 
