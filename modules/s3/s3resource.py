@@ -6522,6 +6522,10 @@ class S3ResourceFilter(object):
         if parent:
 
             pf = parent.rfilter
+            if not pf:
+                # Parent filter could be None if the parent is a component
+                # itself (e.g. inline components in component tabs)
+                pf = parent.build_query()
             alias = resource.alias
 
             # Use the master virtual filter
