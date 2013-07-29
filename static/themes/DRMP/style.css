@@ -201,14 +201,12 @@ a i.icon.icon-plus-sign.big-add:hover {
 }
 
 /* Forms */
-.form-horizontal {  /*temporary we need to pass another class to the form so it can be styled without problems*/
+form.form-horizontal {  /*temporary we need to pass another class to the form so it can be styled without problems*/
     background-color: #fff;
     border: 1px solid #b2b2b2;
     box-shadow: none;
     border-radius: 5px;
     box-shadow: none;
-    position: relative;
-    top: 11px;
     padding-top: 7px;
     padding-left: 9px;
 }

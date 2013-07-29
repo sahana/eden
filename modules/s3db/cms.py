@@ -611,8 +611,6 @@ class S3CMS(S3Method):
         if _item:
             if ADMIN:
                 item = DIV(XML(_item.body),
-                           # @ToDo: Replace with CSS
-                           BR(),
                            A(current.T("Edit"),
                              _href=URL(c="cms", f="post",
                                        args=[_item.id, "update"],

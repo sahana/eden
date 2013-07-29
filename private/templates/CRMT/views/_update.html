@@ -9,13 +9,12 @@
  {{pass}}
 {{try:}}{{=H3(subtitle)}}{{except:}}{{pass}}
 <div>
-{{try:}}{{=buttons["delete_btn"]}}{{except:}}{{pass}}
 {{try:}}{{=deduplicate}}{{except:}}{{pass}}
 </div>
 <div id='map'></div>
 {{include "last_update.html"}}
 {{include "key.html"}}
-<div class='form-container form-horizontal'>
+<div class='form-container'>
 {{try:}}{{=form}}{{except:}}{{pass}}
 </div>
 </div>

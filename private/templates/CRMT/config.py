@@ -9,6 +9,7 @@ except:
 
 from gluon import current, IS_NULL_OR
 from gluon.html import *
+from gluon.sqlhtml import formstyle_bootstrap
 from gluon.storage import Storage
 
 from s3.s3filter import S3OptionsFilter
@@ -176,6 +177,15 @@ current.response.menu = [
                 ]
 
 # =============================================================================
+# Filter Formstyles
+# -----------------------------------------------------------------------------
+
+def filter_formstyle(row_id, label, widget, comment, hidden=False):
+        return DIV(label, widget, comment, 
+                   _id=row_id,
+                   _class = "horiz_filter_form")
+
+# =============================================================================
 # Module Settings
 
 # -----------------------------------------------------------------------------
@@ -244,7 +254,7 @@ def customize_project_activity(**attr):
                                       widget="multiselect",
                                       ),
                       S3OptionsFilter("activity_type_id",
-                                      label=T("Type"),
+                                      label=T("Activity Type"),
                                       represent="%(name)s",
                                       widget="multiselect",
                                       ),
@@ -253,7 +263,10 @@ def customize_project_activity(**attr):
     s3db.configure(tablename,
                    crud_form = crud_form,
                    filter_widgets = filter_widgets,
+                   filter_formstyle = filter_formstyle,
                    )
+
+    attr["hide_filter"] = False
 
     return attr
 
@@ -318,13 +331,13 @@ def customize_event_incident_report(**attr):
         "comments",
     ) 
 
-    filter_widgets = [S3OptionsFilter("activity_group.group_id",
+    filter_widgets = [S3OptionsFilter("incident_report_group.group_id",
                                       label=T("Coalition"),
                                       represent="%(name)s",
                                       widget="multiselect",
                                       ),
                       S3OptionsFilter("incident_type_id",
-                                      label=T("Type"),
+                                      label=T("Incident Type"),
                                       represent="%(name)s",
                                       widget="multiselect",
                                       ),
@@ -333,7 +346,10 @@ def customize_event_incident_report(**attr):
     s3db.configure(tablename,
                    crud_form = crud_form,
                    filter_widgets = filter_widgets,
+                   filter_formstyle = filter_formstyle,
                    )
+
+    attr["hide_filter"] = False
 
     return attr
 
@@ -469,6 +485,8 @@ def customize_org_organisation(**attr):
                                               ),
                               ]
 
+            s3.crud_strings.org_organisation.title_report = T("Organization Matrix")
+
             # Custom Report Fields
             report_fields = ["name",
                              (T("Sectors"), "sector_organisation.sector_id"),
@@ -480,7 +498,7 @@ def customize_org_organisation(**attr):
                                      fact = report_fields,
                                      defaults = Storage(rows = "service_organisation.service_id",
                                                         cols = "sector_organisation.sector_id",
-                                                        fact = "list(name)",
+                                                        fact = "count(name)",
                                                         totals = True
                                                         )
                                      )
@@ -488,6 +506,7 @@ def customize_org_organisation(**attr):
             s3db.configure("org_organisation",
                            crud_form = crud_form,
                            filter_widgets = filter_widgets,
+                           filter_formstyle = filter_formstyle,
                            report_options = report_options,
                            )
 
@@ -540,7 +559,7 @@ def customize_org_facility(**attr):
     """
     
     s3db = current.s3db
-
+    
     # Remove rheader
     attr["rheader"] = None
 
@@ -557,13 +576,29 @@ def customize_org_facility(**attr):
     
     s3db.hrm_human_resource.person_id.widget = None
 
+    # Custom PreP - to hide Open & Delete data table action buttons
+    s3 = current.response.s3
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+
+        if r.method == "summary":
+            s3db.configure(tablename,
+               editable = False,
+               deletable = False,
+               )
+        return True
+    s3.prep = custom_prep
+
     # Custom Crud Form
     s3db.org_site_org_group.group_id.label = ""
     crud_form = S3SQLCustomForm(
         "name",
         S3SQLInlineComponentCheckbox(
             "facility_type",
-            label = T("Facility Type"),
+            label = T("Location Type"),
             field = "facility_type_id",
             cols = 3,
         ),
@@ -593,7 +628,7 @@ def customize_org_facility(**attr):
                                       widget="multiselect",
                                       ),
                       S3OptionsFilter("site_facility_type.facility_type_id",
-                                      label=T("Type"),
+                                      label=T("Location Type"),
                                       represent="%(name)s",
                                       widget="multiselect",
                                       ),
@@ -607,6 +642,7 @@ def customize_org_facility(**attr):
     s3db.configure(tablename,
                    crud_form = crud_form,
                    filter_widgets = filter_widgets,
+                   filter_formstyle = filter_formstyle,
                    )
 
     attr["hide_filter"] = False
@@ -649,6 +685,23 @@ def customize_stats_resident(**attr):
                                                          show_address=True,
                                                          show_postcode=True,
                                                          )
+
+    # Custom PreP - to hide Open & Delete data table action buttons
+    s3 = current.response.s3
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+
+        if r.method == "summary":
+            s3db.configure(tablename,
+               editable = False,
+               deletable = False,
+               )
+        return True
+    s3.prep = custom_prep
+
     # Custom Crud Form
     current.db.stats_resident_group.group_id.label = ""
     crud_form = S3SQLCustomForm(
@@ -665,9 +718,26 @@ def customize_stats_resident(**attr):
         "person_id",
         "comments",
     )
+
+    filter_widgets = [S3OptionsFilter("resident_group.group_id",
+                                      label=T("Coalition"),
+                                      represent="%(name)s",
+                                      widget="multiselect",
+                                      ),
+                      S3OptionsFilter("parameter_id",
+                                      label=T("Resident Type"),
+                                      represent="%(name)s",
+                                      widget="multiselect",
+                                      ),
+                      ]
+
     s3db.configure(tablename,
                    crud_form = crud_form,
+                   filter_widgets = filter_widgets,
+                   filter_formstyle = filter_formstyle,
                    )
+
+    attr["hide_filter"] = False
 
     return attr
 
@@ -693,6 +763,22 @@ def customize_stats_trained(**attr):
                                                          show_postcode=True,
                                                          )
 
+    # Custom PreP - to hide Open & Delete data table action buttons
+    s3 = current.response.s3
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+
+        if r.method == "summary":
+            s3db.configure(tablename,
+               editable = False,
+               deletable = False,
+               )
+        return True
+    s3.prep = custom_prep
+
     # Custom Crud Form
     current.db.stats_trained_group.group_id.label = ""
     crud_form = S3SQLCustomForm(
@@ -711,9 +797,26 @@ def customize_stats_trained(**attr):
         "comments",
     )
 
+    filter_widgets = [S3OptionsFilter("trained_group.group_id",
+                                      label=T("Coalition"),
+                                      represent="%(name)s",
+                                      widget="multiselect",
+                                      ),
+                      S3OptionsFilter("parameter_id",
+                                      label=T("Trained Type"),
+                                      represent="%(name)s",
+                                      widget="multiselect",
+                                      ),
+                      ]
+
     s3db.configure(tablename,
                    crud_form = crud_form,
+                   filter_widgets = filter_widgets,
+                   filter_formstyle = filter_formstyle,
                    )
+
+    attr["hide_filter"] = False
+
 
     return attr
 
@@ -736,6 +839,22 @@ def customize_vulnerability_evac_route(**attr):
                                                          polygons=True,
                                                          )
 
+    # Custom PreP - to hide Open & Delete data table action buttons
+    s3 = current.response.s3
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+
+        if r.method == "summary":
+            s3db.configure(tablename,
+               editable = False,
+               deletable = False,
+               )
+        return True
+    s3.prep = custom_prep
+
     # Custom Crud Form
     current.db.vulnerability_evac_route_group.group_id.label = ""
     crud_form = S3SQLCustomForm(
@@ -757,7 +876,7 @@ def customize_vulnerability_evac_route(**attr):
                                       widget="multiselect",
                                       ),
                       S3OptionsFilter("hazard_id",
-                                      label=T("Type"),
+                                      label=T("Hazard Type"),
                                       represent="%(name)s",
                                       widget="multiselect",
                                       ),
@@ -766,7 +885,10 @@ def customize_vulnerability_evac_route(**attr):
     s3db.configure(tablename,
                    crud_form = crud_form,
                    filter_widgets = filter_widgets,
+                   filter_formstyle = filter_formstyle,
                    )
+
+    attr["hide_filter"] = False
 
     return attr
 
@@ -789,6 +911,22 @@ def customize_vulnerability_risk(**attr):
                                                          polygons=True,
                                                          )
 
+    # Custom PreP - to hide Open & Delete data table action buttons
+    s3 = current.response.s3
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+
+        if r.method == "summary":
+            s3db.configure(tablename,
+               editable = False,
+               deletable = False,
+               )
+        return True
+    s3.prep = custom_prep
+
     # Custom Crud Form
     current.db.vulnerability_risk_group.group_id.label = ""
     crud_form = S3SQLCustomForm(
@@ -810,7 +948,7 @@ def customize_vulnerability_risk(**attr):
                                       widget="multiselect",
                                       ),
                       S3OptionsFilter("hazard_id",
-                                      label=T("Type"),
+                                      label=T("Hazard Type"),
                                       represent="%(name)s",
                                       widget="multiselect",
                                       ),
@@ -819,7 +957,10 @@ def customize_vulnerability_risk(**attr):
     s3db.configure(tablename,
                    crud_form = crud_form,
                    filter_widgets = filter_widgets,
+                   filter_formstyle = filter_formstyle,
                    )
+
+    attr["hide_filter"] = False
 
     return attr
 
