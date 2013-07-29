@@ -314,7 +314,7 @@ class S3SQLDefaultForm(S3SQLForm):
             self.record_id = record_id = self.deduplicate_link(request, record_id)
 
             # Add asterisk to labels of required fields
-            mark_required = self._config("mark_required", default = [])
+            mark_required = self._config("mark_required", default=[])
             labels, required = s3_mark_required(table, mark_required)
             if required:
                 # Show the key if there are any required fields.
@@ -692,7 +692,7 @@ class S3SQLCustomForm(S3SQLForm):
 
         # Mark required fields with asterisk
         if not readonly:
-            mark_required = self._config("mark_required", default = [])
+            mark_required = self._config("mark_required", default=[])
             labels, required = s3_mark_required(self.table, mark_required)
             if required:
                 # Show the key if there are any required fields.

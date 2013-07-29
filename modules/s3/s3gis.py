@@ -5427,7 +5427,7 @@ class MAP(DIV):
 
         # Strings used by all Maps
         i18n = {"gis_base_layers": T("Base Layers"),
-                "gis_overlays": T("Overlays"),
+                "gis_overlays": T(settings.get_gis_label_overlays()),
                 "gis_layers": T("Layers"),
                 "gis_draft_layer": T("Draft Features"),
                 "gis_cluster_multiple": T("There are multiple records at this location"),

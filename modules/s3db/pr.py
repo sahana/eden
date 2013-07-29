@@ -740,6 +740,7 @@ class S3PersonModel(S3Model):
                              pr_gender(label = T("Sex")),
                              s3_date("date_of_birth",
                                      label = T("Date of Birth"),
+                                     future = 0,
                                      past = 1320,  # Months, so 110 years
                                      ),
                              # @ToDo: Move this field from this core table (should be using Saved Searches/Subscription)

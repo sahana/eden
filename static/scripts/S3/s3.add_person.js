@@ -20,13 +20,35 @@
 
         // Move the user-visible rows underneath the real (hidden) one
         var error_row = real_input.next('.error_wrapper');
-        var L0_row = $(selector + '_L0__row');
-        var L1_row = $(selector + '_L1__row');
+        var title_row = $(selector + '_title__row');
+        var name_row = $(selector + '_full_name__row');
+        var date_of_birth_row = $(selector + '_date_of_birth__row');
+        var gender_row = $(selector + '_gender__row');
+        var occupation_row = $(selector + '_occupation__row');
+        var email_row = $(selector + '_email__row');
+        var mobile_phone_row = $(selector + '_mobile_phone__row');
+        var box_bottom = $(selector + '_box_bottom');
         $(selector + '__row').hide()
-                             .after(L1_row)
-                             .after(L0_row)
+                             .after(box_bottom)
+                             .after(mobile_phone_row)
+                             .after(email_row)
+                             .after(occupation_row)
+                             .after(gender_row)
+                             .after(date_of_birth_row)
+                             .after(name_row)
+                             .after(title_row)
                              .after(error_row);
 
+        title_row.show();
+        name_row.show();
+        date_of_birth_row.show();
+        gender_row.show();
+        occupation_row.show();
+        email_row.show();
+        mobile_phone_row.show();
+        box_bottom.show();
+
+        /*
         var fieldname = $('#select_from_registry_row').attr('field');
         var dummy_input = $('#dummy_' + fieldname);
         dummy_input.addClass('hide');
@@ -60,7 +82,7 @@
         if (value != 'None') {
             addPerson_real_input.val(value);
             select_person(value);
-        }
+        }*/
         $('form').submit(function() {
             // The form is being submitted
 
@@ -71,13 +93,14 @@
             S3ClearNavigateAwayConfirm();
 
             // Ensure that all fields aren't disabled (to avoid wiping their contents)
-            enable_person_fields();
+            enable_person_fields(fieldname);
 
             // Allow the Form's Save to continue
             return true;
         });
     }
 
+    /*
     var select_person_clear_form = function() {
         enable_person_fields();
         addPerson_real_input.val('');
@@ -181,27 +204,25 @@
         }
     }
     // Pass to global scope
-    S3.select_person = select_person;
+    S3.select_person = select_person;*/
 
-    var enable_person_fields = function() {
-        $('#pr_person_first_name').prop('disabled', false);
-        $('#pr_person_middle_name').prop('disabled', false);
-        $('#pr_person_last_name').prop('disabled', false);
-        $('#pr_person_gender').prop('disabled', false);
-        $('#pr_person_date_of_birth').prop('disabled', false);
-        $('#pr_person_occupation').prop('disabled', false);
-        $('#pr_person_email').prop('disabled', false);
-        $('#pr_person_mobile_phone').prop('disabled', false);
+    var enable_person_fields = function(fieldname) {
+        var selector = '#' + fieldname;
+        $(selector + '_name').prop('disabled', false);
+        $(selector + '_gender').prop('disabled', false);
+        $(selector + '_date_of_birth').prop('disabled', false);
+        $(selector + '_occupation').prop('disabled', false);
+        $(selector + '_email').prop('disabled', false);
+        $(selector + '_mobile_phone').prop('disabled', false);
     }
 
-    var disable_person_fields = function() {
-        $('#pr_person_first_name').prop('disabled', true);
-        $('#pr_person_middle_name').prop('disabled', true);
-        $('#pr_person_last_name').prop('disabled', true);
-        $('#pr_person_gender').prop('disabled', true);
-        $('#pr_person_date_of_birth').prop('disabled', true);
-        $('#pr_person_occupation').prop('disabled', true);
-        $('#pr_person_email').prop('disabled', true);
-        $('#pr_person_mobile_phone').prop('disabled', true);
+    var disable_person_fields = function(fieldname) {
+        var selector = '#' + fieldname;
+        $(selector + '_name').prop('disabled', true);
+        $(selector + '_gender').prop('disabled', true);
+        $(selector + '_date_of_birth').prop('disabled', true);
+        $(selector + '_occupation').prop('disabled', true);
+        $(selector + '_email').prop('disabled', true);
+        $(selector + '_mobile_phone').prop('disabled', true);
     }
 }());

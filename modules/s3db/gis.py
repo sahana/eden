@@ -167,7 +167,8 @@ class S3LocationModel(S3Model):
                              Field("wkt", "text",
                                    # Full WKT validation is done in the onvalidation callback
                                    # - all we do here is allow longer fields than the default (2 ** 16)
-                                   requires = IS_LENGTH(2 ** 24),
+                                   # - this size handles the standard USA_L0
+                                   requires = IS_LENGTH(2 ** 27),
                                    represent = self.gis_wkt_represent,
                                    label = "WKT (Well-Known Text)"),
                              Field("inherited", "boolean",

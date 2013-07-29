@@ -571,6 +571,12 @@ class S3Config(Storage):
         """
         return self.gis.get("nav_controls", True)
 
+    def get_gis_label_overlays(self):
+        """
+            Label for the Map Overlays in the Layer Tree
+        """
+        return self.gis.get("label_overlays", "Overlays")
+
     def get_gis_overview(self):
         """
             Should the Map display an Overview Map?
@@ -621,6 +627,12 @@ class S3Config(Storage):
             return False
         else:
             return self.gis.get("spatialdb", False)
+
+    def get_gis_toolbar(self):
+        """
+            Should the main Map display a Toolbar?
+        """
+        return self.gis.get("toolbar", True)
 
     def get_gis_zoomcontrol(self):
         """

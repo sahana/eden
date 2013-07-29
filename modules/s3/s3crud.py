@@ -507,7 +507,7 @@ class S3CRUD(S3Method):
                 output["caller"] = caller
 
             # Buttons
-            buttons = self.insert_buttons(r, "edit", "delete", "list",
+            buttons = self.insert_buttons(r, "edit", "delete", "list", "summary",
                                           record_id=record_id)
             if buttons:
                 output["buttons"] = buttons
@@ -2468,6 +2468,14 @@ class S3CRUD(S3Method):
                 list_btn = self.crud_button(LIST,
                                             _href=href_list, _id="list-btn")
                 output["list_btn"] = list_btn
+
+        # Summary button
+        if "summary" in buttons:
+            if not r.component or r.multiple:
+                summary_btn = self.crud_button(crud_string(tablename, "title_list"),
+                                               _href = url(method="summary", vars=remove_filters(r.get_vars)), 
+                                               _id="summary-btn")
+                output["summary_btn"] = summary_btn
 
         if not record_id:
             return output

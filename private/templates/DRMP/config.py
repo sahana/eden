@@ -1882,8 +1882,7 @@ def cms_post_marker_fn(record):
 
         @ToDo: A Bulk function
 
-
-        Using Style instead
+        Unused: Using Style instead
     """
 
     db = current.db

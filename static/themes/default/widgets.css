@@ -864,22 +864,31 @@ span.tab_next_inactive a {
 #select_from_registry_row td {
    padding: 8px;
 }
-tr.box_top {
+.box_top {
    border-top: #bbb 1px solid;
    border-left: #bbb 1px solid;
    border-right: #bbb 1px solid;
    background: #F0F3F4;
 }
-tr.box_middle {
+.form-horizontal .control-group.box_top {
+    margin-bottom: 0;
+}
+.box_middle {
    border-left: #bbb 1px solid;
    border-right: #bbb 1px solid;
    background: #F0F3F4;
 }
-tr.box_bottom {
+.form-horizontal .control-group.box_middle {
+    margin-bottom: 0;
+}
+.box_bottom {
    border-bottom: #bbb 1px solid;
    border-left: #bbb 1px solid;
    border-right: #bbb 1px solid;
    background: #F0F3F4;
+}
+.form-horizontal .control-group.box_bottom {
+    margin-bottom: 5px;
 }
 
 /* Subheadings */
@@ -1303,4 +1312,8 @@ input#sub_defaulttime_defaulttime_hours_edit_none {
 }
 .fm-cancel {
     background: url(../../img/crud/cancel.png) no-repeat;
+}
+
+.cms-edit {
+    display: table;
 }
