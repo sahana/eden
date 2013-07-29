@@ -5046,6 +5046,16 @@ def pr_ancestors(entities):
 # =============================================================================
 def pr_descendants(pe_ids, skip=[]):
     """
+        Find descendant entities of a person entity in the OU hierarchy
+        (performs a real search, not a path lookup), grouped by root PE
+
+        @param pe_ids: person entity ID or list of IDs
+        @param entity_types: optional filter to a specific entity_type
+        @param ids: whether to return a list of ids or nodes (internal)
+        @param skip: list of person entity IDs to skip during
+                     descending (internal)
+
+        @return: a list of PE-IDs
     """
 
     pe_ids = [i for i in pe_ids if i not in skip]
@@ -5101,62 +5111,72 @@ def pr_descendants(pe_ids, skip=[]):
     return result
 
 # =============================================================================
-def pr_get_descendants(pe_ids, skip=[], entity_types=None, ids=True):
+def pr_get_descendants(pe_ids, entity_types=None, skip=None, ids=True):
     """
         Find descendant entities of a person entity in the OU hierarchy
         (performs a real search, not a path lookup).
 
         @param pe_ids: person entity ID or list of IDs
-        @param skip: list of person entity IDs to skip during descending
         @param entity_types: optional filter to a specific entity_type
-        @param ids: whether to return a list of ids or nodes
+        @param ids: whether to return a list of ids or nodes (internal)
+        @param skip: list of person entity IDs to skip during
+                     descending (internal)
 
         @return: a list of PE-IDs
     """
 
-    if type(pe_ids) is not list:
-        pe_ids = [pe_ids]
-    pe_ids = [i for i in pe_ids if i not in skip]
     if not pe_ids:
         return []
+    if type(pe_ids) is not set:
+        pe_ids = set(pe_ids) \
+                 if isinstance(pe_ids, (list, tuple)) else set([pe_ids])
 
     db = current.db
     s3db = current.s3db
     etable = s3db.pr_pentity
     rtable = db.pr_role
     atable = db.pr_affiliation
-    en = etable._tablename
-    an = atable._tablename
-    query = (rtable.deleted != True) & \
-            (rtable.pe_id.belongs(pe_ids)) & \
-            (~(rtable.pe_id.belongs(skip))) &\
-            (rtable.role_type == OU) & \
-            (atable.deleted != True) & \
-            (atable.role_id == rtable.id) & \
-            (etable.pe_id == atable.pe_id)
-    skip = skip + pe_ids
-    rows = db(query).select(atable.pe_id,
-                            etable.instance_type)
-    nodes = [(r[an].pe_id, r[en].instance_type) for r in rows]
-    result = []
-    append = result.append
-    for n in nodes:
-        if n not in result:
-            append(n)
-    node_ids = [n[0] for n in result]
+
+    if skip is None:
+        skip = set()
+    skip.update(pe_ids)
+
+    if len(pe_ids) > 1:
+        q = (rtable.pe_id.belongs(pe_ids))
+    else:
+        q = (rtable.pe_id == list(pe_ids)[0])
+
+    query = ((rtable.deleted != True) & q & (rtable.role_type == OU)) & \
+            ((atable.deleted != True) & (atable.role_id == rtable.id))
+
+    if entity_types is not None:
+        query &= (etable.pe_id == atable.pe_id)
+        rows = db(query).select(etable.pe_id, etable.instance_type)
+        result = {(r.pe_id, r.instance_type) for r in rows}
+        node_ids = {i for i, t in result if i not in skip}
+    else:
+        rows = db(query).select(atable.pe_id)
+        result = {r.pe_id for r in rows}
+        node_ids = {i for i in result if i not in skip}
+    
     # Recurse
-    descendants = pr_get_descendants(node_ids, skip=skip, ids=False)
-    for d in descendants:
-        if d not in result:
-            append(d)
+    if node_ids:
+        descendants = pr_get_descendants(node_ids,
+                                         skip=skip,
+                                         entity_types=entity_types,
+                                         ids=False)
+        result.update(descendants)
 
     if ids:
-        if entity_types and not isinstance(entity_types, (list, tuple)):
-            entity_types = [entity_types]
-        result = [n[0]
-                  for n in result
-                  if (entity_types is None) or (n[1] in entity_types)]
-        return result
+        if entity_types is not None:
+            if type(entity_types) is not set:
+                if not isinstance(entity_types, (tuple, list)):
+                    entity_types = set([entity_types])
+                else:
+                    entity_types = set(entity_types)
+            return [n[0] for n in result if n[1] in entity_types]
+        else:
+            return list(result)
     else:
         return result
 

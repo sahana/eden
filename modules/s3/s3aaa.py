@@ -5434,8 +5434,7 @@ class S3Permission(object):
         # Retrieve the ACLs
         if q:
             query &= q
-            query &= (table.group_id == gtable.id)
-            rows = db(query).select(gtable.id,
+            rows = db(query).select(table.group_id,
                                     table.controller,
                                     table.function,
                                     table.tablename,
@@ -5458,12 +5457,12 @@ class S3Permission(object):
 
         use_facls = self.use_facls
         def rule_type(r):
-            if rule.controller is not None:
-                if rule.function is None:
+            if r.controller is not None:
+                if r.function is None:
                     return "c"
                 elif use_facls:
                     return "f"
-            elif rule.tablename is not None:
+            elif r.tablename is not None:
                 return "t"
             return None
 
@@ -5476,7 +5475,7 @@ class S3Permission(object):
         for row in rows:
 
             # Get the assigning entities
-            group_id = row[gtn].id
+            group_id = row.group_id
             if group_id in delegations:
                 append_delegation(row)
             if group_id not in realms:
@@ -5487,22 +5486,21 @@ class S3Permission(object):
                 entities = None
 
             # Get the rule type
-            rule = row[atn]
-            rtype = rule_type(rule)
+            rtype = rule_type(row)
             if rtype is None:
                 continue
 
             # Resolve the realm
-            if rule.unrestricted:
+            if row.unrestricted:
                 entities = [ANY]
             elif entities is None:
-                if rule.entity is not None:
-                    entities = [rule.entity]
+                if row.entity is not None:
+                    entities = [row.entity]
                 else:
                     entities = [ANY]
 
             # Merge the ACL
-            acl = (rule["uacl"], rule["oacl"])
+            acl = (row["uacl"], row["oacl"])
             for e in entities:
                 if e not in acls:
                     acls[e] = Storage({rtype:acl})
@@ -5521,19 +5519,18 @@ class S3Permission(object):
             for row in delegation_rows:
 
                 # Get the rule type
-                rule = row[atn]
-                rtype = rule_type(rule)
+                rtype = rule_type(row)
                 if rtype is None:
                     continue
 
                 # Get the delegation realms
-                group_id = row[gtn].id
+                group_id = row.group_id
                 if group_id not in delegations:
                     continue
                 else:
                     drealms = delegations[group_id]
 
-                acl = (rule["uacl"], rule["oacl"])
+                acl = (row["uacl"], row["oacl"])
 
                 # Resolve the delegation realms
                 # @todo: optimize
