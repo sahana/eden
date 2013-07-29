@@ -9,7 +9,7 @@ except:
 
 from gluon import current, IS_NULL_OR
 from gluon.html import *
-from gluon.sqlhtml import formstyle_bootstrap
+#from gluon.sqlhtml import formstyle_bootstrap
 from gluon.storage import Storage
 
 from s3.s3filter import S3OptionsFilter
@@ -123,6 +123,43 @@ settings.fin.currencies = {
 settings.search.save_widget = False
 
 # -----------------------------------------------------------------------------
+# Menu
+current.response.menu = [
+    {"name": T("Locations"),
+     "url": URL(c="org", f="facility"),
+     "icon": "icon-home"
+     },
+    {"name": T("Residents"),
+     "url": URL(c="stats", f="resident"),
+     "icon": "icon-group"
+     },
+    {"name": T("Incidents"),
+     "url": URL(c="event", f="incident_report"),
+     "icon": "icon-warning-sign"
+     },
+    {"name": T("Risks"),
+     "url": URL(c="vulnerability", f="risk"),
+     "icon": "icon-bolt"
+     },
+    {"name": T("Activities"),
+     "url": URL(c="project", f="activity"),
+     "icon": "icon-star-empty"
+     },
+    #{"name": T("Organizations"),
+    # "url": URL(c="org", f="organisation"),
+    # "icon": "icon-sitemap"
+    # },
+    {"name": T("Trained People"),
+     "url": URL(c="stats", f="trained"),
+     "icon": "icon-user"
+     },
+    {"name": T("Evacuation Routes"),
+     "url": URL(c="vulnerability", f="evac_route"),
+     "icon": "icon-road"
+     },
+    ]
+
+# -----------------------------------------------------------------------------
 # Summary Pages
 settings.ui.summary = [{"common": True,
                         "name": "cms",
@@ -138,52 +175,11 @@ settings.ui.summary = [{"common": True,
                         },
                        ]
 
-# =============================================================================
-# View Settings
-
-current.response.menu = [
-                {"name": T("Locations"),
-                 "url": URL(c="org", f="facility"),
-                 "icon": "icon-home"
-                 },
-                {"name": T("Residents"),
-                 "url": URL(c="stats", f="resident"),
-                 "icon": "icon-group"
-                 },
-                {"name": T("Incidents"),
-                 "url": URL(c="event", f="incident_report"),
-                 "icon": "icon-warning-sign"
-                 },
-                {"name": T("Risks"),
-                 "url": URL(c="vulnerability", f="risk"),
-                 "icon": "icon-bolt"
-                 },
-                {"name": T("Activities"),
-                 "url": URL(c="project", f="activity"),
-                 "icon": "icon-star-empty"
-                 },
-                #{"name": T("Organizations"),
-                # "url": URL(c="org", f="organisation"),
-                # "icon": "icon-sitemap"
-                # },
-                {"name": T("Trained People"),
-                 "url": URL(c="stats", f="trained"),
-                 "icon": "icon-user"
-                 },
-                {"name": T("Evacuation Routes"),
-                 "url": URL(c="vulnerability", f="evac_route"),
-                 "icon": "icon-road"
-                 },
-                ]
-
-# =============================================================================
-# Filter Formstyles
 # -----------------------------------------------------------------------------
-
 def filter_formstyle(row_id, label, widget, comment, hidden=False):
         return DIV(label, widget, comment, 
                    _id=row_id,
-                   _class = "horiz_filter_form")
+                   _class="horiz_filter_form")
 
 # =============================================================================
 # Module Settings
@@ -557,9 +553,9 @@ def customize_org_facility(**attr):
     """
         Customize org_facility controller
     """
-    
+
     s3db = current.s3db
-    
+
     # Remove rheader
     attr["rheader"] = None
 
@@ -576,7 +572,7 @@ def customize_org_facility(**attr):
     
     s3db.hrm_human_resource.person_id.widget = None
 
-    # Custom PreP - to hide Open & Delete data table action buttons
+    # Custom PreP
     s3 = current.response.s3
     standard_prep = s3.prep
     def custom_prep(r):
@@ -585,6 +581,7 @@ def customize_org_facility(**attr):
             result = standard_prep(r)
 
         if r.method == "summary":
+            # Hide Open & Delete dataTable action buttons
             s3db.configure(tablename,
                editable = False,
                deletable = False,
@@ -686,7 +683,7 @@ def customize_stats_resident(**attr):
                                                          show_postcode=True,
                                                          )
 
-    # Custom PreP - to hide Open & Delete data table action buttons
+    # Custom PreP
     s3 = current.response.s3
     standard_prep = s3.prep
     def custom_prep(r):
@@ -695,6 +692,7 @@ def customize_stats_resident(**attr):
             result = standard_prep(r)
 
         if r.method == "summary":
+            # Hide Open & Delete dataTable action buttons
             s3db.configure(tablename,
                editable = False,
                deletable = False,
@@ -763,7 +761,7 @@ def customize_stats_trained(**attr):
                                                          show_postcode=True,
                                                          )
 
-    # Custom PreP - to hide Open & Delete data table action buttons
+    # Custom PreP
     s3 = current.response.s3
     standard_prep = s3.prep
     def custom_prep(r):
@@ -772,6 +770,7 @@ def customize_stats_trained(**attr):
             result = standard_prep(r)
 
         if r.method == "summary":
+            # Hide Open & Delete dataTable action buttons
             s3db.configure(tablename,
                editable = False,
                deletable = False,
@@ -839,7 +838,7 @@ def customize_vulnerability_evac_route(**attr):
                                                          polygons=True,
                                                          )
 
-    # Custom PreP - to hide Open & Delete data table action buttons
+    # Custom PreP
     s3 = current.response.s3
     standard_prep = s3.prep
     def custom_prep(r):
@@ -848,6 +847,7 @@ def customize_vulnerability_evac_route(**attr):
             result = standard_prep(r)
 
         if r.method == "summary":
+            # Hide Open & Delete dataTable action buttons
             s3db.configure(tablename,
                editable = False,
                deletable = False,
@@ -911,7 +911,7 @@ def customize_vulnerability_risk(**attr):
                                                          polygons=True,
                                                          )
 
-    # Custom PreP - to hide Open & Delete data table action buttons
+    # Custom PreP
     s3 = current.response.s3
     standard_prep = s3.prep
     def custom_prep(r):
@@ -920,6 +920,7 @@ def customize_vulnerability_risk(**attr):
             result = standard_prep(r)
 
         if r.method == "summary":
+            # Hide Open & Delete dataTable action buttons
             s3db.configure(tablename,
                editable = False,
                deletable = False,
