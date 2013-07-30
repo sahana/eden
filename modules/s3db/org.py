@@ -2149,7 +2149,9 @@ class S3FacilityModel(S3Model):
         tablename = "org_facility_type"
         table = define_table(tablename,
                              Field("name",
-                                   label=T("Name")),
+                                   label=T("Name"),
+                                   unique=True,
+                                   ),
                              s3_comments(),
                              *s3_meta_fields()
                              )
@@ -2171,10 +2173,6 @@ class S3FacilityModel(S3Model):
             msg_record_modified=T("Facility Type updated"),
             msg_record_deleted=T("Facility Type deleted"),
             msg_list_empty=T("No Facility Types currently registered"))
-
-        configure(tablename,
-                  deduplicate=self.org_facility_type_duplicate,
-                  )
 
         represent = S3Represent(lookup=tablename, translate=True)
         facility_type_id = S3ReusableField("facility_type_id", table,
@@ -2498,21 +2496,6 @@ class S3FacilityModel(S3Model):
                 query = query & (table.organisation_id == org)
             if address:
                 query = query & (table.address == address)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def org_facility_type_duplicate(item):
-        """ Import item de-duplication """
-
-        if item.tablename == "org_facility_type":
-            table = item.table
-            name = item.data.get("name", None)
-            query = (table.name.lower() == name.lower())
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
             if duplicate:
