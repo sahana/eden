@@ -4879,7 +4879,10 @@ def pr_get_path(pe_id):
             (atable.pe_id == pe_id) & \
             (rtable.deleted != True) & \
             (rtable.role_type == OU)
-    roles = current.db(query).select(rtable.ALL)
+    roles = current.db(query).select(rtable.id,
+                                     rtable.pe_id,
+                                     rtable.path,
+                                     rtable.role_type)
     multipath = S3MultiPath()
     append = multipath.append
     for role in roles:
@@ -4914,8 +4917,10 @@ def pr_get_ancestors(pe_id):
             (rtable.deleted != True) & \
             (rtable.role_type == OU)
 
-    roles = current.db(query).select(rtable.ALL)
-
+    roles = current.db(query).select(rtable.id,
+                                     rtable.pe_id,
+                                     rtable.path,
+                                     rtable.role_type)
     paths = []
     append = paths.append
     for role in roles:
@@ -5024,8 +5029,11 @@ def pr_ancestors(entities):
             (atable.pe_id.belongs(entities)) & \
             (rtable.deleted != True) & \
             (rtable.role_type == OU)
-    rows = current.db(query).select(rtable.ALL, atable.pe_id)
-
+    rows = current.db(query).select(rtable.id,
+                                    rtable.pe_id,
+                                    rtable.path,
+                                    rtable.role_type,
+                                    atable.pe_id)
     ancestors = Storage([(pe_id, []) for pe_id in entities])
     r = rtable._tablename
     a = atable._tablename
@@ -5045,34 +5053,36 @@ def pr_ancestors(entities):
     return ancestors
 
 # =============================================================================
-def pr_descendants(pe_ids, skip=[]):
+def pr_descendants(pe_ids, skip=None, root=True):
     """
         Find descendant entities of a person entity in the OU hierarchy
         (performs a real search, not a path lookup), grouped by root PE
 
-        @param pe_ids: person entity ID or list of IDs
-        @param entity_types: optional filter to a specific entity_type
-        @param ids: whether to return a list of ids or nodes (internal)
+        @param pe_ids: set/list of pe_ids
         @param skip: list of person entity IDs to skip during
                      descending (internal)
+        @param root: this is the top-node (internal)
 
-        @return: a list of PE-IDs
+        @return: a dict of lists of descendant PEs per root PE
     """
 
-    pe_ids = [i for i in pe_ids if i not in skip]
+    if skip is None:
+        skip = set()
+    
+    pe_ids = {i for i in pe_ids if i not in skip}
     if not pe_ids:
-        return []
+        return {}
 
     s3db = current.s3db
     etable = s3db.pr_pentity
     rtable = s3db.pr_role
     atable = s3db.pr_affiliation
 
-    query = (rtable.deleted != True) & \
-            (rtable.pe_id.belongs(pe_ids)) & \
-            (rtable.role_type == OU) & \
-            (atable.role_id == rtable.id) & \
-            (atable.deleted != True) & \
+    q = (rtable.pe_id.belongs(pe_ids)) \
+        if len(pe_ids) > 1 else (rtable.pe_id == list(pe_ids)[0])
+
+    query = (q & (rtable.role_type == OU) & (rtable.deleted != True)) & \
+            ((atable.role_id == rtable.id) & (atable.deleted != True)) & \
             (etable.pe_id == atable.pe_id)
 
     rows = current.db(query).select(rtable.pe_id,
@@ -5082,32 +5092,39 @@ def pr_descendants(pe_ids, skip=[]):
     e = etable._tablename
     a = atable._tablename
 
-    nodes = []
-    result = Storage()
+    nodes = set()
+    ogetattr = object.__getattribute__
+
+    result = dict()
+    
+    skip.update(pe_ids)
     for row in rows:
-        parent = row[r].pe_id
-        child = row[a].pe_id
-        if row[e].instance_type != "pr_person":
+
+        parent = ogetattr(ogetattr(row, r), "pe_id")
+        child = ogetattr(ogetattr(row, a), "pe_id")
+        instance_type = ogetattr(ogetattr(row, e), "instance_type")
+        if instance_type != "pr_person":
             if parent not in result:
-                result[parent] = [child]
-            else:
-                result[parent].append(child)
-        if child not in nodes:
-            nodes.append(child)
+                result[parent] = []
+            result[parent].append(child)
+        if child not in skip:
+            nodes.add(child)
 
-    skip = skip + pe_ids
-    descendants = pr_descendants(nodes, skip=skip)
-
-    for child in descendants:
-        for parent in result:
-            if child in result[parent]:
-                for node in descendants[child]:
-                    if node not in result[parent]:
-                        result[parent].append(node)
-    for x in result:
-        for y in result:
-            if x in result[y]:
-                result[y].extend([i for i in result[x] if i not in result[y] and i != y])
+    if nodes:
+        descendants = pr_descendants(nodes, skip=skip, root=False)
+        for child, nodes in descendants.iteritems():
+            for parent, children in result.iteritems():
+                if child in children:
+                    for node in nodes:
+                        if node not in children:
+                            children.append(node)
+    if root:
+        for child, nodes in result.iteritems():
+            for parent, children in result.iteritems():
+                if child in children:
+                    for node in nodes:
+                        if node not in children and node != parent:
+                            children.append(node)
 
     return result
 
@@ -5197,12 +5214,15 @@ def pr_rebuild_path(pe_id, clear=False):
         pe_id = row.pe_id
 
     rtable = current.s3db.pr_role
-    query = (rtable.deleted != True) & \
-            (rtable.pe_id == pe_id) & \
-            (rtable.role_type == OU)
+    query = (rtable.pe_id == pe_id) & \
+            (rtable.role_type == OU) & \
+            (rtable.deleted != True)
     db = current.db
     db(query).update(path=None)
-    roles = db(query).select()
+    roles = db(query).select(rtable.id,
+                             rtable.pe_id,
+                             rtable.path,
+                             rtable.role_type)
     for role in roles:
         if role.path is None:
             pr_role_rebuild_path(role, clear=clear)
@@ -5242,12 +5262,15 @@ def pr_role_rebuild_path(role_id, skip=[], clear=False):
         path = None
     else:
         # Get all parent roles
-        query = (atable.deleted != True) & \
-                (atable.pe_id == pe_id) & \
+        query = (atable.pe_id == pe_id) & \
+                (atable.deleted != True) & \
                 (rtable.deleted != True) & \
                 (rtable.id == atable.role_id) & \
                 (rtable.role_type == OU)
-        parent_roles = db(query).select(rtable.ALL)
+        parent_roles = db(query).select(rtable.id,
+                                        rtable.pe_id,
+                                        rtable.path,
+                                        rtable.role_type)
 
         # Update ancestor path
         path = S3MultiPath()

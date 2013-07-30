@@ -185,6 +185,8 @@ settings.ui.summary = [{"common": True,
                        ]
 
 # -----------------------------------------------------------------------------
+# Filter forms
+settings.search.filter_manager = False # disabled until ready
 def filter_formstyle(row_id, label, widget, comment, hidden=False):
         return DIV(label, widget, comment, 
                    _id=row_id,

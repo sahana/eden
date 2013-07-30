@@ -829,7 +829,6 @@ class S3IncidentTypeModel(S3Model):
                                   Field("name", notnull=True,
                                         length=64,
                                         label=T("Name"),
-                                        unique=True,
                                         ),
                                   s3_comments(),
                                   *s3_meta_fields())
@@ -907,7 +906,7 @@ class S3IncidentTypeModel(S3Model):
             return
 
         table = item.table
-        query = (table.name == name)
+        query = (table.name.lower() == name.lower())
         _duplicate = current.db(query).select(table.id,
                                               limitby=(0, 1)).first()
         if _duplicate:

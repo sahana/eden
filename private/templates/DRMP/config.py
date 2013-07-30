@@ -153,7 +153,7 @@ settings.ui.export_formats = ["xls"]
 settings.ui.update_label = "Edit"
 
 # Disabled until ready for prime-time
-settings.search.save_widget = False
+settings.search.filter_manager = False
 
 # =============================================================================
 # Module Settings

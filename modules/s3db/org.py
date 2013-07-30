@@ -2150,7 +2150,6 @@ class S3FacilityModel(S3Model):
         table = define_table(tablename,
                              Field("name",
                                    label=T("Name"),
-                                   unique=True,
                                    ),
                              s3_comments(),
                              *s3_meta_fields()
@@ -2192,6 +2191,10 @@ class S3FacilityModel(S3Model):
                                             tooltip=T("If you don't see the Type in the list, you can add a new one by clicking link 'Add Facility Type'.")),
                                            ondelete="CASCADE",
                                            )
+
+        configure(tablename,
+                  deduplicate = self.org_facility_type_duplicate,
+                  )
 
         # ---------------------------------------------------------------------
         # Facilities (generic)
@@ -2501,6 +2504,31 @@ class S3FacilityModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def org_facility_type_duplicate(item):
+        """
+            Deduplication of Facility Types
+        """
+
+        if item.tablename != "org_facility_type":
+            return
+
+        data = item.data
+        name = data.get("name", None)
+
+        if not name:
+            return
+
+        table = item.table
+        query = (table.name.lower() == name.lower())
+        _duplicate = current.db(query).select(table.id,
+                                              limitby=(0, 1)).first()
+        if _duplicate:
+            item.id = _duplicate.id
+            item.data.id = _duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -----------------------------------------------------------------------------
     @staticmethod
