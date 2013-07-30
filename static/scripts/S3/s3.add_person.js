@@ -208,7 +208,7 @@
 
     var enable_person_fields = function(fieldname) {
         var selector = '#' + fieldname;
-        $(selector + '_name').prop('disabled', false);
+        $(selector + '_full_name').prop('disabled', false);
         $(selector + '_gender').prop('disabled', false);
         $(selector + '_date_of_birth').prop('disabled', false);
         $(selector + '_occupation').prop('disabled', false);
@@ -218,7 +218,7 @@
 
     var disable_person_fields = function(fieldname) {
         var selector = '#' + fieldname;
-        $(selector + '_name').prop('disabled', true);
+        $(selector + '_full_name').prop('disabled', true);
         $(selector + '_gender').prop('disabled', true);
         $(selector + '_date_of_birth').prop('disabled', true);
         $(selector + '_occupation').prop('disabled', true);
