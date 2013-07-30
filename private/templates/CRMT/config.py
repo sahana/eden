@@ -14,8 +14,9 @@ from gluon.storage import Storage
 
 from s3.s3filter import S3OptionsFilter
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
-from s3.s3validators import IS_LOCATION_SELECTOR2
+from s3.s3validators import IS_LOCATION_SELECTOR2, IS_ONE_OF
 from s3.s3widgets import S3LocationSelectorWidget2, S3AddPersonWidget2
+from s3.s3fields import S3Represent
 
 T = current.T
 settings = current.deployment_settings
@@ -697,14 +698,27 @@ def customize_stats_resident(**attr):
     s3db = current.s3db
     tablename = "stats_resident"
     table = s3db[tablename]
-    table.location_id.label = "" # Gets replaced by widget
-    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
-    table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
-                                                         hide_lx=False,
-                                                         reverse_lx=True,
-                                                         show_address=True,
-                                                         show_postcode=True,
-                                                         )
+    
+    # L3s only
+    table.location_id.requires = IS_ONE_OF(current.db, "gis_location.id",
+                                        S3Represent(lookup="gis_location"),
+                                        sort = True,
+                                        filterby = "level",
+                                        filter_opts = ["L3"]
+                                        )
+    # Don't add new Locations here
+    table.location_id.comment = None
+    # Simple dropdown
+    table.location_id.widget = None
+    table.location_id.label = T("City")
+    #table.location_id.label = "" # Gets replaced by widget
+    #table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
+    #table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
+    #                                                     hide_lx=False,
+    #                                                     reverse_lx=True,
+    #                                                     show_address=True,
+    #                                                     show_postcode=True,
+    #                                                     )
 
     # Custom PreP
     s3 = current.response.s3
@@ -857,7 +871,10 @@ def customize_vulnerability_evac_route(**attr):
     table.location_id.label = "" # Gets replaced by widget
     table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
     table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
-                                                         polygons=True,
+                                                         hide_lx=False,
+                                                         reverse_lx=True,
+                                                         show_address=True,
+                                                         show_postcode=True,
                                                          )
 
     # Custom PreP
@@ -930,7 +947,11 @@ def customize_vulnerability_risk(**attr):
     table.location_id.label = "" # Gets replaced by widget
     table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
     table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
-                                                         #polygons=True,
+                                                         hide_lx=False,
+                                                         reverse_lx=True,
+                                                         show_address=True,
+                                                         show_postcode=True,
+                                                         polygons=True,
                                                          )
 
     # Custom PreP
