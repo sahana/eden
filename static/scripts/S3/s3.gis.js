@@ -4426,8 +4426,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     title: ' '
                 });
                 rules.push(rule);
-                featureStyle.addRules(rules);
             }
+            featureStyle.addRules(rules);
         }
 
         // @ToDo: Allow customisation of the Select Style

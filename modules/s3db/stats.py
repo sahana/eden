@@ -359,7 +359,8 @@ class S3StatsDemographicModel(S3Model):
                              Field("agg_type", "integer",
                                    requires = IS_IN_SET(aggregate_types),
                                    represent = lambda opt: \
-                                        aggregate_types.get(opt, UNKNOWN_OPT),
+                                    aggregate_types.get(opt,
+                                                        current.messages.UNKNOWN_OPT),
                                    default = 1,
                                    label = T("Aggregation Type"),
                                    ),
