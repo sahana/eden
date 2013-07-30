@@ -1245,22 +1245,35 @@ class S3DateWidget(FormWidget):
         past = self.past
         if past:
             past = now - relativedelta(months=past)
-            past = (now - past).days
+            if now > past:
+                days = (now - past).days
+                minDate = "-%s" % days
+            else:
+                days = (past - now).days
+                minDate = "+%s" % days
+        else:
+            minDate = "-0"
         future = self.future
         if future:
             future = now + relativedelta(months=future)
-            future = relativedelta(future, now)
-            past = (future - now).days
+            if future > now:
+                days = (future - now).days
+                maxDate = "+%s" % days
+            else:
+                days = (now - future).days
+                maxDate = "-%s" % days
+        else:
+            maxDate = "+0"
 
         current.response.s3.jquery_ready.append(
 '''$('#%(selector)s').datepicker('option',{
- minDate:-%(past)s,
- maxDate:+%(future)s,
+ minDate:%(past)s,
+ maxDate:%(future)s,
  yearRange:'c-100:c+100',
  dateFormat:'%(format)s'})''' % \
         dict(selector = selector,
-             past = past,
-             future = future,
+             past = minDate,
+             future = maxDate,
              format = format))
 
         return TAG[""](widget, requires = field.requires)
