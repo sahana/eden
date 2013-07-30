@@ -1320,15 +1320,18 @@ S3.search = {};
          * options: default options
          */
         options: {
-            filters: {},                // the available filters
-            readOnly: false,            // do not allow to save/update filters
-            ajaxURL: null,              // URL to save filters
-            loadTooltip: null,          // tooltip for load-button
-            saveTooltip: null,          // tooltip for save-button
-            createTooltip: null,        // tooltip for create-button
-            explicitLoad: false,        // load filters via load-button rather than immediately
-            confirmUpdate: false,       // user must confirm update of existing filters
-            titleHint: 'Enter a title'  // hint (watermark) in the title input field
+            filters: {},                    // the available filters
+            readOnly: false,                // do not allow to save/update filters
+            ajaxURL: null,                  // URL to save filters
+            loadTooltip: null,              // tooltip for load-button
+            saveTooltip: null,              // tooltip for save-button
+            createTooltip: null,            // tooltip for create-button
+            explicitLoad: false,            // load filters via load-button rather than immediately
+            titleHint: 'Enter a title',     // hint (watermark) in the title input field
+            selectHint: 'Saved filters...', // hint in the selector
+            emptyHint: 'No saved filters',  // hint in the selector if no filters available
+            confirmUpdate: false,           // user must confirm update of existing filters
+            confirmText: 'Update this filter?' // filter update confirmation question
         },
 
         /**
@@ -1345,6 +1348,7 @@ S3.search = {};
         _init: function() {
 
             this.refresh();
+
         },
 
         /**
@@ -1360,7 +1364,7 @@ S3.search = {};
         refresh: function() {
             
             var id = this.id,
-                el = this.element,
+                el = this.element.val(''),
                 options = this.options;
 
             this._unbindEvents();
@@ -1512,7 +1516,7 @@ S3.search = {};
                         fm.options.filters[new_id] = filter.query;
                         // Append filter to SELECT + select it
                         var new_opt = $('<option value="' + new_id + '">' + filter.title + '</option>');
-                        $(el).append(new_opt).val(new_id).change();
+                        $(el).append(new_opt).val(new_id).change().prop('disabled', false);
                     }
                     // Close save-dialog
                     fm._cancel();
@@ -1530,12 +1534,14 @@ S3.search = {};
 
             // @todo: ignore if readOnly
 
-            var el = this.element, fm = this;
+            var el = this.element,
+                fm = this,
+                opts = this.options;
 
             var id = $(el).val();
             
             // @todo: i18n, use title for this filter
-            if (!id || this.options.confirmUpdate && !confirm("Update this filter?")) {
+            if (!id || opts.confirmUpdate && !confirm(opts.confirmText)) {
                 return;
             }
 
@@ -1586,7 +1592,19 @@ S3.search = {};
             this.cancel_btn.hide();
 
             // Show selector and buttons
-            this.element.show();
+            var el = this.element.show(),
+                opts = this.options;
+            
+            // Disable selector if no filters
+            var options = $(el).find('option');
+            if (options.length == 1 && options.first().hasClass('filter-manager-prompt')) {
+                $(el).prop('disabled', true);
+                $(el).find('option.filter-manager-prompt').text(opts.emptyHint);
+            } else {
+                $(el).prop('disabled', false);
+                $(el).find('option.filter-manager-prompt').text(opts.selectHint);
+            }
+
             this.create_btn.show();
 
             // @todo: hide create-button if readOnly
