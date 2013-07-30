@@ -106,6 +106,7 @@ h2.summary {
 }
 
 .geocode {
+    /* Same height as throbber */
     height: 32px;
 }
 

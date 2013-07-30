@@ -872,6 +872,7 @@ span.tab_next_inactive a {
 }
 .form-horizontal .control-group.box_top {
     margin-bottom: 0;
+    max-width: 680px;
 }
 .box_middle {
    border-left: #bbb 1px solid;
@@ -880,6 +881,7 @@ span.tab_next_inactive a {
 }
 .form-horizontal .control-group.box_middle {
     margin-bottom: 0;
+    max-width: 680px;
 }
 .box_bottom {
    border-bottom: #bbb 1px solid;
@@ -889,6 +891,18 @@ span.tab_next_inactive a {
 }
 .form-horizontal .control-group.box_bottom {
     margin-bottom: 5px;
+    max-width: 680px;
+}
+
+/* Add Person 2 */
+.add_person_edit_bar {
+    float: right;
+    padding-right: 10px;
+    padding-top: 5px;
+    cursor: pointer;
+}
+.add_person_edit_bar a {
+    text-decoration: none;
 }
 
 /* Subheadings */

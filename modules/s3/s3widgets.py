@@ -671,6 +671,7 @@ class S3AddPersonWidget2(FormWidget):
             occupation = dtable.occupation
             emailRequired = settings.get_hrm_email_required()
         else:
+            controller = "pr"
             emailRequired = False
             occupation = None
 
@@ -733,7 +734,17 @@ class S3AddPersonWidget2(FormWidget):
         # Section Title
         id = "%s_title" % fieldname
         label = field.label
-        widget= ""
+        # @ToDo: Style these icons in non-Bootstrap themes
+        # @ToDo: Check Permissions for existing person records to know whether we can edit the person or simply select a different one
+        widget= DIV(A(I(" ", _class="icon icon-edit"),
+                      _title=T("Edit Selection"),
+                      ),
+                    A(I(" ", _class="icon icon-remove"),
+                      _title=T("Clear Selection"),
+                      ),
+                    _class="add_person_edit_bar hide",
+                    _id="%s_edit_bar" % fieldname,
+                    )
         comment = ""
         if formstyle == "bootstrap":
             # We would like to hide the whole original control-group & append rows, but that can't be done directly within a Widget
@@ -755,11 +766,12 @@ class S3AddPersonWidget2(FormWidget):
 
         # Fields
         # (id, label, widget, required)
+        fattr = {"_data-c": controller}
         fields = [# Name field
                   # - can search for an existing person
                   # - can create a new person
                   # - multiple names get assigned to first, middle, last
-                  ("full_name", T("Name"), INPUT(), True)
+                  ("full_name", T("Name"), INPUT(**fattr), True)
                   ]
 
         if date_of_birth:
@@ -775,6 +787,7 @@ class S3AddPersonWidget2(FormWidget):
 
         if occupation:
             fields.append(("occupation", occupation.label, INPUT(), False))
+
         fields.append(("email", T("Email Address"), INPUT(), emailRequired))
         fields.append(("mobile_phone", settings.get_ui_label_mobile_phone(), INPUT(), False))
 

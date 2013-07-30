@@ -1980,10 +1980,12 @@ class IS_ADD_PERSON_WIDGET(Validator):
                 for f in ptable._filter_fields(_vars):
                     value, error = validate(ptable, None, f, _vars[f])
                     if error:
-                        return (None, None)
-                    elif f == "date_of_birth" and \
-                         value:
-                        data[f] = value.isoformat()
+                        return (person_id, error)
+                    if value:
+                        if f == "date_of_birth":
+                            data[f] = value.isoformat()
+                        else:
+                            data[f] = value
                 if data:
                     db(query).update(**data)
 
@@ -2048,13 +2050,13 @@ class IS_ADD_PERSON_WIDGET(Validator):
                 # Validate the email
                 email, error = email_validate(_vars.email, None)
                 if error:
-                    return (person_id, error)
+                    return (None, error)
 
                 # Validate and add the person record
                 for f in ptable._filter_fields(_vars):
                     value, error = validate(ptable, None, f, _vars[f])
                     if error:
-                        return (None, None)
+                        return (None, error)
                     elif f == "date_of_birth" and \
                         value:
                         _vars[f] = value.isoformat()
@@ -2086,8 +2088,8 @@ class IS_ADD_PERSON_WIDGET(Validator):
                                                       occupation = _vars.occupation)
                 else:
                     # Something went wrong
-                    return (person_id, self.error_message or \
-                                       T("Could not add person record"))
+                    return (None, self.error_message or \
+                                    T("Could not add person record"))
 
         return (person_id, None)
 
@@ -2226,10 +2228,12 @@ class IS_ADD_PERSON_WIDGET2(Validator):
                 for f in ptable._filter_fields(_vars):
                     value, error = validate(ptable, None, f, _vars[f])
                     if error:
-                        return (None, None)
-                    elif f == "date_of_birth" and \
-                         value:
-                        data[f] = value.isoformat()
+                        return (person_id, error)
+                    if value:
+                        if f == "date_of_birth":
+                            data[f] = value.isoformat()
+                        else:
+                            data[f] = value
                 if data:
                     db(query).update(**data)
 
@@ -2294,7 +2298,7 @@ class IS_ADD_PERSON_WIDGET2(Validator):
                 # Validate the email
                 email, error = email_validate(_vars.email, None)
                 if error:
-                    return (person_id, error)
+                    return (None, error)
 
                 # Separate the Name into components
                 first_name, middle_name, last_name = name_split(_vars["full_name"])

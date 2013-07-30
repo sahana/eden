@@ -533,14 +533,12 @@ class S3SQLDefaultForm(S3SQLForm):
             @todo: describe arguments
         """
 
-        manager = current.manager
-        audit = manager.audit
         table = self.table
-        record_id = self.record_id
+        tablename = self.tablename
 
         # Get the proper onvalidation routine
         if isinstance(onvalidation, dict):
-            onvalidation = onvalidation.get(self.tablename, [])
+            onvalidation = onvalidation.get(tablename, [])
 
         # Append link.postprocess to onvalidation
         if link and link.postprocess:
@@ -555,7 +553,8 @@ class S3SQLDefaultForm(S3SQLForm):
         success = True
         error = None
 
-        formname = "%s/%s" % (self.tablename, self.record_id)
+        record_id = self.record_id
+        formname = "%s/%s" % (tablename, record_id)
         if form.accepts(vars,
                         current.session,
                         formname=formname,
@@ -563,15 +562,16 @@ class S3SQLDefaultForm(S3SQLForm):
                         keepvalues=False,
                         hideerror=False):
 
+            manager = current.manager
             # Audit
             prefix = self.prefix
             name = self.name
-            if self.record_id is None:
-                audit("create", prefix, name, form=form,
-                      representation=format)
+            if record_id is None:
+                manager.audit("create", prefix, name, form=form,
+                              representation=format)
             else:
-                audit("update", prefix, name, form=form,
-                      record=record_id, representation=format)
+                manager.audit("update", prefix, name, form=form,
+                              record=record_id, representation=format)
 
             vars = form.vars
 
@@ -602,16 +602,18 @@ class S3SQLDefaultForm(S3SQLForm):
                 manager.store_session(prefix, name, vars.id)
 
             # Execute onaccept
-            callback(onaccept, form, tablename=self.tablename)
+            callback(onaccept, form, tablename=tablename)
 
         else:
             success = False
 
             if form.errors:
 
+                # Revert any records created within widgets/validators
+                db.rollback()
+
                 # IS_LIST_OF validation errors need special handling
                 errors = []
-                table = self.table
                 for fieldname in form.errors:
                     if fieldname in table:
                         if isinstance(table[fieldname].requires, IS_LIST_OF):
@@ -841,7 +843,7 @@ class S3SQLCustomForm(S3SQLForm):
         # Cancel button
         if not readonly and s3.cancel:
             buttons.append(A(current.T("Cancel"),
-                             _href=response.s3.cancel,
+                             _href=s3.cancel,
                              _class="action-lnk"))
 
         # Render the form
@@ -884,6 +886,10 @@ class S3SQLCustomForm(S3SQLForm):
             link = options.get("link", None)
             self.accept(form, format=format, link=link)
             response.confirmation = message
+
+        if form.errors:
+            # Revert any records created within widgets/validators
+            db.rollback()
 
         return form
 
