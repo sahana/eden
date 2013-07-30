@@ -828,7 +828,9 @@ class S3IncidentTypeModel(S3Model):
         table = self.define_table(tablename,
                                   Field("name", notnull=True,
                                         length=64,
-                                        label=T("Name")),
+                                        label=T("Name"),
+                                        unique=True,
+                                        ),
                                   s3_comments(),
                                   *s3_meta_fields())
 

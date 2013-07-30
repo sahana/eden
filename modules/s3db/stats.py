@@ -1121,7 +1121,9 @@ class S3StatsResidentModel(S3Model):
                              # Instance
                              super_link("parameter_id", "stats_parameter"),
                              Field("name",
-                                   label=T("Name")),
+                                   label=T("Name"),
+                                   unique=True,
+                                   ),
                              s3_comments(),
                              *s3_meta_fields())
 
@@ -1277,7 +1279,9 @@ class S3StatsTrainedPeopleModel(S3Model):
                              # Instance
                              super_link("parameter_id", "stats_parameter"),
                              Field("name",
-                                   label=T("Name")),
+                                   label=T("Name"),
+                                   unique=True,
+                                   ),
                              s3_comments(),
                              *s3_meta_fields())
 

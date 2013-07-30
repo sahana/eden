@@ -231,6 +231,15 @@ def customize_project_activity(**attr):
     # Remove rheader
     attr["rheader"] = None
 
+    list_fields = ["date",
+                   "name",
+                   "activity_type_id",
+                   "activity_group$group_id",
+                   "location_id",
+                   "person_id",
+                   "comments",
+                   ]
+
     # Custom Crud Form
     s3db.project_activity_group.group_id.label = ""
     crud_form = S3SQLCustomForm(
@@ -266,6 +275,7 @@ def customize_project_activity(**attr):
                       ]
 
     s3db.configure(tablename,
+                   list_fields = list_fields,
                    crud_form = crud_form,
                    filter_widgets = filter_widgets,
                    filter_formstyle = filter_formstyle,
