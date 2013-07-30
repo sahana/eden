@@ -12,9 +12,10 @@ from gluon.html import *
 #from gluon.sqlhtml import formstyle_bootstrap
 from gluon.storage import Storage
 
+from s3.s3fields import S3Represent
 from s3.s3filter import S3OptionsFilter
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
-from s3.s3validators import IS_ADD_PERSON_WIDGET2, IS_LOCATION_SELECTOR2
+from s3.s3validators import IS_ADD_PERSON_WIDGET2, IS_LOCATION_SELECTOR2, IS_ONE_OF
 from s3.s3widgets import S3AddPersonWidget2, S3LocationSelectorWidget2
 
 T = current.T
@@ -698,14 +699,19 @@ def customize_stats_resident(**attr):
     s3db = current.s3db
     tablename = "stats_resident"
     table = s3db[tablename]
-    table.location_id.label = "" # Gets replaced by widget
-    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
-    table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
-                                                         hide_lx=False,
-                                                         reverse_lx=True,
-                                                         show_address=True,
-                                                         show_postcode=True,
-                                                         )
+    # L3s only
+    field = table.location_id
+    field.requires = IS_ONE_OF(current.db, "gis_location.id",
+                               S3Represent(lookup="gis_location"),
+                               sort = True,
+                               filterby = "level",
+                               filter_opts = ["L3"]
+                               )
+    # Don't add new Locations here
+    field.comment = None
+    # Simple dropdown
+    field.widget = None
+    field.label = T("City")
 
     # Custom PreP
     s3 = current.response.s3
@@ -931,7 +937,11 @@ def customize_vulnerability_risk(**attr):
     table.location_id.label = "" # Gets replaced by widget
     table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
     table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
-                                                         #polygons=True,
+                                                         hide_lx=False,
+                                                         reverse_lx=True,
+                                                         polygons=True,
+                                                         #show_address=True,
+                                                         #show_postcode=True,
                                                          )
 
     # Custom PreP

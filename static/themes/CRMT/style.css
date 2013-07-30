@@ -26,7 +26,9 @@ h2.summary {
 
 #summary-common { 
     float: left;
-    margin-top: 20px;
+    margin-top: 10px;
+    width: 50%;
+    line-height: 18px;
 }
 
 #summary-tabs.ui-widget-content {
@@ -89,7 +91,7 @@ h2.summary {
 }
 
 /* Hide the colons for Location Selectors */
-#stats_resident_location_id__label,
+/*#stats_resident_location_id__label, */
 #event_incident_report_location_id__label,
 #vulnerability_risk_location_id__label,
 #project_activity_location_id__label,
@@ -173,12 +175,14 @@ button.ui-multiselect.ui-state-default.ui-corner-all {
     margin-bottom: 10px;
 }
 
-/* Summary Page - Filter Form */
-form#summary-filter-form {
+/* Filter Form */
+form.filter-form,
+form#summary-filter-form
+ {
     height: 60px;
     background-color: white;
     padding: 5px 10px;
-        border-radius: 5px;
+    border-radius: 5px;
 }
 
 .horiz_filter_form {
