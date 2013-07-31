@@ -3,6 +3,10 @@
 .map_home {
     margin: 0 0 0 -12px;
 }
+.map_wrapper {
+    /* Allow Absolutely positioned panels within */
+    position: relative;
+}
 /* Ensure Throbber shows centered on main map (but not on location selector)
    - core definition in widgets.css */
 .map_loader {
@@ -44,6 +48,20 @@ form .map_loader {
 }
 .x-tree-node {
     font-size: 12px;
+}
+
+/* Save Panel */
+.map_save_panel {
+    background-color: #FBFBFB;
+    position: absolute;
+    right: 0;
+    top: 0;
+    margin: 10px 35px 0 0;
+    padding: 5px;
+    border: solid;
+    border-radius: 5px 5px 5px 5px;
+    width: auto;
+    cursor: pointer;
 }
 
 /* Current Coordinates */

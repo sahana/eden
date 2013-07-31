@@ -1544,12 +1544,11 @@ class S3GISConfigModel(S3Model):
                                    readable=False,
                                    writable=False,
                                    ),
-                             # @ToDo: Allows selection of which OU a person's config should inherit from for disambiguation
-                             # - needs implementing in gis.set_config()
-                             # - needs a method in gis_config_form_setup() to populate the dropdown from the OUs (in this person's Path for this person's,  would have to be a dynamic lookup for Admins)
-                             Field("pe_path", "integer",
-                                   readable=False,
-                                   writable=False,
+                             # Default:
+                             # If a person has multiple saved configs then this decides
+                             # which is the one to use
+                             Field("pe_default", "boolean",
+                                   default = False,
                                    ),
 
                              # Region field
@@ -1562,12 +1561,18 @@ class S3GISConfigModel(S3Model):
                              location_id("default_location_id",
                                          widget = S3LocationAutocompleteWidget(),
                                          requires = IS_NULL_OR(IS_LOCATION())),
-                             Field("geocoder", "boolean",
-                                   # This would be turned off for Offline deployments or expensive SatComms, such as BGAN
-                                   #readable=False,
-                                   #writable=False,
-                                   # @ToDo: Remove default once we have cascading working
-                                   default=True),
+                             # Map Settings
+                             Field("zoom", "integer",
+                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(1, 20))),
+                             Field("lat", "double",
+                                   requires = IS_NULL_OR(IS_LAT())),
+                             Field("lon", "double",
+                                   requires = IS_NULL_OR(IS_LON())),
+                             projection_id(#empty=False,
+                                           # Nice if we could get this set to epsg field
+                                           #default=900913
+                                           ),
+                             symbology_id(),
                              # Overall Bounding Box for sanity-checking inputs
                              Field("lat_min", "double",
                                    # @ToDo: Remove default once we have cascading working
@@ -1586,18 +1591,8 @@ class S3GISConfigModel(S3Model):
                                    default=180,
                                    requires = IS_NULL_OR(IS_LON())),
 
-                             # Map Settings
-                             Field("zoom", "integer",
-                                   requires = IS_NULL_OR(IS_INT_IN_RANGE(1, 20))),
-                             Field("lat", "double",
-                                   requires = IS_NULL_OR(IS_LAT())),
-                             Field("lon", "double",
-                                   requires = IS_NULL_OR(IS_LON())),
-                             projection_id(#empty=False,
-                                           # Nice if we could get this set to epsg field
-                                           #default=900913
-                                           ),
-                             symbology_id(),
+                             # This would be turned off for Offline deployments or expensive SatComms, such as BGAN
+                             Field("geocoder", "boolean"),
                              Field("wmsbrowser_url"),
                              Field("wmsbrowser_name",
                                    default="Web Map Service"),
@@ -1657,15 +1652,7 @@ class S3GISConfigModel(S3Model):
                   create_next=URL(c="gis", f="config",
                                   args=["[id]", "layer_entity"]),
                   ondelete=self.gis_config_ondelete,
-                  subheadings = {T("Map Settings"): "zoom",
-                                 T("Form Settings"): "default_location_id",
-                                 },
-                  list_fields = ["id",
-                                 "name",
-                                 "pe_id",
-                                 "region_location_id",
-                                 "default_location_id",
-                                 ])
+                  )
 
         if current.deployment_settings.get_security_map() and not \
            current.auth.s3_has_role("MapAdmin"):
@@ -1726,24 +1713,39 @@ class S3GISConfigModel(S3Model):
         # Defined here since Component (of Persons)
         # @ToDo: Need tooltips for projection, symbology, geocoder, zoom levels,
         # cluster distance, and cluster threshold.
-        table.name.label = T("Name")
+        label = T("Name")
+        table.name.label = label
+        table.name.represent = lambda v: v or ""
         table.name.comment = DIV(
             _class="tooltip",
             _title="%s|%s" % (
-                T("Name"),
+                label,
                 T("If this configuration is displayed on the GIS config menu, give it a name to use in the menu. The name for a personal map configuration will be set to the user's name.")))
         field = table.pe_id
         field.label = T("Person or OU")
-        field.readable = True
-        field.writable = True
-        field.represent = lambda id: current.s3db.pr_pentity_represent(id)
+        field.readable = field.writable = True
+        field.represent = current.s3db.pr_PersonEntityRepresent(show_label=False)
         field.widget = S3AutocompleteWidget("pr", "pentity")
+        label = T("Default?")
+        table.pe_default.label = label
+        table.pe_default.comment = DIV(
+            _class="tooltip",
+            _title="%s|%s" % (
+                label,
+                T("If there are multiple configs for a person, which should be their default?")))
+
         table.region_location_id.label = T("Region")
-        table.default_location_id.label = T("Default Location")
+        table.region_location_id.comment = DIV(
+            _class="tooltip",
+            _title="%s|%s" % (
+                T("Region Location"),
+                T("A location that specifies the geographic area for this region. This can be a location from the location hierarchy, or a 'group location', or a location that has a boundary for the area.")))
+        label = T("Default Location")
+        table.default_location_id.label = label
         table.default_location_id.comment = DIV(
             _class="tooltip",
             _title="%s|%s" % (
-                T("Default Location"),
+                label,
                 T("Use this to set the starting location for the Location Selector.")))
         table.lat.label = T("Map Center Latitude")
         table.lat.comment = DIV(
@@ -1761,46 +1763,52 @@ class S3GISConfigModel(S3Model):
                 T("The map will be displayed initially with this longitude at the center."),
                 T("Longitude is West - East (sideways)."),
                 T("Longitude is zero on the prime meridian (through Greenwich, United Kingdom) and is positive to the east, across Europe and Asia.  Longitude is negative to the west, across the Atlantic and the Americas.")))
-        table.wmsbrowser_name.label = T("Web Map Service Browser Name")
+        label = T("Web Map Service Browser Name")
+        table.wmsbrowser_name.label = label
         table.wmsbrowser_name.comment = DIV(
             _class="tooltip",
             _title="%s|%s" % (
-                T("Web Map Service Browser Name"),
+                label,
                 T("Title to show for the Web Map Service panel in the Tools panel.")))
-        table.wmsbrowser_url.label = T("Web Map Service Browser URL")
+        label = T("Web Map Service Browser URL")
+        table.wmsbrowser_url.label = label
         table.wmsbrowser_url.comment = DIV(
             _class="tooltip",
             _title="%s|%s|%s" % (
-                T("Web Map Service Browser URL"),
+                label,
                 T("The URL for the GetCapabilities page of a Web Map Service (WMS) whose layers you want available via the Browser panel on the Map."),
                 T("The form of the URL is http://your/web/map/service?service=WMS&request=GetCapabilities where your/web/map/service stands for the URL path to the WMS.")))
         table.geocoder.label = T("Use Geocoder for address lookups?")
-        table.lat_min.label = T("Minimum Location Latitude")
+        label = T("Minimum Location Latitude")
+        table.lat_min.label = label
         table.lat_min.comment = DIV(
             _class="tooltip",
             _title="%s|%s|%s" % (
-                T("Minimum Location Latitude"),
+                label,
                 T("Latitude of far southern end of the region of interest."),
                 T("Used to check that latitude of entered locations is reasonable. May be used to filter lists of resources that have locations.")))
-        table.lat_max.label = T("Maximum Location Latitude")
+        label = T("Maximum Location Latitude")
+        table.lat_max.label = label
         table.lat_max.comment = DIV(
             _class="tooltip",
             _title="%s|%s|%s" % (
-                T("Maximum Location Latitude"),
+                label,
                 T("Latitude of far northern end of the region of interest."),
                 T("Used to check that latitude of entered locations is reasonable. May be used to filter lists of resources that have locations.")))
-        table.lon_min.label = T("Minimum Location Longitude")
+        label = T("Minimum Location Longitude")
+        table.lon_min.label = label
         table.lon_min.comment = DIV(
             _class="tooltip",
             _title="%s|%s|%s" % (
-                T("Minimum Location Longitude"),
+                label,
                 T("Longitude of far western end of the region of interest."),
                 T("Used to check that longitude of entered locations is reasonable. May be used to filter lists of resources that have locations.")))
-        table.lon_max.label = T("Maximum Location Longitude")
+        label = T("Maximum Location Longitude")
+        table.lon_max.label = label
         table.lon_max.comment = DIV(
             _class="tooltip",
             _title="%s|%s|%s" % (
-                T("Maximum Location Longitude"),
+                label,
                 T("Longitude of far eastern end of the region of interest."),
                 T("Used to check that longitude of entered locations is reasonable. May be used to filter lists of resources that have locations.")))
         table.zoom_levels.label = T("Zoom Levels")
@@ -1810,11 +1818,6 @@ class S3GISConfigModel(S3Model):
             _title="%s|%s" % (
                 T("Zoom"),
                 T("How much detail is seen. A high Zoom level means lot of detail, but not a wide area. A low Zoom level means seeing a wide area, but not a high level of detail.")))
-        table.region_location_id.comment = DIV(
-            _class="tooltip",
-            _title="%s|%s" % (
-                T("Region Location"),
-                T("A location that specifies the geographic area for this region. This can be a location from the location hierarchy, or a 'group location', or a location that has a boundary for the area.")))
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1847,23 +1850,18 @@ class S3GISConfigModel(S3Model):
     @staticmethod
     def gis_config_onvalidation(form):
         """
-            Check region values. Add name for personal & site configs.
-
-            If this a region location is set, protect that location from accidental
-            editing (e.g. if it is used as a default location for any resources in
-            the region) but making it only editable by a MapAdmin.
+            Set the pe_type
         """
 
-        db = current.db
-        s3db = current.s3db
         vars = form.vars
-
         if vars.uuid == "SITE_DEFAULT":
             vars.pe_type = 9
         elif "pe_id" in vars:
             pe_id = vars.pe_id
             if pe_id:
                 # Populate the pe_type
+                db = current.db
+                s3db = current.s3db
                 table = s3db.pr_pentity
                 query = (table.pe_id == pe_id)
                 pe = db(query).select(table.instance_type,
@@ -1895,45 +1893,55 @@ class S3GISConfigModel(S3Model):
             # Personal Config
             vars.pe_type = 1
 
-        # If there's a region location, set its owned by role to MapAdmin.
-        # That makes Authenticated no longer an owner, so they only get whatever
-        # is permitted by uacl (currently that is set to READ).
-        if "region_location_id" in vars and vars.region_location_id:
-            MAP_ADMIN = current.session.s3.system_roles.MAP_ADMIN
-            table = db.gis_location
-            query = (table.id == vars.region_location_id)
-            db(query).update(owned_by_group = MAP_ADMIN)
-
     # -------------------------------------------------------------------------
     @staticmethod
     def gis_config_onaccept(form):
         """
             If this is the cached config, clear the cache.
-
             If this is this user's personal config, clear the config
+            Check that there is only 1 default for each PE
             If this is an OU config, then add to GIS menu
+
+            If this has a region location, protect that location from accidental
+            editing (e.g. if it is used as a default location for any resources in
+            the region) but making it only editable by a MapAdmin.
         """
 
-        try:
-            update = False
-            id = form.vars.id
-            pe_id = form.request_vars.pe_id
-            if pe_id:
-                if pe_id == current.auth.user.pe_id:
-                    # Clear the current config
-                    current.response.s3.gis.config = None
-                # Add to GIS Menu
-                table = current.db.gis_menu
-                table.update_or_insert(config_id=id,
-                                       pe_id=pe_id)
-            else:
-                config = current.response.s3.gis.config
-                if config and config.id == id:
-                    # This is the currently active config, so clear our cache
-                    config = None
-        except:
+        vars = form.vars
+        if "pe_id" not in form.vars:
             # AJAX Save of Viewport from Map
-            pass
+            return
+
+        pe_id = vars.pe_id
+        if pe_id:
+            id = vars.id
+            db = current.db
+            if pe_id == current.auth.user.pe_id:
+                # Clear the current config
+                current.response.s3.gis.config = None
+            if vars.pe_default:
+                # Ensure no other records for this PE are marked as default
+                table = db.gis_config
+                query = (table.pe_id == pe_id) & \
+                        (table.id != id)
+                db(query).update(pe_default=False)
+            # Add to GIS Menu
+            db.gis_menu.update_or_insert(config_id=id,
+                                         pe_id=pe_id)
+        else:
+            config = current.response.s3.gis.config
+            if config and config.id == vars.id:
+                # This is the currently active config, so clear our cache
+                config = None
+
+        # If there's a region location, set its owned by role to MapAdmin.
+        # That makes Authenticated no longer an owner, so they only get whatever
+        # is permitted by uacl (currently that is set to READ).
+        if vars.region_location_id:
+            MAP_ADMIN = current.session.s3.system_roles.MAP_ADMIN
+            table = db.gis_location
+            query = (table.id == vars.region_location_id)
+            db(query).update(owned_by_group = MAP_ADMIN)
 
     # -------------------------------------------------------------------------
     @staticmethod

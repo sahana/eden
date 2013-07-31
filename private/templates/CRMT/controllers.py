@@ -125,6 +125,7 @@ for(var i=0,len=layers.length;i<len;i++){
                                    callback=callback,
                                    catalogue_layers=True,
                                    collapsed=True,
+                                   save=False,
                                    )
         output["map"] = map
         return output

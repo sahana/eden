@@ -277,7 +277,7 @@ function getQueryParams(qs) {
     var pairs = qs.split('&');
     var params = {};
     var check = [];
-    for ( var i = 0; i < pairs.length; i++ ) {
+    for (var i=0; i < pairs.length; i++) {
         check = pairs[i].split('=');
         params[decodeURIComponent(check[0])] = decodeURIComponent(check[1]);
     }

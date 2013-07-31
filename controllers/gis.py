@@ -18,6 +18,14 @@ def index():
 
     # Read user request
     vars = request.get_vars
+    config = vars.get("config", None)
+    if config:
+        try:
+            config = int(config)
+        except:
+            pass
+        else:
+            gis.set_config(config)
     height = vars.get("height", None)
     width = vars.get("width", None)
     toolbar = vars.get("toolbar", None)
@@ -657,19 +665,63 @@ def config():
         if r.interactive:
             if not r.component:
                 s3db.gis_config_form_setup()
-                if auth.is_logged_in() and not auth.s3_has_role(MAP_ADMIN):
-                    # Only Personal Config is accessible
-                    # @ToDo: ideal would be to have the SITE_DEFAULT (with any OU configs overlaid) on the left-hand side & then they can see what they wish to override on the right-hand side
-                    # - could be easier to put the currently-effective config into the form fields, however then we have to save all this data
-                    # - if each field was readable & you clicked on it to make it editable (like RHoK pr_contact), that would solve this
-                    pe_id = auth.user.pe_id
-                    # For Lists
-                    s3.filter = (s3db.gis_config.pe_id == pe_id)
-                    # For Create forms
-                    field = r.table.pe_id
-                    field.default = pe_id
-                    field.readable = False
-                    field.writable = False
+                if auth.s3_has_role(MAP_ADMIN):
+                    list_fields = ["id",
+                                   "name",
+                                   "pe_id",
+                                   "region_location_id",
+                                   "default_location_id",
+                                   ]
+                    s3db.configure("gis_config",
+                                   list_fields = list_fields,
+                                   subheadings = {T("Map Settings"): "zoom",
+                                                  T("Form Settings"): "default_location_id",
+                                                  },
+                                   )
+                else:
+                    # Filter Region Configs
+                    s3.filter = (s3db.gis_config.region_location_id != None)
+                    if auth.is_logged_in():
+                        # For Create forms
+                        field = r.table.pe_id
+                        field.default = auth.user.pe_id
+                        field.readable = field.writable = False
+                        fields = ["name",
+                                  "default_location_id",
+                                  "zoom",
+                                  "lat",
+                                  "lon",
+                                  #"projection_id",
+                                  #"symbology_id",
+                                  #"wmsbrowser_url",
+                                  #"wmsbrowser_name",
+                                  ]
+                        osm_table = s3db.gis_layer_openstreetmap
+                        openstreetmap = db(osm_table.deleted == False).select(osm_table.id,
+                                                                              limitby=(0, 1))
+                        if openstreetmap:
+                            # OpenStreetMap config
+                            s3db.add_component("auth_user_options",
+                                               gis_config=dict(joinby="pe_id",
+                                                               pkey="pe_id",
+                                                               multiple=False)
+                                               )
+                            fields += ["user_options.osm_oauth_consumer_key",
+                                       "user_options.osm_oauth_consumer_secret",
+                                       ]
+                        crud_form = s3base.S3SQLCustomForm(*fields)
+                    else:
+                        crud_form = None
+                    list_fields = ["name",
+                                   "pe_id",
+                                   "pe_default",
+                                   ]
+                    s3db.configure("gis_config",
+                                   crud_form=crud_form,
+                                   insertable=False,
+                                   list_fields = list_fields,
+                                   )
+
             elif r.component_name == "layer_entity":
                 s3.crud_strings["gis_layer_config"] = Storage(
                     title_create = T("Add Layer to this Profile"),
@@ -751,19 +803,27 @@ def config():
                 # Show the enable button if the layer is not currently enabled
                 restrict = [str(row.layer_id) for row in rows if not row.enabled]
                 s3.actions.append(dict(label=str(T("Enable")),
-                                                _class="action-btn",
-                                                url=URL(args=[r.id, "layer_entity", "[id]", "enable"]),
-                                                restrict = restrict
-                                                )
-                                            )
+                                       _class="action-btn",
+                                       url=URL(args=[r.id, "layer_entity", "[id]", "enable"]),
+                                       restrict = restrict
+                                       ))
                 # Show the disable button if the layer is not currently disabled
                 restrict = [str(row.layer_id) for row in rows if row.enabled]
                 s3.actions.append(dict(label=str(T("Disable")),
-                                                _class="action-btn",
-                                                url=URL(args=[r.id, "layer_entity", "[id]", "disable"]),
-                                                restrict = restrict
-                                                )
-                                            )
+                                       _class="action-btn",
+                                       url=URL(args=[r.id, "layer_entity", "[id]", "disable"]),
+                                       restrict = restrict
+                                       ))
+
+            elif not r.component and r.method != "import":
+                s3_action_buttons(r, copyable=True)
+                s3.actions.append(
+                    dict(url=URL(c="gis", f="index",
+                                 vars={"config":"[id]"}),
+                         label=str(T("Show")),
+                         _class="action-btn")
+                )
+
         elif r.representation == "url":
             # Save from Map
             result = json.loads(output["item"])
@@ -776,16 +836,12 @@ def config():
                 for layer in layers:
                     if "id" in layer and layer["id"] != "search_results":
                         layer_id = layer["id"]
-                        vars = Storage(
-                                config_id = id,
-                                layer_id = layer_id,
-                            )
+                        vars = Storage(config_id = id,
+                                       layer_id = layer_id,
+                                       )
                         if "base" in layer:
                             vars.base = layer["base"]
-                        if "visible" in layer:
-                            vars.visible = layer["visible"]
-                        else:
-                            vars.visible = False
+                        vars.visible = layer.get("visible", False)
                         if "style" in layer:
                             vars.style = json.dumps(layer["style"])
                         # Update or Insert?
@@ -794,8 +850,11 @@ def config():
                         record = db(query).select(ltable.id,
                                                   limitby=(0, 1)).first()
                         if record:
-                            vars.id = record.id
+                            record_id = record.id
+                            vars.id = record_id
+                            db(ltable.id == record_id).update(**vars)
                         else:
+                            # How could this happen?
                             vars.id = ltable.insert(**vars)
                         # Ensure that Default Base processing happens properly
                         form.vars = vars

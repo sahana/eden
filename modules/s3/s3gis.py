@@ -990,6 +990,7 @@ class GIS(object):
                   ctable.zoom,
                   ctable.lat,
                   ctable.lon,
+                  ctable.pe_id,
                   ctable.symbology_id,
                   ctable.wmsbrowser_url,
                   ctable.wmsbrowser_name,
@@ -1017,12 +1018,14 @@ class GIS(object):
                     ]
             rows = db(query).select(*fields,
                                     left=left,
+                                    orderby=ctable.pe_type,
                                     limitby=(0, 2))
             if len(rows) == 1:
+                # The requested config must be invalid, so just use site default
                 row = rows.first()
 
         elif config_id is 0:
-            # Use site default.
+            # Use site default
             query = (ctable.uuid == "SITE_DEFAULT") & \
                     (mtable.id == stable.marker_id) & \
                     (stable.id == ctable.symbology_id) & \
@@ -1034,9 +1037,8 @@ class GIS(object):
                 _gis.config = cache
                 return cache
 
-        # If no id supplied, or the requested config does not exist,
-        # fall back to personal or site config.
-        if not row:
+        # If no id supplied, extend the site config with any personal or OU configs
+        if not rows and not row:
             # Read personalised config, if available.
             auth = current.auth
             if auth.is_logged_in():
@@ -1049,14 +1051,20 @@ class GIS(object):
                 pes = []
                 for role in roles:
                     if role in role_paths:
-                        # @ToDo: Read the person's gis_config to disambiguate which Path to use, if there are issues
+                        # @ToDo: Allow selection of which OU a person's config should inherit from for disambiguation
+                        # - store in s3db.gis_config?
+                        # - needs a method in gis_config_form_setup() to populate the dropdown from the OUs (in this person's Path for this person's,  would have to be a dynamic lookup for Admins)
                         pes = role_paths[role].nodes()
                         # Staff don't check Volunteer's OUs
                         break
-                # Add Personal
-                pes.insert(0, pe_id)
-                query = (ctable.pe_id.belongs(pes)) | \
-                        (ctable.uuid == "SITE_DEFAULT")
+                query = (ctable.uuid == "SITE_DEFAULT") | \
+                        ((ctable.pe_id == pe_id) & \
+                         (ctable.pe_default != False))
+                len_pes = len(pes)
+                if len_pes == 1:
+                    query |= (ctable.pe_id == pes[0])
+                elif len_pes:
+                    query |= (ctable.pe_id.belongs(pes))
                 # Personal may well not be complete, so Left Join
                 left = [ptable.on(ptable.id == ctable.projection_id),
                         stable.on(stable.id == ctable.symbology_id),
@@ -1067,6 +1075,8 @@ class GIS(object):
                 rows = db(query).select(*fields,
                                         left=left,
                                         orderby=ctable.pe_type)
+                if len(rows) == 1:
+                    row = rows.first()
 
         if rows and not row:
             # Merge Configs
@@ -1113,7 +1123,7 @@ class GIS(object):
                 _gis.config = cache
                 return cache
 
-        if row and not cache:
+        if not cache:
             # We had a single row
             config = row["gis_config"]
             config_id = config.id
@@ -1130,9 +1140,7 @@ class GIS(object):
 
         # Store the values
         _gis.config = cache
-
-        # Let caller know if their id was valid.
-        return config_id if row else cache
+        return cache
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5643,6 +5651,17 @@ class MAP(DIV):
             if mgrs:
                 options["mgrs_name"] = mgrs["name"]
                 options["mgrs_url"] = mgrs["url"]
+        else:
+            # No Toolbar
+            # Show Save control?
+            # e.g. removed within S3LocationSelectorWidget[2]
+            if opts.get("save", True) and auth.is_logged_in():
+                options["save"] = True
+                i18n["save"] = T("Save")
+                config_id = vars.get("config", None)
+                if config_id and (config.pe_id == auth.user.pe_id):
+                    # Personal config, so Save Button does Updates
+                    options["config_id"] = config_id
 
         # Legend panel
         if opts.get("legend", False):
@@ -7603,6 +7622,7 @@ class S3Map(S3Method):
                            legend = True,
                            #toolbar = True,
                            #search = True,
+                           save = False,
                            callback = callback,
                            )
         return map

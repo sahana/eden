@@ -234,12 +234,10 @@ class S3PersonEntity(S3Model):
         add_component("dvi_identification",
                       pr_pentity=dict(joinby=pe_id,
                                       multiple=False))
-        # Map Configs
+        # Map Configs 'Saved Maps'
         #   - Personalised configurations
         #   - OU configurations (Organisation/Branch/Facility/Team)
-        add_component("gis_config",
-                      pr_pentity=dict(joinby=pe_id,
-                                      multiple=False))
+        add_component("gis_config", pr_pentity=pe_id)
 
         # ---------------------------------------------------------------------
         # Person <-> User

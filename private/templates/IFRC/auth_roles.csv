@@ -3,6 +3,7 @@
 "AUTHENTICATED","Authenticated",,"default","person","gis_location",,"READ|CREATE|UPDATE",,,,,
 "AUTHENTICATED","Authenticated",,"default","person","pr_saved_search",,,"READ|CREATE|UPDATE",,,,
 "AUTHENTICATED","Authenticated",,"gis","index",,,"READ",,,,,
+"AUTHENTICATED","Authenticated",,"gis","config",,,"READ|CREATE","READ|CREATE|UPDATE",,,,
 "AUTHENTICATED","Authenticated",,"gis","hierarchy",,,"READ",,,,,
 "AUTHENTICATED","Authenticated",,"gis","location",,,"READ",,,,,
 "AUTHENTICATED","Authenticated",,"pr","contact",,,,"READ|CREATE|UPDATE",,,,

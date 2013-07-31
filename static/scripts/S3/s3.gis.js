@@ -525,6 +525,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 }
                 addPolygonControl(map, null, active, true);
             }
+            if (options.save) {
+                addSavePanel(map);
+            }
         }
 
         var mapPanelContainer = new Ext.Panel({
@@ -3365,55 +3368,86 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         toolbar.addButton(potlatchButton);
     }
 
-    // Save button to save the Viewport settings
+    // Save button on Toolbar to save the Viewport settings
     var addSaveButton = function(toolbar) {
-        var map = toolbar.map;
-        var config_id = map.s3.options.config_id;
         // Toolbar Button
         var saveButton = new Ext.Toolbar.Button({
             iconCls: 'save',
             tooltip: i18n.gis_save,
             handler: function() {
-                // Read current settings from map
-                var state = getState(map);
-                var encode = Ext.util.JSON.encode;
-                var layersStr = encode(state.layers);
-                var pluginsStr = encode(state.plugins);
-                // Use AJAX to send back
-                var url;
-                if (config_id) {
-                    url = S3.Ap.concat('/gis/config/' + config_id + '.url/update');
-                } else {
-                    url = S3.Ap.concat('/gis/config.url/create');
-                }
-                // @ToDo: Switch to jQuery
-                Ext.Ajax.request({
-                    url: url,
-                    method: 'POST',
-                    // @ToDo: Make the return value visible to the user
-                    success: function(response, opts) {
-                        var obj = Ext.decode(response.responseText);
-                        var id = obj.message.split('=', 2)[1];
-                        if (id) {
-                            // Ensure that future saves are updates, not creates
-                            config_id = id;
-                            // Change the Menu link
-                            var url = S3.Ap.concat('/gis/config/', id, '/layer_entity');
-                            $('#gis_menu_config').attr('href', url);
-                        }
-                    },
-                    params: {
-                        lat: state.lat,
-                        lon: state.lon,
-                        zoom: state.zoom,
-                        layers: layersStr,
-                        plugins: pluginsStr
-                    }
-                });
+                saveConfig(toolbar.map);
             }
         });
         toolbar.addSeparator();
         toolbar.addButton(saveButton);
+    }
+
+    // Save button as floating DIV to save the Viewport settings
+    var addSavePanel = function(map) {
+        var map_id = map.s3.id;
+        var div = '<div class="map_save_panel">' + i18n.save + '</div>';
+        $('#' + map_id).append(div);
+        // Click Handler
+        $('#' + map_id + ' .map_save_panel').click(function() {
+            saveConfig(map);
+        });
+    }
+
+    // Save the Config
+    var saveConfig = function(map) {
+        // Read current settings from map
+        var state = getState(map);
+        var encode = Ext.util.JSON.encode;
+        var layersStr = encode(state.layers);
+        var pluginsStr = encode(state.plugins);
+        // Use AJAX to send back
+        var url;
+        var config_id = map.s3.options.config_id;
+        if (config_id) {
+            url = S3.Ap.concat('/gis/config/' + config_id + '.url/update');
+        } else {
+            url = S3.Ap.concat('/gis/config.url/create');
+        }
+        // @ToDo: Switch to jQuery
+        Ext.Ajax.request({
+            url: url,
+            method: 'POST',
+            // @ToDo: Make the return value visible to the user
+            success: function(response, opts) {
+                var obj = Ext.decode(response.responseText);
+                var id = obj.message.split('=', 2)[1];
+                if (id) {
+                    // Ensure that future saves are updates, not creates
+                    map.s3.options.config_id = id;
+                    // Change the browser URL (if-applicable)
+                    if (history.pushState && document.location.search) {
+                        // Browser supports URL changing without page refresh
+                        // We have vars
+                        var pairs = document.location.search.split('?')[1].split('&');
+                        var pair = [];
+                        for (var i=0; i < pairs.length; i++) {
+                            pair = pairs[i].split('=');
+                            if ((decodeURIComponent(pair[0]) == 'config_id') && decodeURIComponent(pair[1]) != id) {
+                                pairs[i] = 'config_id=' + id;
+                                var url = document.location.pathname + '?' + pairs.join('&');
+                                window.history.pushState({}, document.title, url);
+                                break;
+                            }
+                        }
+                    }
+                    // Change the Menu link (if-applicable)
+                    var url = S3.Ap.concat('/gis/config/', id, '/layer_entity');
+                    $('#gis_menu_config').attr('href', url);
+                }
+            },
+            params: {
+                lat: state.lat,
+                lon: state.lon,
+                zoom: state.zoom,
+                layers: layersStr,
+                plugins: pluginsStr
+            }
+        });
     }
 
     // Get the State of the Map
