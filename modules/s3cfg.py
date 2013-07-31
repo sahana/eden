@@ -1488,17 +1488,19 @@ class S3Config(Storage):
     def get_pr_request_dob(self):
         """ Include Date of Birth in the AddPersonWidget """
         return self.pr.get("request_dob", True)
+
     def get_pr_request_gender(self):
         """ Include Gender in the AddPersonWidget """
         return self.pr.get("request_gender", True)
+
     def get_pr_select_existing(self):
         """
             Whether the AddPersonWidget allows selecting existing PRs
             - set to True if Persons can be found in multiple contexts
             - set to False if just a single context
-            @ToDo: Fix (form fails to submit)
         """
         return self.pr.get("select_existing", True)
+
     def get_pr_import_update_requires_email(self):
         """
             During imports, records are only updated if the import

@@ -242,32 +242,35 @@
         clear_person_fields(fieldname);
         var selector = '#' + fieldname;
         var real_input = $(selector);
-        var controller = real_input.attr('data-c');
+        var name_input = $(selector + '_full_name');
+        var controller = name_input.attr('data-c');
         var url = S3.Ap.concat('/' + controller + '/person/' + person_id + '.s3json?show_ids=True');
         $.getJSONS3(url, function(data) {
             try {
                 var email = undefined,
                     phone = undefined;
                 var person = data['$_pr_person'][0];
-                disable_person_fields();
-                addPerson_real_input.val(person['@id']);
+                disable_person_fields(fieldname);
+                real_input.val(person['@id']);
+                var names = [];
                 if (person.hasOwnProperty('first_name')) {
-                    $('#pr_person_first_name').val(person['first_name']);
+                    names.push(person['first_name']);
                 }
                 if (person.hasOwnProperty('middle_name')) {
-                    $('#pr_person_middle_name').val(person['middle_name']['@value']);
+                    names.push(person['middle_name']['@value']);
                 }
                 if (person.hasOwnProperty('last_name')) {
-                    $('#pr_person_last_name').val(person['last_name']['@value']);
+                    names.push(person['last_name']['@value']);
                 }
+                name_input.val(names.join(' '));
                 if (person.hasOwnProperty('gender')) {
-                    $('#pr_person_gender').val(person['gender']['@value']);
+                    $(selector + '_gender').val(person['gender']['@value']);
                 }
                 if (person.hasOwnProperty('date_of_birth')) {
-                    $('#pr_person_date_of_birth').val(person['date_of_birth']['@value']);
+                    $(selector + '_date_of_birth').val(person['date_of_birth']['@value']);
                 }
                 if (person.hasOwnProperty('occupation')) {
-                    $('#pr_person_occupation').val(person['occupation']['@value']);
+                    $(selector + '_occupation').val(person['occupation']['@value']);
                 }
                 if (person.hasOwnProperty('$_pr_email_contact')) {
                     var contact = person['$_pr_email_contact'][0];
@@ -282,25 +285,25 @@
                     var contact;
                     for (var i=0; i < contacts.length; i++) {
                         contact = contacts[i];
-                        if(email == undefined){
+                        if (email == undefined){
                             if (contact['contact_method']['@value'] == 'EMAIL') {
                                 email = contact['value']['@value'];
                             }
                         }
-                        if(phone == undefined){
+                        if (phone == undefined){
                             if (contact['contact_method']['@value'] == 'SMS') {
                                 phone = contact['value']['@value'];
                             }
                         }
                     }
                 }
-                if(email !== undefined){
-                    $('#pr_person_email').val(email);
+                if (email !== undefined){
+                    $(selector + '_email').val(email);
                 }
-                if(phone !== undefined){
-                    $('#pr_person_mobile_phone').val(phone);
+                if (phone !== undefined){
+                    $(selector + '_mobile_phone').val(phone);
                 }
-                                        
+
             } catch(e) {
                 real_input.val('');
             }

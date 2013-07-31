@@ -122,6 +122,9 @@ settings.gis.map_width = 1170
 # Don't simplify Polygons as much to retain their original shape
 settings.gis.simplify_tolerance = 0.0001
 
+# Add Person Widget
+settings.pr.request_gender = False
+
 # -----------------------------------------------------------------------------
 # Finance settings
 settings.fin.currencies = {
@@ -129,7 +132,7 @@ settings.fin.currencies = {
 }
 
 # Disabled until ready for prime-time
-settings.search.save_widget = False
+settings.search.filter_manager = False
 
 # -----------------------------------------------------------------------------
 # Menu
@@ -221,18 +224,20 @@ def customize_project_activity(**attr):
     s3db = current.s3db
     tablename = "project_activity"
     table = s3db[tablename]
-    table.location_id.label = "" # Gets replaced by widget
-    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
-    table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
-                                                         hide_lx=False,
-                                                         reverse_lx=True,
-                                                         show_address=True,
-                                                         show_postcode=True,
-                                                         )
-
-    # Remove rheader
-    attr["rheader"] = None
-
+    field = table.location_id
+    field.label = "" # Gets replaced by widget
+    field.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
+    field.widget = S3LocationSelectorWidget2(levels=["L3"],
+                                             hide_lx=False,
+                                             reverse_lx=True,
+                                             show_address=True,
+                                             show_postcode=True,
+                                             )
+    field = table.person_id
+    field.comment = None
+    field.requires = IS_ADD_PERSON_WIDGET2()
+    field.widget = S3AddPersonWidget2(controller="pr")
+    
     list_fields = ["date",
                    "name",
                    "activity_type_id",
@@ -285,6 +290,9 @@ def customize_project_activity(**attr):
 
     attr["hide_filter"] = False
 
+    # Remove rheader
+    attr["rheader"] = None
+
     return attr
 
 settings.ui.customize_project_activity = customize_project_activity
@@ -303,18 +311,19 @@ def customize_event_incident_report(**attr):
     s3db = current.s3db
     tablename = "event_incident_report"
     table = s3db[tablename]
-    table.location_id.label = "" # Gets replaced by widget
-    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
-    table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
-                                                         hide_lx=False,
-                                                         reverse_lx=True,
-                                                         show_address=True,
-                                                         show_postcode=True,
-                                                         )
-    table.person_id.comment = None
-    #table.person_id.requires = IS_ADD_PERSON_WIDGET2()
-    #table.person_id.widget = S3AddPersonWidget2(controller="pr")
-    table.person_id.widget = None
+    field = table.location_id
+    field.label = "" # Gets replaced by widget
+    field.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
+    field.widget = S3LocationSelectorWidget2(levels=["L3"],
+                                             hide_lx=False,
+                                             reverse_lx=True,
+                                             show_address=True,
+                                             show_postcode=True,
+                                             )
+    field = table.person_id
+    field.comment = None
+    field.requires = IS_ADD_PERSON_WIDGET2()
+    field.widget = S3AddPersonWidget2(controller="pr")
     
     current.response.s3.crud_strings[tablename] = Storage(
         title_create = T("Add Incident"),
@@ -725,6 +734,11 @@ def customize_stats_resident(**attr):
     field.widget = None
     field.label = T("City")
 
+    field = table.person_id
+    field.comment = None
+    field.requires = IS_ADD_PERSON_WIDGET2()
+    field.widget = S3AddPersonWidget2(controller="pr")
+
     # Custom PreP
     s3 = current.response.s3
     standard_prep = s3.prep
@@ -802,6 +816,11 @@ def customize_stats_trained(**attr):
                                                          show_address=True,
                                                          show_postcode=True,
                                                          )
+
+    field = table.person_id
+    field.comment = None
+    field.requires = IS_ADD_PERSON_WIDGET2()
+    field.widget = S3AddPersonWidget2(controller="pr")
 
     # Custom PreP
     s3 = current.response.s3

@@ -130,25 +130,25 @@
                             var contact;
                             for (var i=0; i < contacts.length; i++) {
                                 contact = contacts[i];
-                                if(email == undefined){
+                                if (email == undefined){
                                     if (contact['contact_method']['@value'] == 'EMAIL') {
                                         email = contact['value']['@value'];
                                     }
                                 }
-                                if(phone == undefined){
+                                if (phone == undefined){
                                     if (contact['contact_method']['@value'] == 'SMS') {
                                         phone = contact['value']['@value'];
                                     }
                                 }
                             }
                         }
-                        if(email !== undefined){
+                        if (email !== undefined){
                             $('#pr_person_email').val(email);
                         }
-                        if(phone !== undefined){
+                        if (phone !== undefined){
                             $('#pr_person_mobile_phone').val(phone);
                         }
-                                                
+
                     } catch(e) {
                         addPerson_real_input.val('');
                     }
