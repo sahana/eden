@@ -844,6 +844,7 @@ class S3AddPersonWidget2(FormWidget):
         if script not in scripts:
             scripts.append(script)
         s3.jquery_ready.append('''S3.addPersonWidget('%s')''' % fieldname)
+        s3.js_global.append('''i18n.none_of_the_above="%s"''' % T("None of the above"))
 
         # Overall layout of components
         return TAG[""](DIV(INPUT(**attr), # Real input, hidden

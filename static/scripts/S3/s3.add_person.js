@@ -161,6 +161,15 @@
                             // First Name
                             first: no_matching_records
                         });
+                    } else {
+                        var none_of_the_above = i18n.none_of_the_above;
+                        data.push({
+                            id: 0,
+                            value: '',
+                            label: none_of_the_above,
+                            // First Name
+                            first: none_of_the_above
+                        });
                     }
                     response(data);
                 });
@@ -202,7 +211,7 @@
                     // Update the Form Fields
                     select_person(fieldname, item.id);
                 } else {
-                    // No matching results
+                    // 'No matching results' or 'None of the above'
                     dummy_input.val('');
                     real_input.val('');
                 }
