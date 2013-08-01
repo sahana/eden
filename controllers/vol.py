@@ -103,8 +103,8 @@ def volunteer():
                    "person_id",
                    "job_title_id",
                    "organisation_id",
-                   (settings.get_ui_label_mobile_phone(), "person_id$phone.value"),
-                   (T("Email"), "person_id$email.value"),
+                   (settings.get_ui_label_mobile_phone(), "phone.value"),
+                   (T("Email"), "email.value"),
                    "location_id",
                    ]
     if settings.get_hrm_use_trainings():
