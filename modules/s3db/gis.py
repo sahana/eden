@@ -1916,7 +1916,8 @@ class S3GISConfigModel(S3Model):
         if pe_id:
             id = vars.id
             db = current.db
-            if pe_id == current.auth.user.pe_id:
+            user = current.auth.user
+            if user and user.pe_id == pe_id:
                 # Clear the current config
                 current.response.s3.gis.config = None
             if vars.pe_default:

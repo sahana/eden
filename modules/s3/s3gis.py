@@ -5441,6 +5441,7 @@ class MAP(DIV):
                 "gis_cluster_multiple": T("There are multiple records at this location"),
                 "gis_loading": T("Loading"),
                 "gis_requires_login": T("Requires Login"),
+                "gis_zoomin": T("Zoom In"),
                 }
 
         ############
@@ -5599,7 +5600,6 @@ class MAP(DIV):
             i18n["gis_length_message"] = T("The length is")
             i18n["gis_length_tooltip"] = T("Measure Length: Click the points along the path & end with a double-click")
             i18n["gis_zoomfull"] = T("Zoom to maximum map extent")
-            i18n["gis_zoomin"] = T("Zoom In")
             i18n["gis_zoominbutton"] = T("Zoom In: click in the map or use the left mouse button and drag to create a rectangle")
             i18n["gis_zoomout"] = T("Zoom Out: click in the map or use the left mouse button and drag to create a rectangle")
             i18n["gis_geoLocate"] = T("Zoom to Current Location")

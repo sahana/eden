@@ -1045,11 +1045,10 @@ class S3OptionsFilter(S3FilterWidget):
         elif widget_type == "multiselect":
             if "multiselect-filter-widget" not in _class:
                 attr["_class"] = "%s multiselect-filter-widget" % _class
-            w = S3MultiSelectWidget(
-                    filter = opts.get("filter", False),
-                    header = opts.get("header", False),
-                    selectedList = opts.get("selectedList", 3),
-                )
+            w = S3MultiSelectWidget(filter = opts.get("filter", False),
+                                    header = opts.get("header", False),
+                                    selectedList = opts.get("selectedList", 3),
+                                    )
             widget = w(dummy_field, values, **attr)
         else:
             if "groupedopts-filter-widget" not in _class:

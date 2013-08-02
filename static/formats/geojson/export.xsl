@@ -37,6 +37,8 @@
     <s3:fields tables="gis_layer_shapefile" select=""/>
     <s3:fields tables="gis_layer_shapefile*" select="layer_id"/>
     <s3:fields tables="gis_theme_data" select="location_id,value"/>
+    <!-- Fix for Summary page allowing filtering by records without a Coalition -->
+    <s3:fields tables="vulnerability_risk_group" select="risk_id"/>
     <s3:fields tables="ANY" select="location_id,site_id"/>
 
     <xsl:param name="prefix"/>

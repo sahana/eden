@@ -14,7 +14,7 @@ from gluon.storage import Storage
 
 from s3.s3fields import S3Represent
 from s3.s3filter import S3OptionsFilter
-from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
+from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
 from s3.s3validators import IS_ADD_PERSON_WIDGET2, IS_LOCATION_SELECTOR2, IS_ONE_OF
 from s3.s3widgets import S3AddPersonWidget2, S3LocationSelectorWidget2
 
@@ -123,6 +123,7 @@ settings.gis.map_width = 1170
 settings.gis.simplify_tolerance = 0.0001
 
 # Add Person Widget
+settings.pr.request_dob = False
 settings.pr.request_gender = False
 
 # -----------------------------------------------------------------------------
@@ -446,23 +447,20 @@ def customize_org_organisation(**attr):
             crud_form = S3SQLCustomForm(
                 "name",
                 "logo",
-                S3SQLInlineComponentCheckbox(
+                S3SQLInlineComponentMultiSelectWidget(
                     "group",
                     label = T("Coalitions"),
                     field = "group_id",
-                    cols = 3,
                 ),
-                S3SQLInlineComponentCheckbox(
+                S3SQLInlineComponentMultiSelectWidget(
                     "sector",
                     label = T("Sectors"),
                     field = "sector_id",
-                    cols = 4,
                 ),
-                S3SQLInlineComponentCheckbox(
+                S3SQLInlineComponentMultiSelectWidget(
                     "service",
                     label = T("Services"),
                     field = "service_id",
-                    cols = 4,
                 ),
                 S3SQLInlineComponent(
                     "human_resource",
@@ -629,11 +627,10 @@ def customize_org_facility(**attr):
             s3db.org_site_org_group.group_id.label = ""
             crud_form = S3SQLCustomForm(
                 "name",
-                S3SQLInlineComponentCheckbox(
+                S3SQLInlineComponentMultiSelectWidget(
                     "facility_type",
                     label = T("Location Type"),
                     field = "facility_type_id",
-                    cols = 3,
                 ),
                 "organisation_id",
                 S3SQLInlineComponent(
@@ -962,68 +959,85 @@ def customize_vulnerability_risk(**attr):
         Customize vulnerability_risk controller
     """
 
-    s3db = current.s3db
-    tablename = "vulnerability_risk"
-    table = s3db[tablename]
-    table.location_id.label = "" # Gets replaced by widget
-    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
-    table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
-                                                         hide_lx=False,
-                                                         reverse_lx=True,
-                                                         polygons=True,
-                                                         #show_address=True,
-                                                         #show_postcode=True,
-                                                         )
+    s3 = current.response.s3
 
     # Custom PreP
-    s3 = current.response.s3
     standard_prep = s3.prep
     def custom_prep(r):
         # Call standard prep
         if callable(standard_prep):
             result = standard_prep(r)
 
+        s3db = current.s3db
+        tablename = "vulnerability_risk"
+        if r.interactive:
+            table = s3db[tablename]
+            field = table.location_id
+            field.label = "" # Gets replaced by widget
+            field.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
+            field.widget = S3LocationSelectorWidget2(levels=["L3"],
+                                                     hide_lx=False,
+                                                     reverse_lx=True,
+                                                     polygons=True,
+                                                     #show_address=True,
+                                                     #show_postcode=True,
+                                                     )
+
+            # Custom Crud Form
+            ltable = current.db.vulnerability_risk_group
+            ltable.group_id.label = ""
+            crud_form = S3SQLCustomForm(
+                "name",
+                "hazard_id",
+                S3SQLInlineComponent(
+                    "risk_group",
+                    label = T("Coalition"),
+                    fields = ["group_id"],
+                    multiple = False,
+                ),
+                "location_id",
+                "comments",
+            )
+
+            filter_widgets = [S3OptionsFilter("risk_group.group_id",
+                                              label=T("Coalition"),
+                                              represent="%(name)s",
+                                              widget="multiselect",
+                                              ),
+                              S3OptionsFilter("hazard_id",
+                                              label=T("Hazard Type"),
+                                              represent="%(name)s",
+                                              widget="multiselect",
+                                              ),
+                              ]
+
+            s3db.configure(tablename,
+                           crud_form = crud_form,
+                           filter_widgets = filter_widgets,
+                           filter_formstyle = filter_formstyle,
+                           )
+    
         if r.method == "summary":
             # Hide Open & Delete dataTable action buttons
             s3db.configure(tablename,
                            editable = False,
                            deletable = False,
                            )
+            # Filter out data not associated with any Coalition
+            from s3.s3resource import S3FieldSelector
+            group_filter = (S3FieldSelector("group.id") != None)
+            r.resource.add_filter(group_filter)
+
+        if r.representation== "geojson":
+            layer = current.request.get_vars.get("layer", None)
+            if not layer:
+                # Filter out data not associated with any Coalition
+                from s3.s3resource import S3FieldSelector
+                group_filter = (S3FieldSelector("group.id") != None)
+                r.resource.add_filter(group_filter)
+
         return True
     s3.prep = custom_prep
-
-    # Custom Crud Form
-    current.db.vulnerability_risk_group.group_id.label = ""
-    crud_form = S3SQLCustomForm(
-        "name",
-        "hazard_id",
-        S3SQLInlineComponent(
-            "risk_group",
-            label = T("Coalition"),
-            fields = ["group_id"],
-            multiple = False,
-        ),
-        "location_id",
-        "comments",
-    )
-
-    filter_widgets = [S3OptionsFilter("risk_group.group_id",
-                                      label=T("Coalition"),
-                                      represent="%(name)s",
-                                      widget="multiselect",
-                                      ),
-                      S3OptionsFilter("hazard_id",
-                                      label=T("Hazard Type"),
-                                      represent="%(name)s",
-                                      widget="multiselect",
-                                      ),
-                      ]
-
-    s3db.configure(tablename,
-                   crud_form = crud_form,
-                   filter_widgets = filter_widgets,
-                   filter_formstyle = filter_formstyle,
-                   )
 
     attr["hide_filter"] = False
 

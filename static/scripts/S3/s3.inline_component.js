@@ -24,19 +24,21 @@ $(function() {
 
     // Read JSON from real_input, decode and store as data object
     var inline_deserialize = function(formname) {
-        var real_input = '#' + inline_get_field(formname);
-        var data_json = $(real_input).val();
+        var selector = inline_get_field(formname);
+        var real_input = $('#' + selector);
+        var data_json = real_input.val();
         var data = JSON.parse(data_json);
-        $(real_input).data('data', data);
+        real_input.data('data', data);
         return data;
     };
 
     // Serialize the data object as JSON and store into real_input
     var inline_serialize = function(formname) {
-        var real_input = '#' + inline_get_field(formname);
-        var data = $(real_input).data('data');
+        var selector = inline_get_field(formname);
+        var real_input = $('#' + selector);
+        var data = real_input.data('data');
         var data_json = JSON.stringify(data);
-        $(real_input).val(data_json);
+        real_input.val(data_json);
         return data_json;
     };
 
@@ -708,9 +710,9 @@ $(function() {
             // Read current data from real input
             var data = inline_deserialize(formname);
             var _data = data['data'];
-            var item;
+            var i, item;
             for (var prop in _data) {
-                var i = _data[prop];
+                i = _data[prop];
                 if (i.hasOwnProperty(fieldname) && i[fieldname]['value'] == value) {
                     item = i;
                     break;
@@ -734,4 +736,61 @@ $(function() {
         });
     };
     inline_checkbox_events();
+
+    // Used by S3SQLInlineComponentMultiSelectWidget
+    var inline_multiselect_events = function() {
+        // Listen for changes on all Inline MultiSelect Widgets
+        $('.multiselect-widget').change(function() {
+            var that = $(this);
+            var values = that.val();
+            var names = that.attr('id').split('-');
+            var formname = names[0];
+            var fieldname = names[1];
+            // Read current data from real input
+            var data = inline_deserialize(formname);
+            var _data = data['data'];
+            var old_values = [];
+            var i;
+            for (var prop in _data) {
+                i = _data[prop];
+                if (i.hasOwnProperty(fieldname)) {
+                    old_values.push(i[fieldname]['value'].toString());
+                }
+            }
+            // Modify the Data
+            var new_items = $(values).not(old_values).get();
+            var item,
+                value,
+                len = new_items.length;
+            if (len) {
+                var label;
+                for (i = 0; i < len; i++) {
+                    item = {};
+                    value = new_items[i];
+                    label = that.find('option[value=' + value + ']').html();
+                    item[fieldname] = {'text': label,
+                                       'value': value
+                                       };
+                    item['_changed'] = true;
+                    _data.push(item);
+                }
+            }
+            var old_items = $(old_values).not(values).get();
+            len = old_items.length;
+            if (len) {
+                for (i = 0; i < len; i++) {
+                    value = old_items[i];
+                    for (var prop in _data) {
+                        item = _data[prop];
+                        if ((item.hasOwnProperty(fieldname)) && (item[fieldname]['value'] == value)) {
+                            item['_delete'] = true;
+                        }
+                    }
+                }
+            }
+            // Write data back to real input
+            inline_serialize(formname);
+        });
+    };
+    inline_multiselect_events();
 });

@@ -1865,10 +1865,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
         else:
             data = value
 
-        NONE = current.messages["NONE"]
         if data["data"] == []:
             # Don't render a subform for NONE
-            return NONE
+            return current.messages["NONE"]
 
         fields = data["fields"]
         items = data["data"]
@@ -2650,19 +2649,11 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
             raise SyntaxError("No resource structure information")
 
         T = current.T
-        s3db = current.s3db
         opts = self.options
-
-        cols = opts.get("cols", 1)
 
         script = opts.get("script", None)
         if script:
             current.response.s3.jquery_ready.append(script)
-        
-        # Get the component resource
-        resource = self.resource
-        component_name = data["component"]
-        component = resource.components[component_name]
 
         # @ToDo: Render read-only if self.readonly
 
@@ -2670,9 +2661,104 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
         # component
 
         # Get the list of available options
-        # @ToDo: Support lookups to tables which don't use 'name' (e.g. 'tag')
+        options = self._options(data)
+
+        formname = self._formname()
+        fieldname = data["field"]
+        field_name = "%s-%s" % (formname, fieldname)
+
+        if not options:
+            widget = T("No options currently available")
+        else:
+            # Translate the Options?
+            translate = False
+            s3db = current.s3db
+            if hasattr(s3db, fieldname):
+                reusable_field = s3db.get(fieldname)
+                if reusable_field:
+                    represent = reusable_field.attr.represent
+                    if hasattr(represent, "translate"):
+                        translate = represent.translate
+
+            # Render the options
+            cols = opts.get("cols", 1)
+            count = len(options)
+            num_of_rows = count / cols
+            if count % cols:
+                num_of_rows += 1
+
+            table = [[] for row in range(num_of_rows)]
+
+            row_index = 0
+            col_index = 0
+
+            for id in options:
+                input_id = "id-%s-%s-%s" % (field_name, row_index, col_index)
+                option = options[id]
+                v = option["name"]
+                if translate:
+                    v = T(v)
+                label = LABEL(v, _for=input_id)
+                title = option.get("help", None)
+                if title:
+                    # Add help tooltip
+                    label["_title"] = title
+                widget = TD(INPUT(_disabled = not option["editable"],
+                                  _id=input_id,
+                                  _name=field_name,
+                                  _type="checkbox",
+                                  _value=id,
+                                  hideerror=True,
+                                  value=option["selected"],
+                                  ),
+                            label,
+                            )
+                table[row_index].append(widget)
+                row_index += 1
+                if row_index >= num_of_rows:
+                    row_index = 0
+                    col_index += 1
+
+            widget = TABLE(table,
+                           _class="checkboxes-widget-s3",
+                           )
+
+        # Real input: a hidden text field to store the JSON data
+        real_input = "%s_%s" % (self.resource.tablename, field_name)
+        default = dict(_type = "text",
+                       _value = value,
+                       requires=lambda v: (v, None))
+        attr = StringWidget._attributes(field, default, **attributes)
+        attr["_class"] = attr["_class"] + " hide"
+        attr["_id"] = real_input
+
+        # Render output HTML
+        output = DIV(INPUT(**attr),
+                     widget,
+                     _id=self._formname(separator="-"),
+                     _field=real_input,
+                     _class="inline-checkbox",
+                     _name="%s_widget" % field_name,
+                     )
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def _options(self, data):
+        """
+            Build the Options
+        """
+
+        s3db = current.s3db
+        opts = self.options
+
+        # Get the component resource
+        resource = self.resource
+        component_name = data["component"]
+        component = resource.components[component_name]
         table = component.table
 
+        # @ToDo: Support lookups to tables which don't use 'name' (e.g. 'tag')
         option_help = opts.get("option_help", None)
         if option_help:
             fields = ["id", "name", option_help]
@@ -2780,111 +2866,49 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                                     orderby=table.name,
                                     as_rows=True)
 
-        fieldname = data["field"]
-        formname = self._formname()
-        field_name = "%s-%s" % (formname, fieldname)
-
         if not rows:
-            widget = T("No options currently available")
-        else:
-            if component.link:
-                # For link-table components, check the link table permissions
-                # rather than the component
-                component = component.link
-            creatable = component.permit("create", component.tablename)
-            options = OrderedDict()
-            for r in rows:
-                options[r.id] = dict(name=r.name,
-                                     selected=False,
-                                     editable=creatable)
-                if option_help:
-                    options[r.id]["help"] = r[option_help]
+            return None
 
-            # Which ones are currently selected?
-            items = data["data"]
-            prefix = component.prefix
-            name = component.name
-            audit = component.audit
-            for i in xrange(len(items)):
-                item = items[i]
-                # Get the item record ID
-                if "_id" in item:
-                    record_id = item["_id"]
-                    # Check permissions to edit this item
-                    editable = not "_readonly" in item
-                    audit("read", prefix, name,
-                          record=record_id, representation="html")
-                    if fieldname in item:
-                        id = item[fieldname]["value"]
-                        try:
-                            options[id].update(selected=True,
-                                               editable=editable)
-                        except:
-                            # e.g. Theme filtered by Sector
-                            current.session.error = \
-                                T("Invalid data: record %s not accessible in table %s" % (id, table))
-                            redirect(URL(args=None, vars=None))
+        if component.link:
+            # For link-table components, check the link table permissions
+            # rather than the component
+            component = component.link
+        creatable = component.permit("create", component.tablename)
+        options = OrderedDict()
+        for r in rows:
+            options[r.id] = dict(name=r.name,
+                                 selected=False,
+                                 editable=creatable)
+            if option_help:
+                options[r.id]["help"] = r[option_help]
 
-            # Render the options
-            count = len(options)
-            num_of_rows = count / cols
-            if count % cols:
-                num_of_rows += 1
+        # Which ones are currently selected?
+        fieldname = data["field"]
+        items = data["data"]
+        prefix = component.prefix
+        name = component.name
+        audit = component.audit
+        for i in xrange(len(items)):
+            item = items[i]
+            # Get the item record ID
+            if "_id" in item:
+                record_id = item["_id"]
+                # Check permissions to edit this item
+                editable = not "_readonly" in item
+                audit("read", prefix, name,
+                      record=record_id, representation="html")
+                if fieldname in item:
+                    id = item[fieldname]["value"]
+                    try:
+                        options[id].update(selected=True,
+                                           editable=editable)
+                    except:
+                        # e.g. Theme filtered by Sector
+                        current.session.error = \
+                            T("Invalid data: record %s not accessible in table %s" % (id, table))
+                        redirect(URL(args=None, vars=None))
 
-            table = [[] for row in range(num_of_rows)]
-
-            row_index = 0
-            col_index = 0
-
-            for id in options:
-                input_id = "id-%s-%s-%s" % (field_name, row_index, col_index)
-                option = options[id]
-                label = LABEL(T(option["name"]),
-                              _for=input_id,
-                              )
-                title = option.get("help", None)
-                if title:
-                    # Add help tooltip
-                    label["_title"] = title
-                widget = TD(INPUT(_disabled= not option["editable"],
-                                  _id=input_id,
-                                  _name=field_name,
-                                  _type="checkbox",
-                                  _value=id,
-                                  hideerror=True,
-                                  value=option["selected"],
-                                  ),
-                            label,
-                            )
-                table[row_index].append(widget)
-                row_index += 1
-                if row_index >= num_of_rows:
-                    row_index = 0
-                    col_index += 1
-
-            widget = TABLE(table,
-                           _class="checkboxes-widget-s3",
-                           )
-
-        # Real input: a hidden text field to store the JSON data
-        real_input = "%s_%s" % (resource.tablename, field_name)
-        default = dict(_type = "text",
-                       _value = value,
-                       requires=lambda v: (v, None))
-        attr = StringWidget._attributes(field, default, **attributes)
-        attr["_class"] = attr["_class"] + " hide"
-        attr["_id"] = real_input
-
-        # Render output HTML
-        output = DIV(INPUT(**attr),
-                     widget,
-                     _id=self._formname(separator="-"),
-                     _field=real_input,
-                     _class="inline-checkbox",
-                     _name="%s_widget" % field_name,
-                     )
-
-        return output
+        return options
 
     # -------------------------------------------------------------------------
     def represent(self, value):
@@ -2897,11 +2921,6 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
             @return: the read-only representation of this element as
                       string or HTML helper
         """
-
-        if "cols" in self.options:
-            cols = self.options.cols
-        else:
-            cols = 4
 
         if isinstance(value, basestring):
             data = json.loads(value)
@@ -2939,5 +2958,146 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                               )),
                      #_class="embeddedComponent"
                      )
+
+# =============================================================================
+class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
+    """
+        Form element for an inline-component-form
+
+        This form element allows CRUD of multi-record-components within
+        the main record form. It renders a single hidden text field with a
+        JSON representation of the component records, and a widget which
+        facilitates client-side manipulation of this JSON.
+        This widget is a SELECT MULTIPLE, so is suitable for
+        simple many<>many link tables ('tagging'). It does NOT support link
+        tables with additional fields.
+
+        The widget uses the s3.inline_component.js script for
+        client-side manipulation of the JSON data.
+        During accept(), the component gets updated according to the JSON
+        returned.
+    """
+
+    # -------------------------------------------------------------------------
+    def __call__(self, field, value, **attributes):
+        """
+            Widget method for this form element. Renders a SELECT MULTIPLE with
+            all available options.
+            This widget uses s3.inline_component.js to facilitate
+            manipulation of the entries.
+
+            @param field: the Field for this form element
+            @param value: the current value for this field
+            @param attributes: keyword attributes for this widget
+
+            @ToDo: Add ability to add new options to the list
+        """
+
+        if value is None:
+            value = field.default
+        if isinstance(value, basestring):
+            data = json.loads(value)
+        else:
+            data = value
+            value = json.dumps(value)
+        if data is None:
+            raise SyntaxError("No resource structure information")
+
+        T = current.T
+
+        script = self.options.get("script", None)
+        if script:
+            current.response.s3.jquery_ready.append(script)
+
+        # @ToDo: Render read-only if self.readonly
+
+        # @ToDo: Hide completely if the user is not permitted to read this
+        # component
+
+        # Get the list of available options
+        options = self._options(data)
+
+        formname = self._formname()
+        fieldname = data["field"]
+        field_name = "%s-%s" % (formname, fieldname)
+
+        if not options:
+            widget = T("No options currently available")
+        else:
+            # Translate the Options?
+            translate = False
+            s3db = current.s3db
+            if hasattr(s3db, fieldname):
+                reusable_field = s3db.get(fieldname)
+                if reusable_field:
+                    represent = reusable_field.attr.represent
+                    if hasattr(represent, "translate"):
+                        translate = represent.translate
+            # Render the options
+            opts = []
+            vals = []
+            oappend = opts.append
+            for id in options:
+                option = options[id]
+                v = option["name"]
+                if translate:
+                    v = T(v)
+                oappend(OPTION(v,
+                               _value=id,
+                               _disabled = not option["editable"]))
+                if option["selected"]:
+                    vals.append(id)
+
+            widget = SELECT(*opts,
+                            value=vals,
+                            _id=field_name,
+                            _name=field_name,
+                            _multiple=True,
+                            _class="multiselect-widget",
+                            _size=5 # @ToDo: Make this configurable?
+                            )
+            # jQueryUI widget Options
+            opts = self.options
+            filter = opts.get("filter", False)
+            header = opts.get("header", False)
+            selectedList = opts.get("selectedList", 3)
+            noneSelectedText = "Select"
+            if header is True:
+                header = '''checkAllText:'%s',uncheckAllText:"%s"''' % \
+                    (T("Check all"),
+                     T("Uncheck all"))
+            elif header is False:
+                header = '''header:false'''
+            else:
+                header = '''header:"%s"''' % self.header
+            script = '''$('#%s').multiselect({selectedText:'%s',%s,height:300,minWidth:0,selectedList:%s,noneSelectedText:'%s'})''' % \
+                (field_name,
+                 T("# selected"),
+                 header,
+                 selectedList,
+                 T(noneSelectedText))
+            if filter:
+                script = '''%s.multiselectfilter()''' % script
+            #current.response.s3.jquery_ready.append(script)
+
+        # Real input: a hidden text field to store the JSON data
+        real_input = "%s_%s" % (self.resource.tablename, field_name)
+        default = dict(_type = "text",
+                       _value = value,
+                       requires=lambda v: (v, None))
+        attr = StringWidget._attributes(field, default, **attributes)
+        attr["_class"] = attr["_class"] + " hide"
+        attr["_id"] = real_input
+
+        # Render output HTML
+        output = DIV(INPUT(**attr),
+                     widget,
+                     _id=self._formname(separator="-"),
+                     _field=real_input,
+                     #_class="inline-multiselect",
+                     _name="%s_widget" % field_name,
+                     )
+
+        return output
 
 # END =========================================================================
