@@ -3056,7 +3056,8 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
                             _class="multiselect-widget",
                             _size=5 # @ToDo: Make this configurable?
                             )
-            # jQueryUI widget Options
+            # jQueryUI widget
+            # (this section could be made optional)
             opts = self.options
             filter = opts.get("filter", False)
             header = opts.get("header", False)
@@ -3078,7 +3079,7 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
                  T(noneSelectedText))
             if filter:
                 script = '''%s.multiselectfilter()''' % script
-            #current.response.s3.jquery_ready.append(script)
+            current.response.s3.jquery_ready.append(script)
 
         # Real input: a hidden text field to store the JSON data
         real_input = "%s_%s" % (self.resource.tablename, field_name)
