@@ -112,47 +112,58 @@ $(function() {
         }
 
         // Collect the input data
-        var fields = data['fields'];
-        var fieldname;
-        var element;
-        var input;
-        var value;
-        var cssclass;
-        var intvalue;
+        var fieldname,
+            element,
+            input,
+            value,
+            cssclass,
+            intvalue,
+            fields = data['fields'];
         for (var i=0; i < fields.length; i++) {
             fieldname = fields[i]['name'];
             element = '#sub_' +
                       formname + '_' + formname + '_i_' +
                       fieldname + '_edit_' + rowindex;
             input = $(element);
-            value = input.val();
-            if (input.attr('type') == 'file') {
-                // Store the upload at the end of the form
-                var form = input.closest('form');
-                var cloned = input.clone();
-                var upload_id = 'upload_' + formname + '_' + fieldname + '_' + rowindex;
-                $('#' + upload_id).remove();
-                if (value.match(/fakepath/)) {
-                    // IE, etc: Remove 'fakepath' from filename
-                    value = value.replace(/(c:\\)*fakepath\\/i, '');
-                }
-                // Clone the Input ready for any additional files
-                cloned.insertAfter(input);
-                // We move the original input as it doesn't contain the file otherwise on IE, etc
-                // http://stackoverflow.com/questions/415483/clone-a-file-input-element-in-javascript
-                input.css({display: 'none'})
-                     .attr('id', upload_id)
-                     .attr('name', upload_id)
-                     .appendTo(form);
-            } else {
-                cssclass = input.attr('class');
-                if (cssclass == 'generic-widget') {
-                    // Reference values need to be ints for S3Represent to find a match in theset
-                    // - ensure we don't do this to dates though!
-                    intvalue = parseInt(value, 10);
-                    if (!isNaN(intvalue)) {
-                        value = intvalue;
+            if (input.length) {
+                // Field is Writable
+                value = input.val();
+                if (input.attr('type') == 'file') {
+                    // Store the upload at the end of the form
+                    var form = input.closest('form');
+                    var cloned = input.clone();
+                    var upload_id = 'upload_' + formname + '_' + fieldname + '_' + rowindex;
+                    $('#' + upload_id).remove();
+                    if (value.match(/fakepath/)) {
+                        // IE, etc: Remove 'fakepath' from filename
+                        value = value.replace(/(c:\\)*fakepath\\/i, '');
                     }
+                    // Clone the Input ready for any additional files
+                    cloned.insertAfter(input);
+                    // We move the original input as it doesn't contain the file otherwise on IE, etc
+                    // http://stackoverflow.com/questions/415483/clone-a-file-input-element-in-javascript
+                    input.css({display: 'none'})
+                         .attr('id', upload_id)
+                         .attr('name', upload_id)
+                         .appendTo(form);
+                } else {
+                    cssclass = input.attr('class');
+                    if (cssclass == 'generic-widget') {
+                        // Reference values need to be ints for S3Represent to find a match in theset
+                        // - ensure we don't do this to dates though!
+                        intvalue = parseInt(value, 10);
+                        if (!isNaN(intvalue)) {
+                            value = intvalue;
+                        }
+                    }
+                }
+            } else {
+                // Field is Read-only
+                if (typeof original != 'undefined') {
+                    // Keep current value
+                    value = original[fieldname]['value'];
+                } else {
+                    value = '';
                 }
             }
             row[fieldname] = value;
@@ -191,6 +202,7 @@ $(function() {
         }
 
         // Request validation of the row
+        // @ToDo: Skip read-only fields (especially Virtual)
         var row_json = JSON.stringify(row);
         var response = null;
         $.ajaxS3({
@@ -213,11 +225,19 @@ $(function() {
             has_errors = true;
             inline_append_error(formname, rowindex, null, response['_error']);
         }
+        var item,
+            error;
         for (field in response) {
-            var item = response[field];
+            item = response[field];
             if (item.hasOwnProperty('_error')) {
-                inline_append_error(formname, rowindex, field, item['_error']);
-                has_errors = true;
+                error = item['_error'];
+                if (error == "invalid field") {
+                    // Virtual Field - not a real error
+                    item['text'] = item['value'];
+                } else {
+                    inline_append_error(formname, rowindex, field, error);
+                    has_errors = true;
+                }
             }
         }
 

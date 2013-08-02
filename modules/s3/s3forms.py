@@ -1205,7 +1205,27 @@ class S3SQLFormElement(object):
                                          dummy fields.
         """
 
-        if skip_post_validation and \
+        if not hasattr(field, "type"):
+            # Virtual Field
+            field = Storage(comment=None,
+                            type="string",
+                            length=255,
+                            unique=False,
+                            uploadfolder=None,
+                            autodelete=False,
+                            label="", # @ToDo?
+                            writable=False,
+                            readable=True,
+                            default=None,
+                            update=None,
+                            compute=None,
+                            represent=lambda v: v or "",
+                            )
+            requires = None
+            widget = None
+            required = False
+            notnull = False
+        elif skip_post_validation and \
            current.request.env.request_method == "POST":
             requires = SKIP_POST_VALIDATION(field.requires)
             widget = None
@@ -1541,6 +1561,12 @@ class S3SQLInlineComponent(S3SQLSubForm):
             if pkey not in fields:
                 fields.insert(0, pkey)
 
+            # Support read-only Virtual Fields
+            if "virtual_fields" in self.options:
+                virtual_fields = self.options["virtual_fields"]
+            else:
+                virtual_fields = []
+
             if "orderby" in self.options:
                 orderby = self.options["orderby"]
             else:
@@ -1552,7 +1578,12 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 if f is not None:
                     component.build_query(filter=f)
 
-                data = component.select(fields,
+                if "extra_fields" in self.options:
+                    extra_fields = self.options["extra_fields"]
+                else:
+                    extra_fields = []
+                all_fields = fields + virtual_fields + extra_fields
+                data = component.select(all_fields,
                                         limit=None,
                                         represent=True,
                                         raw_data=True,
@@ -1560,9 +1591,19 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
                 records = data["rows"]
                 rfields = data["rfields"]
+
+                if extra_fields:
+                    for f in rfields:
+                        if f.fname in extra_fields:
+                            rfields.remove(f)
+
             else:
                 records = []
                 rfields = [component.resolve_selector(s) for s in fields]
+                for f in virtual_fields:
+                    rfield = component.resolve_selector(f[1])
+                    rfield.label = f[0]
+                    rfields.append(rfield)
 
             headers = [{"name": rfield.fname,
                         "label": s3_unicode(rfield.label)}
@@ -1571,28 +1612,32 @@ class S3SQLInlineComponent(S3SQLSubForm):
             items = []
             permit = resource.permit
             for record in records:
-                
+
                 row = record["_row"]
                 row_id = row[str(table._id)]
-                
+
                 item = {"_id": row_id}
-                
+
                 permitted = permit("update", tablename, row_id)
                 if not permitted:
                     item["_readonly"] = True
 
                 for rfield in rfields:
-                    
+
                     fname = rfield.fname
                     if fname == pkey:
                         continue
-                    
+
                     colname = rfield.colname
-                    value = rfield.field.formatter(row[colname])
+                    if hasattr(rfield.field, "formatter"):
+                        value = rfield.field.formatter(row[colname])
+                    else:
+                        # Virtual Field
+                        value = row[colname]
                     text = s3_unicode(record[colname])
-                    
+
                     item[fname] = {"value": value, "text": text}
-                    
+
                 items.append(item)
 
             validate = self.options.get("validate", None)
@@ -1991,7 +2036,10 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     if f[0] != "_" and d and isinstance(d, dict):
 
                         field = table[f]
-                        if table[f].type == "upload":
+                        if not hasattr(field, "type"):
+                            # Virtual Field
+                            continue
+                        elif table[f].type == "upload":
                             # Find, rename and store the uploaded file
                             rowindex = item.get("_index", None)
                             if rowindex is not None:

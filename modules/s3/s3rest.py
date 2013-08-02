@@ -267,12 +267,17 @@ class S3RequestManager(object):
                         if hasattr(r, "other") and \
                             hasattr(r.other, "set_self_id"):
                             r.other.set_self_id(self_id)
-            try:
-                value, error = field.validate(value)
-            except:
-                return (None, None)
+
+            if not hasattr(field, "validate"):
+                # Virtual Field
+                return (value, None)
             else:
-                return (value, error)
+                try:
+                    value, error = field.validate(value)
+                except:
+                    return (None, None)
+                else:
+                    return (value, error)
 
     # -------------------------------------------------------------------------
     def represent(self, field,

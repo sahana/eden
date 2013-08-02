@@ -268,7 +268,7 @@ def customize_project_activity(**attr):
             fields = ["organisation_id"],
         ),
         "comments",
-    ) 
+    )
 
     filter_widgets = [S3OptionsFilter("activity_group.group_id",
                                       label=T("Coalition"),
@@ -305,9 +305,6 @@ def customize_event_incident_report(**attr):
     """
         Customize project_project controller
     """
-
-    # Remove rheader
-    attr["rheader"] = None
 
     s3db = current.s3db
     tablename = "event_incident_report"
@@ -357,7 +354,7 @@ def customize_event_incident_report(**attr):
         "location_id",
         "person_id",
         "comments",
-    ) 
+    )
 
     filter_widgets = [S3OptionsFilter("incident_report_group.group_id",
                                       label=T("Coalition"),
@@ -379,6 +376,9 @@ def customize_event_incident_report(**attr):
 
     attr["hide_filter"] = False
 
+    # Remove rheader
+    attr["rheader"] = None
+
     return attr
 
 settings.ui.customize_event_incident_report = customize_event_incident_report
@@ -389,7 +389,7 @@ settings.ui.customize_event_incident_report = customize_event_incident_report
 def org_facility_types(row):
     """
         The Types of the Facility
-        - requried since we can't have a component within an Inline Component
+        - required since we can't have a component within an Inline Component
     """
 
     if hasattr(row, "org_facility"):
@@ -400,12 +400,13 @@ def org_facility_types(row):
         # not available
         return current.messages["NONE"]
 
+    s3db = current.s3db
     table = s3db.org_facility_type
     ltable = s3db.org_site_facility_type
     query = (ltable.site_id == site_id) & \
             (ltable.facility_type_id == table.id)
     rows = current.db(query).select(table.name)
-    return "".join([r.name for r in rows])
+    return ",".join([r.name for r in rows])
 
 # -----------------------------------------------------------------------------
 def customize_org_organisation(**attr):
@@ -429,16 +430,18 @@ def customize_org_organisation(**attr):
             s3db = current.s3db
             ftable = s3db.org_facility
             ftable.location_id.label = T("Address")
-            ftable.location_id.widget = None
             # We don't have a widget capable of creating/editing Locations inline
+            ftable.location_id.widget = None
+            ftable.location_id.writable = False
             s3db.configure("org_facility",
-                           editable=False,
+                           #editable=False,
                            insertable=False,
                            )
             # We can't include components in an Inline Component
-            # Virtual fields also don't work
-            #from gluon import Field
-            #ftable.facility_types = Field.Lazy(org_facility_types)
+            # => use a readonly virtual field instead
+            from gluon import Field
+            ftable.facility_types = Field.Lazy(org_facility_types)
+
             hrtable = s3db.hrm_human_resource
             hrtable.person_id.widget = None
             hrtable.site_id.label = T("Location")
@@ -478,9 +481,12 @@ def customize_org_organisation(**attr):
                     fields = ["name", 
                               # Only fields within the table are supported
                               #"facility_type.facility_type_id",
-                              #"facility_types",
                               "location_id",
                               ],
+                    # Fields needed to load for Virtual Fields
+                    extra_fields = ["site_id"],
+                    virtual_fields = [(T("Facility Type"), "facility_types"),
+                                      ],
                 ),
                 S3SQLInlineComponent(
                     "resource",
@@ -491,7 +497,7 @@ def customize_org_organisation(**attr):
                               ],
                 ),
                 "comments",
-            ) 
+            )
 
             filter_widgets = [S3OptionsFilter("group_membership.group_id",
                                               label=T("Coalition"),
@@ -650,7 +656,7 @@ def customize_org_facility(**attr):
                               ],
                 ),
                 "comments",
-            ) 
+            )
 
             filter_widgets = [S3OptionsFilter("site_org_group.group_id",
                                               label=T("Coalition"),
