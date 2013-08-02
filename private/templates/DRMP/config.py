@@ -1243,6 +1243,192 @@ def render_posts(listid, resource, rfields, record, **attr):
 s3.render_posts = render_posts
 
 # -----------------------------------------------------------------------------
+def render_profile_posts(listid, resource, rfields, record, **attr):
+    """
+        Custom dataList item renderer for CMS Posts on the Profile pages
+
+        @param listid: the HTML ID for this list
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+        @param attr: additional HTML attributes for the item
+    """
+
+    pkey = "cms_post.id"
+
+    # Construct the item ID
+    if pkey in record:
+        record_id = record[pkey]
+        item_id = "%s-%s" % (listid, record_id)
+    else:
+        # template
+        item_id = "%s-[id]" % listid
+
+    item_class = "thumbnail"
+
+    raw = record._row
+    series = record["cms_post.series_id"]
+    date = record["cms_post.date"]
+    body = record["cms_post.body"]
+    event_id = raw["event_event_post.event_id"]
+    location = record["cms_post.location_id"]
+    location_id = raw["cms_post.location_id"]
+    location_url = URL(c="gis", f="location", args=[location_id, "profile"])
+    author = record["cms_post.created_by"]
+    author_id = raw["cms_post.created_by"]
+    organisation = record["auth_user.organisation_id"]
+    organisation_id = raw["auth_user.organisation_id"]
+    org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
+
+    db = current.db
+    s3db = current.s3db
+    ltable = s3db.pr_person_user
+    ptable = db.pr_person
+    query = (ltable.user_id == author_id) & \
+            (ltable.pe_id == ptable.pe_id)
+    row = db(query).select(ptable.id,
+                           limitby=(0, 1)
+                           ).first()
+    if row:
+        person_url = URL(c="hrm", f="person", args=[row.id])
+    else:
+        person_url = "#"
+    author = A(author,
+               _href=person_url,
+               )
+
+    # Use Personal Avatar
+    # @ToDo: Optimise by not doing DB lookups (especially duplicate) within render, but doing these in the bulk query
+    #avatar = s3_avatar_represent(author_id,
+    #                             _class="media-object")
+    #avatar = A(avatar,
+    #           _href=person_url,
+    #           _class="pull-left",
+    #           )
+
+    # Use Organisation Logo
+    otable = db.org_organisation
+    row = db(otable.id == organisation_id).select(otable.logo,
+                                                  limitby=(0, 1)
+                                                  ).first()
+    if row and row.logo:
+        logo = URL(c="default", f="download", args=[row.logo])
+    else:
+        logo = ""
+    avatar = IMG(_src=logo,
+                 _height=50,
+                 _width=50,
+                 #_style="padding-right:5px;",
+                 _class="media-object")
+    avatar = A(avatar,
+               _href=org_url,
+               _class="pull-left",
+               )
+
+    # Edit Bar
+    permit = current.auth.s3_has_permission
+    table = db.cms_post
+    if permit("update", table, record_id=record_id):
+        T = current.T
+        vars = {"refresh": listid,
+                "record": record_id,
+                "~.series_id$name": series,
+                }
+        f = current.request.function
+        if f == "event" and event_id:
+            vars["(event)"] = event_id
+        if f == "location" and location_id:
+            vars["(location)"] = location_id
+        edit_btn = A(I(" ", _class="icon icon-edit"),
+                     _href=URL(c="cms", f="post",
+                               args=[record_id, "update.popup"],
+                               vars=vars),
+                     _class="s3_modal",
+                     _title=T("Edit %(type)s") % dict(type=T(series)),
+                     )
+    else:
+        edit_btn = ""
+    if permit("delete", table, record_id=record_id):
+        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+                       _class="dl-item-delete",
+                       )
+    else:
+        delete_btn = ""
+    edit_bar = DIV(edit_btn,
+                   delete_btn,
+                   _class="edit-bar fright",
+                   )
+
+    # Dropdown of available documents
+    documents = raw["doc_document.file"]
+    if documents:
+        if not isinstance(documents, list):
+            documents = [documents]
+        doc_list = UL(_class="dropdown-menu",
+                      _role="menu",
+                      )
+        retrieve = db.doc_document.file.retrieve
+        for doc in documents:
+            try:
+                doc_name = retrieve(doc)[0]
+            except IOError:
+                doc_name = current.messages["NONE"]
+            doc_url = URL(c="default", f="download",
+                          args=[doc])
+            doc_item = LI(A(I(_class="icon-file"),
+                            " ",
+                            doc_name,
+                            _href=doc_url,
+                            ),
+                          _role="menuitem",
+                          )
+            doc_list.append(doc_item)
+        docs = DIV(A(I(_class="icon-paper-clip"),
+                     SPAN(_class="caret"),
+                     _class="btn dropdown-toggle",
+                     _href="#",
+                     **{"_data-toggle": "dropdown"}
+                     ),
+                   doc_list,
+                   _class="btn-group attachments dropdown pull-right",
+                   )
+    else:
+        docs = ""
+
+    # Render the item
+    class SMALL(DIV):
+        tag = "small"
+
+    item = DIV(DIV(DIV(avatar,
+                       P(SMALL(" ", author, " ",
+                               A(organisation,
+                                 _href=org_url,
+                                 _class="card-organisation",
+                                 ),
+                               ),
+                         _class="citation"),
+                       _class="span1"),
+                   DIV(SPAN(A(location,
+                              _href=location_url,
+                              ),
+                            _class="location-title"),
+                       " ",
+                       SPAN(date,
+                            _class="date-title"),
+                       edit_bar,
+                       P(body,
+                         _class="card_comments"),
+                       docs,
+                       _class="span5 card-details"),
+                   _class="row",
+                   ),
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
+
+# -----------------------------------------------------------------------------
 def render_projects(listid, resource, rfields, record, **attr):
     """
         Custom dataList item renderer for Projects on the Profile pages
@@ -2252,7 +2438,7 @@ def customize_event_event(**attr):
                                      layer = "Alerts",
                                      # provided by Catalogue Layer
                                      #marker = "alert",
-                                     list_layout = render_posts,
+                                     list_layout = render_profile_posts,
                                      )
                 incidents_widget = dict(label = "Incidents",
                                         title_create = "Add New Incident",
@@ -2265,7 +2451,7 @@ def customize_event_event(**attr):
                                         layer = "Incidents",
                                         # provided by Catalogue Layer
                                         #marker = "incident",
-                                        list_layout = render_posts,
+                                        list_layout = render_profile_posts,
                                         )
                 assessments_widget = dict(label = "Assessments",
                                           title_create = "Add New Assessment",
@@ -2278,7 +2464,7 @@ def customize_event_event(**attr):
                                           layer = "Assessments",
                                           # provided by Catalogue Layer
                                           #marker = "assessment",
-                                          list_layout = render_posts,
+                                          list_layout = render_profile_posts,
                                           )
                 activities_widget = dict(label = "Activities",
                                          title_create = "Add New Activity",
@@ -2291,7 +2477,7 @@ def customize_event_event(**attr):
                                          layer = "Activities",
                                          # provided by Catalogue Layer
                                          #marker = "activity",
-                                         list_layout = render_posts,
+                                         list_layout = render_profile_posts,
                                          )
                 reports_widget = dict(label = "Reports",
                                       title_create = "Add New Report",
@@ -2304,7 +2490,7 @@ def customize_event_event(**attr):
                                       layer = "Reports",
                                       # provided by Catalogue Layer
                                       #marker = "report",
-                                      list_layout = render_posts,
+                                      list_layout = render_profile_posts,
                                       )
                 #comments_widget = dict(label = "Comments",
                 #                       type = "comments",
@@ -2524,7 +2710,7 @@ def customize_gis_location(**attr):
                                         layer = "Incidents",
                                         # provided by Catalogue Layer
                                         #marker = "incident",
-                                        list_layout = render_posts,
+                                        list_layout = render_profile_posts,
                                         )
                 reports_widget = dict(label = "Reports",
                                       title_create = "Add New Report",
@@ -2537,7 +2723,7 @@ def customize_gis_location(**attr):
                                       layer = "Reports",
                                       # provided by Catalogue Layer
                                       #marker = "report",
-                                      list_layout = render_posts,
+                                      list_layout = render_profile_posts,
                                       )
                 projects_widget = dict(label = "Projects",
                                        title_create = "Add New Project",
@@ -2560,7 +2746,7 @@ def customize_gis_location(**attr):
                                          layer = "Activities",
                                          # provided by Catalogue Layer
                                          #marker = "activity",
-                                         list_layout = render_posts,
+                                         list_layout = render_profile_posts,
                                          )
                 name = location.name
                 # https://code.google.com/p/web2py/issues/detail?id=1533
@@ -3018,7 +3204,7 @@ def customize_org_organisation(**attr):
                                          layer = "Activities",
                                          # provided by Catalogue Layer
                                          #marker = "activity",
-                                         list_layout = render_posts,
+                                         list_layout = render_profile_posts,
                                          )
                 reports_widget = dict(label = "Reports",
                                       title_create = "Add New Report",
@@ -3030,7 +3216,7 @@ def customize_org_organisation(**attr):
                                       layer = "Reports",
                                       # provided by Catalogue Layer
                                       #marker = "report",
-                                      list_layout = render_posts,
+                                      list_layout = render_profile_posts,
                                       )
                 assessments_widget = dict(label = "Assessments",
                                           title_create = "Add New Assessment",
@@ -3042,7 +3228,7 @@ def customize_org_organisation(**attr):
                                           layer = "Assessments",
                                           # provided by Catalogue Layer
                                           #marker = "assessment",
-                                          list_layout = render_posts,
+                                          list_layout = render_profile_posts,
                                           )
                 record = r.record
                 s3db.configure("org_organisation",

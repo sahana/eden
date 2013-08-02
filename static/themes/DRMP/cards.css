@@ -26,6 +26,13 @@
     cursor: auto;
 }
 
+/* Show a border around active disasters */
+.thumbnail.disaster {
+    border: 3px solid #E67E22;
+    padding-right: 5px;
+    margin: -2px 6px 6px -2px;
+}
+
 .media-body a span.date-title {
     border-left: none;
     margin-left: 0;

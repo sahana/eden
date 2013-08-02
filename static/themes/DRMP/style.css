@@ -175,12 +175,6 @@ a i.icon.icon-plus-sign.big-add:hover {
     text-decoration: none;
 }
 
-/* Show a border around active disasters */
-.thumbnail.disaster {
-    border: 3px solid #E67E22;
-    padding-right: 5px;
-}
-
 /* Modals */
 /* Imitate Bootstrap in jQueryUI Modal */
 #popup #submit_record__row {
