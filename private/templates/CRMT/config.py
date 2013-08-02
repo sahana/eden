@@ -429,10 +429,13 @@ def customize_org_organisation(**attr):
            not r.component:
             s3db = current.s3db
             ftable = s3db.org_facility
-            ftable.location_id.label = T("Address")
+            field = ftable.location_id
+            field.label = T("Address")
             # We don't have a widget capable of creating/editing Locations inline
-            ftable.location_id.widget = None
-            ftable.location_id.writable = False
+            field.widget = None
+            field.writable = False
+            # s3forms passes even read-only fields through validation
+            field.requires = None
             s3db.configure("org_facility",
                            #editable=False,
                            insertable=False,
@@ -540,6 +543,9 @@ def customize_org_organisation(**attr):
                            filter_formstyle = filter_formstyle,
                            report_options = report_options,
                            )
+        elif r.method == "validate":
+            # Need to override .requires here too
+            current.s3db.org_facility.location_id.requires = None
 
         return True
     s3.prep = custom_prep

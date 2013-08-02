@@ -267,10 +267,11 @@ $(function() {
         var data = inline_deserialize(formname);
         var fields = data['fields'];
         var row = data['data'][rowindex];
-        var fieldname;
-        var value;
-        var element;
-        var input;
+        var fieldname,
+            element,
+            input,
+            text,
+            value;
         for (i=0; i < fields.length; i++) {
             fieldname = fields[i]['name'];
             value = row[fieldname]['value'];
@@ -287,34 +288,42 @@ $(function() {
                 }
             }
             input = $(element);
-            if (input.attr('type') != 'file') {
-                input.val(value);
-                // Populate text in autocompletes
-                element = '#dummy_sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_0';
-                var text = row[fieldname]['text'];
-                $(element).val(text);
+            if (!input.length) {
+                // Read-only field
+                text = row[fieldname]['text'];
+                var td = $('#edit-row-' + formname + ' td')[i];
+                td.innerHTML = text;
             } else {
-                // Update the existing upload item, if there is one
-                var upload = $('#upload_' + formname + '_' + fieldname + '_' + rowindex);
-                if (upload.length) {
-                    var id = input.attr('id');
-                    var name = input.attr('name');
-                    input.replaceWith(upload);
-                    upload.attr('id', id)
-                          .attr('name', name)
-                          .css({display: ''});
+                if (input.attr('type') != 'file') {
+                    input.val(value);
+                    // Populate text in autocompletes
+                    element = '#dummy_sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_0';
+                    text = row[fieldname]['text'];
+                    $(element).val(text);
+                } else {
+                    // Update the existing upload item, if there is one
+                    var upload = $('#upload_' + formname + '_' + fieldname + '_' + rowindex);
+                    if (upload.length) {
+                        var id = input.attr('id');
+                        var name = input.attr('name');
+                        input.replaceWith(upload);
+                        upload.attr('id', id)
+                              .attr('name', name)
+                              .css({display: ''});
+                    }
                 }
             }
         }
 
         // Insert the edit row after this read row
-        $('#edit-row-' + formname).insertAfter('#read-row-' + rowname);
+        var edit_row = $('#edit-row-' + formname);
+        edit_row.insertAfter('#read-row-' + rowname);
 
-        // Remember the current row index in the edit row
-        $('#edit-row-' + formname).data('rowindex', rowindex);
+        // Remember the current row index in the edit row & show it
+        edit_row.data('rowindex', rowindex)
+                .removeClass('hide');
 
-        // Show the edit row
-        $('#edit-row-' + formname).removeClass('hide');
+        // Trigger the dropdown change event
         $('#edit-row-' + formname + ' select').change();
 
         // Disable the add-row while editing
@@ -327,12 +336,12 @@ $(function() {
 
         inline_remove_errors(formname);
 
-        var $edit = $('#edit-row-' + formname);
+        var edit_row = $('#edit-row-' + formname);
         
         // Hide and reset the edit-row
-        $edit.addClass('hide')
-             .data('rowindex', null)
-             .removeClass('changed');
+        edit_row.addClass('hide')
+                .data('rowindex', null)
+                .removeClass('changed');
         
         // Show the read-row
         $('#read-row-' + rowname).removeClass('hide');
@@ -440,10 +449,10 @@ $(function() {
 
         // Collect the values from the edit-row
         var data = inline_deserialize(formname);
-        var edit_row = inline_collect_data(formname, data, '0');
+        var edit_row = inline_collect_data(formname, data, rowindex);
 
         // Validate the form data
-        var new_row = inline_validate(formname, '0', data, edit_row);
+        var new_row = inline_validate(formname, rowindex, data, edit_row);
 
         var success = false;
         if (null !== new_row) {
