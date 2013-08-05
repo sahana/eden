@@ -5837,11 +5837,10 @@ class MAP(DIV):
                 i18n["gis_name_map"] = T("Name of Map")
                 i18n["saved"] = T("Saved")
                 i18n["gis_my_maps"] = T("My Maps")
-                db = current.db
-                ptable = db.pr_person
-                person = db(ptable.pe_id == auth.user.pe_id).select(ptable.id,
-                                                                    limitby=(0, 1)
-                                                                    ).first()
+                ptable = current.s3db.pr_person
+                person = current.db(ptable.pe_id == auth.user.pe_id).select(ptable.id,
+                                                                            limitby=(0, 1)
+                                                                            ).first()
                 if person:
                     options["person_id"] = person.id
                 config_id = vars.get("config", None)
