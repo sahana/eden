@@ -3919,11 +3919,12 @@ class S3BulkImporter(object):
                 create_role(rulelist[0],
                             rulelist[1],
                             *acls[rulelist[0]])
+
     # -------------------------------------------------------------------------
     def import_user(self, csv_filename):
         """ Import Users from CSV """
 
-        current.manager.import_prep = current.auth.s3_membership_import_prep
+        current.manager.import_prep = current.auth.s3_import_prep
         user_task = [1,
                      "auth",
                      "user",

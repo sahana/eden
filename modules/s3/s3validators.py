@@ -1014,6 +1014,11 @@ class IS_LOCATION_SELECTOR(Validator):
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
+
+        if current.response.s3.bulk:
+            # Pointless in imports
+            return (value, None)
+
         db = current.db
         table = db.gis_location
 
@@ -1579,6 +1584,10 @@ class IS_LOCATION_SELECTOR2(Validator):
     # -------------------------------------------------------------------------
     def __call__(self, value):
 
+        if current.response.s3.bulk:
+            # Pointless in imports
+            return (value, None)
+
         vars = current.request.post_vars
         address = vars.get("address", None)
         postcode = vars.get("postcode", None)
@@ -1803,6 +1812,11 @@ class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
+
+        if current.response.s3.bulk:
+            # Pointless in imports
+            return (value, None)
+
         db = current.db
         auth = current.auth
         gis = current.gis
@@ -1901,6 +1915,10 @@ class IS_ADD_PERSON_WIDGET(Validator):
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
+
+        if current.response.s3.bulk:
+            # Pointless in imports
+            return (value, None)
 
         person_id = None
         if value:
@@ -2105,6 +2123,10 @@ class IS_ADD_PERSON_WIDGET2(Validator):
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
+
+        if current.response.s3.bulk:
+            # Pointless in imports
+            return (value, None)
 
         person_id = None
         if value:
@@ -2383,7 +2405,7 @@ class IS_PROCESSED_IMAGE(Validator):
         if current.response.s3.bulk:
             # Pointless in imports
             return (value, None)
-        
+
         r = current.request
         vars = r.post_vars
 

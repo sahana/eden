@@ -389,6 +389,7 @@ class S3HRModel(S3Model):
                              s3_comments(),
                              *s3_meta_fields())
 
+        # @ToDo: Move this configurability to templates rather than lots of deployment_settings
         if STAFF == T("Contacts"):
             contacts = True
             crud_strings["hrm_staff"] = Storage(
@@ -407,7 +408,6 @@ class S3HRModel(S3Model):
                 msg_record_deleted = T("Contact deleted"),
                 msg_list_empty = T("No Contacts currently registered"))
         else:
-            # @ToDo: make more flexible
             contacts = False
             crud_strings["hrm_staff"] = Storage(
                 title_create = T("Add Staff Member"),
@@ -3474,7 +3474,7 @@ def hrm_human_resource_onaccept(form):
     s3db = current.s3db
     auth = current.auth
 
-    # Get the full record
+    # Get the 'full' record
     htable = db.hrm_human_resource
     record = db(htable.id == id).select(htable.id, # needed for update_record
                                         htable.type,

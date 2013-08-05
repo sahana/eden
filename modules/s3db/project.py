@@ -4263,7 +4263,7 @@ class S3ProjectTaskModel(S3Model):
         configure(tablename,
                   super_entity = "doc_entity",
                   copyable = True,
-                  orderby = "project_task.priority",
+                  orderby = "project_task.priority,project_task.date_due asc",
                   realm_entity = self.project_task_realm_entity,
                   onvalidation = self.project_task_onvalidation,
                   #create_next = URL(f="task", args=["[id]"]),

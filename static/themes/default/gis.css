@@ -60,8 +60,33 @@ form .map_loader {
     padding: 5px;
     border: solid;
     border-radius: 5px 5px 5px 5px;
+    width: 250px;
+}
+.map_save_panel.off {
+    visibility: hidden;
+}
+.map_save_button {
+    background-color: #FBFBFB;
+    padding: 5px;
+    border: solid;
+    border-radius: 5px 5px 5px 5px;
+    float: right;
     width: auto;
     cursor: pointer;
+    visibility: visible;
+}
+.map_save_panel input {
+    width: 150px;
+    margin-top: 6px;
+}
+.map_save_panel p {
+    float: left;
+    padding: 5px;
+}
+.map_save_panel a {
+    float: right;
+    padding: 5px;
+    margin-top: 6px;
 }
 
 /* Current Coordinates */

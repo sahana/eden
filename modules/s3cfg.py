@@ -247,6 +247,14 @@ class S3Config(Storage):
             organisation_id = None
         return organisation_id
 
+    def get_auth_registration_requests_organisation_group(self):
+        " Have the registration form request the Organisation Group "
+        return self.auth.get("registration_requests_organisation_group", False)
+
+    def get_auth_registration_organisation_group_required(self):
+        " Make the selection of Organisation Group required during registration "
+        return self.auth.get("registration_organisation_group_required", False)
+
     def get_auth_registration_requests_site(self):
         " Have the registration form request the Site "
         return self.auth.get("registration_requests_site", False)
@@ -509,6 +517,10 @@ class S3Config(Storage):
     def get_gis_edit_group(self):
         " Edit Location Groups "
         return self.gis.get("edit_GR", False)
+
+    def get_gis_geocode_imported_addresses(self):
+        " Should Addresses imported from CSV be passed to a Geocoder to try and automate Lat/Lon? "
+        return self.gis.get("geocode_imported_addresses", False)
 
     def get_gis_geoserver_url(self):
         return self.gis.get("geoserver_url", "")

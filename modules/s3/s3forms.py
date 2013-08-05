@@ -3101,7 +3101,7 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
                             _id=field_name,
                             _name=field_name,
                             _multiple=True,
-                            _class="multiselect-widget",
+                            _class="inline-multiselect-widget",
                             _size=5 # @ToDo: Make this configurable?
                             )
             # jQueryUI widget

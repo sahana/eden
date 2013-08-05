@@ -3385,11 +3385,49 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     // Save button as floating DIV to save the Viewport settings
     var addSavePanel = function(map) {
         var map_id = map.s3.id;
-        var div = '<div class="map_save_panel">' + i18n.save + '</div>';
+        var div = '<div class="map_save_panel off"><div class="map_save_button">' + i18n.gis_save_map + '</div></div>';
         $('#' + map_id).append(div);
         // Click Handler
-        $('#' + map_id + ' .map_save_panel').click(function() {
+        $('#' + map_id + ' .map_save_button').click(function() {
+            $('#' + map_id + ' .map_save_panel').removeClass('off');
+            nameConfig(map);
+        });
+    }
+
+    // Name the Config
+    var nameConfig = function(map) {
+        var s3 = map.s3;
+        var map_id = s3.id;
+        var options = s3.options;
+        var config_id = options.config_id;
+        var name = '';
+        if (config_id) {
+            // Read the current name
+            var url = S3.Ap.concat('/gis/config/' + config_id + '.json');
+            $.ajax({
+                type: 'GET',
+                url: url
+            }).done(function(data) {
+                var config = data['$_gis_config'][0];
+                name = config['name'];
+            });
+        }
+        if (!name) {
+            name = i18n.gis_name_map;
+        }
+        var save_button = $('#' + map_id + ' .map_save_button');
+        // Prompt user for the name
+        var name_input = '<input value="' + name + '">';
+        save_button.before(name_input);
+        // Click Handler
+        save_button.unbind('click')
+                   .click(function() {
             saveConfig(map);
+            save_button.hide();
+            var name_input = $('#' + map_id + ' .map_save_panel input');
+            var div = '<p>' + name_input.val() + '</p><p><i>' + i18n.saved + '</i></p><a href="' + S3.Ap.concat('/default/person/' + options.person_id + '/config') + '">' + i18n.gis_my_maps + '</a>';
+            name_input.hide()
+                      .before(div);
         });
     }
 
@@ -3400,9 +3438,24 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var encode = Ext.util.JSON.encode;
         var layersStr = encode(state.layers);
         var pluginsStr = encode(state.plugins);
+        var json_data = {
+            name: name,
+            lat: state.lat,
+            lon: state.lon,
+            zoom: state.zoom,
+            layers: layersStr,
+            plugins: pluginsStr
+        }
+        var s3 = map.s3;
+        var map_id = s3.id;
+        var name_input = $('#' + map_id + ' .map_save_panel input')
+        if (name_input.length) {
+            // Floating Save Panel
+            json_data['name'] = name_input.val();
+        }
         // Use AJAX to send back
         var url;
-        var config_id = map.s3.options.config_id;
+        var config_id = s3.options.config_id;
         if (config_id) {
             url = S3.Ap.concat('/gis/config/' + config_id + '.url/update');
         } else {
@@ -3418,7 +3471,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 var id = obj.message.split('=', 2)[1];
                 if (id) {
                     // Ensure that future saves are updates, not creates
-                    map.s3.options.config_id = id;
+                    s3.options.config_id = id;
                     // Change the browser URL (if-applicable)
                     if (history.pushState && document.location.search) {
                         // Browser supports URL changing without page refresh
@@ -3440,13 +3493,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     $('#gis_menu_config').attr('href', url);
                 }
             },
-            params: {
-                lat: state.lat,
-                lon: state.lon,
-                zoom: state.zoom,
-                layers: layersStr,
-                plugins: pluginsStr
-            }
+            params: json_data
         });
     }
 

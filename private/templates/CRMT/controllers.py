@@ -96,14 +96,12 @@ class index():
         callback = None
         if auth.is_logged_in():
             # Show the User's Coalition's Polygon
-            organisation_id = auth.user.organisation_id
-            if organisation_id:
-                # Lookup Coalition
+            org_group_id = auth.user.org_group_id
+            if org_group_id:
+                # Lookup Coalition Name
                 db = current.db
                 table = current.s3db.org_group
-                mtable = db.org_group_membership
-                query = (mtable.group_id == table.id) & \
-                        (mtable.organisation_id == organisation_id)
+                query = (table.id == org_group_id)
                 row = db(query).select(table.name,
                                        limitby=(0, 1)).first()
                 if row:

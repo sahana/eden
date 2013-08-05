@@ -387,27 +387,30 @@
         $(selector + '_address__row').show();
         $(selector + '_postcode__row').show();
 
-        // Listen for changes
-        $(selector + '_address').change(function() {
-            var real_input = $(selector);
-            var manually_geocoded = real_input.data('manually_geocoded');
-            if (manually_geocoded) {
-                // Show a button to allow the user to do a new automatic Geocode
-                $(selector + '_geocode .geocode_success').hide();
-                $(selector + '_geocode .geocode_fail').hide();
-                $(selector + '_geocode button').removeClass('hide')
-                                               .show()
-                                               .click(function() {
-                    $(this).hide();
+        var geocode_button = $(selector + '_geocode button');
+        if (geocode_button.length) {
+            // Listen for changes
+            $(selector + '_address').change(function() {
+                var real_input = $(selector);
+                var manually_geocoded = real_input.data('manually_geocoded');
+                if (manually_geocoded) {
+                    // Show a button to allow the user to do a new automatic Geocode
+                    $(selector + '_geocode .geocode_success').hide();
+                    $(selector + '_geocode .geocode_fail').hide();
+                    geocode_button.removeClass('hide')
+                                  .show()
+                                  .click(function() {
+                        $(this).hide();
+                        geocode(fieldname);
+                        resetHidden(fieldname);
+                    });
+                } else {
+                    // Do an Automatic Geocode
                     geocode(fieldname);
-                    resetHidden(fieldname);
-                });
-            } else {
-                // Do an Automatic Geocode
-                geocode(fieldname);
-            }
-            resetHidden(fieldname);
-        });
+                }
+                resetHidden(fieldname);
+            });
+        }
     }
 
     /**

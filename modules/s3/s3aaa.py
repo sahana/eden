@@ -196,6 +196,7 @@ Thank you
         self.messages.registration_disabled = "Registration Disabled!"
         self.messages.registration_verifying = "You haven't yet Verified your account - please check your email"
         self.messages.label_organisation_id = "Organization"
+        self.messages.label_org_group_id = "Coalition"
         self.messages.label_utc_offset = "UTC Offset"
         self.messages.label_image = "Profile Image"
         self.messages.help_utc_offset = "The time difference between UTC and your timezone, specify as +HHMM for eastern or -HHMM for western timezones."
@@ -265,43 +266,35 @@ Thank you
         # User table
         utable = settings.table_user
         uname = settings.table_user_name
-        label_user_id = messages.label_user_id
         if not utable:
             utable_fields = [
                     Field("first_name", length=128, notnull=True,
                           default="",
-                          label=messages.label_first_name,
                           requires = \
                           IS_NOT_EMPTY(error_message=messages.is_empty),
                           ),
                     Field("last_name", length=128,
-                          default="",
-                          label=messages.label_last_name),
-                    Field("email", length=255,
-                          default="",
-                          label=messages.label_email,
-                          unique=True),
+                          default=""),
+                    Field("email", length=255, unique=True,
+                          default=""),
                     Field("language", length=16,
                           default = deployment_settings.get_L10n_default_language()),
                     Field("utc_offset", length=16,
-                          readable=False, writable=False,
-                          label=messages.label_utc_offset),
+                          readable=False, writable=False),
                     Field("organisation_id", "integer",
-                          readable=False, writable=False,
-                          label=messages.label_organisation_id),
+                          readable=False, writable=False),
+                    Field("org_group_id", "integer",
+                          readable=False, writable=False),
                     Field("site_id", "integer",
-                          readable=False, writable=False,
-                          label=deployment_settings.get_org_site_label()),
+                          readable=False, writable=False),
                     Field("link_user_to", "list:string",
                           readable=False, writable=False),
                     Field("registration_key", length=512,
                           default="",
-                          readable=False, writable=False,
-                          label=messages.label_registration_key),
+                          readable=False, writable=False),
                     Field("reset_password_key", length=512,
                           default="",
-                          readable=False, writable=False,
-                          label=messages.label_registration_key),
+                          readable=False, writable=False),
                     Field("deleted", "boolean",
                           default=False,
                           readable=False, writable=False),
@@ -348,7 +341,6 @@ Thank you
         # Group table (roles)
         gtable = settings.table_group
         gname = settings.table_group_name
-        label_group_id = messages.label_group_id
         if not gtable:
             gtable = define_table(gname,
                 # Group unique ID, must be notnull+unique:
@@ -388,45 +380,45 @@ Thank you
                 Field("user_id", utable,
                       requires = IS_IN_DB(db, "%s.id" % uname,
                                           "%(id)s: %(first_name)s %(last_name)s"),
-                      label=label_user_id),
+                      label=messages.label_user_id),
                 Field("group_id", gtable,
                       requires = IS_IN_DB(db, "%s.id" % gname,
                                           "%(id)s: %(role)s"),
                       represent = S3Represent(lookup=gname, fields=["role"]),
-                      label=label_group_id),
+                      label=messages.label_group_id),
                 # Realm
                 Field("pe_id", "integer"),
                 migrate = migrate,
                 fake_migrate=fake_migrate,
                 *(s3_uid() + s3_timestamp() + s3_deletion_status()))
 
-        security_policy = deployment_settings.get_security_policy()
         # Define Eden permission table
         self.permission.define_table(migrate=migrate,
                                      fake_migrate=fake_migrate)
 
-        if security_policy not in (1, 2, 3, 4, 5, 6, 7, 8) and \
-           not settings.table_permission:
-            # Permissions table (group<->permission)
-            # NB This Web2Py table is deprecated / replaced in Eden by S3Permission
-            settings.table_permission = define_table(
-                settings.table_permission_name,
-                Field("group_id", gtable,
-                      requires = IS_IN_DB(db, "%s.id" % gname,
-                                          "%(id)s: %(role)s"),
-                      label=label_group_id),
-                Field("name", default="default", length=512,
-                      requires = IS_NOT_EMPTY(),
-                      label=messages.label_name),
-                Field("table_name", length=512,
-                      # Needs to be defined after all tables created
-                      #requires = IS_IN_SET(db.tables),
-                      label=messages.label_table_name),
-                Field("record_id", "integer",
-                      requires = IS_INT_IN_RANGE(0, 10 ** 9),
-                      label=messages.label_record_id),
-                migrate = migrate,
-                fake_migrate=fake_migrate)
+        #security_policy = deployment_settings.get_security_policy()
+        #if security_policy not in (1, 2, 3, 4, 5, 6, 7, 8) and \
+        #   not settings.table_permission:
+        #    # Permissions table (group<->permission)
+        #    # NB This Web2Py table is deprecated / replaced in Eden by S3Permission
+        #    settings.table_permission = define_table(
+        #        settings.table_permission_name,
+        #        Field("group_id", gtable,
+        #              requires = IS_IN_DB(db, "%s.id" % gname,
+        #                                  "%(id)s: %(role)s"),
+        #              label=messages.label_group_id),
+        #        Field("name", default="default", length=512,
+        #              requires = IS_NOT_EMPTY(),
+        #              label=messages.label_name),
+        #        Field("table_name", length=512,
+        #              # Needs to be defined after all tables created
+        #              #requires = IS_IN_SET(db.tables),
+        #              label=messages.label_table_name),
+        #        Field("record_id", "integer",
+        #              requires = IS_INT_IN_RANGE(0, 10 ** 9),
+        #              label=messages.label_record_id),
+        #        migrate = migrate,
+        #        fake_migrate=fake_migrate)
 
         # Event table (auth_event)
         # Records Logins & ?
@@ -437,19 +429,22 @@ Thank you
                 settings.table_event_name,
                 Field("time_stamp", "datetime",
                       default=request.utcnow,
-                      label=messages.label_time_stamp),
+                      #label=messages.label_time_stamp
+                      ),
                 Field("client_ip",
                       default=request.client,
-                      label=messages.label_client_ip),
+                      #label=messages.label_client_ip
+                      ),
                 Field("user_id", utable, default=None,
                       requires = IS_IN_DB(db, "%s.id" % uname,
                                           "%(id)s: %(first_name)s %(last_name)s"),
-                      label=label_user_id),
+                      #label=messages.label_user_id
+                      ),
                 Field("origin", default="auth", length=512,
-                      label=messages.label_origin,
+                      #label=messages.label_origin,
                       requires = IS_NOT_EMPTY()),
                 Field("description", "text", default="",
-                      label=messages.label_description,
+                      #label=messages.label_description,
                       requires = IS_NOT_EMPTY()),
                 migrate = migrate,
                 fake_migrate=fake_migrate,
@@ -1233,6 +1228,8 @@ Thank you
                     i.e. org_admin coming from admin.py/user()
         """
 
+        from s3validators import IS_ONE_OF
+
         T = current.T
         db = current.db
         s3db = current.s3db
@@ -1245,11 +1242,11 @@ Thank you
         utable = self.settings.table_user
 
         first_name = utable.first_name
-        first_name.label = T("First Name")
+        first_name.label = T("First Name") #messages.label_first_name
         first_name.requires = IS_NOT_EMPTY(error_message=messages.is_empty),
 
         last_name = utable.last_name
-        last_name.label = T("Last Name")
+        last_name.label = T("Last Name") #messages.label_last_name
         if deployment_settings.get_L10n_mandatory_lastname():
             last_name.notnull = True
             last_name.requires = IS_NOT_EMPTY(error_message=messages.is_empty)
@@ -1260,7 +1257,7 @@ Thank you
                                                    utable._tablename)
 
         email = utable.email
-        email.label = T("E-mail")
+        email.label = T("E-mail") #messages.label_email
         email.requires = [IS_EMAIL(error_message=messages.invalid_email),
                           IS_LOWER(),
                           IS_NOT_IN_DB(db,
@@ -1280,6 +1277,7 @@ Thank you
         language.default = T.accepted_language
 
         utc_offset = utable.utc_offset
+        utc_offset.label = messages.label_utc_offset
         utc_offset.comment = DIV(_class="tooltip",
                                  _title="%s|%s" % (messages.label_utc_offset,
                                                    messages.help_utc_offset)
@@ -1290,6 +1288,10 @@ Thank you
         except:
             pass
 
+        utable.registration_key.label = messages.label_registration_key
+        #utable.reset_password_key.label = messages.label_registration_key
+
+        # Organisation
         req_org = deployment_settings.get_auth_registration_requests_organisation()
         if req_org:
             if pe_ids:
@@ -1301,49 +1303,77 @@ Thank you
                 filterby = None
                 filter_opts = None
             organisation_id = utable.organisation_id
+            organisation_id.label = messages.label_organisation_id
             organisation_id.readable = organisation_id.writable = True
-            from s3validators import IS_ONE_OF
-            org_represent = s3db.org_organisation_represent
-            organisation_id.requires = IS_ONE_OF(db, "org_organisation.id",
-                                                 org_represent,
-                                                 filterby=filterby,
-                                                 filter_opts=filter_opts,
-                                                 orderby="org_organisation.name",
-                                                 sort=True)
-            organisation_id.represent = org_represent
             organisation_id.default = deployment_settings.get_auth_registration_organisation_id_default()
-            from s3layouts import S3AddResourceLink
+            org_represent = s3db.org_organisation_represent
+            organisation_id.represent = org_represent
+            requires = IS_ONE_OF(db, "org_organisation.id",
+                                 org_represent,
+                                 filterby=filterby,
+                                 filter_opts=filter_opts,
+                                 orderby="org_organisation.name",
+                                 sort=True)
+            if deployment_settings.get_auth_registration_organisation_required():
+                organisation_id.requires = requires
+            else:
+                organisation_id.requires = IS_NULL_OR(requires)
 
+            from s3layouts import S3AddResourceLink
             organisation_id.comment = S3AddResourceLink(c="org",
                                                         f="organisation",
                                                         label=s3db.crud_strings["org_organisation"].title_create,
                                                         title=s3db.crud_strings["org_organisation"].title_list,)
-            # no permissions for autocomplete on registration page yet
             #from s3widgets import S3OrganisationAutocompleteWidget
             #organisation_id.widget = S3OrganisationAutocompleteWidget()
             #organisation_id.comment = DIV(_class="tooltip",
             #                              _title="%s|%s" % (T("Organization"),
             #                                                T("Enter some characters to bring up a list of possible matches")))
 
-            if not deployment_settings.get_auth_registration_organisation_required():
-                organisation_id.requires = IS_NULL_OR(organisation_id.requires)
+        # Organisation Group
+        if deployment_settings.get_auth_registration_requests_organisation_group():
+            org_group_id = utable.org_group_id
+            org_group_id.label = messages.label_org_group_id
+            org_group_id.readable = org_group_id.writable = True
+            org_group_represent = s3db.org_group_represent
+            org_group_id.represent = org_group_represent
+            requires = IS_ONE_OF(db, "org_group.id",
+                                 org_group_represent,
+                                 # @ToDo: Filter org groups to just those belonging to the Org Admin's Org
+                                 # @ToDo: Dynamically filter groups to just those that the selected Org is a member of
+                                 #filterby=filterby,
+                                 #filter_opts=filter_opts,
+                                 orderby="org_group.name",
+                                 sort=True)
+            if deployment_settings.get_auth_registration_organisation_group_required():
+                org_group_id.requires = requires
+            else:
+                org_group_id.requires = IS_NULL_OR(requires)
+            #from s3layouts import S3AddResourceLink
+            #org_group_id.comment = S3AddResourceLink(c="org",
+            #                                         f="group",
+            #                                         label=s3db.crud_strings["org_group"].title_create,
+            #                                         title=s3db.crud_strings["org_group"].title_list,)
 
+        # Site
         if deployment_settings.get_auth_registration_requests_site():
             site_id = request.get_vars.get("site_id", None)
+            field = utable.site_id
+            field.label = deployment_settings.get_org_site_label()
+            site_represent = s3db.org_site_represent
+            field.represent = site_represent
             if site_id:
-                field = utable.site_id
                 field.default = site_id
                 field.readable = True
-                field.represent = lambda v: s3db.org_site_represent(site_id)
             else:
-                site_id = utable.site_id
-                site_id.readable = site_id.writable = True
+                field.readable = field.writable = True
+                #field.default = deployment_settings.get_auth_registration_site_id_default()
                 if req_org:
                     from s3validators import IS_ONE_OF_EMPTY
-                    site_id.requires = IS_ONE_OF_EMPTY(db, "org_site.site_id",
-                                                       s3db.org_site_represent,
-                                                       orderby="org_site.name",
-                                                       sort=True)
+                    requires = IS_ONE_OF_EMPTY(db, "org_site.site_id",
+                                               site_represent,
+                                               orderby="org_site.name",
+                                               sort=True)
                     current.response.s3.jquery_ready.append('''
 S3OptionsFilter({
  'triggerName':'organisation_id',
@@ -1353,24 +1383,24 @@ S3OptionsFilter({
  'lookupURL':S3.Ap.concat('/org/sites_for_org/')
 })''')
                 else:
-                    from s3validators import IS_ONE_OF
-                    site_id.requires = IS_ONE_OF(db, "org_site.site_id",
-                                                 s3db.org_site_represent,
-                                                 orderby="org_site.name",
-                                                 sort=True)
-                site_id.represent = s3db.org_site_represent
-                #site_id.default = deployment_settings.get_auth_registration_site_id_default()
-                # No permissions for autocomplete on registration page
+                    requires = IS_ONE_OF(db, "org_site.site_id",
+                                         site_represent,
+                                         orderby="org_site.name",
+                                         sort=True)
                 #from s3widgets import S3SiteAutocompleteWidget
-                #site_id.widget = S3SiteAutocompleteWidget()
-                site_id.comment = DIV(_class="tooltip",
-                                      _title="%s|%s" % (T("Facility"),
-                                                        T("Select the default site.")))
-                if not deployment_settings.get_auth_registration_site_required():
-                    site_id.requires = IS_NULL_OR(site_id.requires)
+                #field.widget = S3SiteAutocompleteWidget()
+                field.comment = DIV(_class="tooltip",
+                                    _title="%s|%s" % (T("Facility"),
+                                                      T("Select the default site.")))
+                if deployment_settings.get_auth_registration_site_required():
+                    field.requires = requires
+                else:
+                    field.requires = IS_NULL_OR(requires)
 
         if "profile" in request.args:
             return
+
+        # Link User to
         link_user_to_opts = deployment_settings.get_auth_registration_link_user_to()
         if link_user_to_opts:
             link_user_to = utable.link_user_to
@@ -1395,23 +1425,25 @@ S3OptionsFilter({
                                                              T("Will create and link your user account to the following records")))
 
     # -------------------------------------------------------------------------
-    def s3_membership_import_prep(self, data, group=None):
+    def s3_import_prep(self, data, group=None):
         """
-            Called when a user is imported.
-            Because the auth.membership.pe_id fields is an integer not
-            reference, this function is used to lookup the pe_id from
+            Called when users are imported from CSV
+
+            Lookups Pseudo-reference Integer fields from Names
             e.g.:
-            organisation.name=<Org Name>
+            auth_membership.pe_id from organisation.name=<Org Name>
+
+            @ToDo: Add support for Sites
         """
 
         db = current.db
         s3db = current.s3db
+        cache = s3db.cache
+        otable = s3db.org_organisation
 
         resource, tree = data
-        xml = current.xml
-        tag = xml.TAG
-        att = xml.ATTRIBUTE
 
+        # Memberships
         elements = tree.getroot().xpath("/s3xml//resource[@name='auth_membership']/data[@field='pe_id']")
         for element in elements:
             pe_string = element.text
@@ -1420,8 +1452,12 @@ S3OptionsFilter({
                 pe_type, pe_value =  pe_string.split("=")
                 pe_tablename, pe_field =  pe_type.split(".")
 
-                table = s3db[pe_tablename]
+                if pe_tablename == "org_organisation":
+                    table = otable
+                else:
+                    table = s3db[pe_tablename]
                 record = db(table[pe_field] == pe_value).select(table.pe_id,
+                                                                cache=cache,
                                                                 limitby=(0, 1)
                                                                 ).first()
                 if record:
@@ -1429,9 +1465,48 @@ S3OptionsFilter({
                 else:
                     # Add a new record
                     id = table.insert(**{pe_field: pe_value})
-                    record = db(table._id == id).select(limitby=(0, 1)).first()
+                    record = db(table._id == id).select(table._id,
+                                                        limitby=(0, 1)).first()
                     s3db.update_super(table, record)
                     element.text = str(record.pe_id)
+
+        # Organisations
+        elements = tree.getroot().xpath("/s3xml//resource[@name='auth_user']/data[@field='organisation_id']")
+        for element in elements:
+            name = element.text
+            if name:
+                record = db(otable.name == name).select(otable.id,
+                                                        cache=cache,
+                                                        limitby=(0, 1)
+                                                        ).first()
+                if record:
+                    element.text = str(record.id)
+                else:
+                    # Add a new record
+                    id = otable.insert(name=name)
+                    element.text = str(id)
+                    record = Storage(id=id)
+                    s3db.update_super(otable, record)
+
+        # Organisation Groups
+        elements = tree.getroot().xpath("/s3xml//resource[@name='auth_user']/data[@field='org_group_id']")
+        if elements:
+            gtable = s3db.org_group
+            for element in elements:
+                name = element.text
+                if name:
+                    record = db(gtable.name == name).select(gtable.id,
+                                                            cache=cache,
+                                                            limitby=(0, 1)
+                                                            ).first()
+                    if record:
+                        element.text = str(record.id)
+                    else:
+                        # Add a new record
+                        id = gtable.insert(name=name)
+                        element.text = str(id)
+                        record = Storage(id=id)
+                        s3db.update_super(gtable, record)
 
     # -------------------------------------------------------------------------
     def s3_user_register_onaccept(self, form):
@@ -1604,7 +1679,7 @@ S3OptionsFilter({
                 roles = entity_roles[entity]
 
                 # Get User's Organisation or Site pe_id
-                if entity in ["organisation_id", "site_id"]:
+                if entity in ("organisation_id", "org_group_id", "site_id"):
                     tablename = "org_%s" % entity.split("_")[0]
                     entity = s3db.pr_get_pe_id(tablename, user[entity])
                     if not entity:

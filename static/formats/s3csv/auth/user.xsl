@@ -11,8 +11,13 @@
          Email...................auth_user.email
          Password................auth_user.password
          Role....................auth_group.role
-         Organisation............org_organisation.name (@ToDo: Doesn't work as not a real Reference)
-         Site....................org_site.name (@ToDo: Doesn't work as not a real Reference)
+         Organisation............org_organisation.name
+         Organisation Group......org_group.name
+
+         @ToDo: Add support for Sites to auth.s3_import_prep
+         - meanwhile, can add these via hrm/person.xsl
+         Facility Type...........s3db[tablename]
+         Site....................org_site.name
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -20,6 +25,7 @@
     <xsl:include href="../../xml/commons.xsl"/>
 
     <xsl:key name="organisations" match="row" use="col[@field='Organisation']/text()"/>
+    <xsl:key name="groups" match="row" use="col[@field='Organisation Group']/text()"/>
 
     <!-- ****************************************************************** -->
 
@@ -32,6 +38,13 @@
                 <xsl:call-template name="Organisation"/>
             </xsl:for-each>
 
+            <!-- Organisation Groups -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('groups',
+                                                        col[@field='Organisation Group']/text())[1])]">
+                <xsl:call-template name="OrganisationGroup"/>
+            </xsl:for-each>
+
             <xsl:apply-templates select="table/row"/>
         </s3xml>
     </xsl:template>
@@ -39,6 +52,7 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
+        <xsl:variable name="GroupName" select="col[@field='Organisation Group']/text()"/>
 
         <!-- Create the User -->
         <resource name="auth_user">
@@ -65,11 +79,19 @@
             <!-- Link to Organisation -->
             <xsl:if test="$OrgName!=''">
                 <data field="organisation_id">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$OrgName"/>
-                    </xsl:attribute>
+                    <!-- Name gets converted to ID in auth.s3_import_prep -->
+                    <xsl:value-of select="$OrgName"/>
                 </data>
             </xsl:if>
+
+            <!-- Link to Organisation Group -->
+            <xsl:if test="$GroupName!=''">
+                <data field="org_group_id">
+                    <!-- Name gets converted to ID in auth.s3_import_prep -->
+                    <xsl:value-of select="$GroupName"/>
+                </data>
+            </xsl:if>
+
         </resource>
     </xsl:template>
 
@@ -121,10 +143,19 @@
 
         <xsl:if test="$OrgName!=''">
             <resource name="org_organisation">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$OrgName"/>
-                </xsl:attribute>
                 <data field="name"><xsl:value-of select="$OrgName"/></data>
+            </resource>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="OrganisationGroup">
+        <xsl:variable name="GroupName" select="col[@field='Organisation Group']/text()"/>
+
+        <xsl:if test="$GroupName!=''">
+            <resource name="org_group">
+                <data field="name"><xsl:value-of select="$GroupName"/></data>
             </resource>
         </xsl:if>
 

@@ -443,16 +443,43 @@ class S3LocationModel(S3Model):
         T = current.T
         db = current.db
         gis = current.gis
+        response = current.response
 
         MAP_ADMIN = current.auth.s3_has_role(current.session.s3.system_roles.MAP_ADMIN)
 
-        # Shortcuts
         vars = form.vars
         vars_get = vars.get
         level = vars_get("level", None)
         parent = vars_get("parent", None)
         lat = vars_get("lat", None)
         lon = vars_get("lon", None)
+        addr_street = vars_get("addr_street", None)
+
+        if addr_street and lat is None and lon is None and \
+           response.s3.bulk:
+            geocoder = current.deployment_settings.get_gis_geocode_imported_addresses()
+            if geocoder:
+                # Geocode imported addresses
+                postcode = vars_get("postcode", None)
+                # Build Path (won't be populated yet)
+                if parent:
+                    Lx_ids = gis.get_parents(parent, ids_only=True)
+                    if Lx_ids:
+                       Lx_ids.append(parent) 
+                    else:
+                        Lx_ids = [parent]
+                else:
+                    Lx_ids = None
+                results = gis.geocode(addr_street, postcode, Lx_ids, geocoder)
+                if isinstance(results, basestring):
+                    # Error
+                    s3_debug(results)
+                    form.errors["addr_street"] = results
+                    return
+                else:
+                    vars.lon = lon = results["lon"]
+                    vars.lat = lat = results["lat"]
+
         if lon:
             if lon > 180:
                 # Map Selector wrapped
@@ -473,7 +500,7 @@ class S3LocationModel(S3Model):
                     child = parent or id
                     editable = gis_hierarchy_editable(level, child)
                 if not editable:
-                    current.response.error = T("Sorry, only users with the MapAdmin role are allowed to edit these locations")
+                    response.error = T("Sorry, only users with the MapAdmin role are allowed to edit these locations")
                     form.errors["level"] = T("This level is not open for editing.")
                     return
 
@@ -486,7 +513,7 @@ class S3LocationModel(S3Model):
         if level and parent and _parent:
             # Check that parent is of a higher level
             if level[1:] < _parent.level[1:]:
-                current.response.error = "%s: %s" % (T("Parent level should be higher than this record's level. Parent level is"),
+                response.error = "%s: %s" % (T("Parent level should be higher than this record's level. Parent level is"),
                                              gis.get_location_hierarchy()[_parent.level])
                 form.errors["level"] = T("Level is higher than parent's")
                 return
@@ -497,7 +524,7 @@ class S3LocationModel(S3Model):
                 parent = ""
             elif not parent:
                 # Parent is mandatory
-                current.response.error = "%s: %s" % \
+                response.error = "%s: %s" % \
                     (T("Parent needs to be set for locations of level"),
                     gis.get_location_hierarchy()[level])
                 form.errors["parent"] = T("Parent needs to be set")
@@ -506,7 +533,7 @@ class S3LocationModel(S3Model):
                 # Parents needs to be of level max_hierarchy
                 max_hierarchy = gis.get_max_hierarchy_level()
                 if _parent.level != max_hierarchy:
-                    current.response.error = "%s: %s" % \
+                    response.error = "%s: %s" % \
                         (T("Specific locations need to have a parent of level"),
                         gis.get_location_hierarchy()[max_hierarchy])
                     form.errors["parent"] = T("Parent needs to be of the correct level")
@@ -514,7 +541,7 @@ class S3LocationModel(S3Model):
             else:
                 # Check that parent is of exactly next higher order
                 if (int(level[1:]) - 1) != int(_parent.level[1:]):
-                    current.response.error = "%s: %s" % \
+                    response.error = "%s: %s" % \
                         (T("Locations of this level need to have a parent of level"),
                         gis.get_location_hierarchy()["L%i" % (int(level[1:]) - 1)])
                     form.errors["parent"] = T("Parent needs to be of the correct level")
@@ -547,7 +574,7 @@ class S3LocationModel(S3Model):
                             else:
                                 error = T("Sorry location appears to be outside the area of parent %(parent)s.") % \
                                     dict(parent=parent_name)
-                            current.response.error = error
+                            response.error = error
                             s3_debug(error)
                             return
 
@@ -579,7 +606,7 @@ class S3LocationModel(S3Model):
                                     dict(location=name)
                             else:
                                 error = T("Sorry location appears to be outside the area supported by this deployment.")
-                            current.response.error = error
+                            response.error = error
                             s3_debug(error)
                             lat_error =  "%s: %s & %s" % (T("Latitude should be between"),
                                                           str(lat_min), str(lat_max))
@@ -592,7 +619,7 @@ class S3LocationModel(S3Model):
                                     dict(location=name)
                             else:
                                 error = T("Sorry location appears to be outside the area supported by this deployment.")
-                            current.response.error = error
+                            response.error = error
                             s3_debug(error)
                             lon_error = "%s: %s & %s" % (T("Longitude should be between"),
                                                          str(lon_min), str(lon_max))
@@ -1591,7 +1618,7 @@ class S3GISConfigModel(S3Model):
                                    default=180,
                                    requires = IS_NULL_OR(IS_LON())),
 
-                             # This would be turned off for Offline deployments or expensive SatComms, such as BGAN
+                             # This should be turned off for Offline deployments or expensive SatComms, such as BGAN
                              Field("geocoder", "boolean"),
                              Field("wmsbrowser_url"),
                              Field("wmsbrowser_name",

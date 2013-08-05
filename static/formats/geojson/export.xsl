@@ -37,7 +37,12 @@
     <s3:fields tables="gis_layer_shapefile" select=""/>
     <s3:fields tables="gis_layer_shapefile*" select="layer_id"/>
     <s3:fields tables="gis_theme_data" select="location_id,value"/>
-    <!-- Fix for Summary page allowing filtering by records without a Coalition -->
+    <!-- Summary pages need to be able to filter records by Coalition -->
+    <s3:fields tables="project_activity_group" select="activity_id"/>
+    <s3:fields tables="event_incident_report_group" select="incident_report_id"/>
+    <s3:fields tables="stats_resident_group" select="resident_id"/>
+    <s3:fields tables="stats_trained_group" select="trained_id"/>
+    <s3:fields tables="vulnerability_evac_route_group" select="evac_route_id"/>
     <s3:fields tables="vulnerability_risk_group" select="risk_id"/>
     <s3:fields tables="ANY" select="location_id,site_id"/>
 

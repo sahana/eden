@@ -193,7 +193,7 @@
                 if (item.last) {
                     name += ' ' + item.last;
                 }
-                dummy_input.val(name);
+                //dummy_input.val(name);
                 return false;
             },
             select: function(event, ui) {
@@ -212,7 +212,7 @@
                     select_person(fieldname, item.id);
                 } else {
                     // 'No matching results' or 'None of the above'
-                    dummy_input.val('');
+                    //dummy_input.val('');
                     real_input.val('');
                 }
                 data.accept = true;

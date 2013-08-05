@@ -493,6 +493,182 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def geocode(address, postcode=None, Lx_ids=None, geocoder="google"):
+        """
+            Geocode an Address
+            - used by S3LocationSelectorWidget2
+                      settings.get_gis_geocode_imported_addresses
+
+            @param address: street address
+            @param postcode: postcode
+            @param Lx_ids: list of ancestor IDs
+            @param geocoder: which geocoder service to use
+        """
+
+        from geopy import geocoders
+
+        if geocoder == "google":
+            g = geocoders.GoogleV3()
+        elif geocoder == "yahoo":
+            apikey = current.deployment_settings.get_gis_api_yahoo()
+            g = geocoders.Yahoo(apikey)
+        else:
+            # @ToDo
+            raise NotImplementedError
+
+        location = address
+        if postcode:
+            location = "%s,%s" % (location, postcode)
+
+        L5 = L4 = L3 = L2 = L1 = L0 = None
+        if Lx_ids:
+            # Convert Lx IDs to Names
+            table = current.s3db.gis_location
+            limit = len(Lx_ids)
+            if limit > 1:
+                query = (table.id.belongs(Lx_ids))
+            else:
+                query = (table.id == Lx_ids[0])
+            db = current.db
+            Lx = db(query).select(table.id,
+                                  table.name,
+                                  table.level,
+                                  table.gis_feature_type,
+                                  # Better as separate query
+                                  #table.lon_min,
+                                  #table.lat_min,
+                                  #table.lon_max,
+                                  #table.lat_max,
+                                  # Better as separate query
+                                  #table.wkt,
+                                  limitby=(0, limit),
+                                  orderby=~table.level
+                                  )
+            if Lx:
+                Lx_names = ",".join([l.name for l in Lx])
+                location = "%s,%s" % (location, Lx_names)
+                for l in Lx:
+                    if l.level == "L0":
+                        L0 = l.id
+                        continue
+                    elif l.level == "L1":
+                        L1 = l.id
+                        continue
+                    elif l.level == "L2":
+                        L2 = l.id
+                        continue
+                    elif l.level == "L3":
+                        L3 = l.id
+                        continue
+                    elif l.level == "L4":
+                        L4 = l.id
+                        continue
+                    elif l.level == "L5":
+                        L5 = l.id
+                Lx = Lx.as_dict()
+
+        try:
+            results = g.geocode(location, exactly_one=False)
+            if len(results) == 1:
+                place, (lat, lon) = results[0]
+                if Lx:
+                    # Check Results are for a specific address & not just that for the City
+                    results = g.geocode(Lx_names, exactly_one=False)
+                    if len(results) == 1:
+                        place2, (lat2, lon2) = results[0]
+                        if place == place2:
+                            results = "We can only geocode to the Lx"
+                        else:
+                            if Lx:
+                                # Check Results are within relevant bounds
+                                L0_row = None
+                                wkt = None
+                                if L5 and Lx[L5]["gis_feature_type"] != 1:
+                                    wkt = db(table.id == L5).select(table.wkt,
+                                                                    limitby=(0, 1)
+                                                                    ).first().wkt
+                                    used_Lx = "L5"
+                                elif L4 and Lx[L4]["gis_feature_type"] != 1:
+                                    wkt = db(table.id == L4).select(table.wkt,
+                                                                    limitby=(0, 1)
+                                                                    ).first().wkt
+                                    used_Lx = "L4"
+                                elif L3 and Lx[L3]["gis_feature_type"] != 1:
+                                    wkt = db(table.id == L3).select(table.wkt,
+                                                                    limitby=(0, 1)
+                                                                    ).first().wkt
+                                    used_Lx = "L3"
+                                elif L2 and Lx[L2]["gis_feature_type"] != 1:
+                                    wkt = db(table.id == L2).select(table.wkt,
+                                                                    limitby=(0, 1)
+                                                                    ).first().wkt
+                                    used_Lx = "L2"
+                                elif L1 and Lx[L1]["gis_feature_type"] != 1:
+                                    wkt = db(table.id == L1).select(table.wkt,
+                                                                    limitby=(0, 1)
+                                                                    ).first().wkt
+                                    used_Lx = "L1"
+                                elif L0:
+                                    L0_row = db(table.id == L0).select(table.wkt,
+                                                                       table.lon_min,
+                                                                       table.lat_min,
+                                                                       table.lon_max,
+                                                                       table.lat_max,
+                                                                       limitby=(0, 1)
+                                                                       ).first()
+                                    wkt = L0_row.wkt
+                                    used_Lx = "L0"
+                                if wkt:
+                                    from shapely.geometry import point
+                                    from shapely.wkt import loads as wkt_loads
+                                    test = point.Point(lon, lat)
+                                    shape = wkt_loads(wkt)
+                                    ok = test.intersects(shape)
+                                    if not ok:
+                                        results = "Returned value not within %s" % Lx[used_Lx].name
+                                elif L0:
+                                    # Check within country at least
+                                    if not L0_row:
+                                        L0_row = db(table.id == L0).select(table.lon_min,
+                                                                           table.lat_min,
+                                                                           table.lon_max,
+                                                                           table.lat_max,
+                                                                           limitby=(0, 1)
+                                                                           ).first()
+                                    if lat < L0_row["lat_max"] and \
+                                       lat > L0_row["lat_min"] and \
+                                       lon < L0_row["lon_max"] and \
+                                       lon > L0_row["lon_min"]:
+                                        ok = True
+                                    else:
+                                        ok = False
+                                        results = "Returned value not within %s" % check.name
+                                else:
+                                    # We'll just have to trust it!
+                                    ok = True
+                            if ok:
+                                results = dict(lat=lat, lon=lon)
+                    elif not results:
+                        results = "Can't check that these results are specific enough"
+                    else:
+                        results = "Can't check that these results are specific enough"
+                else:
+                    # We'll just have to trust it!
+                    results = dict(lat=lat, lon=lon)
+            elif len(results):
+                results = "Multiple results found"
+                # @ToDo: Iterate through the results to see if just 1 is within the right bounds
+            else:
+                results = "No results found"
+        except:
+            import sys
+            error = sys.exc_info()[1]
+            results = str(error)
+
+        return results
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def get_bearing(lat_start, lon_start, lat_end, lon_end):
         """
             Given a Start & End set of Coordinates, return a Bearing
@@ -773,7 +949,7 @@ class GIS(object):
 
             path_list = map(int, path.split("/"))
             if len(path_list) == 1:
-                # No parents -- path contains only this feature.
+                # No parents - path contains only this feature.
                 return None
 
             # Get path in the desired order, without current feature.
@@ -5639,7 +5815,7 @@ class MAP(DIV):
                     options["config_id"] = config.id
 
             # OSM Authoring
-            pe_id = auth.s3_user_pe_id(auth.user.id) if auth.s3_logged_in() else None
+            pe_id = auth.user.pe_id if auth.s3_logged_in() else None
             if pe_id and s3db.auth_user_options_get_osm(pe_id):
                 # Presence of label turns feature on in s3.gis.js
                 # @ToDo: Provide explicit option to support multiple maps in a page with different options
@@ -5657,7 +5833,17 @@ class MAP(DIV):
             # e.g. removed within S3LocationSelectorWidget[2]
             if opts.get("save", True) and auth.is_logged_in():
                 options["save"] = True
-                i18n["save"] = T("Save")
+                i18n["gis_save_map"] = T("Save Map")
+                i18n["gis_name_map"] = T("Name of Map")
+                i18n["saved"] = T("Saved")
+                i18n["gis_my_maps"] = T("My Maps")
+                db = current.db
+                ptable = db.pr_person
+                person = db(ptable.pe_id == auth.user.pe_id).select(ptable.id,
+                                                                    limitby=(0, 1)
+                                                                    ).first()
+                if person:
+                    options["person_id"] = person.id
                 config_id = vars.get("config", None)
                 if config_id and (config.pe_id == auth.user.pe_id):
                     # Personal config, so Save Button does Updates

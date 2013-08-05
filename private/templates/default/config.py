@@ -75,6 +75,10 @@ settings.base.guided_tour = True
 #settings.auth.registration_organisation_hidden = True
 # Uncomment this to default the Organisation during registration
 #settings.auth.registration_organisation_default = "My Organisation"
+# Uncomment this to request the Organisation Group when a user registers
+#settings.auth.registration_requests_organisation_group = True
+# Uncomment this to have the Organisation Group selection during registration be mandatory
+#settings.auth.registration_organisation_group_required = True
 # Uncomment this to request the Site when a user registers
 #settings.auth.registration_requests_site = True
 # Uncomment to set the default role UUIDs assigned to newly-registered users
@@ -146,16 +150,15 @@ settings.L10n.decimal_separator = "."
 # Make last name in person/user records mandatory
 #settings.L10n.mandatory_lastname = True
 # Configure the list of Religions
-#settings.L10n.get("religions", {
-#                "none": T("none"),
-#                "christian": T("Christian"),
-#                "muslim": T("Muslim"),
-#                "jewish": T("Jewish"),
-#                "buddhist": T("Buddhist"),
-#                "hindu": T("Hindu"),
-#                "bahai": T("Bahai"),
-#                "other": T("other")
-#            })
+#settings.L10n.get("religions", {"none": T("none"),
+                                #"christian": T("Christian"),
+                                #"muslim": T("Muslim"),
+                                #"jewish": T("Jewish"),
+                                #"buddhist": T("Buddhist"),
+                                #"hindu": T("Hindu"),
+                                #"bahai": T("Bahai"),
+                                #"other": T("other")
+                                #})
 # Uncomment this to Translate CMS Series Names
 #settings.L10n.translate_cms_series = True
 # Uncomment this to Translate Location Names
@@ -186,6 +189,8 @@ settings.L10n.decimal_separator = "."
 # NB This can also be over-ridden for specific contexts later
 # e.g. Activities filtered to those of parent Project
 #settings.gis.countries = ["US"]
+# Uncomment to pass Addresses imported from CSV to a Geocoder to try and automate Lat/Lon
+#settings.gis.geocode_imported_addresses = "google"
 # Hide the Map-based selection tool in the Location Selector
 #settings.gis.map_selector = False
 # Hide LatLon boxes in the Location Selector

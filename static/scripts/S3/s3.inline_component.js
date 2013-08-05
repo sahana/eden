@@ -769,7 +769,7 @@ $(function() {
     // Used by S3SQLInlineComponentMultiSelectWidget
     var inline_multiselect_events = function() {
         // Listen for changes on all Inline MultiSelect Widgets
-        $('.multiselect-widget').change(function() {
+        $('.inline-multiselect-widget').change(function() {
             var that = $(this);
             var values = that.val();
             var names = that.attr('id').split('-');

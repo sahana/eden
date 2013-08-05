@@ -886,6 +886,7 @@ class S3OrganisationGroupModel(S3Model):
     names = ["org_group",
              "org_group_membership",
              "org_group_id",
+             "org_group_represent",
              ]
 
     def model(self):
@@ -953,6 +954,7 @@ class S3OrganisationGroupModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         return dict(org_group_id = group_id,
+                    org_group_represent = represent,
                     )
 
     # -------------------------------------------------------------------------
