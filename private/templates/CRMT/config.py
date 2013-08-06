@@ -1137,10 +1137,11 @@ def customize_vulnerability_risk(**attr):
                            )
     
             if r.method == "summary":
+                # Not needed now that Risk data is moved to WMS
                 # Filter out data not associated with any Coalition
-                from s3.s3resource import S3FieldSelector
-                group_filter = (S3FieldSelector("group.id") != None)
-                r.resource.add_filter(group_filter)
+                #from s3.s3resource import S3FieldSelector
+                #group_filter = (S3FieldSelector("group.id") != None)
+                #r.resource.add_filter(group_filter)
 
                 filter_widgets = [S3OptionsFilter("risk_group.group_id",
                                                   label=T("Coalition"),
@@ -1162,13 +1163,14 @@ def customize_vulnerability_risk(**attr):
                                filter_formstyle = filter_formstyle,
                                )
 
-        elif r.representation== "geojson":
-            layer = current.request.get_vars.get("layer", None)
-            if not layer:
-                # Filter out data not associated with any Coalition
-                from s3.s3resource import S3FieldSelector
-                group_filter = (S3FieldSelector("group.id") != None)
-                r.resource.add_filter(group_filter)
+        # Not needed now that Risk data is moved to WMS
+        #elif r.representation== "geojson":
+        #    layer = current.request.get_vars.get("layer", None)
+        #    if not layer:
+        #        # Filter out data not associated with any Coalition
+        #        from s3.s3resource import S3FieldSelector
+        #        group_filter = (S3FieldSelector("group.id") != None)
+        #        r.resource.add_filter(group_filter)
 
         return True
     s3.prep = custom_prep
