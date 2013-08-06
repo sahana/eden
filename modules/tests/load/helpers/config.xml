@@ -1,0 +1,22 @@
+<clients>
+	<!-- Client side setup -->
+	<client host="localhost" use_controller_vm="true" maxusers="200000"/>
+</clients>
+
+<servers>
+	<!-- Server side setup -->
+	<server host="127.0.0.1" port="8000" type="tcp"></server>
+</servers>
+
+<load>
+	<!-- several arrival phases can be set: for each phase, you can set
+	the mean inter-arrival time between new clients and the phase
+	duration -->
+	<arrivalphase phase="1" duration="5" unit="minute">
+    	<users maxnumber="50" interarrival="5" unit="second"></users>
+    </arrivalphase>
+
+   <arrivalphase phase="2" duration="10" unit="minute">
+    	<users maxnumber="100" interarrival="3" unit="second"></users>
+   </arrivalphase>
+</load>
