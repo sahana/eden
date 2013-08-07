@@ -125,27 +125,27 @@ class index():
 
 # =============================================================================
 class datalist():
-    """ Alternate URL for Updates page """
+    """ Alternate URL for Newfeed page """
 
     def __call__(self):
 
-        return _updates()
+        return _newsfeed()
 
 # =============================================================================
 class datalist_dl_post():
-    """ AJAX URL for CMS Posts (for Updates page) """
+    """ AJAX URL for CMS Posts (for Newsfeed page) """
 
     def __call__(self):
 
-        return _updates()
+        return _newsfeed()
 
 # =============================================================================
 class datalist_dl_filter():
-    """ AJAX URL for CMS Posts Filter Form (for Updates page) """
+    """ AJAX URL for CMS Posts Filter Form (for Newsfeed page) """
 
     def __call__(self):
 
-        return _updates()
+        return _newsfeed()
 
 # =============================================================================
 class login():
@@ -156,23 +156,23 @@ class login():
         return _login()
 
 # =============================================================================
-class updates():
-    """ Updates page """
+class newsfeed():
+    """ Newsfeed page """
 
     def __call__(self):
 
-        return _updates()
+        return _newsfeed()
 
 # =============================================================================
 class validate():
-    """ Alternate URL for Updates page """
+    """ Alternate URL for Newsfeed page """
 
     def __call__(self):
 
-        return _updates()
+        return _newsfeed()
 
 # =============================================================================
-def _updates():
+def _newsfeed():
     """
         Custom Page
         - Filterable DataList of CMS Posts & a DataList of Events
@@ -275,7 +275,7 @@ def _updates():
         # Set Title & View after REST Controller, in order to override
         output["title"] = T("News Feed")
         view = path.join(request.folder, "private", "templates",
-                         THEME, "views", "updates.html")
+                         THEME, "views", "newsfeed.html")
         try:
             # Pass view as file not str to work in compiled mode
             response.view = open(view, "rb")
@@ -357,7 +357,7 @@ def filter_formstyle(row_id, label, widget, comment, hidden=False):
 # -----------------------------------------------------------------------------
 def render_events(listid, resource, rfields, record, **attr):
     """
-        Custom dataList item renderer for 'Disasters' on the Updates page
+        Custom dataList item renderer for 'Disasters' on the Newsfeed page
 
         @param listid: the HTML ID for this list
         @param resource: the S3Resource to render
