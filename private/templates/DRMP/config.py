@@ -1051,7 +1051,7 @@ def render_organisations(listid, resource, rfields, record, **attr):
 # -----------------------------------------------------------------------------
 def render_posts(listid, resource, rfields, record, **attr):
     """
-        Custom dataList item renderer for CMS Posts on the Home & Updates pages
+        Custom dataList item renderer for CMS Posts on the Home & Newsfeed pages
 
         @param listid: the HTML ID for this list
         @param resource: the S3Resource to render
@@ -1192,7 +1192,7 @@ def render_posts(listid, resource, rfields, record, **attr):
         docs = ""
 
     if current.request.controller == "default":
-        # Mixed resource lists (Home, Updates)
+        # Mixed resource lists (Home, Newsfeed)
         icon = series.lower().replace(" ", "_")
         card_label = TAG[""](I(_class="icon icon-%s" % icon),
                              SPAN(" %s" % T(series),
@@ -2182,7 +2182,7 @@ def customize_cms_post(**attr):
             field.label = T("Type")
             refresh = get_vars.get("refresh", None)
             if refresh == "datalist":
-                # We must be coming from the Updates page so can change the type on-the-fly
+                # We must be coming from the Newsfeed page so can change the type on-the-fly
                 field.readable = field.writable = True
             #field.requires = field.requires.other
             #field = table.name
@@ -2202,7 +2202,7 @@ def customize_cms_post(**attr):
             #table.comments.readable = table.comments.writable = False
 
             if current.request.controller == "default":
-                # Don't override card layout for Updates/Homepage
+                # Don't override card layout for Newsfeed/Homepage
                 return True
 
             # Filter from a Profile page?
@@ -2259,7 +2259,7 @@ def customize_cms_post(**attr):
 
             # Return to List view after create/update/delete
             # We now do all this in Popups
-            #url_next = URL(c="default", f="index", args="updates")
+            #url_next = URL(c="default", f="index", args="newsfeed")
 
             s3db.configure("cms_post",
                            #create_next = url_next,
@@ -3817,11 +3817,7 @@ def customize_project_project(**attr):
             # If so, then default the fields we know
             get_vars = current.request.get_vars
             organisation_id = get_vars.get("~.(organisation)", None)
-            if organisation_id:
-                org_field = table.organisation_id
-                org_field.default = organisation_id
-                org_field.readable = org_field.writable = False
-                crud_form = S3SQLCustomForm(
+            crud_form_fields = [
                     "name",
                     S3SQLInlineComponent(
                         "location",
@@ -3830,6 +3826,7 @@ def customize_project_project(**attr):
                         orderby = "location_id$name",
                         render_list = True
                     ),
+                    "description",
                     "human_resource_id",
                     "start_date",
                     "end_date",
@@ -3855,6 +3852,7 @@ def customize_project_project(**attr):
                                         )
                     ),
                     "budget",
+                    "objectives",
                     # Files
                     S3SQLInlineComponent(
                         "document",
@@ -3865,7 +3863,11 @@ def customize_project_project(**attr):
                                   ],
                     ),
                     "comments",
-                )
+                    ]
+            if organisation_id:
+                org_field = table.organisation_id
+                org_field.default = organisation_id
+                org_field.readable = org_field.writable = False
             else:
                 location_field = s3db.project_location.location_id
                 location_id = get_vars.get("~.(location)", None)
@@ -3885,53 +3887,9 @@ def customize_project_project(**attr):
                 location_field.comment = None
                 # Simple dropdown
                 location_field.widget = None
-                
-                crud_form = S3SQLCustomForm(
-                    "name",
-                    "organisation_id",
-                    S3SQLInlineComponent(
-                        "location",
-                        label = T("Districts"),
-                        fields = ["location_id"],
-                        orderby = "location_id$name",
-                        render_list = True
-                    ),
-                    "human_resource_id",
-                    "start_date",
-                    "end_date",
-                    # Partner Orgs
-                    S3SQLInlineComponent(
-                        "organisation",
-                        name = "partner",
-                        label = T("Partner Organizations"),
-                        fields = ["organisation_id",
-                                  ],
-                        filterby = dict(field = "role",
-                                        options = "2"
-                                        )
-                    ),
-                    # Donors
-                    S3SQLInlineComponent(
-                        "organisation",
-                        name = "donor",
-                        label = T("Donor(s)"),
-                        fields = ["organisation_id", "amount", "currency"],
-                        filterby = dict(field = "role",
-                                        options = "3"
-                                        )
-                    ),
-                    "budget",
-                    # Files
-                    S3SQLInlineComponent(
-                        "document",
-                        name = "file",
-                        label = T("Files"),
-                        fields = ["file",
-                                  #"comments"
-                                  ],
-                    ),
-                    "comments",
-                )
+                crud_form_fields.insert(1, "organisation_id")
+
+            crud_form = S3SQLCustomForm(*crud_form_fields)
 
             list_fields = ["name",
                            "organisation_id",
