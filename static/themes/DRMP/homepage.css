@@ -87,6 +87,7 @@ div.carousel-caption p {
         text-align: center;
         padding-right: 8px;
         padding-left: 8px;
+        text-shadow: none;
     }
     div.carousel-caption p{
         padding-left: 12px;
@@ -106,14 +107,12 @@ a.btn.btn-register {
 a.btn.btn-custom.btn-login {
     margin-top: 20px;
     padding: 10px 40px;
-    margin-left: 39px;
 }
 
 @media screen and (max-width: 767px) {
     a.btn.btn-register,
     a.btn.btn-custom.btn-login {
-        margin-top: 10px;
-        margin-left: 39px;
+        margin-top: 15px;
         padding: 5px 15px;
         font-size: 12px;
     }
