@@ -1051,7 +1051,7 @@ def render_organisations(listid, resource, rfields, record, **attr):
 # -----------------------------------------------------------------------------
 def render_posts(listid, resource, rfields, record, **attr):
     """
-        Custom dataList item renderer for CMS Posts on the Home & Newsfeed pages
+        Custom dataList item renderer for CMS Posts on the Home & News Feed pages
 
         @param listid: the HTML ID for this list
         @param resource: the S3Resource to render
@@ -1192,7 +1192,7 @@ def render_posts(listid, resource, rfields, record, **attr):
         docs = ""
 
     if current.request.controller == "default":
-        # Mixed resource lists (Home, Newsfeed)
+        # Mixed resource lists (Home, News Feed)
         icon = series.lower().replace(" ", "_")
         card_label = TAG[""](I(_class="icon icon-%s" % icon),
                              SPAN(" %s" % T(series),
@@ -2182,7 +2182,7 @@ def customize_cms_post(**attr):
             field.label = T("Type")
             refresh = get_vars.get("refresh", None)
             if refresh == "datalist":
-                # We must be coming from the Newsfeed page so can change the type on-the-fly
+                # We must be coming from the News Feed page so can change the type on-the-fly
                 field.readable = field.writable = True
             #field.requires = field.requires.other
             #field = table.name
@@ -2202,7 +2202,7 @@ def customize_cms_post(**attr):
             #table.comments.readable = table.comments.writable = False
 
             if current.request.controller == "default":
-                # Don't override card layout for Newsfeed/Homepage
+                # Don't override card layout for News Feed/Homepage
                 return True
 
             # Filter from a Profile page?
@@ -3748,6 +3748,7 @@ def customize_project_project_fields():
 
     s3db.project_location.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
     table = s3db.project_project
+    table.objectives.readable = table.objectives.writable = True
     table.start_date.represent = date_represent
     table.end_date.represent = date_represent
     table.modified_by.represent = s3_auth_user_represent_name
@@ -3781,8 +3782,6 @@ def customize_project_project(**attr):
     """
 
     s3 = current.response.s3
-    s3db = current.s3db
-    table = s3db.project_project
 
     # Remove rheader
     attr["rheader"] = None
@@ -3796,6 +3795,8 @@ def customize_project_project(**attr):
             if not result:
                 return False
 
+        s3db = current.s3db
+        table = s3db.project_project
         if r.method == "datalist":
             customize_project_project_fields()
             s3db.configure("project_project",
@@ -3806,6 +3807,7 @@ def customize_project_project(**attr):
         elif r.interactive  or r.representation == "aadata":
             from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
             # Configure fields 
+            table.objectives.readable = table.objectives.writable = True
             table.human_resource_id.label = T("Focal Person")
             table.budget.label = "%s (USD)" % T("Budget")
             # Better in column label & otherwise this construction loses thousands separators

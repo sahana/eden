@@ -247,6 +247,8 @@ class S3ProjectModel(S3Model):
                                          writable = False if multi_budgets else True,
                                          ),
                              Field("objectives", "text",
+                                   readable = mode_3w,
+                                   writable = mode_3w,
                                    label = T("Objectives")),
                              human_resource_id(label=T("Contact Person")),
                              s3_comments(comment=DIV(_class="tooltip",

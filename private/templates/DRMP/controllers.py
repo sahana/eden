@@ -125,7 +125,7 @@ class index():
 
 # =============================================================================
 class datalist():
-    """ Alternate URL for Newfeed page """
+    """ Alternate URL for News Feed page """
 
     def __call__(self):
 
@@ -133,7 +133,7 @@ class datalist():
 
 # =============================================================================
 class datalist_dl_post():
-    """ AJAX URL for CMS Posts (for Newsfeed page) """
+    """ AJAX URL for CMS Posts (for News Feed page) """
 
     def __call__(self):
 
@@ -141,7 +141,7 @@ class datalist_dl_post():
 
 # =============================================================================
 class datalist_dl_filter():
-    """ AJAX URL for CMS Posts Filter Form (for Newsfeed page) """
+    """ AJAX URL for CMS Posts Filter Form (for News Feed page) """
 
     def __call__(self):
 
@@ -165,7 +165,7 @@ class newsfeed():
 
 # =============================================================================
 class validate():
-    """ Alternate URL for Newsfeed page """
+    """ Alternate URL for News Feed page """
 
     def __call__(self):
 
@@ -357,7 +357,7 @@ def filter_formstyle(row_id, label, widget, comment, hidden=False):
 # -----------------------------------------------------------------------------
 def render_events(listid, resource, rfields, record, **attr):
     """
-        Custom dataList item renderer for 'Disasters' on the Newsfeed page
+        Custom dataList item renderer for 'Disasters' on the News Feed page
 
         @param listid: the HTML ID for this list
         @param resource: the S3Resource to render
