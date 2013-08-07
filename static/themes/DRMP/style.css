@@ -62,6 +62,7 @@ form {
     -moz-box-sizing: inherit;
     min-height: inherit;
     width: 206px;
+    padding: 4px;
 }
 
 .tooltip {
@@ -107,6 +108,12 @@ div.dl {
 .export_xls {
     background-image: url(img/icon-xls.png);
 }
+
+div.span6 div.list_formats .export_xls {
+	margin-top: -17px;
+}
+
+
 .loading {
     background: url(img/ajax-loader.gif) center no-repeat !important;
 } /*
@@ -166,8 +173,7 @@ a.btn.btn-primary.main-add {
     font-size: 15px;
     float: right;
     position: relative;
-    right: 13px;
-    top: 24px;
+	top: 24px;
 }
 
 /* Add button on Updates page & Disaster selection screen */
@@ -195,14 +201,18 @@ a i.icon.icon-plus-sign.big-add:hover {
 }
 
 /* Forms */
-form.form-horizontal {  /*temporary we need to pass another class to the form so it can be styled without problems*/
+form.form-horizontal {  
     background-color: #fff;
-    border: 1px solid #b2b2b2;
     box-shadow: none;
     border-radius: 5px;
     box-shadow: none;
     padding-top: 7px;
     padding-left: 9px;
+}
+form.form-horizontal.pr_person,
+form.form-horizontal.org_resource,
+form.form-horizontal.project_project {
+	 border: 1px solid #b2b2b2;
 }
 
 .form-container form fieldset {
@@ -475,7 +485,6 @@ table.embeddedComponent .add-row td {
 
 #list-add form.form-horizontal {
     background-color: #fff;
-    border: 1px solid #b2b2b2;
     border-radius: 0 0 5px 5px;
     position: relative;
     padding-top: 7px;
@@ -573,6 +582,34 @@ div.defaultlocation_error.error{
 /* Dropdown with AddResourceLink takes up more vertical space than an INPUT so center the INPUTS
     and the + button and throbber
  */
+ 
+ input#dummy_project_project_human_resource_id.string.ui-autocomplete-input,
+ #project_project_budget,
+ input#project_project_name.input-xlarge.string,
+  #project_project_organisation_id,
+  #project_project_comments,
+  #org_resource_comments  {
+ 	width: 300px!important;
+ 	padding: 4px;
+ }
+ 
+ #sub_donororganisation_donororganisation_i_amount_edit_none {
+ 	width: 60px!important;
+	 margin-left: 5px;
+	 margin-top: -1px;
+	 padding: 4px;
+ }
+ 
+ #project_project_start_date,
+ #project_project_end_date,
+ #sub_defaultlocation_defaultlocation_i_location_id_edit_none  {
+	width: 280px!important;
+}
+
+#project_project_sub_partnerorganisation__row {
+	margin-top: 15px;
+}
+
 #sub_donororganisation_donororganisation_i_currency_edit_none,
 #sub_donororganisation_donororganisation_i_currency_edit_0,
 #sub_donororganisation_donororganisation_i_amount_edit_none,
@@ -589,7 +626,7 @@ div.defaultlocation_error.error{
 #sub_partnerorganisation_partnerorganisation_i_organisation_id_edit_0,
 #sub_donororganisation_donororganisation_i_organisation_id_edit_none,
 #sub_donororganisation_donororganisation_i_organisation_id_edit_0 {
-    width: 250px;
+    width: 280px;
 }
 #sub_donororganisation_donororganisation_i_amount_edit_none,
 #sub_donororganisation_donororganisation_i_amount_edit_0 {

@@ -31,6 +31,40 @@ h4.latest-disasters{
     margin-right: -6px;
 }
 
+#cms_post_date.datetimepicker.hasDatepicker {
+	width: 140px!important;
+	margin-right: 10px;
+}
+#sub_filedocument_filedocument_i_file_edit_none,
+#sub_defaultevent_post_defaultevent_post_i_event_id_edit_none {
+	width: 206px!important;
+
+}
+
+form.form-horizontal #map_panel {
+	margin-left: 30px;	
+	margin-bottom: 10px;
+}
+
+#submit_record__row  {
+	background: none;
+	border-top: none;
+	padding-bottom: none;
+	width: 220px;
+	margin-top: -15px;
+}
+
+#submit_record__row.btn.btn-primary{
+	margin-left:240px;
+	margin-right: 240px;
+	padding: 1000px;
+}
+
+div.ui-dialog.ui-widget.ui-widget-content.ui-corner-all.ui-front.ui-draggable.ui-resizable {
+	width: 600px!important;
+
+}
+
 @media screen and (max-width: 767px){
     h4.latest-disasters {
         display: inline-block;
