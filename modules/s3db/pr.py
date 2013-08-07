@@ -5029,8 +5029,12 @@ def pr_descendants(pe_ids, skip=None, root=True):
 
     if skip is None:
         skip = set()
-    
-    pe_ids = {i for i in pe_ids if i not in skip}
+
+    # We still need to support Py 2.6
+    #pe_ids = {i for i in pe_ids if i not in skip}
+    for i in pe_ids:
+        if i not in skip:
+            del pe_ids[i]
     if not pe_ids:
         return {}
 
