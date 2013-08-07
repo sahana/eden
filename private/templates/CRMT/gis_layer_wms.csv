@@ -1,5 +1,7 @@
 Name,Description,URL,Layers,Folder,Enabled,Visible,Base,Transparent,Opacity,Format,Queryable,LegendURL,Tiled,Map
-"Population","2010 Census, http://www.census.gov/2010census/ DP0010001","http://lacrmt.sahanafoundation.org:8080/geoserver/lacrmt/wms","Population",Demographics,False,False,False,True,0.6,"image/png",True,,True,
+"Population","2010 Census, http://www.census.gov/2010census/ DP0010001","http://lacrmt.sahanafoundation.org:8080/geoserver/lacrmt/wms","Population",Demographics,True,False,False,True,0.6,"image/png",True,,True,
+"Population Density","2010 Census, http://www.census.gov/2010census/ DP0010001 per square mile of land","http://lacrmt.sahanafoundation.org:8080/geoserver/lacrmt/wms","PopulationDensity",Demographics,True,False,False,True,0.6,"image/png",True,,True,
+"Owner-occupied Housing Units","2010 Census, http://www.census.gov/2010census/ DP0220001 percentage of occupied housing units which are owner-occupied","http://lacrmt.sahanafoundation.org:8080/geoserver/lacrmt/wms","OwnerOccupied",Demographics,True,False,False,True,0.6,"image/png",True,,True,
 "Flood Zones","FEMA Flood Zones http://dpw.lacounty.gov/wmd/floodzone/","http://lacrmt.sahanafoundation.org:8080/geoserver/lacrmt/wms","flood",Hazards,True,False,False,True,0.6,"image/png",True,,True,
 "Landslide Susceptibility","Landslide Susceptibility ftp://ftp.consrv.ca.gov/pub/dmg/rgmp/MS58/Susdata.zip","http://lacrmt.sahanafoundation.org:8080/geoserver/lacrmt/wms","laco_suscep",Hazards,True,False,False,True,0.6,"image/png",True,,True,
 "Tsunami Indundation","Statewide Indundation Area","http://lacrmt.sahanafoundation.org:8080/geoserver/lacrmt/wms","tsunami",Hazards,True,False,False,True,0.6,"image/png",True,,True,
