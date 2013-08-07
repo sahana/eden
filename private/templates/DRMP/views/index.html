@@ -16,7 +16,7 @@
   <h1>{{=T("Timor-Leste Disaster Information System")}}<br></h1>
   <p>{{=T("Improving disaster prevention, preparedness and response in Timor-Leste.")}}</p>
   {{if not auth.is_logged_in():}}
-  <p><a href='/{{=appname}}/default/user/login?_next=/{{=appname}}/default/index/updates' class='btn btn-custom btn-login'><i class='icon-signin'></i> {{=T("LOGIN")}} </a>
+  <p><a href='/{{=appname}}/default/user/login?_next=/{{=appname}}/default/index/newsfeed' class='btn btn-custom btn-login'><i class='icon-signin'></i> {{=T("LOGIN")}} </a>
   <a href='/{{=appname}}/default/user/register' class='btn btn-register'><i class='icon-pencil'></i> {{=T("REGISTER")}} </a></p>{{pass}}
  </div>
 </div>
