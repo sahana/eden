@@ -62,6 +62,7 @@ form {
     -moz-box-sizing: inherit;
     min-height: inherit;
     width: 206px;
+    padding: 4px;
 }
 
 .tooltip {
@@ -106,7 +107,9 @@ div.dl {
 
 .export_xls {
     background-image: url(img/icon-xls.png);
+    margin-top: -17px;
 }
+
 .loading {
     background: url(img/ajax-loader.gif) center no-repeat !important;
 } /*
@@ -166,7 +169,6 @@ a.btn.btn-primary.main-add {
     font-size: 15px;
     float: right;
     position: relative;
-    right: 13px;
     top: 24px;
 }
 
@@ -194,15 +196,23 @@ a i.icon.icon-plus-sign.big-add:hover {
     background-image: linear-gradient(top,#f9f9fa,#e0e2e8) !important;
 }
 
+.ui-dialog {
+	width: 600px !important;
+}
+
 /* Forms */
-form.form-horizontal {  /*temporary we need to pass another class to the form so it can be styled without problems*/
+form.form-horizontal {  
     background-color: #fff;
-    border: 1px solid #b2b2b2;
     box-shadow: none;
     border-radius: 5px;
     box-shadow: none;
     padding-top: 7px;
     padding-left: 9px;
+}
+form.form-horizontal.pr_person,
+form.form-horizontal.org_resource,
+form.form-horizontal.project_project {
+    border: 1px solid #b2b2b2;
 }
 
 .form-container form fieldset {
@@ -230,13 +240,20 @@ form.form-horizontal {  /*temporary we need to pass another class to the form so
 }
 
 #submit_record__row {
+    background: none;
+    border-top: none;
+    padding-bottom: none;
+    width: 220px;
+    margin-top: -15px;
     margin-bottom: -24px;
     margin-left: -18px;
     margin-right: -15px;
 }
 
-#submit_record__row input.btn.btn-primary {
+#submit_record__row .btn-primary {
     padding: 5px 20px;
+    margin-left: 240px;
+    margin-right: 240px;
 }
 
 #delete-btn, 
@@ -374,8 +391,13 @@ b.red {
     font-size: 11px;
 }
 
-/* Help Tooltips */
+/* Location Selector */
+form.form-horizontal #map_panel {
+    margin-left: 30px;	
+    margin-bottom: 10px;
+}
 
+/* Help Tooltips */
 .cluetip-default{
     background-color: #ffffff;
     border: 1px solid #ccc;
@@ -475,7 +497,6 @@ table.embeddedComponent .add-row td {
 
 #list-add form.form-horizontal {
     background-color: #fff;
-    border: 1px solid #b2b2b2;
     border-radius: 0 0 5px 5px;
     position: relative;
     padding-top: 7px;
@@ -520,7 +541,7 @@ label.ui-corner-all span {
     font-size: 12px;
 }
 
-/* Updates */
+/* Posts */
 #body__error,
 #name__error,
 #location_id__error {
@@ -543,6 +564,15 @@ div.defaultlocation_error.error{
     color: #b84947;
     background-color: #f2dedd;
     margin-top: 7px;
+}
+
+#cms_post_date {
+    width: 140px !important;
+    margin-right: 10px;
+}
+#sub_filedocument_filedocument_i_file_edit_none,
+#sub_defaultevent_post_defaultevent_post_i_event_id_edit_none {
+    width: 206px !important;
 }
 
 /* Contacts Page */
@@ -573,6 +603,34 @@ div.defaultlocation_error.error{
 /* Dropdown with AddResourceLink takes up more vertical space than an INPUT so center the INPUTS
     and the + button and throbber
  */
+
+#dummy_project_project_human_resource_id,
+#project_project_budget,
+#project_project_name,
+#project_project_organisation_id,
+#project_project_comments,
+#org_resource_comments  {
+    width: 300px !important;
+    padding: 4px;
+}
+ 
+#sub_donororganisation_donororganisation_i_amount_edit_none {
+    width: 60px !important;
+    margin-left: 5px;
+    margin-top: -1px;
+    padding: 4px;
+}
+
+#project_project_start_date,
+#project_project_end_date,
+#sub_defaultlocation_defaultlocation_i_location_id_edit_none  {
+    width: 280px !important;
+}
+
+#project_project_sub_partnerorganisation__row {
+    margin-top: 15px;
+}
+
 #sub_donororganisation_donororganisation_i_currency_edit_none,
 #sub_donororganisation_donororganisation_i_currency_edit_0,
 #sub_donororganisation_donororganisation_i_amount_edit_none,
@@ -589,7 +647,7 @@ div.defaultlocation_error.error{
 #sub_partnerorganisation_partnerorganisation_i_organisation_id_edit_0,
 #sub_donororganisation_donororganisation_i_organisation_id_edit_none,
 #sub_donororganisation_donororganisation_i_organisation_id_edit_0 {
-    width: 250px;
+    width: 280px;
 }
 #sub_donororganisation_donororganisation_i_amount_edit_none,
 #sub_donororganisation_donororganisation_i_amount_edit_0 {

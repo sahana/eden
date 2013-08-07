@@ -1,13 +1,13 @@
 @charset "UTF-8";
 
 body {
-    padding-top: 80px;
+    padding-top: 90px;
 }
 
 /* Responsive style */
 @media screen and (min-width: 768px) and (max-width: 1000px) {
     body {
-        padding-top: 30px;
+        padding-top: 60px;
     }
 }
 
