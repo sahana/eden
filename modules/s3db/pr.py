@@ -5032,10 +5032,9 @@ def pr_descendants(pe_ids, skip=None, root=True):
 
     # We still need to support Py 2.6
     #pe_ids = {i for i in pe_ids if i not in skip}
-    pe_ids = [i for i in pe_ids if i not in skip]
+    pe_ids = set(i for i in pe_ids if i not in skip)
     if not pe_ids:
         return {}
-    pe_ids = set(pe_ids)
 
     s3db = current.s3db
     etable = s3db.pr_pentity
@@ -5136,20 +5135,18 @@ def pr_get_descendants(pe_ids, entity_types=None, skip=None, ids=True):
         rows = db(query).select(etable.pe_id, etable.instance_type)
         # We still need to support Py 2.6
         #result = {(r.pe_id, r.instance_type) for r in rows}
-        result = [(r.pe_id, r.instance_type) for r in rows]
-        result = set(result)
+        result = set((r.pe_id, r.instance_type) for r in rows)
         # We still need to support Py 2.6
         #node_ids = {i for i, t in result if i not in skip}
-        node_ids = [i for i, t in result if i not in skip]
+        node_ids = set(i for i, t in result if i not in skip)
     else:
         rows = db(query).select(atable.pe_id)
         # We still need to support Py 2.6
         #result = {r.pe_id for r in rows}
-        result = [r.pe_id for r in rows]
-        result = set(result)
+        result = set(r.pe_id for r in rows)
         # We still need to support Py 2.6
         #node_ids = {i for i in result if i not in skip}
-        node_ids = [i for i in result if i not in skip]
+        node_ids = set(i for i in result if i not in skip)
     # Recurse
     if node_ids:
         descendants = pr_get_descendants(node_ids,
