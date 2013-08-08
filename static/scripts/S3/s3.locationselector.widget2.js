@@ -118,6 +118,7 @@
         } else {
             $(selector + '_map_icon').click(function() {
                 showMap(fieldname);
+                return false;
             });
         }
 

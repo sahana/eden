@@ -5380,7 +5380,7 @@ class GIS(object):
                  toolbar = False,
                  nav = None,
                  area = False,
-                 save = True,
+                 save = False,
                  search = False,
                  mouse_position = None,
                  overview = None,

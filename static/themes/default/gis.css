@@ -23,6 +23,13 @@ form .map_loader {
 }
 
 /* Location Selector Widget */
+.form-container form button.gis_loc_select_btn {
+    padding: 4px;
+}
+.form-container form button.gis_loc_select_btn i.icon-map {
+    padding-right: 2px;
+}
+
 .gis_coord_wrap .decimal {
     width: 174px;
 }

@@ -4152,7 +4152,6 @@ class S3LocationSelectorWidget2(FormWidget):
                                # Hide controls from toolbar
                                nav = False,
                                area = False,
-                               save = False,
                                # Don't use normal callback (since we postpone rendering Map until DIV unhidden)
                                # but use our one if we need to display a map by default
                                callback = callback if use_callback else None,
@@ -4160,11 +4159,13 @@ class S3LocationSelectorWidget2(FormWidget):
             icon_id = "%s_map_icon" % fieldname
             row_id = "%s_map_icon__row" % fieldname
             if formstyle == "bootstrap":
-                map_icon = DIV(LABEL(I(_class="icon-map",
-                                       _id=icon_id,
-                                       ),
-                                     _class="control-label",
-                                     ),
+                map_icon = DIV(DIV(BUTTON(I(_class="icon-map"),
+                                          T("Find on Map"),
+                                          _id=icon_id,
+                                          _class="btn gis_loc_select_btn",
+                                          ),
+                                   _class="controls",
+                                   ),
                                _id = row_id,
                                _class = "control-group hide",
                                )
@@ -4706,11 +4707,10 @@ class S3SliderWidget(FormWidget):
                  minval,
                  maxval,
                  steprange,
-                 value):
+                 ):
         self.minval = minval
         self.maxval = maxval
         self.steprange = steprange
-        self.value = value
 
     def __call__(self, field, value, **attributes):
 
@@ -4723,14 +4723,14 @@ class S3SliderWidget(FormWidget):
         sliderinput = INPUT(_name=localfield[1],
                             _id=inputid,
                             _class="hide",
-                            _value=self.value)
+                            _value=value)
 
-        response.s3.jquery_ready.append('''S3.slider('%s','%f','%f','%f','%f')''' % \
+        response.s3.jquery_ready.append('''S3.slider('%s','%f','%f','%f','%s')''' % \
           (fieldname,
            self.minval,
            self.maxval,
            self.steprange,
-           self.value))
+           value))
 
         return TAG[""](sliderdiv, sliderinput)
 

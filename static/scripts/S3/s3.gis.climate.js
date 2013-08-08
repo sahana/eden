@@ -279,7 +279,7 @@ var ColourKey = OpenLayers.Class(OpenLayers.Control, {
         colour_scale.$upper_limit = INPUT({size:5, value:'Max', 
             style:'text-align:right;'
         });
-        colour_scale.$limit_lock = INPUT({type:'checkbox', name:'key-lock', id:'key_lock'});
+        colour_scale.$limit_lock = INPUT({type: 'checkbox', name: 'key-lock', id: 'key_lock'});
         colour_scale.$limit_lock_label = $('<label for="key_lock">Lock limits between queries</label>');
         colour_scale.$key_colour_scale_img = IMG({width:'100%', height:'15px'});
         colour_scale.$units = SPAN({}, 'Units');
@@ -464,13 +464,15 @@ var QueryBox = OpenLayers.Class(OpenLayers.Control, {
                 'font-size: 0.9em;'
             )
             },
+            // @ToDo: i18n
             'Query'
         );
 
         var $update_button = query_box.$update_button = INPUT({
-            type:'button',
-            value:'Compute and show on map',
-            style:'margin-top:5px;'
+            type: 'button',
+            // @ToDo: i18n
+            value: 'Compute and show on map',
+            style: 'margin-top:5px;'
         });
         $update_button.hide();
         $update_button.click(function() {

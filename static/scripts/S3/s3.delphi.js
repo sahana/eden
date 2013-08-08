@@ -2,13 +2,13 @@
 
 $(document).ready(function() {
     // Make the listings sortable
-    $( '#solutions, #rankings' ).sortable({
+    $('#solutions, #rankings').sortable({
         connectWith: '.connectedSortable',
         placeholder: 'ui-state-highlight'
     }).disableSelection();
 
     // AJAX Save
-    $( '#vote_button' ).click(function() {
+    $('#vote_button').click(function() {
         $(this).html(i18n.delphi_saving);
         $(this).addClass('saving');
         var ranks = $('#rankings').sortable('toArray').toString();
