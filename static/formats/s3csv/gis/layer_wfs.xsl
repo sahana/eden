@@ -3,21 +3,28 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         KML Layers - CSV Import Stylesheet
+         WFS Layers - CSV Import Stylesheet
 
          CSV column...........Format..........Content
 
          Name.................string..........Layer Name
          Description..........string..........Layer Description
          URL..................string..........Layer URL
+         Projection............string.........Layer Projection (mandatory)
          Symbology............string..........Symbology Name
          Marker...............string..........Layer Symbology Marker Name
-         Folder...............string..........Layer Folder
+         Style................string..........Layer Style
+         Feature Type.........string..........Layer Feature Type (mandatory)
+         Feature Namespace....string..........Layer Feature Namespace (optional)
          Title................string..........Layer Title
-         Body.................string..........Layer Body
+         Geometry Name........string..........Layer Geometry Name
+         Folder...............string..........Layer Folder
          Config...............string..........Configuration Name
          Enabled..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
          Visible..............boolean.........Layer Visible in config? (SITE_DEFAULT if not-specified)
+         Cluster Distance.....integer.........Layer Cluster Distance: The number of pixels apart that features need to be before they are clustered (default=20)
+         Cluster Threshold....integer.........Layer Cluster Threshold: The minimum number of features to form a cluster (default=2)
+         Refresh..............integer.........layer Refresh (Number of seconds between refreshes: 0 to disable)
 
          Needs Importing twice:
             layer_config
@@ -31,6 +38,7 @@
     <xsl:key name="configs" match="row" use="col[@field='Config']/text()"/>
     <xsl:key name="layers" match="row" use="col[@field='Name']/text()"/>
     <xsl:key name="markers" match="row" use="col[@field='Marker']/text()"/>
+    <xsl:key name="projections" match="row" use="col[@field='Projection']/text()"/>
     <xsl:key name="symbologies" match="row" use="col[@field='Symbology']/text()"/>
 
     <!-- ****************************************************************** -->
@@ -42,7 +50,13 @@
                 <xsl:call-template name="Config"/>
             </xsl:for-each>
 
-            <!-- KML Layers -->
+            <!-- Projections -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('projections',
+                                                                   col[@field='Projection'])[1])]">
+                <xsl:call-template name="Projection"/>
+            </xsl:for-each>
+
+            <!-- WFS Layers -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('layers',
                                                                    col[@field='Name'])[1])]">
                 <xsl:call-template name="Layer"/>
@@ -71,7 +85,7 @@
         <xsl:variable name="Layer" select="col[@field='Name']/text()"/>
 
         <resource name="gis_layer_symbology">
-            <reference field="layer_id" resource="gis_layer_kml">
+            <reference field="layer_id" resource="gis_layer_wfs">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$Layer"/>
                 </xsl:attribute>
@@ -108,8 +122,9 @@
 
         <xsl:variable name="Layer" select="col[@field='Name']/text()"/>
         <xsl:variable name="Config" select="col[@field='Config']/text()"/>
+        <xsl:variable name="Projection" select="col[@field='Projection']/text()"/>
 
-        <resource name="gis_layer_kml">
+        <resource name="gis_layer_wfs">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$Layer"/>
             </xsl:attribute>
@@ -117,16 +132,25 @@
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
             <data field="url"><xsl:value-of select="col[@field='URL']"/></data>
             <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
+            <reference field="projection_id" resource="gis_projection">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$Projection"/>
+                </xsl:attribute>
+            </reference>
+            <data field="featureType"><xsl:value-of select="col[@field='Feature Type']"/></data>
+            <xsl:if test="col[@field='Feature Namespace'] != ''">
+                <data field="featureNS"><xsl:value-of select="col[@field='Feature Namespace']"/></data>
+            </xsl:if>
             <xsl:if test="col[@field='Title'] != ''">
                 <data field="title"><xsl:value-of select="col[@field='Title']"/></data>
             </xsl:if>
-            <xsl:if test="col[@field='Body'] != ''">
-                <data field="body"><xsl:value-of select="col[@field='Body']"/></data>
+            <xsl:if test="col[@field='Geometry Name'] != ''">
+                <data field="geometryName"><xsl:value-of select="col[@field='Geometry Name']"/></data>
             </xsl:if>
         </resource>
 
         <resource name="gis_layer_config">
-            <reference field="layer_id" resource="gis_layer_kml">
+            <reference field="layer_id" resource="gis_layer_wfs">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$Layer"/>
                 </xsl:attribute>
@@ -145,6 +169,7 @@
                     </xsl:otherwise>
                 </xsl:choose>
             </reference>
+            <data field="style"><xsl:value-of select="col[@field='Style']"/></data>
             <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
             <data field="visible"><xsl:value-of select="col[@field='Visible']"/></data>
         </resource>
@@ -161,6 +186,19 @@
                 <xsl:value-of select="$Marker"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$Marker"/></data>
+        </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Projection">
+
+        <xsl:variable name="Projection" select="col[@field='Projection']/text()"/>
+    
+        <resource name="gis_projection">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$Projection"/>
+            </xsl:attribute>
+            <data field="epsg"><xsl:value-of select="$Projection"/></data>
         </resource>
     </xsl:template>
 

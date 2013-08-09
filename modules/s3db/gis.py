@@ -3449,6 +3449,7 @@ class S3MapModel(S3Model):
 
         configure(tablename,
                   onaccept=gis_layer_onaccept,
+                  deduplicate = self.gis_layer_wfs_deduplicate,
                   super_entity="gis_layer_entity")
 
         # Components
@@ -3738,6 +3739,34 @@ class S3MapModel(S3Model):
             data = item.data
             url = data.url
             query = (table.url == url)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
+        
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_layer_wfs_deduplicate(item):
+        """
+          This callback will be called when importing Symbology records it will look
+          to see if the record being imported is a duplicate.
+
+          @param item: An S3ImportJob object which includes all the details
+                      of the record being imported
+
+          If the record is a duplicate then it will set the job method to update
+        """
+
+        if item.tablename == "gis_layer_wfs":
+            # Match if url is identical
+            table = item.table
+            data = item.data
+            featureType = data.featureType
+            url = data.url
+            query = (table.url == url) & \
+                    (table.featureType == featureType)
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
             if duplicate:
