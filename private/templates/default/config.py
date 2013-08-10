@@ -215,6 +215,8 @@ settings.L10n.decimal_separator = "."
 # lon<0 have a duplicate at lon+360
 # lon>0 have a duplicate at lon-360
 #settings.gis.duplicate_features = True
+# Uncomment to display the Map Legend as a floating DIV
+#settings.gis.legend = "float"
 # Mouse Position: 'normal', 'mgrs' or None
 #settings.gis.mouse_position = "mgrs"
 # Uncomment to hide the Overview map

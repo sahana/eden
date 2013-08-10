@@ -8,8 +8,10 @@
          CSV column...........Format..........Content
 
          Name.................string..........Layer Name
-         Description..........string..........Layer Description
          URL..................string..........Layer URL
+         Description..........string..........Layer Description
+         Source Name..........string..........Layer Source Name
+         Source URL...........string..........Layer Source URL
          Projection............string.........Layer Projection (mandatory)
          Symbology............string..........Symbology Name
          Marker...............string..........Layer Symbology Marker Name
@@ -130,6 +132,8 @@
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$Layer"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
+            <data field="source_name"><xsl:value-of select="col[@field='Source Name']"/></data>
+            <data field="source_url"><xsl:value-of select="col[@field='Source URL']"/></data>
             <data field="url"><xsl:value-of select="col[@field='URL']"/></data>
             <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
             <reference field="projection_id" resource="gis_projection">

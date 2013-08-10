@@ -9,6 +9,8 @@
 
          Name.................string..........Layer Name
          Description..........string..........Layer Description
+         Source Name..........string..........Layer Source Name
+         Source URL...........string..........Layer Source URL
          Shapefile............string..........Layer Shapefile (URL to download)
          Projection...........string..........Layer Projection (Mandatory)
          Style................string..........Layer Style
@@ -140,6 +142,8 @@
             <xsl:if test="col[@field='Description']!=''">
                 <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
             </xsl:if>
+            <data field="source_name"><xsl:value-of select="col[@field='Source Name']"/></data>
+            <data field="source_url"><xsl:value-of select="col[@field='Source URL']"/></data>
             <xsl:if test="col[@field='Filter']!=''">
                 <data field="filter"><xsl:value-of select="col[@field='Filter']"/></data>
             </xsl:if>

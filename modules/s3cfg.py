@@ -559,6 +559,15 @@ class S3Config(Storage):
     def get_gis_marker_max_width(self):
         return self.gis.get("marker_max_width", 30)
 
+    def get_gis_legend(self):
+        """
+            Should we display a Legend on the Map?
+            - set to True to show a GeoExt Legend (default)
+            - set to False to not show a Legend
+            - set to "float" to use a floating DIV
+        """
+        return self.gis.get("legend", True)
+
     def get_gis_menu(self):
         """
             Should we display a menu of GIS configurations?

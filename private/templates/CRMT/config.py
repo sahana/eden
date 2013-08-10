@@ -114,6 +114,8 @@ settings.gis.geocode_imported_addresses = "google"
 settings.gis.toolbar = False
 # Hide unnecessary Toolbar items
 settings.gis.nav_controls = False
+# Uncomment to display the Map Legend as a floating DIV
+settings.gis.legend = "float"
 # Mouse Position: 'normal', 'mgrs' or None
 settings.gis.mouse_position = None
 # Uncomment to hide the permalink control

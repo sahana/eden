@@ -99,12 +99,12 @@ def define_map(height = None,
     if not config:
         config = gis.get_config()
 
+    legend = settings.get_gis_legend()
+
     # @ToDo: Make these configurable
     search = True
-    legend = True
     #googleEarth = True
     #googleStreetview = True
-    catalogue_layers = True
 
     if config.wmsbrowser_url:
         wms_browser = {"name" : config.wmsbrowser_name,
@@ -119,18 +119,18 @@ def define_map(height = None,
     else:
         print_tool = {}
 
-    map = gis.show_map(height=height,
-                       width=width,
-                       window=window,
+    map = gis.show_map(height = height,
+                       width = width,
+                       window = window,
                        wms_browser = wms_browser,
-                       toolbar=toolbar,
-                       collapsed=collapsed,
-                       closable=closable,
-                       maximizable=maximizable,
-                       legend=legend,
+                       toolbar = toolbar,
+                       collapsed = collapsed,
+                       closable = closable,
+                       maximizable = maximizable,
+                       legend = legend,
                        save = True,
-                       search=search,
-                       catalogue_layers=catalogue_layers,
+                       search = search,
+                       catalogue_layers = True,
                        print_tool = print_tool,
                        )
 

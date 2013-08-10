@@ -5459,7 +5459,7 @@ class GIS(object):
                 }
             @param catalogue_layers: Show all the enabled Layers from the GIS Catalogue
                                      Defaults to False: Just show the default Base layer
-            @param legend: Show the Legend panel
+            @param legend: True: Show the GeoExt Legend panel, False: No Panel, "floating": New floating Legend Panel
             @param toolbar: Show the Icon Toolbar of Controls
             @param nav: Show the Navigation controls on the Toolbar
             @param area: Show the Area tool on the Toolbar
@@ -5849,10 +5849,13 @@ class MAP(DIV):
                     options["config_id"] = config_id
 
         # Legend panel
-        if opts.get("legend", False):
-            # Presence of label turns feature on in s3.gis.js
-            # @ToDo: Provide explicit option to support multiple maps in a page with different options
+        legend = opts.get("legend", False)
+        if legend:
             i18n["gis_legend"] = T("Legend")
+            if legend == "float":
+                options["legend"] = "float"
+            else:
+                options["legend"] = True
 
         # Draw Feature Controls
         if opts.get("add_feature", False):

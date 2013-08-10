@@ -294,7 +294,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         portal.map = mapPanel;
         s3.portal = portal;
 
-        if (i18n.gis_legend || options.layers_wms) {
+        if (options.legend || options.layers_wms) {
             var layers = map.layers;
             var mp_items = mapPanel.layers.data.items;
             for (var i = 0; i < layers.length; i++) {
@@ -327,21 +327,27 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
 
         // Legend Panel
-        if (i18n.gis_legend) {
-           var legendPanel = new GeoExt.LegendPanel({
-                //cls: 'legendpanel',
-                title: i18n.gis_legend,
-                defaults: {
-                    //labelCls: 'mylabel'
-                    //style: 'padding:4px'
-                },
-                //bodyStyle: 'padding:4px',
-                autoScroll: true,
-                collapsible: true,
-                collapseMode: 'mini'
-                //lines: false
-            });
-            west_panel_items.push(legendPanel);
+        if (options.legend) {
+            if (options.legend == "float") {
+                // Floating
+                addLegendPanel(map); 
+            } else {
+                // Integrated in West Panel
+                var legendPanel = new GeoExt.LegendPanel({
+                    //cls: 'legendpanel',
+                    title: i18n.gis_legend,
+                    defaults: {
+                        //labelCls: 'mylabel'
+                        //style: 'padding:4px'
+                    },
+                    //bodyStyle: 'padding:4px',
+                    autoScroll: true,
+                    collapsible: true,
+                    collapseMode: 'mini'
+                    //lines: false
+                });
+                west_panel_items.push(legendPanel);
+            }
         }
 
         // Plugins
@@ -3177,6 +3183,23 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 
             toolbar.add(areaButton);
         }
+    }
+
+    // Legend Panel as floating DIV
+    var addLegendPanel = function(map, legendPanel) {
+        var map_id = map.s3.id;
+        var div = '<div class="map_legend_panel"></div>';
+        $('#' + map_id).append(div);
+        var legendPanel = new GeoExt.LegendPanel({
+            title: i18n.gis_legend,
+            // Ext 4.x option
+            //maxHeight: 600,
+            autoScroll: true,
+            border: false
+        });
+        var jquery_obj = $('#' + map_id + ' .map_legend_panel');
+        var el = Ext.get(jquery_obj[0]);
+        legendPanel.render(el);
     }
 
     // Navigation History

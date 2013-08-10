@@ -3248,6 +3248,8 @@ class S3MapModel(S3Model):
                              layer_id,
                              name_field()(),
                              desc_field()(),
+                             source_name_field()(),
+                             source_url_field()(),
                              Field("shape", "upload", autodelete=True,
                                    label = T("ESRI Shape File"),
                                    requires = IS_UPLOAD_FILENAME(extension="zip"),
@@ -3382,6 +3384,8 @@ class S3MapModel(S3Model):
                              layer_id,
                              name_field()(),
                              desc_field()(),
+                             source_name_field()(),
+                             source_url_field()(),
                              Field("url",
                                    label=LOCATION,
                                    requires = IS_NOT_EMPTY(),
@@ -3475,6 +3479,8 @@ class S3MapModel(S3Model):
                              layer_id,
                              name_field()(),
                              desc_field()(),
+                             source_name_field()(),
+                             source_url_field()(),
                              Field("url",
                                    label=LOCATION,
                                    requires = IS_NOT_EMPTY(),
@@ -4189,6 +4195,21 @@ def desc_field():
                            label=current.T("Description"),
                            represent = lambda v: v or current.messages["NONE"],
                            widget = s3_comments_widget,
+                           )
+
+# =============================================================================
+def source_name_field():
+    return S3ReusableField("source_name",
+                           label=current.T("Source Name"),
+                           represent = lambda v: v or current.messages["NONE"],
+                           )
+
+# =============================================================================
+def source_url_field():
+    return S3ReusableField("source_url",
+                           label=current.T("Source URL"),
+                           requires = IS_NULL_OR(IS_URL(mode="generic")),
+                           represent = lambda v: v or current.messages["NONE"],
                            )
 
 # =============================================================================

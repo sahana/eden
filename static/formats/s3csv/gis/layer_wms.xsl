@@ -8,8 +8,10 @@
          CSV column...........Format..........Content
 
          Name.................string..........Layer Name
-         Description..........string..........Layer Description
          URL..................string..........Layer URL
+         Description..........string..........Layer Description
+         Source Name..........string..........Layer Source Name
+         Source URL...........string..........Layer Source URL
          Layers...............string..........Layers
          Config...............string..........Configuration Name
          Enabled..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
@@ -58,6 +60,8 @@
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$Layer"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
+            <data field="source_name"><xsl:value-of select="col[@field='Source Name']"/></data>
+            <data field="source_url"><xsl:value-of select="col[@field='Source URL']"/></data>
             <data field="url"><xsl:value-of select="col[@field='URL']"/></data>
             <data field="layers"><xsl:value-of select="col[@field='Layers']"/></data>
             <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
