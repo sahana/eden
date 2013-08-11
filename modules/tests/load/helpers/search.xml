@@ -1,0 +1,50 @@
+<transaction name="search_page">
+	<!-- Search Page -->
+	<request><http url='/eden/static/themes/IFRC/img/graphic_staff_wide.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/themes/IFRC/img/graphic_office.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/themes/IFRC/img/graphic_catalogue.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/scripts/S3/s3.dataTables.min.js' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/scripts/ext/adapter/jquery/ext-jquery-adapter.js' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/scripts/ext/ext-all.js' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/scripts/ext/src/locale/ext-lang-en_GB.js' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/scripts/S3/s3.gis.loader.js' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/scripts/yepnope.1.5.4-min.js' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/img/icon-xml.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/img/kml_icon.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/themes/IFRC/img/sidenav_tab.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/img/RSS_16.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/img/help_off.gif' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/img/icon-xls.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/img/pdficon_small.gif' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/img/ajax-loader.gif' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/themes/IFRC/img/bullet-triangle.png' version='1.1' method='GET'></http></request>
+
+	<request><http url='/eden/static/img/jquery.dataTables/sort_both.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/themes/IFRC/xtheme-ifrc.min.css' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/scripts/ext/resources/css/ext-notheme.min.css' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/scripts/gis/OpenLayers.js' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/scripts/S3/s3.gis.min.js' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/scripts/gis/GeoExt.js' version='1.1' method='GET'></http></request>
+
+	<request><http url='/eden/static/scripts/gis/gxp/widgets/GoogleEarthPanel.min.js' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/scripts/gis/gxp/widgets/GoogleStreetViewPanel.min.js' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/scripts/gis/gxp/plugins/WMSGetFeatureInfo.min.js' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/scripts/gis/OWM.OpenLayers.min.js' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/img/markers/gis_marker.image.marker_red.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/img/markers/gis_marker.image.WASH_Water_Source.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/img/markers/gis_marker.image.IFRC_Staff.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/img/markers/gis_marker.image.IFRC_Warehouse.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/img/markers/gis_marker.image.IFRC_Volunteer.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/img/markers/gis_marker.image.Volunteer.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/img/markers/gis_marker.image.SOS.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/img/markers/gis_marker.image.IFRC_Project.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/img/markers/gis_marker.image.IFRC_Member.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/img/markers/gis_marker.image.IFRC_Incident.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/img/markers/gis_marker.image.IFRC_Office.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/img/markers/gis_marker.image.Telecommunications_Mobile_Phone.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/img/gis/openlayers/layer-switcher-maximize.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/img/markers/gis_marker.image.IFRC_Asset.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/img/gis/openlayers/layer-switcher-minimize.png' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/themes/IFRC/img/ext/qtip/tip-sprite.gif' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/themes/IFRC/img/ext/qtip/tip-anchor-sprite.gif' version='1.1' method='GET'></http></request>
+</transaction>

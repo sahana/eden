@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<!-- 
+	Instructions on how to run the test - 
+	http://eden.sahanafoundation.org/wiki/BluePrint/Testing/TestSuite#Runningthetests
+-->
+<!-- The filename below is specific to the system the test is run on. -->
+<!DOCTYPE tsung SYSTEM "/opt/tsung-1.4.2/share/tsung/tsung-1.0.dtd" [
+<!ENTITY config SYSTEM "helpers/config.xml">
+<!ENTITY login_page SYSTEM "helpers/login.xml">
+<!ENTITY search_page SYSTEM "helpers/search.xml">
+]>
+
+<tsung loglevel="notice" version="1.0">
+
+	<!-- Load the configuration -->
+	&config;
+  
+	<sessions>
+	 	<!-- start a session for a http user. the probability is the
+	  	frequency of this type os session. The sum of all session's
+	  	probabilities must be 100 -->
+		<session name='vol_search' probability='100'  type='ts_http'>
+
+			&login_page;
+
+			<request><http url='/eden/vol/volunteer/search' version='1.1' method='GET'></http></request>
+
+			<!-- Search page requests-->
+			&search_page;
+
+			<transaction name="search_query">
+				<!-- Select a random string to be fed in as the query -->
+				<setdynvars sourcetype="random_string" length="3">
+ 					<var name="search_string"/>
+				</setdynvars>
+
+				<!-- Submit Search query -->
+				<request subst="true">
+					<http url='/eden/vol/volunteer/search' version='1.1' contents="_formname=search_simple&amp;_human_resource_search_simple_simple=%%_search_string%%&amp;_simple_submit=Search&amp;__utc_offset=-330" content_type='application/x-www-form-urlencoded' method='POST'></http>
+				</request>
+
+			</transaction>
+
+			<transaction name="logout">
+				<!-- Logout -->
+				<request><http url='http://127.0.0.1:8000/eden/default/user/logout' version='1.1' method='GET'></http></request>
+				<request><http url='/eden/default/index' version='1.1' method='GET'></http></request>
+			</transaction>
+		</session>
+ 	</sessions>
+</tsung>
+
