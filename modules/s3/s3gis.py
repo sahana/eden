@@ -7446,6 +7446,12 @@ class LayerShapefile(Layer):
                       }
             
             # Attributes which are defaulted client-side if not set
+            self.add_attributes_if_not_default(
+                output,
+                desc = (self.description, (None, "")),
+                src = (self.source_name, (None, "")),
+                src_url = (self.source_url, (None, "")),
+            )
             # We convert on-upload to have BBOX handling work properly
             #projection = self.projection
             #if projection.epsg != 4326:
@@ -7544,18 +7550,21 @@ class LayerWFS(Layer):
                           url = self.url,
                           title = self.title,
                           featureType = self.featureType,
-                          featureNS = self.featureNS,
-                          schema = self.wfs_schema,
                           )
 
             # Attributes which are defaulted client-side if not set
             self.add_attributes_if_not_default(
                 output,
                 version = (self.version, ("1.1.0",)),
+                featureNS = (self.featureNS, (None, "")),
                 geometryName = (self.geometryName, ("the_geom",)),
+                schema = (self.wfs_schema, (None, "")),
                 username = (self.username, (None, "")),
                 password = (self.password, (None, "")),
                 projection = (self.projection.epsg, (4326,)),
+                desc = (self.description, (None, "")),
+                src = (self.source_name, (None, "")),
+                src_url = (self.source_url, (None, "")),
                 #editable
             )
             self.setup_folder_visibility_and_opacity(output)
@@ -7622,7 +7631,10 @@ class LayerWMS(Layer):
                 tiled = (self.tiled, (False,)),
                 legendURL = (legend_url, (None, "")),
                 queryable = (self.queryable, (False,)),
-            )
+                desc = (self.description, (None, "")),
+                src = (self.source_name, (None, "")),
+                src_url = (self.source_url, (None, "")),
+                )
             self.setup_folder_visibility_and_opacity(output)
             return output
 

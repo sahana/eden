@@ -72,6 +72,9 @@ form .map_loader {
     max-height: 500px;
     overflow-y: auto;
 }
+.gis_legend_title {
+    font-weight: bold;
+}
 
 /* Save Panel */
 .map_save_panel {

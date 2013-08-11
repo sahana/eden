@@ -302,6 +302,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 if (layers[i].legendURL) {
                     mp_items[i].data.legendURL = layers[i].legendURL;
                 }
+                // Add any Custom Legend Titles
+                if (layers[i].legendTitle) {
+                    mp_items[i].data.title = layers[i].legendTitle;
+                }
                 // Ensure that mapPanel knows about whether our WMS layers are queryable
                 if (layers[i].queryable) {
                     mp_items[i].data.queryable = 1;
@@ -1155,6 +1159,27 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             // Feature Layers
             var layer_type = 'feature';
         }
+        var legendTitle = '<div class="gis_layer_legend"><div class="gis_legend_title">' + name + '</div>';
+        if (undefined != layer.desc) {
+            legendTitle += '<div class="gis_legend_desc">' + layer.desc + '</div>';
+        }
+        if ((undefined != layer.src) || (undefined != layer.src_url)) {
+            var source = '<div class="gis_legend_src">';
+            if (undefined != layer.src_url) {
+                source += '<a href="' + layer.src_url + '" target="_blank">'
+                if (undefined != layer.src) {
+                    source += layer.src;
+                } else {
+                    source += layer.src_url;
+                }
+                source += '</a>';
+            } else {
+                source += layer.src;
+            }
+            source += '</div>';
+            legendTitle += source;
+        }
+        legendTitle += '</div>';
 
         // Styling
         var response = createStyleMap(map, layer);
@@ -1216,6 +1241,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 s3_style: layer.style
             }
         );
+        // This gets picked up after mapPanel instantiates & copied to it's layerRecords
+        geojsonLayer.legendTitle = legendTitle;
         geojsonLayer.setVisibility(visibility);
         geojsonLayer.events.on({
             'featureselected': onFeatureSelect,
@@ -1808,8 +1835,16 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
         var title = layer.title;
         var featureType = layer.featureType;
-        var featureNS = layer.featureNS;
-        var schema = layer.schema;
+        if (undefined != layer.featureNS) {
+            var featureNS = layer.featureNS;
+        } else {
+            var featureNS = null;
+        }
+        if (undefined != layer.schema) {
+            var schema = layer.schema;
+        } else {
+            var schema = null;
+        }
         //var editable = layer.editable;
         if (undefined != layer.version) {
             var version = layer.version;
@@ -1864,6 +1899,28 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             // Needed for WFS-T
             schema: schema
         });
+
+        var legendTitle = '<div class="gis_layer_legend"><div class="gis_legend_title">' + name + '</div>';
+        if (undefined != layer.desc) {
+            legendTitle += '<div class="gis_legend_desc">' + layer.desc + '</div>';
+        }
+        if ((undefined != layer.src) || (undefined != layer.src_url)) {
+            var source = '<div class="gis_legend_src">';
+            if (undefined != layer.src_url) {
+                source += '<a href="' + layer.src_url + '" target="_blank">'
+                if (undefined != layer.src) {
+                    source += layer.src;
+                } else {
+                    source += layer.src_url;
+                }
+                source += '</a>';
+            } else {
+                source += layer.src;
+            }
+            source += '</div>';
+            legendTitle += source;
+        }
+        legendTitle += '</div>';
 
         // Styling
         var response = createStyleMap(map, layer);
@@ -1921,6 +1978,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             s3_style: layer.style
         });
 
+        // This gets picked up after mapPanel instantiates & copied to it's layerRecords
+        wfsLayer.legendTitle = legendTitle;
         wfsLayer.title = title;
         wfsLayer.setVisibility(visibility);
         wfsLayer.events.on({
@@ -2019,6 +2078,27 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         } else {
             var queryable = 1;
         }
+        var legendTitle = '<div class="gis_layer_legend"><div class="gis_legend_title">' + name + '</div>';
+        if (undefined != layer.desc) {
+            legendTitle += '<div class="gis_legend_desc">' + layer.desc + '</div>';
+        }
+        if ((undefined != layer.src) || (undefined != layer.src_url)) {
+            var source = '<div class="gis_legend_src">';
+            if (undefined != layer.src_url) {
+                source += '<a href="' + layer.src_url + '" target="_blank">'
+                if (undefined != layer.src) {
+                    source += layer.src;
+                } else {
+                    source += layer.src_url;
+                }
+                source += '</a>';
+            } else {
+                source += layer.src;
+            }
+            source += '</div>';
+            legendTitle += source;
+        }
+        legendTitle += '</div>';
         if (undefined != layer.legendURL) {
             var legendURL = layer.legendURL;
         } else{
@@ -2069,6 +2149,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 wmsLayer.buffer = 0;
             }
         }
+        // This gets picked up after mapPanel instantiates & copied to it's layerRecords
+        wmsLayer.legendTitle = legendTitle;
         if (legendURL) {
             // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             wmsLayer.legendURL = legendURL;

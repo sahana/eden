@@ -2300,6 +2300,23 @@ def layer_wfs():
                                                           not_filterby="config_id",
                                                           not_filter_opts=[row.config_id for row in rows]
                                                           )
+            elif r.component_name == "symbology":
+                # Markers
+                ltable = s3db.gis_layer_symbology
+                #ltable.gps_marker.readable = ltable.gps_marker.writable = False
+                if r.method != "update":
+                    # Only show ones with no definition yet for this Layer
+                    table = r.table
+                    # Find the records which are used
+                    query = (ltable.layer_id == table.layer_id) & \
+                            (table.id == r.id)
+                    rows = db(query).select(ltable.symbology_id)
+                    # Filter them out
+                    ltable.symbology_id.requires = IS_ONE_OF(db, "gis_symbology.id",
+                                                             "%(name)s",
+                                                             not_filterby="id",
+                                                             not_filter_opts=[row.symbology_id for row in rows]
+                                                             )
         return True
     s3.prep = prep
 

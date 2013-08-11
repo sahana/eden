@@ -3467,6 +3467,16 @@ class S3MapModel(S3Model):
                                             autocomplete="name",
                                             autodelete=False))
 
+        # Symbologies
+        add_component("gis_symbology",
+                      gis_layer_wfs=Storage(link="gis_layer_symbology",
+                                            pkey="layer_id",
+                                            joinby="layer_id",
+                                            key="symbology_id",
+                                            actuate="hide",
+                                            autocomplete="name",
+                                            autodelete=False))
+
         # ---------------------------------------------------------------------
         # WMS
         #
@@ -4796,7 +4806,8 @@ def gis_rheader(r, tabs=[]):
     elif resourcename == "layer_feature" or \
          resourcename == "layer_georss" or \
          resourcename == "layer_geojson" or \
-         resourcename == "layer_kml":
+         resourcename == "layer_kml" or \
+         resourcename == "layer_wfs":
         # Tabs
         if not tabs:
             tabs = [(T("Layer Details"), None),
@@ -4847,7 +4858,6 @@ def gis_rheader(r, tabs=[]):
          resourcename == "layer_openweathermap" or \
          resourcename == "layer_tms" or \
          resourcename == "layer_wms" or \
-         resourcename == "layer_wfs" or \
          resourcename == "layer_xyz" or \
          resourcename == "layer_arcrest" or \
          resourcename == "layer_coordinate" or \
