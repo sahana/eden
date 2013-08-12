@@ -737,10 +737,10 @@ class S3AddPersonWidget2(FormWidget):
         # @ToDo: Style these icons in non-Bootstrap themes
         # @ToDo: Check Permissions for existing person records to know whether we can edit the person or simply select a different one
         widget= DIV(A(I(" ", _class="icon icon-edit"),
-                      _title=T("Edit Selection"),
+                      _title=T("Edit Entry"), # "Edit Selection"
                       ),
                     A(I(" ", _class="icon icon-remove"),
-                      _title=T("Clear Selection"),
+                      _title=T("Revert Entry"), # "Clear Selection"
                       ),
                     _class="add_person_edit_bar hide",
                     _id="%s_edit_bar" % fieldname,

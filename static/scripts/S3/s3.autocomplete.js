@@ -35,7 +35,7 @@ S3.autocomplete.normal = function(fieldname, module, resourcename, input, filter
     if (min_length == 'undefined') {
         min_length = 2;
     }
-    var data = {
+    var datastore = {
         val: dummy_input.val(),
         accept: false
     };
@@ -91,7 +91,7 @@ S3.autocomplete.normal = function(fieldname, module, resourcename, input, filter
                 // postprocess has to be able to handle the 'no match' option
                 eval(postprocess);
             }
-            data.accept = true;
+            datastore.accept = true;
             return false;
         }
     })
@@ -110,14 +110,14 @@ S3.autocomplete.normal = function(fieldname, module, resourcename, input, filter
     dummy_input.blur(function() {
         if (!dummy_input.val()) {
             real_input.val('');
-            data.accept = true;
+            datastore.accept = true;
         }
-        if (!data.accept) {
-            dummy_input.val(data.val);
+        if (!datastore.accept) {
+            dummy_input.val(datastore.val);
         } else {
-            data.val = dummy_input.val();
+            datastore.val = dummy_input.val();
         }
-        data.accept = false;
+        datastore.accept = false;
     });
 };
 

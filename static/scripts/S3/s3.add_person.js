@@ -52,10 +52,23 @@
         if (value) {
             // Update form: disable the fields by default
             disable_person_fields(fieldname);
+            // Hide the cancel button
+            $(selector + '_edit_bar .icon-remove').hide();
         } else {
             // Create form: Enable the Autocomplete
             enable_autocomplete(fieldname);
+            // Hide the edit button
+            $(selector + '_edit_bar .icon-edit').hide();
         }
+        // Show the edit bar
+        $(selector + '_edit_bar').removeClass('hide').show();
+        // Events
+        $(selector + '_edit_bar .icon-edit').click(function() {
+            edit(fieldname);
+        });
+        $(selector + '_edit_bar .icon-remove').click(function() {
+            cancel(fieldname);
+        });
 
         $('form').submit(function() {
             // The form is being submitted
@@ -82,10 +95,6 @@
         $(selector + '_occupation').prop('disabled', false);
         $(selector + '_email').prop('disabled', false);
         $(selector + '_mobile_phone').prop('disabled', false);
-        // Hide the edit button
-        $(selector + '_edit_bar .icon-edit').hide();
-        // Enable the Autocomplete
-        enable_autocomplete(fieldname);
     }
 
     var disable_person_fields = function(fieldname) {
@@ -96,20 +105,17 @@
         $(selector + '_occupation').prop('disabled', true);
         $(selector + '_email').prop('disabled', true);
         $(selector + '_mobile_phone').prop('disabled', true);
-        // Show the edit bar
-        $(selector + '_edit_bar').removeClass('hide').show();
-        // Listen to Events
-        $(selector + '_edit_bar .icon-edit').click(function() {
-            enable_person_fields(fieldname);
-        });
-        $(selector + '_edit_bar .icon-remove').click(function() {
-            clear_person_fields(fieldname);
-        });
+        // Show the edit button
+        $(selector + '_edit_bar .icon-edit').show();
+        // Hide the cancel button
+        $(selector + '_edit_bar .icon-remove').hide();
     }
 
-    var clear_person_fields = function(fieldname) {
+    var edit = function(fieldname) {
         var selector = '#' + fieldname;
-        // Clear all values & Enable Fields
+        // Enable the Autocomplete
+        enable_autocomplete(fieldname);
+        // Enable all the fields & clear their values
         $(selector).val('');
         $(selector + '_full_name').prop('disabled', false).val('');
         $(selector + '_gender').prop('disabled', false).val('');
@@ -117,8 +123,48 @@
         $(selector + '_occupation').prop('disabled', false).val('');
         $(selector + '_email').prop('disabled', false).val('');
         $(selector + '_mobile_phone').prop('disabled', false).val('');
+        // Hide the edit button
+        $(selector + '_edit_bar .icon-edit').hide();
+        // Show the cancel button
+        $(selector + '_edit_bar .icon-remove').show();
+    }
+
+    var cancel = function(fieldname) {
+        var selector = '#' + fieldname;
+        var real_input = $(selector);
+        var existing = real_input.data('existing');
+        if (existing) {
+            // Revert to existing
+            $(selector).val(existing.value);
+            $(selector + '_full_name').prop('disabled', true).val(existing.full_name);
+            $(selector + '_gender').prop('disabled', true).val(existing.gender);
+            $(selector + '_date_of_birth').prop('disabled', true).val(existing.date_of_birth);
+            $(selector + '_occupation').prop('disabled', true).val(existing.occupation);
+            $(selector + '_email').prop('disabled', true).val(existing.email);
+            $(selector + '_mobile_phone').prop('disabled', true).val(existing.mobile_phone);
+            // Show the edit button
+            $(selector + '_edit_bar .icon-edit').show();
+            // Hide the cancel button
+            $(selector + '_edit_bar .icon-remove').hide();
+        } else {
+            // Nothing should come here?
+            // Clear all values
+            $(selector + '_full_name').prop('disabled', false).val('');
+            clear_person_fields(fieldname);
+        }
+    }
+
+    var clear_person_fields = function(fieldname) {
+        var selector = '#' + fieldname;
+        // Clear all values & Enable Fields
+        $(selector).val('');
+        $(selector + '_gender').prop('disabled', false).val('');
+        $(selector + '_date_of_birth').prop('disabled', false).val('');
+        $(selector + '_occupation').prop('disabled', false).val('');
+        $(selector + '_email').prop('disabled', false).val('');
+        $(selector + '_mobile_phone').prop('disabled', false).val('');
         // Hide the edit bar
-        $(selector + '_edit_bar').hide();
+        //$(selector + '_edit_bar').hide();
     }
 
     var enable_autocomplete = function(fieldname) {
@@ -130,16 +176,30 @@
         }
 
         var real_input = $(selector);
+        var value = real_input.val();
+        if (value) {
+            // Store existing data in case of cancel
+            var existing = {
+                value: value,
+                full_name: dummy_input.val(),
+                gender: $(selector + '_gender').val(),
+                date_of_birth: $(selector + '_date_of_birth').val(),
+                occupation: $(selector + '_occupation').val(),
+                email: $(selector + '_email').val(),
+                mobile_phone: $(selector + '_mobile_phone').val()
+            };
+        } else {
+            var existing = {};
+        }
+        real_input.data('existing', existing);
+
         var controller = dummy_input.attr('data-c');
         // Add a Throbber
-        $(selector + '_full_name').after('<div id="' + fieldname + '_throbber" class="throbber hide"></div>');
+        $(selector + '_full_name').after('<div id="' + fieldname + '_throbber" class="throbber fright hide"></div>');
         var throbber = $(selector + '_throbber');
 
         var url = S3.Ap.concat('/' + controller + '/person/search_ac');
-        var data = {
-            val: dummy_input.val(),
-            accept: false
-        };
+        
         dummy_input.autocomplete({
             // @ToDo: Configurable options
             delay: 450,
@@ -153,14 +213,8 @@
                     }
                 }).done(function (data) {
                     if (data.length == 0) {
-                        var no_matching_records = i18n.no_matching_records;
-                        data.push({
-                            id: 0,
-                            value: '',
-                            label: no_matching_records,
-                            // First Name
-                            first: no_matching_records
-                        });
+                        // New Entry
+                        real_input.val('');
                     } else {
                         var none_of_the_above = i18n.none_of_the_above;
                         data.push({
@@ -175,13 +229,11 @@
                 });
             },
             search: function(event, ui) {
-                dummy_input.hide();
                 throbber.removeClass('hide').show();
                 return true;
             },
             response: function(event, ui, content) {
                 throbber.hide();
-                dummy_input.show();
                 return content;
             },
             focus: function(event, ui) {
@@ -193,7 +245,6 @@
                 if (item.last) {
                     name += ' ' + item.last;
                 }
-                //dummy_input.val(name);
                 return false;
             },
             select: function(event, ui) {
@@ -211,11 +262,9 @@
                     // Update the Form Fields
                     select_person(fieldname, item.id);
                 } else {
-                    // 'No matching results' or 'None of the above'
-                    //dummy_input.val('');
+                    // 'None of the above' => New Entry
                     real_input.val('');
                 }
-                data.accept = true;
                 return false;
             }
         })
@@ -231,36 +280,32 @@
                             .append('<a>' + name + '</a>')
                             .appendTo(ul);
         };
-        // @ToDo: Do this only if new_items=False
         dummy_input.blur(function() {
-            if (!dummy_input.val()) {
+            if (existing && existing.full_name != dummy_input.val()) {
+                // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('');
-                data.accept = true;
             }
-            if (!data.accept) {
-                dummy_input.val(data.val);
-            } else {
-                data.val = dummy_input.val();
-            }
-            data.accept = false;
         });
     }
 
     // Called on post-process by the Autocomplete Widget
     var select_person = function(fieldname, person_id) {
-        clear_person_fields(fieldname);
         var selector = '#' + fieldname;
-        var real_input = $(selector);
         var name_input = $(selector + '_full_name');
+        name_input.prop('disabled', false);
+        clear_person_fields(fieldname);
+        var real_input = $(selector);
         var controller = name_input.attr('data-c');
         var url = S3.Ap.concat('/' + controller + '/person/' + person_id + '.s3json?show_ids=True');
         $.getJSONS3(url, function(data) {
             try {
-                var email = undefined,
-                    phone = undefined;
+                var email,
+                    phone;
                 var person = data['$_pr_person'][0];
                 disable_person_fields(fieldname);
-                real_input.val(person['@id']);
+                var value = person['@id'];
+                // Already done
+                //real_input.val(value);
                 var names = [];
                 if (person.hasOwnProperty('first_name')) {
                     names.push(person['first_name']);
@@ -271,16 +316,13 @@
                 if (person.hasOwnProperty('last_name')) {
                     names.push(person['last_name']['@value']);
                 }
-                name_input.val(names.join(' '));
-                if (person.hasOwnProperty('gender')) {
-                    $(selector + '_gender').val(person['gender']['@value']);
+                var full_name = names.join(' ');
+                name_input.val(full_name);
+                var existing = {
+                    value: value,
+                    full_name: full_name
                 }
-                if (person.hasOwnProperty('date_of_birth')) {
-                    $(selector + '_date_of_birth').val(person['date_of_birth']['@value']);
-                }
-                if (person.hasOwnProperty('occupation')) {
-                    $(selector + '_occupation').val(person['occupation']['@value']);
-                }
+                real_input.data('existing', existing);
                 if (person.hasOwnProperty('$_pr_email_contact')) {
                     var contact = person['$_pr_email_contact'][0];
                     email = contact['value']['@value'];                            
@@ -308,9 +350,26 @@
                 }
                 if (email !== undefined){
                     $(selector + '_email').val(email);
+                    existing['email'] = email;
                 }
                 if (phone !== undefined){
                     $(selector + '_mobile_phone').val(phone);
+                    existing['mobile_phone'] = phone;
+                }
+                if (person.hasOwnProperty('gender')) {
+                    var gender = person['gender']['@value'];
+                    $(selector + '_gender').val(gender);
+                    existing['gender'] = gender;
+                }
+                if (person.hasOwnProperty('date_of_birth')) {
+                    var date_of_birth = person['date_of_birth']['@value'];
+                    $(selector + '_date_of_birth').val(date_of_birth);
+                    existing['date_of_birth'] = date_of_birth;
+                }
+                if (person.hasOwnProperty('occupation')) {
+                    var occupation = person['occupation']['@value'];
+                    $(selector + '_occupation').val(occupation);
+                    existing['occupation'] = occupation;
                 }
 
             } catch(e) {
