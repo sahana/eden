@@ -3441,9 +3441,9 @@ class S3MapModel(S3Model):
                                    requires=IS_IN_SET(["1.0.0", "1.1.0"],
                                                       zero=None)),
                              gis_layer_folder()(),
-                             #gis_refresh()(),
+                             gis_refresh()(default=0), # Default to Off as 'External Source' which is uneditable
                              gis_opacity()(),
-                             #cluster_attribute()(),
+                             cluster_attribute()(),
                              cluster_distance()(),
                              cluster_threshold()(),
                              #Field("editable", "boolean", default=False, label=T("Editable?")),

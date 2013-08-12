@@ -201,3 +201,8 @@ form#summary-filter-form
 #edit-btn {
     float: left;
 }
+
+/* Register screen */
+#auth_user_org_group_id {
+    margin-left: 10px;
+}

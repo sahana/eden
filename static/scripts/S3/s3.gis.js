@@ -1128,6 +1128,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             var cluster_attribute = layer.cluster_attribute;
         } else {
             // Default to global settings
+            //var cluster_attribute = cluster_attribute_default;
             var cluster_attribute = 'colour';
         }
         if (undefined != layer.cluster_distance) {
@@ -1872,6 +1873,13 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             // Default folder
             var dir = '';
         }
+        if (undefined != layer.cluster_attribute) {
+            var cluster_attribute = layer.cluster_attribute;
+        } else {
+            // Default to global settings
+            //var cluster_attribute = cluster_attribute_default;
+            var cluster_attribute = 'colour';
+        }
         if (undefined != layer.cluster_distance) {
             var cluster_distance = layer.cluster_distance;
         } else {
@@ -1882,6 +1890,50 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         } else {
             var cluster_threshold = cluster_threshold_default;
         }
+        if (undefined != layer.refresh) {
+            var refresh = layer.refresh;
+        } else {
+            // Default to Off as 'External Source' which is uneditable
+            var refresh = false;
+        }
+        // Strategies
+        var strategies = [
+            // Need to be uniquely instantiated
+            new OpenLayers.Strategy.BBOX({
+                // load features for a wider area than the visible extent to reduce calls
+                ratio: 1.5
+                // don't fetch features after every resolution change
+                //resFactor: 1
+            })
+        ]
+        if (refresh) {
+            strategies.push(new OpenLayers.Strategy.Refresh({
+                force: true,
+                interval: refresh * 1000 // milliseconds
+                // Close any open Popups to prevent them getting orphaned
+                // - annoying to have this happen automatically, so we handle it in onPopupClose() instead
+                //refresh: function() {
+                //    if (this.layer && this.layer.refresh) {
+                //        while (this.layer.map.popups.length) {
+                //            this.layer.map.removePopup(this.layer.map.popups[0]);
+                //        }
+                //    this.layer.refresh({force: this.force});
+                //    }
+                //}
+            }));
+        }
+        if (cluster_threshold) {
+            // Common Cluster Strategy for all layers
+            //map.s3.common_cluster_strategy
+            strategies.push(new OpenLayers.Strategy.AttributeCluster({
+                attribute: cluster_attribute,
+                distance: cluster_distance,
+                threshold: cluster_threshold
+            }))
+        }
+        // @ToDo: if Editable
+        //strategies.push(saveStrategy);
+
         if (undefined != layer.projection) {
             var projection = layer.projection;
             var srsName = 'EPSG:' + projection;
@@ -1950,20 +2002,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             name, {
             // limit the number of features to avoid browser freezes
             maxFeatures: 1000,
-            strategies: [
-                new OpenLayers.Strategy.BBOX({
-                    // load features for a wider area than the visible extent to reduce calls
-                    ratio: 1.5
-                    // don't fetch features after every resolution change
-                    //resFactor: 1
-                }),
-                new OpenLayers.Strategy.Cluster({
-                    distance: cluster_distance,
-                    threshold: cluster_threshold
-                })//,
-                // if Editable
-                //saveStrategy
-            ],
+            strategies: strategies,
             dir: dir,
             // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             legendURL: marker_url,

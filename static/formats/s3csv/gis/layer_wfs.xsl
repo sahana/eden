@@ -24,6 +24,7 @@
          Config...............string..........Configuration Name
          Enabled..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
          Visible..............boolean.........Layer Visible in config? (SITE_DEFAULT if not-specified)
+         Cluster Attribute....string..........Layer Cluster Attribute: The attribute to use for clustering
          Cluster Distance.....integer.........Layer Cluster Distance: The number of pixels apart that features need to be before they are clustered (default=20)
          Cluster Threshold....integer.........Layer Cluster Threshold: The minimum number of features to form a cluster (default=2)
          Refresh..............integer.........layer Refresh (Number of seconds between refreshes: 0 to disable)
@@ -136,6 +137,18 @@
             <data field="source_url"><xsl:value-of select="col[@field='Source URL']"/></data>
             <data field="url"><xsl:value-of select="col[@field='URL']"/></data>
             <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
+            <xsl:if test="col[@field='Refresh']!=''">
+                <data field="refresh"><xsl:value-of select="col[@field='Refresh']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Cluster Attribute']!=''">
+                <data field="cluster_attribute"><xsl:value-of select="col[@field='Cluster Attribute']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Cluster Distance']!=''">
+                <data field="cluster_distance"><xsl:value-of select="col[@field='Cluster Distance']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Cluster Threshold']!=''">
+                <data field="cluster_threshold"><xsl:value-of select="col[@field='Cluster Threshold']"/></data>
+            </xsl:if>
             <reference field="projection_id" resource="gis_projection">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$Projection"/>

@@ -639,6 +639,24 @@ label.ui-corner-all span {
     margin-bottom: 15px;
 }
 
+
+label.ui-corner-all {
+    margin-left: 5px;
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+label.ui-corner-all span {
+    position: relative;
+    top: 5px;
+    left: 10px;
+    font-size: 12px;
+}
+
+.filter-controls {
+    clear: both;
+}
+
 /* Login & Registration Screens */
 #home div.form-container form {
     margin-left: auto;
@@ -663,10 +681,17 @@ label.ui-corner-all span {
     margin-right: auto;
 }
 
+#submit_record__row td.w2p_fw {
+    padding-top: 15px;
+    padding-left: 12px;
+}
+
+/* Login page */
+#auth_user_email,
 #auth_user_password,
-#auth_user_password_two,
-#auth_user_email {
-    width: 100%;
+#auth_user_password_two {
+    /*width: 100%;*/
+    width: 300px;
     margin-left: 10px;
     margin-bottom: 10px;
 }
@@ -690,16 +715,12 @@ label.ui-corner-all span {
     background-color: #f2dedd;
 }
 
-#submit_record__row td.w2p_fw {
-    padding-top: 15px;
-    padding-left: 12px;
-}
-
 /* Registration Screen */
 #auth_user_first_name,
 #auth_user_last_name,
 #auth_user_utc_offset {
-    width: 100%;
+    /*width: 100%;*/
+    width: 300px;
     margin-left: 10px;
     margin-bottom: 10px;
 }
@@ -710,11 +731,6 @@ label.ui-corner-all span {
 
 #auth_user_utc_offset__row td.w2p_fc div.tooltip {
     margin-left: 15px;
-}
-
-#submit_record__row td.w2p_fw {
-    padding-top: 15px;
-    padding-left: 12px;
 }
 
 span.password-min-char {
@@ -730,21 +746,4 @@ span.password-strength-bar {
     color: #2d2d2c;
     padding-left: 12px;
     border-radius: 3px;
-}
-
-label.ui-corner-all {
-    margin-left: 5px;
-    margin-bottom: 0;
-    margin-top: 0;
-}
-
-label.ui-corner-all span {
-    position: relative;
-    top: 5px;
-    left: 10px;
-    font-size: 12px;
-}
-
-.filter-controls {
-    clear: both;
 }

@@ -75,6 +75,9 @@ form .map_loader {
 .gis_legend_title {
     font-weight: bold;
 }
+.gis_legend_desc {
+    max-width: 200px;
+}
 
 /* Save Panel */
 .map_save_panel {

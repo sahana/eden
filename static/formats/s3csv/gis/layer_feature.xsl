@@ -26,6 +26,7 @@
          Config...............string..........Configuration Name
          Enabled..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
          Visible..............boolean.........Layer Visible in config? (SITE_DEFAULT if not-specified)
+         Cluster Attribute....string..........Layer Cluster Attribute: The attribute to use for clustering
          Cluster Distance.....integer.........Layer Cluster Distance: The number of pixels apart that features need to be before they are clustered (default=20)
          Cluster Threshold....integer.........Layer Cluster Threshold: The minimum number of features to form a cluster (default=2)
          Refresh..............integer.........layer Refresh (Number of seconds between refreshes: 0 to disable)
@@ -174,7 +175,12 @@
                 </data>
             </xsl:if>
             <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
-            <data field="refresh"><xsl:value-of select="col[@field='Refresh']"/></data>
+            <xsl:if test="col[@field='Refresh']!=''">
+                <data field="refresh"><xsl:value-of select="col[@field='Refresh']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Cluster Attribute']!=''">
+                <data field="cluster_attribute"><xsl:value-of select="col[@field='Cluster Attribute']"/></data>
+            </xsl:if>
             <xsl:if test="col[@field='Cluster Distance']!=''">
                 <data field="cluster_distance"><xsl:value-of select="col[@field='Cluster Distance']"/></data>
             </xsl:if>

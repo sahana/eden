@@ -7565,6 +7565,7 @@ class LayerWFS(Layer):
                 desc = (self.description, (None, "")),
                 src = (self.source_name, (None, "")),
                 src_url = (self.source_url, (None, "")),
+                refresh = (self.refresh, (0,)),
                 #editable
             )
             self.setup_folder_visibility_and_opacity(output)
