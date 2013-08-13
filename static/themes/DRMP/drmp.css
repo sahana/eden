@@ -6,6 +6,10 @@
 }
 
 /* Posts */
+#cms_post_body.text.input-xlarge {
+    height: 100px;
+}
+
 #body__error,
 #name__error,
 #location_id__error {
@@ -37,6 +41,16 @@ div.defaultlocation_error.error{
 #sub_filedocument_filedocument_i_file_edit_none,
 #sub_defaultevent_post_defaultevent_post_i_event_id_edit_none {
     width: 206px !important;
+}
+
+#sub-defaultevent_post .label-row,
+#sub-defaultlocation .label-row,
+#sub-filedocument .label-row,
+#sub-partnerorganisation .label-row {
+    /* Hide the column titles since only 1 column
+        - this should be done server-side where-possible, but this isn't possible for Partner Orgs as same field as for Donors
+    */
+    display: none;
 }
 
 /* Contacts Page */

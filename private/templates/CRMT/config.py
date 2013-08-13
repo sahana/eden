@@ -222,6 +222,248 @@ settings.hrm.use_skills = False
 settings.hrm.teams = False
 
 # -----------------------------------------------------------------------------
+# Contacts
+# -----------------------------------------------------------------------------
+def customize_pr_person(**attr):
+    """
+        Customize pr_person controller
+    """
+
+    s3db = current.s3db
+    s3 = current.response.s3
+
+    tablename = "pr_person"
+    table = s3db.pr_person
+
+    # Custom PreP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+
+        if r.method == "validate":
+            # Can't validate image without the file
+            image_field = s3db.pr_image.image
+            image_field.requires = None
+
+        if r.interactive or r.representation == "aadata":
+            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+            # CRUD Strings
+            ADD_CONTACT = T("Add New Contact")
+            s3.crud_strings[tablename] = Storage(
+                title_create = T("Add Contact"),
+                title_display = T("Contact Details"),
+                title_list = T("Contact Directory"),
+                title_update = T("Edit Contact Details"),
+                title_search = T("Search Contacts"),
+                subtitle_create = ADD_CONTACT,
+                label_list_button = T("List Contacts"),
+                label_create_button = ADD_CONTACT,
+                label_delete_button = T("Delete Contact"),
+                msg_record_created = T("Contact added"),
+                msg_record_modified = T("Contact details updated"),
+                msg_record_deleted = T("Contact deleted"),
+                msg_list_empty = T("No Contacts currently registered"))
+
+            MOBILE = settings.get_ui_label_mobile_phone()
+            EMAIL = T("Email")
+
+            htable = s3db.hrm_human_resource
+            htable.organisation_id.widget = None
+            site_field = htable.site_id
+            represent = S3Represent(lookup="org_site")
+            site_field.represent = represent
+            site_field.requires = IS_ONE_OF(current.db, "org_site.site_id",
+                                            represent,
+                                            orderby = "org_site.name")
+            from s3layouts import S3AddResourceLink
+            site_field.comment = S3AddResourceLink(c="org", f="office",
+                                                   vars={"child": "site_id"},
+                                                   label=T("Add New Office"),
+                                                   title=T("Office"),
+                                                   tooltip=T("If you don't see the Office in the list, you can add a new one by clicking link 'Add New Office'."))
+
+            # Best to have no labels when only 1 field in the row
+            s3db.pr_contact.value.label = ""
+            image_field = s3db.pr_image.image
+            image_field.label = ""
+            # ImageCrop widget doesn't currently work within an Inline Form
+            image_field.widget = None
+
+            hr_fields = ["organisation_id",
+                         "job_title_id",
+                         "site_id",
+                         ]
+            #if r.method in ("create", "update"):
+            #    # Context from a Profile page?"
+            #    organisation_id = current.request.get_vars.get("(organisation)", None)
+            #    if organisation_id:
+            #        field = s3db.hrm_human_resource.organisation_id
+            #        field.default = organisation_id
+            #        field.readable = field.writable = False
+            #        hr_fields.remove("organisation_id")
+
+            s3_sql_custom_fields = [
+                    "first_name",
+                    #"middle_name",
+                    "last_name",
+                    S3SQLInlineComponent(
+                        "human_resource",
+                        name = "human_resource",
+                        label = "",
+                        multiple = False,
+                        fields = hr_fields,
+                        filterby = dict(field = "contact_method",
+                                        options = "SMS"
+                                        )
+                    ),
+                    S3SQLInlineComponent(
+                        "image",
+                        name = "image",
+                        label = T("Photo"),
+                        multiple = False,
+                        fields = ["image"],
+                    ),
+                ]
+
+            list_fields = [(current.messages.ORGANISATION, "human_resource.organisation_id"),
+                           "first_name",
+                           #"middle_name",
+                           "last_name",
+                           (T("Job Title"), "human_resource.job_title_id"),
+                           (T("Office"), "human_resource.site_id"),
+                           ]
+            
+            # Don't include Email/Phone for unauthenticated users
+            if current.auth.is_logged_in():
+                list_fields += [(MOBILE, "phone.value"),
+                                (EMAIL, "email.value"),
+                                ]
+                s3_sql_custom_fields.insert(3,
+                                            S3SQLInlineComponent(
+                                            "contact",
+                                            name = "phone",
+                                            label = MOBILE,
+                                            multiple = False,
+                                            fields = ["value"],
+                                            filterby = dict(field = "contact_method",
+                                                            options = "SMS")),
+                                            )
+                s3_sql_custom_fields.insert(3,
+                                            S3SQLInlineComponent(
+                                            "contact",
+                                            name = "email",
+                                            label = EMAIL,
+                                            multiple = False,
+                                            fields = ["value"],
+                                            filterby = dict(field = "contact_method",
+                                                            options = "EMAIL")),
+                                            )
+
+            crud_form = S3SQLCustomForm(*s3_sql_custom_fields)
+
+            # Return to List view after create/update/delete (unless done via Modal)
+            url_next = URL(c="pr", f="person")
+
+            s3db.configure(tablename,
+                           create_next = url_next,
+                           delete_next = url_next,
+                           update_next = url_next,
+                           crud_form = crud_form,
+                           list_fields = list_fields,
+                           # Don't include a Create form in 'More' popups
+                           #listadd = False if r.method=="datalist" else True,
+                           #list_layout = render_contacts,
+                           )
+
+            # Move fields to their desired Locations
+            # Disabled as breaks submission of inline_component
+            #i18n = []
+            #iappend = i18n.append
+            #iappend('''i18n.office="%s"''' % T("Office"))
+            #iappend('''i18n.organisation="%s"''' % T("Organization"))
+            #iappend('''i18n.job_title="%s"''' % T("Job Title"))
+            #i18n = '''\n'''.join(i18n)
+            #s3.js_global.append(i18n)
+            #s3.scripts.append('/%s/static/themes/DRMP/js/contacts.js' % current.request.application)
+
+        return True
+    s3.prep = custom_prep
+
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        if r.interactive:
+            output["rheader"] = ""
+            actions = [dict(label=str(T("Open")),
+                            _class="action-btn",
+                            url=URL(c="pr", f="person",
+                                    args=["[id]", "read"]))
+                       ]
+            # All users just get "Open"
+            #db = current.db
+            #auth = current.auth
+            #has_permission = auth.s3_has_permission
+            #ownership_required = auth.permission.ownership_required
+            #s3_accessible_query = auth.s3_accessible_query
+            #if has_permission("update", table):
+            #    action = dict(label=str(T("Edit")),
+            #                  _class="action-btn",
+            #                  url=URL(c="pr", f="person",
+            #                          args=["[id]", "update"]),
+            #                  )
+            #    if ownership_required("update", table):
+            #        # Check which records can be updated
+            #        query = s3_accessible_query("update", table)
+            #        rows = db(query).select(table._id)
+            #        restrict = []
+            #        rappend = restrict.append
+            #        for row in rows:
+            #            row_id = row.get("id", None)
+            #            if row_id:
+            #                rappend(str(row_id))
+            #        action["restrict"] = restrict
+            #    actions.append(action)
+            #if has_permission("delete", table):
+            #    action = dict(label=str(T("Delete")),
+            #                  _class="action-btn",
+            #                  url=URL(c="pr", f="person",
+            #                          args=["[id]", "delete"]),
+            #                  )
+            #    if ownership_required("delete", table):
+            #        # Check which records can be deleted
+            #        query = s3_accessible_query("delete", table)
+            #        rows = db(query).select(table._id)
+            #        restrict = []
+            #        rappend = restrict.append
+            #        for row in rows:
+            #            row_id = row.get("id", None)
+            #            if row_id:
+            #                rappend(str(row_id))
+            #        action["restrict"] = restrict
+            #    actions.append(action)
+            s3.actions = actions
+            if isinstance(output, dict):
+                if "form" in output:
+                    output["form"].add_class("pr_person")
+                elif "item" in output and hasattr(output["item"], "add_class"):
+                    output["item"].add_class("pr_person")
+
+        return output
+    s3.postp = custom_postp
+
+    return attr
+
+settings.ui.customize_pr_person = customize_pr_person
+
+# -----------------------------------------------------------------------------
 # Activities
 # -----------------------------------------------------------------------------
 def customize_project_activity(**attr):

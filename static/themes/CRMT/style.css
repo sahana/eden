@@ -197,7 +197,6 @@ form#summary-filter-form
 }
 
 /* Read & Update - Migrate to DRMP */ 
-
 #edit-btn {
     float: left;
 }
@@ -205,4 +204,27 @@ form#summary-filter-form
 /* Register screen */
 #auth_user_org_group_id {
     margin-left: 10px;
+}
+
+/* Contacts Page */
+#pr_person_sub_human_resourcehuman_resource__label {
+    /* Hide the colon */
+    display: none;
+}
+/* Adjust Field Widths to match Titles/Data */
+#sub_human_resourcehuman_resource_human_resourcehuman_resource_i_organisation_id_edit_none,
+#sub_human_resourcehuman_resource_human_resourcehuman_resource_i_organisation_id_edit_0 {
+    width: 250px;
+}
+#sub_human_resourcehuman_resource_human_resourcehuman_resource_i_job_title_id_edit_none,
+#sub_human_resourcehuman_resource_human_resourcehuman_resource_i_job_title_id_edit_0,
+#sub_human_resourcehuman_resource_human_resourcehuman_resource_i_site_id_edit_none,
+#sub_human_resourcehuman_resource_human_resourcehuman_resource_i_site_id_edit_0 {
+    width: 120px;
+}
+#sub_phonecontact_phonecontact_i_value_edit_none,
+#sub_phonecontact_phonecontact_i_value_edit_0,
+#sub_emailcontact_emailcontact_i_value_edit_none,
+#sub_emailcontact_emailcontact_i_value_edit_0 {
+    width: 240px;
 }
