@@ -672,7 +672,7 @@ class subscriptions(S3CustomController):
 
         selector = S3GroupedOptionsWidget(cols=2)
         row = ("resource_selector__row",
-               "",
+               T("Subscribe To:"),
                selector(dummy, None, _id="resource_selector"),
                "")
         fieldset = formstyle(form, [row])
@@ -700,7 +700,26 @@ class subscriptions(S3CustomController):
                               None, _id="method_selector"), ""))
 
         fieldset = formstyle(form, rows)
+        fieldset.insert(0,
+                        DIV(SPAN([I(_class="icon-reorder"), T("More Options")],
+                                 _class="toggle-text",
+                                 _style="display:none"),
+                            SPAN([I(_class="icon-reorder"), T("Less Options")],
+                                 _class="toggle-text"),
+                            _id="notification-options",
+                            _class="control-group"))
         form.append(fieldset)
+
+        # Script to collapse notification options (collapsed by default)
+        script = """
+$('#notification-options').click(function() {
+  $(this).siblings().toggle();
+  $(this).children().toggle();
+});
+$('#notification-options').siblings().toggle();
+$('#notification-options').children().toggle();
+"""
+        current.response.s3.jquery_ready.append(script)
 
         # Submit button
         row = ("submit__row", "",

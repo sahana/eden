@@ -719,3 +719,10 @@ span.password-strength-bar {
     padding-left: 12px;
     border-radius: 3px;
 }
+
+div.toggle-div {
+    cursor: pointer;
+}
+span.toggle-text i {
+    margin-right: 5px;
+}
