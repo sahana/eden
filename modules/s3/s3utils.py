@@ -1425,6 +1425,22 @@ def URL2(a=None, c=None, r=None):
     return url
 
 # =============================================================================
+class S3CustomController(object):
+
+    @classmethod
+    def _view(cls, theme, name):
+
+        view = os.path.join(current.request.folder,
+                            "private", "templates", theme, "views", name)
+        try:
+            # Pass view as file not str to work in compiled mode
+            current.response.view = open(view, "rb")
+        except IOError:
+            from gluon.http import HTTP
+            raise HTTP("404", "Unable to open Custom View: %s" % view)
+        return
+
+# =============================================================================
 class S3DateTime(object):
     """
         Toolkit for date+time parsing/representation

@@ -114,6 +114,7 @@
         <li class='divider'></li>
        {{if auth.is_logged_in():}}
         <li><a href='/{{=appname}}/default/user/profile'><i class='icon-user'></i> {{=T("Profile")}}</a></li>
+        <li><a href='/{{=appname}}/default/index/subscriptions'><i class='icon-envelope'></i> {{=T("Notifications")}}</a></li>
         <li><a href='/{{=appname}}/default/user/change_password'><i class='icon-lock'></i> {{=T("Change Password")}}</a></li>
         {{if auth.s3_has_role("ADMIN"):}}
         <li><a href='/{{=appname}}/admin/user'><i class='icon-cogs'></i> {{=T("Admin")}}</a></li>

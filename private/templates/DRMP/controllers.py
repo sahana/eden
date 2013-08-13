@@ -9,27 +9,20 @@ from gluon.storage import Storage
 from s3.s3crud import S3CRUD
 from s3.s3filter import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter
 from s3.s3resource import S3FieldSelector
-from s3.s3utils import s3_avatar_represent
+from s3.s3utils import s3_avatar_represent, S3CustomController
 
 THEME = "DRMP"
 
 # =============================================================================
-class index():
+class index(S3CustomController):
     """ Custom Home Page """
 
     def __call__(self):
 
         response = current.response
+        
         output = {}
         #output["title"] = response.title = current.deployment_settings.get_system_name()
-        view = path.join(current.request.folder, "private", "templates",
-                         THEME, "views", "index.html")
-        try:
-            # Pass view as file not str to work in compiled mode
-            response.view = open(view, "rb")
-        except IOError:
-            from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
 
         s3 = response.s3
         # Image Carousel
@@ -121,6 +114,7 @@ class index():
                 data = dl
             output["news"] = data
 
+        self._view(THEME, "index.html")
         return output
 
 # =============================================================================
@@ -604,47 +598,49 @@ def render_cms_events(listid, resource, rfields, record, **attr):
     return item
 
 # =============================================================================
-class glossary():
+class glossary(S3CustomController):
     """
         Custom page
     """
 
     def __call__(self):
-
-        view = path.join(current.request.folder, "private", "templates",
-                         THEME, "views", "glossary.html")
-        try:
-            # Pass view as file not str to work in compiled mode
-            current.response.view = open(view, "rb")
-        except IOError:
-            from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
 
         title = current.T("Glossary")
 
-        return dict(title = title,
-                    )
+        self._view(THEME, "glossary.html")
+        return dict(title = title)
 
 # =============================================================================
-class links():
+class links(S3CustomController):
     """
         Custom page
     """
 
     def __call__(self):
 
-        view = path.join(current.request.folder, "private", "templates",
-                         THEME, "views", "links.html")
-        try:
-            # Pass view as file not str to work in compiled mode
-            current.response.view = open(view, "rb")
-        except IOError:
-            from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
-
         title = current.T("Links")
 
-        return dict(title = title,
-                    )
+        self._view(THEME, "links.html")
+        return dict(title = title)
+
+# =============================================================================
+class subscriptions(S3CustomController):
+    """ Custom page to manage subscriptions """
+
+    def __call__(self):
+
+        T = current.T
+        title = T("Notification Settings")
+
+        form = FORM(
+            INPUT(_type="submit", _value="Update Settings")
+        )
+
+        if form.accepts(current.request.post_vars,
+                        current.session):
+            current.response.warning = T("Not Implemented Yet")
+
+        self._view(THEME, "subscriptions.html")
+        return dict(title=title, form=form)
 
 # END =========================================================================

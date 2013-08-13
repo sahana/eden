@@ -38,6 +38,7 @@ __all__ = ["S3PersonEntity",
            "S3PersonEducationModel",
            "S3PersonDetailsModel",
            "S3SavedFilterModel",
+           "S3SubscriptionModel",
            "S3SavedSearch",
            "S3PersonPresence",
            "S3PersonDescription",
@@ -2469,7 +2470,7 @@ class S3PersonDetailsModel(S3Model):
 class S3SavedFilterModel(S3Model):
     """ Saved Filters """
 
-    names = ["pr_filter"]
+    names = ["pr_filter", "pr_filter_id"]
 
     def model(self):
 
@@ -2478,14 +2479,99 @@ class S3SavedFilterModel(S3Model):
         # ---------------------------------------------------------------------
         tablename = "pr_filter"
         table = self.define_table(tablename,
+                                  self.super_link("pe_id", "pr_pentity"),
                                   Field("title"),
                                   Field("controller"),
                                   Field("function"),
                                   Field("resource"),
                                   Field("description", "text"),
-                                  self.super_link("pe_id", "pr_pentity"),
                                   Field("query", "text"),
                                   s3_comments(),
+                                  *s3_meta_fields())
+
+        represent = S3Represent(lookup=tablename, fields=["title"])
+        filter_id = S3ReusableField("filter_id", table,
+                                    requires = IS_EMPTY_OR(IS_ONE_OF(
+                                                    db, "pr_filter.id",
+                                                    represent,
+                                                    orderby="pr_filter.title",
+                                                    sort=True)),
+                                    represent = represent,
+                                    label = T("Filter"),
+                                    ondelete = "SET NULL")
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return Storage(pr_filter_id = filter_id)
+
+# =============================================================================
+class S3SubscriptionModel(S3Model):
+    """ Model for subscriptions """
+
+    names = ["pr_subscription"]
+
+    def model(self):
+
+        T = current.T
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+
+        trigger_opts = {
+            1: T("New Records"),
+            2: T("Record Updates"),
+            3: T("New Records + Record Updates"),
+        }
+
+        format_opts = {
+            1: T("List"),
+            2: T("Report"),
+            3: T("Map"),
+            4: T("Graph"),
+        }
+
+        frequency_opts = {
+            "never": T("Never"),
+            #"immediately": T("Immediately"),
+            "hourly": T("Hourly"),
+            "daily": T("Daily"),
+            "weekly": T("Weekly"),
+        }
+
+        # ---------------------------------------------------------------------
+        tablename = "pr_subscription"
+        table = self.define_table(tablename,
+                                  self.super_link("pe_id", "pr_pentity"),
+                                  Field("resource"),
+                                  self.pr_filter_id(),
+                                  #Field("trigger", "integer",
+                                        #requires=IS_IN_SET(trigger_opts,
+                                                           #zero=None),
+                                        #default=1,
+                                        #represent=lambda opt: \
+                                                  #trigger_opts.get(opt,
+                                                                  #UNKNOWN_OPT)),
+                                  #Field("format", "integer",
+                                        #requires=IS_IN_SET(format_opts,
+                                                           #zero=None),
+                                        #default=1,
+                                        #represent=lambda opt: \
+                                                  #format_opts.get(opt,
+                                                                  #UNKNOWN_OPT)),
+                                  #Field("frequency",
+                                        #requires=IS_IN_SET(frequency_opts,
+                                                           #zero=None),
+                                        #default=1,
+                                        #represent=lambda opt: \
+                                                  #frequency_opts.get(opt,
+                                                                     #UNKNOWN_OPT)),
+                                  #Field("method"),
+                                  #Field("last_checked", "datetime",
+                                        #default=current.request.utcnow,
+                                        #writable=False),
+                                  #Field("next_due_time", "datetime",
+                                        #writable=False),
+                                  #Field("suspended", "boolean",
+                                        #default=False),
                                   *s3_meta_fields())
 
         # ---------------------------------------------------------------------
