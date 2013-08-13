@@ -629,17 +629,94 @@ class subscriptions(S3CustomController):
 
     def __call__(self):
 
+        s3db = current.s3db
+
         T = current.T
         title = T("Notification Settings")
 
-        form = FORM(
-            INPUT(_type="submit", _value="Update Settings")
-        )
+        # Available resources
+        resources = {
+            "volunteers": dict(
+                            resource="hrm_human_resource",
+                            url="vol/volunteer",
+                            label=T("Volunteers")
+            ),
+            "staff": dict(
+                            resource="hrm_human_resource",
+                            url="hrm/staff",
+                            label=T("Staff")
+            ),
+            "updates": dict(
+                            resource="cms_post",
+                            url="default/index/newsfeed",
+                            label=T("Updates")
+            ),
+            "organizations": dict(
+                            resource="org_organisation",
+                            url="org/organisation",
+                            label=T("Organizations")
+            ),
+        }
 
+        form = FORM()
+
+        from gluon.sqlhtml import SQLFORM
+        from gluon.validators import IS_IN_SET
+        from s3.s3widgets import S3GroupedOptionsWidget
+
+        formstyle = SQLFORM.formstyles.bootstrap
+
+        # Resource selector
+        options = [(k, v["label"]) for k, v in resources.items()]
+        dummy = Storage(name="resources", requires = IS_IN_SET(options))
+
+        selector = S3GroupedOptionsWidget(cols=2)
+        row = ("resource_selector__row",
+               "",
+               selector(dummy, None, _id="resource_selector"),
+               "")
+        fieldset = formstyle(form, [row])
+        form.append(fieldset)
+
+        # Notification options
+        stable = s3db.pr_subscription
+        
+        rows = []
+        selector = S3GroupedOptionsWidget(cols=1)
+        rows.append(("trigger_selector__row",
+                     T("Notify On:"),
+                     selector(stable.notify_on,
+                              None, _id="trigger_selector"), ""))
+                     
+        switch = S3GroupedOptionsWidget(cols=1, multiple=False, sort=False)
+        rows.append(("frequency_selector__row",
+                     T("Frequency:"),
+                     switch(stable.frequency,
+                            None, _id="frequency_selector"), ""))
+                     
+        rows.append(("method_selector__row",
+                     T("Notify By:"),
+                     selector(stable.method,
+                              None, _id="method_selector"), ""))
+
+        fieldset = formstyle(form, rows)
+        form.append(fieldset)
+
+        # Submit button
+        row = ("submit__row", "",
+               INPUT(_type="submit", _value="Update Settings"), "")
+
+        fieldset = formstyle(form, [row])
+        form.append(fieldset)
+
+        # Accept form
         if form.accepts(current.request.post_vars,
-                        current.session):
+                        current.session,
+                        keepvalues=True):
+            print form.vars
             current.response.warning = T("Not Implemented Yet")
 
+        # View
         self._view(THEME, "subscriptions.html")
         return dict(title=title, form=form)
 

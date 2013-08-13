@@ -1131,6 +1131,7 @@ ul.x-tree-root-ct {
     text-align: left;
 }
 .s3-groupedopts-widget label {
+    display: inline;
     margin-left: 5px;
 }
 .s3-groupedopts-widget tr > td {

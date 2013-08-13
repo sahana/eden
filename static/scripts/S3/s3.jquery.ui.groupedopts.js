@@ -55,16 +55,17 @@
             }
             this.selected = el.val();
 
+            var classes = el.attr('class');
             var groups = el.find('optgroup'), i;
             if (groups.length) {
                 this.grouped = true;
-                this.menu = $('<div class="s3-groupedopts-widget"/>');
+                this.menu = $('<div class="s3-groupedopts-widget ' + classes + '"/>');
                 for (i=0; i<groups.length; i++) {
                     this._renderGroup(groups[i]);
                 }
             } else {
                 this.grouped = false;
-                this.menu = $('<table class="s3-groupedopts-widget"/>');
+                this.menu = $('<table class="s3-groupedopts-widget ' + classes + '"/>');
                 var items = el.find('option');
                 this._renderRows(items, this.menu);
             }
@@ -133,9 +134,14 @@
                            'id="' + id + '" ' +
                            'name="' + this.name + '" ' +
                            'class="s3-groupedopts-option" ' +
-                           'value="' + value + '"/>');
-            
-            var pos = $.inArray(value, this.selected);
+                           'value="' + value + '"/>'),
+                pos;
+
+            if (this.multiple) {
+                pos = $.inArray(value, this.selected);
+            } else {
+                pos = value == this.selected ? 1 : -1;
+            }
             if (pos >= 0) {
                 $(oinput).prop('checked', true);
             }
