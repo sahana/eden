@@ -97,10 +97,6 @@ div.dl {
     margin-right: 8px;
 }
 
-#cms_post_body.text.input-xlarge {
-    height: 100px;
-}
-
 #delete-btn {
     margin-bottom: 0;
 }
@@ -455,16 +451,6 @@ table.embeddedComponent .add-row td {
     margin-top: 5px;
 }
 
-#sub-defaultevent_post .label-row,
-#sub-defaultlocation .label-row,
-#sub-filedocument .label-row,
-#sub-partnerorganisation .label-row {
-    /* Hide the column titles since only 1 column
-        - this should be done server-side where-possible, but this isn't possible for Partner Orgs as same field as for Donors
-    */
-    display: none;
-}
-
 #list-add form.form-horizontal {
     background-color: #fff;
     border-radius: 0 0 5px 5px;
@@ -509,6 +495,10 @@ label.ui-corner-all span {
     top: 5px;
     left: 10px;
     font-size: 12px;
+}
+
+.filter-controls {
+    clear: both;
 }
 
 /* DataTable Styling */
@@ -637,24 +627,6 @@ label.ui-corner-all span {
     font-size: 13px;
     color: #666;
     margin-bottom: 15px;
-}
-
-
-label.ui-corner-all {
-    margin-left: 5px;
-    margin-bottom: 0;
-    margin-top: 0;
-}
-
-label.ui-corner-all span {
-    position: relative;
-    top: 5px;
-    left: 10px;
-    font-size: 12px;
-}
-
-.filter-controls {
-    clear: both;
 }
 
 /* Login & Registration Screens */
