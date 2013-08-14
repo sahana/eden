@@ -2696,6 +2696,7 @@ class S3LocationSelectorWidget(FormWidget):
 
     def __call__(self, field, value, **attributes):
 
+        print "here"
         T = current.T
         db = current.db
         s3db = current.s3db
