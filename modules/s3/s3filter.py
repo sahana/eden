@@ -1007,12 +1007,6 @@ class S3OptionsFilter(S3FilterWidget):
         opts = self.opts
         name = attr["_name"]
 
-        # Filter class (default+custom)
-        _class = self._class
-        if "_class" in attr and attr["_class"]:
-            _class = "%s %s" % (_class, attr["_class"])
-        attr["_class"] = _class
-
         # Get the options
         ftype, options, noopt = self._options(resource)
         if noopt:
@@ -1058,6 +1052,7 @@ class S3OptionsFilter(S3FilterWidget):
 
         widget_type = opts["widget"]
         if widget_type == "multiselect-bootstrap":
+            widget_class = "multiselect-filter-bootstrap"
             script = "/%s/static/scripts/bootstrap-multiselect.js" % \
                         current.request.application
             scripts = current.response.s3.scripts
@@ -1066,18 +1061,15 @@ class S3OptionsFilter(S3FilterWidget):
             widget = MultipleOptionsWidget.widget(dummy_field,
                                                   values,
                                                   **attr)
-            widget.add_class("multiselect-filter-bootstrap")
         elif widget_type == "multiselect":
-            if "multiselect-filter-widget" not in _class:
-                attr["_class"] = "%s multiselect-filter-widget" % _class
+            widget_class = "multiselect-filter-widget"
             w = S3MultiSelectWidget(filter = opts.get("filter", False),
                                     header = opts.get("header", False),
                                     selectedList = opts.get("selectedList", 3),
                                     )
             widget = w(dummy_field, values, **attr)
         else:
-            if "groupedopts-filter-widget" not in _class:
-                attr["_class"] = "%s groupedopts-filter-widget" % _class
+            widget_class = "groupedopts-filter-widget"
             w = S3GroupedOptionsWidget(
                     options = options,
                     multiple = True,
@@ -1087,6 +1079,11 @@ class S3OptionsFilter(S3FilterWidget):
                 )
             widget = w(dummy_field, values, **attr)
 
+        if hasattr(widget, "add_class"):
+            # Add default class and widget class
+            widget.add_class(self._class)
+            widget.add_class(widget_class)
+            
         return TAG[""](any_all, widget)
 
     # -------------------------------------------------------------------------
@@ -1142,13 +1139,23 @@ class S3OptionsFilter(S3FilterWidget):
         if isinstance(selector, (tuple, list)):
             selector = selector[0]
 
-        rfield = S3ResourceField(resource, selector)
-        field = rfield.field
-        colname = rfield.colname
-        ftype = rfield.ftype
+        if resource is None:
+            rname = opts.get("resource")
+            if rname:
+                resource = current.s3db.resource(rname)
+
+        if resource:
+            rfield = S3ResourceField(resource, selector)
+            field = rfield.field
+            colname = rfield.colname
+            ftype = rfield.ftype
+        else:
+            rfield = field = colname = None
+            ftype = "string"
 
         # Find the options
-
+        opt_keys = []
+        
         if opts.options is not None:
             # Custom dict of options {value: label} or a callable
             # returning such a dict:
@@ -1157,7 +1164,7 @@ class S3OptionsFilter(S3FilterWidget):
                 options = options()
             opt_keys = options.keys()
 
-        else:
+        elif resource:
             # Determine the options from the field type
             options = None
             if ftype == "boolean":
@@ -1188,21 +1195,18 @@ class S3OptionsFilter(S3FilterWidget):
                             v = row[colname]
                             if v not in opt_keys:
                                 kappend(v)
-            else:
-                opt_keys = []
 
         # No options?
         if len(opt_keys) < 1 or len(opt_keys) == 1 and not opt_keys[0]:
             return (ftype, None, opts.get("no_opts", NOOPT))
 
         # Represent the options
-
         opt_list = [] # list of tuples (key, value)
 
-        # Custom represent? (otherwise fall back to field represent)
+        # Custom represent? (otherwise fall back to field.represent)
         represent = opts.represent
-        if not represent or ftype[:9] != "reference":
-            represent = field.represent
+        if not represent: # or ftype[:9] != "reference":
+            represent = field.represent if field else None
 
         if options is not None:
             # Custom dict of {value:label} => use this label
