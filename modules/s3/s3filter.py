@@ -199,6 +199,10 @@ class S3FilterWidget(object):
         # Construct name and id for the widget
         attr = self.attr
         if "_name" not in attr:
+            if not resource:
+                raise SyntaxError("%s: _name parameter required " \
+                                  "if rendered without resource." % \
+                                  self.__class__.__name__)
             flist = self.field
             if type(flist) is not list:
                 flist = [flist]
@@ -282,16 +286,19 @@ class S3FilterWidget(object):
             fields = [fields]
         selectors = []
         for field in fields:
-            try:
-                rfield = S3ResourceField(resource, field)
-            except (AttributeError, TypeError):
-                continue
-            if not rfield.field and not rfield.virtual:
-                # Unresolvable selector
-                continue
-            if not label:
-                label = rfield.label
-            selectors.append(prefix(rfield.selector))
+            if resource:
+                try:
+                    rfield = S3ResourceField(resource, field)
+                except (AttributeError, TypeError):
+                    continue
+                if not rfield.field and not rfield.virtual:
+                    # Unresolvable selector
+                    continue
+                if not label:
+                    label = rfield.label
+                selectors.append(prefix(rfield.selector))
+            else:
+                selectors.append(field)
         if selectors:
             return label, "|".join(selectors)
         else:
