@@ -149,6 +149,8 @@ class S3FilterWidget(object):
         self.attr = attributes
         self.opts = options
 
+        self.selector = None
+
     # -------------------------------------------------------------------------
     def __call__(self, resource, get_vars=None, alias=None):
         """
@@ -201,7 +203,7 @@ class S3FilterWidget(object):
         if "_name" not in attr:
             if not resource:
                 raise SyntaxError("%s: _name parameter required " \
-                                  "if rendered without resource." % \
+                                  "when rendered without resource." % \
                                   self.__class__.__name__)
             flist = self.field
             if type(flist) is not list:
@@ -521,17 +523,33 @@ class S3DateFilter(S3RangeFilter):
         _id = attr["_id"]
 
         # Determine the field type
-        rfield = S3ResourceField(resource, self.field)
-        field = rfield.field
-        if rfield.virtual:
-            # S3DateTimeWidget doesn't support virtual fields
+        if resource:
+            rfield = S3ResourceField(resource, self.field)
+            field = rfield.field
+        else:
+            rfield = field = None
+        if not field:
+            if not rfield or rfield.virtual:
+                ftype = self.opts.get("fieldtype", "datetime")
+            else:
+                # Unresolvable selector
+                return ""
+        else:
+            ftype = rfield.ftype
+        if not field:
+            # S3DateTimeWidget requires a Field
+            if rfield:
+                tname, fname = rfield.tname, rfield.fname
+            else:
+                tname, fname = "notable", "datetime"
+                if not _id:
+                    raise SyntaxError("%s: _id parameter required " \
+                                      "when rendered without resource." % \
+                                      self.__class__.__name__)
             dtformat = current.deployment_settings.get_L10n_date_format()
-            field = Field(rfield.fname, "datetime",
+            field = Field(fname, ftype,
                           requires = IS_DATE_IN_RANGE(format = dtformat))
-            field.tablename = field._tablename = rfield.tname
-        elif not rfield.field:
-            # Unresolvable selector
-            return ""
+            field.tablename = field._tablename = tname
 
         # Options
         hide_time = self.opts.get("hide_time", False)
@@ -548,7 +566,7 @@ class S3DateFilter(S3RangeFilter):
             input_id = "%s-%s" % (_id, operator)
 
             # Determine the widget class
-            if rfield.ftype == "date":
+            if ftype == "date":
                 widget = S3DateWidget()
             else:
                 opts = {}
