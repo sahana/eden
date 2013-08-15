@@ -7,7 +7,7 @@ from gluon.html import *
 from gluon.storage import Storage
 
 from s3.s3crud import S3CRUD
-from s3.s3filter import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter
+from s3.s3filter import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter, S3FilterForm
 from s3.s3resource import S3FieldSelector
 from s3.s3utils import s3_avatar_represent, S3CustomController
 
@@ -658,6 +658,31 @@ class subscriptions(S3CustomController):
             ),
         }
 
+        # Filter widgets
+        filters = [S3OptionsFilter("series_id",
+                                   label=T("Filter by Type"),
+                                   represent="%(name)s",
+                                   widget="multiselect",
+                                   cols=3,
+                                   resource="cms_post",
+                                   _name="type-filter"),
+                   S3LocationFilter("location_id",
+                                    label=T("Filter by Location"),
+                                    levels=["L1", "L2", "L3"],
+                                    widget="multiselect",
+                                    cols=3,
+                                    resource="cms_post",
+                                    _name="location-filter"),
+                   #S3OptionsFilter("created_by$organisation_id",
+                                   #label=T("Filter by Organization"),
+                                   #represent=s3db.org_organisation_represent,
+                                   ##represent="%(name)s",
+                                   #widget="multiselect",
+                                   #cols=3,
+                                   #resource="cms_post",
+                                   #_name="organisation-filter"),
+                   ]
+
         form = FORM()
 
         from gluon.sqlhtml import SQLFORM
@@ -678,6 +703,12 @@ class subscriptions(S3CustomController):
         fieldset = formstyle(form, [row])
         form.append(fieldset)
 
+        # Filters
+        filter_form = S3FilterForm(filters, clear=False)
+        fieldset = FIELDSET(filter_form.fields(None, {}),
+                            _id="subscription-filter-form")
+        form.append(fieldset)
+       
         # Notification options
         stable = s3db.pr_subscription
         
@@ -732,7 +763,7 @@ $('#notification-options').children().toggle();
         if form.accepts(current.request.post_vars,
                         current.session,
                         keepvalues=True):
-            print form.vars
+            #print form.vars
             current.response.warning = T("Not Implemented Yet")
 
         # View
