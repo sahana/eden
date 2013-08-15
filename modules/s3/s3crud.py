@@ -463,7 +463,7 @@ class S3CRUD(S3Method):
                     r.method = "create"
                     return self.create(r, **attr)
                 else:
-                    return self.select(r, **attr)
+                    return self.select_filter(r, **attr)
 
             # Redirect to update if user has permission unless
             # a method has been specified in the URL
@@ -800,18 +800,21 @@ class S3CRUD(S3Method):
         if not authorised:
             r.unauthorised()
 
-        elif r.interactive and r.http == "GET" and not record_id:
-            # Provide a confirmation form and a record list
-            form = FORM(TABLE(TR(
-                        TD(self.settings.confirm_delete,
-                           _style="color: red;"),
-                        TD(INPUT(_type="submit", _value=current.T("Delete"),
-                           _style="margin-left: 10px;")))))
-            items = self.select(r, **attr).get("items", None)
-            if isinstance(items, DIV):
-                output.update(form=form)
-            output.update(items=items)
-            current.response.view = self._view(r, "delete.html")
+        elif (r.interactive or r.representation == "aadata") and \
+             r.http == "GET" and not record_id:
+            output = self._datatable(r, **attr)
+            if isinstance(output, dict):
+                # Provide a confirmation form and a record list
+                form = FORM(TABLE(TR(TD(self.settings.confirm_delete,
+                                        _style="color: red;"),
+                                     TD(INPUT(_type="submit",
+                                              _value=current.T("Delete"),
+                                              _style="margin-left: 10px;")))))
+                output["form"] = form
+                current.response.view = self._view(r, "delete.html")
+            else:
+                # @todo: sorting not working yet
+                return output
 
         elif r.interactive and (r.http == "POST" or
                                 r.http == "GET" and record_id):

@@ -2517,61 +2517,66 @@ class S3SubscriptionModel(S3Model):
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         trigger_opts = {
-            1: T("New Records"),
-            2: T("Record Updates"),
-            3: T("New Records + Record Updates"),
+            "new": T("New Records"),
+            "upd": T("Record Updates"),
         }
 
-        format_opts = {
-            1: T("List"),
-            2: T("Report"),
-            3: T("Map"),
-            4: T("Graph"),
-        }
+        frequency_opts = (
+            ("never", T("Never")),
+            #("immediately", T("Immediately")),
+            ("hourly", T("Hourly")),
+            ("daily", T("Daily")),
+            ("weekly", T("Weekly")),
+        )
 
-        frequency_opts = {
-            "never": T("Never"),
-            #"immediately": T("Immediately"),
-            "hourly": T("Hourly"),
-            "daily": T("Daily"),
-            "weekly": T("Weekly"),
-        }
-
+        MSG_CONTACT_OPTS = current.msg.MSG_CONTACT_OPTS
+        
         # ---------------------------------------------------------------------
         tablename = "pr_subscription"
         table = self.define_table(tablename,
                                   self.super_link("pe_id", "pr_pentity"),
-                                  Field("resource"),
                                   self.pr_filter_id(),
-                                  #Field("trigger", "integer",
-                                        #requires=IS_IN_SET(trigger_opts,
-                                                           #zero=None),
-                                        #default=1,
-                                        #represent=lambda opt: \
-                                                  #trigger_opts.get(opt,
-                                                                  #UNKNOWN_OPT)),
-                                  #Field("format", "integer",
-                                        #requires=IS_IN_SET(format_opts,
-                                                           #zero=None),
-                                        #default=1,
-                                        #represent=lambda opt: \
-                                                  #format_opts.get(opt,
-                                                                  #UNKNOWN_OPT)),
-                                  #Field("frequency",
-                                        #requires=IS_IN_SET(frequency_opts,
-                                                           #zero=None),
-                                        #default=1,
-                                        #represent=lambda opt: \
-                                                  #frequency_opts.get(opt,
-                                                                     #UNKNOWN_OPT)),
-                                  #Field("method"),
+                                  Field("notify_on", "list:string",
+                                        requires=IS_IN_SET(trigger_opts,
+                                                           multiple=True,
+                                                           zero=None),
+                                        default=["new"],
+                                        represent=S3Represent(
+                                                    options=trigger_opts,
+                                                    multiple=True)),
+                                  Field("frequency",
+                                        requires=IS_IN_SET(frequency_opts,
+                                                           zero=None),
+                                        default="never",
+                                        represent=lambda opt: \
+                                                  frequency_opts.get(opt,
+                                                                     UNKNOWN_OPT)),
+                                  Field("method", "list:string",
+                                        requires=IS_IN_SET(MSG_CONTACT_OPTS,
+                                                           multiple=True,
+                                                           zero=None),
+                                        default=["EMAIL"],
+                                        represent=S3Represent(
+                                                    options=MSG_CONTACT_OPTS,
+                                                    multiple=True)),
                                   #Field("last_checked", "datetime",
                                         #default=current.request.utcnow,
                                         #writable=False),
                                   #Field("next_due_time", "datetime",
                                         #writable=False),
-                                  #Field("suspended", "boolean",
-                                        #default=False),
+                                  *s3_meta_fields())
+
+        self.add_component("pr_subscription_resource",
+                           pr_subscription="subscription_id")
+
+        # ---------------------------------------------------------------------
+        tablename = "pr_subscription_resource"
+        table = self.define_table(tablename,
+                                  Field("subscription_id",
+                                        "reference pr_subscription",
+                                        ondelete="CASCADE"),
+                                  Field("resource"),
+                                  Field("url"),
                                   *s3_meta_fields())
 
         # ---------------------------------------------------------------------

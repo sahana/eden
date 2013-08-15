@@ -1800,7 +1800,8 @@ class S3GroupedOptionsWidget(FormWidget):
                  size=None,
                  cols=None,
                  help_field=None,
-                 none=None):
+                 none=None,
+                 sort=True):
         """
             Constructor
 
@@ -1815,6 +1816,7 @@ class S3GroupedOptionsWidget(FormWidget):
             @param help_field: field in the referenced table to retrieve
                                a tooltip text from (for foreign keys only)
             @param none: True to render "None" as normal option
+            @param sort: sort the options (only effective if size==None)
         """
 
         self.options = options
@@ -1823,6 +1825,7 @@ class S3GroupedOptionsWidget(FormWidget):
         self.cols = cols or 3
         self.help_field = help_field
         self.none = none
+        self.sort = sort
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
@@ -2028,14 +2031,14 @@ class S3GroupedOptionsWidget(FormWidget):
         else:
             # Only one group
             group = {"letters": None, "items": options}
-            close_group(group, values, helptext)
+            close_group(group, values, helptext, sort=self.sort)
             groups = [group]
 
         return {"groups": groups}
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _close_group(group, values, helptext):
+    def _close_group(group, values, helptext, sort=True):
         """
             Helper method to finalize an options group, render its label
             and sort the options
@@ -2058,7 +2061,10 @@ class S3GroupedOptionsWidget(FormWidget):
         del group["letters"]
 
         # Sort the group items
-        group_items = sorted(group["items"], key=lambda i: i[1].upper()[0])
+        if sort:
+            group_items = sorted(group["items"], key=lambda i: i[1].upper()[0])
+        else:
+            group_items = group["items"]
 
         # Add tooltips
         items = []

@@ -7,7 +7,7 @@ from gluon.html import *
 from gluon.storage import Storage
 
 from s3.s3crud import S3CRUD
-from s3.s3filter import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter
+from s3.s3filter import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter, S3FilterForm
 from s3.s3resource import S3FieldSelector
 from s3.s3utils import s3_avatar_represent, S3CustomController
 
@@ -629,17 +629,144 @@ class subscriptions(S3CustomController):
 
     def __call__(self):
 
+        s3db = current.s3db
+
         T = current.T
         title = T("Notification Settings")
 
-        form = FORM(
-            INPUT(_type="submit", _value="Update Settings")
-        )
+        # Available resources
+        resources = {
+            "volunteers": dict(
+                            resource="hrm_human_resource",
+                            url="vol/volunteer",
+                            label=T("Volunteers")
+            ),
+            "staff": dict(
+                            resource="hrm_human_resource",
+                            url="hrm/staff",
+                            label=T("Staff")
+            ),
+            "updates": dict(
+                            resource="cms_post",
+                            url="default/index/newsfeed",
+                            label=T("Updates")
+            ),
+            "organizations": dict(
+                            resource="org_organisation",
+                            url="org/organisation",
+                            label=T("Organizations")
+            ),
+        }
 
+        # Filter widgets
+        filters = [S3OptionsFilter("series_id",
+                                   label=T("Filter by Type"),
+                                   represent="%(name)s",
+                                   widget="multiselect",
+                                   cols=3,
+                                   resource="cms_post",
+                                   _name="type-filter"),
+                   S3LocationFilter("location_id",
+                                    label=T("Filter by Location"),
+                                    levels=["L1", "L2", "L3"],
+                                    widget="multiselect",
+                                    cols=3,
+                                    resource="cms_post",
+                                    _name="location-filter"),
+                   #S3OptionsFilter("created_by$organisation_id",
+                                   #label=T("Filter by Organization"),
+                                   #represent=s3db.org_organisation_represent,
+                                   ##represent="%(name)s",
+                                   #widget="multiselect",
+                                   #cols=3,
+                                   #resource="cms_post",
+                                   #_name="organisation-filter"),
+                   ]
+
+        form = FORM()
+
+        from gluon.sqlhtml import SQLFORM
+        from gluon.validators import IS_IN_SET
+        from s3.s3widgets import S3GroupedOptionsWidget
+
+        formstyle = SQLFORM.formstyles.bootstrap
+
+        # Resource selector
+        options = [(k, v["label"]) for k, v in resources.items()]
+        dummy = Storage(name="resources", requires = IS_IN_SET(options))
+
+        selector = S3GroupedOptionsWidget(cols=2)
+        row = ("resource_selector__row",
+               T("Subscribe To:"),
+               selector(dummy, None, _id="resource_selector"),
+               "")
+        fieldset = formstyle(form, [row])
+        form.append(fieldset)
+
+        # Filters
+        filter_form = S3FilterForm(filters, clear=False)
+        fieldset = FIELDSET(filter_form.fields(None, {}),
+                            _id="subscription-filter-form")
+        form.append(fieldset)
+       
+        # Notification options
+        stable = s3db.pr_subscription
+        
+        rows = []
+        selector = S3GroupedOptionsWidget(cols=1)
+        rows.append(("trigger_selector__row",
+                     T("Notify On:"),
+                     selector(stable.notify_on,
+                              None, _id="trigger_selector"), ""))
+                     
+        switch = S3GroupedOptionsWidget(cols=1, multiple=False, sort=False)
+        rows.append(("frequency_selector__row",
+                     T("Frequency:"),
+                     switch(stable.frequency,
+                            None, _id="frequency_selector"), ""))
+                     
+        rows.append(("method_selector__row",
+                     T("Notify By:"),
+                     selector(stable.method,
+                              None, _id="method_selector"), ""))
+
+        fieldset = formstyle(form, rows)
+        fieldset.insert(0,
+                        DIV(SPAN([I(_class="icon-reorder"), T("More Options")],
+                                 _class="toggle-text",
+                                 _style="display:none"),
+                            SPAN([I(_class="icon-reorder"), T("Less Options")],
+                                 _class="toggle-text"),
+                            _id="notification-options",
+                            _class="control-group"))
+        form.append(fieldset)
+
+        # Script to collapse notification options (collapsed by default)
+        script = """
+$('#notification-options').click(function() {
+  $(this).siblings().toggle();
+  $(this).children().toggle();
+});
+$('#notification-options').siblings().toggle();
+$('#notification-options').children().toggle();
+"""
+        current.response.s3.jquery_ready.append(script)
+
+        # Submit button
+        row = ("submit__row", "",
+               INPUT(_type="submit", _value="Update Settings"), "")
+
+        fieldset = formstyle(form, [row])
+        form.append(fieldset)
+
+        # Accept form
         if form.accepts(current.request.post_vars,
-                        current.session):
+                        current.session,
+                        keepvalues=True):
+            #print form.vars
             current.response.warning = T("Not Implemented Yet")
 
+        # View
         self._view(THEME, "subscriptions.html")
         return dict(title=title, form=form)
 
