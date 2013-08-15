@@ -647,11 +647,82 @@ def catalog():
     return dict()
 
 # -----------------------------------------------------------------------------
+def config_default(r, **attr):
+    """
+        Set a Config to be the default
+            designed to be a custom method called by an action button
+    """
+
+    id = r.id
+    table = s3db.gis_config
+    query = (table.id == id)
+    config = db(query).select(table.pe_id,
+                              table.pe_default,
+                              table.name,
+                              table.default_location_id,
+                              table.lat,
+                              table.lon,
+                              table.zoom,
+                              limitby=(0, 1)
+                              ).first()
+    if not config:
+        session.error = T("Config not found!")
+        redirect(URL())
+    pe_id = auth.user.pe_id
+    if config.pe_id == pe_id:
+        if config.pe_default:
+            session.confirmation = T("Map is already your Default")
+            redirect(URL())
+        else:
+            # Set this to default
+            db(query).update(pe_default = True)
+            # Set all others to False
+            query = (table.pe_id == pe_id) & \
+                    (table.id != id)
+            db(query).update(pe_default = False)
+            session.confirmation = T("Map has been set as Default")
+            redirect(URL())
+    else:
+        new_id = table.insert(pe_id = pe_id,
+                              pe_type = 1,
+                              pe_default = True,
+                              name = config.name,
+                              default_location_id = config.default_location_id,
+                              lat = config.lat,
+                              lon = config.lon,
+                              zoom = config.zoom,
+                              )
+        table = db.gis_layer_config
+        query = (table.config_id == id)
+        layers = db(query).select(table.layer_id,
+                                  table.enabled,
+                                  table.visible,
+                                  table.base,
+                                  table.style,
+                                  )
+        insert = table.insert
+        for layer in layers:
+            insert(config_id = new_id,
+                   layer_id = layer.layer_id,
+                   enabled = layer.enabled,
+                   visible = layer.visible,
+                   base = layer.base,
+                   style = layer.style,
+                   )
+        session.confirmation = T("Map has been copied and set as Default")
+        redirect(URL())
+
+# -----------------------------------------------------------------------------
 def config():
     """ RESTful CRUD controller """
 
-    # Custom Methods to enable/disable layers
+    # Custom Methods to set as default
     set_method = s3db.set_method
+    set_method(module, resourcename,
+               method="default",
+               action=config_default)
+
+    # Custom Methods to enable/disable layers
     set_method(module, resourcename,
                component_name="layer_entity",
                method="enable",
@@ -680,14 +751,28 @@ def config():
                                                   },
                                    )
                 else:
-                    # Filter Region Configs
-                    s3.filter = (s3db.gis_config.region_location_id != None)
+                    # Filter Region & Default Configs
+                    table = r.table
+                    s3.filter = (table.region_location_id == None) & \
+                                (table.uuid != "SITE_DEFAULT")
+                    list_fields = ["name",
+                                   ]
                     if auth.is_logged_in():
+                        if "~.pe_id" in request.get_vars:
+                            s3.crud_strings.gis_config.title_list = T("My Maps")
+                            list_fields.append("pe_default")
+                        else:
+                            s3.crud_strings.gis_config.title_list = T("Saved Maps")
+                            list_fields.append("pe_id")
+                            field = table.pe_id
+                            field.label = T("Person")
+                            field.represent = s3db.pr_PersonEntityRepresent(show_label=False, show_type=False)
                         # For Create forms
-                        field = r.table.pe_id
+                        field = table.pe_id
                         field.default = auth.user.pe_id
                         field.readable = field.writable = False
                         fields = ["name",
+                                  "pe_default",
                                   "default_location_id",
                                   "zoom",
                                   "lat",
@@ -713,10 +798,6 @@ def config():
                         crud_form = s3base.S3SQLCustomForm(*fields)
                     else:
                         crud_form = None
-                    list_fields = ["name",
-                                   "pe_id",
-                                   "pe_default",
-                                   ]
                     s3db.configure("gis_config",
                                    crud_form=crud_form,
                                    insertable=False,
@@ -817,13 +898,20 @@ def config():
                                        ))
 
             elif not r.component and r.method != "import":
-                s3_action_buttons(r, copyable=True)
-                s3.actions.append(
-                    dict(url=URL(c="gis", f="index",
-                                 vars={"config":"[id]"}),
-                         label=str(T("Show")),
-                         _class="action-btn")
-                )
+                show = dict(url=URL(c="gis", f="index",
+                                    vars={"config":"[id]"}),
+                            label=str(T("Show")),
+                            _class="action-btn")
+                if auth.s3_has_role(MAP_ADMIN):
+                    s3_action_buttons(r, copyable=True)
+                    s3.actions.append(show)
+                else:
+                    s3.actions = [show]
+                    if auth.is_logged_in():
+                        default = dict(url=URL(args=["[id]", "default"]),
+                                       label=str(T("Set as my Default")),
+                                       _class="action-btn")
+                        s3.actions.append(default)
 
         elif r.representation == "url":
             # Save from Map

@@ -9,9 +9,10 @@
 
     function enable_fullscreen(map) {
         // Remove map elements
-        map.s3.westPanelContainer.removeAll(false);
-        map.s3.mapPanelContainer.removeAll(false);
-        var mapWin = map.s3.mapWin;
+        var s3 = map.s3;
+        s3.westPanelContainer.removeAll(false);
+        s3.mapPanelContainer.removeAll(false);
+        var mapWin = s3.mapWin;
         mapWin.items.items = [];
         mapWin.doLayout();
         mapWin.destroy();
@@ -25,18 +26,27 @@
         } else if (document.body.mozRequestFullScreen) {
             document.body.mozRequestFullScreen();
         }
+        // Modify the Legend Panel & Save Panel
+        var map_id = s3.id;
+        $('#' + map_id + ' .map_legend_panel').addClass('fullscreen');
+        $('#' + map_id + ' .map_save_panel').addClass('fullscreen');
     }
 
     function disable_fullscreen(map) {
         // Remove map elements
-        map.s3.westPanelContainer.removeAll(false);
-        map.s3.mapPanelContainer.removeAll(false);
-        var mapWin = map.s3.mapWin;
+        var s3 = map.s3;
+        s3.westPanelContainer.removeAll(false);
+        s3.mapPanelContainer.removeAll(false);
+        var mapWin = s3.mapWin;
         mapWin.items.items = [];
         mapWin.doLayout();
         mapWin.destroy();
         // Add embedded Panel
         S3.gis.addMapPanel(map);
+        // Modify the Legend Panel & Save Panel
+        var map_id = s3.id;
+        $('#' + map_id + ' .map_legend_panel').removeClass('fullscreen');
+        $('#' + map_id + ' .map_save_panel').removeClass('fullscreen');
     }
 
     $('.gis_fullscreen_map-btn').click(function(evt) {

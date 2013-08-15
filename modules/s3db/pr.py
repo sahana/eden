@@ -3763,17 +3763,20 @@ class pr_PersonEntityRepresent(S3Represent):
     def __init__(self,
                  show_label=True,
                  default_label="[No ID Tag]",
+                 show_type=True,
                  multiple=False):
         """
             Constructor
 
             @param show_label: show the ID tag label for persons
             @param default_label: the default for the ID tag label
+            @param show_type: show the instance_type
             @param multiple: assume a value list by default
         """
 
         self.show_label = show_label
         self.default_label = default_label
+        self.show_type = show_type
 
         super(pr_PersonEntityRepresent, self).__init__(lookup="pr_pentity",
                                                        key="pe_id",
@@ -3862,25 +3865,29 @@ class pr_PersonEntityRepresent(S3Represent):
         else:
             label = None
 
-        etable = current.s3db.pr_pentity
-        instance_type_nice = etable.instance_type.represent(instance_type)
+        if self.show_type:
+            etable = current.s3db.pr_pentity
+            instance_type_nice = etable.instance_type.represent(instance_type)
+            instance_type_nice = " (%s)" % instance_type_nice
+        else:
+            instance_type_nice = ""
 
         item = object.__getattribute__(row, instance_type)
         if instance_type == "pr_person":
             if show_label:
-                pe_str = "%s %s (%s)" % (s3_fullname(item),
-                                         label,
-                                         instance_type_nice)
-            else:
-                pe_str = "%s (%s)" % (s3_fullname(item),
+                pe_str = "%s %s%s" % (s3_fullname(item),
+                                      label,
                                       instance_type_nice)
+            else:
+                pe_str = "%s%s" % (s3_fullname(item),
+                                   instance_type_nice)
 
         elif "name" in item:
-            pe_str = "%s (%s)" % (item["name"],
-                                  instance_type_nice)
+            pe_str = "%s" % (item["name"],
+                             instance_type_nice)
         else:
-            pe_str = "[%s] (%s)" % (label,
-                                    instance_type_nice)
+            pe_str = "[%s]" % (label,
+                               instance_type_nice)
 
         return pe_str
 

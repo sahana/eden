@@ -595,7 +595,7 @@ def person():
     # If it is an json request, leave the arguments unmodified.
     if not request.args or (request.args[0] != user_person_id
                             and request.args[-1] != "options.s3json"):
-        request.args = [str(user_person_id)]
+        request.args = [user_person_id]
 
     set_method = s3db.set_method
 
@@ -615,7 +615,7 @@ def person():
 
         next = URL(c = "default",
                    f = "person",
-                   args = [str(user_person_id), "user"])
+                   args = [user_person_id, "user"])
         onaccept = lambda form: auth.s3_approve_user(form.vars),
         form = auth.profile(next = next,
                             onaccept = onaccept)
@@ -696,6 +696,7 @@ def person():
                     # Create forms use this
                     # (update forms are in gis/config())
                     fields = ["name",
+                              "pe_default",
                               "default_location_id",
                               "zoom",
                               "lat",

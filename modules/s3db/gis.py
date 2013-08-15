@@ -1934,16 +1934,14 @@ class S3GISConfigModel(S3Model):
             the region) but making it only editable by a MapAdmin.
         """
 
-        vars = form.vars
-        if "pe_id" not in form.vars:
-            # AJAX Save of Viewport from Map
-            return
+        db = current.db
+        auth = current.auth
 
-        pe_id = vars.pe_id
+        vars = form.vars
+        id = vars.id
+        pe_id = vars.get("pe_id", None)
         if pe_id:
-            id = vars.id
-            db = current.db
-            user = current.auth.user
+            user = auth.user
             if user and user.pe_id == pe_id:
                 # Clear the current config
                 current.response.s3.gis.config = None
@@ -1958,13 +1956,22 @@ class S3GISConfigModel(S3Model):
                                          pe_id=pe_id)
         else:
             config = current.response.s3.gis.config
-            if config and config.id == vars.id:
+            if config and config.id == id:
                 # This is the currently active config, so clear our cache
                 config = None
 
-        # If there's a region location, set its owned by role to MapAdmin.
+        # Prepop records should be owned by MapAdmin.
         # That makes Authenticated no longer an owner, so they only get whatever
-        # is permitted by uacl (currently that is set to READ).
+        # is permitted by uacl (usually READ).
+        if auth.override:
+            MAP_ADMIN = current.session.s3.system_roles.MAP_ADMIN
+            table = db.gis_config
+            query = (table.id == id)
+            db(query).update(owned_by_group = MAP_ADMIN)
+
+        # Locations which are referenced by Map Configs should be owned by MapAdmin.
+        # That makes Authenticated no longer an owner, so they only get whatever
+        # is permitted by uacl (usually READ).
         if vars.region_location_id:
             MAP_ADMIN = current.session.s3.system_roles.MAP_ADMIN
             table = db.gis_location

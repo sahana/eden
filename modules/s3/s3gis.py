@@ -5832,21 +5832,30 @@ class MAP(DIV):
             # Show Save control?
             # e.g. removed within S3LocationSelectorWidget[2]
             if opts.get("save", True) and auth.is_logged_in():
-                options["save"] = True
-                i18n["gis_save_map"] = T("Save Map")
-                i18n["gis_name_map"] = T("Name of Map")
-                i18n["saved"] = T("Saved")
-                i18n["gis_my_maps"] = T("My Maps")
-                ptable = current.s3db.pr_person
-                person = current.db(ptable.pe_id == auth.user.pe_id).select(ptable.id,
-                                                                            limitby=(0, 1)
-                                                                            ).first()
-                if person:
-                    options["person_id"] = person.id
-                config_id = vars.get("config", None)
-                if config_id and (config.pe_id == auth.user.pe_id):
-                    # Personal config, so Save Button does Updates
-                    options["config_id"] = config_id
+                db = current.db
+                permit = auth.s3_has_permission
+                ctable = db.gis_config
+                if permit("create", ctable):
+                    options["save"] = True
+                    i18n["gis_save_map"] = T("Save Map")
+                    i18n["gis_new_map"] = T("Save as New Map?")
+                    i18n["gis_name_map"] = T("Name of Map")
+                    i18n["saved"] = T("Saved")
+                    config_id = config.id
+                    _config = db(ctable.id == config_id).select(ctable.uuid,
+                                                                ctable.name,
+                                                                limitby=(0, 1),
+                                                                ).first()
+                    if MAP_ADMIN:
+                        i18n["gis_my_maps"] = T("Saved Maps")
+                    else:
+                        options["pe_id"] = auth.user.pe_id
+                        i18n["gis_my_maps"] = T("My Maps")
+                    if permit("update", ctable, record_id=config_id):
+                        options["config_id"] = config_id
+                        options["config_name"] = _config.name
+                    elif _config.uuid != "SITE_DEFAULT":
+                        options["config_name"] = _config.name
 
         # Legend panel
         legend = opts.get("legend", False)

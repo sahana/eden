@@ -89,6 +89,21 @@ p.legend em {
     margin-left: 180px;
 }
 
+/* Form field hints
+ http://remysharp.com/2007/03/19/a-few-more-jquery-plugins-crop-labelover-and-pluck/#labelOver
+*/
+div.hint {
+    position: relative;
+    /* Breaks Map Save Panel
+    float: left;*/
+}
+label.over {
+    color: #ccc;
+    position: absolute;
+    top: 5px;
+    left: 5px;
+}
+
 /* Styling for Inline Components */
 table.embeddedComponent {
     border: 1px solid #B3B3B3;

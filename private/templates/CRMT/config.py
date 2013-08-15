@@ -118,7 +118,9 @@ settings.gis.nav_controls = False
 settings.gis.legend = "float"
 # Mouse Position: 'normal', 'mgrs' or None
 settings.gis.mouse_position = None
-# Uncomment to hide the permalink control
+# Uncomment to hide the Overview map (doesn't work with Google Maps)
+settings.gis.overview = False
+# Uncomment to hide the permalink control (we have our own saved maps functionality)
 settings.gis.permalink = False
 # Uncomment to rename Overlays in Layer Tree
 settings.gis.label_overlays = "Community Data"

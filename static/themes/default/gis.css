@@ -72,6 +72,11 @@ form .map_loader {
     max-height: 500px;
     overflow-y: auto;
 }
+.map_legend_panel.fullscreen {
+    z-index: 9100;
+    margin-bottom: -600px;
+    margin-right: 0;
+}
 .gis_legend_title {
     font-weight: bold;
 }
@@ -91,6 +96,11 @@ form .map_loader {
     border-radius: 5px 5px 5px 5px;
     width: 250px;
 }
+.map_save_panel.fullscreen {
+    z-index: 9100;
+    margin-top: -50px;
+    margin-right: 0;
+}
 .map_save_panel.off {
     visibility: hidden;
 }
@@ -104,18 +114,27 @@ form .map_loader {
     cursor: pointer;
     visibility: visible;
 }
+.map_save_name {
+    font-weight: bold;
+    text-align: center;
+}
 .map_save_panel input {
     width: 150px;
     margin-top: 6px;
 }
-.map_save_panel p {
+.map_save_panel input.checkbox {
+    width: 10px;
+    margin: 0 5px 0 0;
+}
+.map_save_panel .saved {
     float: left;
     padding: 5px;
 }
-.map_save_panel a {
-    float: right;
+.map_save_panel p {
+    float: left;
     padding: 5px;
-    margin-top: 6px;
+    color: green;
+    margin: 0;
 }
 
 /* Current Coordinates */
