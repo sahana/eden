@@ -71,7 +71,7 @@ form .map_loader {
     position: absolute;
     bottom: 0;
     right: 0;
-    margin: 0 35px 25px 0;
+    margin: 0 0 20px;
     padding: 1px;
     border: solid;
     border-radius: 5px 5px 5px 5px;
@@ -83,7 +83,6 @@ form .map_loader {
 .map_legend_panel.fullscreen {
     z-index: 9100;
     margin-bottom: -600px;
-    margin-right: 0;
 }
 .gis_legend_title {
     font-weight: bold;
@@ -98,7 +97,7 @@ form .map_loader {
     position: absolute;
     top: 0;
     right: 0;
-    margin: 10px 35px 0 0;
+    margin: 0;
     padding: 5px;
     border: solid;
     border-radius: 5px 5px 5px 5px;
@@ -107,7 +106,6 @@ form .map_loader {
 .map_save_panel.fullscreen {
     z-index: 9100;
     margin-top: -50px;
-    margin-right: 0;
 }
 .map_save_panel.off {
     visibility: hidden;
