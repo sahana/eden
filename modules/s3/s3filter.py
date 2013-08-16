@@ -135,6 +135,48 @@ class S3FilterWidget(object):
 
             @param field: the selector(s) for the field(s) to filter by
             @param attr: configuration options for this widget
+
+            Configuration options:
+            @keyword label: label for the widget
+            @keyword comment: comment for the widget
+            @keyword hidden: render widget initially hidden (="advanced"
+                             option)
+            @keyword levels: list of location hierarchy levels
+                             (L{S3LocationFilter})
+            @keyword widget: widget to use (L{S3OptionsFilter}),
+                             "multiselect", "multiselect-bootstrap" or
+                             "groupedopts" (default)
+            @keyword cols: number of columns of checkboxes (L{S3OptionsFilter}
+                           and L{S3LocationFilter} with "groupedopts" widget)
+            @keyword filter: show filter for options (L{S3OptionsFilter},
+                             L{S3LocationFilter} with "multiselect" widget)
+            @keyword header: show header in widget (L{S3OptionsFilter},
+                             L{S3LocationFilter} with "multiselect" widget)
+            @keyword selectedList: number of selected items to show before
+                                   collapsing into number of items
+                                   (L{S3OptionsFilter}, L{S3LocationFilter}
+                                   with "multiselect" widget)
+            @keyword no_opts: text to show if no options available
+                              (L{S3OptionsFilter}, L{S3LocationFilter})
+            @keyword resource: alternative resource to look up options
+                               (L{S3LocationFilter}, L{S3OptionsFilter})
+            @keyword lookup: field in the alternative resource to look up
+                             options (L{S3LocationFilter})
+            @keyword options: fixed set of options (L{S3OptionsFilter}: dict
+                              of {value: label} or a callable that returns one,
+                              L{S3LocationFilter}: list of gis_location IDs)
+            @keyword size: maximum size of multi-letter options groups
+                           (L{S3OptionsFilter} with "groupedopts" widget)
+            @keyword help_field: field in the referenced table to display on
+                                 hovering over a foreign key option
+                                 (L{S3OptionsFilter} with "groupedopts" widget)
+            @keyword none: label for explicit None-option in many-to-many
+                           fields (L{S3OptionsFilter})
+            @keyword fieldtype: explicit field type "date" or "datetime" to
+                                use for context or virtual fields
+                                (L{S3DateFilter})
+            @keyword hide_time: don't show time selector (L{S3DateFilter})
+
         """
 
         self.field = field
@@ -351,6 +393,7 @@ class S3FilterWidget(object):
 
 # =============================================================================
 class S3TextFilter(S3FilterWidget):
+    """ Text filter widget """
 
     _class = "text-filter"
 
@@ -492,7 +535,10 @@ class S3RangeFilter(S3FilterWidget):
 
 # =============================================================================
 class S3DateFilter(S3RangeFilter):
-    """ Date Range Filter Widget """
+    """
+        Date Range Filter Widget
+        @see: L{Configuration Options<S3FilterWidget.__init__>}
+    """
 
     _class = "date-filter"
 
@@ -606,7 +652,10 @@ class S3DateFilter(S3RangeFilter):
 
 # =============================================================================
 class S3LocationFilter(S3FilterWidget):
-    """ Hierarchical Location Filter Widget """
+    """
+        Hierarchical Location Filter Widget
+        @see: L{Configuration Options<S3FilterWidget.__init__>}
+    """
 
     _class = "location-filter"
 
@@ -664,6 +713,8 @@ class S3LocationFilter(S3FilterWidget):
         operator = self.operator
         field_name = self.field
 
+        fname = self._prefix(field_name) if resource else field_name
+        
         # @ToDo: Hide dropdowns other than first
         if opts.widget == "multiselect":
 
@@ -684,7 +735,7 @@ class S3LocationFilter(S3FilterWidget):
                 attr["_id"] = "%s-%s" % (base_id, level)
                 attr["_name"] = name
                 # Find relevant values to pre-populate the widget
-                _values = values.get("~.%s$%s__%s" % (field_name, level, operator))
+                _values = values.get("%s$%s__%s" % (fname, level, operator))
                 w = S3MultiSelectWidget(filter = opts.get("filter", False),
                                         header = opts.get("header", False),
                                         selectedList = opts.get("selectedList", 3),
@@ -711,7 +762,7 @@ class S3LocationFilter(S3FilterWidget):
                 attr["_id"] = "%s-%s" % (base_id, level)
                 attr["_name"] = name
                 # Find relevant values to pre-populate
-                _values = values.get("~.%s$%s__%s" % (field_name, level, operator))
+                _values = values.get("%s$%s__%s" % (fname, level, operator))
                 w_append(s3_grouped_checkboxes_widget(dummy_field,
                                                       _values,
                                                       **attr))
@@ -1012,6 +1063,10 @@ class S3LocationFilter(S3FilterWidget):
 
 # =============================================================================
 class S3OptionsFilter(S3FilterWidget):
+    """
+        Options filter widget
+        @see: L{Configuration Options<S3FilterWidget.__init__>}
+    """
 
     _class = "options-filter"
 
@@ -1070,11 +1125,7 @@ class S3OptionsFilter(S3FilterWidget):
         else:
             any_all = ""
 
-        # Render the filter widget
-        dummy_field = Storage(name=name,
-                              type=ftype,
-                              requires=IS_IN_SET(options, multiple=True))
-
+        # Initialize widget
         widget_type = opts["widget"]
         if widget_type == "multiselect-bootstrap":
             widget_class = "multiselect-filter-bootstrap"
@@ -1083,16 +1134,13 @@ class S3OptionsFilter(S3FilterWidget):
             scripts = current.response.s3.scripts
             if script not in scripts:
                 scripts.append(script)
-            widget = MultipleOptionsWidget.widget(dummy_field,
-                                                  values,
-                                                  **attr)
+            w = MultipleOptionsWidget.widget
         elif widget_type == "multiselect":
             widget_class = "multiselect-filter-widget"
-            w = S3MultiSelectWidget(filter = opts.get("filter", False),
-                                    header = opts.get("header", False),
-                                    selectedList = opts.get("selectedList", 3),
-                                    )
-            widget = w(dummy_field, values, **attr)
+            w = S3MultiSelectWidget(
+                    filter = opts.get("filter", False),
+                    header = opts.get("header", False),
+                    selectedList = opts.get("selectedList", 3))
         else:
             widget_class = "groupedopts-filter-widget"
             w = S3GroupedOptionsWidget(
@@ -1100,15 +1148,19 @@ class S3OptionsFilter(S3FilterWidget):
                     multiple = True,
                     cols = opts["cols"],
                     size = opts["size"] or 12,
-                    help_field = opts["help_field"],
-                )
-            widget = w(dummy_field, values, **attr)
+                    help_field = opts["help_field"])
 
-        if hasattr(widget, "add_class"):
-            # Add default class and widget class
-            widget.add_class(self._class)
-            widget.add_class(widget_class)
-            
+        # Add widget class and default class
+        classes = set(attr.get("_class", "").split()) | \
+                  set((widget_class, self._class))
+        attr["_class"] = " ".join(classes) if classes else None
+
+        # Render the widget
+        dummy_field = Storage(name=name,
+                              type=ftype,
+                              requires=IS_IN_SET(options, multiple=True))
+        widget = w(dummy_field, values, **attr)
+        
         return TAG[""](any_all, widget)
 
     # -------------------------------------------------------------------------
