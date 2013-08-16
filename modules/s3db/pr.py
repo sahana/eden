@@ -2503,13 +2503,15 @@ class S3SavedFilterModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(pr_filter_id = filter_id)
+        return dict(pr_filter_id = filter_id)
 
 # =============================================================================
 class S3SubscriptionModel(S3Model):
     """ Model for subscriptions """
 
-    names = ["pr_subscription"]
+    names = ["pr_subscription",
+             "pr_subscription_resource",
+            ]
 
     def model(self):
 
