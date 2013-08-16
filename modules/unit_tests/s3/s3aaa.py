@@ -89,9 +89,11 @@ class SetRolesTests(unittest.TestCase):
 </s3xml>"""
 
         try:
+            auth = current.auth
             auth.override = True
             from lxml import etree
             xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+            s3db = current.s3db
             resource = s3db.resource("org_organisation")
             resource.import_xml(xmltree)
 
@@ -104,7 +106,7 @@ class SetRolesTests(unittest.TestCase):
             self.org3 = orgs["SRTO3"]
             auth.override = False
         except:
-            db.rollback()
+            current.db.rollback()
             auth.override = False
             raise
 
