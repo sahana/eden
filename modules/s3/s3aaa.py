@@ -1241,6 +1241,8 @@ Thank you
 
         utable = self.settings.table_user
 
+        utable.password.label = T("Password") #messages.label_password
+
         first_name = utable.first_name
         first_name.label = T("First Name") #messages.label_first_name
         first_name.requires = IS_NOT_EMPTY(error_message=messages.is_empty),

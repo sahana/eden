@@ -47,6 +47,9 @@ form .map_loader {
 }
 
 /* LayerTree */
+.x-tree-elbow,
+.x-tree-elbow-end,
+.x-tree-node-indent,
 .x-tree-node-icon {
     display: none;
 }
@@ -55,6 +58,11 @@ form .map_loader {
 }
 .x-tree-node {
     font-size: 12px;
+}
+/* Override Bootstrap */
+.x-tree-root-ct,
+.x-tree-node-ct {
+    margin: 0;
 }
 
 /* Legend */

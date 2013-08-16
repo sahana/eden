@@ -5765,6 +5765,14 @@ class MAP(DIV):
         if opts.get("collapsed", False):
             options["west_collapsed"] = True
 
+        # LayerTree
+        if not settings.get_gis_layer_tree_base():
+            options["hide_base"] = True
+        if not settings.get_gis_layer_tree_expanded():
+            options["folders_closed"] = True
+        if settings.get_gis_layer_tree_radio():
+            options["folders_radio"] = True
+
         #######
         # Tools
         #######

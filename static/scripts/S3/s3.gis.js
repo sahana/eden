@@ -578,24 +578,66 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     // Add LayerTree (to be called after the layers are added)
     var addLayerTree = function(map) {
 
-        var layerStore = map.s3.mapPanel.layers;
+        var s3 = map.s3;
+        var options = s3.options;
+        if (options.hide_base) {
+            var base = false;
+        } else {
+            var base = true;
+        }
+        if (options.folders_closed) {
+            var expanded = false;
+        } else {
+            var expanded = true;
+        }
+        // @ToDo: Make this a per-Folder config
+        if (options.folders_radio) {
+            var folders_radio = true;
+        } else {
+            var folders_radio = false;
+        }
 
-        // Default Folder for Base Layers
-        var layerTreeBase = {
-            text: i18n.gis_base_layers,
-            nodeType: 'gx_baselayercontainer',
-            layerStore: layerStore,
-            loader: {
-                filter: function(record) {
-                    var layer = record.getLayer();
-                    return layer.displayInLayerSwitcher === true &&
-                           layer.isBaseLayer === true &&
-                           (layer.dir === undefined || layer.dir === '');
+        var layerStore = s3.mapPanel.layers;
+        var nodesArr = [];
+
+        var listeners = {
+            click: function(node) {
+                // Provide a bigger click target area, by allowing click on layer name as well as checkbox/radio
+                if (node.attributes.checked) {
+                    node.ui.checkbox.checked = false;
+                    node.fireEvent('checkchange', node);
+                } else {
+                    // Can't simply do this as otherwise it refires the Event with the checkbox changed!
+                    //node.ui.toggleCheck();
+                    node.ui.checkbox.checked = true;
+                    node.layer.setVisibility(true);
                 }
-            },
-            leaf: false,
-            expanded: true
+            }
         };
+
+        if (base) {
+            // Default Folder for Base Layers
+            var layerTreeBase = {
+                text: i18n.gis_base_layers,
+                nodeType: 'gx_baselayercontainer',
+                layerStore: layerStore,
+                loader: {
+                    baseAttrs: {
+                        listeners: listeners
+                    },
+                    filter: function(record) {
+                        var layer = record.getLayer();
+                        return layer.displayInLayerSwitcher === true &&
+                               layer.isBaseLayer === true &&
+                               (layer.dir === undefined || layer.dir === '');
+                    }
+                },
+                leaf: false,
+                singleClickExpand: true,
+                expanded: expanded
+            };
+            nodesArr.push(layerTreeBase)
+        }
 
         // Default Folder for Overlays
         var layerTreeOverlays = {
@@ -603,6 +645,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             nodeType: 'gx_overlaylayercontainer',
             layerStore: layerStore,
             loader: {
+                baseAttrs: {
+                    listeners: listeners
+                },
                 filter: function(record) {
                     var layer = record.getLayer();
                     return layer.displayInLayerSwitcher === true &&
@@ -611,20 +656,29 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 }
             },
             leaf: false,
-            expanded: true
+            singleClickExpand: true,
+            expanded: expanded
         };
-
-        var nodesArr = [ layerTreeBase, layerTreeOverlays ];
+        nodesArr.push(layerTreeOverlays)
 
         // User-specified Folders
         var dirs = map.s3.dirs;
+        var baseAttrs, child, folder;
         for (var i = 0; i < dirs.length; i++) {
-            var folder = dirs[i];
-            var child = {
+            folder = dirs[i];
+            baseAttrs = {
+                listeners: listeners
+            }
+            // @ToDo: Allow per-folder configuration
+            if (folders_radio) {
+                baseAttrs['checkedGroup'] = dirs[i];
+            }
+            child = {
                 text: dirs[i],
                 nodeType: 'gx_layercontainer',
                 layerStore: layerStore,
                 loader: {
+                    baseAttrs: baseAttrs,
                     filter: (function(folder) {
                         return function(read) {
                             if (read.data.layer.dir !== 'undefined')
@@ -633,12 +687,19 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     })(folder)
                 },
                 leaf: false,
-               expanded: true
+                singleClickExpand: true,
+                expanded: expanded
             };
             nodesArr.push(child);
         }
 
+        /*var UIClass = Ext.extend(
+            Ext.tree.TreeNodeUI,
+            GeoExt.tree.TreeNodeUIEventMixin()
+        );*/
         var treeRoot = new Ext.tree.AsyncTreeNode({
+            // Adds an extra - in the root
+            //uiProvider: UIClass,
             expanded: true,
             children: nodesArr
         });
@@ -651,7 +712,6 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
 
         var layerTree = new Ext.tree.TreePanel({
-            //cls: 'treepanel',
             title: i18n.gis_layers,
             loader: new Ext.tree.TreeLoader({applyLoader: false}),
             root: treeRoot,
@@ -662,7 +722,12 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             collapseMode: 'mini',
             lines: false,
             tbar: tbar,
-            enableDD: true
+            enableDD: false
+        });
+        new Ext.tree.TreeSorter(layerTree, {
+            sortType: function(value, node) {
+                return node.text;
+            }
         });
 
         // Add/Remove Layers

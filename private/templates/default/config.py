@@ -215,6 +215,12 @@ settings.L10n.decimal_separator = "."
 # lon<0 have a duplicate at lon+360
 # lon>0 have a duplicate at lon-360
 #settings.gis.duplicate_features = True
+# Uncomment to hide the Base Layers folder in the LayerTree
+#settings.gis.layer_tree_base = False
+# Uncomment to not expand the folders in the LayerTree by default
+#settings.gis.layer_tree_expanded = False
+# Uncomment to have custom folders in the LayerTree use Radio Buttons
+#settings.gis.layer_tree_radio = True
 # Uncomment to display the Map Legend as a floating DIV
 #settings.gis.legend = "float"
 # Mouse Position: 'normal', 'mgrs' or None

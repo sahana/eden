@@ -533,6 +533,18 @@ class S3Config(Storage):
         " Display Lat/Lon form fields when selecting Locations "
         return self.gis.get("latlon_selector", True)
 
+    def get_gis_layer_tree_base(self):
+        " Display Base Layers folder in the Map's Layer Tree "
+        return self.gis.get("layer_tree_base", True)
+
+    def get_gis_layer_tree_expanded(self):
+        " Display folders in the Map's Layer Tree Open by default "
+        return self.gis.get("layer_tree_expanded", True)
+
+    def get_gis_layer_tree_radio(self):
+        " Use a radio button for custom folders in the Map's Layer Tree "
+        return self.gis.get("layer_tree_radio", False)
+
     def get_gis_map_height(self):
         """
             Height of the Embedded Map

@@ -114,6 +114,12 @@ settings.gis.geocode_imported_addresses = "google"
 settings.gis.toolbar = False
 # Hide unnecessary Toolbar items
 settings.gis.nav_controls = False
+# Uncomment to hide the Base Layers folder in the LayerTree
+settings.gis.layer_tree_base = False
+# Uncomment to not expand the folders in the LayerTree by default
+settings.gis.layer_tree_expanded = False
+# Uncomment to have custom folders in the LayerTree use Radio Buttons
+settings.gis.layer_tree_radio = True
 # Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
 # Mouse Position: 'normal', 'mgrs' or None
