@@ -1447,11 +1447,17 @@ S3OptionsFilter({
 
         # Memberships
         elements = tree.getroot().xpath("/s3xml//resource[@name='auth_membership']/data[@field='pe_id']")
+        pe_values = set()
         for element in elements:
             pe_string = element.text
 
             if pe_string and "=" in pe_string:
                 pe_type, pe_value =  pe_string.split("=")
+                if pe_value in pe_values:
+                    # Don't check again
+                    continue
+                else:
+                    pe_values.add(pe_value)
                 pe_tablename, pe_field =  pe_type.split(".")
 
                 if pe_tablename == "org_organisation":
@@ -1459,7 +1465,7 @@ S3OptionsFilter({
                 else:
                     table = s3db[pe_tablename]
                 record = db(table[pe_field] == pe_value).select(table.pe_id,
-                                                                cache=cache,
+                                                                #cache=cache,
                                                                 limitby=(0, 1)
                                                                 ).first()
                 if record:
@@ -1474,11 +1480,17 @@ S3OptionsFilter({
 
         # Organisations
         elements = tree.getroot().xpath("/s3xml//resource[@name='auth_user']/data[@field='organisation_id']")
+        names = set()
         for element in elements:
             name = element.text
+            if name in names:
+                continue
+            else:
+                # Don't check again
+                names.add(name)
             if name:
                 record = db(otable.name == name).select(otable.id,
-                                                        cache=cache,
+                                                        #cache=cache,
                                                         limitby=(0, 1)
                                                         ).first()
                 if record:
@@ -1494,11 +1506,17 @@ S3OptionsFilter({
         elements = tree.getroot().xpath("/s3xml//resource[@name='auth_user']/data[@field='org_group_id']")
         if elements:
             gtable = s3db.org_group
+            names = set()
             for element in elements:
                 name = element.text
+                if name in names:
+                    # Don't check again
+                    continue
+                else:
+                    names.add(name)
                 if name:
                     record = db(gtable.name == name).select(gtable.id,
-                                                            cache=cache,
+                                                            #cache=cache,
                                                             limitby=(0, 1)
                                                             ).first()
                     if record:

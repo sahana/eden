@@ -72,6 +72,42 @@ class AuthUtilsTests(unittest.TestCase):
 class SetRolesTests(unittest.TestCase):
     """ Test AuthS3.set_roles """
 
+    def setUp(self):
+        
+        # Create test organisations
+        xmlstr = """
+<s3xml>
+    <resource name="org_organisation" uuid="SRTO1">
+        <data field="name">SetRoleTestsOrg1</data>
+    </resource>
+    <resource name="org_organisation" uuid="SRTO2">
+        <data field="name">SetRoleTestsOrg2</data>
+    </resource>
+    <resource name="org_organisation" uuid="SRTO3">
+        <data field="name">SetRoleTestsOrg3</data>
+    </resource>
+</s3xml>"""
+
+        try:
+            auth.override = True
+            from lxml import etree
+            xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+            resource = s3db.resource("org_organisation")
+            resource.import_xml(xmltree)
+
+            resource = s3db.resource("org_organisation",
+                                     uid=["SRTO1", "SRTO2", "SRTO3"])
+            rows = resource.select(["pe_id", "uuid"], as_rows=True)
+            orgs = dict((row.uuid, row.pe_id) for row in rows)
+            self.org1 = orgs["SRTO1"]
+            self.org2 = orgs["SRTO2"]
+            self.org3 = orgs["SRTO3"]
+            auth.override = False
+        except:
+            db.rollback()
+            auth.override = False
+            raise
+
     # -------------------------------------------------------------------------
     def testSetRolesPolicy3(self):
         """ Test set_roles with policy 3 """
@@ -148,9 +184,8 @@ class SetRolesTests(unittest.TestCase):
             role = auth.s3_create_role("Example Role", uid="TESTROLE")
 
             # Assign normaluser this role for a realm
-            org = s3db.pr_get_pe_id("org_organisation", 1)
             user_id = auth.s3_get_user_id("normaluser@example.com")
-            auth.s3_assign_role(user_id, role, for_pe=org)
+            auth.s3_assign_role(user_id, role, for_pe=self.org1)
 
             auth.s3_impersonate("normaluser@example.com")
             realms = auth.user.realms.keys()
@@ -160,7 +195,7 @@ class SetRolesTests(unittest.TestCase):
             self.assertTrue(role in realms)
             for r in auth.user.realms:
                 if r == role:
-                    self.assertEqual(auth.user.realms[r], [org])
+                    self.assertEqual(auth.user.realms[r], [self.org1])
                 else:
                     self.assertEqual(auth.user.realms[r], None)
 
@@ -185,8 +220,8 @@ class SetRolesTests(unittest.TestCase):
             role = auth.s3_create_role("Example Role", uid="TESTROLE")
 
             # Create an OU-affiliation for two organisations
-            org1 = s3db.pr_get_pe_id("org_organisation", 1)
-            org2 = s3db.pr_get_pe_id("org_organisation", 2)
+            org1 = self.org1
+            org2 = self.org2
             s3db.pr_add_affiliation(org1, org2, role="TestRole")
 
             # Assign normaluser this role for the realm of the parent org
@@ -227,12 +262,12 @@ class SetRolesTests(unittest.TestCase):
             role = auth.s3_create_role("Test Group", uid="TESTGROUP")
 
             # Have two orgs, set org2 as OU descendant of org1
-            org1 = s3db.pr_get_pe_id("org_organisation", 1)
-            org2 = s3db.pr_get_pe_id("org_organisation", 2)
+            org1 = self.org1
+            org2 = self.org2
             s3db.pr_add_affiliation(org1, org2, role="TestOrgUnit")
 
             # Have a third org
-            org3 = s3db.pr_get_pe_id("org_organisation", 3)
+            org3 = self.org3
 
             # Add the user as OU descendant of org3
             user_id = auth.s3_get_user_id("normaluser@example.com")
@@ -326,6 +361,12 @@ class SetRolesTests(unittest.TestCase):
             #auth.s3_delete_role("TESTGROUP")
             #current.db.rollback()
 
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        current.db.rollback()
+        current.auth.override = False
+        
 # =============================================================================
 class RoleAssignmentTests(unittest.TestCase):
     """ Test role assignments """
