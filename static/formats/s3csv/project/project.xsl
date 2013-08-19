@@ -29,13 +29,15 @@
          FPMobilePhone........string..........Mobile Phone Number of Focal Person
 
          theme_percentages=True:
-         Theme:XXXX...........string..........% of the Project targetting Theme XXX (multiple allowed)
+         Theme:XXXX...........string..........% of the Project targeting Theme XXX (multiple allowed)
          theme_percentages=False:
          Themes...............comma-sep list..List of Theme names
 
-         Location:XXXX........string..........% of the Project targetting Location XXX (multiple allowed)
+         Location:XXXX........string..........% of the Project targeting Location XXX (multiple allowed)
          theme_percentages=False:
          Locations............comma-sep list..List of Location names
+         Partners.............comma-sep list..List of Partner names (role = 2)
+         Donors...............comma-sep list..List of Donor names
 
     *********************************************************************** -->
 
@@ -115,6 +117,8 @@
         <xsl:variable name="Sectors" select="col[@field='Sectors']"/>
         <xsl:variable name="Themes" select="col[@field='Themes']"/>
         <xsl:variable name="Locations" select="col[@field='Locations']"/>
+        <xsl:variable name="Partners" select="col[@field='Partners']"/>
+        <xsl:variable name="Donors" select="col[@field='Donors']"/>
 
         <xsl:variable name="FirstName" select="col[@field='FPFirstName']/text()"/>
         <xsl:variable name="LastName" select="col[@field='FPLastName']/text()"/>
@@ -241,6 +245,22 @@
                     </xsl:otherwise>
                 </xsl:choose>
             </xsl:for-each>
+
+            <!-- Partners -->
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list">
+                    <xsl:value-of select="$Partners"/>
+                </xsl:with-param>
+                <xsl:with-param name="arg">partner_res</xsl:with-param>
+            </xsl:call-template>
+
+            <!-- Donors -->
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list">
+                    <xsl:value-of select="$Donors"/>
+                </xsl:with-param>
+                <xsl:with-param name="arg">donor_res</xsl:with-param>
+            </xsl:call-template>
 
             <!-- Project Organisations -->
             <!-- Embedded within record -->
@@ -383,6 +403,40 @@
                         <xsl:value-of select="concat($LocationPrefix, $item)"/>
                     </xsl:attribute>
                     <data field="name"><xsl:value-of select="$item"/></data>
+                </resource>
+            </xsl:when>
+            <!-- Partners -->
+            <xsl:when test="$arg='partner_res'">
+                <resource name="project_organisation">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$item"/>
+                    </xsl:attribute>
+                    <reference field="organisation_id" resource="org_organisation">
+                        <resource name="org_organisation">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="$item"/>
+                            </xsl:attribute>
+                            <data field="name"><xsl:value-of select="$item"/></data>
+                        </resource>
+                    </reference>
+                    <data field="role">2</data>
+                </resource>
+            </xsl:when>
+            <!-- Donors -->
+            <xsl:when test="$arg='donor_res'">
+                <resource name="project_organisation">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$item"/>
+                    </xsl:attribute>
+                    <reference field="organisation_id" resource="org_organisation">
+                        <resource name="org_organisation">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="$item"/>
+                            </xsl:attribute>
+                            <data field="name"><xsl:value-of select="$item"/></data>
+                        </resource>
+                    </reference>
+                    <data field="role">3</data>
                 </resource>
             </xsl:when>
         </xsl:choose>

@@ -200,7 +200,7 @@ class S3ProjectModel(S3Model):
                                     ),
                                 ),
                              Field("name", unique=True, length=255,
-                                   label = T("Name"),
+                                   label = T("Project Name"),
                                    # Require unique=True if using IS_NOT_ONE_OF like here (same table,
                                    # no filter) in order to allow both automatic indexing (faster)
                                    # and key-based de-duplication (i.e. before field validation)
@@ -3081,7 +3081,7 @@ class S3ProjectOrganisationModel(S3Model):
                                         represent = lambda v: \
                                             IS_FLOAT_AMOUNT.represent(v, precision=2),
                                         widget = IS_FLOAT_AMOUNT.widget,
-                                        label = T("Funds Contributed by this Organization")),
+                                        label = T("Funds Contributed")),
                                   s3_currency(),
                                   s3_comments(),
                                   *s3_meta_fields())

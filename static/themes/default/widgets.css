@@ -669,6 +669,14 @@ body.popup {
     padding: 0 0 0 10px;
 }
 
+.input_throbber {
+    background-size: 50%;
+    height: 24px;
+    width: 24px;
+    display: inline-block;
+    margin: 0 0 -12px -24px;
+}
+
 /* Resource Header */
 #rheader {
     margin-bottom: 0.75em;
@@ -879,34 +887,35 @@ span.tab_next_inactive a {
 #select_from_registry_row td {
    padding: 8px;
 }
+.box_top,
+.box_middle,
+.box_bottom {
+   border-left: #bbb 1px solid;
+   border-right: #bbb 1px solid;
+   background: #F0F3F4;
+}
+
+.form-horizontal .control-group.box_top,
+.form-horizontal .control-group.box_bottom {
+    margin-bottom: 0;
+    max-width: 680px;
+}
+
+.form-horizontal .control-group.box_bottom {
+    margin-bottom: 10px;
+    max-width: 680px;
+}
+
+    
+
 .box_top {
    border-top: #bbb 1px solid;
-   border-left: #bbb 1px solid;
-   border-right: #bbb 1px solid;
-   background: #F0F3F4;
+   padding-top: 10px;
 }
-.form-horizontal .control-group.box_top {
-    margin-bottom: 0;
-    max-width: 680px;
-}
-.box_middle {
-   border-left: #bbb 1px solid;
-   border-right: #bbb 1px solid;
-   background: #F0F3F4;
-}
-.form-horizontal .control-group.box_middle {
-    margin-bottom: 0;
-    max-width: 680px;
-}
+
 .box_bottom {
    border-bottom: #bbb 1px solid;
-   border-left: #bbb 1px solid;
-   border-right: #bbb 1px solid;
-   background: #F0F3F4;
-}
-.form-horizontal .control-group.box_bottom {
-    margin-bottom: 5px;
-    max-width: 680px;
+   padding-bottom: 10px;
 }
 
 /* Add Person 2 */
@@ -1183,6 +1192,7 @@ ul.x-tree-root-ct {
 }
 .range-filter-field {
     float: left;
+    padding-right: 10px;
 }
 
 .filter-form td,
@@ -1346,4 +1356,12 @@ input#sub_defaulttime_defaulttime_hours_edit_none {
 
 .cms-edit {
     display: table;
+}
+
+/* Date Picker Widget */
+.datetimepicker {
+    width: 110px;
+}
+.datetimepicker.hide-time {
+    width: 75px;
 }

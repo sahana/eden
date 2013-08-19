@@ -105,9 +105,14 @@ h2.summary {
     display: block;
 }
 
-.geocode {
+[id$=map_icon__row] div.controls{
+    float: left;
+}
+
+.form-horizontal div.geocode {
     /* Same height as throbber */
     height: 32px;
+    margin-left: 10px;
 }
 
 /* Filter Forms */
@@ -180,7 +185,7 @@ button.ui-multiselect.ui-state-default.ui-corner-all {
 form.filter-form,
 form#summary-filter-form
  {
-    height: 60px;
+    float: left;
     background-color: white;
     padding: 5px 10px;
     border-radius: 5px;
