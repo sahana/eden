@@ -277,7 +277,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 
         var mapPanel = new GeoExt.MapPanel({
             //cls: 'mappanel',
-            height: options.map_height,
+            // Ignored
+            //height: options.map_height,
             width: options.map_width,
             xtype: 'gx_mappanel',
             map: map,
@@ -332,7 +333,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 
         // Legend Panel
         if (options.legend) {
-            if (options.legend == "float") {
+            if (options.legend == 'float') {
                 // Floating
                 addLegendPanel(map); 
             } else {
@@ -413,13 +414,15 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var mapPanelContainer = addMapPanelContainer(map);
 
         var mapWin = new Ext.Panel({
-            renderTo: options.renderTo,
-            autoScroll: true,
             //cls: 'gis-map-panel',
+            renderTo: options.renderTo,
+            //autoScroll: true, // Having this on adds scrollbars which make map navigation awkward as the map size is always large enough to trigger these :/
+                                // Having this off means the map is completely unresponsive
+            autoWidth: true,
             //maximizable: true,
             titleCollapse: true,
             height: options.map_height,
-            width: options.map_width,
+            //width: options.map_width,
             layout: 'border',
             items: [
                 westPanelContainer,
@@ -484,7 +487,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var west_collapsed = s3.options.west_collapsed || false;
 
         var mapWestPanel = new Ext.Panel({
-            cls: 'map_tools',
+            //cls: 'map_tools',
             header: false,
             border: false,
             split: true,
@@ -492,16 +495,28 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         });
         var westPanelContainer = new Ext.Panel({
             region: 'west',
-            header: false,
+            //header: true,
+            header: false, // Can't collapse Panel if this is hidden unless we create custom control
             border: true,
-            width: 250,
-            autoScroll: true,
+            //autoScroll: true,
+            autoWidth: true,
+            //width: 250,
             collapsible: true,
             collapseMode: 'mini',
             collapsed: west_collapsed,
             items: [
                 mapWestPanel
-            ]
+            ]/*, @ToDo: Provide custom control to collapse westPanel without a header
+            listeners: {
+                collapse: function(panel) {
+                    console.log('collapsed');
+                    //'<div class="x-layout-cmini-east x-layout-mini"></div>'
+                    //onClick() { toggleCollapse()};
+                },
+                expand: function(panel) {
+                    console.log('expanded');
+                }
+            }*/
         });
         // Pass to Global Scope for s3.gis.fullscreen.js
         s3.westPanelContainer = westPanelContainer;
@@ -585,6 +600,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         } else {
             var base = true;
         }
+        // @ToDo: Make this a per-Folder config
         if (options.folders_closed) {
             var expanded = false;
         } else {
@@ -596,11 +612,16 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         } else {
             var folders_radio = false;
         }
+        if (options.wms_browser_url || (options.legend && options.legend != 'float')) {
+            var collapsible = true;
+        } else {
+            var collapsible = false;
+        }
 
         var layerStore = s3.mapPanel.layers;
         var nodesArr = [];
 
-        var listeners = {
+        var leaf_listeners = {
             click: function(node) {
                 // Provide a bigger click target area, by allowing click on layer name as well as checkbox/radio
                 if (node.attributes.checked) {
@@ -615,6 +636,17 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             }
         };
 
+        var folder_listeners = {
+            click: function(node) {
+                // Trigger a layout update on the westPanelContainer
+                var westPanelContainer = s3.westPanelContainer;
+                westPanelContainer.fireEvent('collapse');
+                window.setTimeout(function() {
+                    westPanelContainer.fireEvent('expand')
+                }, 300);
+            }
+        };
+
         if (base) {
             // Default Folder for Base Layers
             var layerTreeBase = {
@@ -623,7 +655,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 layerStore: layerStore,
                 loader: {
                     baseAttrs: {
-                        listeners: listeners
+                        listeners: leaf_listeners
                     },
                     filter: function(record) {
                         var layer = record.getLayer();
@@ -633,6 +665,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     }
                 },
                 leaf: false,
+                listeners: folder_listeners,
                 singleClickExpand: true,
                 expanded: expanded
             };
@@ -646,7 +679,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             layerStore: layerStore,
             loader: {
                 baseAttrs: {
-                    listeners: listeners
+                    listeners: leaf_listeners
                 },
                 filter: function(record) {
                     var layer = record.getLayer();
@@ -656,6 +689,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 }
             },
             leaf: false,
+            listeners: folder_listeners,
             singleClickExpand: true,
             expanded: expanded
         };
@@ -667,7 +701,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         for (var i = 0; i < dirs.length; i++) {
             folder = dirs[i];
             baseAttrs = {
-                listeners: listeners
+                listeners: leaf_listeners
             }
             // @ToDo: Allow per-folder configuration
             if (folders_radio) {
@@ -687,19 +721,14 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     })(folder)
                 },
                 leaf: false,
+                listeners: folder_listeners,
                 singleClickExpand: true,
                 expanded: expanded
             };
             nodesArr.push(child);
         }
 
-        /*var UIClass = Ext.extend(
-            Ext.tree.TreeNodeUI,
-            GeoExt.tree.TreeNodeUIEventMixin()
-        );*/
         var treeRoot = new Ext.tree.AsyncTreeNode({
-            // Adds an extra - in the root
-            //uiProvider: UIClass,
             expanded: true,
             children: nodesArr
         });
@@ -718,7 +747,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             rootVisible: false,
             split: true,
             autoScroll: true,
-            collapsible: true,
+            collapsible: collapsible,
             collapseMode: 'mini',
             lines: false,
             tbar: tbar,
