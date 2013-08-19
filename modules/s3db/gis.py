@@ -117,7 +117,7 @@ class S3LocationModel(S3Model):
 
         tablename = "gis_location"
         table = self.define_table(tablename,
-                             Field("name", length=128,
+                             Field("name", length=255,
                                    # Placenames don't have to be unique.
                                    # Waypoints don't need to have a name at all.
                                    #requires = IS_NOT_EMPTY()

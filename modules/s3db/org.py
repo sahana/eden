@@ -2207,7 +2207,8 @@ class S3FacilityModel(S3Model):
                              super_link("pe_id", "pr_pentity"),
                              super_link("site_id", "org_site"),
                              Field("name", notnull=True,
-                                   length=64, # Mayon Compatibility
+                                   length=255, # Shape File Compatible
+                                   #length=64, # Mayon Compatibility
                                    label=T("Name")),
                              Field("code", length=10, # Mayon compatibility
                                    # Deployments that don't wants office codes can hide them

@@ -1504,12 +1504,11 @@ class S3DateTimeWidget(FormWidget):
  defaultValue:'%(default)s',
  onClose:%(onclose)s
 });
-var clear_button=$('<input id="%(selector)s_clear" type="button" value="clear"/>').click(function(){
- $('#%(selector)s').val('');%(onclear)s
-});
-if($('#%(selector)s_clear').length==0){
- $('#%(selector)s').after(clear_button)
-}""" %  dict(selector=selector,
+$('#%(selector)s').keyup(function(event){
+    if (event.keyCode == 8 || event.keyCode == 46) {
+        $(this).val("");%(onclear)s;
+    }
+ });""" %  dict(selector=selector,
              widget=widget,
              date_format=date_format,
              time_format=time_format,
