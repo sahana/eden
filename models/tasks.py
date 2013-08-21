@@ -203,6 +203,31 @@ def sync_synchronize(repository_id, user_id=None, manual=False):
 tasks["sync_synchronize"] = sync_synchronize
 
 # -----------------------------------------------------------------------------
+def notify_check_subscriptions(user_id=None):
+    """
+        Scheduled task to check subscriptions for updates,
+        creates notify_notify tasks where updates exist.
+    """
+    notify = s3base.S3Notifications()
+    return notify.check_subscriptions()
+
+tasks["notify_check_subscriptions"] = notify_check_subscriptions
+
+def notify_notify(resource_id, user_id=None):
+    """
+        Asynchronous task to notify a subscriber about resource
+        updates. This task is created by notify_check_subscriptions.
+
+        @param subscription: JSON with the subscription data
+        @param now: lookup date (@todo: remove this)
+    """
+
+    notify = s3base.S3Notifications
+    return notify.notify(resource_id)
+
+tasks["notify_notify"] = notify_notify
+
+# -----------------------------------------------------------------------------
 def maintenance(period="daily"):
     """
         Run all maintenance tasks which should be done daily
@@ -226,7 +251,6 @@ def maintenance(period="daily"):
     return result
 
 tasks["maintenance"] = maintenance
-
 
 # -----------------------------------------------------------------------------
 if settings.has_module("msg"):

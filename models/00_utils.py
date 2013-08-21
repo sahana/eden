@@ -8,23 +8,46 @@
 if request.is_local:
     # This is a request made from the local server
 
-    search_subscription = request.get_vars.get("search_subscription", None)
-    if search_subscription:
-        # We're doing a request for a saved search
-        table = s3db.pr_saved_search
-        search = db(table.auth_token == search_subscription).select(table.pe_id,
-                                                                    limitby=(0, 1)
-                                                                    ).first()
-        if search:
-            # Impersonate user
-            user_id = auth.s3_get_user_id(pe_id=search.pe_id)
+    f = request.get_vars.get("format", None)
+    auth_token = request.get_vars.get("subscription", None)
+    if auth_token and f == "msg":
+        # Subscription lookup request
+        rtable = s3db.pr_subscription_resource
+        stable = s3db.pr_subscription
+        utable = s3db.pr_person_user
+        join = [stable.on(stable.id == rtable.subscription_id),
+                utable.on(utable.pe_id == stable.pe_id)]
 
-            if user_id:
-                # Impersonate the user who is subscribed to this saved search
-                auth.s3_impersonate(user_id)
-            else:
-                # Request is ANONYMOUS
-                auth.s3_impersonate(None)
+        user = db(rtable.auth_token == auth_token).select(utable.user_id,
+                                                          join=join,
+                                                          limitby=(0, 1)) \
+                                                  .first()
+        if user:
+            # Impersonate subscriber
+            auth.s3_impersonate(user.user_id)
+        else:
+            # Anonymous request
+            auth.s3_impersonate(None)
+    else:
+
+        # @todo: deprecate this:
+        search_subscription = request.get_vars.get("search_subscription", None)
+        if search_subscription:
+            # We're doing a request for a saved search
+            table = s3db.pr_saved_search
+            search = db(table.auth_token == search_subscription).select(table.pe_id,
+                                                                        limitby=(0, 1)
+                                                                        ).first()
+            if search:
+                # Impersonate user
+                user_id = auth.s3_get_user_id(pe_id=search.pe_id)
+
+                if user_id:
+                    # Impersonate the user who is subscribed to this saved search
+                    auth.s3_impersonate(user_id)
+                else:
+                    # Request is ANONYMOUS
+                    auth.s3_impersonate(None)
 
 # =============================================================================
 # Check Permissions & fail as early as we can

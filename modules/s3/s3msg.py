@@ -573,10 +573,13 @@ class S3Msg(object):
 
         # Place the Message in the appropriate Log
         if pr_message_method == "EMAIL":
+            if not fromaddress:
+                fromaddress = current.deployment_settings.get_mail_sender
+
             table = s3db.msg_email
             id = table.insert(body=message,
                               subject=subject,
-                              #from_address= @ToDo,
+                              from_address=fromaddress,
                               inbound=False,
                               )
             record = db(table.id == id).select(table.id,

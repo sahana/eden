@@ -1396,6 +1396,14 @@ class S3CRUD(S3Method):
                             report_groupby=report_groupby,
                             **attr)
 
+        elif representation == "msg":
+
+            if r.http == "POST":
+                from s3notify import S3Notifications
+                return S3Notifications.send(r, resource)
+            else:
+                r.error(405, r.ERROR.BAD_METHOD)
+            
         else:
             r.error(501, r.ERROR.BAD_FORMAT)
 

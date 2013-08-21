@@ -120,6 +120,9 @@ from s3gis import *
 # Messaging
 from s3msg import *
 
+# Notifications
+from s3notify import *
+
 # GUI Navigation Framework
 from s3navigation import *
 

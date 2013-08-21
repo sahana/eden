@@ -131,6 +131,12 @@ if len(pop_list) > 0:
                              repeats=0
                              )
 
+        # Subscription notifications
+        s3task.schedule_task("notify_check_subscriptions",
+                             period=300,
+                             timeout=300,
+                             repeats=0)
+
     # Daily maintenance
     s3task.schedule_task("maintenance",
                          vars={"period":"daily"},

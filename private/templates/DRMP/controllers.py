@@ -248,6 +248,12 @@ def _newsfeed():
         request.args = ["filter"]
         ajax = "filter"
     elif "validate.json" in request.args:
+        # Inline component validation request
+        request.args = []
+        ajax = True
+    elif current.auth.permission.format == "msg":
+        # Subscription lookup request
+        request.args = []
         ajax = True
     else:
         # Default
@@ -890,7 +896,9 @@ $('#subscription-form').submit(function() {
                     (rtable.deleted != True)
             rows = db(query).select(rtable.id,
                                     rtable.resource,
-                                    rtable.url)
+                                    rtable.url,
+                                    rtable.last_check_time,
+                                    rtable.next_check_time)
 
             if f.query:
                 filters = json.loads(f.query)
@@ -953,11 +961,12 @@ $('#subscription-form').submit(function() {
         # Save subscription settings
         stable = s3db.pr_subscription
         subscription_id = subscription["id"]
+        frequency = subscription["frequency"]
         if not subscription_id:
             success = stable.insert(pe_id=pe_id,
                                     filter_id=filter_id,
                                     notify_on=subscription["notify_on"],
-                                    frequency=subscription["frequency"],
+                                    frequency=frequency,
                                     method=subscription["method"])
             subscription_id = success
         else:
@@ -965,7 +974,7 @@ $('#subscription-form').submit(function() {
                             pe_id=pe_id,
                             filter_id=filter_id,
                             notify_on=subscription["notify_on"],
-                            frequency=subscription["frequency"],
+                            frequency=frequency,
                             method=subscription["method"])
         if not success:
             return None
@@ -974,12 +983,21 @@ $('#subscription-form').submit(function() {
         rtable = s3db.pr_subscription_resource
         subscribe = subscription.get("subscribe")
         if subscribe:
+            from datetime import datetime, timedelta
+            now = datetime.utcnow()
             resources = subscription["resources"]
+
+            subscribed = {}
+            timestamps = {}
             if resources:
-                subscribed = dict(((r.resource, r.url), r.id)
-                                  for r in resources)
-            else:
-                subscribed = {}
+                for r in resources:
+                    subscribed[(r.resource, r.url)] = r.id
+                    timestamps[r.id] = (r.last_check_time,
+                                        r.next_check_time)
+                                    
+            intervals = s3db.pr_subscription_check_intervals
+            interval = timedelta(minutes=intervals.get(frequency, 0))
+                
             keep = set()
             fk = """{"subscription_id": %s}""" % subscription_id
             for new in subscribe:
@@ -996,10 +1014,17 @@ $('#subscription-form').submit(function() {
                                             deleted_fk=None,
                                             subscription_id=subscription_id,
                                             resource=resource,
-                                            url=url)
+                                            url=url,
+                                            last_check_time=now,
+                                            next_check_time=None)
                 else:
                     # Keep it
-                    keep.add(subscribed[(resource, url)])
+                    record_id = subscribed[(resource, url)]
+                    last_check_time, next_check_time = timestamps[record_id]
+                    due = last_check_time + interval
+                    if next_check_time != due:
+                        db(rtable.id == record_id).update(next_check_time=due)
+                    keep.add(record_id)
                     
             # Unsubscribe all others
             unsubscribe = set(subscribed.values()) - keep

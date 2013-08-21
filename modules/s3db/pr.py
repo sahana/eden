@@ -2511,6 +2511,7 @@ class S3SubscriptionModel(S3Model):
 
     names = ["pr_subscription",
              "pr_subscription_resource",
+             "pr_subscription_check_intervals",
             ]
 
     def model(self):
@@ -2524,12 +2525,20 @@ class S3SubscriptionModel(S3Model):
         }
 
         frequency_opts = (
-            ("never", T("Never")),
-            #("immediately", T("Immediately")),
+            ("immediately", T("Immediately")),
             ("hourly", T("Hourly")),
             ("daily", T("Daily")),
             ("weekly", T("Weekly")),
+            ("never", T("Never")),
         )
+
+        check_intervals = {
+            "immediately": 5,
+            "hourly": 60,
+            "daily": 1440,
+            "weekly": 10080,
+            "never": 0
+        }
 
         MSG_CONTACT_OPTS = current.msg.MSG_CONTACT_OPTS
         
@@ -2561,11 +2570,6 @@ class S3SubscriptionModel(S3Model):
                                         represent=S3Represent(
                                                     options=MSG_CONTACT_OPTS,
                                                     multiple=True)),
-                                  #Field("last_checked", "datetime",
-                                        #default=current.request.utcnow,
-                                        #writable=False),
-                                  #Field("next_due_time", "datetime",
-                                        #writable=False),
                                   *s3_meta_fields())
 
         self.add_component("pr_subscription_resource",
@@ -2579,12 +2583,27 @@ class S3SubscriptionModel(S3Model):
                                         ondelete="CASCADE"),
                                   Field("resource"),
                                   Field("url"),
+                                  Field("auth_token",
+                                        length=40,
+                                        readable=False,
+                                        writable=False),
+                                  Field("locked", "boolean",
+                                        default=False,
+                                        readable=False,
+                                        writable=False),
+                                  Field("batch_mode", "boolean",
+                                        default=True),
+                                  Field("last_check_time", "datetime",
+                                        default=current.request.utcnow,
+                                        writable=False),
+                                  Field("next_check_time", "datetime",
+                                        writable=False),
                                   *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return dict(pr_subscription_check_intervals = check_intervals)
 
 # =============================================================================
 class S3SavedSearch(S3Model):
