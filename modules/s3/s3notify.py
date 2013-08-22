@@ -49,7 +49,7 @@ from gluon.tools import fetch
 
 from s3utils import s3_truncate
 
-DEBUG = True
+DEBUG = False
 if DEBUG:
     print >> sys.stderr, "S3NOTIFY: DEBUG MODE"
 
@@ -78,9 +78,7 @@ class S3Notifications(object):
         if subscriptions:
             async = current.s3task.async
             for row in subscriptions:
-                # Create asynchronous notification task (we can
-                # be relatively sure that we do have a worker running,
-                # otherwise we wouldn't be here).
+                # Create asynchronous notification task.
                 row.update_record(locked=True)
                 async("notify_notify", args=[row.id])
             message = "%s notifications scheduled." % len(subscriptions)
@@ -146,10 +144,10 @@ class S3Notifications(object):
         # Construct the send-URL
         settings = current.deployment_settings
         public_url = settings.get_base_public_url()
-        # @todo: do we need the application name?
         lookup_url = "%s/%s/%s" % (public_url,
                                    current.request.application,
-                                   r.url)
+                                   r.url.lstrip("/"))
+                                   
         # Break up the URL into its components
         purl = list(urlparse.urlparse(lookup_url))
         
@@ -251,18 +249,18 @@ class S3Notifications(object):
         data = source.read()
         subscription = json.loads(data)
 
-        # @todo: clean this up:
-        _debug("Notify PE #%s by %s on %s of %s since %s" % (
-                    subscription["pe_id"],
-                    str(subscription["method"]),
-                    str(subscription["notify_on"]),
-                    subscription["resource"],
-                    subscription["last_check_time"]))
+        #_debug("Notify PE #%s by %s on %s of %s since %s" % (
+                    #subscription["pe_id"],
+                    #str(subscription["method"]),
+                    #str(subscription["notify_on"]),
+                    #subscription["resource"],
+                    #subscription["last_check_time"]))
 
         notify_on = subscription["notify_on"]
         methods = subscription["method"]
         if not notify_on or not methods:
-            return json_message(message="No notification configured for this subscription")
+            return json_message(message="No notifications configured "
+                                        "for this subscription")
 
         # Authorization (subscriber must be logged in)
         auth = current.auth
@@ -281,12 +279,7 @@ class S3Notifications(object):
             fields = [f.name for f in resource.readable_fields()]
         if "created_on" not in fields:
             fields.append("created_on")
-        _debug("Notify fields: %s" % str(fields))
 
-        # @todo: clean this up:
-        _debug("Extracting the data...")
-        _debug(resource.rfilter)
-        
         # Extract the data
         data = resource.select(fields,
                                represent=True,
@@ -298,8 +291,7 @@ class S3Notifications(object):
         if not numrows:
             return json_message(message="No records found")
 
-        _debug("%s rows:" % numrows)
-        _debug(str(rows))
+        #_debug("%s rows:" % numrows)
 
         # Render and send the messages
         join = lambda *f: os.path.join(current.request.folder, *f)
@@ -343,8 +335,8 @@ class S3Notifications(object):
                 continue
 
             # Send the message
-            _debug("Sending message per %s" % method)
-            _debug(message)
+            #_debug("Sending message per %s" % method)
+            #_debug(message)
             try:
                 sent = send(pe_id,
                             subject=s3_truncate(subject, 64),
@@ -372,7 +364,6 @@ class S3Notifications(object):
             message = ", ".join(errors)
         else:
             message = "Success"
-        _debug(message)
         return json_message(success=success,
                             statuscode=200 if success else 403,
                             message=message)
