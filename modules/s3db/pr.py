@@ -2558,7 +2558,7 @@ class S3SubscriptionModel(S3Model):
                                   Field("frequency",
                                         requires=IS_IN_SET(frequency_opts,
                                                            zero=None),
-                                        default="never",
+                                        default="daily",
                                         represent=lambda opt: \
                                                   frequency_opts.get(opt,
                                                                      UNKNOWN_OPT)),

@@ -648,18 +648,9 @@ class subscriptions(S3CustomController):
         T = current.T
         
         # Available resources
-        resources = [dict(resource="hrm_human_resource",
-                          url="vol/volunteer",
-                          label=T("Volunteers")),
-                     dict(resource="hrm_human_resource",
-                          url="hrm/staff",
-                          label=T("Staff")),
-                     dict(resource="cms_post",
+        resources = [dict(resource="cms_post",
                           url="default/index/newsfeed",
                           label=T("Updates")),
-                     dict(resource="org_organisation",
-                          url="org/organisation",
-                          label=T("Organizations")),
                     ]
 
         # Filter widgets
@@ -667,14 +658,14 @@ class subscriptions(S3CustomController):
         #        must configure fixed options or lookup resources
         #        for filter widgets which need it.
         filters = [S3OptionsFilter("series_id",
-                                   label=T("Filter by Type"),
+                                   label=T("Subscribe to"),
                                    represent="%(name)s",
-                                   widget="multiselect",
-                                   cols=3,
+                                   widget="groupedopts",
+                                   cols=2,
                                    resource="cms_post",
                                    _name="type-filter"),
                    S3LocationFilter("location_id",
-                                    label=T("Filter by Location"),
+                                    label=T("Location(s)"),
                                     levels=["L1", "L2", "L3"],
                                     widget="multiselect",
                                     cols=3,
@@ -737,28 +728,28 @@ class subscriptions(S3CustomController):
         form = FORM(_id="subscription-form",
                     hidden={"subscription-filters": ""})
 
-        # Resource selector
-        options = []
-        selected_resources = set()
-        subscribed = subscription["resources"]
-        for idx, rconfig in enumerate(resources):
-            options.append((idx, rconfig["label"]))
-            if subscribed:
-                for s in subscribed:
-                    if s.resource == rconfig["resource"] and \
-                       s.url == rconfig["url"]:
-                        selected_resources.add(idx)
+        # Deactivated: resource selector
+        #options = []
+        #selected_resources = set()
+        #subscribed = subscription["resources"]
+        #for idx, rconfig in enumerate(resources):
+            #options.append((idx, rconfig["label"]))
+            #if subscribed:
+                #for s in subscribed:
+                    #if s.resource == rconfig["resource"] and \
+                       #s.url == rconfig["url"]:
+                        #selected_resources.add(idx)
 
-        dummy = Storage(name="resources", requires = IS_IN_SET(options))
-        selector = S3GroupedOptionsWidget(cols=2)
-        row = ("resource_selector__row",
-               "%s:" % labels.RESOURCES,
-               selector(dummy,
-                        list(selected_resources),
-                        _id="resource_selector"),
-               "")
-        fieldset = formstyle(form, [row])
-        form.append(fieldset)
+        #dummy = Storage(name="resources", requires = IS_IN_SET(options))
+        #selector = S3GroupedOptionsWidget(cols=2)
+        #row = ("resource_selector__row",
+               #"%s:" % labels.RESOURCES,
+               #selector(dummy,
+                        #list(selected_resources),
+                        #_id="resource_selector"),
+               #"")
+        #fieldset = formstyle(form, [row])
+        #form.append(fieldset)
 
         # Filters
         filter_form = S3FilterForm(filters, clear=False)
@@ -787,12 +778,13 @@ class subscriptions(S3CustomController):
                             _id="frequency_selector"),
                      ""))
 
-        rows.append(("method_selector__row",
-                     "%s:" % labels.NOTIFY_BY,
-                     selector(stable.method,
-                              subscription["method"],
-                              _id="method_selector"),
-                     ""))
+        # Deactivated: method selector
+        #rows.append(("method_selector__row",
+                     #"%s:" % labels.NOTIFY_BY,
+                     #selector(stable.method,
+                              #subscription["method"],
+                              #_id="method_selector"),
+                     #""))
 
         fieldset = formstyle(form, rows)
         fieldset.insert(0,
@@ -838,18 +830,24 @@ $('#subscription-form').submit(function() {
 
             listify = lambda x: None if not x else x if type(x) is list else [x]
 
-            subscribe = listify(formvars.resources)
-            if subscribe:
-                subscription["subscribe"] = \
-                        [r for idx, r in enumerate(resources)
-                           if str(idx) in subscribe]
+            # Fixed resource selection:
+            subscription["subscribe"] = [resources[0]]
+            # Alternatively, with resource selector:
+            #subscribe = listify(formvars.resources)
+            #if subscribe:
+                #subscription["subscribe"] = \
+                        #[r for idx, r in enumerate(resources)
+                           #if str(idx) in subscribe]
 
             subscription["filters"] = form.request_vars \
                                       .get("subscription-filters", None)
 
             subscription["notify_on"] = listify(formvars.notify_on)
             subscription["frequency"] = formvars.frequency
-            subscription["method"] = listify(formvars.method)
+            # Fixed method:
+            subscription["method"] = ["EMAIL"]
+            # Alternatively, with method selector:
+            #subscription["method"] = listify(formvars.method)
 
             success = self._update_subscription(subscription)
 
@@ -875,13 +873,13 @@ $('#subscription-form').submit(function() {
                 (stable.deleted != True)
         left = ftable.on(ftable.id == stable.filter_id)
         row = db(query).select(stable.id,
-                            stable.notify_on,
-                            stable.frequency,
-                            stable.method,
-                            ftable.id,
-                            ftable.query,
-                            left=left,
-                            limitby=(0, 1)).first()
+                               stable.notify_on,
+                               stable.frequency,
+                               #stable.method,
+                               ftable.id,
+                               ftable.query,
+                               left=left,
+                               limitby=(0, 1)).first()
 
         output = {"pe_id": pe_id}
                             
@@ -919,7 +917,7 @@ $('#subscription-form').submit(function() {
                            "resources": rows,
                            "notify_on": s.notify_on,
                            "frequency": s.frequency,
-                           "method": s.method,
+                           "method": ["EMAIL"] #s.method,
                           })
             
         else:
@@ -930,7 +928,7 @@ $('#subscription-form').submit(function() {
                            "resources": None,
                            "notify_on": stable.notify_on.default,
                            "frequency": stable.frequency.default,
-                           "method": stable.method.default
+                           "method": ["EMAIL"] #stable.method.default
                           })
 
         return output
