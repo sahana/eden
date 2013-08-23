@@ -27,13 +27,13 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+import datetime
 import os
 import sys
 import urlparse
 import urllib2
 from urllib import urlencode
 from uuid import uuid4
-from datetime import datetime, timedelta
 
 try:
     from cStringIO import StringIO # Faster, where available
@@ -218,9 +218,9 @@ class S3Notifications(object):
                 
         # Update time stamps and unlock, invalidate auth token
         intervals = s3db.pr_subscription_check_intervals
-        interval = timedelta(minutes=intervals.get(s.frequency, 0))
+        interval = datetime.timedelta(minutes=intervals.get(s.frequency, 0))
         if success:
-            last_check_time = datetime.utcnow()
+            last_check_time = datetime.datetime.utcnow()
             next_check_time = last_check_time + interval
             r.update_record(auth_token=None,
                             locked=False,
