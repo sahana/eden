@@ -1040,6 +1040,29 @@ class S3Config(Storage):
         return self.msg.get("twitter_oauth_consumer_secret", "")
 
     # -------------------------------------------------------------------------
+    # Notifications
+    def get_msg_notification_subject(self):
+        """
+            Template for the subject line of resource update notifications.
+
+            Available placeholders:
+                $s = System Name (short)
+                $r = Resource Name
+
+            Use {} to separate the placeholder from immediately following
+            identifier characters (like: ${placeholder}text).
+        """
+        return self.msg.get("notification_subject",
+                            "$s %s: $r" % current.T("Update Notification"))
+
+    def get_msg_notification_email_format(self):
+        """
+            The preferred email format for resource update notifications,
+            "text" or "html".
+        """
+        return self.msg.get("notification_email_format", "text")
+                            
+    # -------------------------------------------------------------------------
     # Save Search and Subscription
     def get_search_max_results(self):
         """

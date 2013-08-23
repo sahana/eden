@@ -22,7 +22,7 @@
     </style>
 </head>
 <body>
-{{=H4("%s %s" % (system, title))}}
+{{=H4("%s: %s %s" % (system, resource, current.T("Update Notification")))}}
 {{if new is not None:}}
 <p>The following {{=new}} {{=resource}} have been added:</p>
 {{=new_records}}

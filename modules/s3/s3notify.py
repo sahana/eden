@@ -36,6 +36,11 @@ from uuid import uuid4
 from datetime import datetime, timedelta
 
 try:
+    from cStringIO import StringIO # Faster, where available
+except:
+    from StringIO import StringIO
+
+try:
     import json # try stdlib (Python 2.6)
 except ImportError:
     try:
@@ -120,6 +125,7 @@ class S3Notifications(object):
                                                   stable.frequency,
                                                   stable.notify_on,
                                                   stable.method,
+                                                  stable.email_format,
                                                   rtable.id,
                                                   rtable.resource,
                                                   rtable.url,
@@ -187,6 +193,7 @@ class S3Notifications(object):
                     "pe_id": s.pe_id,
                     "notify_on": s.notify_on,
                     "method": s.method,
+                    "email_format": s.email_format,
                     "resource": r.resource,
                     "last_check_time": last_check_time,
                     # @todo: add nice representation of query
@@ -273,10 +280,7 @@ class S3Notifications(object):
                                 subscription["last_check_time"])
 
         # Fields to report
-        fields = resource.get_config("notify_fields",
-                 resource.get_config("list_fields"))
-        if not fields:
-            fields = [f.name for f in resource.readable_fields()]
+        fields = resource.list_fields(key="notify_fields")
         if "created_on" not in fields:
             fields.append("created_on")
 
@@ -294,40 +298,70 @@ class S3Notifications(object):
         #_debug("%s rows:" % numrows)
 
         # Render and send the messages
+        settings = current.deployment_settings
+        
         join = lambda *f: os.path.join(current.request.folder, *f)
-        theme = current.deployment_settings.get_template()
+        theme = settings.get_template()
         send = current.msg.send_by_pe_id
 
         success = False
         errors = []
         
         # Pre-render the data for the view
+        email_format = subscription["email_format"]
+        if not email_format:
+            email_format = settings.get_msg_notification_email_format()
         output = cls._pre_render(resource,
                                  data,
                                  notify_on,
-                                 last_check_time)
+                                 last_check_time,
+                                 email_format)
 
-        subject = "%s %s: %s" % (output["system"],
-                                 output["title"],
-                                 output["resource"])
+        # Subject line
+        get_config = resource.get_config
+        subject = get_config("notification_subject",
+                             settings.get_msg_notification_subject())
+        from string import Template
+        subject = Template(subject).safe_substitute(s="%(system)s",
+                                                    r="%(resource)s")
+        subject = subject % output
 
         # @todo: add nice representation of the filter query
 
+        prefix = resource.get_config("notification_prefix", "notify")
+        
+        def get_template(path, filenames):
+
+            for fn in filenames:
+                filepath = join(path, fn)
+                if os.path.exists(filepath):
+                    try:
+                        return open(filepath, "rb")
+                    except:
+                        pass
+            return None
+            
         for method in methods:
-            view = "notify_%s.html" % method.lower()
 
             error = None
             
             # Get the message template
-            default_path = join("views", "msg", view)
+            template = None
+            filenames = ["%s_%s.html" % (prefix, method.lower())]
+            if method == "EMAIL" and email_format:
+                filenames.insert(0, "%s_email_%s.html" % (prefix, email_format))
             if theme != "default":
-                path = join("private", "templates", theme, "views", "msg", view)
-                if not os.path.exists(path):
-                    path = default_path
+                path = join("private", "templates", theme, "views", "msg")
+                template = get_template(path, filenames)
+            if template is None:
+                path = join("views", "msg")
+                template = get_template(path, filenames)
+            if template is None:
+                template = StringIO(T("New updates are available."))
 
             # Render the message
             try:
-                message = current.response.render(str(path), output)
+                message = current.response.render(template, output)
             except:
                 exc_info = sys.exc_info()[:2]
                 error = ("%s: %s" % (exc_info[0].__name__, exc_info[1]))
@@ -449,14 +483,20 @@ class S3Notifications(object):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def _pre_render(cls, resource, data, notify_on, last_check_time):
+    def _pre_render(cls,
+                    resource,
+                    data,
+                    notify_on,
+                    last_check_time,
+                    email_format=None):
         """
             Method to pre-render the data for the message template
 
-            @param data: the data returned from S3Resource.select
             @param resource: the S3Resource
+            @param data: the data returned from S3Resource.select
             @param notify_on: the notification trigger(s)
             @param last_check_time: the last check time (datetime)
+            @param email_format: the email format ("text" or "html")
 
             @todo: make this configurable per resource and/or controller
         """
@@ -510,7 +550,6 @@ class S3Notifications(object):
             resource_name = string.capwords(resource.name, "_")
         
         output = {
-                  "title": current.T("Update Notification"),
                   "system": current.deployment_settings.get_system_name_short(),
                   "resource": resource_name,
                  }

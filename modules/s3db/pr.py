@@ -2540,6 +2540,11 @@ class S3SubscriptionModel(S3Model):
             "never": 0
         }
 
+        email_format_opts = {
+            "text": T("Text"),
+            "html": T("HTML")
+        }
+
         MSG_CONTACT_OPTS = current.msg.MSG_CONTACT_OPTS
         
         # ---------------------------------------------------------------------
@@ -2570,6 +2575,12 @@ class S3SubscriptionModel(S3Model):
                                         represent=S3Represent(
                                                     options=MSG_CONTACT_OPTS,
                                                     multiple=True)),
+                                  Field("email_format",
+                                        requires=IS_EMPTY_OR(
+                                                   IS_IN_SET(email_format_opts,
+                                                             zero=None)),
+                                        represent=S3Represent(
+                                                    options=email_format_opts)),
                                   *s3_meta_fields())
 
         self.add_component("pr_subscription_resource",

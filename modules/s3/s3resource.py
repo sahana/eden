@@ -4465,26 +4465,38 @@ class S3Resource(object):
             return "~.%s" % selector
 
     # -------------------------------------------------------------------------
-    def list_fields(self, key="list_fields"):
+    def list_fields(self, key="list_fields", id_column=0):
         """
             Get the list_fields for this resource
 
             @param key: alternative key for the table configuration
+            @param id_column: True/False, whether to include the record ID
+                              or not, or 0 to enforce the record ID to be
+                              the first column
         """
 
         list_fields = self.get_config(key, None)
+        if not list_fields and key != "list_fields":
+            list_fields = self.get_config("list_fields", None)
         if not list_fields:
             list_fields = [f.name for f in self.readable_fields()]
-        pkey = self._id.name
+
+        pkey = _pkey = self._id.name
         fields = []
         append = fields.append
+        selectors = set()
+        seen = selectors.add
         for f in list_fields:
-            if f not in fields and f != pkey:
+            selector = f if type(f) is not tuple else f[1]
+            if selector == _pkey and not id_column:
+                pkey = f
+            elif selector not in selectors:
+                seen(selector)
                 append(f)
-        list_fields = fields
-        list_fields.insert(0, self._id.name)
-        return list_fields
-
+        if id_column is 0:
+            fields.insert(0, pkey)
+        return fields
+        
 # =============================================================================
 class S3LeftJoins(object):
 
