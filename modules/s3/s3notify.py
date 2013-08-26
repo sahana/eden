@@ -52,7 +52,7 @@ from gluon import *
 from gluon.storage import Storage
 from gluon.tools import fetch
 
-from s3utils import s3_truncate
+from s3utils import s3_truncate, s3_unicode
 
 DEBUG = False
 if DEBUG:
@@ -159,20 +159,30 @@ class S3Notifications(object):
         
         # Subscription parameters
         last_check_time = current.xml.encode_iso_datetime(r.last_check_time)
-        query = [("subscription", auth_token),
-                 ("format", "msg")]
+        query = {"subscription": auth_token, "format": "msg"}
         if "upd" in s.notify_on:
-            query.append(("~.modified_on__ge", last_check_time))
+            query["~.modified_on__ge"] = last_check_time
         else:
-            query.append(("~.created_on__ge", last_check_time))
+            query["~.created_on__ge"] = last_check_time
 
         # Filters
         if f.query:
-            # @todo: should not need to prefix_selector here
+            from s3filter import S3FilterString
             resource = s3db.resource(r.resource)
-            for k, v in json.loads(f.query):
+            fstring = S3FilterString(resource, f.query)
+            for k, v in fstring.get_vars.iteritems():
                 if v is not None:
-                    query.append((resource.prefix_selector(k), v))
+                    if k in query:
+                        value = query[k]
+                        if type(value) is list:
+                            value.append(v)
+                        else:
+                            query[k] = [value, v]
+                    else:
+                        query[k] = v
+            query_nice = s3_unicode(fstring.represent())
+        else:
+            query_nice = None
 
         # Add subscription parameters and filters to the URL query, and
         # put the URL back together
@@ -196,7 +206,7 @@ class S3Notifications(object):
                     "email_format": s.email_format,
                     "resource": r.resource,
                     "last_check_time": last_check_time,
-                    # @todo: add nice representation of query
+                    "filter_query": query_nice,
                })
 
         # Send the request
@@ -306,16 +316,33 @@ class S3Notifications(object):
 
         success = False
         errors = []
-        
-        # Pre-render the data for the view
+
+        # Email format
         email_format = subscription["email_format"]
         if not email_format:
             email_format = settings.get_msg_notification_email_format()
-        output = cls._pre_render(resource,
-                                 data,
-                                 notify_on,
-                                 last_check_time,
-                                 email_format)
+
+        # Pre-render the contents for the view
+        contents = {}
+        if email_format == "html" and "EMAIL" in methods:
+            contents["html"] = cls._pre_render(resource,
+                                               data,
+                                               notify_on,
+                                               last_check_time,
+                                               "html")
+            contents["default"] = contents["html"]
+        if email_format != "html" or "EMAIL" not in methods or len(methods) > 1:
+            contents["text"] = cls._pre_render(resource,
+                                               data,
+                                               notify_on,
+                                               last_check_time,
+                                               "text")
+            contents["default"] = contents["text"]
+        
+        # Add human-readable representation of the filter query
+        filter_query = subscription.get("filter_query")
+        for f, c in contents.iteritems():
+            c["filter_query"] = filter_query
 
         # Subject line
         get_config = resource.get_config
@@ -324,12 +351,9 @@ class S3Notifications(object):
         from string import Template
         subject = Template(subject).safe_substitute(s="%(system)s",
                                                     r="%(resource)s")
-        subject = subject % output
+        subject = subject % contents["default"]
 
-        # @todo: add nice representation of the filter query
-
-        prefix = resource.get_config("notification_prefix", "notify")
-        
+        # Helper function to find templates from a priority list
         def get_template(path, filenames):
 
             for fn in filenames:
@@ -341,6 +365,7 @@ class S3Notifications(object):
                         pass
             return None
             
+        prefix = resource.get_config("notification_prefix", "notify")
         for method in methods:
 
             error = None
@@ -359,6 +384,12 @@ class S3Notifications(object):
             if template is None:
                 template = StringIO(T("New updates are available."))
 
+            # Select contents format
+            if method == "EMAIL" and email_format == "html":
+                output = contents["html"]
+            else:
+                output = contents["text"]
+                
             # Render the message
             try:
                 message = current.response.render(template, output)
@@ -488,15 +519,15 @@ class S3Notifications(object):
                     data,
                     notify_on,
                     last_check_time,
-                    email_format=None):
+                    format=None):
         """
-            Method to pre-render the data for the message template
+            Method to pre-render the contents for the message template
 
             @param resource: the S3Resource
             @param data: the data returned from S3Resource.select
             @param notify_on: the notification trigger(s)
             @param last_check_time: the last check time (datetime)
-            @param email_format: the email format ("text" or "html")
+            @param format: the contents format ("text" or "html")
 
             @todo: make this configurable per resource and/or controller
         """
@@ -508,61 +539,106 @@ class S3Notifications(object):
 
         rfields = data["rfields"]
 
-        colnames = []
-        new_headers = TR()
-        mod_headers = TR()
-        for rfield in rfields:
-                
-            if rfield.selector == created_on_selector:
-                created_on_colname = rfield.colname
-            
-            elif rfield.ftype != "id":
-                label = rfield.label
-                new_headers.append(TH(label))
-                mod_headers.append(TH(label))
-                colnames.append(rfield.colname)
-
-        rows = data["rows"]
-        
-        new, upd = [], []
         as_utc = current.xml.as_utc
-        for row in rows:
+        
+        rows = data["rows"]
+        new, upd = [], []
 
-            # New record or updated record?
-            append = upd.append
-            if created_on_colname:
-                try:
-                    created_on = row["_row"][created_on_colname]
-                except KeyError, AttributeError:
-                    pass
-                else:
-                    if as_utc(created_on) >= last_check_time:
-                        append = new.append
-            tr = TR()
-            for colname in colnames:
-                tr.append(TD(XML(row[colname])))
-            append(tr)
-            
+        # Common contents
         crud_strings = current.response.s3.crud_strings[resource.tablename]
         if crud_strings:
             resource_name = crud_strings.title_list
         else:
             resource_name = string.capwords(resource.name, "_")
-        
-        output = {
-                  "system": current.deployment_settings.get_system_name_short(),
-                  "resource": resource_name,
-                 }
-        if "new" in notify_on and len(new):
-            output["new"] = len(new)
-            output["new_records"] = TABLE(THEAD(new_headers), TBODY(new))
+
+        output = {"system": current.deployment_settings.get_system_name_short(),
+                  "resource": resource_name}
+
+        if format == "html":
+            # Pre-formatted HTML
+            colnames = []
+            
+            new_headers = TR()
+            mod_headers = TR()
+            for rfield in rfields:
+                if rfield.selector == created_on_selector:
+                    created_on_colname = rfield.colname
+                elif rfield.ftype != "id":
+                    colnames.append(rfield.colname)
+                    label = rfield.label
+                    new_headers.append(TH(label))
+                    mod_headers.append(TH(label))
+            for row in rows:
+                append_record = upd.append
+                if created_on_colname:
+                    try:
+                        created_on = row["_row"][created_on_colname]
+                    except KeyError, AttributeError:
+                        pass
+                    else:
+                        if as_utc(created_on) >= last_check_time:
+                            append_record = new.append
+                tr = TR([TD(XML(row[colname])) for colname in colnames])
+                append_record(tr)
+            if "new" in notify_on and len(new):
+                output["new"] = len(new)
+                output["new_records"] = TABLE(THEAD(new_headers), TBODY(new))
+            else:
+                output["new"] = None
+            if "upd" in notify_on and len(upd):
+                output["upd"] = len(upd)
+                output["upd_records"] = TABLE(THEAD(new_headers), TBODY(upd))
+            else:
+                output["upd"] = None
+
         else:
-            output["new"] = None
-        if "upd" in notify_on and len(upd):
-            output["upd"] = len(upd)
-            output["upd_records"] = TABLE(THEAD(new_headers), TBODY(upd))
-        else:
-            output["upd"] = None
+            # Standard text format
+            labels = []
+            append = labels.append
+            
+            for rfield in rfields:
+                if rfield.selector == created_on_selector:
+                    created_on_colname = rfield.colname
+                elif rfield.ftype != "id":
+                    append((rfield.colname, rfield.label))
+
+            for row in rows:
+                append_record = upd.append
+                if created_on_colname:
+                    try:
+                        created_on = row["_row"][created_on_colname]
+                    except KeyError, AttributeError:
+                        pass
+                    else:
+                        if as_utc(created_on) >= last_check_time:
+                            append_record = new.append
+                            
+                record = []
+                append_column = record.append
+                for colname, label in labels:
+                    append_column((label, row[colname]))
+                append_record(record)
+
+            crud_strings = current.response.s3.crud_strings[resource.tablename]
+            if crud_strings:
+                resource_name = crud_strings.title_list
+            else:
+                resource_name = string.capwords(resource.name, "_")
+
+            output = {"system": current.deployment_settings \
+                                       .get_system_name_short(),
+                      "resource": resource_name,
+                     }
+            if "new" in notify_on and len(new):
+                output["new"] = len(new)
+                output["new_records"] = new
+            else:
+                output["new"] = None
+            if "upd" in notify_on and len(upd):
+                output["upd"] = len(upd)
+                output["upd_records"] = upd
+            else:
+                output["upd"] = None
 
         return output
 

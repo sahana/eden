@@ -1,35 +1,20 @@
-<html>
-<head>
-    <style>
-        body {
-                background-color: white;
-                font-family: sans-serif;
-                color: #4f565d;
-        }
-        table {
-                border-collapse: collapse;
-        }
-        thead {
-                background-color: #dfdfdf;
-        }
-        tbody {
-                background-color: #dfdfdf;
-        }
-        th, td {
-                border: 1px solid #cfcfcf;
-                padding: 2px;
-        }
-    </style>
-</head>
-<body>
-{{=H4("%s: %s %s" % (system, resource, current.T("Update Notification")))}}
+{{title="%s: %s %s" % (system, resource, current.T("Update Notification"))}}
+{{=XML(title)}}
+{{="=" * len(title)}}
+{{if filter_query:}}
+{{=current.T("Filter")}}: {{=XML(filter_query)}}
+{{pass}}
 {{if new is not None:}}
-<p>The following {{=new}} {{=resource}} have been added:</p>
-{{=new_records}}
-{{pass}}
+{{new_title=current.T("The following %(new)s %(resource)s have been added") % dict(new=new, resource=resource)}}
+{{=XML(new_title)}}:
+{{for record in new_records:}}
+{{for label, value in record:}}
+  {{=XML(label)}}: {{=XML(value)}}
+{{pass}}{{pass}}{{pass}}
 {{if upd is not None:}}
-<p>The following {{=upd}} {{=resource}} have been updated:</p>
-{{=upd_records}}
-{{pass}}
-</body>
-</html>
+{{upd_title=current.T("The following %(upd)s %(resource)s have been updated") % dict(upd=upd, resource=resource)}}
+{{=XML(upd_title)}}:
+{{for record in upd_records:}}
+{{for label, value in record:}}
+  {{=XML(label)}}: {{=XML(value)}}
+{{pass}}{{pass}}{{pass}}

@@ -235,6 +235,11 @@ def _newsfeed():
                    list_layout = list_layout,
                    # Create form comes via AJAX in a Modal
                    insertable = False,
+                   notify_fields = [(T("Type"), "series_id"),
+                                    (T("Date"), "date"),
+                                    (T("Location"), "location_id"),
+                                    (T("Description"), "body"),
+                                   ]
                    )
 
     s3.dl_pagelength = 6  # 5 forces an AJAX call

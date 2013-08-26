@@ -1978,7 +1978,7 @@ class S3FilterString(object):
         queries in saved filters.
     """
 
-    def __init__(self, query):
+    def __init__(self, resource, query):
         """
             Constructor
 
@@ -1986,29 +1986,16 @@ class S3FilterString(object):
                           string with such a list in JSON)
         """
 
-        self.query = query
-
-    # -------------------------------------------------------------------------
-    def represent(self, resource):
-        """
-            Render the query representation for the given resource
-
-            @param resource: the S3Resource
-        """
-
-        default = ""
-
-        # Load the query if JSON
-        query = self.query
         if type(query) is not list:
             try:
-                query = json.loads(query)
+                self.query = json.loads(query)
             except ValueError:
-                return default
+                self.query = []
+        else:
+            self.query = query
 
-        # Convert into a S3ResourceQuery
         get_vars = {}
-        for k, v in query:
+        for k, v in self.query:
             if v is not None:
                 key = resource.prefix_selector(k)
                 if key in get_vars:
@@ -2019,7 +2006,26 @@ class S3FilterString(object):
                         get_vars[key] = [value, v]
                 else:
                     get_vars[key] = v
-        queries = S3URLQuery.parse(resource, get_vars)
+
+        self.resource = resource
+        self.get_vars = get_vars
+        
+    # -------------------------------------------------------------------------
+    def represent(self):
+        """
+            Render the query representation for the given resource
+
+            @param resource: the S3Resource
+        """
+
+        default = ""
+
+        get_vars = self.get_vars
+        resource = self.resource
+        if not get_vars:
+            return default
+        else:
+            queries = S3URLQuery.parse(resource, get_vars)
 
         # Iterate over the sub-queries
         substrings = []
