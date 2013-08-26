@@ -29,6 +29,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+import datetime
 import re
 
 try:
@@ -54,7 +55,7 @@ from gluon.tools import callback
 
 from s3rest import S3Method
 from s3resource import S3FieldSelector, S3ResourceField, S3URLQuery
-from s3utils import s3_unicode
+from s3utils import s3_unicode, S3TypeConverter
 from s3validators import *
 from s3widgets import S3DateWidget, S3DateTimeWidget, S3MultiSelectWidget, S3OrganisationHierarchyWidget, S3GroupedOptionsWidget, s3_grouped_checkboxes_widget
 
@@ -1742,7 +1743,7 @@ $("#%(widget_id)s").filtermanager({
 
 # =============================================================================
 class S3Filter(S3Method):
-    """ Back-end for filter form updates """
+    """ Back-end for filter forms """
 
     def apply_method(self, r, **attr):
         """
@@ -1968,5 +1969,302 @@ class S3Filter(S3Method):
         # JSON response
         current.response.headers["Content-Type"] = "application/json"
         return json.dumps(filters)
+
+# =============================================================================
+class S3FilterString(object):
+    """
+        Helper class to render a human-readable representation of a
+        filter query, as representation method of JSON-serialized
+        queries in saved filters.
+    """
+
+    def __init__(self, query):
+        """
+            Constructor
+
+            @param query: the URL query (list of key-value pairs or a
+                          string with such a list in JSON)
+        """
+
+        self.query = query
+
+    # -------------------------------------------------------------------------
+    def represent(self, resource):
+        """
+            Render the query representation for the given resource
+
+            @param resource: the S3Resource
+        """
+
+        default = ""
+
+        # Load the query if JSON
+        query = self.query
+        if type(query) is not list:
+            try:
+                query = json.loads(query)
+            except ValueError:
+                return default
+
+        # Convert into a S3ResourceQuery
+        get_vars = {}
+        for k, v in query:
+            if v is not None:
+                key = resource.prefix_selector(k)
+                if key in get_vars:
+                    value = get_vars[key]
+                    if type(value) is list:
+                        value.append(v)
+                    else:
+                        get_vars[key] = [value, v]
+                else:
+                    get_vars[key] = v
+        queries = S3URLQuery.parse(resource, get_vars)
+
+        # Iterate over the sub-queries
+        substrings = []
+        append = substrings.append
+        for alias, subqueries in queries.iteritems():
+
+            for subquery in subqueries:
+                s = self._render(resource, alias, subquery)
+                if s:
+                    append(s)
+
+        if substrings:
+            result = substrings[0]
+            T = current.T
+            for s in substrings[1:]:
+                result = T("%s AND %s") % (result, s)
+            return result
+        else:
+            return default
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def _render(cls, resource, alias, query, invert=False):
+        """
+            Recursively render a human-readable representation of a
+            S3ResourceQuery.
+
+            @param resource: the S3Resource
+            @param query: the S3ResourceQuery
+            @param invert: invert the query
+        """
+
+        T = current.T
+
+        if not query:
+            return None
+
+        op = query.op
+
+        l = query.left
+        r = query.right
+        render = lambda q, invert=False, resource=resource, alias=alias: \
+                        cls._render(resource, alias, q, invert=invert)
+
+        if op == query.AND:
+            # Recurse AND
+            l = render(l)
+            r = render(r)
+            if l is not None and r is not None:
+                if invert:
+                    result = T("NOT %s OR NOT %s") % (l, r)
+                else:
+                    result = T("%s AND %s") % (l, r)
+            else:
+                result = l if l is not None else r
+        elif op == query.OR:
+            # Recurse OR
+            l = render(l)
+            r = render(r)
+            if l is not None and r is not None:
+                if invert:
+                    result = T("NOT %s AND NOT %s") % (l, r)
+                else:
+                    result = T("%s OR %s") % (l, r)
+            else:
+                result = l if l is not None else r
+        elif op == query.NOT:
+            # Recurse NOT
+            result = render(l, invert=not invert)
+        else:
+            # Resolve the field selector against the resource
+            try:
+                rfield = l.resolve(resource)
+            except (AttributeError, SyntaxError):
+                return None
+
+            # Convert the filter values into the field type
+            try:
+                values = cls._convert(rfield, r)
+            except (TypeError, ValueError):
+                values = r
+
+            # Alias
+            tlabel = " ".join(s.capitalize() for s in rfield.tname.split("_")[1:])
+            rfield.label = "%s %s" % (tlabel, rfield.label)
+
+            # Represent the values
+            if values is None:
+                values = T("None")
+            else:
+                list_type = rfield.ftype[:5] == "list:"
+                renderer = rfield.represent
+                if not callable(renderer):
+                    renderer = lambda v: s3_unicode(v)
+                if hasattr(renderer, "linkto"):
+                    linkto = renderer.linkto
+                    renderer.linkto = None
+                else:
+                    linkto = None
+
+                is_list = type(values) is list
+
+                try:
+                    if is_list and hasattr(renderer, "bulk") and not list_type:
+                        fvalues = renderer.bulk(values, list_type=False)
+                        values = [fvalues[v] for v in values if v in fvalues]
+                    elif list_type:
+                        if is_list:
+                            values = renderer(values)
+                        else:
+                            values = renderer([values])
+                    else:
+                        if is_list:
+                            values = [renderer(v) for v in values]
+                        else:
+                            values = renderer(values)
+                except:
+                    values = s3_unicode(values)
+
+            # Translate the query
+            result = cls._translate_query(query, rfield, values, invert=invert)
+
+        return result
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def _convert(cls, rfield, value):
+        """
+            Convert a filter value according to the field type
+            before representation
+
+            @param rfield: the S3ResourceField
+            @param value: the value
+        """
+
+        if value is None:
+            return value
+
+        ftype = rfield.ftype
+        if ftype[:5] == "list:":
+            if ftype[5:8] in ("int", "ref"):
+                ftype = long
+            else:
+                ftype = unicode
+        elif ftype == "id" or ftype [:9] == "reference":
+            ftype = long
+        elif ftype == "integer":
+            ftype = int
+        elif ftype == "date":
+            ftype = datetime.date
+        elif ftype == "time":
+            ftype = datetime.time
+        elif ftype == "datetime":
+            ftype = datetime.datetime
+        elif ftype == "double":
+            ftype = float
+        elif ftype == "boolean":
+            ftype = bool
+        else:
+            ftype = unicode
+
+        convert = S3TypeConverter.convert
+        if type(value) is list:
+            output = []
+            append = output.append
+            for v in value:
+                try:
+                    append(convert(ftype, v))
+                except TypeError, ValueError:
+                    continue
+        else:
+            try:
+                output = convert(ftype, value)
+            except TypeError, ValueError:
+                output = None
+        return output
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def _translate_query(cls, query, rfield, values, invert=False):
+        """
+            Translate the filter query into human-readable language
+
+            @param query: the S3ResourceQuery
+            @param rfield: the S3ResourceField the query refers to
+            @param values: the filter values
+            @param invert: invert the operation
+        """
+
+        T = current.T
+
+        # Value list templates
+        vor = T("%s or %s")
+        vand = T("%s and %s")
+
+        # Operator templates
+        otemplates = {
+            query.LT: (query.GE, vand, "%(label)s < %(values)s"),
+            query.LE: (query.GT, vand, "%(label)s <= %(values)s"),
+            query.EQ: (query.NE, vor, T("%(label)s is %(values)s")),
+            query.GE: (query.LT, vand, "%(label)s >= %(values)s"),
+            query.GT: (query.LE, vand, "%(label)s > %(values)s"),
+            query.NE: (query.EQ, vor, T("%(label)s is not %(values)s")),
+            query.LIKE: ("notlike", vor, T("%(label)s is like %(values)s")),
+            query.BELONGS: (query.NE, vor, T("%(label)s is %(values)s")),
+            query.CONTAINS: ("notall", vand, T("%(label)s contains %(values)s")),
+            query.ANYOF: ("notany", vor, T("%(label)s contains any of %(values)s")),
+            "notall": (query.CONTAINS, vand, T("%(label)s does not contain %(values)s")),
+            "notany": (query.ANYOF, vor, T("%(label)s does not contain %(values)s")),
+            "notlike": (query.LIKE, vor, T("%(label)s is not like %(values)s"))
+        }
+
+        # Quote values as necessary
+        ftype = rfield.ftype
+        if ftype in ("string", "text") or \
+           ftype[:9] == "reference" or \
+           ftype[:5] == "list:" and ftype[5:8] in ("str", "ref"):
+            if type(values) is list:
+                values = ['"%s"' % v for v in values]
+            elif values is not None:
+                values = '"%s"' % values
+            else:
+                values = current.messages["NONE"]
+
+        # Render value list template
+        def render_values(template=None, values=None):
+            if not template or type(values) is not list:
+                return str(values)
+            elif not values:
+                return "()"
+            elif len(values) == 1:
+                return values[0]
+            else:
+                return template % (", ".join(values[:-1]), values[-1])
+
+        # Render the operator template
+        op = query.op
+        if op in otemplates:
+            inversion, vtemplate, otemplate = otemplates[op]
+            if invert:
+                inversion, vtemplate, otemplate = otemplates[inversion]
+            return otemplate % dict(label=rfield.label,
+                                    values=render_values(vtemplate, values))
+        else:
+            # Fallback to simple representation
+            return query.represent(resource)
 
 # END =========================================================================

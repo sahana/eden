@@ -4681,9 +4681,9 @@ class S3FieldSelector(object):
     def __init__(self, name, type=None):
         """ Constructor """
 
-        if not isinstance(name, str) or not name:
+        if not isinstance(name, basestring) or not name:
             raise SyntaxError("name required")
-        self.name = name
+        self.name = str(name)
         self.type = type
 
         self.op = None
@@ -5287,7 +5287,7 @@ class S3ResourceField(object):
         # Fall back to the field label
         if label is None:
             fname = self.fname
-            if fname in ["L1", "L2", "L3", "L3", "L4", "L5"]:
+            if fname in ["L0", "L1", "L2", "L3", "L3", "L4", "L5"]:
                 try:
                     label = current.gis.get_location_hierarchy(fname)
                 except:
@@ -6443,9 +6443,11 @@ class S3URLQuery(object):
             # Add to subquery
             if q is None:
                 q = rquery
+            elif invert:
+                q &= rquery
             else:
                 q |= rquery
-
+                
         return q
 
 # =============================================================================
