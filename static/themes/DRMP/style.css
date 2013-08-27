@@ -726,3 +726,53 @@ div.toggle-div {
 span.toggle-text i {
     margin-right: 5px;
 }
+
+/* Throbber */
+/* Used by Autocompletes, map popups, map toolbar, dropdown widgets */
+.throbber,
+.layer_throbber,
+.map_loader {
+    background-image: url(img/ajax-loader.gif);
+}
+.throbber,
+.layer_throbber {
+    background-size: 75%;
+    height: 32px;
+    width: 32px;
+}
+
+.input_throbber {
+    background-size: 50%;
+    height: 24px;
+    width: 24px;
+    display: inline-block;
+    margin: 0 0 -12px -24px;
+}
+
+/* Embed Widget */
+
+.box_top,
+.box_middle,
+.box_bottom {
+   border-left: none;
+   border-right: none;
+   background: none;
+}
+
+.form-horizontal .control-group.box_top,
+.form-horizontal .control-group.box_middle,
+.form-horizontal .control-group.box_bottom {
+    max-width: 500px;
+}
+
+.box_top label.control-label {
+    background-color: white;
+    margin-left: 50px;
+    margin-top: -20px;
+    padding-right: 10px;
+    width: 110px;
+}
+
+[id$=full_name__row].box_middle {
+    margin-top: -15px;
+}

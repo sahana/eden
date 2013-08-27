@@ -1459,7 +1459,6 @@ S3OptionsFilter({
                 else:
                     table = s3db[pe_tablename]
                 record = db(table[pe_field] == pe_value).select(table.pe_id,
-                                                                cache=cache,
                                                                 limitby=(0, 1)
                                                                 ).first()
                 if record:
@@ -1478,7 +1477,6 @@ S3OptionsFilter({
             name = element.text
             if name:
                 record = db(otable.name == name).select(otable.id,
-                                                        cache=cache,
                                                         limitby=(0, 1)
                                                         ).first()
                 if record:
@@ -1626,9 +1624,12 @@ S3OptionsFilter({
                                                     last_name = user.last_name,
                                                     email = user.email)
 
-        result = self.settings.mailer.send(to = approver,
-                                           subject = subject,
-                                           message = message)
+        if "@" in approver:
+            approver = [approver]
+        for each_approver in approver:
+            result = self.settings.mailer.send(to = each_approver,
+                                               subject = subject,
+                                               message = message)
         if not result:
             # Don't prevent registration just because email not configured
             #db.rollback()
@@ -2307,6 +2308,18 @@ S3OptionsFilter({
         if not approver:
             # Default Approver
             approver = deployment_settings.get_mail_approver()
+            if "@" not in approver:
+                utable = s3db.auth_user
+                mtable = s3db.auth_membership
+                gtable = s3db.auth_group
+                approver = [ row.email for row in 
+                             db( ( gtable.uuid == approver ) &
+                                 ( gtable.id == mtable.group_id ) &
+                                 ( mtable.user_id == utable.id) 
+                                ).select(utable.email,
+                                         groupby = utable.id
+                                         )
+                            ]
 
         return approver, organisation_id
 

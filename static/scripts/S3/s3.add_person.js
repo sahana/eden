@@ -195,7 +195,7 @@
 
         var controller = dummy_input.attr('data-c');
         // Add a Throbber
-        $(selector + '_full_name').after('<div id="' + fieldname + '_throbber" class="throbber fright hide"></div>');
+        $(selector + '_full_name').after('<div id="' + fieldname + '_throbber" class="throbber input_throbber hide"></div>');
         var throbber = $(selector + '_throbber');
 
         var url = S3.Ap.concat('/' + controller + '/person/search_ac');

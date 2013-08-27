@@ -1015,9 +1015,12 @@ class S3Config(Storage):
     def get_mail_approver(self):
         """
             The default Address to send Requests for New Users to be Approved
+            OR
+            UUID of Role of users who should receive Requests for New Users to be Approved
             - unless overridden by per-domain entries in auth_organsiation
         """
         return self.mail.get("approver", "useradmin@example.org")
+
     def get_mail_limit(self):
         """
             A daily limit to the number of messages which can be sent
