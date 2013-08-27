@@ -126,6 +126,18 @@ div.community-data {
     padding: 0 20px 10px 20px;
 }
 
+div.community-data .a {
+    font-size: 16px;
+    font-weight: 200;
+    line-height: 25px;
+}
+
+div.community-data .cms_content {
+    margin: 5px 0 10px 0;
+    font-weight: 200;
+}
+
+
 div.community-data .btn {
     background: linear-gradient(to bottom, #3788B3 0%, #235482 100%) repeat scroll 0 0 transparent;
 }
@@ -143,8 +155,4 @@ div.community-data a.menu {
 div.community-data a.create {
     padding-left: 12px;
     padding-right: 12px;
-}
-
-div.community-data p {
-    margin-bottom: 20px;
 }

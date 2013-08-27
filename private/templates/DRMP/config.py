@@ -12,13 +12,14 @@ from datetime import timedelta
 from gluon import current, Field, URL
 from gluon.html import *
 from gluon.storage import Storage
-from gluon.validators import IS_NULL_OR
+from gluon.validators import IS_NULL_OR, IS_NOT_EMPTY
 
 from s3.s3fields import S3Represent
 from s3.s3resource import S3FieldSelector
 from s3.s3utils import S3DateTime, s3_auth_user_represent_name, s3_avatar_represent, s3_unicode
 from s3.s3validators import IS_INT_AMOUNT, IS_LOCATION_SELECTOR2, IS_ONE_OF
 from s3.s3widgets import S3LocationSelectorWidget2
+from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
 
 T = current.T
 s3 = current.response.s3
@@ -39,6 +40,9 @@ settings.auth.registration_requires_verification = False
 settings.auth.registration_requests_organisation = True
 settings.auth.registration_organisation_required = True
 settings.auth.registration_requests_site = False
+
+# Approval emails get sent to all admins
+settings.mail.approver = "ADMIN"
 
 settings.auth.registration_link_user_to = {"staff": T("Staff")}
 settings.auth.registration_link_user_to_default = ["staff"]
@@ -1049,7 +1053,9 @@ def render_organisations(listid, resource, rfields, record, **attr):
     return item
 
 # -----------------------------------------------------------------------------
-def render_posts(listid, resource, rfields, record, **attr):
+def render_posts(listid, resource, rfields, record, 
+                 type = None,
+                 **attr):
     """
         Custom dataList item renderer for CMS Posts on the Home & News Feed pages
 
@@ -1078,7 +1084,7 @@ def render_posts(listid, resource, rfields, record, **attr):
     body = record["cms_post.body"]
     location = record["cms_post.location_id"]
     location_id = raw["cms_post.location_id"]
-    location_url = URL(c="gis", f="location", args=[location_id])
+    location_url = URL(c="gis", f="location", args=[location_id, "profile"])
     author = record["cms_post.created_by"]
     author_id = raw["cms_post.created_by"]
     organisation = record["auth_user.organisation_id"]
@@ -1205,38 +1211,71 @@ def render_posts(listid, resource, rfields, record, **attr):
         card_label = SPAN(" ", _class="card-title")
 
     # Render the item
-    item = DIV(DIV(card_label,
-                   SPAN(A(location,
-                          _href=location_url,
-                          ),
-                        _class="location-title",
-                        ),
-                   SPAN(date,
-                        _class="date-title",
-                        ),
-                   edit_bar,
-                   _class="card-header",
-                   ),
-               DIV(avatar,
-                   DIV(DIV(body,
-                           DIV(author,
-                               " - ",
-                               A(organisation,
-                                 _href=org_url,
-                                 _class="card-organisation",
-                                 ),
-                               _class="card-person",
-                               ),
-                           _class="media",
-                           ),
-                       _class="media-body",
+    if "newsfeed" not in current.request.args and series == "Event":
+        item = DIV(DIV(SPAN(date,
+                            _class="date-title event",
+                            ),
+                       SPAN(A(location,
+                              _href=location_url,
+                              ),
+                            _class="location-title",
+                            ),
+                       edit_bar,
+                       _class="card-header",
                        ),
-                   _class="media",
-                   ),
-               docs,
-               _class=item_class,
-               _id=item_id,
-               )
+                   DIV(avatar,
+                       DIV(DIV(body,
+                               DIV(author,
+                                   " - ",
+                                   A(organisation,
+                                     _href=org_url,
+                                     _class="card-organisation",
+                                     ),
+                                   _class="card-person",
+                                   ),
+                               _class="media",
+                               ),
+                           _class="media-body",
+                           ),
+                       _class="media",
+                       ),
+                   docs,
+                   _class=item_class,
+                   _id=item_id,
+                   )#
+    else:
+        item = DIV(DIV(card_label,
+                       SPAN(A(location,
+                              _href=location_url,
+                              ),
+                            _class="location-title",
+                            ),
+                       SPAN(date,
+                            _class="date-title",
+                            ),
+                       edit_bar,
+                       _class="card-header",
+                       ),
+                   DIV(avatar,
+                       DIV(DIV(body,
+                               DIV(author,
+                                   " - ",
+                                   A(organisation,
+                                     _href=org_url,
+                                     _class="card-organisation",
+                                     ),
+                                   _class="card-person",
+                                   ),
+                               _class="media",
+                               ),
+                           _class="media-body",
+                           ),
+                       _class="media",
+                       ),
+                   docs,
+                   _class=item_class,
+                   _id=item_id,
+                   )
 
     return item
 
@@ -3797,6 +3836,7 @@ def customize_project_project(**attr):
 
         s3db = current.s3db
         table = s3db.project_project
+
         if r.method == "datalist":
             customize_project_project_fields()
             s3db.configure("project_project",
@@ -3804,8 +3844,7 @@ def customize_project_project(**attr):
                            listadd = False,
                            list_layout = render_projects,
                            )
-        elif r.interactive  or r.representation == "aadata":
-            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+        elif r.interactive or r.representation == "aadata":
             # Configure fields 
             table.objectives.readable = table.objectives.writable = True
             table.human_resource_id.label = T("Focal Person")
@@ -3821,6 +3860,13 @@ def customize_project_project(**attr):
             organisation_id = get_vars.get("~.(organisation)", None)
             crud_form_fields = [
                     "name",
+                    S3SQLInlineComponentCheckbox(
+                        "theme",
+                        label = T("Themes"),
+                        field = "theme_id",
+                        option_help = "comments",
+                        cols = 3,
+                    ),
                     S3SQLInlineComponent(
                         "location",
                         label = T("Districts"),
@@ -3905,12 +3951,42 @@ def customize_project_project(**attr):
             # Return to List view after create/update/delete (unless done via Modal)
             url_next = URL(c="project", f="project")
 
+
+            from s3.s3filter import S3TextFilter, S3OptionsFilter
+            filter_widgets = [
+                S3TextFilter( ["name",
+                               "description",
+                               "location.location_id",
+                               "theme.name",
+                               "objectives",
+                               "comments"
+                               ],
+                             label = T("Search Projects"),
+                             ),
+                S3OptionsFilter( "organisation_id",
+                                 label = T("Lead Organisation"),
+                                 cols = 3,
+                                 widget="multiselect"
+                                 ),
+                S3OptionsFilter( "location.location_id$L1",
+                                 location_level="L1",
+                                 widget="multiselect"),
+                S3OptionsFilter( "partner.organisation_id",
+                                 label = T("Partners"),
+                                 widget="multiselect"),
+                S3OptionsFilter( "donor.organisation_id",
+                                 label = T("Donors"),
+                                 location_level="L1",
+                                 widget="multiselect")
+                ]
+
             s3db.configure("project_project",
                            create_next = url_next,
                            delete_next = url_next,
                            update_next = url_next,
                            crud_form = crud_form,
                            list_fields = list_fields,
+                           filter_widgets = filter_widgets,
                            )
 
             s3.cancel = True
@@ -3983,9 +4059,72 @@ def customize_project_project(**attr):
         return output
     s3.postp = custom_postp
 
+    attr["hide_filter"] = False
+
     return attr
 
 settings.ui.customize_project_project = customize_project_project
+
+def customize_doc_document(**attr):
+    """
+        Customize doc_document controller
+    """
+
+    request = current.request
+
+    # Custom PreP
+    s3 = current.response.s3
+    s3db = current.s3db
+    tablename = "doc_document"
+    table = s3db.doc_document
+
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+
+        #Fitler Out Docs from Newsfeed
+        current.response.s3.filter = table.name != None
+
+        if r.interactive:
+            s3.crud_strings[tablename] = Storage(
+                title_create = T("Add Document"),
+                title_display = T("Document"),
+                title_list = T("Documents"),
+                title_update = T("Edit Document"),
+                title_search = T("Search Documents"),
+                subtitle_create = T("Add Document"),
+                label_list_button = T("List New Documents"),
+                label_create_button = T("Add Documents"),
+                label_delete_button = T("Remove Documents"),
+                msg_record_created = T("Documents added"),
+                msg_record_modified = T("Documents updated"),
+                msg_record_deleted = T("Documents removed"),
+                msg_list_empty = T("No Documents currently recorded"))
+            
+            #Force added docs to have a name
+            table.name.requires = IS_NOT_EMPTY()
+            
+            list_fields = ["name",
+                           "file",
+                           "url",
+                           "organisation_id",
+                           "comments",
+                           ]
+            
+            crud_form = S3SQLCustomForm(*list_fields)
+
+            s3db.configure(tablename,
+                           list_fields = list_fields,
+                           crud_form = crud_form,
+                           )
+        return True
+    s3.prep = custom_prep
+
+    return attr
+
+settings.ui.customize_doc_document = customize_doc_document
 
 # =============================================================================
 # Template Modules

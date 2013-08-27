@@ -36,52 +36,12 @@ class index(S3CustomController):
         # Image Carousel
         s3.jquery_ready.append('''$('#myCarousel').carousel()''')
 
-        if current.auth.is_logged_in():
+        def latest_4_posts(series_filter,
+                           layout=s3.render_posts):
             s3db = current.s3db
             # Latest 4 Events
             resource = s3db.resource("cms_post")
-            resource.add_filter(S3FieldSelector("series_id$name") == "Event")
-            list_fields = ["location_id",
-                           "date",
-                           "body",
-                           "created_by",
-                           "created_by$organisation_id",
-                           "document.file",
-                           "event_post.event_id",
-                           ]
-            orderby = resource.get_config("list_orderby",
-                                          ~resource.table.date)
-            datalist, numrows, ids = resource.datalist(fields=list_fields,
-                                                       start=None,
-                                                       limit=4,
-                                                       listid="event_datalist",
-                                                       orderby=orderby,
-                                                       layout=render_cms_events)
-            if numrows == 0:
-                # Empty table or just no match?
-                table = resource.table
-                if "deleted" in table:
-                    available_records = current.db(table.deleted != True)
-                else:
-                    available_records = current.db(table._id > 0)
-                if available_records.select(table._id,
-                                            limitby=(0, 1)).first():
-                    msg = DIV(S3CRUD.crud_string(resource.tablename,
-                                                 "msg_no_match"),
-                              _class="empty")
-                else:
-                    msg = DIV(S3CRUD.crud_string(resource.tablename,
-                                                 "msg_list_empty"),
-                              _class="empty")
-                data = msg
-            else:
-                # Render the list
-                dl = datalist.html()
-                data = dl
-            output["events"] = data
-
-            # Latest 4 Updates
-            resource = s3db.resource("cms_post")
+            resource.add_filter(S3FieldSelector("series_id$name") == series_filter)
             list_fields = ["series_id",
                            "location_id",
                            "date",
@@ -91,14 +51,14 @@ class index(S3CustomController):
                            "document.file",
                            "event_post.event_id",
                            ]
-            orderby = resource.get_config("list_orderby",
-                                          ~resource.table.date)
+            orderby = resource.table.date
+            resource.add_filter(resource.table.date >= current.request.now)
             datalist, numrows, ids = resource.datalist(fields=list_fields,
                                                        start=None,
                                                        limit=4,
                                                        listid="news_datalist",
                                                        orderby=orderby,
-                                                       layout=s3.render_posts)
+                                                       layout=layout)
             if numrows == 0:
                 # Empty table or just no match?
                 table = resource.table
@@ -120,7 +80,18 @@ class index(S3CustomController):
                 # Render the list
                 dl = datalist.html()
                 data = dl
-            output["news"] = data
+            return data
+
+        render_posts_events = lambda listid, resource, rfields, record, attr: \
+                              s3.render_posts( listid, resource, rfields, record,
+                                               "event"
+                                                **attr)
+
+        output["events"] = latest_4_posts("Event",
+                                          #layout = render_posts_events
+                                          )
+
+        output["alerts"] = latest_4_posts("Alert")
 
         self._view(THEME, "index.html")
         return output
@@ -1040,4 +1011,27 @@ $('#subscription-form').submit(function() {
         subscription["filter_id"] = filter_id
         return subscription
         
+# =============================================================================
+class contact():
+    """
+        Custom page
+    """
+
+    def __call__(self):
+
+        view = path.join(current.request.folder, "private", "templates",
+                         THEME, "views", "contact.html")
+        try:
+            # Pass view as file not str to work in compiled mode
+            current.response.view = open(view, "rb")
+        except IOError:
+            from gluon.http import HTTP
+            raise HTTP("404", "Unable to open Custom View: %s" % view)
+
+        title = current.T("Contact Us")
+
+        return dict(title = title,
+                    )
+
+
 # END =========================================================================

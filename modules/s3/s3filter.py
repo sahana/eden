@@ -549,7 +549,7 @@ class S3DateFilter(S3RangeFilter):
     operator = ["ge", "le"]
 
     # Untranslated labels for individual input boxes.
-    input_labels = {"ge": "Earliest", "le": "Latest"}
+    input_labels = {"ge": "From", "le": "To"}
 
     # -------------------------------------------------------------------------
     def widget(self, resource, values):
