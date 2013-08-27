@@ -2332,14 +2332,12 @@ S3OptionsFilter({
                 utable = db.auth_user
                 mtable = db.auth_membership
                 gtable = db.auth_group
-                approver = [ row.email for row in 
-                             db( ( gtable.uuid == approver ) &
-                                 ( gtable.id == mtable.group_id ) &
-                                 ( mtable.user_id == utable.id) 
-                                ).select(utable.email,
-                                         groupby = utable.id
-                                         )
-                            ]
+                query = (gtable.uuid == approver) & \
+                        (gtable.id == mtable.group_id) & \
+                        (mtable.user_id == utable.id)
+                rows = db(query).select(utable.email,
+                                        distinct=True)
+                approver = [row.email for row in rows]
 
         return approver, organisation_id
 

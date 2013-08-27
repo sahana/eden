@@ -67,27 +67,27 @@ class index():
              },
         ]
 
-        # function for converting action, type & name to update content
+        # Function for converting action, type & name to update content
         # (Not all updates will have a specific name associated with it, so the link will be on the type)
         def generate_update(action, type, name, url):
             if item.get("name"):
-                return TAG[""]( action % type,
-                                BR(),
-                                A( name,
-                                   _href=url)
-                                )
+                return TAG[""](action % type,
+                               BR(),
+                               A(name,
+                                 _href=url)
+                               )
             else:
-                return TAG[""]( action % A(type,
-                                           _href=url)
+                return TAG[""](action % A(type,
+                                          _href=url)
                                )
 
         output["updates"] = [dict(user = item["user"],
                                   profile = item["profile"],
-                                  update = generate_update( item["action"],
-                                                            item["type"],
-                                                            item.get("name"),
-                                                            item["url"],
-                                                            )
+                                  update = generate_update(item["action"],
+                                                           item["type"],
+                                                           item.get("name"),
+                                                           item["url"],
+                                                           )
                                   )
                              for item in updates]
 
@@ -126,12 +126,12 @@ for(var i=0,len=layers.length;i<len;i++){
                                    save=False,
                                    )
         output["map"] = map
-        
+
         from s3db.cms import S3CMS
         for item in current.response.menu:
-            item["cms"] = S3CMS.resource_content( module = item["c"], 
-                                                  resource = item["f"])
-        
+            item["cms"] = S3CMS.resource_content(module = item["c"], 
+                                                 resource = item["f"])
+
         return output
 
 # END =========================================================================

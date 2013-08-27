@@ -78,7 +78,6 @@ div.community-data {
     background-color: white;
 }
 
-
 div.updates {
     padding-top: 5px;
 }
@@ -117,7 +116,6 @@ div.updates div.more {
     margin: 0px;
 }
 
-
 div.map {
     overflow: auto;
 }
@@ -131,12 +129,13 @@ div.community-data .a {
     font-weight: 200;
     line-height: 25px;
 }
-
-div.community-data .cms_content {
-    margin: 5px 0 10px 0;
-    font-weight: 200;
+div.community-data a.menu {
+    width: 67%;
 }
-
+div.community-data a.create {
+    padding-left: 12px;
+    padding-right: 12px;
+}
 
 div.community-data .btn {
     background: linear-gradient(to bottom, #3788B3 0%, #235482 100%) repeat scroll 0 0 transparent;
@@ -144,15 +143,12 @@ div.community-data .btn {
 div.community-data .btn:hover {
     box-shadow: 0 3px 7px rgba(0, 0, 0, 0.5) inset;
 }
+
+div.community-data .cms_content {
+    margin: 5px 0 10px 0;
+    font-weight: 200;
+}
+
 div.community-data h5 {
-    margin-bottom: 0px;
-}
-
-div.community-data a.menu {
-    width: 67%;
-}
-
-div.community-data a.create {
-    padding-left: 12px;
-    padding-right: 12px;
+    margin-bottom: 0;
 }

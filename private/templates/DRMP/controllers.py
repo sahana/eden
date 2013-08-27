@@ -36,11 +36,9 @@ class index(S3CustomController):
         # Image Carousel
         s3.jquery_ready.append('''$('#myCarousel').carousel()''')
 
-        def latest_4_posts(series_filter,
-                           layout=s3.render_posts):
-            s3db = current.s3db
-            # Latest 4 Events
-            resource = s3db.resource("cms_post")
+        # Latest 4 Events
+        resource = current.s3db.resource("cms_post")
+        def latest_4_posts(series_filter, layout):
             resource.add_filter(S3FieldSelector("series_id$name") == series_filter)
             list_fields = ["series_id",
                            "location_id",
@@ -82,16 +80,11 @@ class index(S3CustomController):
                 data = dl
             return data
 
-        render_posts_events = lambda listid, resource, rfields, record, attr: \
-                              s3.render_posts( listid, resource, rfields, record,
-                                               "event"
-                                                **attr)
+        layout = s3.render_posts
 
-        output["events"] = latest_4_posts("Event",
-                                          #layout = render_posts_events
-                                          )
+        output["events"] = latest_4_posts("Event", layout)
 
-        output["alerts"] = latest_4_posts("Alert")
+        output["alerts"] = latest_4_posts("Alert", layout)
 
         self._view(THEME, "index.html")
         return output

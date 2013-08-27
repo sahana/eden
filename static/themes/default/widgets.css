@@ -895,19 +895,6 @@ span.tab_next_inactive a {
    background: #F0F3F4;
 }
 
-.form-horizontal .control-group.box_top,
-.form-horizontal .control-group.box_bottom {
-    margin-bottom: 0;
-    max-width: 680px;
-}
-
-.form-horizontal .control-group.box_bottom {
-    margin-bottom: 10px;
-    max-width: 680px;
-}
-
-    
-
 .box_top {
    border-top: #bbb 1px solid;
    padding-top: 10px;
@@ -916,6 +903,16 @@ span.tab_next_inactive a {
 .box_bottom {
    border-bottom: #bbb 1px solid;
    padding-bottom: 10px;
+}
+
+.form-horizontal .control-group.box_top {
+    margin-bottom: 0;
+    max-width: 680px;
+}
+
+.form-horizontal .control-group.box_bottom {
+    margin-bottom: 10px;
+    max-width: 680px;
 }
 
 /* Add Person 2 */

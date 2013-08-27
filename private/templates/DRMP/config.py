@@ -1242,7 +1242,7 @@ def render_posts(listid, resource, rfields, record,
                    docs,
                    _class=item_class,
                    _id=item_id,
-                   )#
+                   )
     else:
         item = DIV(DIV(card_label,
                        SPAN(A(location,
@@ -3951,33 +3951,32 @@ def customize_project_project(**attr):
             # Return to List view after create/update/delete (unless done via Modal)
             url_next = URL(c="project", f="project")
 
-
             from s3.s3filter import S3TextFilter, S3OptionsFilter
             filter_widgets = [
-                S3TextFilter( ["name",
-                               "description",
-                               "location.location_id",
-                               "theme.name",
-                               "objectives",
-                               "comments"
-                               ],
+                S3TextFilter(["name",
+                              "description",
+                              "location.location_id",
+                              "theme.name",
+                              "objectives",
+                              "comments"
+                              ],
                              label = T("Search Projects"),
                              ),
-                S3OptionsFilter( "organisation_id",
-                                 label = T("Lead Organisation"),
-                                 cols = 3,
-                                 widget="multiselect"
-                                 ),
-                S3OptionsFilter( "location.location_id$L1",
-                                 location_level="L1",
-                                 widget="multiselect"),
-                S3OptionsFilter( "partner.organisation_id",
-                                 label = T("Partners"),
-                                 widget="multiselect"),
-                S3OptionsFilter( "donor.organisation_id",
-                                 label = T("Donors"),
-                                 location_level="L1",
-                                 widget="multiselect")
+                S3OptionsFilter("organisation_id",
+                                label = T("Lead Organisation"),
+                                cols = 3,
+                                widget="multiselect"
+                                ),
+                S3OptionsFilter("location.location_id$L1",
+                                location_level="L1",
+                                widget="multiselect"),
+                S3OptionsFilter("partner.organisation_id",
+                                label = T("Partners"),
+                                widget="multiselect"),
+                S3OptionsFilter("donor.organisation_id",
+                                label = T("Donors"),
+                                location_level="L1",
+                                widget="multiselect")
                 ]
 
             s3db.configure("project_project",
@@ -4065,27 +4064,26 @@ def customize_project_project(**attr):
 
 settings.ui.customize_project_project = customize_project_project
 
+# -----------------------------------------------------------------------------
 def customize_doc_document(**attr):
     """
         Customize doc_document controller
     """
 
-    request = current.request
-
-    # Custom PreP
     s3 = current.response.s3
     s3db = current.s3db
     tablename = "doc_document"
     table = s3db.doc_document
 
+    # Custom PreP
     standard_prep = s3.prep
     def custom_prep(r):
         # Call standard prep
         if callable(standard_prep):
             result = standard_prep(r)
 
-        #Fitler Out Docs from Newsfeed
-        current.response.s3.filter = table.name != None
+        # Filter Out Docs from Newsfeed
+        current.response.s3.filter = (table.name != None)
 
         if r.interactive:
             s3.crud_strings[tablename] = Storage(
@@ -4102,17 +4100,17 @@ def customize_doc_document(**attr):
                 msg_record_modified = T("Documents updated"),
                 msg_record_deleted = T("Documents removed"),
                 msg_list_empty = T("No Documents currently recorded"))
-            
-            #Force added docs to have a name
+
+            # Force added docs to have a name
             table.name.requires = IS_NOT_EMPTY()
-            
+
             list_fields = ["name",
                            "file",
                            "url",
                            "organisation_id",
                            "comments",
                            ]
-            
+
             crud_form = S3SQLCustomForm(*list_fields)
 
             s3db.configure(tablename,

@@ -574,8 +574,7 @@ class S3CMS(S3Method):
         r.error(405, r.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
-    def widget(self, r, method="cms", widget_id=None, 
-               **attr):
+    def widget(self, r, method="cms", widget_id=None, **attr):
         """
             Render a Rich Text widget suitable for use in a page such as
             S3Summary
