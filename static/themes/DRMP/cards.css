@@ -50,6 +50,17 @@
     padding-bottom: 9px;
 }
 
+.date-title.event {
+    font: 600 14px "Helvetica Neue",Arial,sans-serif;
+    list-style: none outside none;
+    padding-left: 10px;
+    color: #666;
+    border-left: none;
+    margin-left: 0;
+    padding-top: 10px;
+    padding-bottom: 9px;
+}
+
 .location-title {
     border-left: 1px solid rgba(0, 0, 0, 0.1);
     text-shadow: 0px 1px 0px white;

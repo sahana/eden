@@ -126,6 +126,12 @@ for(var i=0,len=layers.length;i<len;i++){
                                    save=False,
                                    )
         output["map"] = map
+        
+        from s3db.cms import S3CMS
+        for item in current.response.menu:
+            item["cms"] = S3CMS.resource_content( module = item["c"], 
+                                                  resource = item["f"])
+        
         return output
 
 # END =========================================================================

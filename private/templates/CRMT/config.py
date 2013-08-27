@@ -13,7 +13,7 @@ from gluon.html import *
 from gluon.storage import Storage
 
 from s3.s3fields import S3Represent
-from s3.s3filter import S3OptionsFilter
+from s3.s3filter import S3OptionsFilter, S3DateFilter
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
 from s3.s3validators import IS_ADD_PERSON_WIDGET2, IS_LOCATION_SELECTOR2, IS_ONE_OF
 from s3.s3widgets import S3AddPersonWidget2, S3LocationSelectorWidget2
@@ -148,64 +148,75 @@ settings.fin.currencies = {
 }
 
 # Disabled until ready for prime-time
-settings.search.filter_manager = False
+settings.search.filter_manager = True
 
 # -----------------------------------------------------------------------------
 # Menu
 current.response.menu = [
-    {"name": T("Locations"),
-     "url": URL(c="org", f="facility"),
+    {"name": T("Organizations"),
+     "c":"org", 
+     "f":"organisation",
+     "icon": "icon-sitemap"
+     },
+    {"name": T("Places"),
+     "c":"org", 
+     "f":"facility",
      "icon": "icon-home"
      },
-    {"name": T("Residents"),
-     "url": URL(c="stats", f="resident"),
+    {"name": T("People"),
+     "c":"stats", 
+     "f":"resident",
      "icon": "icon-group"
      },
-    {"name": T("Incidents"),
-     "url": URL(c="event", f="incident_report"),
-     "icon": "icon-warning-sign"
-     },
-    {"name": T("Risks"),
-     "url": URL(c="vulnerability", f="risk"),
+    #{"name": T("Incidents"),
+    # "url": URL(c="event", f="incident_report"),
+    # "icon": "icon-warning-sign"
+    # },
+    {"name": T("Hazards"),
+     "c":"vulnerability", 
+     "f":"risk",
      "icon": "icon-bolt"
      },
     {"name": T("Activities"),
-     "url": URL(c="project", f="activity"),
+     "c":"project", 
+     "f":"activity",
      "icon": "icon-star-empty"
      },
     #{"name": T("Organizations"),
     # "url": URL(c="org", f="organisation"),
     # "icon": "icon-sitemap"
     # },
-    {"name": T("Trained People"),
-     "url": URL(c="stats", f="trained"),
-     "icon": "icon-user"
-     },
+    #{"name": T("Trained People"),
+    # "url": URL(c="stats", f="trained"),
+    # "icon": "icon-user"
+    # },
     {"name": T("Evacuation Routes"),
-     "url": URL(c="vulnerability", f="evac_route"),
+     "c":"vulnerability", 
+     "f":"evac_route",
      "icon": "icon-road"
      },
     ]
 
+for item in current.response.menu:
+    item["url"] = URL(item["c"], item["f"])
 # -----------------------------------------------------------------------------
 # Summary Pages
 settings.ui.summary = [{"common": True,
                         "name": "cms",
                         "widgets": [{"method": "cms"}]
                         },
-                       {"name": "map",
-                        "label": "Map",
-                        "widgets": [{"method": "map"}]
-                        },
                        {"name": "table",
                         "label": "Table",
                         "widgets": [{"method": "datatable"}]
+                        },
+                       {"name": "map",
+                        "label": "Map",
+                        "widgets": [{"method": "map"}]
                         },
                        ]
 
 # -----------------------------------------------------------------------------
 # Filter forms
-settings.search.filter_manager = False # disabled until ready
 def filter_formstyle(row_id, label, widget, comment, hidden=False):
         return DIV(label, widget, comment, 
                    _id=row_id,
@@ -408,7 +419,7 @@ def customize_pr_person(**attr):
         if callable(standard_postp):
             output = standard_postp(r, output)
 
-        if r.interactive:
+        if r.interactive and r.method != "search_ac":
             output["rheader"] = ""
             actions = [dict(label=str(T("Open")),
                             _class="action-btn",
@@ -562,6 +573,11 @@ def customize_project_activity(**attr):
                                                   represent="%(name)s",
                                                   widget="multiselect",
                                                   ),
+                                  S3DateFilter("date",
+                                               label=None,
+                                               hide_time=True,
+                                               input_labels = {"ge": "From", "le": "To"}
+                                               )
                                   ]
 
                 s3db.configure(tablename,
@@ -756,7 +772,7 @@ def customize_org_organisation(**attr):
 
             hrtable = s3db.hrm_human_resource
             hrtable.person_id.widget = None
-            hrtable.site_id.label = T("Location")
+            hrtable.site_id.label = T("Place")
 
             # Custom Crud Form
             crud_form = S3SQLCustomForm(
@@ -789,7 +805,7 @@ def customize_org_organisation(**attr):
                 ),
                 S3SQLInlineComponent(
                     "facility",
-                    label = T("Organization's Locations"),
+                    label = T("Organization's Places"),
                     fields = ["name", 
                               # Only fields within the table are supported
                               #"facility_type.facility_type_id",
@@ -897,7 +913,7 @@ def customize_org_group(**attr):
 settings.ui.customize_org_group = customize_org_group
 
 #-----------------------------------------------------------------------------
-# Location (org_facility)
+# Place (org_facility)
 #-----------------------------------------------------------------------------
 def customize_org_facility(**attr):
     """
@@ -939,19 +955,19 @@ def customize_org_facility(**attr):
             s3db.hrm_human_resource.person_id.widget = None
             
             s3.crud_strings[tablename] = Storage(
-                title_create = T("Add Location"),
-                title_display = T("Location Details"),
-                title_list = T("Locations"),
-                title_update = T("Edit Location"),
-                title_search = T("Search Locations"),
-                subtitle_create = T("Add New Location"),
-                label_list_button = T("List Locations"),
-                label_create_button = T("Add Location"),
-                label_delete_button = T("Remove Location"),
-                msg_record_created = T("Location added"),
-                msg_record_modified = T("Location updated"),
-                msg_record_deleted = T("Location removed"),
-                msg_list_empty = T("No Locations currently recorded"))
+                title_create = T("Add Place"),
+                title_display = T("Place Details"),
+                title_list = T("Places"),
+                title_update = T("Edit Place"),
+                title_search = T("Search Places"),
+                subtitle_create = T("Add New Place"),
+                label_list_button = T("List Places"),
+                label_create_button = T("Add Place"),
+                label_delete_button = T("Remove Place"),
+                msg_record_created = T("Place added"),
+                msg_record_modified = T("Place updated"),
+                msg_record_deleted = T("Place removed"),
+                msg_list_empty = T("No Places currently recorded"))
 
             # Custom Crud Form
             s3db.org_site_org_group.group_id.label = ""
@@ -959,7 +975,7 @@ def customize_org_facility(**attr):
                 "name",
                 S3SQLInlineComponentMultiSelectWidget(
                     "facility_type",
-                    label = T("Location Type"),
+                    label = T("Type of Place"),
                     field = "facility_type_id",
                 ),
                 "organisation_id",
@@ -972,7 +988,7 @@ def customize_org_facility(**attr):
                 "location_id",
                 S3SQLInlineComponent(
                     "human_resource",
-                    label = T("Location's Contacts"),
+                    label = T("Place's Contacts"),
                     fields = ["person_id",
                               "job_title_id",
                               #"email",
@@ -982,8 +998,17 @@ def customize_org_facility(**attr):
                 "comments",
             )
 
+            list_fields = ["name",
+                           "organisation_id",
+                           "facility_type$facility_type_id"
+                           "facility_group$group_id",
+                           "location_id",
+                           "comments",
+                           ]
+
             s3db.configure(tablename,
                            crud_form = crud_form,
+                           list_fields = list_fields,
                            )
 
             if r.method == "summary":
@@ -993,7 +1018,7 @@ def customize_org_facility(**attr):
                                                   widget="multiselect",
                                                   ),
                                   S3OptionsFilter("site_facility_type.facility_type_id",
-                                                  label=T("Location Type"),
+                                                  label=T("Type of Place"),
                                                   represent="%(name)s",
                                                   widget="multiselect",
                                                   ),
@@ -1018,7 +1043,7 @@ def customize_org_facility(**attr):
             table = s3db.org_facility
             table.location_id.label = T("Address")
             table.organisation_id.comment = ""
-            s3.crud_strings[tablename].title_display = "Location Details"
+            s3.crud_strings[tablename].title_display = "Place Details"
             s3db.configure(tablename,
                            popup_url="",
                            )
@@ -1067,6 +1092,23 @@ def customize_stats_resident(**attr):
             s3db = current.s3db
             tablename = "stats_resident"
             table = s3db[tablename]
+            
+            #TEMPORARY - replace with another resource?
+            s3.crud_strings[tablename] = Storage(
+                title_create = T("Add People"),
+                title_display = T("People Details"),
+                title_list = T("People"),
+                title_update = T("Edit People"),
+                title_search = T("Search People"),
+                subtitle_create = T("Add New People"),
+                label_list_button = T("List People"),
+                label_create_button = T("Add People"),
+                label_delete_button = T("Remove People"),
+                msg_record_created = T("People added"),
+                msg_record_modified = T("People updated"),
+                msg_record_deleted = T("People removed"),
+                msg_list_empty = T("No People currently recorded"))
+            
             field = table.location_id
             # L3s only
             #field.requires = IS_ONE_OF(current.db, "gis_location.id",
@@ -1356,6 +1398,23 @@ def customize_vulnerability_risk(**attr):
         if r.interactive:
             s3db = current.s3db
             tablename = "vulnerability_risk"
+            
+            #TEMPORARY - replace with another resource?
+            s3.crud_strings[tablename] = Storage(
+                title_create = T("Add Hazard"),
+                title_display = T("Hazard Details"),
+                title_list = T("Hazards"),
+                title_update = T("Edit Hazard"),
+                title_search = T("Search Hazards"),
+                subtitle_create = T("Add New Hazard"),
+                label_list_button = T("List Hazards"),
+                label_create_button = T("Add Hazard"),
+                label_delete_button = T("Remove Hazard"),
+                msg_record_created = T("Hazard added"),
+                msg_record_modified = T("Hazard updated"),
+                msg_record_deleted = T("Hazard removed"),
+                msg_list_empty = T("No Hazards currently recorded"))
+            
             table = s3db[tablename]
             field = table.location_id
             field.label = "" # Gets replaced by widget
@@ -1373,14 +1432,9 @@ def customize_vulnerability_risk(**attr):
             ltable.group_id.label = ""
             crud_form = S3SQLCustomForm(
                 "name",
-                "hazard_id",
-                S3SQLInlineComponent(
-                    "risk_group",
-                    label = T("Coalition"),
-                    fields = ["group_id"],
-                    multiple = False,
-                ),
-                "location_id",
+                "file",
+                "url",
+                "organisation_id",
                 "comments",
             )
 

@@ -11,18 +11,20 @@
 }
 
 .navbar .nav > li > a.map  {
-    padding: 10px;
+    padding: 12px;
     font-size: 18px;
 }
 
-
 .navbar .nav > li > a  {
     float: left;
-    font-size: 10pt;
-    text-transform: none; 
-    padding: 0.75em;
+    font-size: 16px;
+    text-transform: uppercase;
+    padding: 0.75em 1em;
 }
 .dropdown-menu > li > a  {
-    font-size: 10pt;
-    padding: 0;
+    display: inline;
+}
+
+.dropdown-menu > li > a.create  {
+    float: right;
 }
