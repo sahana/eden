@@ -109,6 +109,10 @@ def update_check(settings):
         import numpy
     except ImportError:
         warnings.append("Vulnerability unresolved dependency: numpy required for Vulnerability module support")
+    try:
+        import TwitterSearch
+    except ImportError:
+        warnings.append("Message Parsing unresolved dependency: TwitterSearch required for fetching results from twitter keyword queries")
     # @ToDo: Load settings before running this
     # for now this is done in s3db.climate_first_run()
     if settings.has_module("climate"):
