@@ -600,6 +600,11 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         } else {
             var base = true;
         }
+        if (options.hide_overlays) {
+            var overlays = false;
+        } else {
+            var overlays = true;
+        }
         // @ToDo: Make this a per-Folder config
         if (options.folders_closed) {
             var expanded = false;
@@ -672,28 +677,30 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             nodesArr.push(layerTreeBase)
         }
 
-        // Default Folder for Overlays
-        var layerTreeOverlays = {
-            text: i18n.gis_overlays,
-            nodeType: 'gx_overlaylayercontainer',
-            layerStore: layerStore,
-            loader: {
-                baseAttrs: {
-                    listeners: leaf_listeners
+        if (overlays) {
+            // Default Folder for Overlays
+            var layerTreeOverlays = {
+                text: i18n.gis_overlays,
+                nodeType: 'gx_overlaylayercontainer',
+                layerStore: layerStore,
+                loader: {
+                    baseAttrs: {
+                        listeners: leaf_listeners
+                    },
+                    filter: function(record) {
+                        var layer = record.getLayer();
+                        return layer.displayInLayerSwitcher === true &&
+                               layer.isBaseLayer === false &&
+                               (layer.dir === undefined || layer.dir === '');
+                    }
                 },
-                filter: function(record) {
-                    var layer = record.getLayer();
-                    return layer.displayInLayerSwitcher === true &&
-                           layer.isBaseLayer === false &&
-                           (layer.dir === undefined || layer.dir === '');
-                }
-            },
-            leaf: false,
-            listeners: folder_listeners,
-            singleClickExpand: true,
-            expanded: expanded
-        };
-        nodesArr.push(layerTreeOverlays)
+                leaf: false,
+                listeners: folder_listeners,
+                singleClickExpand: true,
+                expanded: expanded
+            };
+            nodesArr.push(layerTreeOverlays)
+        }
 
         // User-specified Folders
         var dirs = map.s3.dirs;
@@ -955,11 +962,6 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
         // KML
         if (options.layers_kml) {
-            map.s3.format_kml = new OpenLayers.Format.KML({
-                extractStyles: true,
-                extractAttributes: true,
-                maxDepth: 2
-            });
             var layers_kml = options.layers_kml;
             for (i = layers_kml.length; i > 0; i--) {
                 addKMLLayer(map, layers_kml[i - 1]);
@@ -1677,10 +1679,49 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             var cluster_threshold = cluster_threshold_default;
         }
 
-        // Styling
+        // Styling: Base
         var response = createStyleMap(map, layer);
         var featureStyleMap = response[0];
-        var marker_url = response[1];
+        //var marker_url = response[1];
+
+        // Needs to be uniquely instantiated
+        var format = new OpenLayers.Format.KML({
+            extractStyles: true,
+            extractAttributes: true,
+            maxDepth: 2
+        });
+
+        // Strategies
+        // Need to be uniquely instantiated
+        var strategies = [
+            new OpenLayers.Strategy.Fixed()
+        ]
+        if (refresh) {
+            strategies.push(new OpenLayers.Strategy.Refresh({
+                force: true,
+                interval: refresh * 1000 // milliseconds
+                // Close any open Popups to prevent them getting orphaned
+                // - annoying to have this happen automatically, so we handle it in onPopupClose() instead
+                //refresh: function() {
+                //    if (this.layer && this.layer.refresh) {
+                //        while (this.layer.map.popups.length) {
+                //            this.layer.map.removePopup(this.layer.map.popups[0]);
+                //        }
+                //    this.layer.refresh({force: this.force});
+                //    }
+                //}
+            }));
+        }
+        if (cluster_threshold) {
+            // Common Cluster Strategy for all layers
+            //map.s3.common_cluster_strategy
+            //strategies.push(new OpenLayers.Strategy.AttributeCluster({
+            strategies.push(new OpenLayers.Strategy.Cluster({
+                //attribute: cluster_attribute,
+                distance: cluster_distance,
+                threshold: cluster_threshold
+            }))
+        }
 
         var kmlLayer = new OpenLayers.Layer.Vector(
             name, {
@@ -1688,22 +1729,13 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 projection: proj4326,
                 protocol: new OpenLayers.Protocol.HTTP({
                     url: url,
-                    format: s3.format_kml
+                    format: format
                 }),
-                // Need to be uniquely instantiated
-                strategies: [
-                    new OpenLayers.Strategy.Fixed(),
-                    new OpenLayers.Strategy.Cluster({
-                        distance: cluster_distance,
-                        threshold: cluster_threshold
-                    }),
-                    new OpenLayers.Strategy.Refresh({
-                        force: true,
-                        interval: refresh * 1000 // milliseconds
-                    })
-                ],
+                strategies: strategies,
                 // This gets picked up after mapPanel instantiates & copied to it's layerRecords
-                legendURL: marker_url,
+                // This is just fallback style, so use VectorLegend.js instead
+                // @ToDo: Get that working with KML's dynamic styles
+                //legendURL: marker_url,
                 styleMap: featureStyleMap,
                 // This is used to Save State
                 s3_layer_id: layer.id,

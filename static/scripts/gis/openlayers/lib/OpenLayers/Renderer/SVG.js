@@ -348,6 +348,8 @@ OpenLayers.Renderer.SVG = OpenLayers.Class(OpenLayers.Renderer.Elements, {
         }
         
         if (options.isFilled) {
+            // @ToDo: Extra option so that we don't default sloppy KML Icons in Styles as Fill
+            // => act like GoogleEarth does
             if (style.externalGraphic) {
 				var pid = this.createImagePattern(style);
 				node.setAttributeNS(null, "fill", "url(#" + pid + ")");

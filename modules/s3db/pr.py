@@ -795,6 +795,7 @@ class S3PersonModel(S3Model):
 
         # Custom Form
         crud_form = S3SQLCustomForm("first_name",
+                                    "middle_name",
                                     "last_name",
                                     "date_of_birth",
                                     "initials",

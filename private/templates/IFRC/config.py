@@ -241,7 +241,8 @@ settings.org.site_code_len = 3
 settings.org.site_label = "Office/Warehouse/Facility"
 # Enable certain fields just for specific Organisations
 settings.org.dependent_fields = \
-    {"pr_person_details.mother_name"             : ["Bangladesh Red Crescent Society"],
+    {"pr_person.middle_name"                     : ["Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)", "Viet Nam Red Cross"],
+     "pr_person_details.mother_name"             : ["Bangladesh Red Crescent Society"],
      "pr_person_details.father_name"             : ["Bangladesh Red Crescent Society"],
      "pr_person_details.company"                 : ["Philippine Red Cross"],
      "pr_person_details.affiliations"            : ["Philippine Red Cross"],
