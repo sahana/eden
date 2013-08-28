@@ -1783,9 +1783,14 @@ class S3Msg(object):
         access_token = settings.access_token
         access_token_secret = settings.access_token_secret
 
-        from TwitterSearch import *
         try:
-            tso = TwitterSearchOrder()
+            import TwitterSearch
+        except ImportError:
+            s3_debug("s3msg", "Message Parsing unresolved dependency: TwitterSearch required for fetching results from twitter keyword queries")
+            raise
+
+        try:
+            tso = TwitterSearch.TwitterSearchOrder()
             tso.setKeywords(keywords)
             tso.setLanguage(language)
             # @ToDo Handle more than 100 results per page
@@ -1793,7 +1798,7 @@ class S3Msg(object):
             tso.setCount(count)
             tso.setIncludeEntities(includeEntities)
 
-            ts = TwitterSearch(
+            ts = TwitterSearch.TwitterSearch(
                 consumer_key = consumer_key,
                 consumer_secret = consumer_secret,
                 access_token = access_token,
@@ -1803,16 +1808,16 @@ class S3Msg(object):
             update_super = s3db.update_super
             from dateutil import parser
             for tweet in ts.searchTweetsIterable(tso):
-                user = tweet['user']['screen_name']
-                body = tweet['text']
-                tweet_id = tweet['id_str']
-                lang = tweet['lang']
-                created_on = parser.parse(tweet['created_at'])
+                user = tweet["user"]["screen_name"]
+                body = tweet["text"]
+                tweet_id = tweet["id_str"]
+                lang = tweet["lang"]
+                created_on = parser.parse(tweet["created_at"])
                 lat = None
                 lon = None
-                if tweet['coordinates']:
-                    lat = tweet['coordinates']['coordinates'][1]
-                    lon = tweet['coordinates']['coordinates'][0]
+                if tweet["coordinates"]:
+                    lat = tweet["coordinates"]["coordinates"][1]
+                    lon = tweet["coordinates"]["coordinates"][0]
                 id = rtable.insert(from_address = user,
                                    query_id = query_id,
                                    body = body,
@@ -1828,7 +1833,7 @@ class S3Msg(object):
                 update_super(rtable, record)
                 db(mtable.id == record.message_id).update(inbound = True)
 
-        except TwitterSearchException as e:
+        except TwitterSearch.TwitterSearchException as e:
             return(str(e))
 
         db(qtable.id == query_id).update(is_searched = True)
@@ -2145,7 +2150,7 @@ class S3Compose(S3CRUD):
             if recipient_type:
                 s3.js_global.append('''S3.msg_search_url="%s"''' % \
                                     URL(c="msg", f="search",
-                                        vars={"type":recipient_type}))
+                                        vars={"type": recipient_type}))
             else:
                 s3.js_global.append('''S3.msg_search_url="%s"''' % \
                                     URL(c="msg", f="search"))

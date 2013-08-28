@@ -1452,7 +1452,7 @@ class S3OptionsMenu(object):
                        M("Queries", f="twitter_search"),
                        M("Results", f="twitter_search_results")
                     ),
-                    M("TwitterSearch", f="twitter_result")(
+                    M("Twitter Search", f="twitter_result")(
                        M("Twitter Settings", f="twitter_search_channel"),
                        M("Twitter Queries", f="twitter_search_query"),
                        M("Results", f="twitter_result"),

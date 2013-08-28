@@ -614,7 +614,6 @@ def twitter_search_channel():
         msg_record_modified = T("Setting updated")
         )
 
-    #response.menu_options = admin_menu_options
     s3db.configure(tablename, listadd=True, deletable=True)
 
     return s3_rest_controller()
@@ -640,9 +639,8 @@ def twitter_search_query():
     table.lang.requires = IS_IN_SET(settings.get_L10n_languages().keys())
     comment = "Add the keywords separated by single spaces."
     table.keywords.comment = DIV(_class="tooltip",
-                            _title="%s|%s" % (T("Keywords"),
-                                              T(comment)))
-
+                                 _title="%s|%s" % (T("Keywords"),
+                                                   T(comment)))
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
