@@ -5768,6 +5768,8 @@ class MAP(DIV):
         # LayerTree
         if not settings.get_gis_layer_tree_base():
             options["hide_base"] = True
+        if not settings.get_gis_layer_tree_overlays():
+            options["hide_overlays"] = True
         if not settings.get_gis_layer_tree_expanded():
             options["folders_closed"] = True
         if settings.get_gis_layer_tree_radio():

@@ -37,6 +37,8 @@ def outbox():
 
     table.message_id.label = T("Message")
     table.message_id.writable = False
+    table.message_id.readable = True
+
     table.pe_id.readable = True
     table.pe_id.label = T("Recipient")
 
@@ -61,7 +63,17 @@ def outbox():
                 )
 
     s3db.configure(tablename, listadd=False)
-    return s3_rest_controller(module, resourcename, add_btn = add_btn)
+
+    def postp(r, output):
+
+        if isinstance(output, dict):
+            output["rheader"] = add_btn
+
+        return output
+
+    s3.postp = postp
+
+    return s3_rest_controller(module, resourcename)
 
 # =============================================================================
 def message():
@@ -70,6 +82,22 @@ def message():
     """
 
     tablename = "msg_message"
+
+    table = s3db.msg_message
+
+    table.instance_type.readable = True
+    table.instance_type.label = T("Channel")
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_list = T("View Message Log"),
+        title_update = T("Edit Message"),
+        label_list_button = T("View Message Log"),
+        label_delete_button = T("Delete Message"),
+        msg_record_modified = T("Message updated"),
+        msg_record_deleted = T("Message deleted"),
+        msg_list_empty = T("No Messages currently in the Message Log")
+    )
+
     s3db.configure(tablename, listadd=False)
     return s3_rest_controller()
 
@@ -545,6 +573,165 @@ def rss_channel():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def twitter_search_channel():
+    """
+       RESTful CRUD controller for Twitter Search channel
+       - appears in the administration menu
+    """
+
+    if not auth.s3_has_role(ADMIN):
+
+        session.error = UNAUTHORISED
+        redirect(URL(f="index"))
+
+    tablename = "msg_twitter_search_channel"
+    table = s3db[tablename]
+
+    table.name.label = T("Account Name")
+    table.consumer_key.label = T("Consumer Key")
+    table.consumer_secret.label = T("Consumer Secret")
+    table.access_token.label = T("Access Token")
+    table.access_token_secret.label = T("Access Token Secret")
+    table.name.comment = DIV(_class="tooltip",
+                            _title="%s|%s" % (T("Account Name"),
+                                              T("Identifier account name.")))
+    table.consumer_key.readable = False
+    table.consumer_secret.readable = False
+    table.access_token.readable = False
+    table.access_token_secret.readable = False
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_display = T("TwitterSearch Setting Details"),
+        title_list = T("TwitterSearch Settings"),
+        title_create = T("Add TwitterSearch Settings"),
+        title_update = T("Edit TwitterSearch Settings"),
+        label_list_button = T("View TwitterSearch Settings"),
+        label_create_button = T("Add TwitterSearch Settings"),
+        msg_record_created = T("Setting added"),
+        msg_record_deleted = T("Setting deleted"),
+        msg_list_empty = T("No TwitterSearch Settings currently defined"),
+        msg_record_modified = T("Setting updated")
+        )
+
+    s3db.configure(tablename, listadd=True, deletable=True)
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def twitter_search_query():
+    """
+       RESTful CRUD controller to add keywords
+       for Twitter Search
+    """
+
+    if not auth.s3_has_role(ADMIN):
+
+        session.error = UNAUTHORISED
+        redirect(URL(f="index"))
+
+    tablename = "msg_twitter_search_query"
+    table = s3db[tablename]
+
+    table.includeEntities.writable = False
+    table.is_processed.writable = False
+    table.is_searched.writable = False
+    table.lang.requires = IS_IN_SET(settings.get_L10n_languages().keys())
+    comment = "Add the keywords separated by single spaces."
+    table.keywords.comment = DIV(_class="tooltip",
+                                 _title="%s|%s" % (T("Keywords"),
+                                                   T(comment)))
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_display = T("Twitter Search Queries"),
+        title_list = T("Twitter Search Queries"),
+        title_create = T("Add Twitter Search Query"),
+        title_update = T("Edit Twitter Search Query"),
+        label_list_button = T("View Queries"),
+        label_create_button = T("Add Query"),
+        msg_record_created = T("Query added"),
+        msg_record_deleted = T("Query deleted"),
+        msg_list_empty = T("No Query currently defined"),
+        msg_record_modified = T("Query updated")
+        )
+
+    s3db.configure(tablename, listadd=True, deletable=True)
+
+    def postp(r, output):
+
+        rtable = r.table
+
+        s3_action_buttons(r)
+
+        query = (rtable.deleted == False) & \
+                (rtable.is_searched == False)
+        records = db(query).select(rtable.id)
+
+        restrict_s = [str(record.id) for record in records]
+
+        query = (rtable.deleted == False) & \
+                (rtable.is_processed == False)
+        records = db(query).select(rtable.id)
+
+        restrict_k = [str(record.id) for record in records]
+
+        s3.actions = \
+        s3.actions + [
+                      dict(label=str(T("Search")),
+                           _class="action-btn",
+                           url=URL(f="search_tweet_query",
+                                  args="[id]"),
+                                  restrict = restrict_s)
+                     ]
+
+        # @ToDo Add process_keygraph
+        s3.actions.append(dict(label=str(T("Analyze with KeyGraph")),
+                               _class="action-btn",
+                               url = URL(f = "process_keygraph",
+                                         args = "[id]"),
+                                         restrict = restrict_k)
+        )
+
+        return output
+
+    s3.postp = postp
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def search_tweet_query():
+    """
+       Searches for tweets using
+       TwitterSearch API async.
+    """
+
+    query_id = request.args[0]
+    # Process TwitterSearch async
+    s3task.async("msg_process_twitter_search",
+                 args=[query_id])
+    redirect(URL(f="twitter_search_query"))
+    return
+# -----------------------------------------------------------------------------
+def twitter_result():
+    """
+       RESTful CRUD controller for Twitter Search Results.
+    """
+
+    tablename = "msg_twitter_result"
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_display = T("Twitter Search Results"),
+        title_list = T("Twitter Search Results"),
+        label_list_button = T("View Tweet"),
+        msg_record_deleted = T("Tweet deleted"),
+        msg_list_empty = T("No Tweets Available."),
+        )
+
+    s3db.configure(tablename, listadd=False)
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def mcommons_channel():
     """
         RESTful CRUD controller for Mobile Commons SMS Channels
@@ -882,7 +1069,7 @@ def workflow():
             records = db(rtable.deleted == False).select(rtable.name, \
                                                          rtable.url)
             for record in records:
-                append(str(record.name) + "(" + str(record.url) + ")")
+                append(record.url)
 
             # Dynamic lookup of the parsing functions in S3Parsing class.
             parsers = inspect.getmembers(S3Parsing, \
@@ -948,34 +1135,33 @@ def workflow():
         restrict_d = [str(row.id) for row in rows]
 
         rows = []
-        records = db(stable.id > 0).select(stable.vars)
+        query = (stable.function_name == "msg_parse_workflow")
+        records = db(query).select(stable.vars)
         tasks = [record.vars for record in records]
-        parser1 = []
+        parser1 = {}
         for task in tasks:
-            if "workflow" in task:
+            if ("workflow" in task) and ("source" in task):
                 r = task.split("\"workflow\":")[1]
                 s = r.split("}")[0]
                 s = s.split("\"")[1].split("\"")[0]
-
-                parser1 += [s]
-        parser2 = []
-        for task in tasks:
-            if "source" in task:
                 u = task.split("\"source\":")[1]
                 v = u.split(",")[0]
                 v = v.split("\"")[1]
-                parser2 += [v]
-
+                if v not in parser1.keys():
+                    parser1[v] = [s]
+                else:
+                    parser1[v] = parser1[v] + [s]
 
         workflows = db(wtable.id > 0).select(wtable.id,
                                              wtable.workflow_task_id,
                                              wtable.source_task_id)
 
-        for workflow in workflows :
-            if workflow.workflow_task_id and workflow.source_task_id:
-                if (workflow.workflow_task_id not in parser1) or \
-                   (workflow.source_task_id not in parser2):
-                    rows += [workflow]
+        for workflow in workflows:
+            wsource = workflow.source_task_id
+            wworkflow = workflow.workflow_task_id
+            if (wsource not in parser1.keys()) or \
+               (wworkflow not in parser1[wsource]):
+                rows += [workflow]
 
         restrict_a = [str(row.id) for row in rows]
 
@@ -1191,6 +1377,21 @@ def inbox():
 
     mtable = s3db.msg_message
     s3.filter = (mtable.inbound == True)
+
+    tablename = "msg_message"
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_list = T("View InBox"),
+        title_update = T("Edit Message"),
+        label_list_button = T("View Message InBox"),
+        label_delete_button = T("Delete Message"),
+        msg_record_modified = T("Message updated"),
+        msg_record_deleted = T("Message deleted"),
+        msg_list_empty = T("No Messages currently in InBox")
+    )
+
+    s3db.configure(tablename, listadd=False)
+
     return s3_rest_controller(module, "message")
 
 # -----------------------------------------------------------------------------
@@ -1208,7 +1409,7 @@ def email_inbox():
     etable = s3db.msg_email
     s3.filter = (etable.inbound == True)
 
-    return s3_rest_controller(module, "message")
+    return s3_rest_controller(module, "email")
 
 # -----------------------------------------------------------------------------
 def twilio_inbox():

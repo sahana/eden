@@ -537,6 +537,10 @@ class S3Config(Storage):
         " Display Base Layers folder in the Map's Layer Tree "
         return self.gis.get("layer_tree_base", True)
 
+    def get_gis_layer_tree_overlays(self):
+        " Display Overlays folder in the Map's Layer Tree "
+        return self.gis.get("layer_tree_overlays", True)
+
     def get_gis_layer_tree_expanded(self):
         " Display folders in the Map's Layer Tree Open by default "
         return self.gis.get("layer_tree_expanded", True)

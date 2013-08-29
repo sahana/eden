@@ -116,6 +116,8 @@ settings.gis.toolbar = False
 settings.gis.nav_controls = False
 # Uncomment to hide the Base Layers folder in the LayerTree
 settings.gis.layer_tree_base = False
+# Uncomment to hide the Overlays folder in the LayerTree
+settings.gis.layer_tree_overlays = False
 # Uncomment to not expand the folders in the LayerTree by default
 settings.gis.layer_tree_expanded = False
 # Uncomment to have custom folders in the LayerTree use Radio Buttons
@@ -129,7 +131,7 @@ settings.gis.overview = False
 # Uncomment to hide the permalink control (we have our own saved maps functionality)
 settings.gis.permalink = False
 # Uncomment to rename Overlays in Layer Tree
-settings.gis.label_overlays = "Community Data"
+#settings.gis.label_overlays = "Community Data"
 
 # Set Map to fill the container
 settings.gis.map_width = 1170
@@ -913,7 +915,7 @@ def customize_org_group(**attr):
 settings.ui.customize_org_group = customize_org_group
 
 #-----------------------------------------------------------------------------
-# Place (org_facility)
+# Places (org_facility)
 #-----------------------------------------------------------------------------
 def customize_org_facility(**attr):
     """
@@ -942,18 +944,7 @@ def customize_org_facility(**attr):
         s3db = current.s3db
         tablename = "org_facility"
         if r.interactive:
-            field = s3db.org_facility.location_id
-            field.label = "" # Gets replaced by widget
-            field.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
-            field.widget = S3LocationSelectorWidget2(levels=["L3"],
-                                                     hide_lx=False,
-                                                     reverse_lx=True,
-                                                     show_address=True,
-                                                     show_postcode=True,
-                                                     )
 
-            s3db.hrm_human_resource.person_id.widget = None
-            
             s3.crud_strings[tablename] = Storage(
                 title_create = T("Add Place"),
                 title_display = T("Place Details"),
@@ -969,49 +960,62 @@ def customize_org_facility(**attr):
                 msg_record_deleted = T("Place removed"),
                 msg_list_empty = T("No Places currently recorded"))
 
-            # Custom Crud Form
-            s3db.org_site_org_group.group_id.label = ""
-            crud_form = S3SQLCustomForm(
-                "name",
-                S3SQLInlineComponentMultiSelectWidget(
-                    "facility_type",
-                    label = T("Type of Place"),
-                    field = "facility_type_id",
-                ),
-                "organisation_id",
-                S3SQLInlineComponent(
-                    "site_org_group",
-                    label = T("Coalition"),
-                    fields = ["group_id"],
-                    multiple = False,
-                ),
-                "location_id",
-                S3SQLInlineComponent(
-                    "human_resource",
-                    label = T("Place's Contacts"),
-                    fields = ["person_id",
-                              "job_title_id",
-                              #"email",
-                              #"phone",
-                              ],
-                ),
-                "comments",
-            )
+            if r.method in ("create", "update"):
+                field = s3db.org_facility.location_id
+                field.label = "" # Gets replaced by widget
+                field.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
+                field.widget = S3LocationSelectorWidget2(levels=["L3"],
+                                                         hide_lx=False,
+                                                         reverse_lx=True,
+                                                         show_address=True,
+                                                         show_postcode=True,
+                                                         )
 
-            list_fields = ["name",
-                           "organisation_id",
-                           "facility_type$facility_type_id"
-                           "facility_group$group_id",
-                           "location_id",
-                           "comments",
-                           ]
+                s3db.hrm_human_resource.person_id.widget = None
 
-            s3db.configure(tablename,
-                           crud_form = crud_form,
-                           list_fields = list_fields,
-                           )
+                # Custom Crud Form
+                s3db.org_site_org_group.group_id.label = ""
+                crud_form = S3SQLCustomForm(
+                    "name",
+                    S3SQLInlineComponentMultiSelectWidget(
+                        "facility_type",
+                        label = T("Type of Place"),
+                        field = "facility_type_id",
+                    ),
+                    "organisation_id",
+                    S3SQLInlineComponent(
+                        "site_org_group",
+                        label = T("Coalition"),
+                        fields = ["group_id"],
+                        multiple = False,
+                    ),
+                    "location_id",
+                    S3SQLInlineComponent(
+                        "human_resource",
+                        label = T("Place's Contacts"),
+                        fields = ["person_id",
+                                  "job_title_id",
+                                  #"email",
+                                  #"phone",
+                                  ],
+                    ),
+                    "comments",
+                )
+                s3db.configure(tablename,
+                               crud_form = crud_form,
+                               )
 
-            if r.method == "summary":
+            elif r.method == "summary":
+
+                #s3db.org_facility_type.name.label = T("Type of Place")
+                list_fields = ["name",
+                               "facility_type.name",
+                               "organisation_id",
+                               "facility_group$group_id",
+                               "location_id",
+                               "comments",
+                               ]
+
                 filter_widgets = [S3OptionsFilter("site_org_group.group_id",
                                                   label=T("Coalition"),
                                                   represent="%(name)s",
@@ -1035,6 +1039,7 @@ def customize_org_facility(**attr):
                                deletable = False,
                                filter_widgets = filter_widgets,
                                filter_formstyle = filter_formstyle,
+                               list_fields = list_fields,
                                )
 
         elif r.representation == "plain" and \
@@ -1043,12 +1048,13 @@ def customize_org_facility(**attr):
             table = s3db.org_facility
             table.location_id.label = T("Address")
             table.organisation_id.comment = ""
-            s3.crud_strings[tablename].title_display = "Place Details"
+            s3.crud_strings[tablename].title_display = T("Place Details")
             s3db.configure(tablename,
                            popup_url="",
                            )
         return True
     s3.prep = custom_prep
+
     # Override Custom Map Popup in default PostP
     s3.postp = None
 

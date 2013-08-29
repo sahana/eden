@@ -1444,13 +1444,19 @@ class S3OptionsMenu(object):
                     M("Email InBox", f="email_inbox"),
                     M("RSS Feeds", f="rss_feed"),
                     M("Twilio SMS InBox", f="twilio_inbox"),
-                    M("Log", f="log"),
+                    M("Message Log", f="message"),
                     M("Outbox", f="outbox"),
                     M("Search Twitter Tags", f="twitter_search")(
                        M("Keywords", f="keyword"),
                        M("Senders", f="sender"),
                        M("Queries", f="twitter_search"),
                        M("Results", f="twitter_search_results")
+                    ),
+                    M("Twitter Search", f="twitter_result")(
+                       M("Twitter Settings", f="twitter_search_channel"),
+                       M("Twitter Queries", f="twitter_search_query"),
+                       M("Results", f="twitter_result"),
+                       # @ToDo KeyGraph Results
                     ),
                     M("Administration", restrict=[ADMIN])(settings_messaging)
                 )

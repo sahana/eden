@@ -324,22 +324,23 @@ def person():
                   editable = False,
                   deletable = False)
 
-    group = request.get_vars.get("group", "volunteer")
-    hr_id = request.get_vars.get("human_resource.id", None)
+    get_vars = request.get_vars
+    group = get_vars.get("group", "volunteer")
+    hr_id = get_vars.get("human_resource.id", None)
     if not str(hr_id).isdigit():
         hr_id = None
 
     # Configure human resource table
     table = s3db.hrm_human_resource
     table.type.default = 2
-    request.get_vars.update(xsltmode="volunteer")
+    get_vars["xsltmode"] = "volunteer"
     if hr_id:
         hr = db(table.id == hr_id).select(table.type,
                                           limitby=(0, 1)).first()
         if hr:
             group = hr.type == 2 and "volunteer" or "staff"
             # Also inform the back-end of this finding
-            request.get_vars["group"] = group
+            get_vars["group"] = group
 
     # Configure person table
     tablename = "pr_person"
@@ -389,7 +390,7 @@ def person():
                 title_display = T("Volunteer Details"),
                 title_update = T("Volunteer Details"),
                 title_upload = T("Import Volunteers"),
-            )
+                )
 
     # Upload for configuration (add replace option)
     s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
@@ -453,6 +454,7 @@ def person():
 
                 # Organisation Dependent Fields
                 set_org_dependent_field = settings.set_org_dependent_field
+                set_org_dependent_field("pr_person", "middle_name")
                 set_org_dependent_field("pr_person_details", "father_name")
                 set_org_dependent_field("pr_person_details", "mother_name")
                 set_org_dependent_field("pr_person_details", "affiliations")

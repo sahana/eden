@@ -275,6 +275,25 @@ if settings.has_module("msg"):
     tasks["msg_process_outbox"] = msg_process_outbox
 
     # -------------------------------------------------------------------------
+    def msg_process_twitter_search(query_id, user_id=None):
+        """
+            Process Twitter Search
+                - will normally be done Asynchronously if there is a worker alive
+
+            @param query_id: one of s3db.msg_twitter_search_query.id
+            @param user_id: calling request's auth.user.id or None
+        """
+        if user_id:
+            # Authenticate
+            auth.s3_impersonate(user_id)
+        # Run the Task & return the result
+        result = msg.twitter_search_poll(query_id)
+        db.commit()
+        return result
+
+    tasks["msg_process_twitter_search"] = msg_process_twitter_search
+
+    # -------------------------------------------------------------------------
     def msg_email_poll(account_id, user_id):
         """
             Poll an inbound email source.

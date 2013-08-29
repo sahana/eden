@@ -10,6 +10,7 @@
          Name.................string..........Activity short description
          Project..............string..........Project Name
          Activity Type........string..........activity_type_id
+         OR
          Activity Types.......comma-sep list..List of Activity Types
          Organisation Group...................project_activity_group.group_id  
          Country..............string..........Country code/name (L0)
@@ -47,18 +48,19 @@
                 <xsl:call-template name="Project"/>
             </xsl:for-each>
 
-            <!-- Organisation Group -->
+            <!-- Organisation Groups -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation_group',
                                                                        col[@field='Organisation Group'])[1])]">
                 <xsl:call-template name="OrganisationGroup"/>
             </xsl:for-each>
 
-            <!-- Activity Type -->
+            <!-- Activity Types -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('activity_types',
                                                                    col[@field='Activity Type'])[1])]">
                 <xsl:call-template name="ActivityType"/>
             </xsl:for-each>
 
+            <!-- Beneficiary Types -->
             <xsl:for-each select="//row[1]/col[starts-with(@field, 'Beneficiaries')]">
                 <xsl:call-template name="BeneficiaryType"/>
             </xsl:for-each>
@@ -83,6 +85,15 @@
 	                    <xsl:value-of select="concat('Project:', $ProjectName)"/>
 	                </xsl:attribute>
 	            </reference>
+            </xsl:if>
+
+            <!-- Link to Activity Type -->
+            <xsl:if test="$ActivityType">
+                <reference field="activity_type_id" resource="project_activity_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('ActivityType:', $ActivityType)"/>
+                    </xsl:attribute>
+                </reference>
             </xsl:if>
 
             <!-- Organisation Group -->
@@ -114,16 +125,7 @@
 
         </resource>
         
-        <!-- Activity Type -->
-        <xsl:if test="$ActivityType">
-            <reference field="activity_type_id" resource="project_activity_type">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('ActivityType:', $ActivityType)"/>
-                </xsl:attribute>
-            </reference>
-        </xsl:if>
-
-        <!-- Activity TypeS -->
+        <!-- Activity Types -->
         <xsl:call-template name="splitList">
             <xsl:with-param name="list">
                 <xsl:value-of select="col[@field='Activity Types']"/>
