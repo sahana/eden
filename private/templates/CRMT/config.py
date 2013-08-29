@@ -1438,14 +1438,19 @@ def customize_vulnerability_risk(**attr):
             ltable.group_id.label = ""
             crud_form = S3SQLCustomForm(
                 "name",
-                "file",
-                "url",
-                "organisation_id",
+                "hazard_id",
+                S3SQLInlineComponent(
+                    "risk_group",
+                    label = T("Coalition"),
+                    fields = ["group_id"],
+                    multiple = False,
+                ),
+                "location_id",
                 "comments",
             )
 
             s3db.configure(tablename,
-                           crud_form = crud_form,
+                           #crud_form = crud_form,
                            )
     
             if r.method == "summary":

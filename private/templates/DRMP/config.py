@@ -2219,6 +2219,19 @@ def customize_cms_post(**attr):
 
             field = table.series_id
             field.label = T("Type")
+            
+            if r.method == "create":
+                ADMIN = current.session.s3.system_roles.ADMIN
+                if (not current.auth.s3_has_role(ADMIN)):
+                    represent = S3Represent(lookup="cms_series", 
+                                            translate=settings.get_L10n_translate_cms_series())
+                    field.requires = IS_ONE_OF(current.db, 
+                                               "cms_series.id",
+                                               represent,
+                                               not_filterby="name",
+                                               not_filter_opts = ["Alert"], 
+                                               )
+            
             refresh = get_vars.get("refresh", None)
             if refresh == "datalist":
                 # We must be coming from the News Feed page so can change the type on-the-fly
@@ -4058,7 +4071,7 @@ def customize_project_project(**attr):
         return output
     s3.postp = custom_postp
 
-    attr["hide_filter"] = False
+    #attr["hide_filter"] = False
 
     return attr
 
