@@ -3578,11 +3578,12 @@ def hrm_human_resource_onaccept(form):
         elif "location_id" in record and record.location_id:
             # Create Address from newly-created HRM
             query = (ptable.id == person_id)
-            pe_id = db(query).select(ptable.pe_id,
-                                     limitby=(0, 1)).first().pe_id
-            record_id = atable.insert(type = 1,
-                                      pe_id = pe_id,
-                                      location_id = record.location_id)
+            pe = db(query).select(ptable.pe_id,
+                                  limitby=(0, 1)).first()
+            if pe:
+                record_id = atable.insert(type = 1,
+                                          pe_id = pe.pe_id,
+                                          location_id = record.location_id)
         request_vars = current.request.vars
         if request_vars and "programme_id" in request_vars:
             programme_id = request_vars.programme_id
