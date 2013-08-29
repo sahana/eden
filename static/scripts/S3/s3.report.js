@@ -446,7 +446,7 @@ $(document).ready(function() {
      * User can click on a magnifying glass in the cell to show
      * the list of values for each cell layer
      */
-    $('table#list tbody').on('click', '.report-cell-zoom', function(event) {
+    $('table#list tbody, #pivot-table tbody').on('click', '.report-cell-zoom', function(event) {
         zoom = $(event.currentTarget);
         cell = zoom.closest('td'); //parent();
 
