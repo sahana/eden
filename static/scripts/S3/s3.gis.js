@@ -648,7 +648,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 westPanelContainer.fireEvent('collapse');
                 window.setTimeout(function() {
                     westPanelContainer.fireEvent('expand')
-                }, 300);
+                }, 350);
             }
         };
 

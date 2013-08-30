@@ -154,10 +154,10 @@ class S3LocationModel(S3Model):
                                                  _id="gis_location_lat_tooltip",
                                                  _title="%s|%s|%s|%s|%s|%s" % \
                                                  (T("Latitude & Longitude"),
-                                                  T("Latitude is North-South (Up-Down)."),
-                                                  T("Longitude is West-East (sideways)."),
+                                                  T("Latitude is North - South (Up-Down)."),
+                                                  T("Longitude is West - East (sideways)."),
                                                   T("Latitude is zero on the equator and positive in the northern hemisphere and negative in the southern hemisphere."),
-                                                  T("Longitude is zero on the prime meridian (Greenwich Mean Time) and is positive to the east, across Europe and Asia.  Longitude is negative to the west, across the Atlantic and the Americas."),
+                                                  T("Longitude is zero on the prime meridian (through Greenwich, United Kingdom) and is positive to the east, across Europe and Asia.  Longitude is negative to the west, across the Atlantic and the Americas."),
                                                   T("These need to be added in Decimal Degrees."))),
                                    ),
                              Field("lon", "double",

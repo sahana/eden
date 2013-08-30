@@ -146,7 +146,7 @@ if settings.get_auth_openid():
                                                 signals=["oid", "janrain_nonce"])
         auth.settings.login_form = extended_login_form
     except ImportError:
-        session.warning = T("Library support not available for OpenID")
+        session.warning = "Library support not available for OpenID"
 
 # Allow use of LDAP accounts for login
 # NB Currently this means that change password should be disabled:

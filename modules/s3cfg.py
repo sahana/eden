@@ -295,7 +295,7 @@ class S3Config(Storage):
         return self.auth.get("record_approval", False)
     def get_auth_record_approval_required_for(self):
         """ Which tables record approval is required for """
-        return self.auth.get("record_approval_required_for", None)
+        return self.auth.get("record_approval_required_for", [])
 
     def get_auth_realm_entity(self):
         """ Hook to determine the owner entity of a record """

@@ -59,6 +59,9 @@ form .map_loader {
 .x-tree-node {
     font-size: 12px;
 }
+.x-tree-node-leaf {
+    margin-left: 10px;
+}
 /* Override Bootstrap */
 .x-tree-root-ct,
 .x-tree-node-ct {
