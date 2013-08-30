@@ -132,6 +132,9 @@ settings.gis.countries = ["TL"]
 # Until we add support to LocationSelector2 to set dropdowns from LatLons
 settings.gis.check_within_parent_boundaries = False
 
+# Uncomment to hide Layer Properties tool
+settings.gis.layer_properties = False
+
 # Hide unnecessary Toolbar items
 settings.gis.nav_controls = False
 

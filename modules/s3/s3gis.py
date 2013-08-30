@@ -5892,8 +5892,9 @@ class MAP(DIV):
                 options["draw_polygon"] = "inactive"
 
         # Layer Properties
-        # Presence of label turns feature on in s3.gis.js
-        i18n["gis_properties"] = T("Layer Properties")
+        if settings.get_gis_layer_properties():
+            # Presence of label turns feature on in s3.gis.js
+            i18n["gis_properties"] = T("Layer Properties")
 
         # Upload Layer
         if settings.get_gis_geoserver_password():

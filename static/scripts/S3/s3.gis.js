@@ -279,7 +279,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             //cls: 'mappanel',
             // Ignored
             //height: options.map_height,
-            width: options.map_width,
+            //width: options.map_width,
             xtype: 'gx_mappanel',
             map: map,
             center: options.center,
@@ -493,14 +493,22 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             split: true,
             items: s3.west_panel_items
         });
+
+        if (Ext.isChrome) {
+            // Chrome is buggy with autoWidth :/
+            autoWidth = false;
+        } else {
+            autoWidth = true;
+        }
+
         var westPanelContainer = new Ext.Panel({
             region: 'west',
             //header: true,
             header: false, // Can't collapse Panel if this is hidden unless we create custom control
             border: true,
             //autoScroll: true,
-            autoWidth: true,
-            //width: 250,
+            autoWidth: autoWidth,
+            width: 250,
             collapsible: true,
             collapseMode: 'mini',
             collapsed: west_collapsed,
@@ -641,6 +649,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             }
         };
 
+        // @ToDo: Run this when clicking on + as well as title
         var folder_listeners = {
             click: function(node) {
                 // Trigger a layout update on the westPanelContainer
@@ -648,7 +657,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 westPanelContainer.fireEvent('collapse');
                 window.setTimeout(function() {
                     westPanelContainer.fireEvent('expand')
-                }, 350);
+                }, 300);
             }
         };
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2008-2011 The Open Source Geospatial Foundation
+ * Copyright (c) 2008-2012 The Open Source Geospatial Foundation
  * 
  * Published under the BSD license.
  * See http://svn.geoext.org/core/trunk/geoext/license.txt for the full text
@@ -85,7 +85,11 @@ Ext.extend(GeoExt.data.AttributeReader, Ext.data.DataReader, {
             attributes = data;
         } else {
             // only works with one featureType in the doc
-            attributes = this.meta.format.read(data).featureTypes[0].properties;
+            var output = this.meta.format.read(data);
+            if (!!output.error) {
+                throw new Ext.data.DataReader.Error("invalid-response", output.error);
+            }
+            attributes = output.featureTypes[0].properties;
         }
         var feature = this.meta.feature;
         var recordType = this.recordType;
