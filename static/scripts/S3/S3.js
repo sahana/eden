@@ -120,12 +120,14 @@ S3.addModals = function() {
             // Bootstrap formstyle
             caller = $(this).parents('.control-group').attr('id');
         }
-        caller = caller.replace(/__row_comment/, '') // DRRPP formstyle
-                       .replace(/__row/, '');
-        // Avoid Duplicate callers
         var url_out = attr;
-        if (attr.indexOf('caller=') == -1) {
-            url_out = attr + '&caller=' + caller;
+        if (caller) {
+            caller = caller.replace(/__row_comment/, '') // DRRPP formstyle
+                           .replace(/__row/, '');
+            // Avoid Duplicate callers
+            if (attr.indexOf('caller=') == -1) {
+                url_out = attr + '&caller=' + caller;
+            }
         }
         return url_out;
     });
