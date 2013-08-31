@@ -533,6 +533,10 @@ class S3Config(Storage):
         " Display Lat/Lon form fields when selecting Locations "
         return self.gis.get("latlon_selector", True)
 
+    def get_gis_layer_properties(self):
+        " Display Layer Properties Tool above Map's Layer Tree "
+        return self.gis.get("layer_properties", True)
+
     def get_gis_layer_tree_base(self):
         " Display Base Layers folder in the Map's Layer Tree "
         return self.gis.get("layer_tree_base", True)
