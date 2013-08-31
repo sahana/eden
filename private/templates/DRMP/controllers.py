@@ -615,7 +615,12 @@ class subscriptions(S3CustomController):
         """ Main entry point, configuration """
 
         T = current.T
-        
+
+        # Must be logged in
+        auth = current.auth
+        if not auth.s3_logged_in():
+            auth.permission.fail()
+            
         # Available resources
         resources = [dict(resource="cms_post",
                           url="default/index/newsfeed",
@@ -988,9 +993,18 @@ $('#subscription-form').submit(function() {
                     # Keep it
                     record_id = subscribed[(resource, url)]
                     last_check_time, next_check_time = timestamps[record_id]
+                    data = {}
+                    if not last_check_time:
+                        # Someone has tampered with the timestamps, so
+                        # we need to reset them and start over
+                        last_check_time = now
+                        data["last_check_time"] = last_check_time
                     due = last_check_time + interval
                     if next_check_time != due:
-                        db(rtable.id == record_id).update(next_check_time=due)
+                        # Time interval has changed
+                        data["next_check_time"] = due
+                    if data:
+                        db(rtable.id == record_id).update(**data)
                     keep.add(record_id)
                     
             # Unsubscribe all others
