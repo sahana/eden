@@ -274,9 +274,8 @@ class TranslateGetFiles:
                         # Remove '.py'
                         base = path.splitext(f)[0]
 
-                        # If file is inside /modules/s3 directory and
-                        # has "s3" as prefix, remove "s3" to get module name
-                        if base_dir == "s3" and "s3" in base:
+                        # If file has "s3" as prefix, remove "s3" to get module name
+                        if "s3" in base:
                             base = base[2:]
 
                         # If file is inside /models and file name is
@@ -1163,7 +1162,7 @@ class StringsToExcel:
 
         # ---------------------------------------------------------------------
         @staticmethod
-        def create_spreadsheet(Strings):
+        def create_spreadsheet(Strings, langcode):
             """
                 Function to create a spreadsheet (.xls file) of strings with
                 location, original string and translated string as columns
@@ -1210,7 +1209,7 @@ class StringsToExcel:
             wbk.save(output)
 
             # Modify headers to return the xls file for download
-            filename = "trans.xls"
+            filename = "%s.xls" % langcode
             disposition = "attachment; filename=\"%s\"" % filename
             response = current.response
             response.headers["Content-Type"] = contenttype(".xls")
@@ -1232,8 +1231,8 @@ class StringsToExcel:
             request = current.request
             settings = current.deployment_settings
             appname = request.application
+            langcode = langfile[:-3]
             langfile = os.path.join(request.folder, "languages", langfile)
-
             # If the language file doesn't exist, create it
             if not os.path.exists(langfile):
                 f = open(langfile, "w")
@@ -1314,7 +1313,7 @@ class StringsToExcel:
 
             if filetype == "xls":
                 # Create excel file
-                return self.create_spreadsheet(Strings)
+                return self.create_spreadsheet(Strings, langcode)
             elif filetype == "po":
                 # Create pootle file
                 C = CsvToWeb2py()
