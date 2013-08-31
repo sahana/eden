@@ -5227,7 +5227,7 @@ class S3FieldPath(object):
             join = (table[pkey] == ktable[fkey])
             if DELETED in ktable.fields:
                 join &= ktable[DELETED] != True
-            left = ktable.on(join)
+            left = [ktable.on(join)]
 
         else:
             raise SyntaxError("Invalid tablename: %s" % alias)
