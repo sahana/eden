@@ -2595,9 +2595,9 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
                                                  metadata = metadata,
                                                 )
                         record = self.qtable(id)
-                        current.manager.s3.survey_updateMetaData(record,
-                                                                 "GridChild",
-                                                                 childMetadata)
+                        current.s3db.survey_updateMetaData(record,
+                                                           "GridChild",
+                                                           childMetadata)
 
     # -------------------------------------------------------------------------
     def insertChildrenToList(self, question_id, template_id, section_id,
