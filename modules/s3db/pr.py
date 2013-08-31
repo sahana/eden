@@ -88,6 +88,13 @@ import os
 import re
 
 try:
+    # Python 2.7
+    from collections import OrderedDict
+except:
+    # Python 2.6
+    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+
+try:
     import json # try stdlib (Python 2.6)
 except ImportError:
     try:
@@ -2525,13 +2532,13 @@ class S3SubscriptionModel(S3Model):
             "upd": T("Record Updates"),
         }
 
-        frequency_opts = (
+        frequency_opts = OrderedDict([
             ("immediately", T("Immediately")),
             ("hourly", T("Hourly")),
             ("daily", T("Daily")),
             ("weekly", T("Weekly")),
             ("never", T("Never")),
-        )
+        ])
 
         check_intervals = {
             "immediately": 5,
@@ -2547,7 +2554,7 @@ class S3SubscriptionModel(S3Model):
         }
 
         MSG_CONTACT_OPTS = current.msg.MSG_CONTACT_OPTS
-        
+
         # ---------------------------------------------------------------------
         tablename = "pr_subscription"
         table = self.define_table(tablename,

@@ -3214,16 +3214,17 @@ def getLocationList(series_id):
         else:
             # The lat & lon were not added to the assessment so try and get one
             locWidget = get_default_location(row.id)
-            complete_id = locWidget.question["complete_id"]
-            if "answer" not in locWidget.question:
-                continue
-            answer = locWidget.question["answer"]
-            if locWidget != None:
-                record = locWidget.getLocationRecord(complete_id, answer)
-                if len(record.records) == 1:
-                    location = record.records[0].gis_location
-                    location.complete_id = complete_id
-                    rappend(location)
+            if locWidget:
+                complete_id = locWidget.question["complete_id"]
+                if "answer" not in locWidget.question:
+                    continue
+                answer = locWidget.question["answer"]
+                if locWidget != None:
+                    record = locWidget.getLocationRecord(complete_id, answer)
+                    if len(record.records) == 1:
+                        location = record.records[0].gis_location
+                        location.complete_id = complete_id
+                        rappend(location)
 
     return response_locations
 

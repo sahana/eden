@@ -33,7 +33,6 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
-
 """
 
 __all__ = ["S3Parsing"]
@@ -55,13 +54,13 @@ from gluon.tools import fetch
 
 from s3.s3fields import S3Represent
 from s3.s3utils import s3_debug, soundex
-                
+
 # =============================================================================
 class S3Parsing(object):
     """
        Message Parsing Template.
     """
-  
+
     # -------------------------------------------------------------------------
     @staticmethod
     def filter(message="", sender="", service="", coordinates=""):
@@ -72,7 +71,7 @@ class S3Parsing(object):
         db = current.db
         s3db = current.s3db
         cache = s3db.cache
-        
+
         # Start with a base priority
         priority = 0
 
@@ -98,7 +97,7 @@ class S3Parsing(object):
             if sender == s[ctable].value:
                 priority += s[table].priority
                 break
-        
+
         # If Anonymous, check their history
         # - within our database
         # if service == "twitter":
@@ -231,7 +230,7 @@ class S3Parsing(object):
 
         # @ToDo: Prioritise reports from people located where they are reporting from
         # if coordinates:
-        
+
         if not loc_matches or loc_matches > 1:
             if lat and lon:
                 location_id = ltable.insert(lat = lat,
@@ -240,7 +239,7 @@ class S3Parsing(object):
                 # Use Geolocation of Tweet
                 location_id = ltable.insert(lat = coordinates[0],
                                             lon = coordinates[1])
-            
+
         # @ToDo: Image
         return category, priority, location_id
 
