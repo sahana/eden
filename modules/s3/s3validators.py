@@ -599,10 +599,13 @@ class IS_ONE_OF_EMPTY(Validator):
 
         dbset = self.dbset
         db = dbset._db
-        if self.ktable in db:
 
-            table = db[self.ktable]
-
+        ktablename = self.ktable
+        if ktablename not in db:
+            table = current.s3db.table(ktablename, db_only=True)
+        else:
+            table = db[ktablename]
+        if table:
             if self.fields == "all":
                 fields = [table[f] for f in table.fields if f not in ("wkt", "the_geom")]
             else:
@@ -895,7 +898,11 @@ class IS_ONE_OF(IS_ONE_OF_EMPTY):
     def options(self, zero=True):
 
         self.build_set()
-        items = zip(self.theset, self.labels)
+        theset, labels = self.theset, self.labels
+        if theset is None or labels is None:
+            items = []
+        else:
+            items = zip(theset, labels)
         if zero and self.zero is not None and not self.multiple:
             items.insert(0, ("", self.zero))
         return items
