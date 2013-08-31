@@ -78,7 +78,7 @@ class S3Notifications(object):
         now = datetime.utcnow()
 
         _debug("S3Notifications.check_subscriptions(now=%s)" % now)
-        
+
         subscriptions = cls._subscriptions(now)
         if subscriptions:
             async = current.s3task.async
@@ -102,7 +102,7 @@ class S3Notifications(object):
             runs a POST?format=msg request against the subscribed
             controller which extracts the data and renders and sends
             the notification message (see send()).
-            
+
             @param resource_id: the pr_subscription_resource record ID
         """
 
@@ -110,9 +110,9 @@ class S3Notifications(object):
 
         db = current.db
         s3db = current.s3db
-        
+
         stable = s3db.pr_subscription
-        rtable = s3db.pr_subscription_resource
+        rtable = db.pr_subscription_resource
         ftable = s3db.pr_filter
 
         # Extract the subscription data
@@ -156,7 +156,7 @@ class S3Notifications(object):
                                    
         # Break up the URL into its components
         purl = list(urlparse.urlparse(lookup_url))
-        
+
         # Subscription parameters
         last_check_time = current.xml.encode_iso_datetime(r.last_check_time)
         query = {"subscription": auth_token, "format": "msg"}
@@ -189,25 +189,23 @@ class S3Notifications(object):
         query = urlencode(query)
         if purl[4]:
             query = "&".join((purl[4], query))
-        page_url = urlparse.urlunparse([
-                        purl[0], # scheme
-                        purl[1], # netloc
-                        purl[2], # path
-                        purl[3], # params
-                        query,   # query
-                        purl[5], # fragment
-                   ])
+        page_url = urlparse.urlunparse([purl[0], # scheme
+                                        purl[1], # netloc
+                                        purl[2], # path
+                                        purl[3], # params
+                                        query,   # query
+                                        purl[5], # fragment
+                                        ])
                                        
         # Serialize data for send (avoid second lookup in send)
-        data = json.dumps({
-                    "pe_id": s.pe_id,
-                    "notify_on": s.notify_on,
-                    "method": s.method,
-                    "email_format": s.email_format,
-                    "resource": r.resource,
-                    "last_check_time": last_check_time,
-                    "filter_query": query_nice,
-               })
+        data = json.dumps({"pe_id": s.pe_id,
+                           "notify_on": s.notify_on,
+                           "method": s.method,
+                           "email_format": s.email_format,
+                           "resource": r.resource,
+                           "last_check_time": last_check_time,
+                           "filter_query": query_nice,
+                           })
 
         # Send the request
         _debug("Requesting %s" % page_url)
@@ -225,7 +223,7 @@ class S3Notifications(object):
             exc_info = sys.exc_info()[:2]
             message = ("%s: %s" % (exc_info[0].__name__, exc_info[1]))
         _debug(message)
-                
+
         # Update time stamps and unlock, invalidate auth token
         intervals = s3db.pr_subscription_check_intervals
         interval = datetime.timedelta(minutes=intervals.get(s.frequency, 0))
@@ -451,7 +449,7 @@ class S3Notifications(object):
         s3db = current.s3db
 
         stable = s3db.pr_subscription
-        rtable = s3db.pr_subscription_resource
+        rtable = db.pr_subscription_resource
         ftable = s3db.pr_filter
 
         # Find all resources with due suscriptions
@@ -533,14 +531,14 @@ class S3Notifications(object):
         """
 
         prefix = resource.prefix_selector
-        
+
         created_on_selector = prefix("created_on")
         created_on_colname = None
 
         rfields = data["rfields"]
 
         as_utc = current.xml.as_utc
-        
+
         rows = data["rows"]
         new, upd = [], []
 
@@ -552,7 +550,8 @@ class S3Notifications(object):
             resource_name = string.capwords(resource.name, "_")
 
         output = {"system": current.deployment_settings.get_system_name_short(),
-                  "resource": resource_name}
+                  "resource": resource_name
+                  }
 
         if format == "html":
             # Pre-formatted HTML
@@ -595,7 +594,7 @@ class S3Notifications(object):
             # Standard text format
             labels = []
             append = labels.append
-            
+
             for rfield in rfields:
                 if rfield.selector == created_on_selector:
                     created_on_colname = rfield.colname
@@ -612,7 +611,7 @@ class S3Notifications(object):
                     else:
                         if as_utc(created_on) >= last_check_time:
                             append_record = new.append
-                            
+
                 record = []
                 append_column = record.append
                 for colname, label in labels:
@@ -628,7 +627,7 @@ class S3Notifications(object):
             output = {"system": current.deployment_settings \
                                        .get_system_name_short(),
                       "resource": resource_name,
-                     }
+                      }
             if "new" in notify_on and len(new):
                 output["new"] = len(new)
                 output["new_records"] = new

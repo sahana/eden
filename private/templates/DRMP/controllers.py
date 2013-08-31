@@ -635,7 +635,7 @@ class subscriptions(S3CustomController):
                                    _name="type-filter"),
                    S3LocationFilter("location_id",
                                     label=T("Location(s)"),
-                                    levels=["L1", "L2", "L3"],
+                                    levels=["L1"],
                                     widget="multiselect",
                                     cols=3,
                                     resource="cms_post",
@@ -887,7 +887,7 @@ $('#subscription-form').submit(function() {
                            "notify_on": s.notify_on,
                            "frequency": s.frequency,
                            "method": ["EMAIL"] #s.method,
-                          })
+                           })
             
         else:
             # Form defaults
@@ -898,7 +898,7 @@ $('#subscription-form').submit(function() {
                            "notify_on": stable.notify_on.default,
                            "frequency": stable.frequency.default,
                            "method": ["EMAIL"] #stable.method.default
-                          })
+                           })
 
         return output
 
@@ -966,7 +966,7 @@ $('#subscription-form').submit(function() {
             interval = timedelta(minutes=intervals.get(frequency, 0))
                 
             keep = set()
-            fk = """{"subscription_id": %s}""" % subscription_id
+            fk = '''{"subscription_id": %s}''' % subscription_id
             for new in subscribe:
                 resource, url = new["resource"], new["url"]
                 if (resource, url) not in subscribed:
