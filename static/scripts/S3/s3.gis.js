@@ -4252,7 +4252,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             fillOpacity: '${fillOpacity}',
             strokeColor: '${stroke}',
             strokeWidth: '${strokeWidth}',
-            strokeOpacity: opacity,
+            strokeOpacity: '${strokeOpacity}',
             graphicWidth: '${graphicWidth}',
             graphicHeight: '${graphicHeight}',
             graphicXOffset: '${graphicXOffset}',
@@ -4636,6 +4636,54 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     }
                     return color;
                 },
+                strokeOpacity: function(feature) {
+                    var strokeOpacity;
+                    if (feature.cluster) {
+                        if (feature.cluster[0].attributes.opacity) {
+                            // Use opacity from features (e.g. FeatureQuery)
+                            strokeOpacity = feature.cluster[0].attributes.opacity;
+                        } else {
+                            // default fillOpacity for Clustered Point
+                            strokeOpacity = opacity;
+                        }
+                    } else if (feature.attributes.opacity) {
+                        // Use opacity from feature (e.g. FeatureQuery)
+                        strokeOpacity = feature.attributes.opacity;
+                    } else if (style) {
+                        if (!style_array) {
+                            // Common Style for all features in layer
+                            strokeOpacity = style.strokeOpacity;
+                        } else {
+                            // Lookup from rule
+                            /* Done within OpenLayers.Rule
+                            var prop, value;
+                            $.each(style, function(index, elem) {
+                                if (undefined != elem.prop) {
+                                    prop = elem.prop;
+                                } else {
+                                    // Default (e.g. for Theme Layers)
+                                    prop = 'value';
+                                }
+                                value = feature.attributes[prop];
+                                if (undefined != elem.cat) {
+                                    // Category-based style
+                                    if (value == elem.cat) {
+                                        strokeOpacity = elem.strokeOpacity;
+                                        break;
+                                    }
+                                } else {
+                                    // Range-based style
+                                    if ((value >= elem.low) && (value < elem.high)) {
+                                        strokeOpacity = elem.strokeOpacity;
+                                        break;
+                                    }
+                                }
+                            }); */
+                        }
+                    }
+                    // default to layer's opacity
+                    return strokeOpacity || opacity;
+                },
                 strokeWidth: function(feature) {
                     // default strokeWidth
                     var width = 2;
@@ -4753,7 +4801,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             var prop, filter, rule, symbolizer, title, value,
                 externalGraphic, graphicHeight, graphicWidth,
                 graphicXOffset, graphicYOffset,
-                fill, fillOpacity, size, strokeWidth;
+                fill, fillOpacity, size, strokeOpacity, strokeWidth;
             $.each(style, function(index, elem) {
                 if (undefined != elem.prop) {
                     prop = elem.prop;
@@ -4808,6 +4856,11 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 } else {
                     fillOpacity = 1;
                 }
+                if (undefined != elem.strokeOpacity) {
+                    strokeOpacity = elem.strokeOpacity;
+                } else {
+                    strokeOpacity = 1;
+                }
                 if (undefined != elem.graphic) {
                     graphic = elem.graphic;
                 } else {
@@ -4831,7 +4884,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                         fillColor: fill, // Used for Legend on LineStrings
                         fillOpacity: fillOpacity,
                         strokeColor: fill,
-                        //strokeOpacity: strokeOpacity,
+                        strokeOpacity: strokeOpacity,
                         strokeWidth: strokeWidth,
                         graphicName: graphic,
                         graphicHeight: graphicHeight,

@@ -5,6 +5,10 @@
     margin-top: -17px;
 }
 
+.map_legend_panel  .x-panel-body {
+    max-width: 200px;
+}
+
 /* Posts */
 #cms_post_body.text.input-xlarge {
     height: 100px;
