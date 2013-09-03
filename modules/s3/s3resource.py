@@ -4286,7 +4286,7 @@ class S3Resource(object):
                     for j in xrange(iSortCol):
                         if vars.get("bSortable_%s" % j, "true") == "false":
                             iSortCol -= 1
-                    rfield = rfields[iSortCol]
+                    rfield = rfields[iSortCol + 1]
                 except:
                     # iSortCol_x is either not present in vars or specifies
                     # a non-existent column (i.e. iSortCol_x >= numcols) =>
