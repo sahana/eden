@@ -2102,27 +2102,30 @@ def layer_shapefile():
             row = db(table.id == id).select(table.data,
                                             limitby=(0, 1)
                                             ).first()
-            fields = json.loads(row.data)
-            for field in fields:
-                # Unicode fieldnames not supported
-                append(Field(str(field[0]), field[1]))
-            if settings.get_gis_spatialdb():
-                # Add a spatial field
-                append(Field("the_geom", "geometry()"))
-            s3db.define_table(_tablename, *Fields)
-            new_arg = _tablename[4:]
-            extension = test[4:]
-            if extension:
-                new_arg = "%s%s" % (new_arg, extension)
-            args[1] = new_arg
-            s3db.add_component(_tablename,
-                               gis_layer_shapefile="layer_id")
-            # @ToDo: onaccept to write any modified data back to the attached shapefile
-            # If we need to reproject, then we need to write a .prj file out:
-            #outSpatialRef.MorphToESRI()
-            #file = open(outfilepath + '\\'+ outfileshortname + '.prj', 'w')
-            #file.write(outSpatialRef.ExportToWkt())
-            #file.close()
+            if row and row.data:
+                fields = json.loads(row.data)
+                for field in fields:
+                    # Unicode fieldnames not supported
+                    append(Field(str(field[0]), field[1]))
+                if settings.get_gis_spatialdb():
+                    # Add a spatial field
+                    append(Field("the_geom", "geometry()"))
+                s3db.define_table(_tablename, *Fields)
+                new_arg = _tablename[4:]
+                extension = test[4:]
+                if extension:
+                    new_arg = "%s%s" % (new_arg, extension)
+                args[1] = new_arg
+                s3db.add_component(_tablename,
+                                   gis_layer_shapefile="layer_id")
+                # @ToDo: onaccept to write any modified data back to the attached shapefile
+                # If we need to reproject, then we need to write a .prj file out:
+                #outSpatialRef.MorphToESRI()
+                #file = open(outfilepath + '\\'+ outfileshortname + '.prj', 'w')
+                #file.write(outSpatialRef.ExportToWkt())
+                #file.close()
+            else:
+                raise ValueError
 
     # Pre-processor
     def prep(r):

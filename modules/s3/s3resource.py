@@ -4284,7 +4284,7 @@ class S3Resource(object):
                     for j in xrange(iSortCol):
                         if vars.get("bSortable_%s" % j, "true") == "false":
                             iSortCol -= 1
-                    rfield = rfields[iSortCol + 1]
+                    rfield = rfields[iSortCol]
                 except:
                     columns.append(None)
                 else:

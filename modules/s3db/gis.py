@@ -2256,7 +2256,7 @@ class S3LayerEntityModel(S3Model):
         # @ToDo: Import/Export SLD
         # @ToDo: Be able to reuse Styles across Layers/Configs (separate gis_style table)
         #Style = [{
-        #   prop: string,       //* Attribute used to activate this style rule
+        #   prop: string,       //* Attribute used to activate this style rule (otherwise defaults to 'value')
         #   cat: string,        //* Absolute Value used to style the element
         #   low: float,         //* Low value of the range of values used for this style rule
         #   high: float,        //* High value of the range of values used for this style rule
@@ -2268,6 +2268,7 @@ class S3LayerEntityModel(S3Model):
         #   strokeOpacity: float,
         #   strokeWidth: float or int, //* OpenLayers wants int, SLD wants float
         #   label: string,      //* Attribute used to label the element
+        #   show_label: boolean, //* Whether or not to label the element
         #   graphic: string,    //* Shape: "circle", "square", "star", "x", "cross", "triangle"
         #   size: integer,,     //* Radius of the Shape
         #   popup: {},

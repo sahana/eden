@@ -130,13 +130,13 @@ settings.L10n.thousands_separator = ","
 settings.gis.countries = ["TL"]
 
 # Until we add support to LocationSelector2 to set dropdowns from LatLons
-settings.gis.check_within_parent_boundaries = False
-
+#settings.gis.check_within_parent_boundaries = False
 # Uncomment to hide Layer Properties tool
 settings.gis.layer_properties = False
-
 # Hide unnecessary Toolbar items
 settings.gis.nav_controls = False
+# Uncomment to display the Map Legend as a floating DIV
+settings.gis.legend = "float"
 
 # -----------------------------------------------------------------------------
 # Finance settings
