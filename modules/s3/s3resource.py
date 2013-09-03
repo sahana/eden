@@ -4280,13 +4280,18 @@ class S3Resource(object):
             for i in xrange(numcols):
                 try:
                     iSortCol = int(vars["iSortCol_%s" % i])
-                    # for every non-sortable column to the left of sortable column subtract 1
+                    # Map sortable-column index to the real list_fields
+                    # index: for every non-sortable column to the left
+                    # of sortable column subtract 1
                     for j in xrange(iSortCol):
                         if vars.get("bSortable_%s" % j, "true") == "false":
                             iSortCol -= 1
                     rfield = rfields[iSortCol + 1]
                 except:
-                    columns.append(None)
+                    # iSortCol_x is either not present in vars or specifies
+                    # a non-existent column (i.e. iSortCol_x >= numcols) =>
+                    # ignore silently
+                    columns.append({"field": None})
                 else:
                     columns.append(rfield)
 

@@ -62,11 +62,18 @@
                 argData += '&sFilter=' + serverFilterArgs.val();
             }
             argData += '&sSearch=' + oSetting.oPreviousSearch['sSearch'];
+            aoColumns = oSetting.aoColumns;
+            var i, len;
+            for (i=0, len=aoColumns.length; i < len; i++) {
+                if (!aoColumns[i].bSortable) {
+                    argData += '&bSortable_' + i + '=false';
+                }
+            }
             var aaSort = (oSetting.aaSortingFixed !== null) ?
                          oSetting.aaSortingFixed.concat(oSetting.aaSorting) :
                          oSetting.aaSorting.slice();
             argData += '&iSortingCols=' + aaSort.length;
-            for (i=0 ; i < aaSort.length ; i++) {
+            for (i=0, len=aaSort.length; i < len; i++) {
                 argData += '&iSortCol_' + i + '=' + aaSort[i][0];
                 argData += '&sSortDir_' + i + '=' + aaSort[i][1];
             }
