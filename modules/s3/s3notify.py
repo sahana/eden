@@ -205,6 +205,8 @@ class S3Notifications(object):
                            "resource": r.resource,
                            "last_check_time": last_check_time,
                            "filter_query": query_nice,
+                           "page_url": lookup_url,
+                           "item_url": None,
                            })
 
         # Send the request
@@ -315,6 +317,9 @@ class S3Notifications(object):
         success = False
         errors = []
 
+        # Page URL
+        page_url = subscription["page_url"]
+
         # Email format
         email_format = subscription["email_format"]
         if not email_format:
@@ -324,6 +329,7 @@ class S3Notifications(object):
         contents = {}
         if email_format == "html" and "EMAIL" in methods:
             contents["html"] = cls._pre_render(resource,
+                                               page_url,
                                                data,
                                                notify_on,
                                                last_check_time,
@@ -331,6 +337,7 @@ class S3Notifications(object):
             contents["default"] = contents["html"]
         if email_format != "html" or "EMAIL" not in methods or len(methods) > 1:
             contents["text"] = cls._pre_render(resource,
+                                               page_url,
                                                data,
                                                notify_on,
                                                last_check_time,
@@ -514,6 +521,7 @@ class S3Notifications(object):
     @classmethod
     def _pre_render(cls,
                     resource,
+                    page_url,
                     data,
                     notify_on,
                     last_check_time,
@@ -550,7 +558,8 @@ class S3Notifications(object):
             resource_name = string.capwords(resource.name, "_")
 
         output = {"system": current.deployment_settings.get_system_name_short(),
-                  "resource": resource_name
+                  "resource": resource_name,
+                  "page_url": page_url,
                   }
 
         if format == "html":
@@ -624,10 +633,6 @@ class S3Notifications(object):
             else:
                 resource_name = string.capwords(resource.name, "_")
 
-            output = {"system": current.deployment_settings \
-                                       .get_system_name_short(),
-                      "resource": resource_name,
-                      }
             if "new" in notify_on and len(new):
                 output["new"] = len(new)
                 output["new_records"] = new
