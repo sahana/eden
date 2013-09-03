@@ -839,7 +839,7 @@ def config():
                                   "gis_layer_tms",
                                   ):
                         ltable.visible.readable = ltable.visible.writable = False
-                    elif type in ("gis_layer_feature"
+                    elif type in ("gis_layer_feature",
                                   "gis_layer_geojson",
                                   "gis_layer_kml",
                                   "gis_layer_shapefile",
