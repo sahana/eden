@@ -1330,24 +1330,31 @@ input#sub_defaulttime_defaulttime_hours_edit_none {
 .fm-accept,
 .fm-cancel {
     float: left;
-    margin-top: 7px;
     margin-left: 5px;
+}
+
+div.fm-load,
+div.fm-save,
+div.fm-create,
+div.fm-accept,
+div.fm-cancel {
+    margin-top: 7px;
     width: 16px;
     height: 16px;
 }
-.fm-load {
+div.fm-load {
     background: url(../../img/filter/load.png) no-repeat;
 }
-.fm-save {
+div.fm-save {
     background: url(../../img/filter/save.png) no-repeat;
 }
-.fm-create {
+div.fm-create {
     background: url(../../img/filter/create.png) no-repeat;
 }
-.fm-accept {
+div.fm-accept {
     background: url(../../img/crud/apply.png) no-repeat;
 }
-.fm-cancel {
+div.fm-cancel {
     background: url(../../img/crud/cancel.png) no-repeat;
 }
 

@@ -1415,19 +1415,11 @@ class S3FilterForm(object):
         if not formstyle:
             formstyle = self._formstyle
 
-        # Filter Manager (load/apply/save filters)
-        rows = []
-        fm = current.deployment_settings.get_search_filter_manager()
-        if fm and opts.get("filter_manager", resource is not None):
-            filter_manager = self._render_filters(resource, form_id)
-            if filter_manager:
-                rows = [formstyle(None, "", filter_manager, "")]
-
         # Filter widgets
-        rows.extend(self._render_widgets(resource,
-                                         get_vars=get_vars or {},
-                                         alias=alias,
-                                         formstyle=formstyle))
+        rows = self._render_widgets(resource,
+                                    get_vars=get_vars or {},
+                                    alias=alias,
+                                    formstyle=formstyle)
 
         # Other filter form controls
         controls = self._render_controls()
@@ -1469,6 +1461,16 @@ class S3FilterForm(object):
                                     _value=target))
 
             rows.append(formstyle(None, "", submit, ""))
+
+        # Filter Manager (load/apply/save filters)
+        fm = current.deployment_settings.get_search_filter_manager()
+        if fm and opts.get("filter_manager", resource is not None):
+            filter_manager = self._render_filters(resource, form_id)
+            if filter_manager:
+                fmrow = formstyle(None, "", filter_manager, "")
+                if hasattr(fmrow, "add_class"):
+                    fmrow.add_class("filter-manager-row")
+                rows.append(fmrow)
 
         # Adapt to formstyle: render a TABLE only if formstyle returns TRs
         if rows:
@@ -1670,35 +1672,53 @@ class S3FilterForm(object):
                 query = json.loads(query)
             filters[filter_id] = query
         widget_id = "%s-fm" % form_id
-        widget = SELECT(options,
-                        _id=widget_id,
-                        _class="filter-manager-widget")
+        widget = DIV(SELECT(options,
+                            _id=widget_id,
+                            _class="filter-manager-widget"),
+                     _class="filter-manager-container")
 
+        # JSON-serializable translator
         T = current.T
-        script = """
-$("#%(widget_id)s").filtermanager({
-  filters: %(filters)s,
-  ajaxURL: "%(ajaxurl)s",
-  saveTooltip: "%(save_tooltip)s",
-  loadTooltip: "%(load_tooltip)s",
-  createTooltip: "%(create_tooltip)s",
-  titleHint: "%(title_hint)s",
-  selectHint: "%(select_hint)s",
-  emptyHint: "%(empty_hint)s",
-  confirmUpdate: true,
-  confirmText: "%(confirm_text)s"
-})""" % dict(
-            widget_id = widget_id,
-            filters = json.dumps(filters),
-            ajaxurl = ajaxurl,
-            save_tooltip = T("Update saved filter"),
-            load_tooltip = T("Load filter"),
-            create_tooltip = T("Create new filter from current options"),
-            title_hint = T("Enter a title..."),
-            select_hint = SELECT_FILTER,
-            empty_hint = T("No saved filters"),
-            confirm_text = T("Update this filter?"),
+        _t = lambda s: str(T(s))
+
+        # Configure the widget
+        config = dict(
+
+            # Filters and Ajax URL
+            filters = filters,
+            ajaxURL = ajaxurl,
+
+            # Tooltips for action icons/buttons
+            saveTooltip = _t("Update saved filter"),
+            loadTooltip = _t("Load filter"),
+            createTooltip = _t("Create new filter from current options"),
+
+            # Hints
+            titleHint = _t("Enter a title..."),
+            selectHint = str(SELECT_FILTER),
+            emptyHint = _t("No saved filters"),
+
+            # Confirm update + confirmation text
+            confirmUpdate = True,
+            confirmText = _t("Update this filter?"),
         )
+
+        # Render actions as buttons with text if configured, otherwise
+        # they will appear as empty DIVs with classes for CSS icons
+        settings = current.deployment_settings
+        create_text = settings.get_search_filter_manager_save()
+        if create_text:
+            config["createText"] = _t(create_text)
+        update_text = settings.get_search_filter_manager_update()
+        if update_text:
+            config["saveText"] = _t(update_text)
+        load_text = settings.get_search_filter_manager_load()
+        if load_text:
+            config["loadText"] = _t(load_text)
+            
+        script = """$("#%s").filtermanager(%s)""" % (widget_id,
+                                                     json.dumps(config))
+
         current.response.s3.jquery_ready.append(script)
 
         return widget

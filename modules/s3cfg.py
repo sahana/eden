@@ -1097,6 +1097,18 @@ class S3Config(Storage):
         """ Enable the filter manager widget """
         return self.search.get("filter_manager", True)
 
+    def get_search_filter_manager_save(self):
+        """ Text for saved filter save-button """
+        return self.search.get("filter_manager_save", None)
+
+    def get_search_filter_manager_update(self):
+        """ Text for saved filter update-button """
+        return self.search.get("filter_manager_update", None)
+
+    def get_search_filter_manager_load(self):
+        """ Text for saved filter load-button """
+        return self.search.get("filter_manager_load", None)
+
     # =========================================================================
     # Modules
 

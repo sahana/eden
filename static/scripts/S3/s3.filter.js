@@ -1320,18 +1320,35 @@ S3.search = {};
          * options: default options
          */
         options: {
+            // Basic configuration (required)
             filters: {},                    // the available filters
-            readOnly: false,                // do not allow to save/update filters
             ajaxURL: null,                  // URL to save filters
+
+            // Workflow options
+            readOnly: false,                // do not allow to save/update filters
+            explicitLoad: false,            // load filters via load-button rather
+                                            // than immediately
+
+            // Tooltips for actions
             loadTooltip: null,              // tooltip for load-button
             saveTooltip: null,              // tooltip for save-button
             createTooltip: null,            // tooltip for create-button
-            explicitLoad: false,            // load filters via load-button rather than immediately
-            titleHint: 'Enter a title',     // hint (watermark) in the title input field
+
+            // Hints (these should be localized by the back-end)
             selectHint: 'Saved filters...', // hint in the selector
             emptyHint: 'No saved filters',  // hint in the selector if no filters available
+            titleHint: 'Enter a title',     // hint (watermark) in the title input field
+
+            // Ask the user for confirmation when updating a saved filter?
             confirmUpdate: false,           // user must confirm update of existing filters
-            confirmText: 'Update this filter?' // filter update confirmation question
+            confirmText: 'Update this filter?', // filter update confirmation question
+
+            // If text is provided for actions, we render them as <a>nchors
+            // with the buttonClass - otherwise as empty DIVs for CSS-icons
+            createText: null,               // Text for create-action button
+            saveText: null,                 // Text for save-action button
+            loadText: null,                 // Text for load-action button
+            buttonClass: 'action-btn'       // Class for action buttons
         },
 
         /**
@@ -1369,11 +1386,17 @@ S3.search = {};
 
             this._unbindEvents();
 
+            var buttonClass = options.buttonClass;
+
             // SAVE-button
             if (this.save_btn) {
                 this.save_btn.remove();
             }
-            this.save_btn = $('<div class="fm-save" id="fm-save-' + id + '">');
+            if (options.saveText) {
+                this.save_btn = $('<a class="fm-save ' + buttonClass + '" id="fm-save-' + id + '">' + options.saveText + '</a>');
+            } else {
+                this.save_btn = $('<div class="fm-save" id="fm-save-' + id + '">');
+            }
             if (options.saveTooltip) {
                 this.save_btn.attr('title', options.saveTooltip);
             }
@@ -1382,7 +1405,11 @@ S3.search = {};
             if (this.load_btn) {
                 this.load_btn.remove();
             }
-            this.load_btn = $('<div class="fm-load" id="fm-load-' + id + '">');
+            if (options.loadText) {
+                this.load_btn = $('<a class="fm-load ' + buttonClass + '" id="fm-load-' + id + '">' + options.loadText + '</a>');
+            } else {
+                this.load_btn = $('<div class="fm-load" id="fm-load-' + id + '">');
+            }
             if (options.loadTooltip) {
                 this.load_btn.attr('title', options.loadTooltip);
             }
@@ -1398,7 +1425,11 @@ S3.search = {};
             if (this.create_btn) {
                 this.create_btn.remove();
             }
-            this.create_btn = $('<div class="fm-create" id="fm-create-' + id + '">');
+            if (options.createText) {
+                this.create_btn = $('<a class="fm-create ' + buttonClass + '" id="fm-create-' + id + '">' + options.createText + '</a>');
+            } else {
+                this.create_btn = $('<div class="fm-create" id="fm-create-' + id + '">');
+            }
             if (options.createTooltip) {
                 this.create_btn.attr('title', options.createTooltip);
             }

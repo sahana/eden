@@ -151,8 +151,9 @@ settings.fin.currencies = {
     "USD" : T("United States Dollars"),
 }
 
-# Disabled until ready for prime-time
 settings.search.filter_manager = True
+settings.search.filter_manager_save = "Save"
+settings.search.filter_manager_update = "Update"
 
 # -----------------------------------------------------------------------------
 # Menu

@@ -201,6 +201,15 @@ form#summary-filter-form
     margin-top: 30px;
 }
 
+.horiz_filter_form.filter-manager-row {
+    float: right;
+    clear: left;
+}
+
+.fm-accept {
+    background: url(../../img/filter/save.png) no-repeat scroll 0 0 transparent !important;
+}
+
 /* Read & Update - Migrate to DRMP */ 
 #edit-btn {
     float: left;
@@ -236,7 +245,7 @@ form#summary-filter-form
 
 /* Filter Manager */
 
-.horiz_filter_form:first-child {
+/*.horiz_filter_form:first-child {
     bottom: 14px;
     float: right;
     margin-top: 25px;
@@ -252,7 +261,7 @@ form#summary-filter-form
  .fm-accept{
     background: url("../../img/filter/save.png") no-repeat scroll 0 0 transparent;
 }
-
+*/
 #summary-tabs #table {
     padding-top: 120px;
 }
