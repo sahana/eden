@@ -75,7 +75,7 @@ class S3Notifications(object):
             active subscriptions which (may) have updates.
         """
 
-        now = datetime.utcnow()
+        now = datetime.datetime.utcnow()
 
         _debug("S3Notifications.check_subscriptions(now=%s)" % now)
 
