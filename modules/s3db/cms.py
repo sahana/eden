@@ -28,6 +28,7 @@
 """
 
 __all__ = ["S3ContentModel",
+           "S3ContentMapModel",
            "cms_index",
            "cms_rheader",
            "S3CMS",
@@ -364,8 +365,8 @@ class S3ContentModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(cms_post_id = post_id,
-                       )
+        return dict(cms_post_id = post_id,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -390,8 +391,8 @@ class S3ContentModel(S3Model):
     @staticmethod
     def cms_post_onaccept(form):
         """
-           Handle the case where the page is for a Module home page or
-           Resource Summary page
+           Handle the case where the page is for a Module home page,
+           Resource Summary page or Map Layer
         """
 
         vars = current.request.get_vars
@@ -416,7 +417,43 @@ class S3ContentModel(S3Model):
                              resource=resource,
                              )
 
+        layer_id = vars.get("layer_id", None)
+        if layer_id:
+            post_id = form.vars.id
+            table = current.s3db.cms_post_layer
+            query = (table.layer_id == layer_id)
+            result = current.db(query).update(post_id=post_id)
+            if not result:
+                table.insert(post_id=post_id,
+                             layer_id=layer_id,
+                             )
+
         return
+
+# =============================================================================
+class S3ContentMapModel(S3Model):
+    """
+        Use of the CMS to provide extra data about Map Layers
+    """
+
+    names = ["cms_post_layer",
+             ]
+
+    def model(self):
+
+        # ---------------------------------------------------------------------
+        # Layers <> Posts link table
+        #
+        tablename = "cms_post_layer"
+        table = self.define_table(tablename,
+                                  self.cms_post_id(),
+                                  self.super_link("layer_id", "gis_layer_entity"),
+                                  *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return dict()
 
 # =============================================================================
 def cms_rheader(r, tabs=[]):

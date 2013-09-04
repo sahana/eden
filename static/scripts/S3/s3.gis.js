@@ -2266,10 +2266,36 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         if (undefined != layer.desc) {
             legendTitle += '<div class="gis_legend_desc">' + layer.desc + '</div>';
         }
-        if ((undefined != layer.src) || (undefined != layer.src_url)) {
+        if (map.s3.options.metadata) {
+            // Use CMS to display Metadata
+            if (undefined != layer.post_id) {
+                // Link to the existing page
+                if (i18n.gis_metadata) {
+                    // Read-only view for end-users
+                    var label = i18n.gis_metadata;
+                    var murl = S3.Ap.concat('/cms/page/' + layer.post_id);
+                } else {
+                    // Edit view for Map Admins
+                    var label = i18n.gis_metadata_edit;
+                    var murl = S3.Ap.concat('/cms/post/' + layer.post_id + '/update?layer_id=' + layer.id);
+                }
+            } else if (i18n.gis_metadata_create) {
+                // Link to create new page
+                var label = i18n.gis_metadata_create;
+                var murl = S3.Ap.concat('/cms/post/create?layer_id=' + layer.id);
+            } else {
+                // Skip
+                var label = '';
+            }
+            if (label) {
+                source = '<div class="gis_legend_src"><a href="' + murl + '" target="_blank">' + label + '</a></div>';
+                legendTitle += source;
+            }
+        } else if ((undefined != layer.src) || (undefined != layer.src_url)) {
+            // Link to external source direct
             var source = '<div class="gis_legend_src">';
             if (undefined != layer.src_url) {
-                source += '<a href="' + layer.src_url + '" target="_blank">'
+                source += '<a href="' + layer.src_url + '" target="_blank">';
                 if (undefined != layer.src) {
                     source += layer.src;
                 } else {

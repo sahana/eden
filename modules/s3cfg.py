@@ -533,6 +533,10 @@ class S3Config(Storage):
         " Display Lat/Lon form fields when selecting Locations "
         return self.gis.get("latlon_selector", True)
 
+    def get_gis_layer_metadata(self):
+        " Use CMS to provide Metadata on Map Layers "
+        return self.has_module("cms") and self.gis.get("layer_metadata", False)
+
     def get_gis_layer_properties(self):
         " Display Layer Properties Tool above Map's Layer Tree "
         return self.gis.get("layer_properties", True)

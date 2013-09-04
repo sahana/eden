@@ -138,6 +138,8 @@ def post():
                 if _module:
                     table.avatar.readable = table.avatar.writable = False
                     table.location_id.readable = table.location_id.writable = False
+                    table.date.readable = table.date.writable = False
+                    table.expired.readable = table.expired.writable = False
                     resource = request.get_vars.get("resource", None)
                     if resource:
                         # We're creating/updating text for a Resource Summary page
@@ -156,6 +158,21 @@ def post():
                     s3db.configure(tablename,
                                    create_next = url,
                                    update_next = url)
+
+                layer_id = vars.get("layer_id", None)
+                if layer_id:
+                    # Editing cms_post_layer
+                    table.name.default = "Metadata Page for Layer %s" % layer_id
+                    table.name.readable = table.name.writable = False
+                    table.avatar.readable = table.avatar.writable = False
+                    table.location_id.readable = table.location_id.writable = False
+                    table.title.readable = table.title.writable = False
+                    table.replies.readable = table.replies.writable = False
+                    table.date.readable = table.date.writable = False
+                    table.expired.readable = table.expired.writable = False
+                    _crud = s3.crud_strings[tablename]
+                    _crud.title_create = T("Add Metadata")
+                    _crud.title_update = T("Edit Metadata")
 
                 if r.component_name == "module":
                     modules = {}

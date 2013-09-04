@@ -5874,6 +5874,15 @@ class MAP(DIV):
             i18n["gis_legend"] = T("Legend")
             if legend == "float":
                 options["legend"] = "float"
+                if settings.get_gis_layer_metadata():
+                    options["metadata"] = True
+                    # MAP_ADMIN better for simpler deployments
+                    #if auth.s3_has_permission("create", "cms_post_layer"):
+                    if MAP_ADMIN:
+                        i18n["gis_metadata_create"] = T("Create Metadata")
+                        i18n["gis_metadata_edit"] = T("Edit Metadata")
+                    else:
+                        i18n["gis_metadata"] = T("View Metadata")
             else:
                 options["legend"] = True
 
@@ -6602,7 +6611,14 @@ class Layer(object):
             else:
                 query &= (ltable.base == True)
 
+        if current.deployment_settings.get_gis_layer_metadata():
+            mtable = s3db.cms_post_layer
+            left = mtable.on(mtable.layer_id == table.layer_id)
+            fields.append(mtable.post_id)
+        else:
+            left = None
         rows = current.db(query).select(orderby=ctable.pe_type,
+                                        left=left,
                                         *fields)
         layer_ids = []
         lappend = layer_ids.append
@@ -6643,6 +6659,8 @@ class Layer(object):
             if "style" not in record:
                 # Take from the layer_config
                 record["style"] = _config.style
+            if left is not None:
+                record["post_id"] = _record["cms_post_layer.post_id"]
             if tablename in ["gis_layer_bing", "gis_layer_google"]:
                 # SubLayers handled differently
                 append(record)
@@ -7637,27 +7655,35 @@ class LayerWMS(Layer):
                     (current.deployment_settings.get_base_public_url(),
                      current.request.application,
                      legend_url)
-            self.add_attributes_if_not_default(
-                output,
-                transparent = (self.transparent, (True,)),
-                version = (self.version, ("1.1.1",)),
-                format = (self.img_format, ("image/png",)),
-                map = (self.map, (None, "")),
-                username = (self.username, (None, "")),
-                password = (self.password, (None, "")),
-                buffer = (self.buffer, (0,)),
-                base = (self.base, (False,)),
-                _base = (self._base, (False,)),
-                style = (self.style, (None, "")),
-                bgcolor = (self.bgcolor, (None, "")),
-                tiled = (self.tiled, (False,)),
-                legendURL = (legend_url, (None, "")),
-                queryable = (self.queryable, (False,)),
-                desc = (self.description, (None, "")),
-                src = (self.source_name, (None, "")),
-                src_url = (self.source_url, (None, "")),
-                )
+            attr = dict(transparent = (self.transparent, (True,)),
+                        version = (self.version, ("1.1.1",)),
+                        format = (self.img_format, ("image/png",)),
+                        map = (self.map, (None, "")),
+                        username = (self.username, (None, "")),
+                        password = (self.password, (None, "")),
+                        buffer = (self.buffer, (0,)),
+                        base = (self.base, (False,)),
+                        _base = (self._base, (False,)),
+                        style = (self.style, (None, "")),
+                        bgcolor = (self.bgcolor, (None, "")),
+                        tiled = (self.tiled, (False,)),
+                        legendURL = (legend_url, (None, "")),
+                        queryable = (self.queryable, (False,)),
+                        desc = (self.description, (None, "")),
+                        )
+            
+            if current.deployment_settings.get_gis_layer_metadata():
+                # Use CMS to add info about sources
+                attr["post_id"] = (self.post_id, (None, ""))
+            else:
+                # Link direct to sources
+                attr.update(src = (self.source_name, (None, "")),
+                            src_url = (self.source_url, (None, "")),
+                            )
+
+            self.add_attributes_if_not_default(output, **attr)
             self.setup_folder_visibility_and_opacity(output)
+
             return output
 
 # -----------------------------------------------------------------------------

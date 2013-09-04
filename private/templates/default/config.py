@@ -215,6 +215,8 @@ settings.L10n.decimal_separator = "."
 # lon<0 have a duplicate at lon+360
 # lon>0 have a duplicate at lon-360
 #settings.gis.duplicate_features = True
+# Uncomment to use CMS to provide Metadata on Map Layers
+#settings.gis.layer_metadata = True
 # Uncomment to hide Layer Properties tool
 #settings.gis.layer_properties = False
 # Uncomment to hide the Base Layers folder in the LayerTree

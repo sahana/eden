@@ -114,6 +114,8 @@ settings.gis.geocode_imported_addresses = "google"
 settings.gis.toolbar = False
 # Hide unnecessary Toolbar items
 settings.gis.nav_controls = False
+# Uncomment to use CMS to provide Metadata on Map Layers
+settings.gis.layer_metadata = True
 # Uncomment to hide Layer Properties tool
 settings.gis.layer_properties = False
 # Uncomment to hide the Base Layers folder in the LayerTree
