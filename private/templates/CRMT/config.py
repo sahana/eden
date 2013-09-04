@@ -1453,7 +1453,7 @@ def customize_vulnerability_risk(**attr):
             )
 
             s3db.configure(tablename,
-                           #crud_form = crud_form,
+                           crud_form = crud_form,
                            )
     
             if r.method == "summary":

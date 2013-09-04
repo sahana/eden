@@ -81,20 +81,16 @@ $(function() {
 
     // Disable the add-row
     var disable_inline_add = function(formname) {
-        $('#add-row-' + formname + ' > td input').prop('disabled', true);
-        $('#add-row-' + formname + ' > td select').prop('disabled', true);
-        $('#add-row-' + formname + ' > td textarea').prop('disabled', true);
-        $('#add-row-' + formname + ' > td .inline-add').addClass('hide');
-        $('#add-row-' + formname + ' > td .action-lnk').addClass('hide');
+        var add_tds = $('#add-row-' + formname + ' > td');
+        add_tds.find('input, select, textarea').prop('disabled', true);
+        add_tds.find('.inline-add, .action-lnk').addClass('hide');
     };
 
     // Enable the add-row
     var enable_inline_add = function(formname) {
-        $('#add-row-' + formname + ' > td input').prop('disabled', false);
-        $('#add-row-' + formname + ' > td select').prop('disabled', false);
-        $('#add-row-' + formname + ' > td textarea').prop('disabled', false);
-        $('#add-row-' + formname + ' > td .inline-add').removeClass('hide');
-        $('#add-row-' + formname + ' > td .action-lnk').removeClass('hide');
+        var add_tds = $('#add-row-' + formname + ' > td');
+        add_tds.find('input, select, textarea').prop('disabled', false);
+        add_tds.find('.inline-add, .action-lnk').removeClass('hide');
     };
 
     // Collect the data from the form
@@ -175,6 +171,21 @@ $(function() {
             if (!row.hasOwnProperty(fieldname)) {
                 value = defaults[fieldname]['value'];
                 row[fieldname] = value;
+            }
+        }
+
+        var single = $('#read-row-' + formname + '-' + rowindex).hasClass('single');
+        if (single) {
+            // A multiple=False form
+            // setting all fields to '' => delete
+            var del = true;
+            for (fieldname in row) {
+                if ((fieldname != '_id') && (row[fieldname] != '')) {
+                    del = false;
+                }
+            }
+            if (del) {
+                row['_delete'] = true;
             }
         }
 
@@ -354,19 +365,30 @@ $(function() {
     var inline_add = function(formname) {
         var rowindex = 'none';
 
-        // Hide add-button, show throbber
-        $('#add-' + formname + '-' + rowindex).addClass('hide');
-        $('#throbber-' + formname + '-' + rowindex).removeClass('hide');
+        var add_button = $('#add-' + formname + '-' + rowindex);
+        if (add_button.length) {
+            var multiple = true;
+        } else {
+            // Only one row can exist & this must be added during form submission
+            var multiple = false;
+        }
 
-        // Remove any previous error messages
-        inline_remove_errors(formname);
+        if (multiple) {
+            // Hide add-button, show throbber
+            add_button.addClass('hide');
+            var throbber = $('#throbber-' + formname + '-' + rowindex);
+            throbber.removeClass('hide');
+
+            // Remove any previous error messages
+            inline_remove_errors(formname);
+        }
 
         // Collect the values from the add-row
         var data = inline_deserialize(formname);
-        var add_row = inline_collect_data(formname, data, 'none');
+        var row_data = inline_collect_data(formname, data, 'none');
 
         // Validate the data
-        var new_row = inline_validate(formname, rowindex, data, add_row);
+        var new_row = inline_validate(formname, rowindex, data, row_data);
 
         var success = false;
         if (null !== new_row) {
@@ -377,62 +399,65 @@ $(function() {
             new_row['_index'] = newindex;
             inline_serialize(formname, data);
 
-            // Create a new read-row, clear add-row
-            var read_row = '<tr id="read-row-' + formname + '-' + newindex + '" class="read-row">';
-            var fields = data['fields'];
-            var default_value;
-            for (i=0; i < fields.length; i++) {
-                var field = fields[i]['name'];
-                // Update all uploads to the new index
-                var upload = $('#upload_' + formname + '_' + field + '_none');
-                if (upload.length) {
-                    var upload_id = 'upload_' + formname + '_' + field + '_' + newindex;
-                    $('#' + upload_id).remove();
-                    upload.attr('id', upload_id)
-                          .attr('name', upload_id);
+            if (multiple) {
+                // Create a new read-row, clear add-row
+                var read_row = '<tr id="read-row-' + formname + '-' + newindex + '" class="read-row">';
+                var fields = data['fields'];
+                var i, field, upload, d, f, default_value;
+                for (i=0; i < fields.length; i++) {
+                    field = fields[i]['name'];
+                    // Update all uploads to the new index
+                    upload = $('#upload_' + formname + '_' + field + '_none');
+                    if (upload.length) {
+                        var upload_id = 'upload_' + formname + '_' + field + '_' + newindex;
+                        $('#' + upload_id).remove();
+                        upload.attr('id', upload_id)
+                              .attr('name', upload_id);
+                    }
+                    read_row += '<td>' + new_row[field]['text'] + '</td>';
+                    // Reset add-field to default value
+                    d = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_default');
+                    f = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_none');
+                    if (f.attr('type') == 'file') {
+                        var empty = d.clone();
+                        empty.attr('id', f.attr('id'))
+                             .attr('name', f.attr('name'));
+                        f.replaceWith(empty);
+                    } else {
+                        default_value = d.val();
+                        f.val(default_value);
+                    }
+                    default_value = $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_default').val();
+                    $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_none').val(default_value);
                 }
-                read_row += '<td>' + new_row[field]['text'] + '</td>';
-                // Reset add-field to default value
-                var d = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_default');
-                var f = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_none');
-                if (f.attr('type') == 'file') {
-                    var empty = d.clone();
-                    empty.attr('id', f.attr('id'))
-                         .attr('name', f.attr('name'));
-                    f.replaceWith(empty);
+                // Unmark changed
+                $('#add-row-' + formname).removeClass('changed');
+                
+                // Add edit-button
+                if ($('#edt-' + formname + '-none').length !== 0) {
+                    read_row += '<td><div><div id="edt-' + formname + '-' + newindex + '" class="inline-edt"></div></div></td>';
                 } else {
-                    default_value = d.val();
-                    f.val(default_value);
+                    read_row += '<td></td>';
                 }
-                default_value = $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_default').val();
-                $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_none').val(default_value);
+                // Add remove-button
+                if ($('#rmv-' + formname + '-none').length !== 0) {
+                    read_row += '<td><div><div id="rmv-' + formname + '-' + newindex + '" class="inline-rmv"></div></div></td>';
+                } else {
+                    read_row += '<td></td>';
+                }
+                read_row += '</tr>';
+                // Append the new read-row to the table
+                $('#sub-' + formname + ' > table.embeddedComponent > tbody').append(read_row);
+                inline_button_events();
             }
-            // Unmark changed
-            $('#add-row-' + formname).removeClass('changed');
-            
-            // Add edit-button
-            var edit = '#edt-' + formname + '-none';
-            if ($(edit).length !== 0) {
-                read_row += '<td><div><div id="edt-' + formname + '-' + newindex + '" class="inline-edt"></div></div></td>';
-            } else {
-                read_row += '<td></td>';
-            }
-            // Add remove-button
-            var remove = '#rmv-' + formname + '-none';
-            if ($(remove).length !== 0) {
-                read_row += '<td><div><div id="rmv-' + formname + '-' + newindex + '" class="inline-rmv"></div></div></td>';
-            } else {
-                read_row += '<td></td>';
-            }
-            read_row += '</tr>';
-            // Append the new read-row to the table
-            $('#sub-' + formname + ' > table.embeddedComponent > tbody').append(read_row);
-            inline_button_events();
         }
 
-        // Hide throbber, show add-button
-        $('#throbber-' + formname + '-' + rowindex).addClass('hide');
-        $('#add-' + formname + '-' + rowindex).removeClass('hide');
+        if (multiple) {
+            // Hide throbber, show add-button
+            throbber.addClass('hide');
+            add_button.removeClass('hide');
+        }
+
         return (success);
     };
 
@@ -440,92 +465,115 @@ $(function() {
     var inline_update = function(formname, rowindex) {
         var rowname = formname + '-' + rowindex;
 
-        // Hide rdy, show throbber
-        $('#rdy-' + formname + '-0').addClass('hide');
-        $('#throbber-' + formname + '-0').removeClass('hide');
+        var rdy = $('#rdy-' + formname + '-0');
+        if (rdy.length) {
+            var multiple = true;
+        } else {
+            // Only one row can exist & this must be updated during form submission
+            var multiple = false;
+        }
 
-        // Remove any previous error messages
-        inline_remove_errors(formname);
+        if (multiple) {
+            // Hide rdy, show throbber
+            rdy.addClass('hide');
+            var throbber = $('#throbber-' + formname + '-0');
+            throbber.removeClass('hide');
+
+            // Remove any previous error messages
+            inline_remove_errors(formname);
+        }
 
         // Collect the values from the edit-row
         var data = inline_deserialize(formname);
-        var edit_row = inline_collect_data(formname, data, rowindex);
+        var row_data = inline_collect_data(formname, data, rowindex);
 
-        // Validate the form data
-        var new_row = inline_validate(formname, rowindex, data, edit_row);
+        if (row_data['_delete']) {
 
-        var success = false;
-        if (null !== new_row) {
-            success = true;
-
-            // Update the row in the real_input JSON
-            new_row['_id'] = data['data'][rowindex]['_id'];
-            new_row['_changed'] = true; // mark as changed
-            new_row['_index'] = rowindex;
-            data['data'][rowindex] = new_row;
+            // multiple=False form which has set all fields to '' to delete the row
+            data['data'][rowindex]['_delete'] = true;
             inline_serialize(formname, data);
+            return true;
 
-            // Update read-row in the table, clear edit-row
-            var read_row = '';
-            var fields = data['fields'];
-            var default_value;
-            for (i=0; i < fields.length; i++) {
-                var field = fields[i]['name'];
-                read_row += '<td>' + new_row[field]['text'] + '</td>';
-                // Reset edit-field to default value
-                var d = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_default');
-                var f = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_0');
-                if (f.attr('type') == 'file') {
-                    var empty = d.clone();
-                    empty.attr('id', f.attr('id'))
-                         .attr('name', f.attr('name'));
-                    f.replaceWith(empty);
-                } else {
-                    default_value = d.val();
-                    f.val(default_value);
+        } else {
+            // Validate the form data
+            var new_row = inline_validate(formname, rowindex, data, row_data);
+
+            var success = false;
+            if (null !== new_row) {
+                success = true;
+
+                // Update the row in the real_input JSON
+                new_row['_id'] = data['data'][rowindex]['_id'];
+                new_row['_changed'] = true; // mark as changed
+                new_row['_index'] = rowindex;
+                data['data'][rowindex] = new_row;
+                inline_serialize(formname, data);
+
+                if (multiple) {
+                    // Update read-row in the table, clear edit-row
+                    var read_row = '';
+                    var fields = data['fields'];
+                    var default_value;
+                    for (i=0; i < fields.length; i++) {
+                        var field = fields[i]['name'];
+                        read_row += '<td>' + new_row[field]['text'] + '</td>';
+                        // Reset edit-field to default value
+                        var d = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_default');
+                        var f = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_0');
+                        if (f.attr('type') == 'file') {
+                            var empty = d.clone();
+                            empty.attr('id', f.attr('id'))
+                                 .attr('name', f.attr('name'));
+                            f.replaceWith(empty);
+                        } else {
+                            default_value = d.val();
+                            f.val(default_value);
+                        }
+                        default_value = $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_default').val();
+                        $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_0').val(default_value);
+                    }
+                    // Unmark changed
+                    var edit_row = $('#edit-row-' + formname);
+                    edit_row.removeClass('changed');
+                    
+                    // Add edit-button
+                    if ($('#edt-' + formname + '-none').length !== 0) {
+                        read_row += '<td><div><div id="edt-' + formname + '-' + rowindex + '" class="inline-edt"></div></div></td>';
+                    } else {
+                        read_row += '<td></td>';
+                    }
+                    // Add remove-button
+                    if ($('#rmv-' + formname + '-none').length !== 0) {
+                        read_row += '<td><div><div id="rmv-' + formname + '-' + rowindex + '" class="inline-rmv"></div></div></td>';
+                    } else {
+                        read_row += '<td></td>';
+                    }
+
+                    $('#read-row-' + formname + '-' + rowindex + ' > td').remove();
+                    $('#read-row-' + formname + '-' + rowindex).html(read_row);
+                    inline_button_events();
+
+                    // Hide and reset the edit row
+                    edit_row.addClass('hide')
+                            // Reset rowindex
+                            .data('rowindex', null);
+
+                    // Show the read row
+                    $('#read-row-' + rowname).removeClass('hide');
+
+                    // Re-enable add-row
+                    enable_inline_add(formname);
                 }
-                default_value = $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_default').val();
-                $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_0').val(default_value);
-            }
-            // Unmark changed
-            $('#edit-row-' + formname).removeClass('changed');
-            
-            // Add edit-button
-            var edit = '#edt-' + formname + '-none';
-            if ($(edit).length !== 0) {
-                read_row += '<td><div><div id="edt-' + formname + '-' + rowindex + '" class="inline-edt"></div></div></td>';
-            } else {
-                read_row += '<td></td>';
-            }
-            // Add remove-button
-            var remove = '#rmv-' + formname + '-none';
-            if ($(remove).length !== 0) {
-                read_row += '<td><div><div id="rmv-' + formname + '-' + rowindex + '" class="inline-rmv"></div></div></td>';
-            } else {
-                read_row += '<td></td>';
             }
 
-            $('#read-row-' + formname + '-' + rowindex + ' > td').remove();
-            $('#read-row-' + formname + '-' + rowindex).html(read_row);
-            inline_button_events();
+            if (multiple) {
+                // Hide throbber, enable rdy
+                rdy.removeClass('hide');
+                throbber.addClass('hide');
+            }
 
-            // Hide and reset the edit row
-            $('#edit-row-' + formname).addClass('hide');
-
-            // Reset rowindex
-            $('#edit-row-' + formname).data('rowindex', null);
-
-            // Show the read row
-            $('#read-row-' + rowname).removeClass('hide');
-
-            // Re-enable add-row
-            enable_inline_add(formname);
-
+            return (success);
         }
-        // Hide throbber, enable rdy
-        $('#rdy-' + formname + '-0').removeClass('hide');
-        $('#throbber-' + formname + '-0').addClass('hide');
-        return (success);
     };
 
     // Remove a row
@@ -549,7 +597,7 @@ $(function() {
         $('input[name^="' + 'upload_' + formname + '_"][name$="_' + rowindex + '"]').remove();
 
         // Display the add-row (in case hidden because we're multiple=False)
-        $('#add-row-' + formname).show();
+        //$('#add-row-' + formname).show();
 
         return true;
     };
@@ -561,11 +609,12 @@ $(function() {
         var $form = $(this);
         var success = false;
         $form.find('tr.inline-form.changed').each(function() {
-            var formname = $(this).attr('id').split('-').pop();
-            if ($(this).hasClass('add-row')) {
+            var that = $(this);
+            var formname = that.attr('id').split('-').pop();
+            if (that.hasClass('add-row')) {
                 success = inline_add(formname);
             } else {
-                var rowindex = $(this).data('rowindex');
+                var rowindex = that.data('rowindex');
                 success = inline_update(formname, rowindex);
             }
         });
@@ -574,7 +623,7 @@ $(function() {
             $form.submit();
         }
     }
-    
+
     // Catch form-submit if any inline-row has been changed
     var inline_catch_submit = function(toggle, element) {
         var form = $(element).closest('form');
@@ -624,8 +673,7 @@ $(function() {
                 return false;
             }
             return true;
-        });
-        $('.edit-row input').keyup(function(e) {
+        }).keyup(function(e) {
             if (e.which == 13) {
                 var subform = $(this).parent().parent();
                 var names = subform.attr('id').split('-');
@@ -638,8 +686,7 @@ $(function() {
                 return false;
             }
             return true;
-        });
-        $('.add-row input').keyup(function(e) {
+        }).keyup(function(e) {
             if (e.which == 13) {
                 var subform = $(this).parent().parent();
                 var names = subform.attr('id').split('-');
@@ -647,20 +694,19 @@ $(function() {
             }
         });
     };
-    inline_form_events();
 
     var inline_button_events = function() {
 
-        $('.inline-add').unbind('click');
-        $('.inline-add').click(function() {
+        $('.inline-add').unbind('click')
+                        .click(function() {
             var names = $(this).attr('id').split('-');
             var rowindex = names.pop();
             var formname = names.pop();
             inline_add(formname);
             return false;
         });
-        $('.inline-cnc').unbind('click');
-        $('.inline-cnc').click(function() {
+        $('.inline-cnc').unbind('click')
+                        .click(function() {
             var names = $(this).attr('id').split('-');
             var zero = names.pop();
             var formname = names.pop();
@@ -668,8 +714,8 @@ $(function() {
             inline_cancel(formname, rowindex);
             return false;
         });
-        $('.inline-rdy').unbind('click');
-        $('.inline-rdy').click(function() {
+        $('.inline-rdy').unbind('click')
+                        .click(function() {
             var names = $(this).attr('id').split('-');
             var zero = names.pop();
             var formname = names.pop();
@@ -677,16 +723,16 @@ $(function() {
             inline_update(formname, rowindex);
             return false;
         });
-        $('.inline-edt').unbind('click');
-        $('.inline-edt').click(function() {
+        $('.inline-edt').unbind('click')
+                        .click(function() {
             var names = $(this).attr('id').split('-');
             var rowindex = names.pop();
             var formname = names.pop();
             inline_edit(formname, rowindex);
             return false;
         });
-        $('.inline-rmv').unbind('click');
-        $('.inline-rmv').click(function() {
+        $('.inline-rmv').unbind('click')
+                        .click(function() {
             var names = $(this).attr('id').split('-');
             var rowindex = names.pop();
             var formname = names.pop();
@@ -694,40 +740,7 @@ $(function() {
             return false;
         });
     };
-    inline_button_events();
 
-    // Used by S3SQLInlineComponentCheckbox
-    if ($('.error_wrapper').length) {
-        // Errors in form, so ensure we show correct checkbox status
-        var checkboxes = $('.inline-checkbox :checkbox');
-        var that, value, names, formname, fieldname, data, _data, item, i;
-        for (var c = 0; c < checkboxes.length; c++) {
-            that = $(checkboxes[c]);
-            value = that.val();
-            names = that.attr('id').split('-');
-            formname = names[1];
-            fieldname = names[2];
-            // Read current data from real input
-            data = inline_deserialize(formname);
-            _data = data['data'];
-            item = 0;
-            for (var prop in _data) {
-                i = _data[prop];
-                if (i.hasOwnProperty(fieldname) && i[fieldname]['value'] == value) {
-                    item = i;
-                    break;
-                }
-            }
-            // Modify checkbox state, as-required
-            if (item) {
-                if (item['_changed']) {
-                    that.prop('checked', true);
-                } else if (item['_delete']) {
-                    that.prop('checked', false);
-                }
-            }
-        }
-    }
     var inline_checkbox_events = function() {
         // Listen for changes on all Inline Checkboxes
         $('.inline-checkbox :checkbox').click(function() {
@@ -764,7 +777,6 @@ $(function() {
             inline_serialize(formname);
         });
     };
-    inline_checkbox_events();
 
     // Used by S3SQLInlineComponentMultiSelectWidget
     var inline_multiselect_events = function() {
@@ -821,5 +833,55 @@ $(function() {
             inline_serialize(formname);
         });
     };
-    inline_multiselect_events();
+
+    $(document).ready(function() {
+        if ($('.error_wrapper').length) {
+            // Used by S3SQLInlineComponentCheckbox
+            // Errors in form, so ensure we show correct checkbox status
+            var checkboxes = $('.inline-checkbox :checkbox');
+            var that, value, names, formname, fieldname, data, _data, item, i;
+            for (var c=0; c < checkboxes.length; c++) {
+                that = $(checkboxes[c]);
+                value = that.val();
+                names = that.attr('id').split('-');
+                formname = names[1];
+                fieldname = names[2];
+                // Read current data from real input
+                data = inline_deserialize(formname);
+                _data = data['data'];
+                item = 0;
+                for (var prop in _data) {
+                    i = _data[prop];
+                    if (i.hasOwnProperty(fieldname) && i[fieldname]['value'] == value) {
+                        item = i;
+                        break;
+                    }
+                }
+                // Modify checkbox state, as-required
+                if (item) {
+                    if (item['_changed']) {
+                        that.prop('checked', true);
+                    } else if (item['_delete']) {
+                        that.prop('checked', false);
+                    }
+                }
+            }
+        }
+
+        // Check for multiple=False forms
+        $('.inline-form.read-row.single').each(function() {
+            // Open Edit Row by default
+            var names = $(this).attr('id').split('-');
+            var rowindex = names.pop();
+            var formname = names.pop();
+            inline_edit(formname, rowindex);
+        });
+
+        // Listen to Events
+        inline_form_events();
+        inline_button_events();
+        inline_checkbox_events();
+        inline_multiselect_events();
+
+    });
 });
