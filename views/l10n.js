@@ -15,8 +15,6 @@ i18n.delete_confirmation='{{=T("Are you sure you want to delete this record?")}}
 i18n.close_map='{{=T("Close map")}}'
 i18n.no_match='{{=T("No match")}}'
 i18n.no_matching_records='{{=T("No matching records found")}}'
-i18n.in_inv='{{=T("in Stock")}}'
-i18n.no_packs='{{=T("No Packs for Item")}}'
 i18n.input_number='{{=T("Please enter a number only")}}'
 i18n.ac_widget_more_results='{{=T("Greater than 10 matches. Please refine search further")}}'
 i18n.all='{{=T("All")}}'

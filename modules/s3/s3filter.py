@@ -656,6 +656,8 @@ class S3LocationFilter(S3FilterWidget):
     """
         Hierarchical Location Filter Widget
         @see: L{Configuration Options<S3FilterWidget.__init__>}
+
+        NB This will show records linked to all child locations of the Lx
     """
 
     _class = "location-filter"

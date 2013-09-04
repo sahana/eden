@@ -5850,6 +5850,7 @@ class MAP(DIV):
                     i18n["gis_save_map"] = T("Save Map")
                     i18n["gis_new_map"] = T("Save as New Map?")
                     i18n["gis_name_map"] = T("Name of Map")
+                    i18n["save"] = T("Save")
                     i18n["saved"] = T("Saved")
                     config_id = config.id
                     _config = db(ctable.id == config_id).select(ctable.uuid,

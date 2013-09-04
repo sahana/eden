@@ -104,7 +104,7 @@ form .map_loader {
     padding: 5px;
     border: solid;
     border-radius: 5px 5px 5px 5px;
-    width: 250px;
+    width: 210px;
 }
 .map_save_panel.fullscreen {
     z-index: 9100;
