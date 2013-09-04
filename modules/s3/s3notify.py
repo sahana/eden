@@ -354,7 +354,8 @@ class S3Notifications(object):
         subject = get_config("notification_subject",
                              settings.get_msg_notification_subject())
         from string import Template
-        subject = Template(subject).safe_substitute(s="%(system)s",
+        subject = Template(subject).safe_substitute(S="%(systemname)s",
+                                                    s="%(systemname_short)s",
                                                     r="%(resource)s")
         subject = subject % contents["default"]
 
@@ -409,7 +410,7 @@ class S3Notifications(object):
             #_debug(message)
             try:
                 sent = send(pe_id,
-                            subject=s3_truncate(subject, 64),
+                            subject=s3_truncate(subject, 78),
                             message=message,
                             pr_message_method=method,
                             system_generated=True)
@@ -557,7 +558,9 @@ class S3Notifications(object):
         else:
             resource_name = string.capwords(resource.name, "_")
 
-        output = {"system": current.deployment_settings.get_system_name_short(),
+        settings = current.deployment_settings
+        output = {"systemname": settings.get_system_name(),
+                  "systemname_short": settings.get_system_name_short(),
                   "resource": resource_name,
                   "page_url": page_url,
                   }
