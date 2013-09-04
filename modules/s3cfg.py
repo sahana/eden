@@ -1057,6 +1057,7 @@ class S3Config(Storage):
             Template for the subject line of resource update notifications.
 
             Available placeholders:
+                $S = System Name (long)
                 $s = System Name (short)
                 $r = Resource Name
 

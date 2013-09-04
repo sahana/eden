@@ -106,7 +106,7 @@ class S3SupplyModel(S3Model):
 
         NONE = current.messages["NONE"]
 
-        if auth.permission.format == "html":
+        if current.auth.permission.format == "html":
             i18n = {"in_inv": T("in Stock"),
                     "no_packs": T("No Packs for Item"),
                     }

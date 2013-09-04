@@ -203,7 +203,8 @@ def _newsfeed():
                                     (T("Date"), "date"),
                                     (T("Location"), "location_id"),
                                     (T("Description"), "body"),
-                                   ]
+                                   ],
+                   notification_prefix = "post",
                    )
 
     s3.dl_pagelength = 6  # 5 forces an AJAX call

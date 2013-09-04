@@ -191,6 +191,11 @@ settings.org.site_label = "Office"
 settings.project.multiple_organisations = True
 
 # -----------------------------------------------------------------------------
+# Notifications
+# Template for the subject line of resource update notifications
+settings.msg.notification_subject = "$S %s" % current.T("Notification")
+
+# -----------------------------------------------------------------------------
 def currency_represent(v):
     """
         Custom Representation of Currencies
