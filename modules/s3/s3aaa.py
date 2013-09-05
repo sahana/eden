@@ -100,6 +100,8 @@ class AuthS3(Auth):
             - requires_membership
 
         - S3 extension for user registration:
+            - s3_registration_form
+            - s3_register_validation
             - s3_user_register_onaccept
 
         - S3 extension for user administration:
@@ -837,18 +839,13 @@ Thank you
 
         labels, required = s3_mark_required(utable)
 
-        if deployment_settings.get_terms_of_service():
-            submit_button = T("I accept. Create my account.")
-        else:
-            submit_button = T("Register")
-
         #formstyle = deployment_settings.get_ui_formstyle()
         form = SQLFORM(utable, hidden=dict(_next=request.vars._next),
                        labels = labels,
                        separator = "",
-                       showid=settings.showid,
-                       submit_button=submit_button,
-                       delete_label=messages.delete_label,
+                       showid = settings.showid,
+                       submit_button = T("Register"),
+                       delete_label = messages.delete_label,
                        #formstyle = formstyle
                        )
         for i, row in enumerate(form[0].components):
@@ -1527,6 +1524,158 @@ S3OptionsFilter({
                         element.text = str(id)
                         record = Storage(id=id)
                         s3db.update_super(gtable, record)
+
+    # =============================================================================
+    @staticmethod
+    def s3_register_validation():
+        """
+            JavaScript client-side validation for Registration / User profile
+            - needed to check for passwords being same, etc
+        """
+
+        T = current.T
+        request = current.request
+        appname = request.application
+        settings = current.deployment_settings
+        s3 = current.response.s3
+
+        # Static Scripts
+        scripts_append = s3.scripts.append
+        if s3.debug:
+            scripts_append("/%s/static/scripts/jquery.validate.js" % appname)
+            scripts_append("/%s/static/scripts/jquery.pstrength.2.1.0.js" % appname)
+            scripts_append("/%s/static/scripts/S3/s3.register_validation.js" % appname)
+        else:
+            scripts_append("/%s/static/scripts/jquery.validate.min.js" % appname)
+            scripts_append("/%s/static/scripts/jquery.pstrength.2.1.0.min.js" % appname)
+            scripts_append("/%s/static/scripts/S3/s3.register_validation.min.js" % appname)
+
+        # Configuration
+        js_global = []
+        js_append = js_global.append
+        if request.cookies.has_key("registered"):
+            # If we have already registered on this site from this PC then the login form is default
+            # .password:last
+            js_append('''S3.password_position=2''')
+        else:
+            # If we haven't already registered on this site from this PC then the registration form is default
+            # .password:first
+            js_append('''S3.password_position=1''')
+
+        if settings.get_auth_registration_mobile_phone_mandatory():
+            js_append('''S3.auth_registration_mobile_phone_mandatory=1''')
+
+        if settings.get_auth_registration_organisation_required():
+            js_append('''S3.auth_registration_organisation_required=1''')
+            js_append('''i18n.enter_your_organisation="%s"''' % T("Enter your organization"))
+
+        if settings.get_auth_terms_of_service():
+            js_append('''S3.auth_terms_of_service=1''')
+            js_append('''i18n.tos_required="%s"''' % T("You must agree to the Terms of Service"))
+
+        if request.controller != "admin":
+            if settings.get_auth_registration_organisation_hidden():
+                js_append('''S3.auth_registration_hide_organisation=1''')
+
+            # Check for Whitelists
+            table = current.s3db.auth_organisation
+            query = (table.organisation_id != None) & \
+                    (table.domain != None)
+            whitelists = current.db(query).select(table.organisation_id,
+                                                  table.domain)
+            if whitelists:
+                domains = []
+                domains_append = domains.append
+                for whitelist in whitelists:
+                    domains_append("'%s':%s" % (whitelist.domain,
+                                                whitelist.organisation_id))
+                domains = ''','''.join(domains)
+                domains = '''S3.whitelists={%s}''' % domains
+                js_append(domains)
+
+        js_append('''i18n.enter_first_name="%s"''' % T("Enter your first name"))
+        js_append('''i18n.provide_password="%s"''' % T("Provide a password"))
+        js_append('''i18n.repeat_your_password="%s"''' % T("Repeat your password"))
+        js_append('''i18n.enter_same_password="%s"''' % T("Enter the same password as above"))
+        js_append('''i18n.please_enter_valid_email="%s"''' % T("Please enter a valid email address"))
+
+        js_append('''S3.password_min_length=%i''' % settings.get_auth_password_min_length())
+
+        script = '''\n'''.join(js_global)
+        s3.js_global.append(script)
+
+        # Call script after Global config done
+        s3.jquery_ready.append('''s3_register_validation()''')
+
+    # =============================================================================
+    def s3_registration_form(self):
+        """
+            Build a form for Registration
+        """
+
+        T = current.T
+
+        # Build the Form
+        form = self.register()
+        form.attributes["_id"] = "regform"
+
+        if current.deployment_settings.get_auth_terms_of_service():
+            id = "tos__row"
+            label = T("I agree to the %(terms_of_service)s") % \
+                dict(terms_of_service=A(T("Terms of Service"),
+                                        _href=URL(c="default", f="tos"),
+                                        _target="_blank",
+                                        ))
+            label = XML("%s:" % label)
+            widget = INPUT(_name="tos",
+                           _id="tos",
+                           _type="checkbox",
+                           )
+            #formstyle = current.deployment_settings.get_ui_formstyle()
+            #if formstyle == "bootstrap":
+            #    row = DIV(LABEL(label,
+            #                    _id="tos__label",
+            #                    _for="tos",
+            #                    _class="control-label",
+            #                    ),
+            #              DIV(widget,
+            #                  _class="controls",
+            #                  ),
+            #              # Somewhere to store Error Messages
+            #              SPAN(_class="help-block"),
+            #              _id=id,
+            #              _class="control-group hide",
+            #              )
+            #else:
+            #    # Assume callable
+            comment = ""
+            #    #row = formstyle(id, label, widget, comment)
+            # Auth uses default formstyle currently
+            row = TR(TD(LABEL(label,
+                              _id="tos__label",
+                              _for="tos",
+                              ),
+                        _class="w2p_fl"),
+                     TD(widget,
+                        _class="w2p_fw"),
+                     TD(comment,
+                        _class="w2p_fc"),
+                     _id=id,
+                     )
+
+            form[0][-2].append(row)
+
+        # Insert shortcut to Login
+        form[0][-1][1].append(A(T("Login"),
+                                _href=URL(f="user", args="login"),
+                                _id="login-btn",
+                                _class="action-lnk"
+                                ))
+
+        # Client-side Validation
+        self.s3_register_validation()
+
+        return form
 
     # -------------------------------------------------------------------------
     def s3_user_register_onaccept(self, form):

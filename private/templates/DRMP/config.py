@@ -49,6 +49,10 @@ settings.auth.registration_link_user_to_default = ["staff"]
 settings.auth.registration_roles = {"organisation_id": ["USER"],
                                     }
 
+# Terms of Service to be able to Register on the system
+# uses <template>/views/tos.html
+settings.auth.terms_of_service = True
+
 settings.auth.show_utc_offset = False
 
 settings.auth.show_link = False

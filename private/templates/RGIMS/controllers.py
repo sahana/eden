@@ -135,23 +135,11 @@ class index():
 
             if self_registration:
                 # Provide a Registration box on front page
-                request.args = ["register"]
-                if settings.get_terms_of_service():
-                    auth.messages.submit_button = T("I accept. Create my account.")
-                else:
-                    auth.messages.submit_button = T("Register")
-                register_form = auth()
+                register_form = auth.s3_registration_form()
                 register_div = DIV(H3(T("Register")),
                                    P(XML(T("If you would like to help, then please %(sign_up_now)s") % \
                                             dict(sign_up_now=B(T("sign-up now"))))))
 
-                # Add client-side validation
-                s3_register_validation()
-
-                if s3.debug:
-                    s3.scripts.append("/%s/static/scripts/jquery.validate.js" % appname)
-                else:
-                    s3.scripts.append("/%s/static/scripts/jquery.validate.min.js" % appname)
                 if request.env.request_method == "POST":
                     post_script = \
 '''$('#register_form').removeClass('hide')

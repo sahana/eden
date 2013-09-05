@@ -272,13 +272,10 @@ def index():
 
         if self_registration:
             # Provide a Registration box on front page
-            register_form = auth.register()
+            register_form = auth.s3_registration_form()
             register_div = DIV(H3(T("Register")),
                                P(XML(T("If you would like to help, then please %(sign_up_now)s") % \
                                         dict(sign_up_now=B(T("sign-up now"))))))
-
-             # Add client-side validation
-            s3base.s3_register_validation()
 
             if request.env.request_method == "POST":
                 post_script = \
@@ -341,21 +338,21 @@ google.load('feeds','1')
 google.setOnLoadCallback(LoadDynamicFeedControl)'''))
         s3.js_global.append(feed_control)
 
-    output =  dict(title = title,
-                item = item,
-                sit_dec_res_box = sit_dec_res_box,
-                facility_box = facility_box,
-                manage_facility_box = manage_facility_box,
-                org_box = org_box,
-                r = None, # Required for dataTable to work
-                datatable_ajax_source = datatable_ajax_source,
-                self_registration=self_registration,
-                registered=registered,
-                login_form=login_form,
-                login_div=login_div,
-                register_form=register_form,
-                register_div=register_div
-                )
+    output = dict(title = title,
+                  item = item,
+                  sit_dec_res_box = sit_dec_res_box,
+                  facility_box = facility_box,
+                  manage_facility_box = manage_facility_box,
+                  org_box = org_box,
+                  r = None, # Required for dataTable to work
+                  datatable_ajax_source = datatable_ajax_source,
+                  self_registration=self_registration,
+                  registered=registered,
+                  login_form=login_form,
+                  login_div=login_div,
+                  register_form=register_form,
+                  register_div=register_div
+                  )
 
     output = s3_guided_tour(output)
 
@@ -520,10 +517,7 @@ def user():
             session.error = T("Registration not permitted")
             redirect(URL(f="index"))
 
-        form = auth.register()
-        register_form = form
-        # Add client-side validation
-        s3base.s3_register_validation()
+        form = register_form = auth.s3_registration_form()
     elif arg == "change_password":
         title = response.title = T("Change Password")
         form = auth()

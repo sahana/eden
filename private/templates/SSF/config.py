@@ -52,6 +52,9 @@ settings.auth.registration_organisation_default = "Sahana Software Foundation"
 # NB This requires Verification/Approval to be Off
 # @ToDo: Extend to all optional Profile settings: Homepage, Twitter, Facebook, Mobile Phone, Image
 #settings.auth.registration_volunteer = True
+# Terms of Service to be able to Register on the system
+# uses <template>/views/tos.html
+#settings.auth.terms_of_service = True
 # Uncomment this to allow users to Login using OpenID
 #settings.auth.openid = True
 # Uncomment this to allow users to Login using Gmail's SMTP
@@ -305,12 +308,6 @@ settings.hrm.show_staff = False
 settings.project.mode_task = True
 # Uncomment this to use Activities for projects
 settings.project.activities = True
-
-# Terms of Service to be able to Register on the system
-#settings.options.terms_of_service = T("Terms of Service\n\nYou have to be eighteen or over to register as a volunteer.")
-# Should we use internal Support Requests?
-#settings.options.support_requests = True
-
 
 # Formstyle
 def formstyle_row(id, label, widget, comment, hidden=False):

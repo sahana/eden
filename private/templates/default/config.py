@@ -96,6 +96,9 @@ settings.base.guided_tour = True
 # NB This requires Verification/Approval to be Off
 # @ToDo: Extend to all optional Profile settings: Homepage, Twitter, Facebook, Mobile Phone, Image
 #settings.auth.registration_volunteer = True
+# Terms of Service to be able to Register on the system
+# uses <template>/views/tos.html
+#settings.auth.terms_of_service = True
 # Uncomment this to allow users to Login using Gmail's SMTP
 #settings.auth.gmail_domains = ["gmail.com"]
 # Uncomment this to allow users to Login using OpenID
@@ -560,9 +563,6 @@ settings.L10n.decimal_separator = "."
 #settings.search.save_widget = False
 # Maximum number of search results for an Autocomplete Widget
 #settings.search.max_results = 200
-
-# Terms of Service to be able to Register on the system
-#settings.options.terms_of_service = T("Terms of Service\n\nYou have to be eighteen or over to register as a volunteer.")
 
 # Comment/uncomment modules here to disable/enable them
 # @ToDo: Have the system automatically enable migrate if a module is enabled

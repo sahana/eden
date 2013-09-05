@@ -365,7 +365,7 @@ def user():
                     form[0].insert(-8, row)
 
             # Add client-side validation
-            s3base.s3_register_validation()
+            auth.s3_register_validation()
 
         return output
     s3.postp = postp

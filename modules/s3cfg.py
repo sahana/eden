@@ -58,7 +58,6 @@ class S3Config(Storage):
         self.L10n = Storage()
         self.mail = Storage()
         self.msg = Storage()
-        self.options = Storage()
         self.search = Storage()
         self.security = Storage()
         self.ui = Storage()
@@ -285,6 +284,13 @@ class S3Config(Storage):
             Use key = 0 to have the roles not restricted to a realm
         """
         return self.auth.get("registration_roles", [])
+
+    def get_auth_terms_of_service(self):
+        """
+            Force users to accept Terms of Servcie before Registering an account
+            - uses <template>/views/tos.html
+        """
+        return self.auth.get("terms_of_service", False)
 
     def get_auth_registration_volunteer(self):
         """ Redirect the newly-registered user to their volunteer details page """
@@ -810,11 +816,6 @@ class S3Config(Storage):
                 excluded_fields_dict.get(resourcename, [])
 
         return excluded_fields
-
-    # -------------------------------------------------------------------------
-    # Options
-    def get_terms_of_service(self):
-        return self.options.get("terms_of_service", False)
 
     # -------------------------------------------------------------------------
     # UI Settings
