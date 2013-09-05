@@ -464,8 +464,6 @@ class S3Profile(S3CRUD):
                     layer_id = row.layer_id
             if layer_id:
                 layer["layer_id"] = layer_id
-                if not marker:
-                    marker = Marker(layer_id=layer_id).as_dict()
                 resource = s3dbresource(tablename)
                 filter_url = ""
                 first = True

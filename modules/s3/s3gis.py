@@ -6344,7 +6344,9 @@ def addFeatureResources(feature_resources):
 
     db = current.db
     s3db = current.s3db
+    config = GIS.get_config()
     ftable = s3db.gis_layer_feature
+    ltable = s3db.gis_layer_config
 
     layers_feature_resource = []
     append = layers_feature_resource.append
@@ -6358,44 +6360,57 @@ def addFeatureResources(feature_resources):
         # Are we loading a Catalogue Layer or a simple URL?
         layer_id = layer.get("layer_id", None)
         if layer_id:
-            # @ToDo: Lookup Style
             query = (ftable.layer_id == layer_id)
-            flayer = db(query).select(ftable.id,
-                                      ftable.controller,
-                                      ftable.function,
-                                      ftable.filter,
-                                      ftable.trackable,
-                                      ftable.use_site,
-                                      ftable.opacity,
-                                      ftable.cluster_attribute,
-                                      ftable.cluster_distance,
-                                      ftable.cluster_threshold,
-                                      ftable.dir,
-                                      limitby=(0, 1)).first()
-            if flayer.use_site:
+            lquery = (ltable.layer_id == layer_id) & \
+                     (ltable.config_id == config.id)
+            left = ltable.on(lquery)
+            row = db(query).select(ftable.id,
+                                   ftable.controller,
+                                   ftable.function,
+                                   ftable.filter,
+                                   ftable.trackable,
+                                   ftable.use_site,
+                                   ftable.opacity,
+                                   ftable.cluster_attribute,
+                                   ftable.cluster_distance,
+                                   ftable.cluster_threshold,
+                                   ftable.dir,
+                                   ltable.style,
+                                   left=left,
+                                   limitby=(0, 1)).first()
+            style = layer.get("style", row["gis_layer_config.style"])
+            row = row["gis_layer_feature"]
+            if row.use_site:
                 maxdepth = 1
                 show_ids = "&show_ids=true"
             else:
                 maxdepth = 0
                 show_ids = ""
             url = "%s.geojson?layer=%i&components=None&maxdepth=%s%s" % \
-                (URL(flayer.controller, flayer.function), flayer.id, maxdepth, show_ids)
+                (URL(row.controller, row.function), row.id, maxdepth, show_ids)
             # Use specified filter or fallback to the one in the layer
-            filter = layer.get("filter", flayer.filter)
+            filter = layer.get("filter", row.filter)
             if filter:
                 url = "%s&%s" % (url, filter)
-            if flayer.trackable:
+            if row.trackable:
                 url = "%s&track=1" % url
-            opacity = layer.get("opacity", flayer.opacity)
+            opacity = layer.get("opacity", row.opacity)
             cluster_attribute = layer.get("cluster_attribute",
-                                          flayer.cluster_attribute)
+                                          row.cluster_attribute)
             cluster_distance = layer.get("cluster_distance",
-                                         flayer.cluster_distance)
+                                         row.cluster_distance)
             cluster_threshold = layer.get("cluster_threshold",
-                                          flayer.cluster_threshold)
-            dir = layer.get("dir", flayer.dir)
-            marker = layer.get("marker",
-                               Marker(layer_id=layer_id).as_dict())
+                                          row.cluster_threshold)
+            dir = layer.get("dir", row.dir)
+            if style:
+                try:
+                    # JSON Object?
+                    style = json.loads(style)
+                except:
+                    style = None
+            if not style:
+                marker = layer.get("marker",
+                                   Marker(layer_id=layer_id).as_dict())
         else:
             # URL to retrieve the data
             url = layer["url"]
@@ -6425,7 +6440,15 @@ def addFeatureResources(feature_resources):
             cluster_threshold = layer.get("cluster_threshold",
                                           CLUSTER_THRESHOLD)
             dir = layer.get("dir", None)
-            marker = layer.get("marker", None)
+            style = layer.get("style", None)
+            if style:
+                try:
+                    # JSON Object?
+                    style = json.loads(style)
+                except:
+                    style = None
+            if not style:
+                marker = layer.get("marker", None)
 
         if "active" in layer and not layer["active"]:
             _layer["visibility"] = False
@@ -6440,7 +6463,9 @@ def addFeatureResources(feature_resources):
         if dir:
             _layer["dir"] = dir
 
-        if marker:
+        if style:
+            _layer["style"] = style
+        elif marker:
             # Per-layer Marker
             _layer["marker"] = dict(i = marker["image"],
                                     h = marker["height"],

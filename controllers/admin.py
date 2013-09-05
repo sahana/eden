@@ -872,10 +872,11 @@ def translate():
                 row = TR(TD(num + 1),
                          TD(INPUT(_type="checkbox", _name="module_list",
                                   _value=modlist[num], _checked = check)),
-                         TD(mod_name))
+                         TD(mod_name),
+                         )
 
                 for c in range(1, NO_OF_COLUMNS):
-                    cmax_rows = num + c*max_rows
+                    cmax_rows = num + (c * max_rows)
                     if cmax_rows < modcount:
                         mod_name = modules[modlist[cmax_rows]].name_nice
                         mod_name = "%s (%s)" %(mod_name, modlist[cmax_rows])
@@ -888,58 +889,61 @@ def translate():
                 num += 1
                 table.append(row)
 
-            div = DIV()
-            div.append(table)
-            div.append(BR())
+            div = DIV(table,
+                      BR(),
+                      )
             row = TR(TD(INPUT(_type="checkbox", _name="module_list",
                               _value="core", _checked="yes")),
-                     TD(T("Include core files")))
+                     TD(T("Include core files")),
+                     )
             div.append(row)
             div.append(BR())
             row = TR(TD(INPUT(_type="checkbox", _name="module_list",
                               _value="all")),
-                     TD(T("Select all templates (All modules included)")))
+                     TD(T("Select all templates (All modules included)")),
+                     )
             div.append(row)
             div.append(BR())
 
-            # Providing option to export strings in pootle format
-            row = TR(TD(INPUT(_type="radio", _name="filetype",
+            # Provide option to choose export format
+            row = TR(TD("%s:" % T("Export as")),
+                     TD(INPUT(_type="radio", _name="filetype",
                             _value="xls", _checked="checked")),
-                     TD(T("Export as Xls")),
+                     TD(".xls (Excel)"),
                      TD(INPUT(_type="radio", _name="filetype", _value="po")),
-                     TD(T("Export as Pootle")))
+                     TD(".po (Pootle)"),
+                     BR(),
+                     BR(),
+                     )
 
-            row.append(BR())
-            row.append(BR())
             div.append(row)
 
             # Drop-down for available language codes
-            lang_col = TD()
             lang_dropdown = SELECT(_name = "code")
             for lang in langlist:
                 lang_dropdown.append(lang)
-            lang_col.append(lang_dropdown)
 
-            row = TR(TD("%s :" % T("Select language code")), TD(lang_col))
-            row.append(TD("%s :" % T("Or add a new language code")))
-            row.append(TD(INPUT(_type="text", _name="new_code")))
+            row = TR(TD("%s :" % T("Select language code")),
+                     TD(lang_dropdown),
+                     TD("%s :" % T("Or add a new language code")),
+                     TD(INPUT(_type="text", _name="new_code")),
+                     )
             div.append(row)
             div.append(BR())
-
 
             div.append(BR())
             div.append(INPUT(_type="submit", _value=T("Submit")))
             form.append(div)
-            # Adding the custom form to the output
-            output["title"] = T("Select the required modules")
+            # Add the custom form to the output
             output["form"] = form
+            output["title"] = T("Select the required modules")
 
         elif opt == "2":
             # Upload translated files
-            div = DIV()
-            div.append(BR())
-            div.append(T("Note: Make sure that all the text cells are quoted in the csv file before uploading"))
             form = output["form"]
+            div = DIV(BR(),
+                      T("Note: Make sure that all the text cells are quoted in the csv file before uploading"),
+                      )
             form.append(div)
             output["form"] = form
 
@@ -969,12 +973,12 @@ def translate():
 
                 # Display "NO_OF_COLUMNS" modules per row so as to utilize the page completely
                 num = 0
-                max_rows = int(ceil(modcount/float(NO_OF_COLUMNS)))
+                max_rows = int(ceil(modcount / float(NO_OF_COLUMNS)))
 
                 while num < max_rows:
                     row = TR(TD(modlist[num]), TD(percent_dict[modlist[num]]))
                     for c in range(1, NO_OF_COLUMNS):
-                        cmax_rows = num + c*max_rows
+                        cmax_rows = num + (c * max_rows)
                         if cmax_rows < modcount:
                             row.append(TD(modlist[cmax_rows]))
                             row.append(TD(percent_dict[modlist[cmax_rows]]))
@@ -982,14 +986,14 @@ def translate():
                     table.append(row)
 
                 # Add the table to output to display it
-                div = DIV()
-                div.append(table)
-                div.append(BR())
-                div.append(TR(TD("Overall translation percentage of the file: "),
-                              TD(percent_dict["complete_file"])))
+                div = DIV(table,
+                          BR(),
+                          TR(TD("Overall translation percentage of the file: "),
+                             TD(percent_dict["complete_file"])),
+                          )
                 form.append(div)
-                output["title"] = T("Module-wise Percentage of Translated Strings")
                 output["form"] = form
+                output["title"] = T("Module-wise Percentage of Translated Strings")
                 s3.has_required = False
 
             else:
@@ -1004,10 +1008,10 @@ def translate():
                     lang_dropdown.append(lang)
                 lang_col.append(lang_dropdown)
 
-                div = DIV()
                 row = TR(TD("%s:" % T("Language Code")), TD(lang_col))
-                div.append(row)
-                div.append(BR())
+                div = DIV(row,
+                          BR(),
+                          )
                 row = TR(TD(INPUT(_type="checkbox", _name="update_master")),
                          TD(T("Update Master file")))
                 div.append(row)
@@ -1032,11 +1036,11 @@ def translate():
                 R.merge_user_strings_file(strings)
                 response.confirmation = T("File Uploaded")
 
-            div = DIV()
-            div.append(T("Upload a text file containing new-line separated strings:"))
-            div.append(INPUT(_type="file", _name="upload"))
-            div.append(BR())
-            div.append(INPUT(_type="submit", _value=T("Submit")))
+            div = DIV(T("Upload a text file containing new-line separated strings:"),
+                      INPUT(_type="file", _name="upload"),
+                      BR(),
+                      INPUT(_type="submit", _value=T("Submit")),
+                      )
             form.append(div)
             output["form"] = form
 
