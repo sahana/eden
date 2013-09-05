@@ -97,6 +97,7 @@
         <li class='divider'></li>
         {{if auth.is_logged_in():}}
         <li><a href='/{{=appname}}/default/person'><i class='icon-cog'></i> {{=T("Preferences")}}</a></li>
+        <li><a href='/{{=appname}}/default/index/filters'><i class='icon-filter'></i> {{=T("Saved Filters")}}</a></li>
         <li><a href='/{{=appname}}/default/user/change_password'><i class='icon-lock'></i> {{=T("Change Password")}}</a></li>
         <li><a href='/{{=appname}}/default/user/logout'><i class='icon-off'></i> {{=T("Logout")}}</a></li>
         {{else:}}

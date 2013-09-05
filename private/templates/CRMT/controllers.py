@@ -2,9 +2,12 @@
 
 from os import path
 
-from gluon import current, URL, TAG, BR, A
-#from gluon.html import *
+from gluon import current, URL
+from gluon.html import *
 #from gluon.storage import Storage
+
+from s3.s3filter import S3FilterString
+from s3.s3utils import S3CustomController
 
 THEME = "CRMT"
 
@@ -133,5 +136,111 @@ for(var i=0,len=layers.length;i<len;i++){
                                                  resource = item["f"])
 
         return output
+
+# =============================================================================
+class filters(S3CustomController):
+    """ Custom controller to manage saved filters """
+
+    def __call__(self):
+        """ Main entry point """
+
+        # Authorization (user must be logged in)
+        auth = current.auth
+        permissions = auth.permission
+        if not auth.user:
+            permissions.fail()
+
+        pe_id = auth.user.pe_id
+        fmt = permissions.format
+        s3 = current.response.s3
+
+        # Filter
+        from s3 import S3FieldSelector as FS
+        f = FS("pe_id") == pe_id
+        s3.filter = f
+
+        # List Fields
+        current.s3db.configure("pr_filter",
+                               list_fields = ["title", "resource", "query"],
+                               list_layout = self.render_filter,
+                               orderby = "resource")
+
+        # Page length
+        s3.dl_pagelength = 10
+
+        # Data list
+        current.request.args = ["datalist.%s" % fmt]
+        output = current.rest_controller("pr", "filter",
+                                         list_ajaxurl = URL(f="index",
+                                                            args="filters.dl"))
+
+        # Title and view
+        if fmt != "dl":
+            output["title"] = current.T("Saved Filters")
+            self._view(THEME, "filters.html")
+        return output
+        
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def render_filter(listid, resource, rfields, record, **attr):
+        """
+            Custom dataList item renderer for 'Saved Filters'
+
+            @param listid: the HTML ID for this list
+            @param resource: the S3Resource to render
+            @param rfields: the S3ResourceFields to render
+            @param record: the record as dict
+            @param attr: additional HTML attributes for the item
+        """
+
+        item_class = "thumbnail"
+
+        # Construct the item ID
+        pkey = "pr_filter.id"
+        if pkey in record:
+            record_id = record[pkey]
+            item_id = "%s-%s" % (listid, record_id)
+        else:
+            # template
+            item_id = "%s-[id]" % listid
+
+        raw = record._row
+        resource_name = raw["pr_filter.resource"]
+        resource = current.s3db.resource(resource_name)
+
+        T = current.T
+        
+        # Resource title
+        crud_strings = current.response.s3.crud_strings.get(resource.tablename)
+        if crud_strings:
+            resource_name = crud_strings.title_list
+        else:
+            resource_name = string.capwords(resource.name, "_")
+
+        # Filter title
+        title = record["pr_filter.title"]
+        
+        # Filter Query
+        query = S3FilterString(resource, raw["pr_filter.query"]).represent()
+
+        # Render the item
+        item = DIV(
+                   DIV(SPAN(T("%(resource)s Filter") % \
+                            dict(resource=resource_name),
+                            _class="card-title"),
+                       DIV(A(I(" ", _class="icon icon-remove-sign"),
+                             _class="dl-item-delete"),
+                           _class="edit-bar fright"),
+                       _class="card-header"),
+                   DIV(
+                       DIV(H5(title,
+                              _class="media-heading"),
+                           DIV(query),
+                           _class="media-body"),
+                       _class="media"),
+                   _class=item_class,
+                   _id=item_id)
+
+        return item
 
 # END =========================================================================

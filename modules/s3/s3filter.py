@@ -2141,8 +2141,10 @@ class S3FilterString(object):
             selector = l.name
             if labels and selector in labels:
                 rfield.label = labels[selector]
-            tlabel = " ".join(s.capitalize() for s in rfield.tname.split("_")[1:])
-            rfield.label = "%s %s" % (tlabel, rfield.label)
+            # @todo: for duplicate labels, show the table name
+            #else:
+                #tlabel = " ".join(s.capitalize() for s in rfield.tname.split("_")[1:])
+                #rfield.label = "(%s) %s" % (tlabel, rfield.label)
 
             # Represent the values
             if values is None:
@@ -2260,14 +2262,14 @@ class S3FilterString(object):
             query.EQ: (query.NE, vor, T("%(label)s is %(values)s")),
             query.GE: (query.LT, vand, "%(label)s >= %(values)s"),
             query.GT: (query.LE, vand, "%(label)s > %(values)s"),
-            query.NE: (query.EQ, vor, T("%(label)s is not %(values)s")),
-            query.LIKE: ("notlike", vor, T("%(label)s is like %(values)s")),
-            query.BELONGS: (query.NE, vor, T("%(label)s is %(values)s")),
+            query.NE: (query.EQ, vor, T("%(label)s != %(values)s")),
+            query.LIKE: ("notlike", vor, T("%(label)s like %(values)s")),
+            query.BELONGS: (query.NE, vor, T("%(label)s = %(values)s")),
             query.CONTAINS: ("notall", vand, T("%(label)s contains %(values)s")),
             query.ANYOF: ("notany", vor, T("%(label)s contains any of %(values)s")),
             "notall": (query.CONTAINS, vand, T("%(label)s does not contain %(values)s")),
             "notany": (query.ANYOF, vor, T("%(label)s does not contain %(values)s")),
-            "notlike": (query.LIKE, vor, T("%(label)s is not like %(values)s"))
+            "notlike": (query.LIKE, vor, T("%(label)s not like %(values)s"))
         }
 
         # Quote values as necessary
