@@ -196,8 +196,8 @@ settings.project.multiple_organisations = True
 
 # -----------------------------------------------------------------------------
 # Notifications
-# Template for the subject line of resource update notifications
-settings.msg.notification_subject = "$S %s" % current.T("Notification")
+# Template for the subject line in update notifications
+settings.msg.notify_subject = "$S %s" % current.T("Notification")
 
 # -----------------------------------------------------------------------------
 def currency_represent(v):

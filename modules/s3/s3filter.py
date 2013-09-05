@@ -2031,14 +2031,10 @@ class S3FilterString(object):
 
         self.resource = resource
         self.get_vars = get_vars
-        
+
     # -------------------------------------------------------------------------
     def represent(self):
-        """
-            Render the query representation for the given resource
-
-            @param resource: the S3Resource
-        """
+        """ Render the query representation for the given resource """
 
         default = ""
 
@@ -2049,13 +2045,24 @@ class S3FilterString(object):
         else:
             queries = S3URLQuery.parse(resource, get_vars)
 
+        # Get alternative field labels
+        labels = {}
+        get_config = resource.get_config
+        prefix = resource.prefix_selector
+        for config in ("list_fields", "notify_fields"):
+            fields = get_config(config, set())
+            for f in fields:
+                if type(f) is tuple:
+                    labels[prefix(f[1])] = f[0]
+
         # Iterate over the sub-queries
+        render = self._render
         substrings = []
         append = substrings.append
         for alias, subqueries in queries.iteritems():
 
             for subquery in subqueries:
-                s = self._render(resource, alias, subquery)
+                s = render(resource, alias, subquery, labels=labels)
                 if s:
                     append(s)
 
@@ -2070,7 +2077,7 @@ class S3FilterString(object):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def _render(cls, resource, alias, query, invert=False):
+    def _render(cls, resource, alias, query, invert=False, labels=None):
         """
             Recursively render a human-readable representation of a
             S3ResourceQuery.
@@ -2089,8 +2096,8 @@ class S3FilterString(object):
 
         l = query.left
         r = query.right
-        render = lambda q, invert=False, resource=resource, alias=alias: \
-                        cls._render(resource, alias, q, invert=invert)
+        render = lambda q, r=resource, a=alias, invert=False, labels=labels: \
+                        cls._render(r, a, q, invert=invert, labels=labels)
 
         if op == query.AND:
             # Recurse AND
@@ -2131,6 +2138,9 @@ class S3FilterString(object):
                 values = r
 
             # Alias
+            selector = l.name
+            if labels and selector in labels:
+                rfield.label = labels[selector]
             tlabel = " ".join(s.capitalize() for s in rfield.tname.split("_")[1:])
             rfield.label = "%s %s" % (tlabel, rfield.label)
 

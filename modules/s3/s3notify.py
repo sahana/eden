@@ -273,6 +273,7 @@ class S3Notifications(object):
                     #subscription["resource"],
                     #subscription["last_check_time"]))
 
+        # Check notification settings
         notify_on = subscription["notify_on"]
         methods = subscription["method"]
         if not notify_on or not methods:
@@ -285,11 +286,7 @@ class S3Notifications(object):
         if not auth.s3_logged_in() or auth.user.pe_id != pe_id:
             r.unauthorised()
 
-        # Last check time
-        last_check_time = current.xml.decode_iso_datetime(
-                                subscription["last_check_time"])
-
-        # Fields to report
+        # Fields to extract
         fields = resource.list_fields(key="notify_fields")
         if "created_on" not in fields:
             fields.append("created_on")
@@ -307,61 +304,66 @@ class S3Notifications(object):
 
         #_debug("%s rows:" % numrows)
 
-        # Render and send the messages
+        # Prepare meta-data
+        get_config = resource.get_config
         settings = current.deployment_settings
-        
-        join = lambda *f: os.path.join(current.request.folder, *f)
-        theme = settings.get_template()
-        send = current.msg.send_by_pe_id
 
-        success = False
-        errors = []
-
-        # Page URL
         page_url = subscription["page_url"]
+        
+        crud_strings = current.response.s3.crud_strings.get(resource.tablename)
+        if crud_strings:
+            resource_name = crud_strings.title_list
+        else:
+            resource_name = string.capwords(resource.name, "_")
 
-        # Email format
+        last_check_time = current.xml.decode_iso_datetime(
+                                subscription["last_check_time"])
+
         email_format = subscription["email_format"]
         if not email_format:
-            email_format = settings.get_msg_notification_email_format()
+            email_format = settings.get_msg_notify_email_format()
 
-        # Pre-render the contents for the view
+        filter_query = subscription.get("filter_query")
+
+        meta_data = {"systemname": settings.get_system_name(),
+                     "systemname_short": settings.get_system_name_short(),
+                     "resource": resource_name,
+                     "page_url": page_url,
+                     "notify_on": notify_on,
+                     "last_check_time": last_check_time,
+                     "filter_query": filter_query,
+                     "total_rows": numrows,
+                    }
+
+        # Render contents for the message template(s)
+        renderer = get_config("notify_renderer")
+        if not renderer:
+            renderer = settings.get_msg_notify_renderer()
+        if not renderer:
+            renderer = cls._render
+
         contents = {}
         if email_format == "html" and "EMAIL" in methods:
-            contents["html"] = cls._pre_render(resource,
-                                               page_url,
-                                               data,
-                                               notify_on,
-                                               last_check_time,
-                                               "html")
+            contents["html"] = renderer(resource, data, meta_data, "html")
             contents["default"] = contents["html"]
         if email_format != "html" or "EMAIL" not in methods or len(methods) > 1:
-            contents["text"] = cls._pre_render(resource,
-                                               page_url,
-                                               data,
-                                               notify_on,
-                                               last_check_time,
-                                               "text")
+            contents["text"] = renderer(resource, data, meta_data, "text")
             contents["default"] = contents["text"]
         
-        # Add human-readable representation of the filter query
-        filter_query = subscription.get("filter_query")
-        for f, c in contents.iteritems():
-            c["filter_query"] = filter_query
-
         # Subject line
-        get_config = resource.get_config
-        subject = get_config("notification_subject",
-                             settings.get_msg_notification_subject())
+        subject = get_config("notify_subject")
+        if not subject:
+            subject = settings.get_msg_notify_subject()
+            
         from string import Template
         subject = Template(subject).safe_substitute(S="%(systemname)s",
                                                     s="%(systemname_short)s",
                                                     r="%(resource)s")
-        subject = subject % contents["default"]
+        subject = subject % meta_data
 
         # Helper function to find templates from a priority list
+        join = lambda *f: os.path.join(current.request.folder, *f)
         def get_template(path, filenames):
-
             for fn in filenames:
                 filepath = join(path, fn)
                 if os.path.exists(filepath):
@@ -370,8 +372,16 @@ class S3Notifications(object):
                     except:
                         pass
             return None
-            
-        prefix = resource.get_config("notification_prefix", "notify")
+
+        # Render and send the message(s)
+        theme = settings.get_template()
+        prefix = resource.get_config("notify_template", "notify")
+        
+        send = current.msg.send_by_pe_id
+
+        success = False
+        errors = []
+
         for method in methods:
 
             error = None
@@ -520,50 +530,25 @@ class S3Notifications(object):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def _pre_render(cls,
-                    resource,
-                    page_url,
-                    data,
-                    notify_on,
-                    last_check_time,
-                    format=None):
+    def _render(cls, resource, data, meta_data, format=None):
         """
             Method to pre-render the contents for the message template
 
             @param resource: the S3Resource
             @param data: the data returned from S3Resource.select
-            @param notify_on: the notification trigger(s)
-            @param last_check_time: the last check time (datetime)
+            @param meta_data: the meta data for the notification
             @param format: the contents format ("text" or "html")
-
-            @todo: make this configurable per resource and/or controller
         """
 
-        prefix = resource.prefix_selector
-
-        created_on_selector = prefix("created_on")
+        created_on_selector = resource.prefix_selector("created_on")
         created_on_colname = None
-
-        rfields = data["rfields"]
-
         as_utc = current.xml.as_utc
-
+        notify_on = meta_data["notify_on"]
+        last_check_time = meta_data["last_check_time"]
         rows = data["rows"]
+        rfields = data["rfields"]
+        output = {}
         new, upd = [], []
-
-        # Common contents
-        crud_strings = current.response.s3.crud_strings[resource.tablename]
-        if crud_strings:
-            resource_name = crud_strings.title_list
-        else:
-            resource_name = string.capwords(resource.name, "_")
-
-        settings = current.deployment_settings
-        output = {"systemname": settings.get_system_name(),
-                  "systemname_short": settings.get_system_name_short(),
-                  "resource": resource_name,
-                  "page_url": page_url,
-                  }
 
         if format == "html":
             # Pre-formatted HTML
@@ -630,12 +615,6 @@ class S3Notifications(object):
                     append_column((label, row[colname]))
                 append_record(record)
 
-            crud_strings = current.response.s3.crud_strings[resource.tablename]
-            if crud_strings:
-                resource_name = crud_strings.title_list
-            else:
-                resource_name = string.capwords(resource.name, "_")
-
             if "new" in notify_on and len(new):
                 output["new"] = len(new)
                 output["new_records"] = new
@@ -647,6 +626,7 @@ class S3Notifications(object):
             else:
                 output["upd"] = None
 
+        output.update(meta_data)
         return output
 
 # END =========================================================================
