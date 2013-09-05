@@ -110,9 +110,9 @@ class S3SupplyModel(S3Model):
             i18n = {"in_inv": T("in Stock"),
                     "no_packs": T("No Packs for Item"),
                     }
-            i18n = '''\n'''.join(i18n)
-            s3.js_global.append(i18n)
-
+            s3.js_global.append('''i18n.in_inv="%s"''' % i18n["in_inv"])
+            s3.js_global.append('''i18n.no_packs="%s"''' % i18n["no_packs"])
+            
         # =====================================================================
         # Brand
         #
