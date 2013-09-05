@@ -1056,9 +1056,9 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # Notifications
-    def get_msg_notification_subject(self):
+    def get_msg_notify_subject(self):
         """
-            Template for the subject line of resource update notifications.
+            Template for the subject line in update notifications.
 
             Available placeholders:
                 $S = System Name (long)
@@ -1068,15 +1068,22 @@ class S3Config(Storage):
             Use {} to separate the placeholder from immediately following
             identifier characters (like: ${placeholder}text).
         """
-        return self.msg.get("notification_subject",
+        return self.msg.get("notify_subject",
                             "$s %s: $r" % current.T("Update Notification"))
 
-    def get_msg_notification_email_format(self):
+    def get_msg_notify_email_format(self):
         """
-            The preferred email format for resource update notifications,
+            The preferred email format for update notifications,
             "text" or "html".
         """
-        return self.msg.get("notification_email_format", "text")
+        return self.msg.get("notify_email_format", "text")
+
+    def get_msg_notify_renderer(self):
+        """
+            Custom content renderer function for update notifications,
+            function()
+        """
+        return self.msg.get("notify_renderer", None)
                             
     # -------------------------------------------------------------------------
     # Save Search and Subscription
