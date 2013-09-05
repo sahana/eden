@@ -274,9 +274,8 @@ class TranslateGetFiles:
                         # Remove '.py'
                         base = path.splitext(f)[0]
 
-                        # If file is inside /modules/s3 directory and
-                        # has "s3" as prefix, remove "s3" to get module name
-                        if base_dir == "s3" and "s3" in base:
+                        # If file has "s3" as prefix, remove "s3" to get module name
+                        if "s3" in base:
                             base = base[2:]
 
                         # If file is inside /models and file name is
@@ -890,27 +889,36 @@ class TranslateReadFiles:
 
                     # if translate attribute is set to True
                     if translate:
+                        if hasattr(represent, "fields") == False:
+                            # Only name field is considered
+                            fields = ["name"]
+                        else:
+                            # List of fields is retrieved from represent.fields
+                            fields = represent.fields
+
                         # Consider it for transation (csv[3])
                         obj = CsvToWeb2py()
                         data = obj.read_csvfile(csv[3])
-                        # Translating only "name" column for now.
                         title_row = data[0]
                         idx = 0
+                        idxlist = []
+                        idxappend = idxlist.append
                         for e in title_row:
-                            if e.lower() == "name":
-                                break
+                            if e.lower() in fields:
+                                idxappend(idx)
                             idx += 1
 
-                        # If "name" column is found
-                        if idx != len(title_row):
+                        # if list is not empty
+                        if idxlist:
                             # Line number of string retreived.
                             line_number = 1
                             for row in data[1:]:
                                 line_number += 1
                                 # If string is not empty
-                                if row[idx] != "":
-                                    loc = "%s:%s" %(csv[3], str(line_number))
-                                    database_strings.append((loc, row[idx]))
+                                for idx in idxlist:
+                                    if row[idx] != "":
+                                        loc = "%s:%s" %(csv[3], str(line_number))
+                                        database_strings.append((loc, row[idx]))
 
             return database_strings
 
@@ -1156,7 +1164,7 @@ class StringsToExcel:
 
         # ---------------------------------------------------------------------
         @staticmethod
-        def create_spreadsheet(Strings):
+        def create_spreadsheet(Strings, langcode):
             """
                 Function to create a spreadsheet (.xls file) of strings with
                 location, original string and translated string as columns
@@ -1203,7 +1211,7 @@ class StringsToExcel:
             wbk.save(output)
 
             # Modify headers to return the xls file for download
-            filename = "trans.xls"
+            filename = "%s.xls" % langcode
             disposition = "attachment; filename=\"%s\"" % filename
             response = current.response
             response.headers["Content-Type"] = contenttype(".xls")
@@ -1225,8 +1233,8 @@ class StringsToExcel:
             request = current.request
             settings = current.deployment_settings
             appname = request.application
+            langcode = langfile[:-3]
             langfile = os.path.join(request.folder, "languages", langfile)
-
             # If the language file doesn't exist, create it
             if not os.path.exists(langfile):
                 f = open(langfile, "w")
@@ -1307,7 +1315,7 @@ class StringsToExcel:
 
             if filetype == "xls":
                 # Create excel file
-                return self.create_spreadsheet(Strings)
+                return self.create_spreadsheet(Strings, langcode)
             elif filetype == "po":
                 # Create pootle file
                 C = CsvToWeb2py()
