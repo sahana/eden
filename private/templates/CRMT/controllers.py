@@ -161,11 +161,12 @@ class filters(S3CustomController):
         if not auth.user:
             permissions.fail()
 
-        if current.request.env.request_method == "POST":
+        fmt = permissions.format
+        
+        if current.request.env.request_method == "POST" and fmt != "dl":
             return self.update()
 
         pe_id = auth.user.pe_id
-        fmt = permissions.format
         s3 = current.response.s3
 
         # Filter
