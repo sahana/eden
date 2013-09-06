@@ -1903,6 +1903,10 @@ class S3Filter(S3Method):
         if query is not None:
             filter_data["query"] = json.dumps(query)
 
+        url = data.get("url")
+        if url is not None:
+            filter_data["url"] = url
+
         # Store record
         onaccept = None
         if record:

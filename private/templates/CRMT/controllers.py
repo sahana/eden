@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 
 from os import path
+from urllib import urlencode
 
 from gluon import current, URL
 from gluon.html import *
 #from gluon.storage import Storage
 
 from s3.s3filter import S3FilterString
+from s3.s3resource import S3URLQuery
+from s3.s3summary import S3Summary
 from s3.s3utils import S3CustomController
 
 THEME = "CRMT"
@@ -161,7 +164,10 @@ class filters(S3CustomController):
 
         # List Fields
         current.s3db.configure("pr_filter",
-                               list_fields = ["title", "resource", "query"],
+                               list_fields = ["title",
+                                              "resource",
+                                              "url",
+                                              "query"],
                                list_layout = self.render_filter,
                                orderby = "resource")
 
@@ -180,9 +186,9 @@ class filters(S3CustomController):
             self._view(THEME, "filters.html")
         return output
         
-    # -----------------------------------------------------------------------------
-    @staticmethod
-    def render_filter(listid, resource, rfields, record, **attr):
+    # -------------------------------------------------------------------------
+    @classmethod
+    def render_filter(cls, listid, resource, rfields, record, **attr):
         """
             Custom dataList item renderer for 'Saved Filters'
 
@@ -219,18 +225,40 @@ class filters(S3CustomController):
 
         # Filter title
         title = record["pr_filter.title"]
-        
-        # Filter Query
-        query = S3FilterString(resource, raw["pr_filter.query"]).represent()
+
+        # Filter Query and Summary URLs
+        fstring = S3FilterString(resource, raw["pr_filter.query"])
+        query = fstring.represent()
+        links = cls.summary_urls(resource,
+                                 raw["pr_filter.url"],
+                                 fstring.get_vars)
+
+        actions = []
+        if links:
+            if "map" in links:
+                actions.append(A(I(" ", _class="icon icon-globe"),
+                                 _title=T("Open Map"),
+                                 _href=links["map"]))
+            if "table" in links:
+                actions.append(A(I(" ", _class="icon icon-list"),
+                                 _title=T("Open Chart"),
+                                 _href=links["table"]))
+            if "chart" in links:
+                actions.append(A(I(" ", _class="icon icon-list"),
+                                 _title=T("Open Chart"),
+                                 _href=links["chart"]))
 
         # Render the item
         item = DIV(
-                   DIV(SPAN(T("%(resource)s Filter") % \
+                   DIV(DIV(actions,
+                           _class="action-bar fleft"),
+                       SPAN(T("%(resource)s Filter") % \
                             dict(resource=resource_name),
                             _class="card-title"),
-                       DIV(A(I(" ", _class="icon icon-remove-sign"),
-                             _class="dl-item-delete"),
-                           _class="edit-bar fright"),
+                        DIV(A(I(" ", _class="icon icon-remove-sign"),
+                              _title=T("Delete this Filter"),
+                              _class="dl-item-delete"),
+                            _class="edit-bar fright"),
                        _class="card-header"),
                    DIV(
                        DIV(H5(title,
@@ -243,4 +271,49 @@ class filters(S3CustomController):
 
         return item
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def summary_urls(resource, url, filters):
+        """
+            Construct the summary tabs URLs for a saved filter.
+
+            @param resource: the S3Resource
+            @param url: the filter page URL
+            @param filters: the filter GET vars
+        """
+
+        links = {}
+
+        if not url:
+            return links
+
+        get_vars = S3URLQuery.parse_url(url)
+        get_vars.pop("t", None)
+        get_vars.pop("w", None)
+        get_vars.update(filters)
+
+        list_vars = []
+        for (k, v) in get_vars.items():
+            if v is None:
+                continue
+            values = v if type(v) is list else [v]
+            for value in values:
+                if value is not None:
+                    list_vars.append((k, value))
+        base_url = url.split("?", 1)[0]
+
+        summary_config = S3Summary._get_config(resource)
+        tab_idx = 0
+        for section in summary_config:
+
+            if section.get("common"):
+                continue
+            section_id = section["name"]
+
+            tab_vars = list_vars + [("t", str(tab_idx))]
+            links[section["name"]] = "%s?%s" % (base_url, urlencode(tab_vars))
+            tab_idx += 1
+            
+        return links
+        
 # END =========================================================================
