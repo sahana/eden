@@ -419,7 +419,6 @@ class S3Config(Storage):
             URL to connect to solr server
         """    
         return self.base.get("solr_url", False)
-
     # -------------------------------------------------------------------------
     # Database settings
     def get_database_type(self):
@@ -784,6 +783,21 @@ class S3Config(Storage):
         """
         return self.L10n.get("translate_gis_location", False)
 
+    def get_L10n_pootle_username(self):
+        """
+            Username for pootle server
+        """
+        return self.L10n.get("pootle_username", False)
+    def get_L10n_pootle_password(self):
+        """
+            Password for pootle server
+        """
+        return self.L10n.get("pootle_password", False)
+    def get_L10n_pootle_url(self):
+        """
+            Url for pootle server
+        """
+        return self.L10n.get("pootle_url", "http://pootle.sahanafoundation.org/")
     # -------------------------------------------------------------------------
     # PDF settings
     def get_paper_size(self):
