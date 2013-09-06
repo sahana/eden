@@ -10,7 +10,7 @@
      * - in global scope as called from outside
      *
      * Parameters:
-     * fieldname - {String} A unique fieldname for a person_id field
+     * fieldname - {String} A unique fieldname for a person_id or human_resource_id field
      */
     S3.addPersonWidget = function(fieldname) {
         // Function to be called by S3AddPersonWidget2
@@ -21,6 +21,7 @@
         // Move the user-visible rows underneath the real (hidden) one
         var error_row = real_input.next('.error_wrapper');
         var title_row = $(selector + '_title__row');
+        var org_row = $(selector + '_organisation_id__row');
         var name_row = $(selector + '_full_name__row');
         var date_of_birth_row = $(selector + '_date_of_birth__row');
         var gender_row = $(selector + '_gender__row');
@@ -36,10 +37,12 @@
                              .after(gender_row)
                              .after(date_of_birth_row)
                              .after(name_row)
+                             .after(org_row)
                              .after(title_row)
                              .after(error_row);
 
         title_row.show();
+        org_row.show();
         name_row.show();
         date_of_birth_row.show();
         gender_row.show();
@@ -62,12 +65,29 @@
         }
         // Show the edit bar
         $(selector + '_edit_bar').removeClass('hide').show();
+
         // Events
         $(selector + '_edit_bar .icon-edit').click(function() {
             edit(fieldname);
         });
         $(selector + '_edit_bar .icon-remove').click(function() {
             cancel(fieldname);
+        });
+
+        $(selector + '_organisation_id').change(function() {
+            // If there is an organisation selected then use this as a filter for the Autocomplete
+            var organisation_id = $(this).val();
+            var url = real_input.data('url');
+            if (organisation_id) {
+                // Remove any old filter
+                url = url.split('?')[0];
+                // Add a filter
+                url += '?~.organisation_id=' + organisation_id;
+            } else {
+                // Strip off the filter
+                url = url.split('?')[0];
+            }
+            real_input.data('url', url);
         });
 
         $('form').submit(function() {
@@ -89,6 +109,7 @@
 
     var enable_person_fields = function(fieldname) {
         var selector = '#' + fieldname;
+        $(selector + '_organisation_id').prop('disabled', false);
         $(selector + '_full_name').prop('disabled', false);
         $(selector + '_gender').prop('disabled', false);
         $(selector + '_date_of_birth').prop('disabled', false);
@@ -99,6 +120,7 @@
 
     var disable_person_fields = function(fieldname) {
         var selector = '#' + fieldname;
+        $(selector + '_organisation_id').prop('disabled', true);
         $(selector + '_full_name').prop('disabled', true);
         $(selector + '_gender').prop('disabled', true);
         $(selector + '_date_of_birth').prop('disabled', true);
@@ -117,6 +139,7 @@
         enable_autocomplete(fieldname);
         // Enable all the fields & clear their values
         $(selector).val('');
+        $(selector + '_organisation_id').prop('disabled', false).val('').change();
         $(selector + '_full_name').prop('disabled', false).val('');
         $(selector + '_gender').prop('disabled', false).val('');
         $(selector + '_date_of_birth').prop('disabled', false).val('');
@@ -136,6 +159,7 @@
         if (existing) {
             // Revert to existing
             $(selector).val(existing.value);
+            $(selector + '_organisation_id').prop('disabled', true).val(existing.organisation_id);
             $(selector + '_full_name').prop('disabled', true).val(existing.full_name);
             $(selector + '_gender').prop('disabled', true).val(existing.gender);
             $(selector + '_date_of_birth').prop('disabled', true).val(existing.date_of_birth);
@@ -158,6 +182,7 @@
         var selector = '#' + fieldname;
         // Clear all values & Enable Fields
         $(selector).val('');
+        $(selector + '_organisation_id').prop('disabled', false).val('');
         $(selector + '_gender').prop('disabled', false).val('');
         $(selector + '_date_of_birth').prop('disabled', false).val('');
         $(selector + '_occupation').prop('disabled', false).val('');
@@ -165,6 +190,41 @@
         $(selector + '_mobile_phone').prop('disabled', false).val('');
         // Hide the edit bar
         //$(selector + '_edit_bar').hide();
+    }
+
+    var represent_person = function(item) {
+        var name = item.first;
+        if (item.middle) {
+            name += ' ' + item.middle;
+        }
+        if (item.last) {
+            name += ' ' + item.last;
+        }
+        return name;
+    }
+
+    var represent_hr = function(item) {
+        var name = item.first;
+        if (item.middle) {
+            name += ' ' + item.middle;
+        }
+        if (item.last) {
+            name += ' ' + item.last;
+        }
+        var org = item.org;
+        var job = item.job;
+        if (org || job) {
+            if (job) {
+                name += ' (' + job;
+                if (org) {
+                    name += ', ' + org;
+                }
+                name += ')';
+            } else {
+                name += ' (' + org + ')';
+            }
+        }
+        return name;
     }
 
     var enable_autocomplete = function(fieldname) {
@@ -182,6 +242,7 @@
             var existing = {
                 value: value,
                 full_name: dummy_input.val(),
+                organisation_id: $(selector + '_organisation_id').val(),
                 gender: $(selector + '_gender').val(),
                 date_of_birth: $(selector + '_date_of_birth').val(),
                 occupation: $(selector + '_occupation').val(),
@@ -193,13 +254,16 @@
         }
         real_input.data('existing', existing);
 
-        var controller = dummy_input.attr('data-c');
         // Add a Throbber
         $(selector + '_full_name').after('<div id="' + fieldname + '_throbber" class="throbber input_throbber hide"></div>');
         var throbber = $(selector + '_throbber');
 
-        var url = S3.Ap.concat('/' + controller + '/person/search_ac');
-        
+        var controller = dummy_input.attr('data-c');
+        var fn = dummy_input.attr('data-f');
+        var url = S3.Ap.concat('/' + controller + '/' + fn + '/search_ac');
+        // Have this URL editable after setup (e.g. to Filter by Organisation)
+        real_input.data('url', url);
+
         dummy_input.autocomplete({
             // @ToDo: Configurable options
             delay: 450,
@@ -207,7 +271,7 @@
             source: function(request, response) {
                 // Patch the source so that we can handle No Matches
                 $.ajax({
-                    url: url,
+                    url: real_input.data('url'),
                     data: {
                         term: request.term
                     }
@@ -237,26 +301,13 @@
                 return content;
             },
             focus: function(event, ui) {
-                var item = ui.item;
-                var name = item.first;
-                if (item.middle) {
-                    name += ' ' + item.middle;
-                }
-                if (item.last) {
-                    name += ' ' + item.last;
-                }
+                var name = represent_person(ui.item);
                 return false;
             },
             select: function(event, ui) {
                 var item = ui.item;
                 if (item.id) {
-                    var name = item.first;
-                    if (item.middle) {
-                        name += ' ' + item.middle;
-                    }
-                    if (item.last) {
-                        name += ' ' + item.last;
-                    }
+                    var name = represent_person(item);
                     dummy_input.val(name);
                     real_input.val(item.id);
                     // Update the Form Fields
@@ -269,13 +320,7 @@
             }
         })
         .data('ui-autocomplete')._renderItem = function(ul, item) {
-            var name = item.first;
-            if (item.middle) {
-                name += ' ' + item.middle;
-            }
-            if (item.last) {
-                name += ' ' + item.last;
-            }
+            var name = represent_hr(item);
             return $('<li>').data('item.autocomplete', item)
                             .append('<a>' + name + '</a>')
                             .appendTo(ul);
@@ -289,91 +334,74 @@
     }
 
     // Called on post-process by the Autocomplete Widget
-    var select_person = function(fieldname, person_id) {
+    var select_person = function(fieldname, id) {
         var selector = '#' + fieldname;
         var name_input = $(selector + '_full_name');
         name_input.prop('disabled', false);
         clear_person_fields(fieldname);
         var real_input = $(selector);
         var controller = name_input.attr('data-c');
-        var url = S3.Ap.concat('/' + controller + '/person/' + person_id + '.s3json?show_ids=True');
+        var fn = name_input.attr('data-f');
+        var url = S3.Ap.concat('/' + controller + '/' + fn + '/' + id + '/lookup');
         $.getJSONS3(url, function(data) {
             try {
-                var email,
-                    phone;
-                var person = data['$_pr_person'][0];
-                disable_person_fields(fieldname);
-                var value = person['@id'];
-                // Already done
-                //real_input.val(value);
+                /* We have these already from the search_ac
                 var names = [];
-                if (person.hasOwnProperty('first_name')) {
-                    names.push(person['first_name']);
+                if (data.hasOwnProperty('first_name')) {
+                    names.push(data['first_name']);
                 }
-                if (person.hasOwnProperty('middle_name')) {
-                    names.push(person['middle_name']['@value']);
+                if (data.hasOwnProperty('middle_name')) {
+                    names.push(data['middle_name']);
                 }
-                if (person.hasOwnProperty('last_name')) {
-                    names.push(person['last_name']['@value']);
+                if (data.hasOwnProperty('last_name')) {
+                    names.push(data['last_name']);
                 }
                 var full_name = names.join(' ');
-                name_input.val(full_name);
+                name_input.val(full_name); */
+                var full_name = name_input.val();
                 var existing = {
-                    value: value,
+                    value: id,
                     full_name: full_name
                 }
+                // Already done by ac, yet gets lost for some reason
+                real_input.val(id);
                 real_input.data('existing', existing);
-                if (person.hasOwnProperty('$_pr_email_contact')) {
-                    var contact = person['$_pr_email_contact'][0];
-                    email = contact['value']['@value'];                            
-                }
-                if (person.hasOwnProperty('$_pr_phone_contact')) {
-                    var contact = person['$_pr_phone_contact'][0];
-                    phone = contact['value']['@value'];                            
-                }                       
-                if (person.hasOwnProperty('$_pr_contact')) {
-                    var contacts = person['$_pr_contact'];
-                    var contact;
-                    for (var i=0; i < contacts.length; i++) {
-                        contact = contacts[i];
-                        if (email == undefined){
-                            if (contact['contact_method']['@value'] == 'EMAIL') {
-                                email = contact['value']['@value'];
-                            }
-                        }
-                        if (phone == undefined){
-                            if (contact['contact_method']['@value'] == 'SMS') {
-                                phone = contact['value']['@value'];
-                            }
-                        }
-                    }
-                }
-                if (email !== undefined){
+                if (data.hasOwnProperty('email')) {
+                    var email = data['email'];
                     $(selector + '_email').val(email);
                     existing['email'] = email;
                 }
-                if (phone !== undefined){
+                if (data.hasOwnProperty('phone')) {
+                    var phone = data['phone'];
                     $(selector + '_mobile_phone').val(phone);
                     existing['mobile_phone'] = phone;
                 }
-                if (person.hasOwnProperty('gender')) {
-                    var gender = person['gender']['@value'];
+                if (data.hasOwnProperty('gender')) {
+                    var gender = data['gender'];
                     $(selector + '_gender').val(gender);
                     existing['gender'] = gender;
                 }
-                if (person.hasOwnProperty('date_of_birth')) {
-                    var date_of_birth = person['date_of_birth']['@value'];
+                if (data.hasOwnProperty('date_of_birth')) {
+                    var date_of_birth = data['date_of_birth'];
                     $(selector + '_date_of_birth').val(date_of_birth);
                     existing['date_of_birth'] = date_of_birth;
                 }
-                if (person.hasOwnProperty('occupation')) {
-                    var occupation = person['occupation']['@value'];
+                if (data.hasOwnProperty('occupation')) {
+                    var occupation = data['occupation'];
                     $(selector + '_occupation').val(occupation);
                     existing['occupation'] = occupation;
                 }
+                if (data.hasOwnProperty('organisation_id')) {
+                    var organisation_id = data['organisation_id'];
+                    $(selector + '_organisation_id').val(organisation_id);
+                    existing['organisation_id'] = organisation_id;
+                }
+
+                disable_person_fields(fieldname);
 
             } catch(e) {
                 real_input.val('');
+                clear_person_fields(fieldname);
             }
         });
     }

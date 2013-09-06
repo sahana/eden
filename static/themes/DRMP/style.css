@@ -340,7 +340,7 @@ a.action-btn:hover {
 b.red {
     position: absolute;
     z-index: 1;
-    margin-top: 10px;
+    margin-top: 5px;
     margin-left: 7px;
     font-size: 12px;
 }
@@ -763,6 +763,7 @@ span.toggle-text i {
     width: 110px;
 }
 
+/*
 [id$=full_name__row].box_middle {
     margin-top: -15px;
-}
+} */

@@ -30,7 +30,8 @@ def index():
 def human_resource():
     """
         HR Controller
-        - combined (unused, except for Imports)
+        - combined
+        Used for Imports and S3AddPersonWidget2
     """
 
     tablename = "hrm_human_resource"
@@ -41,7 +42,7 @@ def human_resource():
     s3.filter = (_type == 1)
 
     def prep(r):
-        if r.method == "form":
+        if r.method in ("form", "lookup"):
             return True
         if r.interactive:
             if r.method == "create" and not r.component:
@@ -434,7 +435,7 @@ def person():
             resource = r.resource
             if mode is not None:
                 resource.build_query(id=s3_logged_in_person())
-            elif r.method != "deduplicate":
+            elif r.method not in ("deduplicate", "search_ac"):
                 if not r.id and not hr_id:
                     # pre-action redirect => must retain prior errors
                     if response.error:

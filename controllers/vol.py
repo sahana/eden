@@ -30,7 +30,8 @@ def index():
 def human_resource():
     """
         HR Controller
-        - combined used only for Imports and for the service record
+        - combined
+        Used for Imports, S3AddPersonWidget2 and the service record
     """
 
     table = s3db.hrm_human_resource
@@ -44,7 +45,7 @@ def human_resource():
                    )
 
     def prep(r):
-        if r.method == "form":
+        if r.method in ("form", "lookup"):
             return True
         if r.interactive:
             if r.method == "create" and not r.component:
@@ -511,25 +512,25 @@ def person():
             resource = r.resource
             if mode is not None:
                 r.resource.build_query(id=s3_logged_in_person())
-            else:
+            elif r.method not in ("deduplicate", "search_ac"):
                 if not r.id and not hr_id:
                     # pre-action redirect => must retain prior errors
                     if response.error:
                         session.error = response.error
                     redirect(URL(r=r, f="volunteer"))
-            if resource.count() == 1:
-                resource.load()
-                r.record = resource.records().first()
-                if r.record:
-                    r.id = r.record.id
-            if not r.record:
-                session.error = T("Record not found")
-                redirect(URL(f="volunteer",
-                             args=["search"]))
-            if hr_id and r.component_name == "human_resource":
-                r.component_id = hr_id
-            configure("hrm_human_resource",
-                      insertable = False)
+                if resource.count() == 1:
+                    resource.load()
+                    r.record = resource.records().first()
+                    if r.record:
+                        r.id = r.record.id
+                if not r.record:
+                    session.error = T("Record not found")
+                    redirect(URL(f="volunteer",
+                                 args=["search"]))
+                if hr_id and r.component_name == "human_resource":
+                    r.component_id = hr_id
+                configure("hrm_human_resource",
+                          insertable = False)
 
         elif r.component_name == "group_membership" and r.representation == "aadata":
             s3db.hrm_configure_pr_group_membership()

@@ -612,7 +612,7 @@ class S3AddPersonWidget(FormWidget):
 # =============================================================================
 class S3AddPersonWidget2(FormWidget):
     """
-        Renders a person_id field as a Create Person form,
+        Renders a person_id or human_resource_id field as a Create Person form,
         with an embedded Autocomplete to select existing people.
 
         It relies on JS code in static/S3/s3.add_person.js
@@ -622,7 +622,7 @@ class S3AddPersonWidget2(FormWidget):
                  controller = None,
                  select_existing = None):
 
-        # Controller to retrieve the person record
+        # Controller to retrieve the person or hrm record
         self.controller = controller
         if select_existing is not None:
             self.select_existing = select_existing
@@ -649,6 +649,20 @@ class S3AddPersonWidget2(FormWidget):
         s3db = current.s3db
         ptable = s3db.pr_person
 
+        field_type = field.type[10:]
+        if field_type == "pr_person":
+            # person_id
+            hrm = False
+            fn = "person"
+        elif field_type == "hrm_human_resource":
+            # human_resource_id
+            hrm = True
+            fn = "human_resource"
+            htable = s3db.hrm_human_resource
+            organisation_id = htable.organisation_id
+        else:
+            raise UnsupportedError
+
         if settings.get_pr_request_dob():
             date_of_birth = ptable.date_of_birth
         else:
@@ -670,6 +684,10 @@ class S3AddPersonWidget2(FormWidget):
             dtable = s3db.pr_person_details
             occupation = dtable.occupation
             emailRequired = settings.get_hrm_email_required()
+        elif hrm:
+            controller = "hrm"
+            emailRequired = settings.get_hrm_email_required()
+            occupation = None
         else:
             controller = "pr"
             emailRequired = False
@@ -678,12 +696,18 @@ class S3AddPersonWidget2(FormWidget):
         values = {}
         if value:
             db = current.db
-            query = (ptable.id == value)
             fields = [ptable.first_name,
                       ptable.middle_name,
                       ptable.last_name,
                       ptable.pe_id,
                       ]
+            if hrm:
+                query = (htable.id == value) & \
+                        (htable.person_id == ptable.id)
+                fields.append(htable.organisation_id)
+            else:
+                query = (ptable.id == value)
+
             if date_of_birth:
                 fields.append(date_of_birth)
             if gender:
@@ -693,12 +717,17 @@ class S3AddPersonWidget2(FormWidget):
                 left = dtable.on(dtable.person_id == ptable.id)
             else:
                 left = None
-            person = db(query).select(*fields,
-                                      left=left,
-                                      limitby=(0, 1)).first()
+            row = db(query).select(*fields,
+                                   left=left,
+                                   limitby=(0, 1)).first()
+            if hrm:
+                values["organisation_id"] = row["hrm_human_resource.organisation_id"]
             if occupation:
-                values["occupation"] = person["pr_person_details.occupation"]
-                person = person["pr_person"]
+                values["occupation"] = row["pr_person_details.occupation"]
+            if hrm or occupation:
+                person = row["pr_person"]
+            else:
+                person = row
             values["full_name"] = s3_fullname(person)
             if date_of_birth:
                 values["date_of_birth"] = person.date_of_birth
@@ -766,13 +795,22 @@ class S3AddPersonWidget2(FormWidget):
 
         # Fields
         # (id, label, widget, required)
-        fattr = {"_data-c": controller}
-        fields = [# Name field
-                  # - can search for an existing person
-                  # - can create a new person
-                  # - multiple names get assigned to first, middle, last
-                  ("full_name", T("Name"), INPUT(**fattr), True)
-                  ]
+        fattr = {"_data-c": controller,
+                 "_data-f": fn,
+                 }
+        fields = []
+
+        if hrm:
+            fields.append(("organisation_id", organisation_id.label,
+                           OptionsWidget.widget(organisation_id, values.get("organisation_id", None),
+                                                _id = "%s_organisation_id" % fieldname),
+                           settings.get_hrm_org_required()))
+
+        # Name field
+        # - can search for an existing person
+        # - can create a new person
+        # - multiple names get assigned to first, middle, last
+        fields.append(("full_name", T("Name"), INPUT(**fattr), True))
 
         if date_of_birth:
             fields.append(("date_of_birth", date_of_birth.label,

@@ -185,6 +185,10 @@ settings.hrm.use_skills = False
 # Uncomment to disable the use of HR Teams
 settings.hrm.teams = False
 
+# Uncomment to hide fields in S3AddPersonWidget[2]
+settings.pr.request_dob = False
+settings.pr.request_gender = False
+
 # -----------------------------------------------------------------------------
 # Org
 settings.org.site_label = "Office"
@@ -3370,6 +3374,7 @@ def customize_org_organisation(**attr):
     standard_postp = s3.postp
     def custom_postp(r, output):
         if r.interactive and \
+           isinstance(output, dict) and \
            current.auth.s3_has_permission("create", r.table):
             # Insert a Button to Create New in Modal
             output["showadd_btn"] = A(I(_class="icon icon-plus-sign big-add"),
@@ -3736,7 +3741,7 @@ def customize_pr_person(**attr):
         if callable(standard_postp):
             output = standard_postp(r, output)
 
-        if r.interactive:
+        if r.interactive and isinstance(output, dict):
             output["rheader"] = ""
             actions = [dict(label=str(T("Open")),
                             _class="action-btn",
@@ -3786,11 +3791,10 @@ def customize_pr_person(**attr):
             #        action["restrict"] = restrict
             #    actions.append(action)
             s3.actions = actions
-            if isinstance(output, dict):
-                if "form" in output:
-                    output["form"].add_class("pr_person")
-                elif "item" in output and hasattr(output["item"], "add_class"):
-                    output["item"].add_class("pr_person")
+            if "form" in output:
+                output["form"].add_class("pr_person")
+            elif "item" in output and hasattr(output["item"], "add_class"):
+                output["item"].add_class("pr_person")
 
         return output
     s3.postp = custom_postp
@@ -3870,19 +3874,27 @@ def customize_project_project(**attr):
                            list_layout = render_projects,
                            )
         elif r.interactive or r.representation == "aadata":
+            # Filter from a Profile page?
+            # If so, then default the fields we know
+            get_vars = current.request.get_vars
+            organisation_id = get_vars.get("~.(organisation)", None)
+            if not organisation_id:
+                user = current.auth.user
+                if user:
+                    organisation_id = user.organisation_id
+
             # Configure fields 
             table.objectives.readable = table.objectives.writable = True
+            from s3.s3widgets import S3AddPersonWidget2
             table.human_resource_id.label = T("Focal Person")
+            table.human_resource_id.widget = S3AddPersonWidget2()
+            s3db.hrm_human_resource.organisation_id.default = organisation_id
             table.budget.label = "%s (USD)" % T("Budget")
             # Better in column label & otherwise this construction loses thousands separators
             #table.budget.represent = lambda value: "%d USD" % value
 
             s3db.doc_document.file.label = ""
 
-            # Filter from a Profile page?
-            # If so, then default the fields we know
-            get_vars = current.request.get_vars
-            organisation_id = get_vars.get("~.(organisation)", None)
             crud_form_fields = [
                     "name",
                     S3SQLInlineComponentCheckbox(

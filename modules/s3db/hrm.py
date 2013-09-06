@@ -511,10 +511,15 @@ class S3HRModel(S3Model):
                                             ondelete = "RESTRICT"
                                             )
 
-        # Custom Method for S3HumanResourceAutocompleteWidget
-        self.set_method("hrm", "human_resource",
-                        method="search_ac",
-                        action=self.hrm_search_ac)
+        # Custom Method for S3HumanResourceAutocompleteWidget and S3AddPersonWidget2
+        set_method = self.set_method
+        set_method("hrm", "human_resource",
+                   method="search_ac",
+                   action=self.hrm_search_ac)
+
+        set_method("hrm", "human_resource",
+                   method="lookup",
+                   action=self.hrm_lookup)
 
         # Components
         # Email
@@ -906,7 +911,7 @@ class S3HRModel(S3Model):
     @staticmethod
     def hrm_search_ac(r, **attr):
         """
-            JSON search method for S3HumanResourceAutocompleteWidget
+            JSON search method for S3HumanResourceAutocompleteWidget and S3AddPersonWidget2
             - full name search
             - include Organisation & Job Role in the output
         """
@@ -987,6 +992,108 @@ class S3HRModel(S3Model):
             output = json.dumps(items)
 
         response.headers["Content-Type"] = "application/json"
+        return output
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hrm_lookup(r, **attr):
+        """
+            JSON lookup method for S3AddPersonWidget2
+        """
+
+        id = r.id
+        if not id:
+            output = current.xml.json_message(False, 400, "No id provided!")
+            raise HTTP(400, body=output)
+
+        db = current.db
+        s3db = current.s3db
+        settings = current.deployment_settings
+        request_dob = settings.get_pr_request_dob()
+        request_gender = settings.get_pr_request_gender()
+
+        htable = r.table
+        ptable = db.pr_person
+        ctable = s3db.pr_contact
+        fields = [htable.organisation_id,
+                  ptable.pe_id,
+                  # We have these already from the search_ac
+                  #ptable.first_name,
+                  #ptable.middle_name,
+                  #ptable.last_name,
+                  ]
+
+        left = None
+        if request_dob:
+            fields.append(ptable.date_of_birth)
+        if request_gender:
+            fields.append(ptable.gender)
+        if current.request.controller == "vol":
+            dtable = s3db.pr_person_details
+            fields.append(dtable.occupation)
+            left = dtable.on(dtable.person_id == ptable.id)
+
+        query = (htable.id == id) & \
+                (ptable.id == htable.person_id)
+        row = db(query).select(left=left,
+                               *fields).first()
+        if left:
+            occupation = row["pr_person_details.occupation"]
+        else:
+            occupation = None
+        organisation_id = row["hrm_human_resource.organisation_id"]
+        row = row["pr_person"]
+        #first_name = row.first_name
+        #middle_name = row.middle_name
+        #last_name = row.last_name
+        if request_dob:
+            date_of_birth = row.date_of_birth
+        else:
+            date_of_birth = None
+        if request_gender:
+            gender = row.gender
+        else:
+            gender = None
+
+        # Lookup contacts separately as we can't limitby here
+        query = (ctable.pe_id == row.pe_id) & \
+                (ctable.contact_method.belongs(("EMAIL", "SMS")))
+        rows = db(query).select(ctable.contact_method,
+                                ctable.value,
+                                orderby = ctable.priority,
+                                )
+        email = phone = None
+        for row in rows:
+            if not email and row.contact_method == "EMAIL":
+                email = row.value
+            elif not phone and row.contact_method == "SMS":
+                phone = row.value
+            if email and phone:
+                break
+
+        # Minimal flattened structure
+        item = {}
+        #if first_name:
+        #    item["first_name"] = first_name
+        #if middle_name:
+        #    item["middle_name"] = middle_name
+        #if last_name:
+        #    item["last_name"] = last_name
+        if email:
+            item["email"] = email
+        if phone:
+            item["phone"] = phone
+        if gender:
+            item["gender"] = gender
+        if date_of_birth:
+            item["date_of_birth"] = date_of_birth
+        if occupation:
+            item["occupation"] = occupation
+        if organisation_id:
+            item["organisation_id"] = organisation_id
+        output = json.dumps(item)
+
+        current.response.headers["Content-Type"] = "application/json"
         return output
 
     # -------------------------------------------------------------------------

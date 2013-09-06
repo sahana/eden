@@ -309,7 +309,7 @@ settings.L10n.decimal_separator = "."
 
 # -----------------------------------------------------------------------------
 # Persons
-# Uncomment to hide fields in S3AddPersonWidget
+# Uncomment to hide fields in S3AddPersonWidget[2]
 #settings.pr.request_dob = False
 #settings.pr.request_gender = False
 #settings.pr.select_existing = False
