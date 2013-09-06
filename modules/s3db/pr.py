@@ -2582,6 +2582,7 @@ class S3SavedFilterModel(S3Model):
                                   Field("controller"),
                                   Field("function"),
                                   Field("resource"),
+                                  Field("url"),
                                   Field("description", "text"),
                                   Field("query", "text"),
                                   s3_comments(),

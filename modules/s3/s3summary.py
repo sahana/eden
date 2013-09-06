@@ -176,6 +176,9 @@ class S3Summary(S3Method):
                 sections.append(s)
                 tab_idx += 1
 
+        # Remove widget ID
+        r.get_vars.pop("w", None)
+
         # Add tabs + sections to output
         if len(sections) > 1:
             output["tabs"] = tablist
@@ -206,8 +209,11 @@ class S3Summary(S3Method):
                 submit_url_vars = {"t": active_tab}
             else:
                 submit_url_vars = {}
-            filter_submit_url = attr.get("filter_submit_url",
-                                         r.url(vars=submit_url_vars))
+            filter_submit_url = attr.get("filter_submit_url")
+            if not filter_submit_url:
+                _vars = self._remove_filters(r.get_vars)
+                _vars.update(submit_url_vars)
+                filter_submit_url = r.url(vars=_vars)
 
             # Where to retrieve updated filter options from:
             filter_ajax_url = attr.get("filter_ajax_url",

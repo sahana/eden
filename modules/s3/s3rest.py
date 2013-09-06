@@ -29,6 +29,7 @@
 
 import datetime
 import os
+import re
 import sys
 import time
 import types
@@ -64,6 +65,8 @@ from gluon.tools import callback
 
 from s3resource import S3Resource
 from s3utils import S3MarkupStripper, s3_unicode
+
+REGEX_FILTER = re.compile(".+\..+|.*\(.+\).*")
 
 DEBUG = False
 if DEBUG:
@@ -2258,7 +2261,8 @@ class S3Method(object):
             @param vars: the URL vars as dict
         """
 
-        return dict([(k, v) for k, v in vars.items() if "." not in k])
+        return Storage((k, v) for k, v in vars.iteritems()
+                              if not REGEX_FILTER.match(k))
 
     # -------------------------------------------------------------------------
     @staticmethod

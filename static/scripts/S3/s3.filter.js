@@ -1527,11 +1527,11 @@ S3.search = {};
             // Show throbber
             this.throbber.show();
 
-
             // Collect data
             var filter = {
                 title: title,
-                query: S3.search.getCurrentFilters($(el).closest('form'))
+                query: S3.search.getCurrentFilters($(el).closest('form')),
+                url: this._getFilterURL()
             }
 
             // Ajax-save
@@ -1587,7 +1587,8 @@ S3.search = {};
             // Collect data
             var filter = {
                 id: id,
-                query: S3.search.getCurrentFilters($(el).closest('form'))
+                query: S3.search.getCurrentFilters($(el).closest('form')),
+                url: this._getFilterURL()
             }
 
             // Ajax-save current Filters
@@ -1688,6 +1689,20 @@ S3.search = {};
                 this.save_btn.hide();
             }
             
+        },
+
+        /**
+         * _getFilterURL: get the page URL of the filter form
+         */
+        _getFilterURL: function() {
+            
+            var url = $(this.element).closest('form')
+                                     .find('input.filter-submit-url[type="hidden"]');
+            if (url.length) {
+                return url.first().val();
+            } else {
+                return document.URL;
+            }
         },
 
         /**

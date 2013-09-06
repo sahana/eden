@@ -243,6 +243,16 @@ form#summary-filter-form
     width: 240px;
 }
 
+/* Action Toolbar */
+.action-bar.fleft {
+    color: #8a8989;
+    font-size: 14px;
+    position: relative;
+    top: 4px;
+    float: left;
+    margin-right: 8px;
+}
+
 /* Filter Manager */
 
 /*.horiz_filter_form:first-child {

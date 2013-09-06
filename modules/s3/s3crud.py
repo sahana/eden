@@ -1230,8 +1230,11 @@ class S3CRUD(S3Method):
             if filter_widgets and not hide_filter:
 
                 # Where to retrieve filtered data from:
-                filter_submit_url = attr.get("filter_submit_url",
-                                             r.url(vars={}))
+                filter_submit_url = attr.get("filter_submit_url")
+                if not filter_submit_url:
+                    _vars = self._remove_filters(r.get_vars)
+                    filter_submit_url = r.url(vars=_vars)
+                    
                 # Where to retrieve updated filter options from:
                 filter_ajax_url = attr.get("filter_ajax_url",
                                            r.url(method="filter",
