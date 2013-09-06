@@ -3762,7 +3762,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             } else {
                 var disabled = ' disabled="disabled" checked="checked"'
             }
-            var checkbox = '<input type="checkbox" class="checkbox"' + disabled + '>' + i18n.gis_new_map;
+            var checkbox = '<div class="new_map"><input type="checkbox" class="checkbox"' + disabled + '>' + i18n.gis_new_map + '</div>';
             $('#' + map_id + ' .map_save_panel .fleft').html(name_input + checkbox);
             $('#' + map_id + ' .map_save_panel label').labelOver('over');
         }

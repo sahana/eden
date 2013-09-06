@@ -104,7 +104,8 @@ form .map_loader {
     padding: 5px;
     border: solid;
     border-radius: 5px 5px 5px 5px;
-    width: 210px;
+    /*width: 210px;*/
+    width: auto;
 }
 .map_save_panel.fullscreen {
     z-index: 9100;
@@ -126,18 +127,23 @@ form .map_loader {
 .map_save_name {
     font-weight: bold;
     text-align: center;
+    padding: 5px;
+    margin-top: 2px;
 }
 .map_save_panel input {
     width: 150px;
-    margin-top: 6px;
+    margin-top: 1px;
+    margin-right: 5px;
 }
 .map_save_panel input.checkbox {
     width: 10px;
     margin: 0 5px 0 0;
 }
+.map_save_panel .new_map {
+    font-size: small;
+}
 .map_save_panel .saved {
     float: left;
-    padding: 5px;
 }
 .map_save_panel p {
     float: left;
