@@ -806,8 +806,12 @@ class S3SQLCustomForm(S3SQLForm):
                 if labels is not None and f.name not in labels:
                     labels[f.name] = "%s:" % f.label
 
-        # Mark required subtable-fields (retaining override-labels)
-        if not readonly:
+        if readonly:
+            # Strip all comments
+            for a, n, f in fields:
+                f.comment = None
+        else:
+            # Mark required subtable-fields (retaining override-labels)
             for alias in subtables:
                 if alias in rcomponents:
                     component = rcomponents[alias]

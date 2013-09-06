@@ -2236,7 +2236,10 @@ def customize_cms_post(**attr):
             field = table.series_id
             field.label = T("Type")
             
-            if r.method == "create":
+            if r.method == "read":
+                # Restore the label for the Location
+                table.location_id.label = T("Location")
+            elif r.method == "create":
                 ADMIN = current.session.s3.system_roles.ADMIN
                 if (not current.auth.s3_has_role(ADMIN)):
                     represent = S3Represent(lookup="cms_series", 
@@ -3657,9 +3660,6 @@ def customize_pr_person(**attr):
                         label = "",
                         multiple = False,
                         fields = hr_fields,
-                        filterby = dict(field = "contact_method",
-                                        options = "SMS"
-                                        )
                     ),
                     S3SQLInlineComponent(
                         "image",

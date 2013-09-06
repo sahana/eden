@@ -270,8 +270,8 @@ $(function() {
 
         inline_remove_errors(formname);
 
-        // Hide the current read row, show all other read rows
-        $('.read-row').removeClass('hide');
+        // Hide the current read row, show all other read rows for this field
+        $('#sub-' + formname + ' .read-row').removeClass('hide');
         $('#read-row-' + rowname).addClass('hide');
 
         // Populate the edit row with the data for this rowindex
@@ -872,7 +872,7 @@ $(function() {
         $('.inline-form.read-row.single').each(function() {
             // Open Edit Row by default
             var names = $(this).attr('id').split('-');
-            var rowindex = names.pop();
+            var rowindex = names.pop(); // Will always be 0
             var formname = names.pop();
             inline_edit(formname, rowindex);
         });
