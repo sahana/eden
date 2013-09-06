@@ -1119,6 +1119,7 @@ class S3StatsResidentModel(S3Model):
         tablename = "stats_resident_type"
         table = define_table(tablename,
                              # Instance
+                             super_link("doc_id", "doc_entity"),
                              super_link("parameter_id", "stats_parameter"),
                              Field("name",
                                    label=T("Name"),
@@ -1145,7 +1146,7 @@ class S3StatsResidentModel(S3Model):
 
         # Resource Configuration
         configure(tablename,
-                  super_entity = "stats_parameter",
+                  super_entity = ("doc_entity", "stats_parameter"),
                   deduplicate = self.stats_resident_type_duplicate,
                   )
 

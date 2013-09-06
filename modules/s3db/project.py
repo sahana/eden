@@ -1132,6 +1132,7 @@ class S3ProjectActivityModel(S3Model):
         #
         tablename = "project_activity"
         table = define_table(tablename,
+                             # Instance
                              self.super_link("doc_id", "doc_entity"),
                              s3_datetime(),
                              self.project_project_id(),
