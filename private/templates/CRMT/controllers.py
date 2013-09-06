@@ -20,10 +20,11 @@ class index():
 
     def __call__(self):
 
+        request = current.request
         response = current.response
         output = {}
         output["title"] = response.title = current.deployment_settings.get_system_name()
-        view = path.join(current.request.folder, "private", "templates",
+        view = path.join(request.folder, "private", "templates",
                          THEME, "views", "index.html")
         try:
             # Pass view as file not str to work in compiled mode
@@ -32,10 +33,9 @@ class index():
             from gluon.http import HTTP
             raise HTTP("404", "Unable to open Custom View: %s" % view)
 
-        application = current.request.application
         T = current.T
 
-        # This will presumably be modified according to how the update  data is stored / retrieved
+        # This will presumably be modified according to how the update data is stored / retrieved
         updates = [
             {"user": "Tom Jones",
              "profile": URL("static", "themes", args = ["CRMT", "users", "1.jpeg"]),
@@ -133,8 +133,25 @@ for(var i=0,len=layers.length;i<len;i++){
                                    )
         output["map"] = map
 
+        # Button to go full-screen
+        fullscreen = A(I(_class="icon icon-fullscreen"),
+                       _href=URL(c="gis", f="map_viewing_client"),
+                       _class="gis_fullscreen_map-btn fright",
+                       # If we need to support multiple maps on a page
+                       #_map="default",
+                       _title=T("View full screen"),
+                       )
+
+        output["fullscreen"] = fullscreen
+        s3 = response.s3
+        if s3.debug:
+            script = "/%s/static/scripts/S3/s3.gis.fullscreen.js" % request.application
+        else:
+            script = "/%s/static/scripts/S3/s3.gis.fullscreen.min.js" % request.application
+        s3.scripts.append(script)
+
         from s3db.cms import S3CMS
-        for item in current.response.menu:
+        for item in response.menu:
             item["cms"] = S3CMS.resource_content(module = item["c"], 
                                                  resource = item["f"])
 
