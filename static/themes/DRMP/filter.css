@@ -1,0 +1,63 @@
+#datalist-filter-form td {
+    border: none;
+}
+
+.filter-controls {
+    clear: both;
+}
+
+/*button.btn.btn-primary.btn-filter,*/
+input.btn.btn-primary.filter-submit {
+    width: 90%;
+    padding-right: 5px;
+    padding-left: 5px;
+}
+
+input.btn.btn-primary.filter-submit.filter-ajax {
+    width: 100%;
+    margin-top: 15px;
+    margin-bottom: -15px;
+    margin-left: -1px;
+}
+
+/* Responsive styling */
+input.filter-search{
+    width: 50%;
+    text-align: center;
+}
+
+/* Large desktop */
+@media (min-width: 1200px) { 
+    input.filter-search{
+        width: 66%;
+    }
+}
+
+/* Portrait tablet to landscape and desktop */
+@media (min-width: 768px) and (max-width: 979px) {
+    input.filter-search{
+        width: 33%;
+    }
+    input.btn.btn-primary.filter-submit.filter-ajax {
+        width: 100%;
+        margin-left: -1px;
+    }
+}
+
+/* Landscape phone to portrait tablet */
+@media (max-width: 767px) {
+    input.filter-search{
+		width: 100% !important;
+	}
+	input.btn.btn-primary.filter-submit.filter-ajax {
+        width: 100%;
+        margin-left: -1px;
+    }
+}
+
+/* Landscape phones and down */
+@media (max-width: 480px) { 
+	input.filter-search{
+		width: 100% !important;
+	}
+}

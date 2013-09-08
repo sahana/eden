@@ -2203,6 +2203,7 @@ class S3FacilityModel(S3Model):
         #
         tablename = "org_facility"
         table = define_table(tablename,
+                             # Instance
                              super_link("doc_id", "doc_entity"),
                              super_link("pe_id", "pr_pentity"),
                              super_link("site_id", "org_site"),

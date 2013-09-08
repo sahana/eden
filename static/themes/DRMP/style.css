@@ -485,6 +485,46 @@ table.embeddedComponent .add-row td {
 }
 
 /* Multi Select */
+button.ui-multiselect.ui-state-default.ui-corner-all {
+    display: inline-block;
+    *display: inline;
+    margin-bottom: 10px;
+    *margin-left: .3em;
+    font-size: 12px;
+    padding: 2px 5px 2px 12px;
+    line-height: 20px;
+    color: #333333;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
+    vertical-align: middle;
+    cursor: pointer;
+    background-color: #f5f5f5;
+    *background-color: #e6e6e6;
+    background-image: -moz-linear-gradient(top, #ffffff, #e6e6e6);
+    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ffffff), to(#e6e6e6));
+    background-image: -webkit-linear-gradient(top, #ffffff, #e6e6e6);
+    background-image: -o-linear-gradient(top, #ffffff, #e6e6e6);
+    background-image: linear-gradient(to bottom, #ffffff, #e6e6e6);
+    background-repeat: repeat-x;
+    border: 1px solid #cccccc;
+    *border: 0;
+    border-color: #e6e6e6 #e6e6e6 #bfbfbf;
+    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+    border-bottom-color: #b3b3b3;
+    -webkit-border-radius: 4px;
+       -moz-border-radius: 4px;
+            border-radius: 4px;
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffffff', endColorstr='#ffe6e6e6', GradientType=0);
+    filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+    *zoom: 1;
+    -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+       -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+button.ui-multiselect.ui-state-default.ui-corner-all:hover {
+    color: #333333;
+    background: #e6e6e6;
+    *background: #d9d9d9;
+}
 label.ui-corner-all {
     margin-left: 5px;
     margin-bottom: 0;
@@ -496,9 +536,30 @@ label.ui-corner-all span {
     left: 10px;
     font-size: 12px;
 }
-
-.filter-controls {
-    clear: both;
+/* Responsive styling */
+button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
+    width: 100% !important;
+}
+.ui-multiselect-menu.ui-widget.ui-widget-content.ui-corner-all {
+    width: 15% !important;
+}
+/* Portrait tablet to landscape and desktop */
+@media (min-width: 768px) and (max-width: 979px) {
+    button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
+	    width: 100% !important;
+	}
+}
+/* Landscape phone to portrait tablet */
+@media (max-width: 767px) {
+    button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
+	    width: 100% !important;
+	}
+}
+/* Landscape phones and down */
+@media (max-width: 480px) { 
+	button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
+	    margin-bottom: 10px;
+	}
 }
 
 /* DataTable Styling */
