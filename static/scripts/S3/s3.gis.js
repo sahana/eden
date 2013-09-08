@@ -257,20 +257,6 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             this.s3.plugins.push(plugin);
         }
 
-        map.showThrobber = function(id) {
-            // @ToDo: Allow separate throbbers / map
-            $('.layer_throbber').show().removeClass('hide');
-            this.s3.layers_loading.pop(id); // we never want 2 pushed
-            this.s3.layers_loading.push(id);
-        }
-
-        map.hideThrobber = function(id) {
-            this.s3.layers_loading.pop(id);
-            if (this.s3.layers_loading.length === 0) {
-                $('.layer_throbber').hide().addClass('hide');
-            }
-        }
-
         // Layers
         addLayers(map);
 
@@ -391,7 +377,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     this.on('checkchange', function(event, checked) {
                         if (!checked) {
                             // Cancel any associated throbber
-                            map.hideThrobber(this.layer.s3_layer_id);
+                            hideThrobber(this.layer);
                         }
                     });
                 } else {
@@ -401,7 +387,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             this.on('checkchange', function(event, checked) {
                                 if (!checked) {
                                     // Cancel any associated throbber
-                                    map.hideThrobber(this.layer.s3_layer_id);
+                                    hideThrobber(this.layer);
                                 }
                             });
                         }
@@ -843,6 +829,44 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     /* Layers */
 
     // @ToDo: Rewrite with layers as inheriting classes
+
+    /**
+     * Callback for all layers on 'loadstart'
+     * - show Throbber
+     */
+    var layer_loadstart = function(event) {
+        var layer = event.object;
+        var s3 = layer.map.s3;
+        $('#' + s3.id + ' .layer_throbber').show().removeClass('hide');
+        var layer_id = layer.s3_layer_id;
+        var layers_loading = s3.layers_loading;
+        layers_loading.pop(layer_id); // we never want 2 pushed
+        layers_loading.push(layer_id);
+    }
+
+    /**
+     * Callback for all layers on 'loadend'
+     * - cancel Throbber (unless other layers have a lock on it still)
+     */
+    var hideThrobber = function(layer) {
+        var s3 = layer.map.s3;
+        var layers_loading = s3.layers_loading;
+        layers_loading.pop(layer.s3_layer_id);
+        if (layers_loading.length === 0) {
+            $('#' + s3.id + ' .layer_throbber').hide().addClass('hide');
+        }
+    }
+    var layer_loadend = function(event) {
+        hideThrobber(event.object);
+    }
+
+    /**
+     * Callback for all layers on 'visibilitychanged'
+     * - show legendPanel if not displayed
+     */
+    var layer_visibilitychanged = function(event) {
+        showLegend(event.object.map);
+    }
 
     /**
      * Add Layers from the Catalogue
@@ -1363,12 +1387,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         geojsonLayer.events.on({
             'featureselected': onFeatureSelect,
             'featureunselected': onFeatureUnselect,
-            'loadstart': function(event) {
-                map.showThrobber(event.object.s3_layer_id);
-            },
-            'loadend': function(event) {
-                map.hideThrobber(event.object.s3_layer_id);
-            }
+            'loadstart': layer_loadstart,
+            'loadend': layer_loadend,
+            'visibilitychanged': layer_visibilitychanged  
         });
         map.addLayer(geojsonLayer);
         // Ensure Highlight & Popup Controls act on this layer
@@ -1639,12 +1660,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         gpxLayer.events.on({
             'featureselected': onFeatureSelect,
             'featureunselected': onFeatureUnselect,
-            'loadstart': function(event) {
-                map.showThrobber(event.object.s3_layer_id);
-            },
-            'loadend': function(event) {
-                map.hideThrobber(event.object.s3_layer_id);
-            }
+            'loadstart': layer_loadstart,
+            'loadend': layer_loadend,
+            'visibilitychanged': layer_visibilitychanged
         });
         map.addLayer(gpxLayer);
         // Ensure Highlight & Popup Controls act on this layer
@@ -1769,12 +1787,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         kmlLayer.events.on({
             'featureselected': onFeatureSelect,
             'featureunselected': onFeatureUnselect,
-            'loadstart': function(event) {
-                map.showThrobber(event.object.s3_layer_id);
-            },
-            'loadend': function(event) {
-                map.hideThrobber(event.object.s3_layer_id);
-            }
+            'loadstart': layer_loadstart,
+            'loadend': layer_loadend,
+            'visibilitychanged': layer_visibilitychanged
         });
         map.addLayer(kmlLayer);
         // Ensure Highlight & Popup Controls act on this layer
@@ -1879,12 +1894,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             layer.events.on({
                 'featureselected': layer.onSelect,
                 'featureunselected': layer.onUnselect,
-                'loadstart': function(event) {
-                    map.showThrobber(event.object.s3_layer_id);
-                },
-                'loadend': function(event) {
-                    map.hideThrobber(event.object.s3_layer_id);
-                }
+                'loadstart': layer_loadstart,
+                'loadend': layer_loadend,
+                'visibilitychanged': layer_visibilitychanged
             });
             map.addLayer(layer);
             // Ensure Highlight & Popup Controls act on this layer
@@ -1903,12 +1915,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             layer.events.on({
                 'featureselected': layer.onSelect,
                 'featureunselected': layer.onUnselect,
-                'loadstart': function(event) {
-                    map.showThrobber(event.object.s3_layer_id);
-                },
-                'loadend': function(event) {
-                    map.hideThrobber(event.object.s3_layer_id);
-                }
+                'loadstart': layer_loadstart,
+                'loadend': layer_loadend,
+                'visibilitychanged': layer_visibilitychanged
             });
             map.addLayer(layer);
             // Ensure Highlight & Popup Controls act on this layer
@@ -2169,12 +2178,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         wfsLayer.events.on({
             'featureselected': onFeatureSelect,
             'featureunselected': onFeatureUnselect,
-            'loadstart': function(event) {
-                map.showThrobber(event.object.s3_layer_id);
-            },
-            'loadend': function(event) {
-                map.hideThrobber(event.object.s3_layer_id);
-            }
+            'loadstart': layer_loadstart,
+            'loadend': layer_loadend,
+            'visibilitychanged': layer_visibilitychanged
         });
         map.addLayer(wfsLayer);
         // Ensure Highlight & Popup Controls act on this layer
@@ -2365,6 +2371,11 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             // This gets picked up after mapPanel instantiates & copied to it's layerRecords
             wmsLayer.legendURL = legendURL;
         }
+        wmsLayer.events.on({
+            'loadstart': layer_loadstart,
+            'loadend': layer_loadend,
+            'visibilitychanged': layer_visibilitychanged
+        });
         map.addLayer(wmsLayer);
         if (layer._base) {
             map.setBaseLayer(wmsLayer);
@@ -3480,7 +3491,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     // Legend Panel as floating DIV
     var addLegendPanel = function(map, legendPanel) {
         var map_id = map.s3.id;
-        var div = '<div class="map_legend_panel"></div>';
+        var div = '<div class="map_legend_div"><div class="map_legend_tab right"></div><div class="map_legend_panel"></div></div>';
         $('#' + map_id).append(div);
         var legendPanel = new GeoExt.LegendPanel({
             title: i18n.gis_legend,
@@ -3492,6 +3503,32 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var jquery_obj = $('#' + map_id + ' .map_legend_panel');
         var el = Ext.get(jquery_obj[0]);
         legendPanel.render(el);
+
+        // Show/Hide Legend when clicking on Tab 
+        $('#' + map_id + ' .map_legend_tab').click(function() {
+            if ($(this).hasClass('right')) {
+                hideLegend(map);
+            } else {
+                showLegend(map);
+            }
+        });
+    }
+    var hideLegend = function(map) {
+        var map_id = map.s3.id;
+        var outerWidth = $('#' + map_id + ' .map_legend_panel').outerWidth();
+        $('#' + map_id + ' .map_legend_div').animate({
+            marginRight: '-' + outerWidth + 'px'
+        });
+        $('#' + map_id + ' .map_legend_tab').removeClass('right')
+                                            .addClass('left');
+    }
+    var showLegend = function(map) {
+        var map_id = map.s3.id;
+        $('#' + map_id + ' .map_legend_div').animate({
+            marginRight: 0
+        });
+        $('#' + map_id + ' .map_legend_tab').removeClass('left')
+                                            .addClass('right');
     }
 
     // Navigation History
