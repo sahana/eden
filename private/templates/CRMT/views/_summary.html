@@ -14,5 +14,10 @@
   {{try:}}{{=filter_form}}{{except:}}{{pass}}
  </div>
 </div>
+{{if s3.debug:}}
+{{s3.scripts.append("/%s/static/scripts/S3/s3.jquery.ui.pivottable.js" % appname)}}
+{{s3.scripts.append("/%s/static/scripts/flot/jquery.flot.js" % appname)}}
+{{s3.scripts.append("/%s/static/scripts/flot/jquery.flot.pie.js" % appname)}}
+{{else:}}{{s3.scripts.append("/%s/static/scripts/S3/s3.pivotTables.min.js" % appname)}}{{pass}}
 {{include "dataTables.html"}}
 {{include "dataLists.html"}}

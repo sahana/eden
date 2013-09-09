@@ -785,6 +785,8 @@ S3.search = {};
                 t.dataTable().fnReloadAjax(target_data['ajaxurl']);
             } else if (t.hasClass('map_wrapper')) {
                 S3.gis.refreshLayer('search_results');
+            } else if (t.hasClass('pt-container')) {
+                t.pivottable('reload', null, target_data['queries']);
             }
         }
     };
@@ -1259,6 +1261,9 @@ S3.search = {};
                     } else if (t.hasClass('cms_content')) {
                         // CMS widgets do not need page reload
                         needs_reload = false;
+                    } else if (t.hasClass('pt-container')) {
+                        // PivotTables do not need page reload
+                        needs_reload = false;
                     } else {
                         // all other targets need page reload
                         if (visible) {
@@ -1293,6 +1298,8 @@ S3.search = {};
                         t.dataTable().fnReloadAjax(dt_ajaxurl[target_id]);
                     } else if (t.hasClass('map_wrapper')) {
                         S3.gis.refreshLayer('search_results', queries);
+                    } else if (t.hasClass('pt-container')) {
+                        t.pivottable('reload', null, queries);
                     }
                 }
             } else {
