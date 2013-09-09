@@ -108,8 +108,8 @@
      <ul class='nav pull-right'>
       <li class='dropdown'><a href='#' class='dropdown-toggle disabled' data-toggle='dropdown'><i class='icon-cog'></i><b class='caret'></b></a>
        <ul class='dropdown-menu'>{{vars=request.vars}}
-       {{if response.s3.language == "en":}}{{tet_vars=dict(_language="tet")}}{{for var in vars:}}{{tet_vars[var]=vars[var]}}{{pass}}
-        <li><a href='{{=URL(args=request.args, vars=tet_vars)}}'><i class='icon-comment-alt'></i> Tetum</a></li>
+       {{if response.s3.language == "en":}}{{ar_vars=dict(_language="ar")}}{{for var in vars:}}{{ar_vars[var]=vars[var]}}{{pass}}
+        <li><a href='{{=URL(args=request.args, vars=ar_vars)}}'><i class='icon-comment-alt'></i> العربية</a></li>
        {{else:}}{{en_vars=dict(_language="en")}}{{for var in vars:}}{{en_vars[var]=vars[var]}}{{pass}}
         <li><a href='{{=URL(args=request.args, vars=en_vars)}}'><i class='icon-comment-alt'></i> English</a></li>{{pass}}
         <li class='divider'></li>
