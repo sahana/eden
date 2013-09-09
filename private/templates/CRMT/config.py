@@ -216,6 +216,10 @@ settings.ui.summary = [{"common": True,
                         "label": "Table",
                         "widgets": [{"method": "datatable"}]
                         },
+                       {"name": "charts",
+                        "label": "Charts",
+                        "widgets": [{"method": "report2"}]
+                        },
                        {"name": "map",
                         "label": "Map",
                         "widgets": [{"method": "map"}]

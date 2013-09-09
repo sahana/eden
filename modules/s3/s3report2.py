@@ -224,7 +224,94 @@ class S3Report2(S3Method):
             @param attr: controller attributes
         """
 
-        r.error(405, current.manager.ERROR.BAD_METHOD)
+        output = {}
+
+        resource = self.resource
+        get_config = resource.get_config
+
+        # @todo: make configurable:
+        maxrows = 20
+        maxcols = 20
+
+        # Extract the relevant GET vars
+        get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
+                        if k in ("rows",
+                                 "cols",
+                                 "fact",
+                                 "aggregate",
+                                 "totals"))
+
+        # Fall back to report options defaults
+        report_options = get_config("report_options", {})
+        defaults = report_options.get("defaults", {})
+
+        if not any (k in get_vars for k in ("rows", "cols", "fact")):
+            get_vars = defaults
+        get_vars["chart"] = r.get_vars.get("chart",
+                              defaults.get("chart", None))
+        get_vars["table"] = r.get_vars.get("table",
+                              defaults.get("table", None))
+                              
+        # Generate the pivot table
+        if get_vars:
+
+            rows = get_vars.get("rows", None)
+            cols = get_vars.get("cols", None)
+            layer = get_vars.get("fact", "id")
+
+            # Backward-compatiblity: alternative "aggregate" option
+            if layer is not None:
+                m = layer_pattern.match(layer)
+                if m is None:
+                    selector = layer
+                    if get_vars and "aggregate" in get_vars:
+                        method = get_vars["aggregate"]
+                    else:
+                        method = "count"
+                else:
+                    selector, method = m.group(2), m.group(1)
+
+            if not layer or not any([rows, cols]):
+                pivottable = None
+            else:
+                prefix = resource.prefix_selector
+                selector = prefix(selector)
+                layer = (selector, method)
+                get_vars["rows"] = prefix(rows) if rows else None
+                get_vars["cols"] = prefix(cols) if cols else None
+                get_vars["fact"] = "%s(%s)" % (method, selector)
+
+                pivottable = resource.pivottable(rows, cols, [layer])
+        else:
+            pivottable = None
+
+        # Render as JSON-serializable dict
+        if pivottable is not None:
+            pivotdata = pivottable.json(maxrows=maxrows,
+                                        maxcols=maxcols,
+                                        url=r.url(method=""))
+        else:
+            pivotdata = None
+
+        if r.representation in ("html", "iframe"):
+
+            # Generate the report form
+            ajax_vars = Storage(r.get_vars)
+            ajax_vars.update(get_vars)
+            ajaxurl = r.url(method="report2",
+                            representation="json",
+                            vars=ajax_vars)
+
+            output = S3ReportForm(resource).html(pivotdata,
+                                                 get_vars = get_vars,
+                                                 filter_widgets = None,
+                                                 ajaxurl = ajaxurl,
+                                                 widget_id = widget_id)
+
+        else:
+            r.error(501, r.ERROR.BAD_FORMAT)
+
+        return output
         
 # =============================================================================
 class S3ReportForm(object):
