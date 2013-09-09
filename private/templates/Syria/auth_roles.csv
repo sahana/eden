@@ -2,10 +2,13 @@ uid,role,description,controller,function,table,entity,uacl,oacl,hidden,system,pr
 ANONYMOUS,Anonymous,,org,organisation,,,READ|CREATE|UPDATE,,,,,Allow new users to create orgs during registration 
 ANONYMOUS,Anonymous,,,,org_organisation,,READ|CREATE,,,,,Allow new users to create orgs during registration 
 ANONYMOUS,Anonymous,,default,index,auth_user,,READ,,,,,Allow users to decode the modified_by field
+ANONYMOUS,Anonymous,,cr,,,,READ,READ,,,,
+ANONYMOUS,Anonymous,,event,,,,READ,READ,,,,
+ANONYMOUS,Anonymous,,hms,,,any,READ,READ,,,,
 ANONYMOUS,Anonymous,,org,,,any,READ,READ,,,,
 ANONYMOUS,Anonymous,,project,,,any,READ,READ,,,,
-ANONYMOUS,Anonymous,,event,,,,READ,READ,,,,
 ANONYMOUS,Anonymous,,pr,,,any,READ,READ,,,,
+ANONYMOUS,Anonymous,,stats,,,any,READ,READ,,,,
 ANONYMOUS,Anonymous,,vulnerability,risk,,any,READ,READ,,,,
 ANONYMOUS,Anonymous,,,,gis_layer_bing,,READ,,,,,
 ANONYMOUS,Anonymous,,,,gis_layer_coordinate,,READ,,,,,

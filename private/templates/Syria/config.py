@@ -131,7 +131,8 @@ settings.L10n.decimal_separator = "."
 settings.L10n.thousands_separator = ","
 
 # Restrict the Location Selector to just certain countries
-settings.gis.countries = ["SY", "IQ", "LB", "TR", "JO"]
+#settings.gis.countries = ["SY", "IQ", "LB", "TR", "JO"]
+settings.gis.countries = ["SY"]
 
 # Until we add support to LocationSelector2 to set dropdowns from LatLons
 #settings.gis.check_within_parent_boundaries = False
@@ -2688,7 +2689,7 @@ def customize_gis_location(**attr):
             s3db = current.s3db
             table = s3db.gis_location
 
-            s3.crud_strings["gis_location"].title_list = T("Districts")
+            s3.crud_strings["gis_location"].title_list = T("Countries")
 
             if r.method == "datalist":
                 # District selection page
@@ -2696,8 +2697,8 @@ def customize_gis_location(**attr):
                 s3.dl_pagelength = 12
                 s3.dl_rowsize = 2
 
-                # Just show L1s (Districts)
-                s3.filter = (table.level == "L1")
+                # Just show specific Countries
+                s3.filter = (table.name.belongs("Syrian Arab Republic", "Jordan", "Iraq", "Lebanon", "Turkey"))
                 # Default 5 triggers an AJAX call, we should load all by default
                 s3.dl_pagelength = 13
 
@@ -3181,21 +3182,21 @@ def customize_org_organisation(**attr):
                 return False
 
         if r.interactive:
-            ADD_ORGANISATION = T("New Stakeholder")
-            s3.crud_strings["org_organisation"] = Storage(
-                title_create = ADD_ORGANISATION,
-                title_display = T("Stakeholder Details"),
-                title_list = T("Stakeholders"),
-                title_update = T("Edit Stakeholder"),
-                title_search = T("Search Stakeholders"),
-                subtitle_create = T("Add New Stakeholder"),
-                label_list_button = T("List Stakeholders"),
-                label_create_button = ADD_ORGANISATION,
-                label_delete_button = T("Delete Stakeholder"),
-                msg_record_created = T("Stakeholder added"),
-                msg_record_modified = T("Stakeholder updated"),
-                msg_record_deleted = T("Stakeholder deleted"),
-                msg_list_empty = T("No Stakeholders currently registered"))
+            # ADD_ORGANISATION = T("New Stakeholder")
+            # s3.crud_strings["org_organisation"] = Storage(
+                # title_create = ADD_ORGANISATION,
+                # title_display = T("Stakeholder Details"),
+                # title_list = T("Stakeholders"),
+                # title_update = T("Edit Stakeholder"),
+                # title_search = T("Search Stakeholders"),
+                # subtitle_create = T("Add New Stakeholder"),
+                # label_list_button = T("List Stakeholders"),
+                # label_create_button = ADD_ORGANISATION,
+                # label_delete_button = T("Delete Stakeholder"),
+                # msg_record_created = T("Stakeholder added"),
+                # msg_record_modified = T("Stakeholder updated"),
+                # msg_record_deleted = T("Stakeholder deleted"),
+                # msg_list_empty = T("No Stakeholders currently registered"))
 
             list_fields = ["id",
                            "name",
