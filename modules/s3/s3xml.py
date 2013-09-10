@@ -2142,6 +2142,207 @@ class S3XML(S3Codec):
 
     # -------------------------------------------------------------------------
     @classmethod
+    def xls2tree(cls, source,
+                 resourcename=None,
+                 extra_data=None,
+                 sheet=None,
+                 rows=None,
+                 cols=None,
+                 fields=None,
+                 header_row=True):
+        """
+            Convert a table in an XLS (MS Excel) sheet into an ElementTree,
+            consisting of <table name="format">, <row> and
+            <col field="fieldname"> elements (see: L{csv2tree}).
+
+            The returned ElementTree can be imported using S3CSV
+            stylesheets (through S3Resource.import_xml()).
+
+            @param source: the XLS source (stream, or XLRD book, or
+                           None if sheet is an open XLRD sheet)
+            @param resourcename: the resource name
+            @param extra_data: dict of extra cols to add to each row
+            @param sheet: sheet name or index, or an open XLRD sheet
+                          (open work sheet overrides source)
+            @param rows: Rows range, integer (length from 0) or
+                         tuple (start, length) - or a tuple (start,) to
+                         read all available rows after start
+            @param cols: Columns range, like "rows"
+            @param fields: Field map, a dict {index: fieldname} where
+                           index is the column index counted from the
+                           first column within the specified range,
+                           e.g. cols=(2,7), fields={1:"MyField"}
+                           means column 3 in the sheet is "MyField",
+                           the field map can be omitted to read the field
+                           names from the sheet (see "header_row")
+            @param header_row: the first row contains column headers
+                               (if fields is None, they will be used
+                               as field names in the output - otherwise
+                               they will be ignored)
+            @return: an etree.ElementTree representing the table
+        """
+
+        import xlrd
+        
+        # Shortcuts
+        ATTRIBUTE = cls.ATTRIBUTE
+        FIELD = ATTRIBUTE.field
+        TAG = cls.TAG
+        COL = TAG.col
+        SubElement = etree.SubElement
+
+        # Root element
+        root = etree.Element(TAG.table)
+        if resourcename is not None:
+            root.set(ATTRIBUTE.name, resourcename)
+
+        if isinstance(sheet, xlrd.sheet.Sheet):
+            # Open work sheet passed as argument => use this
+            s = sheet
+        else:
+            if hasattr(source, "read"):
+                # Source is a stream
+                if hasattr(source, "seek"):
+                    source.seek(0)
+                wb = xlrd.open_workbook(file_contents=source.read(),
+                                        on_demand=True)
+            elif isinstance(source, xlrd.book.Book):
+                # Source is an open work book
+                wb = source
+            else:
+                # Unsupported source type
+                raise RuntimeError("xls2tree: invalid source %s" %
+                                   type(source))
+
+            # Find the sheet
+            try:
+                if isinstance(sheet, (int, long)):
+                    s = wb.sheet_by_index(sheet)
+                elif isinstance(sheet, basestring):
+                    s = wb.sheet_by_name(sheet)
+                elif sheet is None:
+                    s = wb.sheet_by_index(0)
+                else:
+                    raise SyntaxError("xls2tree: invalid sheet %s" % sheet)
+            except IndexError, xlrd.XLRDError:
+                s = None
+
+        def cell_range(cells, max_cells):
+            """
+                Helper method to calculate a cell range
+
+                @param cells: the specified range
+                @param max_cells: maximum number of cells
+            """
+            if not cells:
+                cells = (0, max_cells)
+            elif not isinstance(cells, (tuple, list)):
+                cells = (0, cells)
+            elif len(cells) == 1:
+                cells = (cells[0], max_cells)
+            else:
+                cells = (cells[0], cells[0] + cells[1])
+            return cells
+
+        if s:
+            # Calculate cell range
+            rows = cell_range(rows, s.nrows)
+            cols = cell_range(cols, s.ncols)
+
+            # Column headers
+            if fields:
+                headers = fields
+            elif not header_row:
+                headers = dict((i, "%s" % i)
+                               for i in range(cols[1]- cols[0]))
+            else:
+                # Use header row in the work sheet
+                headers = {}
+
+            # Lambda to decode XLS dates into an ISO datetime-string
+            decode_date = lambda v: datetime.datetime(
+                                    *xlrd.xldate_as_tuple(v, wb.datemode))
+                                    
+            encode_iso_datetime = cls.encode_iso_datetime
+            def decode(t, v):
+                """
+                    Helper method to decode the cell value by type
+
+                    @param t: the cell type
+                    @param v: the cell value
+                    @return: text representation of the cell value
+                """
+                text = ""
+                if v:
+                    if t is None:
+                        text = s3_unicode(v).strip()
+                    elif t == xlrd.XL_CELL_TEXT:
+                        text = v.strip()
+                    elif t == xlrd.XL_CELL_NUMBER:
+                        text = str(long(v)) if long(v) == v else str(v)
+                    elif t == xlrd.XL_CELL_DATE:
+                        text = encode_iso_datetime(decode_date(v))
+                    elif t == xlrd.XL_CELL_BOOLEAN:
+                        text = str(value).lower()
+                return text
+
+            def add_col(row, name, t, v):
+                """
+                    Helper method to add a column to an output row
+
+                    @param row: the output row (etree.Element)
+                    @param name: the column name
+                    @param t: the cell type
+                    @param v: the cell value
+                """
+                col = SubElement(row, COL)
+                col.set(FIELD, name)
+                col.text = decode(t, v)
+
+            # Process the rows
+            ROW = TAG.row
+            record_idx = 0
+            extra_fields = set(extra_data) if extra_data else None
+            check_headers = extra_fields is not None
+            for ridx in range(*rows):
+                # Read types and values
+                types = s.row_types(ridx, *cols)
+                values = s.row_values(ridx, *cols)
+                
+                if header_row and record_idx == 0:
+                    # Read column headers
+                    if not fields:
+                        for cidx, value in enumerate(values):
+                            header = decode(value)
+                            headers[cidx] = header
+                            if check_headers:
+                                extra_fields.discard(header)
+                        check_headers = False
+                else:
+                    # Add output row
+                    orow = SubElement(root, ROW)
+                    for cidx, name in headers.items():
+                        if check_headers:
+                            extra_fields.discard(name)
+                        try:
+                            t = types[cidx]
+                            v = values[cidx]
+                        except IndexError:
+                            pass
+                        else:
+                            add_col(orow, name, t, v)
+                    check_headers = False
+                            
+                    # Add extra data
+                    if extra_fields:
+                        for key in extra_fields:
+                            add_col(orow, key, None, extra_data[key])
+                record_idx += 1
+            
+        return  etree.ElementTree(root)
+        
+    # -------------------------------------------------------------------------
+    @classmethod
     def csv2tree(cls, source,
                  resourcename=None,
                  extra_data=None,
