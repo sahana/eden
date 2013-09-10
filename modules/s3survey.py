@@ -1670,12 +1670,13 @@ class S3QuestionTypeDateWidget(S3QuestionTypeAbstractWidget):
 
     # -------------------------------------------------------------------------
     def display(self, **attr):
-        #from s3widgets import S3DateWidget
-        #value = self.getAnswer()
-        #widget = S3DateWidget()
-        #input = widget(self.field, value, **self.attr)
-        #return self.layout(self.question.name, input, **attr)
-        return S3QuestionTypeAbstractWidget.display(self, **attr)
+        S3QuestionTypeAbstractWidget.initDisplay(self, **attr)
+        from s3.s3widgets import S3DateWidget
+        widget = S3DateWidget()
+        value = self.getAnswer()
+        self.attr["_id"]=self.question.code
+        input = widget(self.field, value, **self.attr)
+        return self.layout(self.question.name, input, **attr)
 
     # -------------------------------------------------------------------------
     def formattedAnswer(self, data):
@@ -1799,6 +1800,15 @@ class S3QuestionTypeTimeWidget(S3QuestionTypeAbstractWidget):
         T = current.T
         S3QuestionTypeAbstractWidget.__init__(self, question_id)
         self.typeDescription = T("Time")
+
+    # -------------------------------------------------------------------------
+    def display(self, **attr):
+        S3QuestionTypeAbstractWidget.initDisplay(self, **attr)
+        value = self.getAnswer()
+        self.attr["_id"]=self.question.code
+        input = TimeWidget.widget(self.field, value, **self.attr)
+        return self.layout(self.question.name, input, **attr)
+
 
 # =============================================================================
 class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
