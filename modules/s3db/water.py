@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Sahana Eden Flood Model
+""" Sahana Eden Water Model
 
     @copyright: 2011-13 (c) Sahana Software Foundation
     @license: MIT
@@ -27,20 +27,21 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3FloodModel"]
+__all__ = ["S3WaterModel"
+           ]
 
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
 
 # =============================================================================
-class S3FloodModel(S3Model):
+class S3WaterModel(S3Model):
     """
-        Monitors Water Levels
+        Water Sources
     """
 
-    names = ["flood_gauge",
-             "flood_river",
+    names = ["water_gauge",
+             "water_river",
              ]
 
     def model(self):
@@ -62,7 +63,7 @@ class S3FloodModel(S3Model):
             3:T("Very High"),
             4:T("Low")
         }
-        tablename = "flood_gauge"
+        tablename = "water_gauge"
         table = define_table(tablename,
                              Field("name",
                                    label=T("Name")),
@@ -74,7 +75,7 @@ class S3FloodModel(S3Model):
                                    label = T("URL"),
                                    requires = IS_NULL_OR(IS_URL()),
                                    represent = lambda url: \
-                                     A(url, _href=url, _target="blank")
+                                    A(url, _href=url, _target="blank")
                                    ),
                              Field("image_url",
                                    label=T("Image URL")),
@@ -108,7 +109,7 @@ class S3FloodModel(S3Model):
 
         # -----------------------------------------------------------------------------
         # Rivers
-        tablename = "flood_river"
+        tablename = "water_river"
         table = define_table(tablename,
                              Field("name",
                                    label=T("Name"),
@@ -132,13 +133,12 @@ class S3FloodModel(S3Model):
             msg_record_deleted = T("River deleted"),
             msg_list_empty = T("No Rivers currently registered"))
 
+        #represent = S3Represent(lookup = tablename)
         #river_id = S3ReusableField("river_id", table,
-        #                           requires = IS_NULL_OR(IS_ONE_OF(db, "flood_river.id", "%(name)s")),
-        #                           represent = lambda id: \
-        #                            (id and [db(db.flood_river.id == id).select(db.flood_river.name,
-        #                                                                        limitby=(0, 1)).first().name] or ["None"])[0],
+        #                           requires = IS_NULL_OR(IS_ONE_OF(db, "water_river.id", represent)),
+        #                           represent = represent,
         #                           label = T("River"),
-        #                           comment = S3AddResourceLink(c="flood",
+        #                           comment = S3AddResourceLink(c="water",
         #                                                       f="river",
         #                                                       title=ADD_RIVER),
         #                           ondelete = "RESTRICT")
@@ -146,6 +146,6 @@ class S3FloodModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage()
+        return dict()
 
 # END =========================================================================

@@ -3,11 +3,11 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Flood Gauges - CSV Import Stylesheet
+         Water Gauges - CSV Import Stylesheet
 
          Column headers defined in this stylesheet:
 
-         Name...........................required.....shelter name
+         Name...........................required.....Gauge name
          Country........................optional.....country
          L1.............................optional.....L1
          L2.............................optional.....L2
@@ -28,17 +28,17 @@
     <xsl:template match="/">
 
         <s3xml>
-            <!-- Process all table rows for shelter records -->
+            <!-- Process all table rows for gauge records -->
             <xsl:apply-templates select="table/row"/>
         </s3xml>
 
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <!-- Shelter Record -->
+    <!-- Gauge Record -->
     <xsl:template match="row">
 
-        <resource name="flood_gauge">
+        <resource name="water_gauge">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="code"><xsl:value-of select="col[@field='Code']"/></data>
             <data field="image_url"><xsl:value-of select="col[@field='Image']"/></data>

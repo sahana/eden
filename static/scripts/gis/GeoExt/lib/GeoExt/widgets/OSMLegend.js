@@ -7,7 +7,6 @@
  */
 
 /**
- * @include GeoExt/widgets/LegendImage.js
  * @requires GeoExt/widgets/LayerLegend.js
  */
 
@@ -25,19 +24,34 @@ Ext.namespace('GeoExt');
 /** api: constructor
  *  .. class:: OSMLegend(config)
  *
- *      Show a legend image in a BoxComponent and make sure load errors are 
+ *      Show a legend html in a BoxComponent and make sure load errors are 
  *      dealt with.
  */
 GeoExt.OSMLegend = Ext.extend(GeoExt.LayerLegend, {
 
+    /** api: config[url]
+     *  ``String``  The url of the html to load
+     */
+    url: 'http://www.openstreetmap.org/key',
+
     /** private: method[initComponent]
-     *  Initializes the legend image component. 
+     *  Initializes the legend html component. 
      */
     initComponent: function() {
         GeoExt.OSMLegend.superclass.initComponent.call(this);
-        this.add(new GeoExt.LegendImage({
-            url: this.layerRecord.get("legendURL")
+        this.add(new Ext.BoxComponent({
+            autoEl: {
+                tag: 'div'
+            }
         }));
+        Ext.Ajax.request({
+            method: 'GET',
+            url: this.url,
+            success: function (response) {
+                // @ToDo: Why is response empty via AJAX when URL works fine direct in browser?
+                this.getEl().dom.outerHTML = response.responseText;
+            }
+        });
     },
     
     /** private: method[update]
@@ -45,7 +59,7 @@ GeoExt.OSMLegend = Ext.extend(GeoExt.LayerLegend, {
      */
     update: function() {
         GeoExt.OSMLegend.superclass.update.apply(this, arguments);
-        this.items.get(1).setUrl(this.layerRecord.get("legendURL"));
+        //this.items.get(1).setUrl(this.url);
     }
 
 });
@@ -54,11 +68,12 @@ GeoExt.OSMLegend = Ext.extend(GeoExt.LayerLegend, {
  *  Private override
  */
 GeoExt.OSMLegend.supports = function(layerRecord) {
-    return layerRecord.get("legendURL") == null ? 0 : 10;
+    // @ToDo: Filter by URL?
+    return layerRecord.getLayer() instanceof OpenLayers.Layer.TMS ? 1 : 0;
 };
 
-/** api: legendtype = gx_urllegend */
-GeoExt.LayerLegend.types["gx_urllegend"] = GeoExt.OSMLegend;
+/** api: legendtype = gx_osmlegend */
+GeoExt.LayerLegend.types["gx_osmlegend"] = GeoExt.OSMLegend;
 
-/** api: xtype = gx_urllegend */
-Ext.reg('gx_urllegend', GeoExt.OSMLegend);
+/** api: xtype = gx_osmlegend */
+Ext.reg('gx_osmlegend', GeoExt.OSMLegend);

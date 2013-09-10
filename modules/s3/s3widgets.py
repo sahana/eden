@@ -3503,7 +3503,6 @@ class S3LocationSelectorWidget2(FormWidget):
         * Doesn't allow creation of new Lx Locations
         * Doesn't allow selection of existing Locations
         * Doesn't support manual entry of LatLons
-        * Doesn't support Geocoding
 
         May evolve into a replacement in-time if missing features get migrated here.
 
@@ -3743,14 +3742,11 @@ class S3LocationSelectorWidget2(FormWidget):
                                      country.lat_max
                                      ]
             else:
-                # @ToDo: Lookup Labels dynamically when L0 changes
-                raise NotImplementedError
-                default_L0 = 0
-                default_bounds = [config.lon_min,
-                                  config.lat_min,
-                                  config.lon_max,
-                                  config.lat_max
-                                  ]
+                default_L0_bounds = [config.lon_min,
+                                     config.lat_min,
+                                     config.lon_max,
+                                     config.lat_max
+                                     ]
 
         parent = ""
         # Keep the selected Lat/Lon/Address/Postcode during validation errors
@@ -3869,15 +3865,17 @@ class S3LocationSelectorWidget2(FormWidget):
             lon_input = ""
             wkt_input = ""
 
-        if "L0" in levels:
-            L0_input = ""
-        else:
+        if "L0" not in levels and \
+           "L0" in _levels:
             # Have a hidden L0 input
             # - used for Geocoder
             L0_input = INPUT(_name="L0",
                              _id="%s_L0" % fieldname,
                              fvalue=default_L0,
                              )
+        else:
+            L0_input = ""
+
         if "L1" not in levels and \
            "L1" in _levels:
             # Have a hidden L1 input
@@ -3988,10 +3986,17 @@ class S3LocationSelectorWidget2(FormWidget):
             postcode_row = ""
 
         # Hierarchy Labels
+        # @ToDo: Country-specific Translations of Labels
         htable = s3db.gis_hierarchy
         fields = [htable[level] for level in levels if level != "L0"]
-        labels = db(htable.location_id == default_L0).select(*fields,
-                                                             limitby=(0, 1)).first()
+        if default_L0:
+            query = (htable.location_id == default_L0)
+        else:
+            query = (htable.uuid == "SITE_DEFAULT")
+        labels = db(query).select(*fields,
+                                  limitby=(0, 1)).first()
+        if "L0" in levels:
+            labels["L0"] = current.messages.COUNTRY
 
         # Lx Dropdowns
         Lx_rows = DIV()
@@ -3999,7 +4004,6 @@ class S3LocationSelectorWidget2(FormWidget):
         hidden = False
         for level in levels:
             id = "%s_%s" % (fieldname, level)
-            # @ToDo: Translate Labels
             label = labels[level]
             widget = SELECT(OPTION(T("Select %(location)s") % dict(location = label),
                                    _value=""),
@@ -4034,8 +4038,14 @@ class S3LocationSelectorWidget2(FormWidget):
             # (client-side JS will open when-needed)
             hidden = hide_lx
 
-        # @ToDo: Don't assume we start at L1
-        if default_L0 and "L1" in levels:
+        if not default_L0:
+            query = (gtable.level == "L0")
+            if len(countries):
+                ttable = s3db.gis_location_tag
+                query &= ((ttable.tag == "ISO2") & \
+                          (ttable.value.belongs(countries)) & \
+                          (ttable.location_id == gtable.id))
+        elif "L1" in levels:
             query = (gtable.level == "L1") & \
                     (gtable.parent == default_L0)
         elif default_L1 and "L2" in levels:
@@ -4078,38 +4088,33 @@ class S3LocationSelectorWidget2(FormWidget):
             for location in locations:
                 l = location["gis_location"]
                 name = location["gis_location_name.name_l10n"] or l.name
-                if l.inherited:
-                    location_dict[int(l.id)] = dict(n=name,
-                                                    l=int(l.level[1]),
-                                                    f=int(l.parent),
-                                                    )
-                else:
-                    location_dict[int(l.id)] = dict(n=name,
-                                                    l=int(l.level[1]),
-                                                    f=int(l.parent),
-                                                    b=[l.lon_min,
-                                                       l.lat_min,
-                                                       l.lon_max,
-                                                       l.lat_max,
-                                                       ],
-                                                    )
+                data = dict(n=name,
+                            l=int(l.level[1]),
+                            )
+                if l.parent:
+                    data["f"] = int(l.parent)
+                if not l.inherited:
+                    data["b"] = [l.lon_min,
+                                 l.lat_min,
+                                 l.lon_max,
+                                 l.lat_max,
+                                 ]
+                location_dict[int(l.id)] = data
         else:
             for l in locations:
-                if l.inherited:
-                    location_dict[int(l.id)] = dict(n=l.name,
-                                                    l=int(l.level[1]),
-                                                    f=int(l.parent),
-                                                    )
-                else:
-                    location_dict[int(l.id)] = dict(n=l.name,
-                                                    l=int(l.level[1]),
-                                                    f=int(l.parent),
-                                                    b=[l.lon_min,
-                                                       l.lat_min,
-                                                       l.lon_max,
-                                                       l.lat_max,
-                                                       ],
-                                                    )
+                data = dict(n=l.name,
+                            l=int(l.level[1]),
+                            )
+                if l.parent:
+                    data["f"] = int(l.parent)
+                if not l.inherited:
+                    data["b"] = [l.lon_min,
+                                 l.lat_min,
+                                 l.lon_max,
+                                 l.lat_max,
+                                 ]
+                location_dict[int(l.id)] = data
+
         if default_L0 and default_L0 not in location_dict:
             location_dict[default_L0] = dict(l=0,
                                              b=default_L0_bounds)

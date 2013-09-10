@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-    Flood Alerts module
+    Water module
 """
 
 module = request.controller
@@ -17,8 +17,8 @@ def index():
     return s3db.cms_index(module)
 
 # -----------------------------------------------------------------------------
-def gauge():
-    """ Gauges, RESTful controller """
+def flood_gauge():
+    """ Flood Gauges, RESTful controller """
 
     # Pre-processor
     def prep(r):

@@ -1,2 +1,2 @@
 "Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","Filter","Trackable","Folder","Visible","Enabled"
-"Flood Gauges",,"flood","gauge","US","flood","Navaid, Blue","Gauge","name,code,status",,,,"False",
+"Flood Gauges",,"water","gauge","US","flood","Navaid, Blue","Gauge","name,code,status",,,,"False",

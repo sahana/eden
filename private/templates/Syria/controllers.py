@@ -261,17 +261,17 @@ def _newsfeed():
         s3.jquery_ready.append('''\n'''.join(scripts))
         
         # Latest 5 Disasters
-        resource = s3db.resource("event_event")
-        layout = render_events
-        listid = "event_datalist"
-        limit = 5
-        orderby = "zero_hour desc"
-        list_fields = ["name",
-                       "event_type_id$name",
-                       "zero_hour",
-                       "closed",
-                       ]
-        output["disasters"] = latest_records(resource, layout, listid, limit, list_fields, orderby)
+        # resource = s3db.resource("event_event")
+        # layout = render_events
+        # listid = "event_datalist"
+        # limit = 5
+        # orderby = "zero_hour desc"
+        # list_fields = ["name",
+                       # "event_type_id$name",
+                       # "zero_hour",
+                       # "closed",
+                       # ]
+        # output["disasters"] = latest_records(resource, layout, listid, limit, list_fields, orderby)
 
     return output
 
@@ -582,32 +582,6 @@ def render_cms_events(listid, resource, rfields, record, **attr):
                )
 
     return item
-
-# =============================================================================
-class glossary(S3CustomController):
-    """
-        Custom page
-    """
-
-    def __call__(self):
-
-        title = current.T("Glossary")
-
-        self._view(THEME, "glossary.html")
-        return dict(title = title)
-
-# =============================================================================
-class links(S3CustomController):
-    """
-        Custom page
-    """
-
-    def __call__(self):
-
-        title = current.T("Links")
-
-        self._view(THEME, "links.html")
-        return dict(title = title)
 
 # =============================================================================
 class subscriptions(S3CustomController):

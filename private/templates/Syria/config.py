@@ -130,9 +130,14 @@ settings.L10n.decimal_separator = "."
 # Thousands separator for numbers (defaults to space)
 settings.L10n.thousands_separator = ","
 
+# Uncomment this to Translate CMS Series Names
+# - we want this on when running s3translate but off in normal usage as we use the English names to lookup icons in render_posts
+#settings.L10n.translate_cms_series = True
+# Uncomment this to Translate Location Names
+settings.L10n.translate_gis_location = True
+
 # Restrict the Location Selector to just certain countries
-#settings.gis.countries = ["SY", "IQ", "LB", "TR", "JO"]
-settings.gis.countries = ["SY"]
+settings.gis.countries = ["SY", "IQ", "LB", "TR", "JO"]
 
 # Until we add support to LocationSelector2 to set dropdowns from LatLons
 #settings.gis.check_within_parent_boundaries = False
@@ -1904,9 +1909,9 @@ def customize_cms_post_fields():
     field.label = ""
     field.represent = s3db.gis_LocationRepresent(sep=" | ")
     field.requires = IS_NULL_OR(
-                        IS_LOCATION_SELECTOR2(levels=["L1", "L2", "L3"])
+                        IS_LOCATION_SELECTOR2(levels=["L0", "L1", "L2", "L3"])
                      )
-    field.widget = S3LocationSelectorWidget2(levels=["L1", "L2", "L3"])
+    field.widget = S3LocationSelectorWidget2(levels=["L0", "L1", "L2", "L3"])
 
     table.created_by.represent = s3_auth_user_represent_name
 
@@ -1917,7 +1922,7 @@ def customize_cms_post_fields():
                    "created_by",
                    "created_by$organisation_id",
                    "document.file",
-                   "event_post.event_id",
+                   #"event_post.event_id",
                    ]
 
     s3db.configure("cms_post",
@@ -2276,52 +2281,52 @@ def customize_cms_post(**attr):
             location_id = get_vars.get("~.(location)", None)
             if location_id:
                 table.location_id.default = location_id
-            event_id = get_vars.get("~.(event)", None)
-            if event_id:
-                crud_form = S3SQLCustomForm(
-                    "date",
-                    "series_id",
-                    "body",
-                    "location_id",
-                    S3SQLInlineComponent(
-                        "document",
-                        name = "file",
-                        label = T("Files"),
-                        fields = ["file",
-                                  #"comments",
-                                  ],
-                    ),
-                )
-                def create_onaccept(form):
-                    table = current.s3db.event_event_post
-                    table.insert(event_id=event_id, post_id=form.vars.id)
+            # event_id = get_vars.get("~.(event)", None)
+            # if event_id:
+                # crud_form = S3SQLCustomForm(
+                    # "date",
+                    # "series_id",
+                    # "body",
+                    # "location_id",
+                    # S3SQLInlineComponent(
+                        # "document",
+                        # name = "file",
+                        # label = T("Files"),
+                        # fields = ["file",
+                                  ##"comments",
+                                  # ],
+                    # ),
+                # )
+                # def create_onaccept(form):
+                    # table = current.s3db.event_event_post
+                    # table.insert(event_id=event_id, post_id=form.vars.id)
 
-                s3db.configure("cms_post",
-                               create_onaccept = create_onaccept, 
-                               )
-            else:
-                crud_form = S3SQLCustomForm(
-                    "date",
-                    "series_id",
-                    "body",
-                    "location_id",
-                    S3SQLInlineComponent(
-                        "event_post",
-                        #label = T("Disaster(s)"),
-                        label = T("Disaster"),
-                        multiple = False,
-                        fields = ["event_id"],
-                        orderby = "event_id$name",
-                    ),
-                    S3SQLInlineComponent(
-                        "document",
-                        name = "file",
-                        label = T("Files"),
-                        fields = ["file",
-                                  #"comments",
-                                  ],
-                    ),
-                )
+                # s3db.configure("cms_post",
+                               # create_onaccept = create_onaccept, 
+                               # )
+            # else:
+            crud_form = S3SQLCustomForm(
+                "date",
+                "series_id",
+                "body",
+                "location_id",
+                #S3SQLInlineComponent(
+                #    "event_post",
+                #    #label = T("Disaster(s)"),
+                #    label = T("Disaster"),
+                #    multiple = False,
+                #    fields = ["event_id"],
+                #    orderby = "event_id$name",
+                #),
+                S3SQLInlineComponent(
+                    "document",
+                    name = "file",
+                    label = T("Files"),
+                    fields = ["file",
+                              #"comments",
+                              ],
+                ),
+            )
 
             # Return to List view after create/update/delete
             # We now do all this in Popups
@@ -3086,8 +3091,8 @@ def customize_org_office(**attr):
                 # Don't add new Locations here
                 location_field.comment = None
                 # L1s only
-                location_field.requires = IS_LOCATION_SELECTOR2(levels=["L1"])
-                location_field.widget = S3LocationSelectorWidget2(levels=["L1"],
+                location_field.requires = IS_LOCATION_SELECTOR2(levels=["L0", "L1"])
+                location_field.widget = S3LocationSelectorWidget2(levels=["L0", "L1"],
                                                                   show_address=True,
                                                                   show_map=False)
             s3.cancel = True

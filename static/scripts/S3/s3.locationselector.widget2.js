@@ -89,6 +89,27 @@
         // Initial population of dropdown(s)
         if (L0) {
             lx_select(fieldname, 0, L0);
+        } else {
+            // Show the Country row
+            L0_row.show();
+            // Populate with values
+            var values = [];
+            for (var i in l) {
+                v = l[i];
+                if (v['l'] == 0) {
+                    v['i'] = i;
+                    values.push(v);
+                }
+            }
+            values.sort(nameSort);
+            var _id, location, option, selected;
+            var select = $(selector + '_L0');
+            for (var i=0, len=values.length; i < len; i++) {
+                location = values[i];
+                _id = location['i'];
+                option = '<option value="' + _id + '">' + location['n'] + '</option>';
+                select.append(option);
+            }
         }
         if (L1) {
             lx_select(fieldname, 1, L1);

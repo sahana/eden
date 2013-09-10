@@ -384,6 +384,7 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
                 'gis/GeoExt/lib/GeoExt/widgets/LayerOpacitySlider.js',
                 'gis/GeoExt/lib/GeoExt/widgets/LayerLegend.js',
                 'gis/GeoExt/lib/GeoExt/widgets/LegendImage.js',
+                //'gis/GeoExt/lib/GeoExt/widgets/OSMLegend.js',
                 'gis/GeoExt/lib/GeoExt/widgets/UrlLegend.js',
                 'gis/GeoExt/lib/GeoExt/widgets/WMSLegend.js',
                 'gis/GeoExt/lib/GeoExt/widgets/VectorLegend.js',
