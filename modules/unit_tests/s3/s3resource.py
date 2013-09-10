@@ -541,9 +541,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
         expected_r = project_task.on(
                         project_task_project.task_id == project_task.id)
 
-        left = rfilter.left
-        self.assertEqual(left.keys(), ["project"])
-        left = left["project"]
+        left = rfilter.get_left_joins(as_list=False)
         self.assertEqual(left.keys(), ["org_organisation", "project_task"])
         self.assertTrue(isinstance(left["org_organisation"], list))
         self.assertEqual(len(left["org_organisation"]), 1)
@@ -577,19 +575,29 @@ class ResourceFilterQueryTests(unittest.TestCase):
 
         expected = (((((project_task.deleted != True) &
                        (project_task.id > 0)) &
-                      ((((project_project.deleted != True) &
-                         (project_project.id > 0)) &
-                        (org_organisation.name == "test")) &
-                      (project_task.description == "test"))) &
+                      (((project_project.deleted !=True) &
+                        (project_project.id > 0)) &
+                       ((org_organisation.name == "test") &
+                        (project_task.description == "test")))) &
                      ((project_task_project.deleted != True) &
                       ((project_task_project.project_id == project_project.id) &
                        (project_task_project.task_id == project_task.id)))) &
                     (project_project.organisation_id == org_organisation.id))
 
-        self.assertEqual(str(query), str(expected))
+        #expected = (((((project_task.deleted != True) &
+                       #(project_task.id > 0)) &
+                      #((((project_project.deleted != True) &
+                         #(project_project.id > 0)) &
+                        #(org_organisation.name == "test")) &
+                      #(project_task.description == "test"))) &
+                     #((project_task_project.deleted != True) &
+                      #((project_task_project.project_id == project_project.id) &
+                       #(project_task_project.task_id == project_task.id)))) &
+                    #(project_project.organisation_id == org_organisation.id))
 
-        self.assertEqual(rfilter.joins, Storage())
-        self.assertEqual(rfilter.left, Storage())
+        self.assertEqual(str(query), str(expected))
+        self.assertEqual(rfilter.get_left_joins(as_list=False), Storage())
+        
         # Try to select rows
         rows = component.select(None, limit=1, as_rows=True)
 
@@ -615,23 +623,33 @@ class ResourceFilterQueryTests(unittest.TestCase):
         component.build_query()
         rfilter = component.rfilter
         query = rfilter.get_query()
-
         expected = ((((((pr_identity.deleted != True) &
                         (pr_identity.id > 0)) &
-                       ((((pr_person.deleted != True) &
-                          (pr_person.id > 0)) &
-                         (org_organisation.name == "test")) &
-                        (pr_identity.value == "test"))) &
+                       (((pr_person.deleted != True) &
+                         (pr_person.id > 0)) &
+                        ((org_organisation.name == "test") &
+                         (pr_identity.value == "test")))) &
                       ((pr_identity.person_id == pr_person.id) &
                        (pr_identity.deleted != True))) &
                      ((hrm_human_resource.person_id == pr_person.id) &
                       (hrm_human_resource.deleted != True))) &
                     (hrm_human_resource.organisation_id == org_organisation.id))
+                    
+        #expected = ((((((pr_identity.deleted != True) &
+                        #(pr_identity.id > 0)) &
+                       #((((pr_person.deleted != True) &
+                          #(pr_person.id > 0)) &
+                         #(org_organisation.name == "test")) &
+                        #(pr_identity.value == "test"))) &
+                      #((pr_identity.person_id == pr_person.id) &
+                       #(pr_identity.deleted != True))) &
+                     #((hrm_human_resource.person_id == pr_person.id) &
+                      #(hrm_human_resource.deleted != True))) &
+                    #(hrm_human_resource.organisation_id == org_organisation.id))
 
         self.assertEqual(str(query), str(expected))
-
-        self.assertEqual(rfilter.joins, Storage())
-        self.assertEqual(rfilter.left, Storage())
+        self.assertEqual(rfilter.get_left_joins(as_list=False), Storage())
+        
         # Try to select rows
         rows = component.select(None, limit=1, as_rows=True)
 
@@ -663,9 +681,8 @@ class ResourceFilterQueryTests(unittest.TestCase):
                      (project_activity.deleted != True)))
         
         self.assertEqual(str(query), str(expected))
-
-        self.assertEqual(rfilter.joins, Storage())
-        self.assertEqual(rfilter.left, Storage())
+        self.assertEqual(rfilter.get_left_joins(as_list=False), Storage())
+        
         # Try to select rows
         rows = component.select(None, limit=1, as_rows=True)
 
@@ -3230,10 +3247,11 @@ class URLQueryParserTests(unittest.TestCase):
 
         # Check query
         query = rfilter.get_query()
-        expected = ((((project_project.deleted != True) &
-                      (project_project.id > 0)) &
-                     (org_organisation.name.lower().like("%test%"))) &
-                    (~(project_task.description.lower().like("%test%"))))
+        expected = (((project_project.deleted != True) &
+                     (project_project.id > 0)) &
+                    ((org_organisation.name.lower().like("%test%")) &
+                    (~(project_task.description.lower().like("%test%")))))
+                    
         self.assertEqual(str(query), str(expected))
 
     # -------------------------------------------------------------------------

@@ -2373,7 +2373,7 @@ class GIS(object):
         id = resource._ids[0]
         tablename = "gis_layer_shapefile_%s" % id
         table = db[tablename]
-        query = resource.rfilter.query
+        query = resource.get_query()
         fields = []
         fappend = fields.append
         for f in table.fields:
