@@ -430,9 +430,8 @@ def ldata():
     """
 
     args = request.args
-    args_len = len(args)
 
-    if args_len == 0:
+    if len(args) == 0:
         raise HTTP(400)
 
     id = args[0]
@@ -520,6 +519,56 @@ def ldata():
                                                     )
 
     script = '''n=%s\n''' % json.dumps(location_dict)
+    response.headers["Content-Type"] = "application/json"
+    return script
+
+# -----------------------------------------------------------------------------
+def hdata():
+    """
+        Return JSON of hierarchy labels suitable for use by S3LocationSelectorWidget2
+        '/eden/gis/hdata/' + l0_id
+
+        n = {l0_id : {1 : l1_name,
+                      2 : l2_name,
+                      etc,
+                      }}
+    """
+
+    args = request.args
+
+    if len(args) == 0:
+        raise HTTP(400)
+
+    id = args[0]
+
+    # @ToDo: Translate options using gis_hierarchy_name?
+    #translate = settings.get_L10n_translate_gis_location()
+    #if translate:
+    #    language = current.session.s3.language
+    #    if language == current.deployment_settings.get_L10n_default_language():
+    #        translate = False
+
+    table = s3db.gis_hierarchy
+    query = (table.deleted == False) & \
+            (table.location_id == id)
+    fields = [table.L1,
+              table.L2,
+              table.L3,
+              table.L4,
+              table.L5,
+              ]
+    row = db(query).select(*fields,
+                           limitby=(0, 1)
+                           ).first()
+    if not row:
+        return ""
+
+    hdict = {}
+    for l in ["L1", "L2", "L3", "L4", "L5"]:
+        if row[l]:
+            hdict[int(l[1:])] = row[l]
+
+    script = '''n=%s\n''' % json.dumps(hdict)
     response.headers["Content-Type"] = "application/json"
     return script
 

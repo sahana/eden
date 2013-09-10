@@ -3499,7 +3499,7 @@ class S3LocationSelectorWidget2(FormWidget):
         * Selection of lower Lx levels only happens when higher-level have been done
 
         Limitations:
-        * Currently assumes use within just 1 country
+        * Doesn't support variable Levels by Country
         * Doesn't allow creation of new Lx Locations
         * Doesn't allow selection of existing Locations
         * Doesn't support manual entry of LatLons
@@ -3989,14 +3989,43 @@ class S3LocationSelectorWidget2(FormWidget):
         # @ToDo: Country-specific Translations of Labels
         htable = s3db.gis_hierarchy
         fields = [htable[level] for level in levels if level != "L0"]
+        query = (htable.uuid == "SITE_DEFAULT")
         if default_L0:
-            query = (htable.location_id == default_L0)
+            query |= (htable.location_id == default_L0)
+            limit = 2
         else:
-            query = (htable.uuid == "SITE_DEFAULT")
-        labels = db(query).select(*fields,
-                                  limitby=(0, 1)).first()
-        if "L0" in levels:
-            labels["L0"] = current.messages.COUNTRY
+            limit = 1
+        rows = db(query).select(*fields,
+                                limitby=(0, limit)
+                                )
+        hdict = {}
+        labels = {}
+        if default_L0:
+            for row in rows:
+                if row.uuid == "SITE_DEFAULT":
+                    d = hdict["d"] = {}
+                    for level in levels:
+                        if level != "L0":
+                            d[int(level[1:])] = row[level]
+                else:
+                    h_l0 = hdict[default_L0] = {}
+                    for level in levels:
+                        if level == "L0":
+                            labels["L0"] = current.messages.COUNTRY
+                        else:
+                            v = row[level]
+                            h_l0[int(level[1:])] = v
+                            labels[level] = v
+        else:
+            row = rows.first()
+            d = hdict["d"] = {}
+            for level in levels:
+                if level == "L0":
+                    labels["L0"] = current.messages.COUNTRY
+                else:
+                    v = row[level]
+                    d[int(level[1:])] = v
+                    labels[level] = v
 
         # Lx Dropdowns
         Lx_rows = DIV()
@@ -4132,8 +4161,11 @@ class S3LocationSelectorWidget2(FormWidget):
                                              b=default_L4_bounds)
 
         if not location_selector_loaded:
+            global_append = s3.js_global.append
             script = '''l=%s''' % json.dumps(location_dict)
-            s3.js_global.append(script)
+            global_append(script)
+            script = '''h=%s''' % json.dumps(hdict)
+            global_append(script)
 
         # If we need to show the map since we have an existing lat/lon/wkt
         # then we need to launch the client-side JS as a callback to the MapJS loader

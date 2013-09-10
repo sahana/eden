@@ -183,18 +183,48 @@
             $(selector + '_L' + level).val(id);
         } else {
             // Read the selected value from the dropdown
-            id = $(selector + '_L' + level).val();
+            id = parseInt($(selector + '_L' + level).val());
         }
-        //if (level === 0) {
-            // @ToDo: This data structure doesn't exist yet (not required for TLDRMP)
+        if (level === 0) {
             // Set Labels
-            //var h = hdata[id];
-            //$(selector + '_L1__row label').html(h.l1 + ':');
-            //$(selector + '_L2__row label').html(h.l2 + ':');
-            //$(selector + '_L3__row label').html(h.l3 + ':');
-            //$(selector + '_L4__row label').html(h.l4 + ':');
-            //$(selector + '_L5__row label').html(h.l5 + ':');
-        //}
+            var hi = h[id];
+            if (hi == undefined) {
+                // Read the values from server
+                var url = S3.Ap.concat('/gis/hdata/' + id);
+                $.ajax({
+                    async: false,
+                    url: url,
+                    dataType: 'script'
+                }).done(function(data) {
+                    // Copy the elements across
+                    hi = {};
+                    for (var prop in n) {
+                        hi[prop] = n[prop];
+                    }
+                    h[id] =  hi;
+                    // Clear the memory
+                    n = null;
+                }).fail(function(request, status, error) {
+                    if (error == 'UNAUTHORIZED') {
+                        msg = i18n.gis_requires_login;
+                    } else {
+                        msg = request.responseText;
+                    }
+                });
+            }
+            // Use default values as fallback if no value specified
+            var d = h['d'];
+            var label = hi['1'] || d['1'];
+            $(selector + '_L1__row label').html(label + ':');
+            label = hi['2'] || d['2'];
+            $(selector + '_L2__row label').html(label + ':');
+            label = hi['3'] || d['3'];
+            $(selector + '_L3__row label').html(label + ':');
+            label = hi['4'] || d['4'];
+            $(selector + '_L4__row label').html(label + ':');
+            label = hi['5'] || d['5'];
+            $(selector + '_L5__row label').html(label + ':');
+        }
         if (id) {
             // Hide all lower levels
             // & remove their values
