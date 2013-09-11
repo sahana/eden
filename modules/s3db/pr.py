@@ -4020,11 +4020,11 @@ class pr_PersonEntityRepresent(S3Represent):
                                    instance_type_nice)
 
         elif "name" in item:
-            pe_str = "%s" % (item["name"],
-                             instance_type_nice)
-        else:
-            pe_str = "[%s]" % (label,
+            pe_str = "%s%s" % (item["name"],
                                instance_type_nice)
+        else:
+            pe_str = "[%s]%s" % (label,
+                                 instance_type_nice)
 
         return pe_str
 
