@@ -388,7 +388,7 @@ class S3Importer(S3CRUD):
             db.commit()
 
             extension = ofilename.rsplit(".", 1).pop()
-            if extension not in ("csv", "xls"):
+            if extension not in ("csv", "xls", "xlsx"):
                 if self.ajax:
                     return {"Error": self.messages.invalid_file_format}
                 response.flash = None
@@ -538,7 +538,7 @@ class S3Importer(S3CRUD):
         # @todo: manage different file formats
         # @todo: find file format from request.extension
         extension = source.rsplit(".", 1).pop()
-        if extension not in ("csv", "xls"):
+        if extension not in ("csv, ""xls", "xlsx"):
             fileFormat = "csv"
         else:
             fileFormat = extension
@@ -946,7 +946,7 @@ class S3Importer(S3CRUD):
 
         # ---------------------------------------------------------------------
         # XLS
-        if fileFormat == "xls" or fileFormat == "excel":
+        if fileFormat == "xls" or fileFormat == "xlsx":
 
             fmt = "xls"
             src = openFile
