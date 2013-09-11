@@ -9,7 +9,7 @@
 module = request.controller
 resourcename = request.function
 
-if not (settings.has_module("inv") or settings.has_module("asset")):
+if not settings.has_module("supply"):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # =============================================================================
@@ -36,6 +36,18 @@ def catalog():
 
 # -----------------------------------------------------------------------------
 def catalog_item():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def distribution():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def distribution_item():
     """ RESTful CRUD controller """
 
     return s3_rest_controller()

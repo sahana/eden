@@ -28,6 +28,7 @@
 """
 
 __all__ = ["S3SupplyModel",
+           "S3SupplyDistributionModel",
            "supply_item_rheader",
            "supply_item_controller",
            "supply_item_entity_controller",
@@ -1147,6 +1148,376 @@ S3OptionsFilter({
                                    create_next=url,
                                    update_next=url,
                                    )
+
+# =============================================================================
+class S3SupplyDistributionModel(S3Model):
+    """
+        Supply Distribution Model
+        - depends on Stats module
+    """
+
+    names = ["supply_distribution_item",
+             "supply_distribution",
+             ]
+
+    def model(self):
+
+        if not current.deployment_settings.has_module("stats"):
+            # Distribution Model needs Stats module enabling
+            return dict()
+
+        T = current.T
+        db = current.db
+
+        configure = self.configure
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+        super_link = self.super_link
+
+        # ---------------------------------------------------------------------
+        # Distribution Item
+        #
+        tablename = "supply_distribution_item"
+        table = define_table(tablename,
+                             super_link("parameter_id", "stats_parameter"),
+                             self.supply_item_entity_id,
+                             self.supply_item_id(ondelete = "RESTRICT",
+                                                 required = True),
+                             Field("name", length=128, unique=True,
+                                   requires = IS_NOT_IN_DB(db,
+                                                           "supply_distribution_item.name")),
+                             *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_ITEM = T("Add Distribution Item")
+        crud_strings[tablename] = Storage(
+            title_create = ADD_ITEM,
+            title_display = T("Distribution Item"),
+            title_list = T("Distribution Items"),
+            title_update = T("Edit Distribution Item"),
+            title_search = T("Search Distribution Items"),
+            subtitle_create = T("Add New Distribution Item"),
+            label_list_button = T("List Distribution Items"),
+            label_create_button = ADD_ITEM,
+            msg_record_created = T("Distribution Item Added"),
+            msg_record_modified = T("Distribution Item Updated"),
+            msg_record_deleted = T("Distribution Item Deleted"),
+            msg_list_empty = T("No Distribution Items Found")
+        )
+
+        # Resource Configuration
+        configure(tablename,
+                  super_entity = ("stats_parameter", "supply_item_entity"),
+                  onaccept=self.supply_distribution_item_onaccept,
+                  )
+
+        # ---------------------------------------------------------------------
+        # Distribution
+        #
+        tablename = "supply_distribution"
+        table = define_table(tablename,
+                             # Link Fields
+                             # populated automatically
+                             self.project_project_id(readable=False,
+                                                     writable=False),
+                             self.project_location_id(comment=None),
+                             # Instance
+                             super_link("data_id", "stats_data"),
+                             # This is a component, so needs to be a super_link
+                             # - can't override field name, ondelete or requires
+                             super_link("parameter_id", "stats_parameter",
+                                        label = T("Item"),
+                                        instance_types = ["supply_distribution_item"],
+                                        represent = S3Represent(lookup="stats_parameter"),
+                                        readable = True,
+                                        writable = True,
+                                        empty = False,
+                                        comment = S3AddResourceLink(c="supply",
+                                                                    f="distribution_item",
+                                                                    vars = dict(child = "parameter_id"),
+                                                                    title=ADD_ITEM),
+                                        ),
+                             # Populated automatically from project_location
+                             self.gis_location_id(readable = False,
+                                                  writable = False),
+                             Field("value", "double",
+                                   label = T("Quantity"),
+                                   requires = IS_INT_IN_RANGE(0, 99999999),
+                                   represent = lambda v: \
+                                    IS_INT_AMOUNT.represent(v)),
+                             s3_date("date",
+                                     label = T("Start Date"),
+                                     #empty = False,
+                                     ),
+                             s3_date("end_date",
+                                     label = T("End Date"),
+                                     #empty = False,
+                                     ),
+                             #self.stats_source_id(),
+                             s3_comments(),
+                             *s3_meta_fields())
+
+        # Virtual fields
+        table.year = Field.Lazy(self.supply_distribution_year)
+
+        # CRUD Strings
+        ADD_DIST = T("Add Distribution")
+        crud_strings[tablename] = Storage(
+            title_create = ADD_DIST,
+            title_display = T("Distribution Details"),
+            title_list = T("Distributions"),
+            title_update = T("Edit Distribution"),
+            title_search = T("Search Distributions"),
+            title_report = T("Distribution Report"),
+            subtitle_create = T("Add New Distribution"),
+            label_list_button = T("List Distributions"),
+            label_create_button = ADD_DIST,
+            msg_record_created = T("Distribution Added"),
+            msg_record_modified = T("Distribution Updated"),
+            msg_record_deleted = T("Distribution Deleted"),
+            msg_list_empty = T("No Distributions Found")
+        )
+
+        # Resource Configuration
+        # ---------------------------------------------------------------------
+        def year_options():
+            """
+                returns a dict of the options for the year virtual field
+                used by the search widget
+
+                orderby needed for postgres
+            """
+
+            ptable = db.project_project
+            pbtable = db.supply_distribution
+            pquery = (ptable.deleted == False)
+            pbquery = (pbtable.deleted == False)
+            pmin = ptable.start_date.min()
+            pbmin = pbtable.date.min()
+            p_start_date_min = db(pquery).select(pmin,
+                                                 orderby=pmin,
+                                                 limitby=(0, 1)).first()[pmin]
+            pb_date_min = db(pbquery).select(pbmin,
+                                             orderby=pbmin,
+                                             limitby=(0, 1)).first()[pbmin]
+            if p_start_date_min and pb_date_min:
+                start_year = min(p_start_date_min,
+                                 pb_date_min).year
+            else:
+                start_year = (p_start_date_min and p_start_date_min.year) or \
+                             (pb_date_min and pb_date_min.year)
+
+            pmax = ptable.end_date.max()
+            pbmax = pbtable.end_date.max()
+            p_end_date_max = db(pquery).select(pmax,
+                                               orderby=pmax,
+                                               limitby=(0, 1)).first()[pmax]
+            pb_end_date_max = db(pbquery).select(pbmax,
+                                                 orderby=pbmax,
+                                                 limitby=(0, 1)).first()[pbmax]
+            if p_end_date_max and pb_end_date_max:
+                end_year = max(p_end_date_max,
+                               pb_end_date_max).year
+            else:
+                end_year = (p_end_date_max and p_end_date_max.year) or \
+                           (pb_end_date_max and pb_end_date_max.year)
+
+            if not start_year or not end_year:
+                return {start_year:start_year} or {end_year:end_year}
+            years = {}
+            for year in xrange(start_year, end_year + 1):
+                years[year] = year
+            return years
+
+        filter_widgets = [
+            S3TextFilter(["item_id$name",
+                          "project_id$name",
+                          "project_id$code",
+                          "location_id",
+                          "comments"
+                          ],
+                         label = T("Search Distributions"),
+                         ),
+            #S3OptionsFilter("project_id",
+            #                label = T("Project"),
+            #                cols = 3,
+            #                widget="multiselect"
+            #                ),
+            S3OptionsFilter("organisation_id",
+                            label = T("Lead Organisation"),
+                            cols = 3,
+                            widget="multiselect"
+                            ),
+            S3OptionsFilter("parameter_id",
+                            label = T("Item"),
+                            cols = 3,
+                            widget="multiselect"
+                            ),
+            #S3OptionsFilter("year",
+            #                label = T("Year"),
+            #                cols = 3,
+            #                widget="multiselect",
+            #                options = year_options
+            #                ),
+            S3OptionsFilter("location.location_id$L1",
+                            location_level="L1",
+                            widget="multiselect"),
+            S3OptionsFilter("project_id$partner.organisation_id",
+                            label = T("Partners"),
+                            widget="multiselect"),
+            S3OptionsFilter("project_id$donor.organisation_id",
+                            label = T("Donors"),
+                            location_level="L1",
+                            widget="multiselect")
+            ]
+
+        report_fields = ["project_location_id",
+                         (T("Item"), "parameter_id"),
+                         #"project_id",
+                         (T("Year"), "year"),
+                         #"project_id$hazard.name",
+                         #"project_id$theme.name",
+                         (current.messages.COUNTRY, "location_id$L0"),
+                         "location_id$L1",
+                         "location_id$L2",
+                         "location_id$L3",
+                         #"location_id$L4",
+                         ]
+
+        configure(tablename,
+                  super_entity = "stats_data",
+                  onaccept = self.supply_distribution_onaccept,
+                  deduplicate = self.supply_distribution_deduplicate,
+                  filter_widgets = filter_widgets,
+                  report_options=Storage(
+                    rows=report_fields,
+                    cols=report_fields,
+                    fact=report_fields,
+                    defaults=Storage(rows="location_id$L1",
+                                     cols="parameter_id",
+                                     # T("Projects")
+                                     fact="sum(value)",
+                                     totals=True
+                                     ),
+                    extra_fields = ["project_id",
+                                    #"date",
+                                    #"end_date"
+                                    ]
+                    )
+                 )
+
+        # Pass names back to global scope (s3.*)
+        return dict()
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def supply_distribution_item_onaccept(form):
+        """
+            Update supply_distribution_item name from supply_item_id
+        """
+
+        db = current.db
+        dtable = db.supply_distribution_item
+        ltable = db.supply_item
+
+        record_id = form.vars.id
+        query = (dtable.id == record_id) & \
+                (ltable.id == dtable.item_id)
+        item = db(query).select(ltable.name,
+                                limitby=(0, 1)).first()
+        if item:
+            db(dtable.id == record_id).update(name = item.name)
+        return
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def supply_distribution_onaccept(form):
+        """
+            Update supply_distribution project & location from project_location_id
+        """
+
+        db = current.db
+        dtable = db.supply_distribution
+        ltable = db.project_location
+
+        record_id = form.vars.id
+        query = (dtable.id == record_id) & \
+                (ltable.id == dtable.project_location_id)
+        project_location = db(query).select(ltable.project_id,
+                                            ltable.location_id,
+                                            limitby=(0, 1)).first()
+        if project_location:
+            db(dtable.id == record_id).update(
+                    project_id = project_location.project_id,
+                    location_id = project_location.location_id
+                )
+        return
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def supply_distribution_deduplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename != "supply_distribution":
+            return
+
+        data = item.data
+        if "parameter_id" in data and \
+           "project_location_id" in data:
+            # Match distribution by item and project_location
+            table = item.table
+            parameter_id = data.parameter_id
+            project_location_id = data.project_location_id
+            query = (table.parameter_id == parameter_id) & \
+                    (table.project_location_id == project_location_id)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def supply_distribution_year(row):
+        """ Virtual field for the supply_distribution table """
+
+        if hasattr(row, "supply_distribution"):
+            row = row.supply_distribution
+
+        try:
+            project_id = row.project_id
+        except AttributeError:
+            return []
+        try:
+            date = row.date
+        except AttributeError:
+            date = None
+        try:
+            end_date = row.end_date
+        except AttributeError:
+            end_date = None
+
+        if not date or not end_date:
+            table = current.s3db.project_project
+            project = current.db(table.id == project_id) \
+                             .select(table.start_date,
+                                     table.end_date,
+                                     limitby=(0, 1)).first()
+            if project:
+                if not date:
+                    date = project.start_date
+                if not end_date:
+                    end_date = project.end_date
+
+        if not date and not end_date:
+            return []
+        elif not end_date:
+            return [date.year]
+        elif not date:
+            return [end_date.year]
+        else:
+            return list(xrange(date.year, end_date.year + 1))
 
 # =============================================================================
 class supply_ItemRepresent(S3Represent):

@@ -3816,19 +3816,18 @@ def customize_project_project_fields():
 
     s3db.project_location.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
     table = s3db.project_project
-    table.objectives.readable = table.objectives.writable = True
     table.start_date.represent = date_represent
     table.end_date.represent = date_represent
     table.modified_by.represent = s3_auth_user_represent_name
     table.modified_on.represent = datetime_represent
 
-    list_fields = ["name",
+    list_fields = [#"name",
                    "organisation_id",
                    "location.location_id",
                    "organisation_id$logo",
                    "start_date",
                    "end_date",
-                   "human_resource_id",
+                   #"human_resource_id",
                    "budget",
                    "partner.organisation_id",
                    "donor.organisation_id",
@@ -3937,7 +3936,7 @@ def customize_project_project(**attr):
                                         )
                     ),
                     "budget",
-                    "objectives",
+                    #"objectives",
                     # Files
                     S3SQLInlineComponent(
                         "document",
@@ -3976,13 +3975,13 @@ def customize_project_project(**attr):
 
             crud_form = S3SQLCustomForm(*crud_form_fields)
 
-            list_fields = ["name",
+            list_fields = [#"name",
                            "organisation_id",
                            "human_resource_id",
                            (T("Districts"), "location.location_id"),
                            "start_date",
                            "end_date",
-                           "budget",
+                           #"budget",
                            ]
 
             # Return to List view after create/update/delete (unless done via Modal)
@@ -3993,8 +3992,8 @@ def customize_project_project(**attr):
                 S3TextFilter(["name",
                               "description",
                               "location.location_id",
-                              "theme.name",
-                              "objectives",
+                              #"theme.name",
+                              #"objectives",
                               "comments"
                               ],
                              label = T("Search Projects"),
@@ -4280,6 +4279,11 @@ settings.modules = OrderedDict([
     )),
     ("cr", Storage(
         name_nice = "Shelters",
+        restricted = True,
+        module_type = None
+    )),
+    ("supply", Storage(
+        name_nice = "Supply Chain Management",
         restricted = True,
         module_type = None
     )),

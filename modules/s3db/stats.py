@@ -73,6 +73,7 @@ class S3StatsModel(S3Model):
                            stats_demographic = T("Demographic"),
                            stats_resident_type = T("Types of Residents"),
                            stats_trained_type = T("Types of Trained People"),
+                           supply_distribution_item = T("Distribution Item"),
                            vulnerability_indicator = T("Vulnerability Indicator"),
                            vulnerability_aggregated_indicator = T("Vulnerability Aggregated Indicator"),
                            #survey_question_type = T("Survey Question Type"),
@@ -98,6 +99,7 @@ class S3StatsModel(S3Model):
                            stats_demographic_data = T("Demographic Data"),
                            stats_resident = T("Residents"),
                            stats_trained = T("Trained People"),
+                           supply_distribution = T("Distribution"),
                            vulnerability_data = T("Vulnerability Data"),
                            #survey_answer = T("Survey Answer"),
                            #climate_data = T("Climate Data"),
@@ -1217,7 +1219,7 @@ class S3StatsResidentModel(S3Model):
                           ]
 
         configure(tablename,
-                  super_entity=["doc_entity", "stats_data"],
+                  super_entity = ("doc_entity", "stats_data"),
                   filter_widgets = filter_widgets,
                   )
 
@@ -1405,7 +1407,7 @@ class S3StatsTrainedPeopleModel(S3Model):
                           ]
 
         configure(tablename,
-                  super_entity=["doc_entity", "stats_data"],
+                  super_entity = ("doc_entity", "stats_data"),
                   filter_widgets = filter_widgets,
                   )
 
