@@ -3087,6 +3087,10 @@ class S3Resource(object):
                     t = xml.csv2tree(s,
                                      resourcename=resourcename,
                                      extra_data=extra_data)
+                elif format == "xls":
+                    t = xml.xls2tree(s,
+                                     resourcename=resourcename,
+                                     extra_data=extra_data)
                 else:
                     t = xml.parse(s)
                 if not t:

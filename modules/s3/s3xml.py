@@ -2313,7 +2313,7 @@ class S3XML(S3Codec):
                     # Read column headers
                     if not fields:
                         for cidx, value in enumerate(values):
-                            header = decode(value)
+                            header = decode(types[cidx], value)
                             headers[cidx] = header
                             if check_headers:
                                 extra_fields.discard(header)

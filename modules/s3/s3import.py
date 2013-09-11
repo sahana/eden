@@ -537,7 +537,11 @@ class S3Importer(S3CRUD):
 
         # @todo: manage different file formats
         # @todo: find file format from request.extension
-        fileFormat = "csv"
+        extension = source.rsplit(".", 1).pop()
+        if extension not in ("csv", "xls"):
+            fileFormat = "csv"
+        else:
+            fileFormat = extension
 
         # Insert data in the table and get the ID
         try:
@@ -938,6 +942,13 @@ class S3Importer(S3CRUD):
         if fileFormat == "csv" or fileFormat == "comma-separated-values":
 
             fmt = "csv"
+            src = openFile
+
+        # ---------------------------------------------------------------------
+        # XLS
+        if fileFormat == "xls" or fileFormat == "excel":
+
+            fmt = "xls"
             src = openFile
 
         # ---------------------------------------------------------------------
