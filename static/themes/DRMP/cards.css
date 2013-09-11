@@ -72,7 +72,7 @@
 }
 
 .location-title a {
-    font: 400 12px "Helvetica Neue", Arial,sans-serif;
+    font: 600 12px "Helvetica Neue", Arial,sans-serif;
     color: #777;
     padding: 0;
     text-shadow: 1px 1px 0 rgba(255,255,255,0.7);
@@ -103,6 +103,22 @@ a h5.media-heading {
 
 a h5.media-heading:hover {
     color: #0187cc;
+}
+
+@media (max-width: 480px) {
+	.location-title {
+	    padding-left: 5px;
+	    width: 10px;
+	}
+	img.media-object {
+	    width: 34px;
+	    height: 34px;
+	}
+	.date-title {
+	    font: 400 9px "Helvetica Neue",Arial,sans-serif;
+		word-spacing: -1px;
+	}
+	
 }
 
 /* Edit Toolbar */
