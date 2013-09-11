@@ -1330,7 +1330,7 @@ class S3SupplyDistributionModel(S3Model):
             return years
 
         filter_widgets = [
-            S3TextFilter(["item_id$name",
+            S3TextFilter([#"item_id$name",
                           "project_id$name",
                           "project_id$code",
                           "location_id",
@@ -1343,7 +1343,7 @@ class S3SupplyDistributionModel(S3Model):
             #                cols = 3,
             #                widget="multiselect"
             #                ),
-            S3OptionsFilter("organisation_id",
+            S3OptionsFilter("project_id$organisation_id",
                             label = T("Lead Organisation"),
                             cols = 3,
                             widget="multiselect"
@@ -1359,7 +1359,7 @@ class S3SupplyDistributionModel(S3Model):
             #                widget="multiselect",
             #                options = year_options
             #                ),
-            S3OptionsFilter("location.location_id$L1",
+            S3OptionsFilter("location_id$L1",
                             location_level="L1",
                             widget="multiselect"),
             S3OptionsFilter("project_id$partner.organisation_id",
@@ -1392,7 +1392,7 @@ class S3SupplyDistributionModel(S3Model):
                   report_options=Storage(
                     rows=report_fields,
                     cols=report_fields,
-                    fact=report_fields,
+                    fact=report_fields + ["value"],
                     defaults=Storage(rows="location_id$L1",
                                      cols="parameter_id",
                                      # T("Projects")
