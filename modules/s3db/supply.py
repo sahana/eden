@@ -1343,7 +1343,7 @@ class S3SupplyDistributionModel(S3Model):
             #                cols = 3,
             #                widget="multiselect"
             #                ),
-            S3OptionsFilter("organisation_id",
+            S3OptionsFilter("project_id$organisation_id",
                             label = T("Lead Organisation"),
                             cols = 3,
                             widget="multiselect"

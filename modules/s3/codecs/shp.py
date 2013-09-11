@@ -201,7 +201,7 @@ class S3SHP(S3Codec):
         # Zip up
         import zipfile
         request = current.request
-        filename = "%s_%s.zip" % (current.request.env.server_name, str(title))
+        filename = "%s_%s.zip" % (request.env.server_name, str(title))
         fzip = zipfile.ZipFile(filename, "w")
         for item in ["point", "line", "polygon"]:
             for exten in ["shp", "shx", "prj", "dbf"]:

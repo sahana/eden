@@ -70,6 +70,7 @@ class S3Codec(object):
 
         # Import the codec classes
         from codecs import S3SHP
+        from codecs import S3SVG
         from codecs import S3XLS
         from codecs import S3RL_PDF
 
@@ -77,6 +78,7 @@ class S3Codec(object):
         CODECS = Storage(
             pdf = S3RL_PDF,
             shp = S3SHP,
+            svg = S3SVG,
             xls = S3XLS,
         )
 

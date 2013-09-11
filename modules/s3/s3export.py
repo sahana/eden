@@ -133,6 +133,12 @@ class S3Exporter(object):
         return codec(*args, **kwargs)
 
     # -------------------------------------------------------------------------
+    def svg(self, *args, **kwargs):
+
+        codec = S3Codec.get_codec("svg").encode
+        return codec(*args, **kwargs)
+
+    # -------------------------------------------------------------------------
     def xls(self, *args, **kwargs):
 
         codec = S3Codec.get_codec("xls").encode

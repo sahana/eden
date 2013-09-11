@@ -582,6 +582,12 @@ class S3CRUD(S3Method):
             exporter = S3Exporter().pdf
             return exporter(resource, request=r, **attr)
 
+        elif representation == "svg":
+            exporter = S3Exporter().svg
+            return exporter(resource,
+                            list_fields=list_fields,
+                            **attr)
+
         elif representation == "xls":
             list_fields = _config("list_fields")
             exporter = S3Exporter().xls
@@ -1169,6 +1175,12 @@ class S3CRUD(S3Method):
                             list_fields=list_fields,
                             **attr)
 
+        elif representation == "svg":
+            exporter = S3Exporter().svg
+            return exporter(resource,
+                            list_fields=list_fields,
+                            **attr)
+
         elif representation == "xls":
             exporter = S3Exporter().xls
             return exporter(resource,
@@ -1383,16 +1395,19 @@ class S3CRUD(S3Method):
                             **attr)
 
         elif representation == "shp":
-
             exporter = S3Exporter().shp
             return exporter(resource,
                             list_fields=list_fields,
                             **attr)
 
+        elif representation == "svg":
+            exporter = S3Exporter().svg
+            return exporter(resource,
+                            list_fields=list_fields,
+                            **attr)
+
         elif representation == "xls":
-
             report_groupby = get_config("report_groupby", None)
-
             exporter = S3Exporter().xls
             return exporter(resource,
                             list_fields=list_fields,
@@ -1400,7 +1415,6 @@ class S3CRUD(S3Method):
                             **attr)
 
         elif representation == "msg":
-
             if r.http == "POST":
                 from s3notify import S3Notifications
                 return S3Notifications.send(r, resource)
