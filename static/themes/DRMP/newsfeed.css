@@ -41,6 +41,14 @@ h4.latest-disasters{
 	text-decoration: none;
 }
 
+@media (max-width: 480px) {
+	h4.latest-updates,
+	h4.latest-disasters{
+	    width: 97.5%;
+	}
+	
+}
+
 /* Cards */
 .card-person {
     margin-top: 5px;
@@ -62,6 +70,7 @@ p.citation small a {
     color: #7b7b78;
     text-transform: none;
 }
+
 
 .card-organisation{
     font-size: 10px;

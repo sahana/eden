@@ -1,8 +1,19 @@
+
 /* Stuff which is DRMP-specific */
 
 .export_xls {
     background-image: url(img/icon-xls.png);
-    margin-top: -17px;
+    
+}
+
+.span6 div.list_formats .export_xls  { 
+	margin-top: -17px;
+}
+
+@media (max-width: 480px) {
+	.span6 div.list_formats .export_xls  { 
+		display: none;
+	}
 }
 
 .map_legend_panel  .x-panel-body {
@@ -85,7 +96,8 @@ div.defaultlocation_error.error{
 /* Dropdown with AddResourceLink takes up more vertical space than an INPUT so center the INPUTS
     and the + button and throbber
  */
-
+#project_project_objectives,
+#project_project_description,
 #dummy_project_project_human_resource_id,
 #project_project_budget,
 #project_project_name,
