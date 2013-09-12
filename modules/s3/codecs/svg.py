@@ -116,7 +116,6 @@ class S3SVG(S3Codec):
         """
 
         # Get the attributes
-        title = attr.get("title")
         #list_fields = attr.get("list_fields")
         #if not list_fields:
         #    list_fields = resource.list_fields()
@@ -134,8 +133,8 @@ class S3SVG(S3Codec):
         current.s3db.gis_location.wkt.represent = None
 
         # Extract the data from the resource
-        (title, types, lfields, headers, items) = self.extractResource(resource,
-                                                                       list_fields)
+        (_title, types, lfields, headers, items) = self.extractResource(resource,
+                                                                        list_fields)
 
         # @ToDo: Support multiple records
         wkt = items[0]["gis_location.wkt"]
@@ -145,11 +144,23 @@ class S3SVG(S3Codec):
             s3_debug(error)
         
         # Convert to SVG
-        # Python Library Options:
-        # http://pythonhosted.org/svgwrite/
-        # http://codeboje.de/pysvg/
-        # XSLT hints:
-        # http://svn.openstreetmap.org/applications/rendering/osmarender/xslt/oslist_fields.append("location_id$wkt")marender.xsl
+        title = attr.get("title", resource._ids[0])
+        filename = "%s.svg" % title
+        filepath = self.write_file(filename, wkt, **attr)
+
+        # Response headers
+        disposition = "attachment; filename=\"%s\"" % filename
+        response = current.response
+        response.headers["Content-Type"] = contenttype(".svg")
+        response.headers["Content-disposition"] = disposition
+
+        stream = open(filepath)
+        return response.stream(stream, chunk_size=DEFAULT_CHUNK_SIZE,
+                               request=current.request)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def write_file(filename, wkt, **attr):
 
         from xml.etree import ElementTree as et
 
@@ -168,6 +179,7 @@ class S3SVG(S3Codec):
             from shapely import speedups
             speedups.enable()
         except:
+            from s3utils import s3_debug
             s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
 
         shape = wkt_loads(wkt)
@@ -224,34 +236,21 @@ class S3SVG(S3Codec):
         stroke = "rgb(165, 165, 165)"
         et.SubElement(doc, "polygon", points=points, fill=fill, stroke=stroke)
 
-        # @ToDo: Add Attributes
+        # @ToDo: Add Attributes from list_fields
 
         # Write out File
-        import tempfile
-        web2py_path = os.getcwd()
-        if os.path.exists(os.path.join(web2py_path, "temp")): # use web2py/temp
-            TEMP = os.path.join(web2py_path, "temp")
-        else:
-            TEMP = tempfile.gettempdir()
-        request = current.request
-        filename = "%s_%s.svg" % (request.env.server_name, str(title))
-        temp_filepath = os.path.join(TEMP, filename)
-        with open(temp_filepath, "w") as f:
+        path = os.path.join(current.request.folder, "static", "cache", "svg")
+        if not os.path.exists(path):
+            os.makedirs(path)
+        filepath = os.path.join(path, filename)
+        with open(filepath, "w") as f:
             # ElementTree 1.2 doesn't write the SVG file header errata, so do that manually
             f.write("<?xml version=\"1.0\" standalone=\"no\"?>\n")
             f.write("<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"\n")
             f.write("\"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n")
             f.write(et.tostring(doc))
 
-        # Response headers
-        disposition = "attachment; filename=\"%s\"" % filename
-        response = current.response
-        response.headers["Content-Type"] = contenttype(".svg")
-        response.headers["Content-disposition"] = disposition
-
-        stream = open(temp_filepath)
-        return response.stream(stream, chunk_size=DEFAULT_CHUNK_SIZE,
-                               request=request)
+        return filepath
 
     # -------------------------------------------------------------------------
     def decode(self, resource, source, **attr):

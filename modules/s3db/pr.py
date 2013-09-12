@@ -1445,8 +1445,10 @@ class S3GroupModel(S3Model):
         tablename = "pr_group_membership"
         table = define_table(tablename,
                              group_id(label = T("Group"),
+                                      empty = False,
                                       ondelete="CASCADE"),
                              self.pr_person_id(label = T("Person"),
+                                               empty = False,
                                                ondelete="CASCADE"),
                              Field("group_head", "boolean",
                                    label = T("Group Head"),
