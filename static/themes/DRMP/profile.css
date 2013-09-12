@@ -21,8 +21,20 @@
     font-weight: normal;
     font-style: normal;
 }
+
 .profile_header img.media-object {
     padding: 18px 10px 18px 5px;
+}
+
+@media (max-width: 480px) {
+	.profile_header h2 {
+	    padding: 10px 20px;
+	    font-size: 14px;
+	}
+	.profile_header img.media-object {
+	    padding: 7px 10px 18px 5px;
+	}
+
 }
 
 h4.profile-sub-header {
@@ -104,11 +116,16 @@ h4.profile-sub-header {
     border-left-style: none;
 }
 .card-holder .location-title {
-    font: bold 13px "Helvetica Neue", Arial, sans-serif;
+    font: 13px "Helvetica Neue", Arial, sans-serif;
     color: #333333;
-    padding-left: 50px;
     border-left: 0;
-    margin-left: 0px;
+    margin-left: 0;
+    padding-left: 0px;
+}
+
+div.card-header.profile-head {
+	background: none;
+	border-bottom: none;
 }
 
 .card-holder .location-title a {
@@ -151,16 +168,19 @@ h4.profile-sub-header {
 .main_contact_email,
 .main_contact {
     margin-bottom: 0;
+    text-overflow: none;
+	overflow: hidden;
 }
 
 .main_contact_ph,
 .main_contact_email,
 .main_office-add,
 .main_contact {
-    height: 12px; /* Height needs to be same with or without contents */
+    height: 14px; /* Height needs to be same with or without contents */
     font-size: 12px;
     padding-top: 4px;
     color: #666;
+	padding-bottom: 2px;
 }
 
 .person_pos {
@@ -230,4 +250,14 @@ div.more_profile {
 
 .card-header-select span.date-title {
     border-left-style: none;
+}
+
+/*Fixing the layout of the cards within the iframe */
+
+#popup.cf div.form-container{
+	padding-top: 10px;
+}
+
+#popup.cf div.form-container #table-container .dl{
+	width: 575px;
 }
