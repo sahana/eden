@@ -47,6 +47,21 @@ def distribution():
     return s3_rest_controller(hide_filter=False)
 
 # -----------------------------------------------------------------------------
+def distribution_report():
+    """
+        RESTful CRUD controller for Supply Distributions
+        - limited to just seeing aggregated data for differential permissions
+    """
+
+    def prep(r):
+        r.method = "report2"
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller("supply", "distribution",
+                              hide_filter=False)
+
+# -----------------------------------------------------------------------------
 def distribution_item():
     """ RESTful CRUD controller """
 

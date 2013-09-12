@@ -648,21 +648,12 @@ def render_locations(listid, resource, rfields, record, **attr):
         elif series == "Report":
             tally_reports += 1
 
-    # https://code.google.com/p/web2py/issues/detail?id=1533
-    public_url = current.deployment_settings.get_base_public_url()
-    if public_url.startswith("http://127.0.0.1"):
-        # Assume Rocket
-        image = quote_unicode(s3_unicode(name))
-    else:
-        # Assume Apache or Cherokee
-        image = s3_unicode(name)
-
     # Render the item
     item = DIV(DIV(A(IMG(_class="media-object",
-                         _src="%s/%s.png" % (URL(c="static",
-                                                 f="themes",
-                                                 args=["DRMP", "img"]),
-                                             image),
+                         _src=URL(c="gis",
+                                  f="location",
+                                  args=["%s.svg" % record_id],
+                                  )
                          ),
                      _class="pull-left",
                      _href=location_url,
@@ -2820,23 +2811,15 @@ def customize_gis_location(**attr):
                                          list_layout = render_profile_posts,
                                          )
                 name = location.name
-                # https://code.google.com/p/web2py/issues/detail?id=1533
-                public_url = current.deployment_settings.get_base_public_url()
-                if public_url.startswith("http://127.0.0.1"):
-                    # Assume Rocket
-                    image = quote_unicode(s3_unicode(name))
-                else:
-                    # Assume Apache or Cherokee
-                    image = s3_unicode(name)
                 s3db.configure("gis_location",
                                list_fields = list_fields,
                                profile_title = "%s : %s" % (s3.crud_strings["gis_location"].title_list, 
                                                             name),
                                profile_header = DIV(A(IMG(_class="media-object",
-                                                          _src="%s/%s.png" % (URL(c="static",
-                                                                                  f="themes",
-                                                                                  args=["DRMP", "img"]),
-                                                                              image),
+                                                          _src=URL(c="gis",
+                                                                   f="location",
+                                                                   args=["%s.svg" % location.id]
+                                                                   ),
                                                           ),
                                                       _class="pull-left",
                                                       #_href=location_url,
