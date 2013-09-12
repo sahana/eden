@@ -1,2 +1,5 @@
 /* Override DRMP */
 
+.pt-table {
+    overflow: auto;
+}

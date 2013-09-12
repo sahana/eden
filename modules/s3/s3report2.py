@@ -128,7 +128,7 @@ class S3Report2(S3Method):
                         method = "count"
                 else:
                     selector, method = m.group(2), m.group(1)
-                    
+
             if not layer or not any([rows, cols]):
                 pivottable = None
             else:

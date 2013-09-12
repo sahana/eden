@@ -2191,6 +2191,8 @@ class S3XML(S3Codec):
         COL = TAG.col
         SubElement = etree.SubElement
 
+        DEFAULT_SHEET_NAME = "SahanaData"
+
         # Root element
         root = etree.Element(TAG.table)
         if resourcename is not None:
@@ -2221,7 +2223,10 @@ class S3XML(S3Codec):
                 elif isinstance(sheet, basestring):
                     s = wb.sheet_by_name(sheet)
                 elif sheet is None:
-                    s = wb.sheet_by_index(0)
+                    if DEFAULT_SHEET_NAME in wb.sheet_names():
+                        s = wb.sheet_by_name(DEFAULT_SHEET_NAME)
+                    else:
+                        s = wb.sheet_by_index(0)
                 else:
                     raise SyntaxError("xls2tree: invalid sheet %s" % sheet)
             except IndexError, xlrd.XLRDError:
@@ -2313,7 +2318,7 @@ class S3XML(S3Codec):
                     # Read column headers
                     if not fields:
                         for cidx, value in enumerate(values):
-                            header = decode(value)
+                            header = decode(types[cidx], value)
                             headers[cidx] = header
                             if check_headers:
                                 extra_fields.discard(header)
