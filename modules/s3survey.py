@@ -1407,14 +1407,16 @@ class S3QuestionTypeAbstractWidget(FormWidget):
             The basic details will be written to Cell objects that can be
             added to a row in a table object.
         """
-        from PyRTF import Paragraph, Cell, B
+        from PyRTF import Paragraph, Cell, B, BorderPS, FramePS
+        thin_edge  = BorderPS( width=20, style=BorderPS.SINGLE )
+        thin_frame  = FramePS( thin_edge,  thin_edge,  thin_edge,  thin_edge )
         line = []
         p = Paragraph(ss.ParagraphStyles.Normal)
         p.append(B(str(self.fullName())))
-        line.append(Cell(p))
+        line.append(Cell(p, thin_frame))
         p = Paragraph(ss.ParagraphStyles.NormalGrey)
         p.append()
-        line.append(Cell(p))
+        line.append(Cell(p, thin_frame))
         return line
 
     # -------------------------------------------------------------------------
@@ -1508,16 +1510,18 @@ class S3QuestionTypeTextWidget(S3QuestionTypeAbstractWidget):
             The basic details will be written to Cell objects that can be
             added to a row in a table object.
         """
-        from PyRTF import Paragraph, Cell, B
+        from PyRTF import Paragraph, Cell, B, BorderPS, FramePS
+        thin_edge  = BorderPS( width=20, style=BorderPS.SINGLE )
+        thin_frame  = FramePS( thin_edge,  thin_edge,  thin_edge,  thin_edge )
         line = []
         p = Paragraph(ss.ParagraphStyles.Normal)
         p.append(B(str(self.fullName())))
         # Add some spacing to increase the text size
         p2 = Paragraph(ss.ParagraphStyles.Normal)
-        line.append(Cell(p,p2,p2,p2))
+        line.append(Cell(p,p2,p2,p2, thin_frame))
         p = Paragraph(ss.ParagraphStyles.NormalGrey)
         p.append("")
-        line.append(Cell(p))
+        line.append(Cell(p, thin_frame))
         return line
 
 # =============================================================================
@@ -1993,20 +1997,20 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
             The basic details will be written to Cell objects that can be
             added to a row in a table object.
         """
-        from PyRTF import Paragraph, \
-                          Cell, \
-                          B
+        from PyRTF import Paragraph, Cell, B, BorderPS, FramePS
+        thin_edge  = BorderPS( width=20, style=BorderPS.SINGLE )
+        thin_frame  = FramePS( thin_edge,  thin_edge,  thin_edge,  thin_edge )
         line = []
         p = Paragraph(ss.ParagraphStyles.Normal)
         p.append(B(str(self.fullName())))
-        line.append(Cell(p))
+        line.append(Cell(p, thin_frame))
         list = self.getList()
         paras = []
         for option in list:
             p = Paragraph(ss.ParagraphStyles.Normal)
             p.append(survey_T(option, langDict))
             paras.append(p)
-        line.append(Cell(*paras))
+        line.append(Cell(thin_frame, *paras))
         return line
 
 
@@ -2551,13 +2555,13 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
             This will just display the grid name, following this will be the
             grid child objects.
         """
-        from PyRTF import Paragraph, \
-                          Cell, \
-                          B
+        from PyRTF import Paragraph, Cell, B, BorderPS, FramePS
+        thin_edge  = BorderPS( width=20, style=BorderPS.SINGLE )
+        thin_frame  = FramePS( thin_edge,  thin_edge,  thin_edge,  thin_edge )
         line = []
         p = Paragraph(ss.ParagraphStyles.NormalCentre)
         p.append(B(self.question.name))
-        line.append(Cell(p, span=2))
+        line.append(Cell(p, thin_frame, span=2))
         return line
 
     # -------------------------------------------------------------------------
