@@ -738,12 +738,13 @@ class S3Msg(object):
                 for recipient in recipients:
                     person_id = recipient.person_id
                     query = (ptable.id == person_id)
-                    pe_id = db(query).select(ptable.pe_id,
-                                             limitby=(0, 1)).first().pe_id
-                    table.insert(message_id = message_id,
-                                 pe_id = pe_id,
-                                 pr_message_method = contact_method,
-                                 system_generated = True)
+                    pe = db(query).select(ptable.pe_id,
+                                          limitby=(0, 1)).first()
+                    if pe:
+                        table.insert(message_id = message_id,
+                                     pe_id = pe.pe_id,
+                                     pr_message_method = contact_method,
+                                     system_generated = True)
                 status = True
                 chainrun = True
 
