@@ -261,6 +261,33 @@ class S3OutboxTests(unittest.TestCase):
         self.assertTrue("test1@example.com" in self.sent)
 
     # -------------------------------------------------------------------------
+    def testProcessEmailToPersonMaxRetries(self):
+        """ Test inhibition of failing messages after max_send_retries """
+
+        MAX_SEND_RETRIES = current.deployment_settings \
+                                  .get_msg_max_send_retries()
+        if MAX_SEND_RETRIES is None:
+            return
+
+        s3db = current.s3db
+        resource = s3db.resource("pr_person", uid=["MsgTestPerson1"])
+        row = resource.select(["pe_id"], as_rows=True).first()
+
+        self.sent = []
+
+        outbox = s3db.msg_outbox
+        outbox_id = outbox.insert(pe_id = row.pe_id,
+                                  message_id = self.message_id)
+
+        self.msg.send_email = self.send_email_error
+        for i in range(MAX_SEND_RETRIES+1):
+            out_msg = outbox[outbox_id]
+            self.assertEqual(out_msg.status, 1) # Unsent
+            self.msg.process_outbox()
+        out_msg = outbox[outbox_id]
+        self.assertEqual(out_msg.status, 5) # Failed
+
+    # -------------------------------------------------------------------------
     def send_email(self, recipient, *args, **kwargs):
         """ Dummy send mechanism """
 

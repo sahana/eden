@@ -133,9 +133,6 @@ class S3MessagingModel(S3Model):
         # Message parsing status
         #
 
-        # Components
-        #self.add_component("msg_parsing_status", msg_log="message_id")
-
         # Parsing status of all the messages
         tablename = "msg_parsing_status"
         table = define_table(tablename,
@@ -163,48 +160,58 @@ class S3MessagingModel(S3Model):
         # Outbound Messages
         # ---------------------------------------------------------------------
         # Show only the supported messaging methods
-        msg_contact_method_opts = current.msg.MSG_CONTACT_OPTS
+        MSG_CONTACT_OPTS = current.msg.MSG_CONTACT_OPTS
+        
+        # Maximum number of retries to send a message
+        MAX_SEND_RETRIES = current.deployment_settings \
+                                  .get_msg_max_send_retries()
 
         # Valid message outbox statuses
-        msg_status_type_opts = {1 : T("Unsent"),
-                                2 : T("Sent"),
-                                3 : T("Draft"),
-                                4 : T("Invalid"),
-                                }
+        MSG_STATUS_OPTS = {1 : T("Unsent"),
+                           2 : T("Sent"),
+                           3 : T("Draft"),
+                           4 : T("Invalid"),
+                           5 : T("Failed"),
+                          }
 
         opt_msg_status = S3ReusableField("status", "integer",
                                          notnull=True,
-                                         requires = IS_IN_SET(msg_status_type_opts,
+                                         requires = IS_IN_SET(MSG_STATUS_OPTS,
                                                               zero=None),
                                          default = 1,
                                          label = T("Status"),
                                          represent = lambda opt: \
-                                            msg_status_type_opts.get(opt, UNKNOWN_OPT))
+                                                     MSG_STATUS_OPTS.get(opt,
+                                                                 UNKNOWN_OPT))
 
-        # Components
-        #self.add_component("msg_outbox", msg_log="message_id")
-
-        # Outbox - needs to be separate to Message since a single message sent needs different outbox entries for each recipient
+        # Outbox - needs to be separate to Message since a single message
+        # sent needs different outbox entries for each recipient
         tablename = "msg_outbox"
         table = define_table(tablename,
                              message_id(),
-                             super_link("pe_id", "pr_pentity"), # Person/Group to send the message out to
-                             Field("address"),   # If set used instead of picking up from pe_id
+                             # Person/Group to send the message out to:
+                             super_link("pe_id", "pr_pentity"),
+                             # If set used instead of picking up from pe_id:
+                             Field("address"),   
                              Field("pr_message_method", length=32,
-                                   requires = IS_IN_SET(msg_contact_method_opts,
+                                   requires = IS_IN_SET(MSG_CONTACT_OPTS,
                                                         zero=None),
                                    default = "EMAIL",
                                    label = T("Contact Method"),
                                    represent = lambda opt: \
-                                        msg_contact_method_opts.get(opt, UNKNOWN_OPT)),
+                                               MSG_CONTACT_OPTS.get(opt,
+                                                            UNKNOWN_OPT)),
                              opt_msg_status(),
                              Field("system_generated", "boolean",
                                    default=False),
                              Field("log"),
+                             Field("retries", "integer",
+                                   default=MAX_SEND_RETRIES,
+                                   readable=False,
+                                   writable=False),
                              *s3_meta_fields())
 
         configure(tablename,
-                  #super_entity = "pr_pentity",
                   orderby = ~table.created_on,
                   list_fields=["id",
                                "message_id",

@@ -700,6 +700,7 @@ class S3Msg(object):
         fields = [outbox.id,
                   outbox.message_id,
                   outbox.pe_id,
+                  outbox.retries,
                   petable.instance_type]
                   
         query = (outbox.pr_message_method == contact_method) & \
@@ -714,7 +715,9 @@ class S3Msg(object):
             # @ToDo
             return
 
-        rows = db(query).select(*fields, left=left)
+        rows = db(query).select(*fields,
+                                left=left,
+                                orderby=~outbox.retries)
         if not rows:
             return
                                 
@@ -811,6 +814,12 @@ class S3Msg(object):
             if status:
                 row.update_record(status=2) # Sent
                 db.commit()
+            else:
+                if row.retries > 0:
+                    row.update_record(retries=row.retries-1)
+                    db.commit()
+                elif row.retries is not None:
+                    row.update_record(status=5) # Failed
 
         if chainrun:
             self.process_outbox(contact_method)

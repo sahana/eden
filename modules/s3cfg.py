@@ -1085,7 +1085,17 @@ class S3Config(Storage):
             function()
         """
         return self.msg.get("notify_renderer", None)
-                            
+
+    # -------------------------------------------------------------------------
+    # Outbox settings
+    def get_msg_max_send_retries(self):
+        """
+            Maximum number of retries to send a message before
+            it is regarded as permanently failing; set to None
+            to retry forever.
+        """
+        return self.msg.get("max_send_retries", 9)
+    
     # -------------------------------------------------------------------------
     # Save Search and Subscription
     def get_search_max_results(self):
