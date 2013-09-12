@@ -425,7 +425,21 @@ class S3Config(Storage):
             URL to connect to solr server
         """    
         return self.base.get("solr_url", False)
-
+    def get_base_pootle_username(self):
+        """
+            Username for pootle server
+        """
+        return self.base.get("pootle_username", False)
+    def get_base_pootle_password(self):
+        """
+            Password for pootle server
+        """
+        return self.base.get("pootle_password", False)
+    def get_base_pootle_url(self):
+        """
+            Password for pootle server
+        """
+        return self.base.get("pootle_url", False)
     # -------------------------------------------------------------------------
     # Database settings
     def get_database_type(self):
