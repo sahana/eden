@@ -648,11 +648,24 @@ def render_locations(listid, resource, rfields, record, **attr):
         elif series == "Report":
             tally_reports += 1
 
+    # Build the icon, if it doesn't already exist
+    filename = "%s.svg" % record_id
+    import os
+    filepath = os.path.join(current.request.folder, "static", "cache", "svg", filename)
+    if not os.path.exists(filepath):
+        gtable = db.gis_location
+        loc = db(gtable.id == record_id).select(gtable.wkt,
+                                                limitby=(0, 1)
+                                                ).first()
+        if loc:
+            from s3.codecs.svg import S3SVG
+            S3SVG.write_file(filename, loc.wkt)
+
     # Render the item
     item = DIV(DIV(A(IMG(_class="media-object",
-                         _src=URL(c="gis",
-                                  f="location",
-                                  args=["%s.svg" % record_id],
+                         _src=URL(c="static",
+                                  f="cache",
+                                  args=["svg", filename],
                                   )
                          ),
                      _class="pull-left",
@@ -2727,7 +2740,8 @@ def customize_gis_location(**attr):
                 current.auth.settings.table_user.organisation_id.represent = s3db.org_organisation_represent
 
                 location = r.record
-                default = "~.(location)=%s" % location.id
+                record_id = location.id
+                default = "~.(location)=%s" % record_id
                 map_widget = dict(label = "Map",
                                   type = "map",
                                   context = "location",
@@ -2810,15 +2824,28 @@ def customize_gis_location(**attr):
                                          #marker = "activity",
                                          list_layout = render_profile_posts,
                                          )
+                # Build the icon, if it doesn't already exist
+                filename = "%s.svg" % record_id
+                import os
+                filepath = os.path.join(current.request.folder, "static", "cache", "svg", filename)
+                if not os.path.exists(filepath):
+                    gtable = db.gis_location
+                    loc = db(gtable.id == record_id).select(gtable.wkt,
+                                                            limitby=(0, 1)
+                                                            ).first()
+                    if loc:
+                        from s3.codecs.svg import S3SVG
+                        S3SVG.write_file(filename, loc.wkt)
+
                 name = location.name
                 s3db.configure("gis_location",
                                list_fields = list_fields,
                                profile_title = "%s : %s" % (s3.crud_strings["gis_location"].title_list, 
                                                             name),
                                profile_header = DIV(A(IMG(_class="media-object",
-                                                          _src=URL(c="gis",
-                                                                   f="location",
-                                                                   args=["%s.svg" % location.id]
+                                                          _src=URL(c="static",
+                                                                   f="cache",
+                                                                   args=["svg", filename],
                                                                    ),
                                                           ),
                                                       _class="pull-left",
