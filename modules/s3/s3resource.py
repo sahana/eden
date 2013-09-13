@@ -3118,6 +3118,7 @@ class S3Resource(object):
             pass
 
         response = current.response
+        # Flag to let onvalidation/onaccept know this is coming from a Bulk Import
         response.s3.bulk = True
         success = self.import_tree(id, tree,
                                    ignore_errors=ignore_errors,

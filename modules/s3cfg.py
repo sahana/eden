@@ -49,9 +49,10 @@ class S3Config(Storage):
 
     def __init__(self):
         self.auth = Storage()
-        self.auth.email_domains=[]
+        self.auth.email_domains = []
         self.base = Storage()
         self.database = Storage()
+        # @ToDo: Move to self.ui
         self.frontpage = Storage()
         self.frontpage.rss = []
         self.fin = Storage()
@@ -396,35 +397,82 @@ class S3Config(Storage):
             System Name (Short Version) - for the UI & Messaging
         """
         return self.base.get("system_name_short", "Sahana Eden")
+
     def get_base_debug(self):
+        """
+            Debug mode: Serve CSS/JS in separate uncompressed files
+        """
         return self.base.get("debug", False)
+
     def get_base_migrate(self):
         """ Whether to allow Web2Py to migrate the SQL database to the new structure """
         return self.base.get("migrate", True)
     def get_base_fake_migrate(self):
         """ Whether to have Web2Py create the .table files to match the expected SQL database structure """
         return self.base.get("fake_migrate", False)
+        
     def get_base_prepopulate(self):
         """ Whether to prepopulate the database &, if so, which set of data to use for this """
         return self.base.get("prepopulate", 1)
+
     def get_base_guided_tour(self):
         """ Whether the guided tours are enabled """
         return self.base.get("guided_tour", False)
+
     def get_base_public_url(self):
+        """
+            The Public URL for the site - for use in email links, etc
+        """
         return self.base.get("public_url", "http://127.0.0.1:8000")
+
     def get_base_cdn(self):
+        """
+            Should we use CDNs (Content Distribution Networks) to serve some common CSS/JS?
+        """
         return self.base.get("cdn", False)
+
     def get_base_session_memcache(self):
         """
             Should we store sessions in a Memcache service to allow sharing
             between multiple instances?
         """
         return self.base.get("session_memcache", False)
+
     def get_base_solr_url(self):
         """
             URL to connect to solr server
         """    
         return self.base.get("solr_url", False)
+
+    def get_import_callback(self, tablename, callback):
+        """
+            Lookup callback to use for imports in the following order:
+                - custom [create, update]_onxxxx
+                - default [create, update]_onxxxx
+                - custom onxxxx
+                - default onxxxx
+            NB: Currently only onaccept is actually used
+        """
+        callbacks = self.base.get("import_callbacks", [])
+        if tablename in callbacks:
+            callbacks = callbacks[tablename]
+            if callback in callbacks:
+                return callbacks[callback]
+
+        get_config = current.s3db.get_config
+        default = get_config(tablename, callback)
+        if default:
+            return default
+
+        if callback[:2] != "on":
+            callback = callback[7:]
+
+            if callback in callbacks:
+                return callbacks[callback]
+
+            default = get_config(tablename, callback)
+            if default:
+                return default
 
     # -------------------------------------------------------------------------
     # Database settings
@@ -880,7 +928,7 @@ class S3Config(Storage):
 
     def ui_customize(self, tablename, **attr):
         """
-            Customize field settings for a table
+            Customize a Controller
         """
         customize = self.ui.get("customize_%s" % tablename)
         if customize:

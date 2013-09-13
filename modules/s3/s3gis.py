@@ -621,6 +621,12 @@ class GIS(object):
                                 if wkt:
                                     from shapely.geometry import point
                                     from shapely.wkt import loads as wkt_loads
+                                    try:
+                                        # Enable C-based speedups available from 1.2.10+
+                                        from shapely import speedups
+                                        speedups.enable()
+                                    except:
+                                        s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
                                     test = point.Point(lon, lat)
                                     shape = wkt_loads(wkt)
                                     ok = test.intersects(shape)

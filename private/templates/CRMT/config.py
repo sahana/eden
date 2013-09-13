@@ -940,6 +940,67 @@ settings.ui.customize_org_group = customize_org_group
 #-----------------------------------------------------------------------------
 # Places (org_facility)
 #-----------------------------------------------------------------------------
+def facility_onaccept(form):
+    """
+        Auto-lookup of Coalition based on LatLon
+    """
+
+    # Check if we already have a Coalition
+    db = current.db
+    site_id = form.vars.site_id
+    ltable = current.s3db.org_site_org_group
+    exists = db(ltable.site_id == site_id).select(ltable.id, limitby=(0, 1))
+    if not exists:
+        # Have we got a LatLon?
+        location_id = form.vars.location_id
+        if location_id:
+            gtable = db.gis_location
+            location = db(gtable.id == location_id).select(gtable.lat,
+                                                           gtable.lon,
+                                                           limitby=(0, 1)
+                                                           ).first()
+            if location and location.lat is not None \
+                        and location.lon is not None:
+                # Read all the Coalition Polygons
+                ctable = db.org_group
+                query = (ctable.deleted == False) & \
+                        (ctable.location_id == gtable.id)
+                polygons = db(query).select(ctable.id,
+                                            gtable.wkt,
+                                            )
+                match = False
+                from shapely.geometry import point
+                from shapely.wkt import loads as wkt_loads
+                try:
+                    # Enable C-based speedups available from 1.2.10+
+                    from shapely import speedups
+                    speedups.enable()
+                except:
+                    s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
+                pnt = point.Point(location.lon, location.lat)
+                for p in polygons:
+                    wkt = p[gtable].wkt
+                    if not wkt:
+                        continue
+                    poly = wkt_loads(wkt)
+                    match = pnt.intersects(poly)
+                    if match:
+                        break
+                if match:
+                    ltable.insert(group_id=p[ctable].id,
+                                  site_id=site_id,
+                                  )
+
+    # Normal onaccept:
+    # Update Affiliation, record ownership and component ownership
+    from s3db.org import S3FacilityModel
+    S3FacilityModel.org_facility_onaccept(form)
+
+# Ensure callback is accessible to CLI Imports as well as those going via Controller
+settings.base.import_callbacks = {"org_facility": {"onaccept": facility_onaccept,
+                                                   },
+                                  }
+
 def customize_org_facility(**attr):
     """
         Customize org_facility controller
