@@ -3991,6 +3991,7 @@ class S3LocationSelectorWidget2(FormWidget):
         fields = [htable[level] for level in levels if level != "L0"]
         query = (htable.uuid == "SITE_DEFAULT")
         if default_L0:
+            fields.append(htable.uuid)
             query |= (htable.location_id == default_L0)
             limit = 2
         else:

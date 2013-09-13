@@ -1,6 +1,6 @@
 uid,role,description,controller,function,table,entity,uacl,oacl,hidden,system,protected,Notes
-ANONYMOUS,Anonymous,,org,organisation,,,READ|CREATE|UPDATE,,,,,Allow new users to create orgs during registration 
-ANONYMOUS,Anonymous,,,,org_organisation,,READ|CREATE,,,,,Allow new users to create orgs during registration 
+ANONYMOUS,Anonymous,,org,organisation,,,READ,,,,,Allow new users to see orgs during registration 
+ANONYMOUS,Anonymous,,,,org_organisation,,READ,,,,,Allow new users to see orgs during registration 
 ANONYMOUS,Anonymous,,default,index,auth_user,,READ,,,,,Allow users to decode the modified_by field
 ANONYMOUS,Anonymous,,org,,,any,READ,READ,,,,
 ANONYMOUS,Anonymous,,project,,,any,READ,READ,,,,

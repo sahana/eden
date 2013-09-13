@@ -27,14 +27,13 @@
 }
 
 @media (max-width: 480px) {
-	.profile_header h2 {
-	    padding: 10px 20px;
-	    font-size: 14px;
-	}
-	.profile_header img.media-object {
-	    padding: 7px 10px 18px 5px;
-	}
-
+    .profile_header h2 {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+    .profile_header img.media-object {
+        padding: 7px 10px 18px 5px;
+    }
 }
 
 h4.profile-sub-header {
@@ -124,8 +123,8 @@ h4.profile-sub-header {
 }
 
 div.card-header.profile-head {
-	background: none;
-	border-bottom: none;
+    background: none;
+    border-bottom: none;
 }
 
 .card-holder .location-title a {
@@ -169,7 +168,7 @@ div.card-header.profile-head {
 .main_contact {
     margin-bottom: 0;
     text-overflow: none;
-	overflow: hidden;
+    overflow: hidden;
 }
 
 .main_contact_ph,
@@ -180,7 +179,7 @@ div.card-header.profile-head {
     font-size: 12px;
     padding-top: 4px;
     color: #666;
-	padding-bottom: 2px;
+    padding-bottom: 2px;
 }
 
 .person_pos {
@@ -252,12 +251,11 @@ div.more_profile {
     border-left-style: none;
 }
 
-/*Fixing the layout of the cards within the iframe */
-
-#popup.cf div.form-container{
-	padding-top: 10px;
+/* Layout of the cards within the 'more' iframe */
+#popup.cf div.form-container {
+    padding-top: 10px;
 }
 
-#popup.cf div.form-container #table-container .dl{
-	width: 575px;
+#popup.cf div.form-container #table-container .dl {
+    width: 575px;
 }

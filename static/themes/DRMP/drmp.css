@@ -1,19 +1,7 @@
-
 /* Stuff which is DRMP-specific */
 
 .export_xls {
     background-image: url(img/icon-xls.png);
-    
-}
-
-.span6 div.list_formats .export_xls  { 
-	margin-top: -17px;
-}
-
-@media (max-width: 480px) {
-	.span6 div.list_formats .export_xls  { 
-		display: none;
-	}
 }
 
 .map_legend_panel  .x-panel-body {
@@ -94,8 +82,8 @@ div.defaultlocation_error.error{
 /* Projects Page */
 
 /* Dropdown with AddResourceLink takes up more vertical space than an INPUT so center the INPUTS
-    and the + button and throbber
- */
+    and the + button and throbber */
+
 #project_project_objectives,
 #project_project_description,
 #dummy_project_project_human_resource_id,
@@ -180,3 +168,8 @@ div.defaultlocation_error.error{
 .item-container #project_project_name__label {
     display: none;
 }
+
+form#subscription-form.form-horizontal {
+    border: 1px solid #b2b2b2;
+}
+

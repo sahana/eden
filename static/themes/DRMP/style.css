@@ -163,15 +163,6 @@ a.btn.btn-primary.main-add {
     top: 24px;
 }
 
-@media (max-width: 480px) {
-	a.btn.btn-primary.main-add {
-	    top: 15px;
-		left: -6px;
-	}
-}
-
-
-
 /* Add button on Updates page & Disaster selection screen */
 a i.icon.icon-plus-sign.big-add:hover {
     text-decoration: none;
@@ -566,8 +557,27 @@ button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
 }
 /* Landscape phones and down */
 @media (max-width: 480px) { 
-	button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
+	a.btn.btn-primary.main-add {
+	    top: 15px;
+		left: -6px;
+	}
+    button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
 	    margin-bottom: 10px;
+	}
+    #home div.form-container form {
+		width: auto;
+		overflow: hidden;
+	}
+	#auth_user_email,
+	#auth_user_language,
+	#auth_user_password,
+	#auth_user_password_two {
+	    /*width: 100%;*/
+	    width: auto;
+	}
+	#auth_user_email__label,
+	#auth_user_password__label	{
+		font-size: 11px;
 	}
 }
 
@@ -715,7 +725,6 @@ button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
     -moz-box-shadow: 0 1px 1px #aaaaa7;
     -webkit-box-shadow: 0 1px 1px #aaaaa7;
     box-shadow: 0 1px 1px #aaaaa7;
-
 }
 
 #home h2 {
@@ -759,43 +768,23 @@ button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
     background-color: #f2dedd;
 }
 
-@media (max-width: 480px) {
-	#home div.form-container form {
-		width: auto;
-		overflow: hidden;
-	}
-	#auth_user_email,
-	#auth_user_language,
-	#auth_user_password,
-	#auth_user_password_two {
-	    /*width: 100%;*/
-	    width: auto;
-	}
-	#auth_user_email__label,
-	#auth_user_password__label	{
-		font-size: 11px;
-	}
-	
+#submit_record__row td.w2p_fw input.btn.btn-primary {
+    margin-right: 150px;
+    margin-left: 1px;
+    width: auto;
+    margin-bottom: 11px;
+}
+a#register-btn.action-lnk {
+    margin-left: -1px;
+}
+#submit_record__row td.w2p_fw {
+    padding-top: 5px;
+    padding-left: 10px;
+    position: relative;
+    left: -17px;
 }
 
-#submit_record__row td.w2p_fw input.btn.btn-primary {
-		margin-right: 150px;
-		margin-left: 1px;
-		width: auto;
-		margin-bottom: 11px;
-	}
-	a#register-btn.action-lnk {
-		margin-left: -1px;
-	}
-	#submit_record__row td.w2p_fw {
-	    padding-top: 5px;
-	    padding-left: 10px;
-		position: relative;
-		left: -17px;
-	}
-
 /* Registration Screen */
-
 
 #auth_user_first_name,
 #auth_user_last_name,
@@ -807,7 +796,7 @@ button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
 }
 
 #auth_user_organisation_id__label {
-	width: 100px;
+    width: 100px;
 }
 
 #auth_user_organisation_id {
@@ -877,13 +866,7 @@ span.toggle-text i {
     width: 110px;
 }
 
-form#subscription-form.form-horizontal {
-	border: 1px solid #b2b2b2;
-}
-
 /*
 [id$=full_name__row].box_middle {
     margin-top: -15px;
 } */
-
-

@@ -81,7 +81,7 @@
     <span class='icon-bar'></span>
     <span class='icon-bar'></span>
    </button>
-   <a class='brand' href='/{{=appname}}/default/index'><img src="/{{=appname}}/static/themes/{{=response.s3.theme}}/img/logo.png" style="width:55px;margin:0 0 -50px 0" alt=""/><h1 id="main-title">DRMIS</h1></a>
+   <a class='brand' href='/{{=appname}}/default/index'><img src="/{{=appname}}/static/themes/{{=response.s3.theme}}/img/logo.png" style="width:55px;margin:0 0 -50px 0" alt=""/><h1 id="main-title">{{=settings.get_system_name_short()}}</h1></a>
    <div class='nav-collapse collapse'>
     <ul class='nav'>
      <li><a href='/{{=appname}}/default/index/newsfeed'> <i class='icon-updates'></i> {{=T("News Feed")}}</a></li>
@@ -151,11 +151,11 @@
 {{include "bootstrap_js.html"}}
 {{include "scripts.html"}}
 <script type="text/javascript">
-	window.setTimeout(function() {
-	    $(".alert").fadeTo(500, 0).slideUp(500, function(){
-	        $(this).remove(); 
-	    });
-	}, 4000);
+window.setTimeout(function() {
+ $('.alert').fadeTo(500, 0).slideUp(500, function(){
+  $(this).remove(); 
+ });
+}, 4000);
 </script>
 </body>
 </html>

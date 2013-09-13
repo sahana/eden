@@ -31,22 +31,12 @@ h4.latest-disasters{
     margin-right: -6px;
 }
 
-@media screen and (max-width: 767px){
-    h4.latest-disasters {
-        display: inline-block;
-    }
-}
-
 #event_datalist a:hover  {
 	text-decoration: none;
 }
 
-@media (max-width: 480px) {
-	h4.latest-updates,
-	h4.latest-disasters{
-	    width: 97.5%;
-	}
-	
+.span6 .export_xls  { 
+    margin-top: -17px;
 }
 
 /* Cards */
@@ -59,18 +49,16 @@ h4.latest-disasters{
     text-transform: none;
 }
 
-a.card-organisation {
-    font-size: 10px;
-    color: #7b7b78;
-    text-transform: none;
-}
-
 p.citation small a {
     font-size: 10px;
     color: #7b7b78;
     text-transform: none;
 }
 
+a.card-organisation {
+    color: #7b7b78;
+    text-transform: none;
+}
 
 .card-organisation{
     font-size: 10px;
@@ -133,6 +121,12 @@ p.citation small a {
 .accordion-toggle:hover {
     text-decoration: none;
     color: #3498DB;
+}
+
+/* Modals to add Data */
+#popup.cf .form-horizontal {
+    margin-left: -70px;
+    padding-left: 0;
 }
 
 #post-cms_post_created_on-date-filter-le.date-filter-input.anytime, 
@@ -242,5 +236,21 @@ label#post-cms_post_created_on-date-filter__label{
     }
     input#post-cms_post_created_on-date-filter-ge_clear {
         margin-right: 10px;
+    }
+}
+
+@media screen and (max-width: 767px) {
+    h4.latest-disasters {
+        display: inline-block;
+    }
+}
+
+@media (max-width: 480px) {
+    h4.latest-updates,
+    h4.latest-disasters{
+        width: 97.5%;
+    }
+    .span6 .export_xls  { 
+        display: none;
     }
 }

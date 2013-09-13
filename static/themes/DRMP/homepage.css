@@ -2,11 +2,11 @@
 
 /* Landing Page */
 h1#main-title {
-	margin-top: -10px;
-	margin-bottom: -1px;
-	margin-left: 70px;
-	font-size: 25px;
-	text-shadow: 2px 0 4px #464343;
+    margin-top: -10px;
+    margin-bottom: -1px;
+    margin-left: 70px;
+    font-size: 25px;
+    text-shadow: 2px 0 4px #464343;
 }
 
 #myCarousel {
@@ -38,73 +38,6 @@ div.carousel-caption p {
     text-shadow: 0px 1px 0px rgba(0, 0, 0, 0.12);
 } 
 
-@media screen and (min-width: 768px) and (max-width: 1000px) {
-    #myCarousel {
-        margin-bottom: 0px;
-        margin-top: -30px;
-    }
-    div.carousel-caption {
-        width: 379px;
-        margin-left: -7px;
-        top: 40px;
-    }
-    div.carousel-caption h1 {
-        font: 300 40px/37px Merriweather,Georgia,'Times new roman',serif;
-    }
-    div.carousel-caption p{
-        padding-top: 0px;
-        font: normal 16px/20px 'Open Sans','Helvetica Neue',Helvetica,Arial,sans-serif;
-    }
-}
-
-@media screen and (max-width: 767px) {
-    #myCarousel {
-        margin-top: 0px; 
-    }
-    div.carousel-caption {
-        width: 280px;
-        margin-left: -2px;
-        top: 22px;
-    }
-    div.carousel-caption h1 {
-        font: 30px/29px Merriweather,Georgia,'Times new roman',serif;
-    }
-    div.carousel-caption p{
-        padding-top: 1px;
-        font: normal 300 14px/15px 'Open Sans','Helvetica Neue',Helvetica,Arial,sans-serif;
-        margin-top: -3px;
-    } 
-}
-
-@media (max-width: 480px) {
-    #myCarousel {
-        margin-bottom: 0px;
-        margin-top: 0px;   
-    }
-    div.carousel-caption {
-        width: 100%;
-        margin-left: -14px;
-        position: relative;
-        margin-top: -36px;
-        margin-bottom: 27px;
-    }
-    div.carousel-caption h1 {
-        color: #393434;
-        margin-bottom: 7px;
-        text-align: center;
-        padding-right: 8px;
-        padding-left: 8px;
-        text-shadow: none;
-    }
-    div.carousel-caption p{
-        padding-left: 12px;
-        color: #726c6c;
-        text-shadow: none;
-        text-align: center;
-        padding-right: 12px;
-    }
-}
-
 a.btn.btn-register {
     margin-left: 10px;
     padding: 10px 30px;
@@ -114,29 +47,6 @@ a.btn.btn-register {
 a.btn.btn-custom.btn-login {
     margin-top: 20px;
     padding: 10px 40px;
-}
-
-@media screen and (max-width: 767px) {
-    a.btn.btn-register,
-    a.btn.btn-custom.btn-login {
-        margin-top: 15px;
-        padding: 5px 15px;
-        font-size: 12px;
-    }
-    a.btn.btn-register {
-        margin-left: 6px;
-    }
-}
-
-@media (max-width: 480px) {
-    a.btn.btn-register,
-    a.btn.btn-custom.btn-login {
-        margin-top: 16px;
-        margin-left: 30px;
-        font-size: 15px;
-        width: 80%;
-        padding: 6px 0;
-    }
 }
 
 .btn-custom {
@@ -184,58 +94,6 @@ p.quote.mb4 {
     padding-right: 15px;
     padding-left: 15px;
     margin-top: -2px;
-}
-
-@media screen and (max-width: 767px) {
-  .home-circle-img {
-    width: 80px;
-    margin: 0px auto 16px;
-    height: 80px;
-    float: left;
-    padding-right: 9px;
-  }
-  #homepage-about h2 {
-    font-size: 18px;
-    text-align: left;
-    top: 2px;
-    margin-bottom: 12px;
-  }
-  p.quote.mb4 {
-    font-size: 13px;
-    line-height: 18px;
-    text-align: left;
-    margin-top: 0;
-  }
-}
-
-@media (max-width: 480px) { 
-  .home-circle-img {
-    width: 80px;
-    margin: 0px auto 24px -25px;
-    padding-right: 7px;
-  }
-  #homepage-about h2 {
-    font-size: 18px;
-    top: -2px;
-    margin-bottom: 5px;;
-  }
-  p.quote.mb4 {
-    font-size: 13px;
-    line-height: 17px;
-    text-align: justify;
-    padding-right: 15px;
-    padding-left: 15px;
-  }
-}
-
-@media screen and (max-width: 767px) {
-  #homepage-about .span4 {
-    padding-left: 23px;
-    position: relative;
-    border-top: 1px solid rgba(0, 0, 0, 0.11);
-    padding-top: 15px;
-    padding-bottom: 17.5px;
-  }
 }
 
 #homepage-about {
@@ -336,9 +194,137 @@ p.quote.mb4 {
     padding-bottom: 31px;
 }
 
-@media screen and (max-width: 767px) {
-  .stl,
-  .st {
-    background-image: none;
-  }
+@media screen and (min-width: 768px) and (max-width: 1000px) {
+    #myCarousel {
+        margin-bottom: 0px;
+        margin-top: -30px;
+    }
+    div.carousel-caption {
+        width: 379px;
+        margin-left: -7px;
+        top: 40px;
+    }
+    div.carousel-caption h1 {
+        font: 300 40px/37px Merriweather,Georgia,'Times new roman',serif;
+    }
+    div.carousel-caption p{
+        padding-top: 0px;
+        font: normal 16px/20px 'Open Sans','Helvetica Neue',Helvetica,Arial,sans-serif;
+    }
 }
+
+@media screen and (max-width: 767px) {
+    #myCarousel {
+        margin-top: 0px; 
+    }
+    div.carousel-caption {
+        width: 280px;
+        margin-left: -2px;
+        top: 22px;
+    }
+    div.carousel-caption h1 {
+        font: 30px/29px Merriweather,Georgia,'Times new roman',serif;
+    }
+    div.carousel-caption p{
+        padding-top: 1px;
+        font: normal 300 14px/15px 'Open Sans','Helvetica Neue',Helvetica,Arial,sans-serif;
+        margin-top: -3px;
+    }
+    .stl,
+    .st {
+        background-image: none;
+    }
+}
+
+@media screen and (max-width: 767px) {
+    #homepage-about .span4 {
+        padding-left: 23px;
+        position: relative;
+        border-top: 1px solid rgba(0, 0, 0, 0.11);
+        padding-top: 15px;
+        padding-bottom: 17.5px;
+    }
+    #homepage-about h2 {
+        font-size: 18px;
+        text-align: left;
+        top: 2px;
+        margin-bottom: 12px;
+    }
+    .home-circle-img {
+        width: 80px;
+        margin: 0px auto 16px;
+        height: 80px;
+        float: left;
+        padding-right: 9px;
+    }
+    p.quote.mb4 {
+        font-size: 13px;
+        line-height: 18px;
+        text-align: left;
+        margin-top: 0;
+    }
+    a.btn.btn-register,
+    a.btn.btn-custom.btn-login {
+        margin-top: 15px;
+        padding: 5px 15px;
+        font-size: 12px;
+    }
+    a.btn.btn-register {
+        margin-left: 6px;
+    }
+}
+
+@media (max-width: 480px) { 
+    #myCarousel {
+        margin-bottom: 0px;
+        margin-top: 0px;   
+    }
+    div.carousel-caption {
+        width: 100%;
+        margin-left: -14px;
+        position: relative;
+        margin-top: -36px;
+        margin-bottom: 27px;
+    }
+    div.carousel-caption h1 {
+        color: #393434;
+        margin-bottom: 7px;
+        text-align: center;
+        padding-right: 8px;
+        padding-left: 8px;
+        text-shadow: none;
+    }
+    div.carousel-caption p{
+        padding-left: 12px;
+        color: #726c6c;
+        text-shadow: none;
+        text-align: center;
+        padding-right: 12px;
+    }
+    .home-circle-img {
+        width: 80px;
+        margin: 0px auto 24px -25px;
+        padding-right: 7px;
+    }
+    #homepage-about h2 {
+        font-size: 18px;
+        top: -2px;
+        margin-bottom: 5px;;
+    }
+    p.quote.mb4 {
+        font-size: 13px;
+        line-height: 17px;
+        text-align: justify;
+        padding-right: 15px;
+        padding-left: 15px;
+    }
+    a.btn.btn-register,
+    a.btn.btn-custom.btn-login {
+        margin-top: 16px;
+        margin-left: 30px;
+        font-size: 15px;
+        width: 80%;
+        padding: 6px 0;
+    }
+}
+
