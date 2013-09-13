@@ -17,9 +17,7 @@ from gluon.validators import IS_NULL_OR, IS_NOT_EMPTY
 from s3.s3fields import S3Represent
 from s3.s3resource import S3FieldSelector
 from s3.s3utils import S3DateTime, s3_auth_user_represent_name, s3_avatar_represent, s3_unicode
-from s3.s3validators import IS_INT_AMOUNT, IS_LOCATION_SELECTOR2, IS_ONE_OF
-from s3.s3widgets import S3LocationSelectorWidget2
-from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
+from s3.s3validators import IS_ONE_OF
 
 T = current.T
 s3 = current.response.s3
@@ -1605,6 +1603,7 @@ def render_projects(listid, resource, rfields, record, **attr):
         currencies = raw["project_donor_organisation.currency"]
         if not isinstance(currencies, list):
             currencies = [currencies for donor_id in donor_ids]
+        from s3.s3validators import IS_INT_AMOUNT
         amount_represent = IS_INT_AMOUNT.represent
         donors_list = []
         length = len(donor_ids)
@@ -1904,6 +1903,8 @@ def customize_cms_post_fields():
     s3db.doc_document.file.label = ""
     s3db.event_event_post.event_id.label = ""
 
+    from s3.s3validators import IS_LOCATION_SELECTOR2
+    from s3.s3widgets import S3LocationSelectorWidget2
     table = s3db.cms_post
     field = table.location_id
     field.label = ""
@@ -2228,7 +2229,6 @@ def customize_cms_post(**attr):
                 return False
 
         if r.interactive:
-            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
             table = customize_cms_post_fields()
 
             get_vars = current.request.get_vars
@@ -2275,6 +2275,8 @@ def customize_cms_post(**attr):
             if current.request.controller == "default":
                 # Don't override card layout for News Feed/Homepage
                 return True
+
+            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
 
             # Filter from a Profile page?
             # If so, then default the fields we know
@@ -3091,6 +3093,8 @@ def customize_org_office(**attr):
                 # Don't add new Locations here
                 location_field.comment = None
                 # L1s only
+                from s3.s3validators import IS_LOCATION_SELECTOR2
+                from s3.s3widgets import S3LocationSelectorWidget2
                 location_field.requires = IS_LOCATION_SELECTOR2(levels=["L1"])
                 location_field.widget = S3LocationSelectorWidget2(levels=["L1"],
                                                                   show_address=True,
@@ -3895,9 +3899,10 @@ def customize_project_project(**attr):
 
             s3db.doc_document.file.label = ""
 
+            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
             crud_form_fields = [
                     "name",
-                    S3SQLInlineComponentCheckbox(
+                    S3SQLInlineComponentMultiSelectWidget(
                         "theme",
                         label = T("Themes"),
                         field = "theme_id",
@@ -3960,10 +3965,11 @@ def customize_project_project(**attr):
                     # Default to this Location, but allow selection of others
                     location_field.default = location_id
                 location_field.label = ""
-                location_field.represent = S3Represent(lookup="gis_location")
+                represent = S3Represent(lookup="gis_location")
+                location_field.represent = represent
                 # Project Locations must be districts
                 location_field.requires = IS_ONE_OF(current.db, "gis_location.id",
-                                                    S3Represent(lookup="gis_location"),
+                                                    represent,
                                                     sort = True,
                                                     filterby = "level",
                                                     filter_opts = ["L1"]
@@ -4148,6 +4154,7 @@ def customize_doc_document(**attr):
                            "comments",
                            ]
 
+            from s3.s3forms import S3SQLCustomForm
             crud_form = S3SQLCustomForm(*list_fields)
 
             s3db.configure(tablename,

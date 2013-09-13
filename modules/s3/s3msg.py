@@ -807,19 +807,19 @@ class S3Msg(object):
                     status = False
             else:
                 # Unsupported entity type
-                row.update_record(status=4) # Invalid
+                row.update_record(status = 4) # Invalid
                 db.commit()
                 continue
 
             if status:
-                row.update_record(status=2) # Sent
+                row.update_record(status = 2) # Sent
                 db.commit()
             else:
                 if row.retries > 0:
-                    row.update_record(retries=row.retries-1)
+                    row.update_record(retries = row.retries - 1)
                     db.commit()
                 elif row.retries is not None:
-                    row.update_record(status=5) # Failed
+                    row.update_record(status = 5) # Failed
 
         if chainrun:
             self.process_outbox(contact_method)
