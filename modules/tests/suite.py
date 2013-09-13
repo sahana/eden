@@ -17,14 +17,16 @@ current.data = Storage()
 # (shouldn't be required for Smoke tests)
 # (means removing the *)
 from selenium import webdriver
-from tests.asset import *
-from tests.inv import *
-from tests.member import *
-from tests.org import *
-from tests.project import *
-from tests.staff import *
-from tests.volunteer import *
-from tests.helpers import *
+
+from tests.functional.asset import *
+from tests.functional.inv import *
+from tests.functional.member import *
+from tests.functional.org import *
+from tests.functional.project import *
+from tests.functional.staff import *
+from tests.functional.volunteer import *
+from tests.functional.helpers import *
+
 
 def loadAllTests():
 

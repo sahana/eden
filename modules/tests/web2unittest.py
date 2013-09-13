@@ -44,7 +44,7 @@ from s3.s3search import *
 from s3.s3utils import s3_unicode
 from s3.s3widgets import *
 
-from tests.core import *
+from tests.functional.core import *
 
 current.data = Storage()
 current.data["auth"] = {
