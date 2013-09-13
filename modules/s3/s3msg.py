@@ -620,14 +620,13 @@ class S3Msg(object):
             return True
 
     # -------------------------------------------------------------------------
-    def process_outbox(self,
-                       contact_method="EMAIL"):
+    def process_outbox(self, contact_method="EMAIL"):
         """
-            Send Pending Messages from Outbox.
-            If succesful then move from Outbox to Sent.
-            Can be called from Cron
+            Send pending messages from outbox (usually called from scheduler)
 
-            @ToDo: contact_method = "ALL"
+            @param contact_method: the output channel (see pr_contact.method)
+
+            @todo: contact_method = "ALL"
         """
 
         db = current.db
@@ -638,156 +637,194 @@ class S3Msg(object):
             settings = db(table.id > 0).select(table.outgoing_sms_handler,
                                                limitby=(0, 1)).first()
             if not settings:
+                # Raise exception here to make the scheduler
+                # task fail permanently
                 raise ValueError("No SMS handler defined!")
             outgoing_sms_handler = settings.outgoing_sms_handler
 
-        def dispatch_to_pe_id(pe_id):
+        def dispatch_to_pe_id(pe_id,
+                              subject,
+                              message,
+                              outbox_id,
+                              message_id,
+                              contact_method=contact_method):
+            """
+                Helper method to send messages by pe_id
+
+                @param pe_id: the pe_id
+                @param subject: the message subject
+                @param message: the message body
+                @param outbox_id: the outbox record ID
+                @param message_id: the message_id
+                @param contact_method: the contact method
+            """
+
+            # Get the recipient's contact info
             table = s3db.pr_contact
             query = (table.pe_id == pe_id) & \
                     (table.contact_method == contact_method) & \
                     (table.deleted == False)
-            recipient = db(query).select(table.value,
-                                         orderby = table.priority,
-                                         limitby=(0, 1)).first()
-            if recipient:
+            contact_info = db(query).select(table.value,
+                                            orderby=table.priority,
+                                            limitby=(0, 1)).first()
+            # Send the message
+            if contact_info:
+                address = contact_info.value
                 if contact_method == "EMAIL":
-                    return self.send_email(recipient.value,
+                    return self.send_email(address,
                                            subject,
                                            message)
                 elif contact_method == "SMS":
                     if outgoing_sms_handler == "WEB_API":
-                        return self.send_sms_via_api(recipient.value,
-                                                     message)
+                        return self.send_sms_via_api(address, message)
                     elif outgoing_sms_handler == "SMTP":
-                        return self.send_sms_via_smtp(recipient.value,
-                                                       message)
+                        return self.send_sms_via_smtp(address, message)
                     elif outgoing_sms_handler == "MODEM":
-                        return self.send_sms_via_modem(recipient.value,
-                                                       message)
+                        return self.send_sms_via_modem(address, message)
                     elif outgoing_sms_handler == "TROPO":
                         # NB This does not mean the message is sent
-                        return self.send_text_via_tropo(row.id,
+                        return self.send_text_via_tropo(outbox_id,
                                                         message_id,
-                                                        recipient.value,
+                                                        address,
                                                         message)
-                    else:
-                        return False
-
                 elif contact_method == "TWITTER":
-                    return self.send_tweet(message, recipient.value)
+                    return self.send_tweet(message, address)
+                    
             return False
 
-        table = s3db.msg_outbox
-        mtable = s3db.msg_message
-        ptable = s3db.pr_person
+        outbox = s3db.msg_outbox
+        
         petable = s3db.pr_pentity
-
-        fields = [table.id,
-                  table.message_id,
-                  table.pe_id,
-                  ]
-        query = (table.deleted == False) & \
-                (table.status == 1) & \
-                (table.pr_message_method == contact_method)
+        left = [petable.on(petable.pe_id == outbox.pe_id)]
+        
+        fields = [outbox.id,
+                  outbox.message_id,
+                  outbox.pe_id,
+                  outbox.retries,
+                  petable.instance_type]
+                  
+        query = (outbox.pr_message_method == contact_method) & \
+                (outbox.status == 1) & \
+                (outbox.deleted == False)
 
         if contact_method == "EMAIL":
             mailbox = s3db.msg_email
-            fields += [mailbox.subject,
-                       mailbox.body,
-                       ]
-            left = mailbox.on(mailbox.message_id == table.message_id)
+            fields.extend([mailbox.subject, mailbox.body])
+            left.append(mailbox.on(mailbox.message_id == outbox.message_id))
         else:
             # @ToDo
             return
 
         rows = db(query).select(*fields,
-                                left=left)
-        chainrun = False # Used to fire process_outbox again - Used when messages are sent to groups
+                                left=left,
+                                orderby=~outbox.retries)
+        if not rows:
+            return
+                                
+        ptable = s3db.pr_person
+        gtable = s3db.pr_group
+        mtable = s3db.pr_group_membership
+        otable = s3db.org_organisation
+        htable = s3db.hrm_human_resource
+
+        # Left joins for multi-recipient lookups
+        gleft = [mtable.on((mtable.group_id == gtable.id) &
+                           (mtable.person_id != None) &
+                           (mtable.deleted != True)),
+                 ptable.on((ptable.id == mtable.person_id) &
+                           (ptable.deleted != True))]
+
+        oleft = [htable.on((htable.organisation_id == otable.id) &
+                           (htable.person_id != None) &
+                           (htable.deleted != True)),
+                 ptable.on((ptable.id == htable.person_id) &
+                           (ptable.deleted != True))]
+                           
+        # chainrun: used to fire process_outbox again,
+        # when messages are sent to groups or organisations
+        chainrun = False
+
         for row in rows:
+            
             status = True
+
             if contact_method == "EMAIL":
                 subject = row["msg_email.subject"] or ""
                 message = row["msg_email.body"] or ""
             else:
                 # @ToDo
                 continue
-            row = row["msg_outbox"]
-            message_id = row.message_id
-            #sender_pe_id = logrow.pe_id
-            # Determine list of users
-            entity = row.pe_id
-            query = (petable.id == entity)
-            entity_type = db(query).select(petable.instance_type,
-                                           limitby=(0, 1)).first()
-            if entity_type:
-                entity_type = entity_type.instance_type
-            else:
+
+            entity_type = row["pr_pentity"].instance_type
+            if not entity_type:
                 s3_debug("s3msg", "Entity type unknown")
+                continue
+
+            row = row["msg_outbox"]
+            pe_id = row.pe_id
+            outbox_id = row.id
+            message_id = row.message_id
 
             if entity_type == "pr_group":
-                # Take the entities of it and add in the messaging queue - with
-                # sender as the original sender and marks group email processed
-                # Set system generated = True
-                table3 = s3db.pr_group
-                query = (table3.pe_id == entity)
-                group_id = db(query).select(table3.id,
-                                            limitby=(0, 1)).first().id
-                table4 = s3db.pr_group_membership
-                query = (table4.group_id == group_id)
-                recipients = db(query).select(table4.person_id)
-                for recipient in recipients:
-                    person_id = recipient.person_id
-                    query = (ptable.id == person_id)
-                    pe = db(query).select(ptable.pe_id,
-                                          limitby=(0, 1)).first()
-                    if pe:
-                        table.insert(message_id = message_id,
-                                     pe_id = pe.pe_id,
-                                     pr_message_method = contact_method,
-                                     system_generated = True)
+                # Re-queue the message for each member in the group
+                gquery = (gtable.pe_id == pe_id) & (gtable.deleted != True)
+                recipients = db(gquery).select(ptable.pe_id, left=gleft)
+                pe_ids = set(r.pe_id for r in recipients)
+                pe_ids.discard(None)
+                if pe_ids:
+                    for pe_id in pe_ids:
+                        outbox.insert(message_id=message_id,
+                                      pe_id=pe_id,
+                                      pr_message_method=contact_method,
+                                      system_generated=True)
+                    chainrun = True
                 status = True
-                chainrun = True
 
             elif entity_type == "org_organisation":
-                # Take the entities of it and add in the messaging queue - with
-                # sender as the original sender and marks group email processed
-                # Set system generated = True
-                table3 = s3db.org_organisation
-                query = (table3.pe_id == entity)
-                org_id = db(query).select(table3.id,
-                                          limitby=(0, 1)).first().id
-                table4 = s3db.hrm_human_resource
-                query = (table4.organisation_id == org_id)
-                recipients = db(query).select(table4.person_id)
-                for recipient in recipients:
-                    person_id = recipient.person_id
-                    uery = (ptable.id == person_id)
-                    pe_id = db(query).select(ptable.pe_id,
-                                             limitby=(0, 1)).first().pe_id
-                    table.insert(message_id = message_id,
-                                 pe_id = pe_id,
-                                 pr_message_method = contact_method,
-                                 system_generated = True)
+                # Re-queue the message for each HR in the organisation
+                oquery = (otable.pe_id == pe_id) & (otable.deleted != True)
+                recipients = db(oquery).select(ptable.pe_id, left=oleft)
+                pe_ids = set(r.pe_id for r in recipients)
+                pe_ids.discard(None)
+                if pe_ids:
+                    for pe_id in pe_ids:
+                        outbox.insert(message_id=message_id,
+                                      pe_id=pe_id,
+                                      pr_message_method=contact_method,
+                                      system_generated=True)
+                    chainrun = True
                 status = True
-                chainrun = True
 
-            if entity_type == "pr_person":
-                # Person
-                status = dispatch_to_pe_id(entity)
+            elif entity_type == "pr_person":
+                # Send the message to this person
+                try:
+                    status = dispatch_to_pe_id(pe_id,
+                                               subject,
+                                               message,
+                                               outbox_id,
+                                               message_id)
+                except:
+                    status = False
+            else:
+                # Unsupported entity type
+                row.update_record(status=4) # Invalid
+                db.commit()
+                continue
 
             if status:
-                # Update status to sent in Outbox
-                db(table.id == row.id).update(status=2)
-                # Set message log to actioned
-                #db(ltable.id == message_id).update(actioned=True)
-                # Explicitly commit DB operations when running from Cron
+                row.update_record(status=2) # Sent
                 db.commit()
+            else:
+                if row.retries > 0:
+                    row.update_record(retries=row.retries-1)
+                    db.commit()
+                elif row.retries is not None:
+                    row.update_record(status=5) # Failed
 
-        if chainrun :
+        if chainrun:
             self.process_outbox(contact_method)
 
         return
-
 
     # -------------------------------------------------------------------------
     # Send Email
