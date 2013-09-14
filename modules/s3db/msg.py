@@ -847,7 +847,10 @@ class S3ParsingModel(S3Model):
         #
         tablename = "msg_sender"
         table = self.define_table(tablename,
-                                  self.super_link("pe_id", "pr_pentity"),
+                                  Field("sender",
+                                        label=T("Sender")),
+                                  # @ToDo: Make pe_id work for this
+                                  #self.super_link("pe_id", "pr_pentity"),
                                   Field("priority", "integer",
                                         label=T("Priority")),
                                   *s3_meta_fields())
@@ -1514,7 +1517,7 @@ class S3TwitterModel(S3Model):
 
     def model(self):
 
-        #T = current.T
+        T = current.T
         db = current.db
 
         configure = self.configure

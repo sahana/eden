@@ -99,8 +99,60 @@ def message():
     )
 
     s3db.configure(tablename, listadd=False)
+
+
+    def postp(r, output):
+
+        rtable = r.table
+
+        s3_action_buttons(r)
+
+        s3.actions = \
+        s3.actions + [
+                      dict(label=str(T("Mark Sender")),
+                           _class="action-btn",
+                           url=URL(f="mark_sender",
+                                  args="[id]"))
+                     ]
+
+        return output
+
+    s3.postp = postp
+
     return s3_rest_controller()
 
+# =============================================================================
+def mark_sender():
+    """
+        Assign priority to the given sender
+    """
+
+    s3db = current.s3db
+    db = current.db
+
+    mid = request.args[0]
+    mtable = s3db.msg_message
+    stable = s3db.msg_sender
+
+    srecord = db(mtable.id == mid).select(mtable.from_address,
+                                          limitby=(0,1)).first()
+    sender = srecord.from_address
+
+    record = db(stable.sender == sender).select(stable.id,
+                                                limitby=(0, 1)).first()
+
+    if record:
+        args = "update"
+    else:
+        args = "create"
+
+    url = URL(f="sender",
+              args=args,
+              vars=dict(sender=sender))
+
+    redirect(url)
+
+    return
 # =============================================================================
 def log():
     """
@@ -729,6 +781,45 @@ def search_tweet_query():
     return
 
 # -----------------------------------------------------------------------------
+def sender():
+    """
+       RESTful CRUD controller for whitelisting senders.
+       User can assign priority to senders.
+    """
+
+    tablename = "msg_sender"
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_display = T("Whitelisted Senders"),
+        title_list = T("Whitelisted Senders"),
+        title_create = T("Whitelist a Sender"),
+        title_update = T("Edit Sender Priority"),
+        label_list_button = T("View Sender Priority"),
+        label_create_button = T("Add a Whitelisted Sender"),
+        msg_record_created = T("Sender Whitelisted"),
+        msg_record_deleted = T("Sender deleted"),
+        msg_list_empty = T("No Senders Whitelisted"),
+        msg_record_modified = T("Sender Priority updated")
+        )
+
+    s3db.configure(tablename, listadd=True)
+
+    def prep(r):
+
+        if r.method == "create":
+            dsender = request.vars['sender']
+            dpriority = request.vars['priority']
+            r.table.sender.default = dsender
+            r.table.priority.default = dpriority
+
+        return True
+
+    s3.prep = prep
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def twitter_result():
     """
        RESTful CRUD controller for Twitter Search Results.
@@ -1009,12 +1100,6 @@ def twilio_inbound_channel():
 
 # -----------------------------------------------------------------------------
 def keyword():
-    """ REST Controller """
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def sender():
     """ REST Controller """
 
     return s3_rest_controller()

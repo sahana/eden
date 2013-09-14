@@ -215,6 +215,36 @@ class S3Msg(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def sort_by_sender(row):
+        """
+           Helper method to sort messages according to sender priority.
+        """
+
+        s3db = current.s3db
+        db = current.db
+        ptable = s3db.msg_parsing_status
+        mtable = s3db.msg_message
+        stable = s3db.msg_sender
+
+        try:
+            pmessage = db(ptable.id == row.id).select(ptable.message_id)
+            id = pmessage.message_id
+
+            message = db(mtable.id == id).select(mtable.from_address,
+                                                 limitby=(0, 1)).first()
+            sender = message.from_address
+
+            srecord = db(stable.sender == sender).select(stable.priority,
+                                                         limitby=(0, 1)).first()
+
+            return srecord.priority
+        except:
+            import sys
+            # Return max value i.e. assign lowest priority
+            return sys.maxint
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def parse_import(workflow, source):
         """
            Parse Inbound Messages
@@ -234,6 +264,7 @@ class S3Msg(object):
         contact_method = ctable.contact_method
         value = ctable.value
         send_msg = S3Msg.send_by_pe_id
+        sort_by_sender = S3Msg.sort_by_sender
 
         query = (wtable.workflow_task_id == workflow) & \
                 (wtable.source_task_id == source)
@@ -246,7 +277,7 @@ class S3Msg(object):
                     (ptable.source_task_id == record.source_task_id)
             rows = db(query).select()
 
-            for row in rows:
+            for row in rows.sort(lambda row:sort_by_sender(row)):
                 rquery = (mtable.id == row.message_id)
                 rmessage = db(rquery).select(mtable.id,
                                              mtable.body,
