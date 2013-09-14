@@ -200,15 +200,9 @@ def tropo():
         pass
 
 # =============================================================================
-def twitter_search():
-    """ Controller to modify Twitter search queries """
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def twitter_search_results():
+def twitter():
     """
-        Controller to view tweets from user saved search queries
+        Twitter RESTful Controller
 
         @ToDo: Action Button to update async
     """
@@ -226,7 +220,7 @@ def twitter_search_results():
         return True
     s3.prep = prep
 
-    s3db.configure("msg_twitter_search_results",
+    s3db.configure("msg_twitter",
                    insertable=False,
                    editable=False)
     return s3_rest_controller()
@@ -625,17 +619,14 @@ def twitter_search_query():
        for Twitter Search
     """
 
-    if not auth.s3_has_role(ADMIN):
-
-        session.error = UNAUTHORISED
-        redirect(URL(f="index"))
-
     tablename = "msg_twitter_search_query"
     table = s3db[tablename]
 
-    table.includeEntities.writable = False
     table.is_processed.writable = False
     table.is_searched.writable = False
+    table.is_processed.readable = False
+    table.is_searched.readable = False
+
     table.lang.requires = IS_IN_SET(settings.get_L10n_languages().keys())
     comment = "Add the keywords separated by single spaces."
     table.keywords.comment = DIV(_class="tooltip",
@@ -657,6 +648,17 @@ def twitter_search_query():
         )
 
     s3db.configure(tablename, listadd=True, deletable=True)
+
+    def prep(r):
+
+        table = s3db.msg_twitter_search_channel
+        if not db(table.id > 0).select(table.id,
+                                       limitby=(0, 1)).first():
+            session.error = T("Need to configure Twitter Authentication")
+            redirect(URL(f="twitter_search_channel"))
+        return True
+
+    s3.prep = prep
 
     def postp(r, output):
 
@@ -700,6 +702,19 @@ def twitter_search_query():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def process_keygraph():
+    """
+       Processes the result of the query with KeyGraph.
+    """
+
+    query_id = request.args[0]
+    # Process TwitterSearch async
+    s3task.async("msg_process_keygraph",
+                 args=[query_id])
+    redirect(URL(f="twitter_search_query"))
+    return
+
+# -----------------------------------------------------------------------------
 def search_tweet_query():
     """
        Searches for tweets using
@@ -712,6 +727,7 @@ def search_tweet_query():
                  args=[query_id])
     redirect(URL(f="twitter_search_query"))
     return
+
 # -----------------------------------------------------------------------------
 def twitter_result():
     """
@@ -1393,6 +1409,38 @@ def inbox():
     s3db.configure(tablename, listadd=False)
 
     return s3_rest_controller(module, "message")
+
+# -----------------------------------------------------------------------------
+def twitter_inbox():
+    """
+        RESTful CRUD controller for the Twitter Inbox
+        - all Inbound Tweets (Directed Messages) go here
+    """
+
+    if not auth.s3_logged_in():
+        session.error = T("Requires Login!")
+        redirect(URL(c="default", f="user", args="login"))
+
+    ttable = s3db.msg_twitter
+    s3.filter = (ttable.inbound == True)
+
+    return s3_rest_controller(module, "twitter")
+
+# -----------------------------------------------------------------------------
+def twitter_outbox():
+    """
+        RESTful CRUD controller for the Twitter Outbox
+        - all sent Tweets go here
+    """
+
+    if not auth.s3_logged_in():
+        session.error = T("Requires Login!")
+        redirect(URL(c="default", f="user", args="login"))
+
+    ttable = s3db.msg_twitter
+    s3.filter = (ttable.inbound == True)
+
+    return s3_rest_controller(module, "twitter")
 
 # -----------------------------------------------------------------------------
 def email_inbox():

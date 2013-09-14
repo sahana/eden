@@ -86,6 +86,7 @@ class S3MessagingModel(S3Model):
         message_types = Storage(msg_email = T("Email"),
                                 msg_rss_feed = T("RSS"),
                                 msg_twilio_inbox = T("Twilio SMS InBox"),
+                                msg_twitter = T("Twitter"),
                                 )
 
         tablename = "msg_message"
@@ -161,7 +162,7 @@ class S3MessagingModel(S3Model):
         # ---------------------------------------------------------------------
         # Show only the supported messaging methods
         MSG_CONTACT_OPTS = current.msg.MSG_CONTACT_OPTS
-        
+
         # Maximum number of retries to send a message
         MAX_SEND_RETRIES = current.deployment_settings \
                                   .get_msg_max_send_retries()
@@ -192,7 +193,7 @@ class S3MessagingModel(S3Model):
                              # Person/Group to send the message out to:
                              super_link("pe_id", "pr_pentity"),
                              # If set used instead of picking up from pe_id:
-                             Field("address"),   
+                             Field("address"),
                              Field("pr_message_method", length=32,
                                    requires = IS_IN_SET(MSG_CONTACT_OPTS,
                                                         zero=None),
@@ -1135,8 +1136,6 @@ class S3TwitterSearchModel(S3ChannelModel):
                                       "lang",
                                       "count",
                                       "includeEntities",
-                                      "is_searched",
-                                      "is_processed",
                                       ],
                       )
 
@@ -1510,8 +1509,7 @@ class S3TwilioModel(S3ChannelModel):
 class S3TwitterModel(S3Model):
 
     names = ["msg_twitter_channel",
-             "msg_twitter_search",
-             "msg_twitter_search_results",
+             "msg_twitter",
              ]
 
     def model(self):
@@ -1545,41 +1543,29 @@ class S3TwitterModel(S3Model):
                   )
 
         # ---------------------------------------------------------------------
-        # Twitter Search Queries
-        #
-        # @ToDo: Use link table to msg_keyword instead?
-        tablename = "msg_twitter_search"
-        table = define_table(tablename,
-                             Field("search_query", length=140),
-                             *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
-        # @ToDo: Rename as twitter_inbox
-        # - Q? Do we need to separate stuff directed at us via @username vs general searching other than by column?
-        tablename = "msg_twitter_search_results"
+        tablename = "msg_twitter"
         table = define_table(tablename,
                              self.super_link("message_id", "msg_message"),
-                             Field("tweet", length=140,
-                                   writable=False),
                              Field("category",
                                    writable=False),
                              Field("priority", "integer",
                                    writable=False),
                              self.gis_location_id(),
-                             Field("posted_by",
-                                   represent = self.twitter_represent,
-                                   writable=False),
                              Field("posted_at",
+                                   default = current.request.utcnow,
                                    writable=False),
-                             Field("twitter_search", db.msg_twitter_search,
-                                   writable=False),
+                             Field("body", length=140,
+                                   label = T("Body")),
+                             Field("from_address", notnull=True,
+                                   label = T("Posted by"),
+                                   represent = self.twitter_represent,
+                                   ),
+                             Field("inbound", "boolean", default = False,
+                                   represent = lambda direction: \
+                                       (direction and [T("In")] or \
+                                                      [T("Out")])[0],
+                                   label = T("Direction")),
                              *s3_meta_fields())
-
-        #table.twitter_search.requires = IS_ONE_OF(db, "twitter_search.search_query")
-        #table.twitter_search.represent = lambda id: db(db.msg_twitter_search.id == id).select(db.msg_twitter_search.search_query,
-                                                                                              #limitby = (0, 1)).first().search_query
-
-        #self.add_component(table, msg_twitter_search="twitter_search")
 
         configure(tablename,
                   orderby=~table.priority,
@@ -1587,10 +1573,9 @@ class S3TwitterModel(S3Model):
                                "priority",
                                "category",
                                "location_id",
-                               "tweet",
-                               "posted_by",
+                               "body",
+                               "from_address",
                                "posted_at",
-                               "twitter_search",
                                ],
                   super_entity = "msg_message",
                   )

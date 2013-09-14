@@ -312,6 +312,25 @@ if settings.has_module("msg"):
     tasks["msg_email_poll"] = msg_email_poll
 
     # -------------------------------------------------------------------------
+    def msg_process_keygraph(query_id, user_id=None):
+        """
+            Process with KeyGraph
+               - will normally be done Asynchronously if there is a worker alive
+
+            @param query_id: one of s3db.msg_twitter_search_query.id
+            @param user_id: calling request's auth.user.id or None
+        """
+        if user_id:
+            # Authenticate
+            auth.s3_impersonate(user_id)
+        # Run the Task & return the result
+        result = msg.process_keygraph(query_id)
+        db.commit()
+        return result
+
+    tasks["msg_process_keygraph"] = msg_process_keygraph
+
+    # -------------------------------------------------------------------------
     def msg_mcommons_poll(campaign_id, user_id=None):
         """
             Poll a Mobile Commons source for Inbound SMS.
