@@ -116,11 +116,7 @@ if not session.s3:
     session.s3 = Storage()
 
 # AAA
-auth = s3base.AuthS3()
-current.auth = auth
-
-s3_audit = s3base.S3Audit(migrate=migrate, fake_migrate=fake_migrate)
-current.s3_audit = s3_audit
+current.auth = auth = s3base.AuthS3()
 
 # Use username instead of email address for logins
 # - would probably require further customisation
@@ -129,6 +125,8 @@ current.s3_audit = s3_audit
 
 auth.settings.hmac_key = settings.get_auth_hmac_key()
 auth.define_tables(migrate=migrate, fake_migrate=fake_migrate)
+
+current.audit = audit = s3base.S3Audit(migrate=migrate, fake_migrate=fake_migrate)
 
 # Shortcuts for models/controllers/views
 s3_has_role = auth.s3_has_role

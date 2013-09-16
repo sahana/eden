@@ -21,24 +21,10 @@
    <div class="span4">
     <div class="updates">
      <h3>Updates</h3>
-     <span class = "filter_opts">
+     <span class="filter_opts">
       All | <a href="#">My Community</a>
      </span>
-     
-     {{for item in updates:}}
-      <div class="media">
-       <a class="pull-left" href="#">
-        <img class="media-object" width = 50px height = 50px src='{{=item["profile"]}}'>
-       </a>
-       <div class="media-body">
-        <h5 class="media-heading">{{=item["user"]}}</h5>
-        <p>
-         {{=item.get("update")}}
-        </p>
-       </div>
-      </div>
-     {{pass}}
-     <div class="more">More...</div>
+     {{=updates}}
     </div>
    </div>
   </div>

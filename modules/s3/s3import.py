@@ -2474,11 +2474,10 @@ class S3ImportItem(object):
             prefix, name = tablename.split("_", 1)
             if self.id:
                 form.vars.id = self.id
-            if manager.audit is not None:
-                manager.audit(method, prefix, name,
-                              form=form,
-                              record=self.id,
-                              representation="xml")
+            current.audit(method, prefix, name,
+                          form=form,
+                          record=self.id,
+                          representation="xml")
             # Update super entity links
             s3db.update_super(table, form.vars)
             if method == CREATE:
@@ -3985,7 +3984,7 @@ class S3BulkImporter(object):
 
         db = current.db
         s3db = current.s3db
-        audit = current.manager.audit
+        audit = current.audit
         table = s3db[tablename]
         idfield = table[idfield]
         base_query = (table.deleted != True)

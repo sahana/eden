@@ -18,7 +18,7 @@ from gluon.html import *
 from s3.s3filter import S3FilterString
 from s3.s3resource import S3URLQuery
 from s3.s3summary import S3Summary
-from s3.s3utils import S3CustomController
+from s3.s3utils import s3_avatar_represent, S3CustomController
 
 THEME = "CRMT"
 
@@ -42,68 +42,51 @@ class index():
             raise HTTP("404", "Unable to open Custom View: %s" % view)
 
         T = current.T
+        db = current.db
+        s3db = current.s3db
 
-        # This will presumably be modified according to how the update data is stored / retrieved
-        updates = [
-            {"user": "Tom Jones",
-             "profile": URL("static", "themes", args = ["CRMT", "users", "1.jpeg"]),
-             "action": "Added a %s",
-             "type": "Organization",
-             "name": "Helping Hands",
-             "url": URL(""),
-             },
-            {"user": "Frank Sinatra",
-             "profile": URL("static", "themes", args = ["CRMT", "users", "2.jpeg"]),
-             "action": "Saved a %s",
-             "type": "Filter",
-             "name": "My Organization Resources",
-             "url": URL(""),
-             },
-            {"user": "Will Smith",
-             "profile": URL("static", "themes", args = ["CRMT", "users", "3.jpeg"]),
-             "action": "Edited a %s",
-             "type": "Risk",
-             "name": "Wirefires",
-             "url": URL(""),
-             },
-            #{"user": "Marilyn Monroe",
-            # "profile": URL("static", "themes", args = ["CRMT", "users", "4.jpeg"]),
-            # "action": "Saved a %s",
-            # "type": "Map",
-            # "url": URL(""),
-            #},
-            {"user": "Tom Cruise",
-             "profile": URL("static", "themes", args = ["CRMT", "users", "5.jpeg"]),
-             "action": "Add a %s",
-             "type": "Evacuation Route",
-             "name": "Main St",
-             "url": URL(""),
-             },
-        ]
-
-        # Function for converting action, type & name to update content
-        # (Not all updates will have a specific name associated with it, so the link will be on the type)
-        def generate_update(action, type, name, url):
-            if item.get("name"):
-                return TAG[""](action % type,
-                               BR(),
-                               A(name,
-                                 _href=url)
-                               )
+        # Site Activity Log
+        from s3.s3resource import S3FieldSelector
+        resource = s3db.resource("s3_audit")
+        resource.add_filter(S3FieldSelector("~.method") != "delete")
+        orderby = "s3_audit.timestmp desc"
+        list_fields = ["id",
+                       "method",
+                       "user_id",
+                       "tablename",
+                       "record_id",
+                       ]
+        from s3.s3utils import s3_auth_user_represent_name
+        db.s3_audit.user_id.represent = s3_auth_user_represent_name
+        datalist, numrows, ids = resource.datalist(fields=list_fields,
+                                                   start=None,
+                                                   limit=4,
+                                                   listid="log",
+                                                   orderby=orderby,
+                                                   layout=render_log)
+        if numrows == 0:
+            # Empty table or just no match?
+            from s3.s3crud import S3CRUD
+            table = resource.table
+            if "deleted" in table:
+                available_records = db(table.deleted != True)
             else:
-                return TAG[""](action % A(type,
-                                          _href=url)
-                               )
-
-        output["updates"] = [dict(user = item["user"],
-                                  profile = item["profile"],
-                                  update = generate_update(item["action"],
-                                                           item["type"],
-                                                           item.get("name"),
-                                                           item["url"],
-                                                           )
-                                  )
-                             for item in updates]
+                available_records = db(table._id > 0)
+            if available_records.select(table._id,
+                                        limitby=(0, 1)).first():
+                msg = DIV(S3CRUD.crud_string(resource.tablename,
+                                             "msg_no_match"),
+                          _class="empty")
+            else:
+                msg = DIV(S3CRUD.crud_string(resource.tablename,
+                                             "msg_list_empty"),
+                          _class="empty")
+            data = msg
+        else:
+            # Render the list
+            dl = datalist.html()
+            data = dl
+        output["updates"] = data
 
         # Map
         auth = current.auth
@@ -114,7 +97,7 @@ class index():
             if org_group_id:
                 # Lookup Coalition Name
                 db = current.db
-                table = current.s3db.org_group
+                table = s3db.org_group
                 query = (table.id == org_group_id)
                 row = db(query).select(table.name,
                                        limitby=(0, 1)).first()
@@ -165,6 +148,135 @@ for(var i=0,len=layers.length;i<len;i++){
 
         return output
 
+# -----------------------------------------------------------------------------
+def render_log(listid, resource, rfields, record, **attr):
+    """
+        Custom dataList item renderer for 'Site Activity Logs' on the Home page
+
+        @param listid: the HTML ID for this list
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+        @param attr: additional HTML attributes for the item
+    """
+
+    pkey = "s3_audit.id"
+
+    # Construct the item ID
+    if pkey in record:
+        record_id = record[pkey]
+        item_id = "%s-%s" % (listid, record_id)
+    else:
+        # template
+        item_id = "%s-[id]" % listid
+
+    #item_class = "thumbnail"
+    item_class = ""
+
+    raw = record._row
+    author = record["s3_audit.user_id"]
+    author_id = raw["s3_audit.user_id"]
+    method = raw["s3_audit.method"]
+    tablename = raw["s3_audit.tablename"]
+    record_id = raw["s3_audit.record_id"]
+
+    T = current.T
+    db = current.db
+    s3db = current.s3db
+
+    if tablename == "pr_filter":
+        label = T("Saved Filters")
+        url = URL(c="default", f="index", args=["filters"])
+        if method == "create":
+            body = T("Saved a Filter")
+        elif method == "update":
+            body = T("Updated a Filter")
+    else:
+        table = s3db[tablename]
+        row = db(table.id == record_id).select(table.name,
+                                               limitby=(0, 1)
+                                               ).first()
+        if row:
+            label = row.name or ""
+        else:
+            label = ""
+        c, f = tablename.split("_")
+        url = URL(c=c, f=f, args=[record_id])
+        if tablename == "org_facility":
+            if method == "create":
+                body = T("Added a Place")
+            elif method == "update":
+                body = T("Edited a Place")
+        elif tablename == "org_organisation":
+            if method == "create":
+                body = T("Added an Organization")
+            elif method == "update":
+                body = T("Edited an Organization")
+        elif tablename == "project_activity":
+            if method == "create":
+                body = T("Added an Activity")
+            elif method == "update":
+                body = T("Edited an Activity")
+        elif tablename == "stats_resident":
+            if method == "create":
+                body = T("Added People")
+            elif method == "update":
+                body = T("Edited People")
+        elif tablename == "vulnerability_evac_route":
+            if method == "create":
+                body = T("Added an Evacuation Route")
+            elif method == "update":
+                body = T("Edited an Evacuation Route")
+        elif tablename == "vulnerability_risk":
+            if method == "create":
+                body = T("Added a Hazard")
+            elif method == "update":
+                body = T("Edited a Hazard")
+
+    body = P(body,
+             BR(),
+             A(label,
+               _href=url),
+             )
+
+    # @ToDo: Optimise by not doing DB lookups (especially duplicate) within render, but doing these in the bulk query
+    avatar = s3_avatar_represent(author_id,
+                                 _class="media-object",
+                                 _style="width:50px;padding:5px;padding-top:0px;")
+    ptable = s3db.pr_person
+    ltable = db.pr_person_user
+    query = (ltable.user_id == author_id) & \
+            (ltable.pe_id == ptable.pe_id)
+    row = db(query).select(ptable.id,
+                           limitby=(0, 1)
+                           ).first()
+    if row:
+        person_url = URL(c="pr", f="person", args=[row.id])
+    else:
+        person_url = "#"
+    author = A(author,
+               _href=person_url,
+               )
+    avatar = A(avatar,
+               _href=person_url,
+               _class="pull-left",
+               )
+
+    # Render the item
+    item = DIV(DIV(avatar,
+  		           DIV(H5(author,
+                          _class="media-heading"),
+                       body,
+                       _class="media-body",
+                       ),
+                   _class="media",
+                   ),
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
+
 # =============================================================================
 class filters(S3CustomController):
     """ Custom controller to manage saved filters """
@@ -179,7 +291,7 @@ class filters(S3CustomController):
             permissions.fail()
 
         fmt = permissions.format
-        
+
         if current.request.env.request_method == "POST" and fmt != "dl":
             return self.update()
 
@@ -222,7 +334,7 @@ class filters(S3CustomController):
                  (URL(args="filters"), json.dumps(options))
         s3.jquery_ready.append(script)
         return output
-        
+
     # -------------------------------------------------------------------------
     @classmethod
     def render_filter(cls, listid, resource, rfields, record, **attr):
@@ -253,7 +365,7 @@ class filters(S3CustomController):
         resource = current.s3db.resource(resource_name)
 
         T = current.T
-        
+
         # Resource title
         crud_strings = current.response.s3.crud_strings.get(resource.tablename)
         if crud_strings:
@@ -325,7 +437,7 @@ class filters(S3CustomController):
                              .update(title=new_title)
         else:
             success = False
-            
+
         if success:
             return new_title
         else:
@@ -373,7 +485,7 @@ class filters(S3CustomController):
             tab_vars = list_vars + [("t", str(tab_idx))]
             links[section["name"]] = "%s?%s" % (base_url, urlencode(tab_vars))
             tab_idx += 1
-            
+
         return links
         
 # END =========================================================================

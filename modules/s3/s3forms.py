@@ -281,9 +281,6 @@ class S3SQLDefaultForm(S3SQLForm):
         s3 = response.s3
         settings = s3.crud
 
-        manager = current.manager
-        audit = manager.audit
-
         prefix = self.prefix
         name = self.name
         tablename = self.tablename
@@ -292,7 +289,7 @@ class S3SQLDefaultForm(S3SQLForm):
         record = None
         labels = None
 
-        download_url = manager.s3.download_url
+        download_url = current.manager.s3.download_url
 
         self.record_id = record_id
 
@@ -396,8 +393,8 @@ class S3SQLDefaultForm(S3SQLForm):
 
         # Audit read
         if not logged and not form.errors:
-            audit("read", prefix, name,
-                  record=record_id, representation=format)
+            current.audit("read", prefix, name,
+                          record=record_id, representation=format)
 
         return form
 
@@ -418,8 +415,6 @@ class S3SQLDefaultForm(S3SQLForm):
             @param data: the data to prepopulate the form with
             @param format: the request format extension
         """
-
-        audit = current.manager.audit
 
         table = self.table
         record = None
@@ -455,8 +450,8 @@ class S3SQLDefaultForm(S3SQLForm):
 
             # Audit read => this is a read method, after all
             prefix, name = from_table._tablename.split("_", 1)
-            audit("read", prefix, name,
-                  record=from_record, representation=format)
+            current.audit("read", prefix, name,
+                          record=from_record, representation=format)
 
             # Get original record
             query = (from_table.id == from_record)
@@ -562,15 +557,14 @@ class S3SQLDefaultForm(S3SQLForm):
                         keepvalues=False,
                         hideerror=False):
 
-            manager = current.manager
             # Audit
             prefix = self.prefix
             name = self.name
             if record_id is None:
-                manager.audit("create", prefix, name, form=form,
+                current.audit("create", prefix, name, form=form,
                               representation=format)
             else:
-                manager.audit("update", prefix, name, form=form,
+                current.audit("update", prefix, name, form=form,
                               record=record_id, representation=format)
 
             vars = form.vars
@@ -599,7 +593,7 @@ class S3SQLDefaultForm(S3SQLForm):
                                                       force_update=True)
                 # Store session vars
                 self.resource.lastid = str(vars.id)
-                manager.store_session(prefix, name, vars.id)
+                current.manager.store_session(prefix, name, vars.id)
 
             # Execute onaccept
             callback(onaccept, form, tablename=tablename)
@@ -716,6 +710,7 @@ class S3SQLCustomForm(S3SQLForm):
         record = None
         if record_id is not None:
             query = (self.table._id == record_id)
+            # @ToDo: limit fields (at least not meta)
             record = db(query).select(limitby=(0, 1)).first()
         self.record_id = record_id
         self.subrows = Storage()
@@ -1067,8 +1062,6 @@ class S3SQLCustomForm(S3SQLForm):
             return
 
         s3db = current.s3db
-        manager = current.manager
-        audit = manager.audit
 
         if alias is None:
             component = self.resource
@@ -1104,11 +1097,11 @@ class S3SQLCustomForm(S3SQLForm):
 
         # Audit
         if record_id is None:
-            audit("create", prefix, name, form=form,
-                  representation=format)
+            current.audit("create", prefix, name, form=form,
+                          representation=format)
         else:
-            audit("update", prefix, name, form=form,
-                  record=accept_id, representation=format)
+            current.audit("update", prefix, name, form=form,
+                          record=accept_id, representation=format)
 
         # Update super entity links
         s3db.update_super(table, form.vars)
@@ -1127,14 +1120,14 @@ class S3SQLCustomForm(S3SQLForm):
                 auth.s3_make_session_owner(table, accept_id)
             else:
                 # Update realm
-                update_realm = s3db.get_config(table, "update_realm")
+                update_realm = get_config(table, "update_realm")
                 if update_realm:
                     current.auth.set_realm_entity(table, form.vars,
                                                   force_update=True)
 
             # Store session vars
             component.lastid = str(accept_id)
-            manager.store_session(prefix, name, accept_id)
+            current.manager.store_session(prefix, name, accept_id)
 
             # Execute onaccept
             callback(onaccept, form, tablename=tablename)
@@ -1753,7 +1746,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         item_rows = []
         prefix = component.prefix
         name = component.name
-        audit = component.audit
+        audit = current.audit
         permit = component.permit
         tablename = component.tablename
 
@@ -1926,7 +1919,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         component = self.resource.components[data["component"]]
 
-        audit = component.audit
+        audit = current.audit
         prefix, name = component.prefix, component.name
 
         xml_decode = current.xml.xml_decode
@@ -2028,7 +2021,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
             # Process each item
             permit = component.permit
-            audit = component.audit
+            audit = current.audit
             validate = manager.validate
             onaccept = manager.onaccept
             for item in data:
@@ -2943,7 +2936,7 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
         items = data["data"]
         prefix = component.prefix
         name = component.name
-        audit = component.audit
+        audit = current.audit
         for i in xrange(len(items)):
             item = items[i]
             # Get the item record ID
@@ -2992,7 +2985,7 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
 
         component = self.resource.components[data["component"]]
 
-        audit = component.audit
+        audit = current.audit
         prefix, name = component.prefix, component.name
 
         xml_decode = current.xml.xml_decode

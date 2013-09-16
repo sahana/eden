@@ -120,7 +120,7 @@ class S3SkeletonDataModel(S3Model):
                                                                      "skeleton_example.id")))
 
         # Pass names back to global scope (s3.*)
-        return Storage(
+        return dict(
             skeleton_example_id=skeleton_example_id,
         )
 
@@ -135,7 +135,7 @@ class S3SkeletonDataModel(S3Model):
             You don't need this function in case your model is mandatory anyway.
         """
 
-        return Storage(
+        return dict(
             skeleton_example_id = S3ReusableField("skeleton_example_id",
                                                   "integer",
                                                   readable=False,

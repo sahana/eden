@@ -19,9 +19,15 @@ h2.summary {
     float: left;
 }
 
-#summary-tabs .ui-tabs-nav {
-    border: none;
-    margin-bottom: 0;
+.ui-tabs {
+    clear: left;
+}
+.ui-tabs .ui-tabs-nav li {
+    float: right;
+}
+.ui-tabs .ui-tabs-nav li a,
+.ui-tabs .ui-tabs-nav li.ui-tabs-active a {
+    border-color: #B2B2B2 #B2B2B2 white #B2B2B2
 }
 
 #summary-common { 
@@ -29,32 +35,6 @@ h2.summary {
     margin-top: 10px;
     width: 50%;
     line-height: 18px;
-}
-
-#summary-tabs.ui-widget-content {
-    width: 100%;
-    background: none;
-    float: left;
-    margin: -33px;
-    border: none;
-}
-
-#summary-tabs .ui-tabs-nav {
-    border: none;
-    margin: 0 10px 0 0;
-}
-
-.ui-tabs .ui-tabs-nav li a,
-.ui-tabs .ui-tabs-nav li.ui-tabs-active a {
-    border-color: #B2B2B2 #B2B2B2 white #B2B2B2
-}
-
-.ui-tabs {
-    clear: left;
-}
-
-.ui-tabs .ui-tabs-nav li {
-    float: right;
 }
 
 #summary-sections {
@@ -65,7 +45,24 @@ h2.summary {
     box-shadow: none;
     min-height: 200px;
 }
+#summary-sections .map_loader { 
+    margin-top: 125px;
+}
 
+#summary-tabs .ui-tabs-nav {
+    border: none;
+    margin: 0 10px 0 0;
+}
+#summary-tabs.ui-widget-content {
+    width: 100%;
+    background: none;
+    float: left;
+    margin: -33px;
+    border: none;
+}
+#summary-tabs .x-panel-body {
+    border: none;
+}
 #summary-tabs #filter-form {
     margin: 0 50px;
     position: absolute;
@@ -73,15 +70,6 @@ h2.summary {
     width: auto;
     z-index: 1;
 }
-
-#summary-sections .map_loader { 
-    margin-top: 125px;
-}
-
-#summary-tabs .x-panel-body {
-    border: none;
-}
-
 #summary-tabs #table {
     padding: 100px 0 20px;
 }

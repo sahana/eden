@@ -75,6 +75,28 @@ settings.security.map = True
 settings.auth.person_realm_human_resource_site_then_org = False
 
 # -----------------------------------------------------------------------------
+# Audit
+def audit_write(method, tablename, form, record, representation):
+    if not current.auth.user:
+        # Don't include prepop
+        return False
+    if tablename in ("org_facility",
+                     "org_organisation",
+                     "pr_filter",
+                     "project_activity",
+                     "stats_resident",
+                     "vulnerability_evac_route",
+                     "vulnerability_risk",
+                     ):
+        # Perform normal Audit
+        return True
+    else:
+        # Don't Audit non user-visible resources
+        return False
+
+settings.security.audit_write = audit_write
+
+# -----------------------------------------------------------------------------
 # Pre-Populate
 settings.base.prepopulate = ["CRMT"]
 
@@ -319,6 +341,7 @@ def customize_pr_person(**attr):
             # Hide Labels when just 1 column in inline form
             s3db.pr_contact.value.label = ""
 
+            s3db.pr_image.profile.default = True
             image_field = s3db.pr_image.image
             image_field.label = ""
             # ImageCrop widget doesn't currently work within an Inline Form
@@ -942,7 +965,8 @@ settings.ui.customize_org_group = customize_org_group
 #-----------------------------------------------------------------------------
 def facility_onaccept(form):
     """
-        Auto-lookup of Coalition based on LatLon
+        Custom onaccept for Imports:
+        * Auto-lookup of Coalition based on LatLon
     """
 
     # Check if we already have a Coalition

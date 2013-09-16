@@ -14,10 +14,9 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3.s3crud import S3CRUD
 from s3.s3filter import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter, S3FilterForm
-from s3.s3resource import S3FieldSelector
-from s3.s3utils import s3_avatar_represent, S3CustomController
+#from s3.s3utils import s3_avatar_represent, S3CustomController
+from s3.s3utils import S3CustomController
 
 THEME = "DRMP"
 
@@ -37,6 +36,7 @@ class index(S3CustomController):
         s3.jquery_ready.append('''$('#myCarousel').carousel()''')
 
         # Latest 4 Events and Alerts
+        from s3.s3resource import S3FieldSelector
         s3db = current.s3db
         layout = s3.render_posts
         listid = "news_datalist"
@@ -290,6 +290,7 @@ def latest_records(resource, layout, listid, limit, list_fields, orderby):
                                                layout=layout)
     if numrows == 0:
         # Empty table or just no match?
+        from s3.s3crud import S3CRUD
         table = resource.table
         if "deleted" in table:
             available_records = current.db(table.deleted != True)
@@ -425,6 +426,7 @@ def render_events(listid, resource, rfields, record, **attr):
 def render_cms_events(listid, resource, rfields, record, **attr):
     """
         Custom dataList item renderer for 'Events' on the Home page
+        - unused
 
         @param listid: the HTML ID for this list
         @param resource: the S3Resource to render
