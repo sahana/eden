@@ -1,0 +1,26 @@
+<transaction name="login_page">
+	<!-- Login page -->
+	<request>
+	    <!-- Get the form-key from the login form -->
+	    <dyn_variable name="_formkey" xpath="//form//div//input[@name='_formkey']/@value" />
+	    <http url='/eden/default/user/login' version='1.1' method='GET'></http>
+	</request>
+
+	<!-- The requests on the login form -->
+	<request><http url='/eden/static/themes/IFRC/eden.min.css' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/scripts/jquery-1.10.2.min.js' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/scripts/jquery-migrate-1.2.1.min.js' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/scripts/S3/S3.min.js' version='1.1' method='GET'></http></request>
+	<request><http url='/eden/static/themes/IFRC/js/nav.js' version='1.1' method='GET'></http></request>
+
+</transaction>
+
+<transaction name="login_query">
+	<!-- Submit the form -->
+	<request subst="true">
+		<http url='/eden/default/user/login?_next=%2Feden%2Fdefault%2Findex' version='1.1' contents="_formname=login&amp;_formkey=%%__formkey%%&amp;email=admin@example.com&amp;password=testing&amp;_next=/eden/default/index&amp;_utc_offset=-330" content_type='application/x-www-form-urlencoded' method='POST'></http>
+	</request>
+
+	<request><http url='/eden/default/index' version='1.1' method='GET'></http></request>
+
+</transaction>

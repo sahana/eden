@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<!-- 
+	Instructions on how to run the test - 
+	http://eden.sahanafoundation.org/wiki/BluePrint/Testing/TestSuite#Runningthetests
+
+	This test depends upon scripts/create_staff_data.py for its data.
+	Run this script from the current directory if staff.csv is not present.
+-->
+<!-- The filename below is specific to the system the test is run on. -->
+<!DOCTYPE tsung SYSTEM "/opt/tsung-1.4.2/share/tsung/tsung-1.0.dtd" [
+<!ENTITY config SYSTEM "helpers/config.xml">
+<!ENTITY login_page SYSTEM "helpers/login.xml">
+]>
+
+<tsung loglevel="debug" version="1.0">
+
+	<!-- Load the configuration -->
+	&config;
+
+	<options>
+		<option name="file_server" id='newstaff' value="staff.csv"/>
+		<option type="ts_http" name="user_agent">
+		   <user_agent probability="80">Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.8) Gecko/20050513 Galeon/1.3.21</user_agent>
+		   <user_agent probability="20">Mozilla/5.0 (Windows; U; Windows NT 5.2; fr-FR; rv:1.7.8) Gecko/20050511 Firefox/1.0.4</user_agent>
+		</option>
+	</options>
+
+	<sessions>
+	 	<!-- start a session for a http user. the probability is the
+	  	frequency of this type os session. The sum of all session's
+	  	probabilities must be 100 -->
+		<session name='staff_create' probability='100'  type='ts_http'>
+
+			&login_page;
+
+			<request>
+			    <!-- Get the form-key from the login form -->
+			    <dyn_variable name="_formkey" xpath="//form//div[1]//input[@name='_formkey']/@value" />
+			    <dyn_variable name="_formname" xpath="//form//div[1]//input[@name='_formname']/@value" />
+			    <http url='/eden/hrm/staff/create' version='1.1' method='GET'></http>
+			</request>
+
+
+			<transaction name="create_query">
+				<!-- Select a random string to be fed in as the query -->
+				<setdynvars sourcetype="file" fileid="newstaff" delimiter="," order="iter">
+ 					<var name="organisation_id"/>
+ 					<var name="site_id"/>
+ 					<var name="person_id"/>
+ 					<var name="first_name"/>
+ 					<var name="middle_name"/>
+ 					<var name="last_name"/>
+ 					<var name="date_of_birth"/>
+ 					<var name="gender"/>
+ 					<var name="email"/>
+ 					<var name="mobile_phone"/>
+ 					<var name="job_title_id"/>
+ 					<var name="department_id"/>
+ 					<var name="start_date"/>
+ 					<var name="end_date"/>
+				</setdynvars>
+
+				<!-- Submit Create query -->
+				<request subst="true">
+					<http url='/eden/hrm/staff/create' version='1.1' content_type='application/x-www-form-urlencoded' method='POST' contents='organisation_id=%%_organisation_id%%&amp;site_id=%%_site_id%%&amp;person_id=%%_person_id%%&amp;first_name=%%_first_name%%&amp;middle_name=%%_middle_name%%&amp;last_name=%%_last_name%%&amp;date_of_birth=%%_date_of_birth%%&amp;gender=%%_gender%%&amp;email=%%_email%%&amp;mobile_phone=%%_mobile_phone%%&amp;job_title_id=%%_job_title_id%%&amp;department_id=%%_department_id%%&amp;start_date=%%_start_date%%&amp;end_date=%%_end_date%%'></http>
+				</request>
+			</transaction>
+
+			<transaction name="logout">
+				<!-- Logout -->
+				<request><http url='http://127.0.0.1:8000/eden/default/user/logout' version='1.1' method='GET'></http></request>
+				<request><http url='/eden/default/index' version='1.1' method='GET'></http></request>
+			</transaction>
+		</session>
+ 	</sessions>
+</tsung>
+
