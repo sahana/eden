@@ -222,6 +222,7 @@ $(function() {
             url: url,
             data: row_json,
             dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
             // gets moved to .done() inside .ajaxS3
             success: function(data) {
                 response = data;
