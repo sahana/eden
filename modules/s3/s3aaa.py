@@ -6099,41 +6099,48 @@ class S3Audit(object):
             @note: this defines the audit table
         """
 
+        settings = current.deployment_settings
+        audit_read = settings.get_security_audit_read()
+        audit_write = settings.get_security_audit_write()
+        if not audit_read and not audit_write:
+            # Auditing is Disabled
+            self.table = None
+            return
+
         db = current.db
         if tablename in db:
             self.table = db[tablename]
         else:
-            self.table = None
-        if not self.table:
             self.table = db.define_table(tablename,
-                            Field("timestmp", "datetime"),
-                            Field("person", "integer"),
-                            Field("operation"),
-                            Field("tablename"),
-                            Field("record", "integer"),
-                            Field("representation"),
-                            Field("old_value", "text"),
-                            Field("new_value", "text"),
-                            migrate=migrate,
-                            fake_migrate=fake_migrate)
-        session = current.session
-        self.auth = session.auth
-        if session.auth and session.auth.user:
-            self.user = session.auth.user.id
-        else:
-            self.user = None
+                                         Field("timestmp", "datetime"),
+                                         Field("user_id", db.auth_user),
+                                         Field("method"),
+                                         Field("tablename"),
+                                         Field("record_id", "integer"),
+                                         Field("representation"),
+                                         # List of Key:Values
+                                         Field("old_value", "text"),
+                                         # List of Key:Values
+                                         Field("new_value", "text"),
+                                         migrate=migrate,
+                                         fake_migrate=fake_migrate,
+                                         )
 
-        self.diff = None
+        user = current.auth.user
+        if user:
+            self.user_id = user.id
+        else:
+            self.user_id = None
 
     # -------------------------------------------------------------------------
-    def __call__(self, operation, prefix, name,
+    def __call__(self, method, prefix, name,
                  form=None,
                  record=None,
                  representation="unknown"):
         """
             Audit
 
-            @param operation: Operation to log, one of
+            @param method: Method to log, one of
                 "create", "update", "read", "list" or "delete"
             @param prefix: the module prefix of the resource
             @param name: the name of the resource (without prefix)
@@ -6142,22 +6149,14 @@ class S3Audit(object):
             @param representation: the representation format
         """
 
-        settings = current.deployment_settings
-
-        audit_read = settings.get_security_audit_read()
-        audit_write = settings.get_security_audit_write()
-
-        if not audit_read and not audit_write:
+        table = self.table
+        if not table:
+            # Auditing Disabled
             return True
 
-        #import sys
-        #print >> sys.stderr, "Audit %s: %s_%s record=%s representation=%s" % \
-                             #(operation, prefix, name, record, representation)
-
-        now = datetime.datetime.utcnow()
-        db = current.db
-        table = self.table
-        tablename = "%s_%s" % (prefix, name)
+        #if DEBUG:
+        #    _debug("Audit %s: %s_%s record=%s representation=%s" % \
+        #           (method, prefix, name, record, representation))
 
         if record:
             if isinstance(record, Row):
@@ -6184,50 +6183,191 @@ class S3Audit(object):
         else:
             record = None
 
-        if operation in ("list", "read"):
+        now = datetime.datetime.utcnow()
+        tablename = "%s_%s" % (prefix, name)
+
+        settings = current.deployment_settings
+        audit_read = settings.get_security_audit_read()
+        if callable(audit_read):
+            audit_read = audit_read(method, tablename, form, record,
+                                    representation)
+        audit_write = settings.get_security_audit_write()
+        if callable(audit_write):
+            audit_write = audit_write(method, tablename, form, record,
+                                      representation)
+
+        if method in ("list", "read"):
             if audit_read:
                 table.insert(timestmp = now,
-                             person = self.user,
-                             operation = operation,
+                             user_id = self.user_id,
+                             method = method,
                              tablename = tablename,
-                             record = record,
-                             representation = representation)
+                             record_id = record,
+                             representation = representation,
+                             )
 
-        elif operation in ("create", "update"):
+        elif method == "create":
             if audit_write:
                 if form:
-                    record = form.vars.id
-                    new_value = ["%s:%s" % (var, str(form.vars[var]))
-                                 for var in form.vars]
+                    vars = form.vars
+                    record = vars.id
+                    new_value = ["%s:%s" % (var, str(vars[var]))
+                                 for var in vars if vars[var]]
                 else:
                     new_value = []
                 table.insert(timestmp = now,
-                             person = self.user,
-                             operation = operation,
+                             user_id = self.user_id,
+                             method = method,
                              tablename = tablename,
-                             record = record,
+                             record_id = record,
                              representation = representation,
-                             new_value = new_value)
-                self.diff = None
+                             new_value = new_value,
+                             )
 
-        elif operation == "delete":
+        elif method == "update":
             if audit_write:
-                query = db[tablename].id == record
+                if form:
+                    record = form.record
+                    if record:
+                        rvars = record.vars
+                        old_value = ["%s:%s" % (var, str(rvars[var]))
+                                     for var in rvars]
+                    else:
+                        old_value = []
+                    fvars = form.vars
+                    record = fvars.id
+                    new_value = ["%s:%s" % (var, str(fvars[var]))
+                                 for var in fvars]
+                else:
+                    new_value = []
+                    old_value = []
+                table.insert(timestmp = now,
+                             user_id = self.user_id,
+                             method = method,
+                             tablename = tablename,
+                             record_id = record,
+                             representation = representation,
+                             old_value = old_value,
+                             new_value = new_value,
+                             )
+
+        elif method == "delete":
+            if audit_write:
+                db = current.db
+                query = (db[tablename].id == record)
                 row = db(query).select(limitby=(0, 1)).first()
                 old_value = []
                 if row:
                     old_value = ["%s:%s" % (field, row[field])
                                  for field in row]
                 table.insert(timestmp = now,
-                             person = self.user,
-                             operation = operation,
+                             user_id = self.user_id,
+                             method = method,
                              tablename = tablename,
-                             record = record,
+                             record_id = record,
                              representation = representation,
-                             old_value = old_value)
-                self.diff = None
+                             old_value = old_value,
+                             )
 
         return True
+
+    # -------------------------------------------------------------------------
+    def represent(self, records):
+        """
+            Provide a Human-readable representation of Audit records
+            - currently unused
+
+            @param record: the record IDs
+        """
+
+        table = self.table
+        # Retrieve the records
+        if isinstance(records, int):
+            limit = 1
+            query = (table.id == records)
+        else:
+            limit = len(records)
+            query = (table.id.belongs(records))
+        records = current.db(query).select(table.tablename,
+                                           table.method,
+                                           table.user_id,
+                                           table.old_value,
+                                           table.new_value,
+                                           limitby=(0, limit)
+                                           )
+
+        # Convert to Human-readable form
+        s3db = current.s3db
+        output = []
+        oappend = output.append
+        for record in records:
+            table = s3db[tablename]
+            method = record.method
+            if method == "create":
+                new_value = record.new_value
+                if not new_value:
+                    continue
+                diff = []
+                dappend = diff.append
+                for v in new_value:
+                    fieldname, value = v.split(":", 1)
+                    represent = table[fieldname].represent
+                    if represent:
+                        value = represent(value)
+                    label = table[fieldname].label or fieldname
+                    dappend("%s is %s" % (label, value))
+
+            elif method == "update":
+                old_values = record.old_value
+                new_values = record.new_value
+                if not new_value:
+                    continue
+                changed = {}
+                for v in new_values:
+                    fieldname, new_value = v.split(":", 1)
+                    old_value = old_values.get(fieldname, None)
+                    if new_value != old_value:
+                        type = table[fieldname].type
+                        if type == "integer" or \
+                           type.startswith("reference"):
+                            if new_value:
+                                new_value = int(new_value)
+                            if new_value == old_value:
+                                continue
+                        represent = table[fieldname].represent
+                        if represent:
+                            new_value = represent(new_value)
+                        label = table[fieldname].label or fieldname
+                        if old_value:
+                            if represent:
+                                old_value = represent(old_value)
+                            changed[fieldname] = "%s changed from %s to %s" % \
+                                (label, old_value, new_value)
+                        else:
+                            changed[fieldname] = "%s changed to %s" % \
+                                (label, new_value)
+                diff = []
+                dappend = diff.append
+                for fieldname in changed:
+                    dappend(changed[fieldname])
+
+            elif method == "delete":
+                old_value = record.old_value
+                if not old_value:
+                    continue
+                diff = []
+                dappend = diff.append
+                for v in old_value:
+                    fieldname, value = v.split(":", 1)
+                    represent = table[fieldname].represent
+                    if represent:
+                        value = represent(value)
+                    label = table[fieldname].label or fieldname
+                    dappend("%s was %s" % (label, value))
+
+            oappend("\n".join(diff))
+
+        return output
 
 # =============================================================================
 class S3RoleManager(S3Method):

@@ -206,21 +206,6 @@ settings.modules = OrderedDict([
             restricted = False,
             module_type = 10
         )),
-    #("dvi", Storage(
-    #       name_nice = T("Disaster Victim Identification"),
-    #       #description = "Disaster Victim Identification",
-    #       restricted = True,
-    #       module_type = 10,
-    #       #access = "|DVI|",      # Only users with the DVI role can see this module in the default menu & access the controller
-    #       #audit_read = True,     # Can enable Audit for just an individual module here
-    #       #audit_write = True
-    #   )),
-    #("mpr", Storage(
-    #       name_nice = T("Missing Person Registry"),
-    #       #description = "Helps to report and search for missing persons",
-    #       restricted = False,
-    #       module_type = 10,
-    #   )),
     ("dvr", Storage(
            name_nice = T("Disaster Victim Registry"),
            #description = "Allow affected individuals & households to register to receive compensation and distributions",
@@ -239,82 +224,10 @@ settings.modules = OrderedDict([
     #        restricted = True,
     #        module_type = 10,
     #    )),
-    #("fire", Storage(
-    #       name_nice = T("Fire Stations"),
-    #       #description = "Fire Station Management",
-    #       restricted = True,
-    #       module_type = 1,
-    #   )),
     ("water", Storage(
             name_nice = T("Flood Warnings"),
             #description = "Flood Gauges show water levels in various parts of the country",
             restricted = False,
             module_type = 10
         )),
-    #("member", Storage(
-    #       name_nice = T("Members"),
-    #       #description = "Membership Management System",
-    #       restricted = True,
-    #       module_type = 10,
-    #   )),
-    #("patient", Storage(
-    #        name_nice = T("Patient Tracking"),
-    #        #description = "Tracking of Patients",
-    #        restricted = True,
-    #        module_type = 10
-    #    )),
-    #("security", Storage(
-    #       name_nice = T("Security"),
-    #       #description = "Security Management System",
-    #       restricted = True,
-    #       module_type = 10,
-    #   )),
-    # These are specialist modules
-    # Requires RPy2
-    #("climate", Storage(
-    #        name_nice = T("Climate"),
-    #        #description = "Climate data portal",
-    #        restricted = True,
-    #        module_type = 10,
-    #)),
-    #("delphi", Storage(
-    #        name_nice = T("Delphi Decision Maker"),
-    #        #description = "Supports the decision making of large groups of Crisis Management Experts by helping the groups create ranked list.",
-    #        restricted = False,
-    #        module_type = 10,
-    #    )),
-    # @ToDo: Rewrite in a modern style
-    #("budget", Storage(
-    #        name_nice = T("Budgeting Module"),
-    #        #description = "Allows a Budget to be drawn up",
-    #        restricted = True,
-    #        module_type = 10
-    #    )),
-    # @ToDo: Port these Assessments to the Survey module
-    #("building", Storage(
-    #        name_nice = T("Building Assessments"),
-    #        #description = "Building Safety Assessments",
-    #        restricted = True,
-    #        module_type = 10,
-    #    )),
-    # Deprecated by Surveys module
-    # - depends on CR, IRS & Impact
-    #("assess", Storage(
-    #        name_nice = T("Assessments"),
-    #        #description = "Rapid Assessments & Flexible Impact Assessments",
-    #        restricted = True,
-    #        module_type = 10,
-    #    )),
-    #("impact", Storage(
-    #        name_nice = T("Impacts"),
-    #        #description = "Used by Assess",
-    #        restricted = True,
-    #        module_type = None,
-    #    )),
-    #("ocr", Storage(
-    #       name_nice = T("Optical Character Recognition"),
-    #       #description = "Optical Character Recognition for reading the scanned handwritten paper forms.",
-    #       restricted = False,
-    #       module_type = 10
-    #   )),
 ])

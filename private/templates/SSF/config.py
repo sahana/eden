@@ -202,8 +202,6 @@ settings.security.archive_not_delete = True
 # restricted to MapAdmins.
 
 # Audit settings
-# We Audit if either the Global or Module asks us to
-# (ignore gracefully if module author hasn't implemented this)
 # NB Auditing (especially Reads) slows system down & consumes diskspace
 #settings.security.audit_write = False
 #settings.security.audit_read = False
@@ -569,8 +567,6 @@ settings.modules = OrderedDict([
     #       restricted = True,
     #       module_type = 10,
     #       #access = "|DVI|",      # Only users with the DVI role can see this module in the default menu & access the controller
-    #       #audit_read = True,     # Can enable Audit for just an individual module here
-    #       #audit_write = True
     #   )),
     #("mpr", Storage(
     #       name_nice = T("Missing Person Registry"),

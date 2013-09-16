@@ -178,7 +178,7 @@ def kit_totals(kit):
         total_minute_cost += row.minute_cost * quantity
         total_megabyte_cost += row.megabyte_cost * quantity
     db(db.budget_kit.id == kit).update(total_unit_cost=total_unit_cost, total_monthly_cost=total_monthly_cost, total_minute_cost=total_minute_cost, total_megabyte_cost=total_megabyte_cost)
-    s3_audit("update", module, "kit", record=kit, representation="html")
+    audit("update", module, "kit", record=kit, representation="html")
 
 
 def kit_total(form):
@@ -254,7 +254,7 @@ def bundle_totals(bundle):
         total_monthly_cost += row2.megabyte_cost * quantity * row.megabytes
 
     db(db.budget_bundle.id == bundle).update(total_unit_cost=total_unit_cost, total_monthly_cost=total_monthly_cost)
-    s3_audit("update", module, "bundle", record=bundle, representation="html")
+    audit("update", module, "bundle", record=bundle, representation="html")
 
 
 def bundle_total(form):
@@ -766,15 +766,15 @@ def kit_item():
     # Start building the Return with the common items
     output = dict(title=title, description=kit_description, total_cost=kit_total_cost, monthly_cost=kit_monthly_cost)
     # Audit
-    s3_audit("list", module, "kit_item", record=kit, representation="html")
+    audit("list", module, "kit_item", record=kit, representation="html")
     item_list = []
     sqlrows = db(query).select()
     even = True
     if authorised:
         # Audit
-        crud.settings.create_onaccept = lambda form: s3_audit("create", module, "kit_item",
-                                                              form=form,
-                                                              representation="html")
+        crud.settings.create_onaccept = lambda form: audit("create", module, "kit_item",
+                                                           form=form,
+                                                           representation="html")
         # Display a List_Create page with editable Quantities
         for row in sqlrows:
             if even:
@@ -881,7 +881,7 @@ def kit_update_items():
         # Update the Total values
         kit_totals(kit)
         # Audit
-        s3_audit("update", module, "kit_item", record=kit, representation="html")
+        audit("update", module, "kit_item", record=kit, representation="html")
         session.flash = T("Kit updated")
     else:
         session.error = T("Not authorised!")
@@ -1187,12 +1187,12 @@ def bundle_kit_item():
     # Start building the Return with the common items
     output = dict(title=title, description=bundle_description, total_cost=bundle_total_cost, monthly_cost=bundle_monthly_cost)
     # Audit
-    s3_audit("list", module, "bundle_kit_item", record=bundle, representation="html")
+    audit("list", module, "bundle_kit_item", record=bundle, representation="html")
     item_list = []
     even = True
     if authorised:
         # Audit
-        crud.settings.create_onaccept = lambda form: s3_audit(module, "bundle_kit_item",
+        crud.settings.create_onaccept = lambda form: audit(module, "bundle_kit_item",
                                                               form=form,
                                                               representation="html")
         # Display a List_Create page with editable Quantities, Minutes & Megabytes
@@ -1434,7 +1434,7 @@ def bundle_update_items():
         # Update the Total values
         bundle_totals(bundle)
         # Audit
-        s3_audit("update", module, "bundle_kit_item", record=bundle, representation="html")
+        audit("update", module, "bundle_kit_item", record=bundle, representation="html")
         session.flash = T("Bundle updated")
     else:
         session.error = T("Not authorised!")
@@ -1560,12 +1560,12 @@ def budget_staff_bundle():
     # Start building the Return with the common items
     output = dict(title=title, description=budget_description, onetime_cost=budget_onetime_cost, recurring_cost=budget_recurring_cost)
     # Audit
-    s3_audit("list", module, "budget_staff_bundle", record=budget, representation="html")
+    audit("list", module, "budget_staff_bundle", record=budget, representation="html")
     item_list = []
     even = True
     if authorised:
         # Audit
-        crud.settings.create_onaccept = lambda form: s3_audit("create", module, "budget_staff_bundle",
+        crud.settings.create_onaccept = lambda form: audit("create", module, "budget_staff_bundle",
                                                               form=form,
                                                               representation="html")
         # Display a List_Create page with editable Quantities & Months
@@ -1785,7 +1785,7 @@ def budget_totals(budget):
         total_recurring_cost += row2.total_monthly_cost * quantity * months
 
     db(db.budget_budget.id == budget).update(total_onetime_costs=total_onetime_cost, total_recurring_costs=total_recurring_cost)
-    s3_audit("update", module, "budget", record=budget, representation="html")
+    audit("update", module, "budget", record=budget, representation="html")
 
 
 def budget_update_items():
@@ -1836,7 +1836,7 @@ def budget_update_items():
         # Update the Total values
         budget_totals(budget)
         # Audit
-        s3_audit("update", module, "staff_bundle", record=budget, representation="html")
+        audit("update", module, "staff_bundle", record=budget, representation="html")
         session.flash = T("Budget updated")
     else:
         session.error = T("Not authorised!")

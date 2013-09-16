@@ -141,10 +141,6 @@ class S3RequestManager(object):
         # Errors
         self.error = None
 
-        # Toolkits
-        self.audit = current.s3_audit
-        self.auth = auth = current.auth
-
         # Register
         current.manager = self
 
@@ -156,7 +152,7 @@ class S3RequestManager(object):
         self.search = S3Method()
 
         # Hooks
-        self.permit = auth.s3_has_permission
+        self.permit = current.auth.s3_has_permission
         self.messages = None
         self.import_prep = None
         self.log = None
@@ -495,8 +491,8 @@ class S3Request(object):
             self.function, ext = self.function.split(".", 1)
             if extension is None:
                 extension = ext
-        auth = manager.auth
         if c or f:
+            auth = current.auth
             if not auth.permission.has_permission("read",
                                                   c=self.controller,
                                                   f=self.function):

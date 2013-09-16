@@ -274,6 +274,12 @@ settings.L10n.decimal_separator = "."
 # False = owned by any authenticated user
 #settings.security.strict_ownership = False
 
+# Audit
+# - can be a callable for custom hooks (return True to also perform normal logging, or False otherwise)
+# NB Auditing (especially Reads) slows system down & consumes diskspace
+#settings.security.audit_read = True
+#settings.security.audit_write = True
+
 # Lock-down access to Map Editing
 #settings.security.map = True
 # Allow non-MapAdmins to edit hierarchy locations? Defaults to True if not set.
@@ -741,8 +747,6 @@ settings.modules = OrderedDict([
        restricted = True,
        module_type = 10,
        #access = "|DVI|",      # Only users with the DVI role can see this module in the default menu & access the controller
-       #audit_read = True,     # Can enable Audit for just an individual module here
-       #audit_write = True
     )),
     ("dvr", Storage(
        name_nice = T("Disaster Victim Registry"),

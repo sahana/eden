@@ -128,7 +128,12 @@ $(function() {
                     // Store the upload at the end of the form
                     var form = input.closest('form');
                     var cloned = input.clone();
-                    var upload_id = 'upload_' + formname + '_' + fieldname + '_' + rowindex;
+                    if (rowindex == 'none') {
+                        upload_index = '0';
+                    } else {
+                        upload_index = rowindex;
+                    }
+                    var upload_id = 'upload_' + formname + '_' + fieldname + '_' + upload_index;
                     $('#' + upload_id).remove();
                     if (value.match(/fakepath/)) {
                         // IE, etc: Remove 'fakepath' from filename
@@ -306,13 +311,7 @@ $(function() {
                 var td = $('#edit-row-' + formname + ' td')[i];
                 td.innerHTML = text;
             } else {
-                if (input.attr('type') != 'file') {
-                    input.val(value);
-                    // Populate text in autocompletes
-                    element = '#dummy_sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_0';
-                    text = row[fieldname]['text'];
-                    $(element).val(text);
-                } else {
+                if (input.attr('type') == 'file') {
                     // Update the existing upload item, if there is one
                     var upload = $('#upload_' + formname + '_' + fieldname + '_' + rowindex);
                     if (upload.length) {
@@ -323,6 +322,12 @@ $(function() {
                               .attr('name', name)
                               .css({display: ''});
                     }
+                } else {
+                    input.val(value);
+                    // Populate text in autocompletes
+                    element = '#dummy_sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_0';
+                    text = row[fieldname]['text'];
+                    $(element).val(text);
                 }
             }
         }

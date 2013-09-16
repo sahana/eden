@@ -234,9 +234,6 @@ class S3Resource(object):
         self.permit = auth.s3_has_permission
         self.accessible_query = auth.s3_accessible_query
 
-        # Audit hook
-        self.audit = current.s3_audit
-
         # Filter --------------------------------------------------------------
 
         # Default query options
@@ -1218,7 +1215,7 @@ class S3Resource(object):
         # Audit
         if record_id:
             record = Storage(fields).update(id=record_id)
-            self.audit("create", self.prefix, self.name, form=record)
+            current.audit("create", self.prefix, self.name, form=record)
 
         return record_id
 
@@ -1260,7 +1257,7 @@ class S3Resource(object):
 
         INTEGRITY_ERROR = self.ERROR.INTEGRITY_ERROR
         permit = self.permit
-        audit = self.audit
+        audit = current.audit
         prefix = self.prefix
         name = self.name
         tablename = self.tablename
@@ -1554,7 +1551,7 @@ class S3Resource(object):
 
         INTEGRITY_ERROR = self.ERROR.INTEGRITY_ERROR
         permit = self.permit
-        audit = self.audit
+        #audit = current.audit
         prefix = self.prefix
         name = self.name
         tablename = self.tablename
@@ -1943,7 +1940,7 @@ class S3Resource(object):
             rows = rfilter(rows, start=start, limit=limit)
 
         # Audit
-        current.manager.audit("list", self.prefix, self.name)
+        current.audit("list", self.prefix, self.name)
 
         # Keep the rows for later access
         self._rows = rows
@@ -2926,12 +2923,8 @@ class S3Resource(object):
                 self.muntil = record[MTIME]
 
         # Audit read
-        prefix = self.prefix
-        name = self.name
-        audit = manager.audit
-        if audit:
-            audit("read", prefix, name,
-                  record=record[table._id], representation="xml")
+        current.audit("read", self.prefix, self.name,
+                      record=record[table._id], representation="xml")
 
         # Reference map for this record
         rmap = xml.rmap(table, record, rfields)
@@ -3198,7 +3191,7 @@ class S3Resource(object):
         xml = current.xml
         auth = current.auth
         permit = auth.s3_has_permission
-        audit = manager.audit
+        audit = current.audit
         tablename = self.tablename
         table = self.table
 

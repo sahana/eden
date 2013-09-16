@@ -882,8 +882,6 @@ settings.modules = OrderedDict([
     #       restricted = True,
     #       module_type = 10,
     #       #access = "|DVI|",      # Only users with the DVI role can see this module in the default menu & access the controller
-    #       #audit_read = True,     # Can enable Audit for just an individual module here
-    #       #audit_write = True
     #   )),
     #("mpr", Storage(
     #       name_nice = T("Missing Person Registry"),

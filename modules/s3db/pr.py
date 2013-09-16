@@ -2570,7 +2570,9 @@ class S3PersonDetailsModel(S3Model):
 class S3SavedFilterModel(S3Model):
     """ Saved Filters """
 
-    names = ["pr_filter", "pr_filter_id"]
+    names = ["pr_filter",
+             "pr_filter_id",
+             ]
 
     def model(self):
 

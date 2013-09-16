@@ -2,34 +2,33 @@
 
 /* Homepage */
 
+@font-face {
+font-family: NeoSans;
+src: url("../../fonts/NeoSans.otf") format("opentype");
+}
+
 p {
     font-size: 16px;
     font-weight: 200;
     line-height: 25px;
 }
 
-div.banner {
+.banner {
     position: relative;
-    margin-top: -30px;
+    margin-top: -15px;
 }
 
 .title {
     position: absolute;
     width: 100%;
     top: 0;
-    margin: 50px 0 0 60px;
+    margin: 35px 0 0 60px;
 }
-
 .title > img.logo {
     margin: 10px 0 0 10px;
     width: 10%;
     float: left;
 } 
-
-@font-face {
-font-family: NeoSans;
-src: url("../../fonts/NeoSans.otf") format("opentype");
-}
 .title h1,
 .title h2 {
     font-family: NeoSans;
@@ -39,38 +38,34 @@ src: url("../../fonts/NeoSans.otf") format("opentype");
     margin: 0;
     text-shadow: 2px 2px 1px black;
 }
-
 .title h1 {
     font-size: 30pt;
 }
-
 .title h2 {
     font-size: 24pt;
     margin: 0;
 }
 
-div.intro { 
+.intro { 
     background-color: #3788B3;
     color: white;
     margin: 20px 0;
     padding: 0 20px 10px 20px;
 }
-
-div.intro h3 {
+.intro h3 {
     font-size: 20px;
     line-height: 25px;
     padding-top: 20px;
     margin-bottom: 5px;
 }
-
-div.intro p {
+.intro p {
     font-size: 14px;
     font-weight: 800;
     margin-bottom: 10px;
 }
 
-div.updates,
-div.community-data {
+.updates,
+.community-data {
     margin: 20px 0;
     border: 1px solid #B2B2B2;
     border-radius: 10px;
@@ -78,77 +73,80 @@ div.community-data {
     background-color: white;
 }
 
-div.updates {
+.updates {
     padding-top: 5px;
 }
-
-div.updates p {
+.updates p {
     font-size: 14px;
     line-height: 16px;
     margin: 0;
 }
-
-div.updates h3 {
+.updates h3 {
     display: inline;
     margin: 0 15px;
 }
-
-div.updates h5 {
+.updates h5 {
     margin-bottom: 0;
 }
-
-div.updates .filter_opts {
+.updates .filter_opts {
     float: right;
     margin: 15px 15px 0 0;
 }
-
-div.updates div.media {
+.updates .media {
     background: linear-gradient(to bottom, #EDEDED 0%, #F6F6F6 10%, #FFFFFF 50%) repeat scroll 0 0 transparent;
     border-top: 1px solid #C8C8C8;
     padding: 5px 10px;
-    margin: 0px;
+    margin: 0;
     clear: both;
 }
-
-div.updates div.more {
+.updates .dl-1-cols {
+    width: 100%;
+}
+.updates .dl-col-0 {
+    margin-right: 0;
+}
+.updates .dl-row.even,
+.updates .dl-row.odd,
+.updates .dl-row.even .dl-item,
+.updates .dl-row.odd .dl-item {
+    background-color: transparent;
+    padding: 0;
+}
+.updates .dl-navigation {
     border-top: 1px solid #C8C8C8;
     padding: 5px 10px;
-    margin: 0px;
+    margin: 0;
 }
 
-div.map {
+.map {
     overflow: auto;
 }
 
-div.community-data {
+.community-data {
     padding: 0 20px 10px 20px;
 }
-
-div.community-data .a {
+.community-data .a {
     font-size: 16px;
     font-weight: 200;
     line-height: 25px;
 }
-div.community-data a.menu {
+.community-data a.menu {
     width: 67%;
 }
-div.community-data a.create {
+.community-data a.create {
     padding-left: 12px;
     padding-right: 12px;
 }
-
-div.community-data .btn {
+.community-data .btn {
     background: linear-gradient(to bottom, #3788B3 0%, #235482 100%) repeat scroll 0 0 transparent;
 }
-div.community-data .btn:hover {
+.community-data .btn:hover {
     box-shadow: 0 3px 7px rgba(0, 0, 0, 0.5) inset;
 }
-
-div.community-data .cms_content {
+.community-data .cms_content {
     margin: 5px 0 10px 0;
     font-weight: 200;
 }
-
-div.community-data h5 {
+.community-data h5 {
     margin-bottom: 0;
 }
