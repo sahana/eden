@@ -71,7 +71,7 @@ h2.summary {
     z-index: 1;
 }
 #summary-tabs #table {
-    padding: 100px 0 20px;
+    padding-bottom: 20px;
 }
 
 #summary-2_filter {
@@ -246,6 +246,9 @@ form.jeditable-input input {
     max-width: 400px !important;
 }
 
-#summary-tabs #table {
-    padding-top: 120px;
+#summary-sections {
+    padding-top: 132px;
 }
+/*#summary-tabs #table {
+    padding-top: 120px;
+}*/
