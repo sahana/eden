@@ -117,7 +117,7 @@ settings.L10n.languages = OrderedDict([
     ("tet", "Tetum"),
 ])
 # Default Language
-settings.L10n.default_language = "en"
+settings.L10n.default_language = "tet"
 # Default timezone for users
 settings.L10n.utc_offset = "UTC +0900"
 # Unsortable 'pretty' date format

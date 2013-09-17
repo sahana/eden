@@ -604,7 +604,7 @@ class S3SQLDefaultForm(S3SQLForm):
             if form.errors:
 
                 # Revert any records created within widgets/validators
-                db.rollback()
+                current.db.rollback()
 
                 # IS_LIST_OF validation errors need special handling
                 errors = []
@@ -2954,7 +2954,8 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                     except:
                         # e.g. Theme filtered by Sector
                         current.session.error = \
-                            T("Invalid data: record %s not accessible in table %s" % (id, table))
+                            T("Invalid data: record %(id)s not accessible in table %(table)s") % \
+                                dict(id=id, table=table)
                         redirect(URL(args=None, vars=None))
 
         return options

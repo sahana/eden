@@ -87,6 +87,18 @@ class index():
             dl = datalist.html()
             data = dl
         output["updates"] = data
+        # dataLists JS
+        appname = request.application
+        s3 = response.s3
+        debug = s3.debug
+        scripts_append = s3.scripts.append
+        # Infinite Scroll doesn't make sense here
+        #if debug:
+        #    scripts_append("/%s/static/scripts/jquery.infinitescroll.js" % appname)
+        #    scripts_append("/%s/static/scripts/jquery.viewport.js" % appname)
+        #    scripts_append("/%s/static/scripts/S3/s3.dataLists.js" % appname)
+        #else:
+        #    scripts_append("/%s/static/scripts/S3/s3.dataLists.min.js" % appname)
 
         # Map
         auth = current.auth
@@ -134,12 +146,11 @@ for(var i=0,len=layers.length;i<len;i++){
                        )
 
         output["fullscreen"] = fullscreen
-        s3 = response.s3
-        if s3.debug:
-            script = "/%s/static/scripts/S3/s3.gis.fullscreen.js" % request.application
+        if debug:
+            script = "/%s/static/scripts/S3/s3.gis.fullscreen.js" % appname
         else:
-            script = "/%s/static/scripts/S3/s3.gis.fullscreen.min.js" % request.application
-        s3.scripts.append(script)
+            script = "/%s/static/scripts/S3/s3.gis.fullscreen.min.js" % appname
+        scripts_append(script)
 
         from s3db.cms import S3CMS
         for item in response.menu:
