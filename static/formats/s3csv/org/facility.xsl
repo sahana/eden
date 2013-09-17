@@ -90,7 +90,7 @@
     <xsl:template match="row">
 
         <!-- Create the variables -->
-        <xsl:variable name="FacilityName" select="col[@field='Name']/text()"/>
+        <xsl:variable name="FacilityName" select="substring(col[@field='Name']/text(),1,64)"/>
         <xsl:variable name="Type" select="col[@field='Type']/text()"/>
         <xsl:variable name="OrgName">
             <xsl:call-template name="GetColumnValue">
