@@ -1936,9 +1936,11 @@ class S3Filter(S3Method):
 
         # Store record
         onaccept = None
+        form = Storage(vars=filter_data)
         if record:
             success = db(table.id == record_id).update(**filter_data)
             if success:
+                current.audit("update", "pr", "filter", form, record_id, "json")
                 info = {"updated": record_id}
                 onaccept = s3db.get_config(table, "update_onaccept",
                            s3db.get_config(table, "onaccept"))
@@ -1946,13 +1948,14 @@ class S3Filter(S3Method):
             success = table.insert(**filter_data)
             if success:
                 record_id = success
+                current.audit("create", "pr", "filter", form, record_id, "json")
                 info = {"created": record_id}
                 onaccept = s3db.get_config(table, "update_onaccept",
                            s3db.get_config(table, "onaccept"))
 
         if onaccept is not None:
-            filter_data["id"] = record_id
-            callback(onaccept, Storage(vars=filter_data))
+            form.vars["id"] = record_id
+            callback(onaccept, form)
 
         # Success/Error response
         xml = current.xml
