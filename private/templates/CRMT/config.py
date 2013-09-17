@@ -231,10 +231,10 @@ settings.ui.summary = [{"common": True,
                         "label": "Table",
                         "widgets": [{"method": "datatable"}]
                         },
-                       #{"name": "charts",
-                        #"label": "Charts",
-                        #"widgets": [{"method": "report2"}]
-                        #},
+                       {"name": "charts",
+                        "label": "Charts",
+                        "widgets": [{"method": "report2", "ajax_init": True}]
+                        },
                        {"name": "map",
                         "label": "Map",
                         "widgets": [{"method": "map", "ajax_init": True}],
@@ -242,6 +242,7 @@ settings.ui.summary = [{"common": True,
                        ]
 
 settings.ui.filter_auto_submit = 750
+settings.ui.report_auto_submit = 750
                        
 # -----------------------------------------------------------------------------
 # Filter forms
@@ -836,7 +837,9 @@ def customize_org_organisation(**attr):
                                      defaults = Storage(rows = "service_organisation.service_id",
                                                         cols = "sector_organisation.sector_id",
                                                         fact = "count(name)",
-                                                        totals = True
+                                                        totals = True,
+                                                        chart = "breakdown:cols",
+                                                        table = "collapse"
                                                         )
                                      )
 

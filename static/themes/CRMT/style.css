@@ -73,7 +73,7 @@ h2.summary {
 
 #summary-tabs #table,
 #summary-tabs #charts {
-    padding: 120px 20px 20px 20px;
+    padding: 0 20px 20px 20px;
 }
 
 #summary-2_filter {
@@ -244,4 +244,18 @@ form#summary-filter-form
 /* Saved Filters Page - Inline Editor for Filter Titles */
 form.jeditable-input input {
     max-width: 400px !important;
+}
+
+#summary-sections {
+    padding-top: 132px;
+}
+
+.pt-form legend {
+    font-size: 14px;
+    margin-bottom: 0;
+    border: 0 !important;
+}
+button.toggle-text {
+    font-size: 10px !important;
+    margin-left: 12px !important;
 }

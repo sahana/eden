@@ -1875,7 +1875,7 @@ class S3PivotTable(object):
                     if not "." in selector.split("$")[0]:
                         selector = "%s.%s" % (resource.alias, item[0])
                     if selector == field and item[1] == method:
-                        layer_title= item[3]
+                        layer_title= s3_unicode(item[2])
                         break
         if layer_title is None:
             # Construct label from field and method
