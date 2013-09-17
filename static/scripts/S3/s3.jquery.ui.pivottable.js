@@ -1077,6 +1077,7 @@
             if (needs_reload || force) {
                 var ajaxURL = this.options.ajaxURL;
                 $(el).find('.pt-throbber').show();
+                $(el).find('.pt-empty').hide();
                 $.ajax({
                     'url': ajaxURL,
                     'dataType': 'json'
