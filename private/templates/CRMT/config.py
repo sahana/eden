@@ -231,16 +231,18 @@ settings.ui.summary = [{"common": True,
                         "label": "Table",
                         "widgets": [{"method": "datatable"}]
                         },
-                       {"name": "charts",
-                        "label": "Charts",
-                        "widgets": [{"method": "report2"}]
-                        },
+                       #{"name": "charts",
+                        #"label": "Charts",
+                        #"widgets": [{"method": "report2"}]
+                        #},
                        {"name": "map",
                         "label": "Map",
-                        "widgets": [{"method": "map"}]
+                        "widgets": [{"method": "map", "ajax_init": True}],
                         },
                        ]
 
+settings.ui.filter_auto_submit = 750
+                       
 # -----------------------------------------------------------------------------
 # Filter forms
 def filter_formstyle(row_id, label, widget, comment, hidden=False):

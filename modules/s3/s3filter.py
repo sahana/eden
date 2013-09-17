@@ -1413,6 +1413,8 @@ class S3FilterForm(object):
         attr["_id"] = form_id
 
         opts = self.opts
+
+        # Form style
         formstyle = opts.get("formstyle", None)
         if not formstyle:
             formstyle = self._formstyle
@@ -1428,44 +1430,65 @@ class S3FilterForm(object):
         if controls:
             rows.append(formstyle(None, "", controls, ""))
 
-        # Submit button
+        # Submit elements
+        ajax = opts.get("ajax", False)
         submit = opts.get("submit", False)
         if submit:
-            _class = "filter-submit"
-            ajax = opts.get("ajax", False)
-            if ajax:
-                _class = "%s filter-ajax" % _class
+
+            settings = current.deployment_settings
+            
+            # Auto-submit
+            auto_submit = settings.get_ui_filter_auto_submit()
+            if auto_submit and opts.get("auto_submit", True):
+                script = """S3.search.filterFormAutoSubmit('%s', %s)""" % \
+                         (form_id, auto_submit)
+                current.response.s3.jquery_ready.append(script)
+
+            # Custom label and class
+            _class = None
             if submit is True:
                 label = current.T("Search")
             elif isinstance(submit, (list, tuple)):
-                label = submit[0]
-                _class = "%s %s" % (submit[1], _class)
+                label, _class = submit
             else:
                 label = submit
+
+            # Submit button
+            submit_button = INPUT(_type="button",
+                                  _value=label,
+                                  _class="filter-submit")
+            #if auto_submit:
+                #submit_button.add_class("hide")
+            if _class:
+                submit_button.add_class(_class)
+
             # Where to request filtered data from:
             submit_url = opts.get("url", URL(vars={}))
+            
             # Where to request updated options from:
             ajax_url = opts.get("ajaxurl", URL(args=["filter.options"], vars={}))
-            submit = TAG[""](
-                        INPUT(_type="button",
-                              _value=label,
-                              _class=_class),
-                        INPUT(_type="hidden",
-                              _class="filter-ajax-url",
-                              _value=ajax_url),
-                        INPUT(_type="hidden",
-                              _class="filter-submit-url",
-                              _value=submit_url))
 
+            # Submit row elements
+            submit = TAG[""](submit_button,
+                             INPUT(_type="hidden",
+                                   _class="filter-ajax-url",
+                                   _value=ajax_url),
+                             INPUT(_type="hidden",
+                                   _class="filter-submit-url",
+                                   _value=submit_url))
             if ajax and target:
                 submit.append(INPUT(_type="hidden",
                                     _class="filter-submit-target",
                                     _value=target))
 
-            rows.append(formstyle(None, "", submit, ""))
+            # Append submit row
+            submit_row = formstyle(None, "", submit, "")
+            if auto_submit and hasattr(submit_row, "add_class"):
+                submit_row.add_class("hide")
+            rows.append(submit_row)
 
         # Filter Manager (load/apply/save filters)
-        fm = current.deployment_settings.get_search_filter_manager()
+        fm = settings.get_search_filter_manager()
         if fm and opts.get("filter_manager", resource is not None):
             filter_manager = self._render_filters(resource, form_id)
             if filter_manager:
@@ -1486,6 +1509,10 @@ class S3FilterForm(object):
             else:
                 form = FORM(DIV(rows), **attr)
             form.add_class("filter-form")
+            if ajax:
+                form.add_class("filter-ajax")
+        else:
+            return ""
 
         # Put a copy of formstyle into the form for access by the view
         form.formstyle = formstyle

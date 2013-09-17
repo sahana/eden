@@ -30,7 +30,9 @@
             collapseFilter: false,
             collapseOptions: true,
             collapseChart: true,
-            collapseTable: false
+            collapseTable: false,
+
+            autoSubmit: 1000
         },
 
         _create: function() {
@@ -151,6 +153,11 @@
                 $(el).find('.pt-empty').show();
             } else {
                 $(el).find('.pt-empty').hide();
+            }
+            if (this.options.autoSubmit) {
+                $(el).find('.pt-submit').hide();
+            } else {
+                $(el).find('.pt-submit').show();
             }
             this._bindEvents();
 
@@ -1122,6 +1129,7 @@
                 $(this).hide();
             });
 
+            // Totals-option doesn't need Ajax-refresh
             $('#' + widget_id + '-totals').click(function() {
                 var show_totals = $(this).is(':checked');
                 if (pt.options.showTotals != show_totals) {
@@ -1129,12 +1137,42 @@
                 }
             });
             
-            // Submit
-            $(el).find('input.pt-submit').click(function() {
-                var options = pt._getOptions(),
-                    filters = pt._getFilters();
-                pt.reload(options, filters, false);
+            // Axis selectors to fire optionChanged-event
+            $('#' + widget_id + '-rows, #' +
+                    widget_id + '-cols, #' +
+                    widget_id + '-fact').on('change.autosubmit', function() {
+                $(el).find('.pt-form').trigger('optionChanged');
             });
+
+            // Form submission
+            if (this.options.autoSubmit) {
+                // Auto-submit
+                var timeout = this.options.autoSubmit;
+                $(el).find('.pt-form').on('optionChanged', function() {
+                    var that = $(this);
+                    if (that.data('noAutoSubmit')) {
+                        // Event temporarily disabled
+                        return;
+                    }
+                    var timer = that.data('autoSubmitTimeout');
+                    if (timer) {
+                        clearTimeout(timer);
+                    }
+                    timer = setTimeout(function () {
+                        var options = pt._getOptions(),
+                            filters = pt._getFilters();
+                        pt.reload(options, filters, false);
+                    }, timeout);
+                    that.data('autoSubmitTimeout', timer);
+                });
+            } else {
+                // Manual submit
+                $(el).find('input.pt-submit').click(function() {
+                    var options = pt._getOptions(),
+                        filters = pt._getFilters();
+                    pt.reload(options, filters, false);
+                });
+            }
 
             // Zoom in
             $('#' + widget_id + ' div.pt-table div.pt-cell-zoom').click(function(event) {
@@ -1191,12 +1229,19 @@
             var el = this.element;
             var widget_id = $(el).attr('id');
 
-            $(el).find('input.pt-submit').unbind('click');
             $('#' + widget_id + ' div.pt-table div.pt-cell-zoom').unbind('click');
             $('#' + widget_id + '-options legend').unbind('click');
             $('#' + widget_id + '-filters legend').unbind('click');
-            $(widget_id + '-totals').unbind('click');
             
+            $(widget_id + '-totals').unbind('click');
+
+            $('#' + widget_id + '-rows, #' +
+                    widget_id + '-cols, #' +
+                    widget_id + '-fact').unbind('change.autosubmit');
+                    
+            $(el).find('.pt-form').unbind('optionChanged');
+            $(el).find('input.pt-submit').unbind('click');
+
             $('#' + widget_id + '-pchart-rows').unbind('click');
             $('#' + widget_id + '-vchart-rows').unbind('click');
             $('#' + widget_id + '-pchart-cols').unbind('click');

@@ -439,6 +439,8 @@ class S3ReportForm(object):
             "renderChart": True,
             "collapseChart": True,
             "defaultChart": None,
+
+            "autoSubmit": settings.get_ui_report_auto_submit(),
         }
 
         chart_opt = get_vars["chart"]
