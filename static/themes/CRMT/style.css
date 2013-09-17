@@ -70,22 +70,17 @@ h2.summary {
     width: auto;
     z-index: 1;
 }
-#summary-tabs #table {
-    padding: 100px 0 20px;
-}
 
 #summary-2_filter {
     margin-left: 10px;
 }
 
-/* Hide the colons for Location Selectors */
-/*#stats_resident_location_id__label, */
-#event_incident_report_location_id__label,
-#vulnerability_risk_location_id__label,
-#project_activity_location_id__label,
-#stats_trained_location_id__label,
-#org_facility_location_id__label,
-#vulnerability_evac_route_location_id__label {
+/* Hide the colons for Location Selectors before JS can hide */
+.form-container #org_facility_location_id__label,
+.form-container #project_activity_location_id__label,
+.form-container #stats_resident_location_id__label,
+.form-container #vulnerability_evac_route_location_id__label,
+.form-container #vulnerability_risk_location_id__label {
     display: none;
 }
 /* But show in Map Popups */
@@ -246,6 +241,7 @@ form.jeditable-input input {
     max-width: 400px !important;
 }
 
-#summary-tabs #table {
-    padding-top: 120px;
+#summary-tabs #table,
+#summary-tabs #charts {
+    padding: 120px 20px 20px 20px;
 }
