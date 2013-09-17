@@ -872,7 +872,9 @@ S3.search = {};
                     continue;
                 }
                 t = $('#' + target_id);
-                if (t.hasClass('dl') || t.hasClass('map_wrapper')) {
+                if (t.hasClass('dl') ||
+                    t.hasClass('pt-container') ||
+                    t.hasClass('map_wrapper')) {
                     // These targets handle their AjaxURL themselves
                     ajaxurl = null;
                 } else if (t.hasClass('dataTable')) {
