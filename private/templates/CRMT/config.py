@@ -564,7 +564,7 @@ def customize_project_activity(**attr):
             list_fields = ["date",
                            "name",
                            "activity_type_id",
-                           "activity_group$group_id",
+                           "activity_group.group_id",
                            "location_id",
                            "person_id",
                            "comments",
@@ -577,6 +577,7 @@ def customize_project_activity(**attr):
         if r.interactive:
             # CRUD Strings
             table.location_id.label = T("Address")
+            s3db.project_activity_group.group_id.label = T("Coalition")
             if r.method == "summary":
                 from s3.s3filter import S3OptionsFilter, S3DateFilter
                 filter_widgets = [S3OptionsFilter("activity_group.group_id",
@@ -839,8 +840,17 @@ def customize_org_organisation(**attr):
                                                         )
                                      )
 
+            list_fields = ["id",
+                           "name",
+                           (T("Coalitions"), "group_membership.group_id"),
+                           (T("Sectors"), "sector_organisation.sector_id"),
+                           (T("Services"), "service_organisation.service_id"),
+                           "comments",
+                           ]
+
             s3db.configure("org_organisation",
                            crud_form = crud_form,
+                           list_fields = list_fields,
                            filter_widgets = filter_widgets,
                            filter_formstyle = filter_formstyle,
                            report_options = report_options,
@@ -984,7 +994,7 @@ def customize_org_facility(**attr):
             list_fields = ["name",
                            "facility_type.name",
                            "organisation_id",
-                           "facility_group$group_id",
+                           "site_org_group.group_id",
                            "location_id",
                            "comments",
                            ]
@@ -995,6 +1005,7 @@ def customize_org_facility(**attr):
         if r.interactive:
             # CRUD Strings
             table.location_id.label = T("Address")
+            s3db.org_site_org_group.group_id.label = T("Coalition")
 
             s3.crud_strings[tablename] = Storage(
                 title_create = T("Add Place"),
@@ -1156,11 +1167,27 @@ def customize_stats_resident(**attr):
         if callable(standard_prep):
             result = standard_prep(r)
 
-        if r.representation == "interactive":
-            s3db = current.s3db
-            tablename = "stats_resident"
-            table = s3db[tablename]
+        s3db = current.s3db
+        tablename = "stats_resident"
+        table = s3db[tablename]
 
+        if r.method == "summary" or r.representation == "aadata":
+            # Modify list_fields
+            list_fields = ["id",
+                           "name",
+                           "parameter_id",
+                           "value",
+                           "resident_group.group_id",
+                           "location_id",
+                           "person_id",
+                           "comments",
+                           ]
+            s3db.configure(tablename,
+                           list_fields = list_fields,
+                           )
+            s3db.stats_resident_group.group_id.label = T("Coalition")
+
+        if r.interactive:
             # CRUD Strings
             table.location_id.label = T("Address")
 
@@ -1310,14 +1337,28 @@ def customize_vulnerability_evac_route(**attr):
         if callable(standard_prep):
             result = standard_prep(r)
 
-        if r.interactive:
-            s3db = current.s3db
-            tablename = "vulnerability_evac_route"
-            table = s3db[tablename]
+        s3db = current.s3db
+        tablename = "vulnerability_evac_route"
+        table = s3db[tablename]
 
+        if r.method == "summary" or r.representation == "aadata":
+            # Modify list_fields
+            list_fields = ["id",
+                           "name",
+                           "hazard_id",
+                           "evac_route_group.group_id",
+                           "location_id",
+                           "comments",
+                           ]
+            s3db.configure(tablename,
+                           list_fields = list_fields,
+                           )
+
+        if r.interactive:
             # CRUD Strings
             table.location_id.label = T("Address")
-            
+            s3db.vulnerability_evac_route_group.group_id.label = T("Coalition")
+
             if r.method == "summary":
                 from s3.s3filter import S3OptionsFilter
                 filter_widgets = [S3OptionsFilter("evac_route_group.group_id",
@@ -1420,13 +1461,27 @@ def customize_vulnerability_risk(**attr):
         if callable(standard_prep):
             result = standard_prep(r)
 
+        s3db = current.s3db
+        tablename = "vulnerability_risk"
+        table = s3db[tablename]
+
+        if r.method == "summary" or r.representation == "aadata":
+            # Modify list_fields
+            list_fields = ["id",
+                           "name",
+                           "hazard_id",
+                           "risk_group.group_id",
+                           "location_id",
+                           "comments",
+                           ]
+            s3db.configure(tablename,
+                           list_fields = list_fields,
+                           )
+
         if r.interactive:
-            s3db = current.s3db
-            tablename = "vulnerability_risk"
-            table = s3db[tablename]
-            
             # CRUD Strings
             table.location_id.label = T("Address")
+            s3db.vulnerability_risk_group.group_id.label = T("Coalition")
 
             s3.crud_strings[tablename] = Storage(
                 title_create = T("Add Hazard"),

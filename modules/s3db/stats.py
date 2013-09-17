@@ -1206,7 +1206,7 @@ class S3StatsResidentModel(S3Model):
             msg_record_deleted=T("Resident deleted"),
             msg_list_empty=T("No Residents defined"))
 
-        filter_widgets = [S3OptionsFilter("stats_resident_group.group_id",
+        filter_widgets = [S3OptionsFilter("resident_group.group_id",
                                           label=T("Coalition"),
                                           represent="%(name)s",
                                           widget="multiselect",
