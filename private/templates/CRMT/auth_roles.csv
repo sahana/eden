@@ -1,6 +1,7 @@
 uid,role,description,controller,function,table,entity,uacl,oacl,hidden,system,protected,Notes
 ANONYMOUS,Anonymous,,org,group,,,READ,,,,,Allow display of Coalition Polygons on homepage
-ANONYMOUS,Anonymous,,"cms","page",,,"READ","READ",,,,
+ANONYMOUS,Anonymous,,"cms","page",,,"READ","READ",,,,Allow display of Map Layer Metadata
+ANONYMOUS,Anonymous,,,,"s3_audit",,"READ",,,,,Allow display of Site Activity on Homepage
 AUTHENTICATED,Authenticated,,"default","person",,,"READ|CREATE|UPDATE",,,,,
 AUTHENTICATED,Authenticated,,"default","person","gis_location",,"READ|CREATE|UPDATE",,,,,
 AUTHENTICATED,Authenticated,,"default","person","pr_saved_search",,,"READ|CREATE|UPDATE",,,,
@@ -32,6 +33,7 @@ AUTHENTICATED,Authenticated,,,,"pr_address",,,"READ|CREATE|UPDATE",,,,
 AUTHENTICATED,Authenticated,,,,"pr_contact",,,"READ|CREATE|UPDATE",,,,
 AUTHENTICATED,Authenticated,,,,"pr_contact_emergency",,,"READ|CREATE|UPDATE",,,,
 AUTHENTICATED,Authenticated,,,,"pr_education",,,"READ|CREATE|UPDATE",,,,
+AUTHENTICATED,Authenticated,,,,"pr_filter",,"READ","READ|CREATE|UPDATE",,,,
 AUTHENTICATED,Authenticated,,,,"pr_group_membership",,,"READ",,,,
 AUTHENTICATED,Authenticated,,,,"pr_identity",,,"READ|CREATE|UPDATE",,,,
 AUTHENTICATED,Authenticated,,,,"pr_image",,,"READ|CREATE|UPDATE",,,,

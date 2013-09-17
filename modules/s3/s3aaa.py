@@ -6210,7 +6210,8 @@ class S3Audit(object):
             if audit_write:
                 if form:
                     vars = form.vars
-                    record = vars.id
+                    if not record:
+                        record = vars["id"]
                     new_value = ["%s:%s" % (var, str(vars[var]))
                                  for var in vars if vars[var]]
                 else:
@@ -6234,7 +6235,8 @@ class S3Audit(object):
                     else:
                         old_value = []
                     fvars = form.vars
-                    record = fvars.id
+                    if not record:
+                        record = fvars["id"]
                     new_value = ["%s:%s" % (var, str(fvars[var]))
                                  for var in fvars]
                 else:

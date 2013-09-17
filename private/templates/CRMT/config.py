@@ -73,7 +73,8 @@ def audit_write(method, tablename, form, record, representation):
     if not current.auth.user:
         # Don't include prepop
         return False
-    if tablename in ("org_facility",
+    if tablename in ("gis_config",
+                     "org_facility",
                      "org_organisation",
                      "pr_filter",
                      "project_activity",
