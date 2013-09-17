@@ -1053,6 +1053,20 @@ class S3Config(Storage):
 
         return self.ui.get("summary", None)
 
+    def get_ui_filter_auto_submit(self):
+        """
+            Time in milliseconds after the last filter option change to
+            automatically update the filter target(s), set to 0 to disable
+        """
+        return self.ui.get("filter_auto_submit", 0)
+
+    def get_ui_report_auto_submit(self):
+        """
+            Time in milliseconds after the last filter option change to
+            automatically update the filter target(s), set to 0 to disable
+        """
+        return self.ui.get("report_auto_submit", 0)
+
     # =========================================================================
     # Messaging
     # -------------------------------------------------------------------------

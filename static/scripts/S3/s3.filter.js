@@ -62,6 +62,9 @@ S3.search = {};
 
         // If no form has been specified, find the first one
         form = typeof form !== 'undefined' ? form : $('body').find('form.filter-form').first();
+
+        // Temporarily disable auto-submit
+        form.data('noAutoSubmit', 1);
  
         form.find('.text-filter').each(function() {
             $(this).val('');
@@ -93,12 +96,20 @@ S3.search = {};
             $(this).val('');
         });
         // Other widgets go here
+
+        // Clear filter manager
         form.find('.filter-manager-widget').each(function() {
             var that = $(this);
             if (that.filtermanager !== undefined) {
                 that.filtermanager('clear');
             }
         });
+
+        // Re-enable auto-submit
+        form.data('noAutoSubmit', 0);
+
+        // Fire optionChanged event
+        form.trigger('optionChanged');
     };
     
     /**
@@ -307,6 +318,9 @@ S3.search = {};
 
         form = typeof form !== 'undefined' ? form : $('body').find('form.filter-form').first();
 
+        // Temporarily disable auto-submit
+        form.data('noAutoSubmit', 1);
+
         var q = {};
         for (var i=0, len=queries.length, query; i<len; i++) {
             var query = queries[i];
@@ -486,6 +500,12 @@ S3.search = {};
                 }
             }
         });
+        
+        // Re-enable auto-submit
+        form.data('noAutoSubmit', 0);
+
+        // Fire optionChanged event
+        form.trigger('optionChanged');
     };
 
     S3.search.setCurrentFilters = setCurrentFilters;
@@ -714,7 +734,9 @@ S3.search = {};
             'url': ajaxurl,
             'dataType': 'json'
         }).done(function(data) {
+            $(form).data('noAutoSubmit', 1);
             updateOptions(data);
+            $(form).data('noAutoSubmit', 0);
         }).fail(function(jqXHR, textStatus, errorThrown) {
             if (errorThrown == 'UNAUTHORIZED') {
                 msg = i18n.gis_requires_login;
@@ -789,6 +811,36 @@ S3.search = {};
                 t.pivottable('reload', null, target_data['queries']);
             }
         }
+    };
+
+    /**
+     * filterFormAutoSubmit: configure a filter form for automatic
+     *                       submission after option change
+     * Parameters:
+     * form_id: the form element ID
+     * timeout: timeout in milliseconds
+     */
+    S3.search.filterFormAutoSubmit = function(form_id, timeout) {
+
+        var filter_form = $('#' + form_id);
+        if (!filter_form.length || !timeout) {
+            return;
+        }
+        filter_form.on('optionChanged', function (){
+            var that = $(this);
+            if (that.data('noAutoSubmit')) {
+                // Event temporarily disabled
+                return;
+            }
+            var timer = that.data('autoSubmitTimeout');
+            if (timer) {
+                clearTimeout(timer);
+            }
+            timer = setTimeout(function () {
+                filterSubmit(that);
+            }, timeout);
+            that.data('autoSubmitTimeout', timer);
+        });
     };
 
     /**
@@ -1112,6 +1164,123 @@ S3.search = {};
         }
     };
 
+    var filterSubmit = function(filter_form) {
+        
+        var form_id = filter_form.attr('id'),
+            url = filter_form.find('input.filter-submit-url[type="hidden"]').val(),
+            queries = getCurrentFilters(filter_form);
+
+        if (filter_form.hasClass('filter-ajax')) {
+            // Ajax-refresh the target objects
+
+            // Get the target IDs
+            var target = filter_form.find('input.filter-submit-target[type="hidden"]')
+                                    .val();
+
+            // Clear the list
+            pendingTargets[form_id] = {};
+
+            var targets = target.split(' '),
+                needs_reload,
+                dt_ajaxurl = {},
+                ajaxurl,
+                settings,
+                config,
+                i,
+                t,
+                target_id,
+                visible;
+
+            // Inspect the targets
+            for (i=0; i < targets.length; i++) {
+                target_id = targets[i];
+                t = $('#' + target_id);
+
+                if (!t.is(':visible')) {
+                    visible = false;
+                } else {
+                    visible = true;
+                }
+
+                needs_reload = false;
+                ajaxurl = null;
+
+                if (t.hasClass('dl')) {
+                    // data lists do not need page reload
+                    needs_reload = false;
+                } else if (t.hasClass('dataTable')) {
+                    // data tables need page reload if no AjaxURL configured
+                    config = $('input#' + targets[i] + '_configurations');
+                    if (config.length) {
+                        settings = JSON.parse($(config).val());
+                        ajaxurl = settings['ajaxUrl'];
+                        if (typeof ajaxurl != 'undefined') {
+                            ajaxurl = filterURL(ajaxurl, queries);
+                        } else {
+                            ajaxurl = null;
+                        }
+                    }
+                    if (ajaxurl) {
+                        dt_ajaxurl[targets[i]] = ajaxurl;
+                        needs_reload = false;
+                    } else {
+                        needs_reload = true;
+                    }
+                } else if (t.hasClass('map_wrapper')) {
+                    // maps do not need page reload
+                    needs_reload = false;
+                } else if (t.hasClass('cms_content')) {
+                    // CMS widgets do not need page reload
+                    needs_reload = false;
+                } else if (t.hasClass('pt-container')) {
+                    // PivotTables do not need page reload
+                    needs_reload = false;
+                } else {
+                    // all other targets need page reload
+                    if (visible) {
+                        // reload immediately
+                        url = filterURL(url, queries);
+                        window.location.href = url;
+                    } else {
+                        // mark the need for a reload later
+                        needs_reload = true;
+                    }
+                }
+
+                if (!visible) {
+                    // schedule for later
+                    pendingTargets[form_id][target_id] = {
+                        needs_reload: needs_reload,
+                        ajaxurl: ajaxurl,
+                        queries: queries
+                    };
+                }
+            }
+
+            // Ajax-update all visible targets
+            for (i=0; i < targets.length; i++) {
+                target_id = targets[i]
+                t = $('#' + target_id);
+                if (!t.is(':visible')) {
+                    continue;
+                } else if (t.hasClass('dl')) {
+                    dlAjaxReload(target_id, queries);
+                } else if (t.hasClass('dataTable')) {
+                    t.dataTable().fnReloadAjax(dt_ajaxurl[target_id]);
+                } else if (t.hasClass('map_wrapper')) {
+                    S3.gis.refreshLayer('search_results', queries);
+                } else if (t.hasClass('pt-container')) {
+                    t.pivottable('reload', null, queries);
+                }
+            }
+        } else {
+            // Reload the page
+            url = filterURL(url, queries);
+            window.location.href = url;
+        }
+    }
+
+        
     /**
      * document-ready script
      */
@@ -1184,130 +1353,25 @@ S3.search = {};
             hierarchical_location_change(this);
         });
 
+        // Set filter widgets to fire optionChanged event
+        $('.text-filter, .range-filter-input').on('input.autosubmit', function () {
+            $(this).closest('form').trigger('optionChanged');
+        });
+        $('.options-filter, .location-filter, .date-filter-input').on('change.autosubmit', function () {
+            $(this).closest('form').trigger('optionChanged');
+        });
+
         // Clear all filters
         $('.filter-clear').click(function() {
             var form = $(this).closest('form.filter-form');
             clearFilters(form);
         });
-        
+
         // Filter-form submission
         $('.filter-submit').click(function() {
-            
-            var that = $(this);
-            var filter_form = that.closest('form.filter-form');
-            var form_id = filter_form.attr('id');
-            var url = that.nextAll('input.filter-submit-url[type="hidden"]').val(),
-                queries = getCurrentFilters(filter_form);
-
-            if (that.hasClass('filter-ajax')) {
-                // Ajax-refresh the target objects
-
-                // Get the target IDs
-                var target = that.nextAll('input.filter-submit-target[type="hidden"]')
-                                 .val();
-
-                // Clear the list
-                pendingTargets[form_id] = {};
-
-                var targets = target.split(' '),
-                    needs_reload,
-                    dt_ajaxurl = {},
-                    ajaxurl,
-                    settings,
-                    config,
-                    i,
-                    t,
-                    target_id,
-                    visible;
-
-                // Inspect the targets
-                for (i=0; i < targets.length; i++) {
-                    target_id = targets[i];
-                    t = $('#' + target_id);
-
-                    if (!t.is(':visible')) {
-                        visible = false;
-                    } else {
-                        visible = true;
-                    }
-                    
-                    needs_reload = false;
-                    ajaxurl = null;
-                    
-                    if (t.hasClass('dl')) {
-                        // data lists do not need page reload
-                        needs_reload = false;
-                    } else if (t.hasClass('dataTable')) {
-                        // data tables need page reload if no AjaxURL configured
-                        config = $('input#' + targets[i] + '_configurations');
-                        if (config.length) {
-                            settings = JSON.parse($(config).val());
-                            ajaxurl = settings['ajaxUrl'];
-                            if (typeof ajaxurl != 'undefined') {
-                                ajaxurl = filterURL(ajaxurl, queries);
-                            } else {
-                                ajaxurl = null;
-                            }
-                        }
-                        if (ajaxurl) {
-                            dt_ajaxurl[targets[i]] = ajaxurl;
-                            needs_reload = false;
-                        } else {
-                            needs_reload = true;
-                        }
-                    } else if (t.hasClass('map_wrapper')) {
-                        // maps do not need page reload
-                        needs_reload = false;
-                    } else if (t.hasClass('cms_content')) {
-                        // CMS widgets do not need page reload
-                        needs_reload = false;
-                    } else if (t.hasClass('pt-container')) {
-                        // PivotTables do not need page reload
-                        needs_reload = false;
-                    } else {
-                        // all other targets need page reload
-                        if (visible) {
-                            // reload immediately
-                            url = filterURL(url, queries);
-                            window.location.href = url;
-                        } else {
-                            // mark the need for a reload later
-                            needs_reload = true;
-                        }
-                    }
-
-                    if (!visible) {
-                        // schedule for later
-                        pendingTargets[form_id][target_id] = {
-                            needs_reload: needs_reload,
-                            ajaxurl: ajaxurl,
-                            queries: queries
-                        };
-                    }
-                }
-
-                // Ajax-update all visible targets
-                for (i=0; i < targets.length; i++) {
-                    target_id = targets[i]
-                    t = $('#' + target_id);
-                    if (!t.is(':visible')) {
-                        continue;
-                    } else if (t.hasClass('dl')) {
-                        dlAjaxReload(target_id, queries);
-                    } else if (t.hasClass('dataTable')) {
-                        t.dataTable().fnReloadAjax(dt_ajaxurl[target_id]);
-                    } else if (t.hasClass('map_wrapper')) {
-                        S3.gis.refreshLayer('search_results', queries);
-                    } else if (t.hasClass('pt-container')) {
-                        t.pivottable('reload', null, queries);
-                    }
-                }
-            } else {
-                // Reload the page
-                url = filterURL(url, queries);
-                window.location.href = url;
-            }
+            filterSubmit($(this).closest('form.filter-form'));
         });
+
     });
 
 }());
