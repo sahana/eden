@@ -6229,7 +6229,7 @@ class S3Audit(object):
                 if form:
                     record = form.record
                     if record:
-                        rvars = record.vars
+                        rvars = record
                         old_value = ["%s:%s" % (var, str(rvars[var]))
                                      for var in rvars]
                     else:

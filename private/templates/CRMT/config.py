@@ -543,60 +543,64 @@ def customize_project_activity(**attr):
         if callable(standard_prep):
             result = standard_prep(r)
 
-        if r.interactive:
+        if  r.interactive or r.representation == "aadata":
             s3db = current.s3db
             tablename = "project_activity"
             table = s3db[tablename]
-            field = table.location_id
-            field.label = "" # Gets replaced by widget
-            field.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
-            field.widget = S3LocationSelectorWidget2(levels=["L3"],
-                                                     hide_lx=False,
-                                                     reverse_lx=True,
-                                                     show_address=True,
-                                                     show_postcode=True,
-                                                     )
-            field = table.person_id
-            field.comment = None
-            field.requires = IS_ADD_PERSON_WIDGET2()
-            field.widget = S3AddPersonWidget2(controller="pr")
             
-            # Hide Labels when just 1 column in inline form
-            s3db.doc_document.file.label = ""
-            s3db.project_activity_group.group_id.label = ""
-
-            # Custom Crud Form
-            crud_form = S3SQLCustomForm(
-                "date",
-                "name",
-                "activity_type_id",
-                S3SQLInlineComponent(
-                    "activity_group",
-                    label = T("Coalition"),
-                    fields = ["group_id"],
-                    multiple = False,
-                ),
-                "location_id",
-                "person_id",
-                S3SQLInlineComponent(
-                    "activity_organisation",
-                    label = T("Participating Organizations"),
-                    fields = ["organisation_id"],
-                ),
-                S3SQLInlineComponent(
-                    "document",
-                    name = "file",
-                    label = T("Files"),
-                    fields = ["file",
-                              #"comments",
-                              ],
-                ),
-                "comments",
-            )
-
-            s3db.configure(tablename,
-                           crud_form = crud_form,
-                           )
+            table.location_id.label = T("Address")
+            
+            if r.method in ("create", "update"):
+                field = table.location_id
+                field.label = "" # Gets replaced by widget
+                field.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
+                field.widget = S3LocationSelectorWidget2(levels=["L3"],
+                                                         hide_lx=False,
+                                                         reverse_lx=True,
+                                                         show_address=True,
+                                                         show_postcode=True,
+                                                         )
+                field = table.person_id
+                field.comment = None
+                field.requires = IS_ADD_PERSON_WIDGET2()
+                field.widget = S3AddPersonWidget2(controller="pr")
+                
+                # Hide Labels when just 1 column in inline form
+                s3db.doc_document.file.label = ""
+                s3db.project_activity_group.group_id.label = ""
+    
+                # Custom Crud Form
+                crud_form = S3SQLCustomForm(
+                    "date",
+                    "name",
+                    "activity_type_id",
+                    S3SQLInlineComponent(
+                        "activity_group",
+                        label = T("Coalition"),
+                        fields = ["group_id"],
+                        multiple = False,
+                    ),
+                    "location_id",
+                    "person_id",
+                    S3SQLInlineComponent(
+                        "activity_organisation",
+                        label = T("Participating Organizations"),
+                        fields = ["organisation_id"],
+                    ),
+                    S3SQLInlineComponent(
+                        "document",
+                        name = "file",
+                        label = T("Files"),
+                        fields = ["file",
+                                  #"comments",
+                                  ],
+                    ),
+                    "comments",
+                )
+    
+                s3db.configure(tablename,
+                               crud_form = crud_form,
+                               )
 
             if r.method == "summary":
                 list_fields = ["date",
@@ -669,63 +673,67 @@ def customize_event_incident_report(**attr):
         if callable(standard_prep):
             result = standard_prep(r)
 
-        if r.interactive:
+        if  r.interactive or r.representation == "aadata":
             s3db = current.s3db
             tablename = "event_incident_report"
             table = s3db[tablename]
-            field = table.location_id
-            field.label = "" # Gets replaced by widget
-            field.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
-            field.widget = S3LocationSelectorWidget2(levels=["L3"],
-                                                     hide_lx=False,
-                                                     reverse_lx=True,
-                                                     show_address=True,
-                                                     show_postcode=True,
-                                                     )
-            field = table.person_id
-            field.comment = None
-            field.requires = IS_ADD_PERSON_WIDGET2()
-            field.widget = S3AddPersonWidget2(controller="pr")
-
-            current.response.s3.crud_strings[tablename] = Storage(
-                title_create = T("Add Incident"),
-                title_display = T("Incident Details"),
-                title_list = T("Incidents"),
-                title_update = T("Edit Incident"),
-                title_search = T("Search Incidents"),
-                subtitle_create = T("Add New Incident"),
-                label_list_button = T("List Incidents"),
-                label_create_button = T("Add Incident"),
-                label_delete_button = T("Remove Incident"),
-                msg_record_created = T("Incident added"),
-                msg_record_modified = T("Incident updated"),
-                msg_record_deleted = T("Incident removed"),
-                msg_list_empty = T("No Incidents currently recorded")
+            
+            table.location_id.label = T("Address")
+            
+            if r.method in ("create", "update"):
+                field = table.location_id
+                field.label = "" # Gets replaced by widget
+                field.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
+                field.widget = S3LocationSelectorWidget2(levels=["L3"],
+                                                         hide_lx=False,
+                                                         reverse_lx=True,
+                                                         show_address=True,
+                                                         show_postcode=True,
+                                                         )
+                field = table.person_id
+                field.comment = None
+                field.requires = IS_ADD_PERSON_WIDGET2()
+                field.widget = S3AddPersonWidget2(controller="pr")
+    
+                current.response.s3.crud_strings[tablename] = Storage(
+                    title_create = T("Add Incident"),
+                    title_display = T("Incident Details"),
+                    title_list = T("Incidents"),
+                    title_update = T("Edit Incident"),
+                    title_search = T("Search Incidents"),
+                    subtitle_create = T("Add New Incident"),
+                    label_list_button = T("List Incidents"),
+                    label_create_button = T("Add Incident"),
+                    label_delete_button = T("Remove Incident"),
+                    msg_record_created = T("Incident added"),
+                    msg_record_modified = T("Incident updated"),
+                    msg_record_deleted = T("Incident removed"),
+                    msg_list_empty = T("No Incidents currently recorded")
+                    )
+    
+                # Hide Labels when just 1 column in inline form
+                s3db.doc_document.file.label = ""
+                s3db.event_incident_report_group.group_id.label = ""
+    
+                # Custom Crud Form
+                crud_form = S3SQLCustomForm(
+                    "date",
+                    "name",
+                    "incident_type_id",
+                    S3SQLInlineComponent(
+                        "incident_report_group",
+                        label = T("Coalition"),
+                        fields = ["group_id"],
+                        multiple = False,
+                    ),
+                    "location_id",
+                    "person_id",
+                    "comments",
                 )
-
-            # Hide Labels when just 1 column in inline form
-            s3db.doc_document.file.label = ""
-            s3db.event_incident_report_group.group_id.label = ""
-
-            # Custom Crud Form
-            crud_form = S3SQLCustomForm(
-                "date",
-                "name",
-                "incident_type_id",
-                S3SQLInlineComponent(
-                    "incident_report_group",
-                    label = T("Coalition"),
-                    fields = ["group_id"],
-                    multiple = False,
-                ),
-                "location_id",
-                "person_id",
-                "comments",
-            )
-
-            s3db.configure(tablename,
-                           crud_form = crud_form,
-                           )
+    
+                s3db.configure(tablename,
+                               crud_form = crud_form,
+                               )
 
             if r.method == "summary":
                 filter_widgets = [S3OptionsFilter("incident_report_group.group_id",
@@ -1051,7 +1059,9 @@ def customize_org_facility(**attr):
 
         s3db = current.s3db
         tablename = "org_facility"
-        if r.interactive:
+        table = s3db.org_facility
+        if  r.interactive or r.representation == "aadata":
+            table.location_id.label = T("Address")
 
             s3.crud_strings[tablename] = Storage(
                 title_create = T("Add Place"),
@@ -1213,10 +1223,12 @@ def customize_stats_resident(**attr):
         if callable(standard_prep):
             result = standard_prep(r)
 
-        if r.interactive:
+        if  r.interactive or r.representation == "aadata":
             s3db = current.s3db
             tablename = "stats_resident"
             table = s3db[tablename]
+
+            table.location_id.label = T("Address")
             
             #TEMPORARY - replace with another resource?
             s3.crud_strings[tablename] = Storage(
@@ -1234,7 +1246,6 @@ def customize_stats_resident(**attr):
                 msg_record_deleted = T("People removed"),
                 msg_list_empty = T("No People currently recorded"))
             
-            field = table.location_id
             # L3s only
             #field.requires = IS_ONE_OF(current.db, "gis_location.id",
             #                           S3Represent(lookup="gis_location"),
@@ -1247,51 +1258,52 @@ def customize_stats_resident(**attr):
             # Simple dropdown
             #field.widget = None
             #field.label = T("City")
-            table.location_id.label = "" # Gets replaced by widget
-            table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
-            table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
-                                                                 hide_lx=False,
-                                                                 reverse_lx=True,
-                                                                 show_postcode=True,
-                                                                 show_map=False,
-                                                                 )
-
-            field = table.person_id
-            field.comment = None
-            field.requires = IS_ADD_PERSON_WIDGET2()
-            field.widget = S3AddPersonWidget2(controller="pr")
-
-            # Hide Labels when just 1 column in inline form
-            s3db.doc_document.file.label = ""
-            current.db.stats_resident_group.group_id.label = ""
-
-            # Custom Crud Form
-            crud_form = S3SQLCustomForm(
-                "name",
-                "parameter_id",
-                "value",
-                S3SQLInlineComponent(
-                    "resident_group",
-                    label = T("Coalition"),
-                    fields = ["group_id"],
-                    multiple = False,
-                ),
-                "location_id",
-                "person_id",
-                S3SQLInlineComponent(
-                    "document",
-                    name = "file",
-                    label = T("Files"),
-                    fields = ["file",
-                              #"comments",
-                              ],
-                ),
-                "comments",
-            )
-
-            s3db.configure(tablename,
-                           crud_form = crud_form,
-                           )
+            if r.method in ("create", "update"):
+                table.location_id.label = "" # Gets replaced by widget
+                table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
+                table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
+                                                                     hide_lx=False,
+                                                                     reverse_lx=True,
+                                                                     show_postcode=True,
+                                                                     show_map=False,
+                                                                     )
+    
+                field = table.person_id
+                field.comment = None
+                field.requires = IS_ADD_PERSON_WIDGET2()
+                field.widget = S3AddPersonWidget2(controller="pr")
+    
+                # Hide Labels when just 1 column in inline form
+                s3db.doc_document.file.label = ""
+                current.db.stats_resident_group.group_id.label = ""
+    
+                # Custom Crud Form
+                crud_form = S3SQLCustomForm(
+                    "name",
+                    "parameter_id",
+                    "value",
+                    S3SQLInlineComponent(
+                        "resident_group",
+                        label = T("Coalition"),
+                        fields = ["group_id"],
+                        multiple = False,
+                    ),
+                    "location_id",
+                    "person_id",
+                    S3SQLInlineComponent(
+                        "document",
+                        name = "file",
+                        label = T("Files"),
+                        fields = ["file",
+                                  #"comments",
+                                  ],
+                    ),
+                    "comments",
+                )
+    
+                s3db.configure(tablename,
+                               crud_form = crud_form,
+                               )
 
             if r.method == "summary":
                 filter_widgets = [S3OptionsFilter("resident_group.group_id",
@@ -1350,49 +1362,53 @@ def customize_stats_trained(**attr):
         if callable(standard_prep):
             result = standard_prep(r)
 
-        if r.interactive:
+        if  r.interactive or r.representation == "aadata":
             s3db = current.s3db
             tablename = "stats_trained"
             table = s3db[tablename]
-            table.location_id.label = "" # Gets replaced by widget
-            table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
-            table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
-                                                                 hide_lx=False,
-                                                                 reverse_lx=True,
-                                                                 show_postcode=True,
-                                                                 show_map=False,
-                                                                 )
 
-            field = table.person_id
-            field.comment = None
-            field.requires = IS_ADD_PERSON_WIDGET2()
-            field.widget = S3AddPersonWidget2(controller="pr")
+            table.location_id.label = T("Address")
 
-            # Hide Labels when just 1 column in inline form
-            s3db.doc_document.file.label = ""
-            current.db.stats_trained_group.group_id.label = ""
-
-            # Custom Crud Form
-            crud_form = S3SQLCustomForm(
-                "name",
-                "parameter_id",
-                "value",
-                S3SQLInlineComponent(
-                    "trained_group",
-                    label = T("Coalition"),
-                    fields = ["group_id"],
-                    multiple = False,
-                ),
-                "organisation_id",
-                "location_id",
-                "person_id",
-                "comments",
-            )
-
-            s3db.configure(tablename,
-                           crud_form = crud_form,
-                           )
+            if r.method in ("create", "update"):
+                table.location_id.label = "" # Gets replaced by widget
+                table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
+                table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
+                                                                     hide_lx=False,
+                                                                     reverse_lx=True,
+                                                                     show_postcode=True,
+                                                                     show_map=False,
+                                                                     )
     
+                field = table.person_id
+                field.comment = None
+                field.requires = IS_ADD_PERSON_WIDGET2()
+                field.widget = S3AddPersonWidget2(controller="pr")
+    
+                # Hide Labels when just 1 column in inline form
+                s3db.doc_document.file.label = ""
+                current.db.stats_trained_group.group_id.label = ""
+    
+                # Custom Crud Form
+                crud_form = S3SQLCustomForm(
+                    "name",
+                    "parameter_id",
+                    "value",
+                    S3SQLInlineComponent(
+                        "trained_group",
+                        label = T("Coalition"),
+                        fields = ["group_id"],
+                        multiple = False,
+                    ),
+                    "organisation_id",
+                    "location_id",
+                    "person_id",
+                    "comments",
+                )
+    
+                s3db.configure(tablename,
+                               crud_form = crud_form,
+                               )
+
             if r.method == "summary":
                 filter_widgets = [S3OptionsFilter("trained_group.group_id",
                                                   label=T("Coalition"),
@@ -1449,45 +1465,49 @@ def customize_vulnerability_evac_route(**attr):
         if callable(standard_prep):
             result = standard_prep(r)
 
-        if r.interactive:
+        if  r.interactive or r.representation == "aadata":
             s3db = current.s3db
             tablename = "vulnerability_evac_route"
             table = s3db[tablename]
-            table.location_id.label = "" # Gets replaced by widget
-            table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
-            table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
-                                                                 polygons=True,
-                                                                 )
-
-            # Hide Labels when just 1 column in inline form
-            s3db.doc_document.file.label = ""
-            current.db.vulnerability_evac_route_group.group_id.label = ""
-
-            # Custom Crud Form
-            crud_form = S3SQLCustomForm(
-                "name",
-                "hazard_id",
-                S3SQLInlineComponent(
-                    "evac_route_group",
-                    label = T("Coalition"),
-                    fields = ["group_id"],
-                    multiple = False,
-                ),
-                "location_id",
-                S3SQLInlineComponent(
-                    "document",
-                    name = "file",
-                    label = T("Files"),
-                    fields = ["file",
-                              #"comments",
-                              ],
-                ),
-                "comments",
-            )
-
-            s3db.configure(tablename,
-                           crud_form = crud_form,
-                           )
+            
+            table.location_id.label = T("Address")
+            
+            if r.method in ("create", "update"):
+                table.location_id.label = "" # Gets replaced by widget
+                table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
+                table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
+                                                                     polygons=True,
+                                                                     )
+    
+                # Hide Labels when just 1 column in inline form
+                s3db.doc_document.file.label = ""
+                current.db.vulnerability_evac_route_group.group_id.label = ""
+    
+                # Custom Crud Form
+                crud_form = S3SQLCustomForm(
+                    "name",
+                    "hazard_id",
+                    S3SQLInlineComponent(
+                        "evac_route_group",
+                        label = T("Coalition"),
+                        fields = ["group_id"],
+                        multiple = False,
+                    ),
+                    "location_id",
+                    S3SQLInlineComponent(
+                        "document",
+                        name = "file",
+                        label = T("Files"),
+                        fields = ["file",
+                                  #"comments",
+                                  ],
+                    ),
+                    "comments",
+                )
+    
+                s3db.configure(tablename,
+                               crud_form = crud_form,
+                               )
 
             if r.method == "summary":
                 filter_widgets = [S3OptionsFilter("evac_route_group.group_id",
@@ -1545,7 +1565,7 @@ def customize_vulnerability_risk(**attr):
         if callable(standard_prep):
             result = standard_prep(r)
 
-        if r.interactive:
+        if r.interactive or r.representation == "aadata":
             s3db = current.s3db
             tablename = "vulnerability_risk"
             
@@ -1566,46 +1586,49 @@ def customize_vulnerability_risk(**attr):
                 msg_list_empty = T("No Hazards currently recorded"))
             
             table = s3db[tablename]
-            field = table.location_id
-            field.label = "" # Gets replaced by widget
-            field.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
-            field.widget = S3LocationSelectorWidget2(levels=["L3"],
-                                                     hide_lx=False,
-                                                     reverse_lx=True,
-                                                     polygons=True,
-                                                     #show_address=True,
-                                                     #show_postcode=True,
-                                                     )
-
-            # Hide Labels when just 1 column in inline form
-            s3db.doc_document.file.label = ""
-            current.db.vulnerability_risk_group.group_id.label = ""
-
-            # Custom Crud Form
-            crud_form = S3SQLCustomForm(
-                "name",
-                "hazard_id",
-                S3SQLInlineComponent(
-                    "risk_group",
-                    label = T("Coalition"),
-                    fields = ["group_id"],
-                    multiple = False,
-                ),
-                "location_id",
-                S3SQLInlineComponent(
-                    "document",
-                    name = "file",
-                    label = T("Files"),
-                    fields = ["file",
-                              #"comments",
-                              ],
-                ),
-                "comments",
-            )
-
-            s3db.configure(tablename,
-                           crud_form = crud_form,
-                           )
+            table.location_id.label = T("Address")
+            
+            if r.method in ("create", "update"):
+                field = table.location_id
+                field.label = "" # Gets replaced by widget
+                field.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
+                field.widget = S3LocationSelectorWidget2(levels=["L3"],
+                                                         hide_lx=False,
+                                                         reverse_lx=True,
+                                                         polygons=True,
+                                                         #show_address=True,
+                                                         #show_postcode=True,
+                                                         )
+    
+                # Hide Labels when just 1 column in inline form
+                s3db.doc_document.file.label = ""
+                current.db.vulnerability_risk_group.group_id.label = ""
+    
+                # Custom Crud Form
+                crud_form = S3SQLCustomForm(
+                    "name",
+                    "hazard_id",
+                    S3SQLInlineComponent(
+                        "risk_group",
+                        label = T("Coalition"),
+                        fields = ["group_id"],
+                        multiple = False,
+                    ),
+                    "location_id",
+                    S3SQLInlineComponent(
+                        "document",
+                        name = "file",
+                        label = T("Files"),
+                        fields = ["file",
+                                  #"comments",
+                                  ],
+                    ),
+                    "comments",
+                )
+    
+                s3db.configure(tablename,
+                               crud_form = crud_form,
+                               )
     
             if r.method == "summary":
                 # Not needed now that Risk data is moved to WMS
