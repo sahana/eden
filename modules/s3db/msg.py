@@ -263,7 +263,9 @@ class S3MessagingModel(S3Model):
             text = record.body
         except:
             return current.messages.UNKNOWN_OPT
-        if len(text) < 80:
+        if not text:
+            return ""
+        elif len(text) < 80:
             return text
         else:
             return "%s..." % text[:76]

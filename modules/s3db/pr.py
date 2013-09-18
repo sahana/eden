@@ -442,7 +442,6 @@ class S3PersonEntity(S3Model):
 
             data = resource.select(fields=["pe_id"],
                                    limit=limit,
-                                   #as_rows=True,
                                    represent=True,
                                    show_links=False,
                                    )
@@ -469,7 +468,6 @@ class S3PersonEntity(S3Model):
 
             data = resource.select(fields=["pe_id"],
                                    limit=limit,
-                                   #as_rows=True,
                                    represent=True,
                                    show_links=False,
                                    )
@@ -496,7 +494,6 @@ class S3PersonEntity(S3Model):
 
             data = resource.select(fields=["pe_id"],
                                    limit=limit,
-                                   #as_rows=True,
                                    represent=True,
                                    show_links=False,
                                    )
