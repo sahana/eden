@@ -99,6 +99,7 @@ class index():
         #    scripts_append("/%s/static/scripts/S3/s3.dataLists.js" % appname)
         #else:
         #    scripts_append("/%s/static/scripts/S3/s3.dataLists.min.js" % appname)
+        scripts_append("/%s/static/themes/%s/js/homepage.js" % (appname, THEME))
 
         # Map
         auth = current.auth

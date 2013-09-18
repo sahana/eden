@@ -3877,6 +3877,7 @@ def customize_project_project(**attr):
                            listadd = False,
                            list_layout = render_projects,
                            )
+
         elif r.interactive or r.representation == "aadata":
             # Filter from a Profile page?
             # If so, then default the fields we know
@@ -3959,26 +3960,27 @@ def customize_project_project(**attr):
                 org_field.default = organisation_id
                 org_field.readable = org_field.writable = False
             else:
-                location_field = s3db.project_location.location_id
-                location_id = get_vars.get("~.(location)", None)
-                if location_id:
-                    # Default to this Location, but allow selection of others
-                    location_field.default = location_id
-                location_field.label = ""
-                represent = S3Represent(lookup="gis_location")
-                location_field.represent = represent
-                # Project Locations must be districts
-                location_field.requires = IS_ONE_OF(current.db, "gis_location.id",
-                                                    represent,
-                                                    sort = True,
-                                                    filterby = "level",
-                                                    filter_opts = ["L1"]
-                                                    )
-                # Don't add new Locations here
-                location_field.comment = None
-                # Simple dropdown
-                location_field.widget = None
                 crud_form_fields.insert(1, "organisation_id")
+
+            location_field = s3db.project_location.location_id
+            location_id = get_vars.get("~.(location)", None)
+            if location_id:
+                # Default to this Location, but allow selection of others
+                location_field.default = location_id
+            location_field.label = ""
+            represent = S3Represent(lookup="gis_location")
+            location_field.represent = represent
+            # Project Locations must be districts
+            location_field.requires = IS_ONE_OF(current.db, "gis_location.id",
+                                                represent,
+                                                sort = True,
+                                                filterby = "level",
+                                                filter_opts = ["L1"]
+                                                )
+            # Don't add new Locations here
+            location_field.comment = None
+            # Simple dropdown
+            location_field.widget = None
 
             crud_form = S3SQLCustomForm(*crud_form_fields)
 

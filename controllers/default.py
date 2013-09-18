@@ -1168,4 +1168,13 @@ def load_all_models():
     s3db.load_all_models()
     return "ok"
 
+# -----------------------------------------------------------------------------
+def audit():
+    """
+        RESTful CRUD Controller for Audit Logs
+        - used e.g. for Site Activity
+    """
+
+    return s3_rest_controller("s3", "audit")
+
 # END =========================================================================

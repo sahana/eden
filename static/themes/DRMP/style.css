@@ -57,7 +57,17 @@ form {
     margin-left: 20px;
 }
 
-/* Web2Py styles Inputs as x-largem, which don't match other form inputs */
+.form-horizontal .controls {
+    margin-left: 170px;
+}
+
+input[class*="span"],
+select[class*="span"],
+textarea[class*="span"] {
+    width: auto;
+}
+
+/* Web2Py styles Inputs as x-large, which don't match other form inputs */
 .input-xlarge {
     -moz-box-sizing: inherit;
     min-height: inherit;
@@ -173,6 +183,12 @@ a i.icon.icon-plus-sign.big-add:hover {
 #popup #submit_record__row {
     text-align: right;
 }
+
+#popup.cf .form-horizontal {
+    margin-left: -10px;
+    padding-left: 0;
+}
+
 .ui-dialog-titlebar-close:after {
     content: "x";
 }

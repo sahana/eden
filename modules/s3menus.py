@@ -1373,7 +1373,7 @@ class S3OptionsMenu(object):
                         M("Add Disaster Assessments", m="create"),
                         M("List All"),
                     ),
-                    M("Administration", f="complete", restrict=[ADMIN])(
+                    M("Administration", f="admin", restrict=[ADMIN])(
                         #M("New", m="create"),
                         #M("List All"),
                         M("Import Templates", f="question_list",

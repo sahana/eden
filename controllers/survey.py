@@ -1334,4 +1334,24 @@ def analysis():
     output = s3_rest_controller(module, "complete")
     return output
 
+# -----------------------------------------------------------------------------
+def admin():
+    """ Custom Page """
+
+    series_id = False
+    vars = Storage()
+    try:
+        series_id = int(request.args[0])
+    except:
+        try:
+            (dummy, series_id) = request.vars["viewing"].split(".")
+            series_id = int(series_id)
+        except:
+            pass
+    if series_id:
+        vars.viewing = "survey_complete.%s" % series_id
+
+    return dict(series_id = series_id,
+                vars = vars)
+
 # END =========================================================================

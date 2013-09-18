@@ -639,6 +639,7 @@ class subscriptions(S3CustomController):
         filters = [S3OptionsFilter("series_id",
                                    label=T("Subscribe to"),
                                    represent="%(name)s",
+                                   options=self._options("series_id"),
                                    #widget="groupedopts",
                                    widget="multiselect",
                                    cols=2,
@@ -647,6 +648,7 @@ class subscriptions(S3CustomController):
                    S3LocationFilter("location_id",
                                     label=T("Location(s)"),
                                     levels=["L1"],
+                                    options=self._options("location_id"),
                                     widget="multiselect",
                                     cols=3,
                                     resource="cms_post",
@@ -670,6 +672,34 @@ class subscriptions(S3CustomController):
         
         return dict(title=title, form=form)
         
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _options(fieldname):
+        """
+            Lookup the full set of options for a Filter Widget
+            - for Subscriptions we don't want to see just the options available in current data
+        """
+
+        db = current.db
+        if fieldname == "series_id":
+            table = current.s3db.cms_series
+            query = (table.deleted == False)
+            rows = db(query).select(table.id,
+                                    table.name)
+            options = {}
+            for row in rows:
+                options[row.id] = row.name
+
+        elif fieldname == "location_id":
+            table = current.s3db.gis_location
+            query = (table.deleted == False) & \
+                    (table.level == "L1")
+            # IDs converted inside widget's _options() function
+            rows = db(query).select(table.id)
+            options = [row.id for row in rows]
+
+        return options
+
     # -------------------------------------------------------------------------
     def _manage_subscriptions(self, resources, filters):
         """
@@ -785,20 +815,9 @@ class subscriptions(S3CustomController):
         form.append(fieldset)
 
         # Script (to extract filters on submit and toggle options visibility)
-        script = """
-$('#notification-options').click(function() {
-  $(this).siblings().toggle();
-  $(this).children().toggle();
-});
-$('#notification-options').siblings().toggle();
-$('#notification-options').children().toggle();
-$('#subscription-form').submit(function() {
-  $('input[name="subscription-filters"]')
-  .val(JSON.stringify(S3.search.getCurrentFilters($(this))));
-});
-"""
+        script = URL(c="static", f="themes", args=[THEME, "js", "subscriptions.js"])
         response = current.response
-        response.s3.jquery_ready.append(script)
+        response.s3.scripts.append(script)
 
         # Accept form
         if form.accepts(current.request.post_vars,
