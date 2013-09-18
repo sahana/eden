@@ -252,10 +252,9 @@ div.more_profile {
 }
 
 /* Layout of the cards within the 'more' iframe */
-#popup.cf div.form-container {
+#popup.cf #table-container {
     padding-top: 10px;
 }
-
-#popup.cf div.form-container #table-container .dl {
-    width: 575px;
+#popup.cf #table-container div.dl {
+    width: 570px;
 }

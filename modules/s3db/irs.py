@@ -749,7 +749,7 @@ class S3IRSModel(S3Model):
                     subject = T("Deployment Request"),
                     message = message,
                     url = url,
-                    formid = r.id
+                    #formid = r.id
                 )
             # Pre-populate the recipients list if we can
             # @ToDo: Check that we have valid contact details

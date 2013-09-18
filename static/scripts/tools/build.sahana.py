@@ -316,6 +316,7 @@ def dojs(dogis = False, warnings = True):
                      "gis.fullscreen",
                      "locationselector.widget",
                      "locationselector.widget2",
+                     "msg",
                      "popup",
                      "register_validation",
                      "select_person",

@@ -123,12 +123,10 @@ a.card-organisation {
     color: #3498DB;
 }
 
-/* Modals to add Data */
-#popup.cf .form-horizontal {
-    margin-left: -70px;
-    padding-left: 0;
+/* Forms to add Data */
+#popup.cf .form-horizontal.cms_post {
+    margin-left: -60px;
 }
-
 #post-cms_post_created_on-date-filter-le.date-filter-input.anytime, 
 #post-cms_post_created_on-date-filter-ge.date-filter-input.anytime {
     width: 100px;

@@ -1,0 +1,11 @@
+{{extend "layout.html"}}
+<div id='home'>
+<h2>{{=T("Administration")}}</h2>
+<ul>
+ <li><a href='{{=URL(f="question_list", args="import")}}'>{{=T("Import Templates")}}</a>
+ <li><a href='{{=URL(f="formatter", args="import")}}'>{{=T("Import Template Layout")}}</a>
+{{if series_id:}}
+ <li><a href='{{=URL(f="complete", args="import", vars=vars)}}'>{{=T("Import Completed Assessment Forms")}}</a>
+{{pass}}
+</div>
+

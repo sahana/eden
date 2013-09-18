@@ -916,7 +916,228 @@ def comments():
 
     # Form to add a new Comment
     # @ToDo: Rewrite using SQLFORM or S3SQLCustomForm
-    from s3.s3msg import CrudS3
+    from gluon.tools import Crud
+    # =============================================================================
+    class CrudS3(Crud):
+        """
+            S3 extension of the gluon.tools.Crud class
+            - select() uses SQLTABLES3 (to allow different linkto construction)
+        """
+
+        def __init__(self):
+            """ Initialise parent class & make any necessary modifications """
+            Crud.__init__(self, current.db)
+
+
+        def select(
+            self,
+            table,
+            query=None,
+            fields=None,
+            orderby=None,
+            limitby=None,
+            headers={},
+            **attr):
+
+            db = current.db
+            request = current.request
+            if not (isinstance(table, db.Table) or table in db.tables):
+                raise HTTP(404)
+            if not self.has_permission("select", table):
+                redirect(current.auth.settings.on_failed_authorization)
+            #if record_id and not self.has_permission("select", table):
+            #    redirect(current.auth.settings.on_failed_authorization)
+            if not isinstance(table, db.Table):
+                table = db[table]
+            if not query:
+                query = table.id > 0
+            if not fields:
+                fields = [table.ALL]
+            rows = db(query).select(*fields, **dict(orderby=orderby,
+                limitby=limitby))
+            if not rows:
+                return None # Nicer than an empty table.
+            if not "linkto" in attr:
+                attr["linkto"] = self.url(args="read")
+            if not "upload" in attr:
+                attr["upload"] = self.url("download")
+            if request.extension != "html":
+                return rows.as_list()
+            return SQLTABLES3(rows, headers=headers, **attr)
+
+    # =============================================================================
+    class SQLTABLES3(SQLTABLE):
+        """
+            S3 custom version of gluon.sqlhtml.SQLTABLE
+
+            Given a SQLRows object, as returned by a db().select(), generates
+            an html table with the rows.
+
+                - we need a different linkto construction for our CRUD controller
+                - we need to specify a different ID field to direct to for the M2M controller
+                - used by S3Resource.sqltable
+
+            Optional arguments:
+
+            @keyword linkto: URL (or lambda to generate a URL) to edit individual records
+            @keyword upload: URL to download uploaded files
+            @keyword orderby: Add an orderby link to column headers.
+            @keyword headers: dictionary of headers to headers redefinions
+            @keyword truncate: length at which to truncate text in table cells.
+                Defaults to 16 characters.
+
+            Optional names attributes for passed to the <table> tag
+
+            Simple linkto example::
+
+                rows = db.select(db.sometable.ALL)
+                table = SQLTABLES3(rows, linkto="someurl")
+
+            This will link rows[id] to .../sometable/value_of_id
+
+            More advanced linkto example::
+
+                def mylink(field):
+                    return URL(args=[field])
+
+                rows = db.select(db.sometable.ALL)
+                table = SQLTABLES3(rows, linkto=mylink)
+
+            This will link rows[id] to::
+
+                current_app/current_controller/current_function/value_of_id
+        """
+
+        def __init__(self, sqlrows,
+                     linkto=None,
+                     upload=None,
+                     orderby=None,
+                     headers={},
+                     truncate=16,
+                     columns=None,
+                     th_link="",
+                     **attributes):
+
+            # reverted since it causes errors (admin/user & manual importing of req/req/import)
+            # super(SQLTABLES3, self).__init__(**attributes)
+            TABLE.__init__(self, **attributes)
+
+            self.components = []
+            self.attributes = attributes
+            self.sqlrows = sqlrows
+            (components, row) = (self.components, [])
+            if not columns:
+                columns = sqlrows.colnames
+            if headers=="fieldname:capitalize":
+                headers = {}
+                for c in columns:
+                    headers[c] = " ".join([w.capitalize() for w in c.split(".")[-1].split("_")])
+            elif headers=="labels":
+                headers = {}
+                for c in columns:
+                    (t, f) = c.split(".")
+                    field = sqlrows.db[t][f]
+                    headers[c] = field.label
+
+            if headers!=None:
+                for c in columns:
+                    if orderby:
+                        row.append(TH(A(headers.get(c, c),
+                                        _href=th_link+"?orderby=" + c)))
+                    else:
+                        row.append(TH(headers.get(c, c)))
+                components.append(THEAD(TR(*row)))
+
+            tbody = []
+            table_field = re.compile("[\w_]+\.[\w_]+")
+            for (rc, record) in enumerate(sqlrows):
+                row = []
+                if rc % 2 == 0:
+                    _class = "even"
+                else:
+                    _class = "odd"
+                for colname in columns:
+                    if not table_field.match(colname):
+                        if "_extra" in record and colname in record._extra:
+                            r = record._extra[colname]
+                            row.append(TD(r))
+                            continue
+                        else:
+                            raise KeyError("Column %s not found (SQLTABLE)" % colname)
+                    (tablename, fieldname) = colname.split(".")
+                    try:
+                        field = sqlrows.db[tablename][fieldname]
+                    except (KeyError, AttributeError):
+                        field = None
+                    if tablename in record \
+                            and isinstance(record, Row) \
+                            and isinstance(record[tablename], Row):
+                        r = record[tablename][fieldname]
+                    elif fieldname in record:
+                        r = record[fieldname]
+                    else:
+                        raise SyntaxError("something wrong in Rows object")
+                    r_old = r
+                    if not field:
+                        pass
+                    elif linkto and field.type == "id":
+                        #try:
+                            #href = linkto(r, "table", tablename)
+                        #except TypeError:
+                            #href = "%s/%s/%s" % (linkto, tablename, r_old)
+                        #r = A(r, _href=href)
+                        try:
+                            href = linkto(r)
+                        except TypeError:
+                            href = "%s/%s" % (linkto, r)
+                        r = A(r, _href=href)
+                    #elif linkto and field.type.startswith("reference"):
+                        #ref = field.type[10:]
+                        #try:
+                            #href = linkto(r, "reference", ref)
+                        #except TypeError:
+                            #href = "%s/%s/%s" % (linkto, ref, r_old)
+                            #if ref.find(".") >= 0:
+                                #tref,fref = ref.split(".")
+                                #if hasattr(sqlrows.db[tref],"_primarykey"):
+                                    #href = "%s/%s?%s" % (linkto, tref, urllib.urlencode({fref:r}))
+                        #r = A(str(r), _href=str(href))
+                    elif linkto \
+                         and hasattr(field._table, "_primarykey") \
+                         and fieldname in field._table._primarykey:
+                        # have to test this with multi-key tables
+                        key = urllib.urlencode(dict([ \
+                                    ((tablename in record \
+                                          and isinstance(record, Row) \
+                                          and isinstance(record[tablename], Row)) \
+                                          and (k, record[tablename][k])) \
+                                          or (k, record[k]) \
+                                        for k in field._table._primarykey]))
+                        r = A(r, _href="%s/%s?%s" % (linkto, tablename, key))
+                    elif field.type.startswith("list:"):
+                        r = field.represent(r or [])
+                    elif field.represent:
+                        r = field.represent(r)
+                    elif field.type.startswith("reference"):
+                        pass
+                    elif field.type == "blob" and r:
+                        r = "DATA"
+                    elif field.type == "upload":
+                        if upload and r:
+                            r = A("file", _href="%s/%s" % (upload, r))
+                        elif r:
+                            r = "file"
+                        else:
+                            r = ""
+                    elif field.type in ["string", "text"]:
+                        r = str(field.formatter(r))
+                        ur = unicode(r, "utf8")
+                        if truncate!=None and len(ur) > truncate:
+                            r = ur[:truncate - 3].encode("utf8") + "..."
+                    row.append(TD(r))
+                tbody.append(TR(_class=_class, *row))
+            components.append(TBODY(*tbody))
+
     crud = CrudS3()
     crud.messages.submit_button = T("Save")
     form = crud.create(table, formname="project_comment/%s" % task_id)

@@ -171,12 +171,11 @@ class S3PersonEntity(S3Model):
                              Field("pe_label", length=128))
 
         # Search method
-        pentity_search = S3Search(name = "pentity_search_simple",
-                                  label = T("Name and/or ID"),
-                                  comment = "",
-                                  field = ["pe_label"])
-
-        pentity_search.pentity_represent = pr_pentity_represent
+        #pentity_search = S3Search(name = "pentity_search_simple",
+        #                          label = T("Name and/or ID"),
+        #                          comment = "",
+        #                          field = ["pe_label"])
+        #pentity_search.pentity_represent = pr_pentity_represent
 
         # Resource configuration
         configure(tablename,
@@ -185,7 +184,7 @@ class S3PersonEntity(S3Model):
                   deletable=False,
                   listadd=False,
                   onaccept=self.pr_pentity_onaccept,
-                  search_method=pentity_search,
+                  #search_method=pentity_search,
                   referenced_by=[(auth_settings.table_membership_name, "for_pe")]
                   )
 
@@ -380,15 +379,6 @@ class S3PersonEntity(S3Model):
             @param attr: request attributes
         """
 
-        response = current.response
-        resource = r.resource
-        table = resource.table
-        s3db = current.s3db
-
-        # Query comes in pre-filtered to accessible & deletion_status
-        # Respect response.s3.filter
-        resource.add_filter(response.s3.filter)
-
         _vars = current.request.get_vars
 
         # JQueryUI Autocomplete uses "term"
@@ -396,77 +386,129 @@ class S3PersonEntity(S3Model):
         # what uses "value"?
         value = _vars.term or _vars.value or _vars.q or None
 
+        if not value:
+            output = current.xml.json_message(False, 400,
+                                              "No search term specified")
+            raise HTTP(400, body=output)
+
         # We want to do case-insensitive searches
         # (default anyway on MySQL/SQLite, but not PostgreSQL)
         value = value.lower()
 
-        filter = _vars.filter
         limit = int(_vars.limit or 0)
 
-        # Persons
-        if filter and value:
+        types = _vars.get("types")
+        if types:
+            types = types.split(",")
+        else:
+            # Default to Persons & Groups
+            types = ("pr_person", "pr_group")
+
+        s3db = current.s3db
+        resource = r.resource
+        table = resource.table
+        table.pe_id.represent = pr_PersonEntityRepresent(show_label=False)
+
+        response = current.response
+
+        # Query comes in pre-filtered to accessible & deletion_status
+        # Respect response.s3.filter
+        default_filter = response.s3.filter
+        resource.add_filter(default_filter)
+
+        items = []
+
+        if "pr_person" in types:
+            # Persons
             ptable = s3db.pr_person
             field = ptable.first_name
             field2 = ptable.middle_name
             field3 = ptable.last_name
 
-            if filter == "~":
-                # pr_person Autocomplete
-                if " " in value:
-                    value1, value2 = value.split(" ", 1)
-                    value2 = value2.strip()
-                    query = (field.lower().like(value1 + "%")) & \
-                            (field2.lower().like(value2 + "%")) | \
-                            (field3.lower().like(value2 + "%"))
-                else:
-                    value = value.strip()
-                    query = ((field.lower().like(value + "%")) | \
-                            (field2.lower().like(value + "%")) | \
-                            (field3.lower().like(value + "%")))
-                resource.add_filter(query)
+            if " " in value:
+                value1, value2 = value.split(" ", 1)
+                value2 = value2.strip()
+                query = (field.lower().like(value1 + "%")) & \
+                        (field2.lower().like(value2 + "%")) | \
+                        (field3.lower().like(value2 + "%"))
             else:
-                output = current.xml.json_message(False, 400,
-                                "Unsupported filter! Supported filters: ~")
-                raise HTTP(400, body=output)
+                value = value.strip()
+                query = ((field.lower().like(value + "%")) | \
+                        (field2.lower().like(value + "%")) | \
+                        (field3.lower().like(value + "%")))
+            # Add the Join
+            query &= (ptable.pe_id == table.pe_id)
+            resource.add_filter(query)
 
-        resource.add_filter(ptable.pe_id == table.pe_id)
+            data = resource.select(fields=["pe_id"],
+                                   limit=limit,
+                                   represent=True,
+                                   show_links=False,
+                                   )
+            ids = data["ids"]
+            rows = data["rows"]
+            i = 0
+            people = []
+            pappend = people.append
+            for row in rows:
+                pappend((ids[i], row["pr_pentity.pe_id"]))
+                i += 1
+            items.extend(people)
 
-        output = S3Exporter().json(resource, start=0, limit=limit,
-                                   fields=[table.pe_id], orderby=field)
-        items = json.loads(output)
-
-        # Add Groups
-        if filter and value:
+        if "pr_group" in types:
+            # Add Groups
             gtable = s3db.pr_group
             field = gtable.name
             query = field.lower().like("%" + value + "%")
             resource.clear_query()
+            resource.add_filter(default_filter)
+            # Add the Join
+            query &= (gtable.pe_id == table.pe_id)
             resource.add_filter(query)
-            resource.add_filter(gtable.pe_id == table.pe_id)
-            output = S3Exporter().json(resource,
-                                       start=0,
-                                       limit=limit,
-                                       fields=[table.pe_id],
-                                       orderby=field)
-            items += json.loads(output)
 
-        # Add Organisations
-        if filter and value:
+            data = resource.select(fields=["pe_id"],
+                                   limit=limit,
+                                   represent=True,
+                                   show_links=False,
+                                   )
+            ids = data["ids"]
+            rows = data["rows"]
+            i = 0
+            groups = []
+            gappend = groups.append
+            for row in rows:
+                gappend((ids[i], row["pr_pentity.pe_id"]))
+                i += 1
+            items.extend(groups)
+
+        if "org_organisation" in types:
+            # Add Organisations
             otable = s3db.org_organisation
             field = otable.name
             query = field.lower().like("%" + value + "%")
             resource.clear_query()
+            resource.add_filter(default_filter)
+            # Add the Join
+            query &= (otable.pe_id == table.pe_id)
             resource.add_filter(query)
-            resource.add_filter(otable.pe_id == table.pe_id)
-            output = S3Exporter().json(resource,
-                                       start=0,
-                                       limit=limit,
-                                       fields=[table.pe_id],
-                                       orderby=field)
-            items += json.loads(output)
 
-        items = [{"id" : item[u'pe_id'],
-                  "name" : s3db.pr_pentity_represent(item[u'pe_id'])
+            data = resource.select(fields=["pe_id"],
+                                   limit=limit,
+                                   represent=True,
+                                   show_links=False,
+                                   )
+            ids = data["ids"]
+            rows = data["rows"]
+            i = 0
+            orgs = []
+            oappend = orgs.append
+            for row in rows:
+                oappend((ids[i], row["pr_pentity.pe_id"]))
+                i += 1
+            items.extend(orgs)
+
+        items = [{"id" : item[0],
+                  "name" : item[1]
                   } for item in items ]
         output = json.dumps(items)
         response.headers["Content-Type"] = "application/json"
@@ -3902,6 +3944,7 @@ def pr_get_entities(pe_ids=None,
 class pr_PersonEntityRepresent(S3Represent):
 
     def __init__(self,
+                 # Bad default?
                  show_label=True,
                  default_label="[No ID Tag]",
                  show_type=True,

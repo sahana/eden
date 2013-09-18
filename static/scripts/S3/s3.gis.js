@@ -767,7 +767,16 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         });
         new Ext.tree.TreeSorter(layerTree, {
             sortType: function(value, node) {
-                return node.text;
+                if (node.attributes.nodeType == 'gx_baselayercontainer') {
+                    // Base layers always first
+                    return ' ';
+                } else if (node.attributes.nodeType == 'gx_overlaylayercontainer') {
+                    // Default Overlays always second
+                    return '!';
+                } else {
+                    // Alpha-sort the rest
+                    return node.text;
+                }
             }
         });
 
@@ -4329,12 +4338,13 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             image.width = w;
         };
 
+        /* Disabled as causing problems with variable markers
         if (marker_url) {
             // Pre-cache this image
             var image = new Image();
             image.onload = scaleImage;
             image.src = marker_url;
-        }
+        }*/
 
         // Feature Styles based on either a common JSON style or per-Feature attributes (Queries)
         // - also used as fallback (e.g. Cluster) for Rules-based Styles
