@@ -767,7 +767,16 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         });
         new Ext.tree.TreeSorter(layerTree, {
             sortType: function(value, node) {
-                return node.text;
+                if (node.attributes.nodeType == 'gx_baselayercontainer') {
+                    // Base layers always first
+                    return ' ';
+                } else if (node.attributes.nodeType == 'gx_overlaylayercontainer') {
+                    // Default Overlays always second
+                    return '!';
+                } else {
+                    // Alpha-sort the rest
+                    return node.text;
+                }
             }
         });
 
