@@ -85,6 +85,7 @@ class S3MessagingModel(S3Model):
 
         message_types = Storage(msg_email = T("Email"),
                                 msg_rss_feed = T("RSS"),
+                                msg_sms_outbox = T("SMS OutBox"),
                                 msg_twilio_inbox = T("Twilio SMS InBox"),
                                 )
 
@@ -687,9 +688,9 @@ class S3EmailInboundModel(S3ChannelModel):
                        )
 
         # ---------------------------------------------------------------------
-        # Email Inbox
+        # Email Log: InBox & Outbox
         #
-        sender = current.deployment_settings.mail.get("sender", None)
+        sender = current.deployment_settings.get_mail_sender()
 
         tablename = "msg_email"
         table = define_table(tablename,
@@ -1222,7 +1223,8 @@ class S3SMSOutboundModel(S3Model):
         - Tropo
     """
 
-    names = ["msg_sms_outbound_gateway",
+    names = ["msg_sms_outbox",
+             "msg_sms_outbound_gateway",
              "msg_sms_modem_channel",
              "msg_sms_webapi_channel",
              "msg_sms_smtp_channel",
@@ -1236,7 +1238,27 @@ class S3SMSOutboundModel(S3Model):
         define_table = self.define_table
 
         # ---------------------------------------------------------------------
+        # SMS Outbox
+        #
+        tablename = "msg_sms_outbox"
+        table = define_table(tablename,
+                             self.super_link("message_id", "msg_message"),
+                             Field("body", "text",
+                                   #label = T("Body")
+                                   ),
+                             #Field("from_address", notnull=True,
+                             #      default = sender,
+                             #      label = T("Sender"),
+                             #      ),
+                             *s3_meta_fields())
+
+        self.configure(tablename,
+                       super_entity = "msg_message",
+                       )
+
+        # ---------------------------------------------------------------------
         # SMS Outbound Gateway
+        # - select which gateway is in active use
         #
         tablename = "msg_sms_outbound_gateway"
         table = define_table(tablename,
@@ -1251,6 +1273,8 @@ class S3SMSOutboundModel(S3Model):
                              *s3_meta_fields())
 
         # ---------------------------------------------------------------------
+        # SMS Modem Channel
+        #
         tablename = "msg_sms_modem_channel"
         table = define_table(tablename,
                              self.super_link("channel_id", "msg_channel"),
@@ -1313,6 +1337,8 @@ class S3SMSOutboundModel(S3Model):
                   )
 
         # ---------------------------------------------------------------------
+        # SMS via SMTP Channel
+        #
         tablename = "msg_sms_smtp_channel"
         table = define_table(tablename,
                              self.super_link("channel_id", "msg_channel"),

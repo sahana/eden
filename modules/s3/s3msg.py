@@ -466,8 +466,7 @@ class S3Msg(object):
                 current.session.confirmation = T("Check outbox for the message status")
                 redirect(url)
             else:
-                current.session.error = T("Error in message:%s") % \
-                                            current.session.error
+                current.session.error = T("Error sending message!")
                 redirect(url)
 
         # Source forms
@@ -503,39 +502,37 @@ class S3Msg(object):
             pe_row.append(TD(ocustom.comment.pe_id))
 
         # Build a custom form from the 2 source forms
-        form = DIV( lcustom.begin,
-                    TABLE(
-                        TBODY(
-                            TR(TD(LABEL(ocustom.label.pr_message_method)),
-                               TD(ocustom.widget.pr_message_method),
-                               TD(ocustom.comment.pr_message_method),
-                               _id="msg_outbox_pr_message_method__row"
-                            ),
-                            pe_row,
-                            TR(TD(LABEL(mcustom.label.subject)),
-                               TD(mcustom.widget.subject),
-                               TD(mcustom.comment.subject),
-                               _id="msg_log_subject__row"
-                            ),
-                            TR(TD(LABEL(lcustom.label.body)),
-                               TD(lcustom.widget.body),
-                               TD(lcustom.comment.body),
-                               _id="msg_log_message__row"
-                            ),
-                            # TR(TD(LABEL(lcustom.label.priority)),
-                               # TD(lcustom.widget.priority),
-                               # TD(lcustom.comment.priority),
-                               # _id="msg_log_priority__row"
-                            # ),
-                            TR(TD(),
-                               TD(INPUT(_type="submit",
-                                        _value=T("Send message"),
-                                        _id="dummy_submit")),
-                               _id="submit_record__row"
-                            ),
-                        )
-                    ),
-                    lcustom.end)
+        form = DIV(lcustom.begin,
+                   TABLE(TBODY(TR(TD(LABEL(ocustom.label.pr_message_method)),
+                                  TD(ocustom.widget.pr_message_method),
+                                  TD(ocustom.comment.pr_message_method),
+                                  _id="msg_outbox_pr_message_method__row"
+                                  ),
+                               pe_row,
+                               TR(TD(LABEL(mcustom.label.subject)),
+                                  TD(mcustom.widget.subject),
+                                  TD(mcustom.comment.subject),
+                                  _id="msg_log_subject__row"
+                                  ),
+                               TR(TD(LABEL(lcustom.label.body)),
+                                  TD(lcustom.widget.body),
+                                  TD(lcustom.comment.body),
+                                  _id="msg_log_message__row"
+                                  ),
+                               #TR(TD(LABEL(lcustom.label.priority)),
+                                  #TD(lcustom.widget.priority),
+                                  #TD(lcustom.comment.priority),
+                                  #_id="msg_log_priority__row"
+                                  #),
+                               TR(TD(),
+                                  TD(INPUT(_type="submit",
+                                           _value=T("Send message"),
+                                           _id="dummy_submit")),
+                                  _id="submit_record__row"
+                               ),
+                         ),
+                   ),
+                   lcustom.end)
 
         # Default title
         # - can be overridden by the calling function
@@ -570,13 +567,24 @@ class S3Msg(object):
         # Place the Message in the appropriate Log
         if pr_message_method == "EMAIL":
             if not fromaddress:
-                fromaddress = current.deployment_settings.get_mail_sender
+                fromaddress = current.deployment_settings.get_mail_sender()
 
             table = s3db.msg_email
             id = table.insert(body=message,
                               subject=subject,
                               from_address=fromaddress,
                               inbound=False,
+                              )
+            record = db(table.id == id).select(table.id,
+                                               table.message_id,
+                                               limitby=(0, 1)).first()
+            s3db.update_super(table, record)
+            message_id = record.message_id
+        elif pr_message_method == "SMS":
+            # @ToDo: Lookup the Channel used
+            # - for now assume WebAPI
+            table = s3db.msg_sms_outbox
+            id = table.insert(body=message,
                               )
             record = db(table.id == id).select(table.id,
                                                table.message_id,
@@ -614,10 +622,7 @@ class S3Msg(object):
         current.s3task.async("msg_process_outbox",
                              args=[pr_message_method])
 
-        if current.session.error:
-            return False
-        else:
-            return True
+        return True
 
     # -------------------------------------------------------------------------
     def process_outbox(self, contact_method="EMAIL"):
