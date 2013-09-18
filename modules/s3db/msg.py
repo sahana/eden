@@ -87,6 +87,7 @@ class S3MessagingModel(S3Model):
                                 msg_rss_feed = T("RSS"),
                                 msg_sms_outbox = T("SMS OutBox"),
                                 msg_twilio_inbox = T("Twilio SMS InBox"),
+                                msg_twitter_outbox = T("Twitter OutBox"),
                                 )
 
         tablename = "msg_message"
@@ -164,8 +165,7 @@ class S3MessagingModel(S3Model):
         MSG_CONTACT_OPTS = current.msg.MSG_CONTACT_OPTS
         
         # Maximum number of retries to send a message
-        MAX_SEND_RETRIES = current.deployment_settings \
-                                  .get_msg_max_send_retries()
+        MAX_SEND_RETRIES = current.deployment_settings.get_msg_max_send_retries()
 
         # Valid message outbox statuses
         MSG_STATUS_OPTS = {1 : T("Unsent"),
@@ -1252,9 +1252,9 @@ class S3SMSOutboundModel(S3Model):
                              #      ),
                              *s3_meta_fields())
 
-        self.configure(tablename,
-                       super_entity = "msg_message",
-                       )
+        configure(tablename,
+                  super_entity = "msg_message",
+                  )
 
         # ---------------------------------------------------------------------
         # SMS Outbound Gateway
@@ -1536,6 +1536,7 @@ class S3TwilioModel(S3ChannelModel):
 class S3TwitterModel(S3Model):
 
     names = ["msg_twitter_channel",
+             "msg_twitter_outbox",
              "msg_twitter_search",
              "msg_twitter_search_results",
              ]
@@ -1549,7 +1550,7 @@ class S3TwitterModel(S3Model):
         define_table = self.define_table
 
         # ---------------------------------------------------------------------
-        # Twitter Channels
+        # Twitter Channel
         #
         tablename = "msg_twitter_channel"
         table = define_table(tablename,
@@ -1568,6 +1569,25 @@ class S3TwitterModel(S3Model):
         configure(tablename,
                   super_entity = "msg_channel",
                   onvalidation = self.twitter_channel_onvalidation
+                  )
+
+        # ---------------------------------------------------------------------
+        # Twitter Outbox
+        #
+        tablename = "msg_twitter_outbox"
+        table = define_table(tablename,
+                             self.super_link("message_id", "msg_message"),
+                             Field("body", "text",
+                                   #label = T("Body")
+                                   ),
+                             #Field("from_address", notnull=True,
+                             #      default = sender,
+                             #      label = T("Sender"),
+                             #      ),
+                             *s3_meta_fields())
+
+        configure(tablename,
+                  super_entity = "msg_message",
                   )
 
         # ---------------------------------------------------------------------

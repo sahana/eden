@@ -57,6 +57,7 @@ __all__ = ["S3ACLWidget",
            "S3OrganisationAutocompleteWidget",
            "S3OrganisationHierarchyWidget",
            "S3PersonAutocompleteWidget",
+           "S3PentityAutocompleteWidget",
            "S3PriorityListWidget",
            "S3SiteAutocompleteWidget",
            "S3SiteAddressAutocompleteWidget",
@@ -4538,7 +4539,7 @@ class S3PersonAutocompleteWidget(FormWidget):
         To make this widget use the HR table, set the controller to "hrm"
 
         @ToDo: Migrate to template (initial attempt failed)
-   """
+    """
 
     def __init__(self,
                  controller = "pr",
@@ -4586,15 +4587,104 @@ class S3PersonAutocompleteWidget(FormWidget):
         else:
             represent = ""
 
-        script = '''S3.autocomplete.person('%(module)s','%(resourcename)s','%(input)s',"%(postprocess)s",%(delay)s,%(min_length)s)''' % \
-            dict(module = self.c,
-                 resourcename = self.f,
+        script = '''S3.autocomplete.person('%(controller)s','%(fn)s','%(input)s',"%(postprocess)s",%(delay)s,%(min_length)s)''' % \
+            dict(controller = self.c,
+                 fn = self.f,
                  input = real_input,
                  postprocess = self.post_process,
                  delay = self.delay,
                  min_length = self.min_length,
                  )
         current.response.s3.jquery_ready.append(script)
+        return TAG[""](INPUT(_id=dummy_input,
+                             _class="string",
+                             _value=represent),
+                       DIV(_id="%s_throbber" % dummy_input,
+                           _class="throbber hide"),
+                       INPUT(hideerror=self.hideerror, **attr),
+                       requires = field.requires
+                       )
+
+# =============================================================================
+class S3PentityAutocompleteWidget(FormWidget):
+    """
+        Renders a pr_pentity SELECT as an INPUT field with AJAX Autocomplete.
+        Differs from the S3AutocompleteWidget in that it can filter by type &
+        also represents results with the type
+    """
+
+    def __init__(self,
+                 controller = "pr",
+                 function = "pentity",
+                 types = None,
+                 post_process = "",
+                 hideerror = False,
+                 delay = 450,   # milliseconds
+                 min_length=2): # Increase this for large deployments
+
+        self.post_process = post_process
+        self.delay = delay
+        self.min_length = min_length
+        self.c = controller
+        self.f = function
+        self.types = None
+        self.hideerror = hideerror
+
+    def __call__(self, field, value, **attributes):
+
+        default = dict(
+            _type = "text",
+            value = (value != None and str(value)) or "",
+            )
+        attr = StringWidget._attributes(field, default, **attributes)
+
+        # Hide the real field
+        attr["_class"] = "%s hide" % attr["_class"]
+
+        if "_id" in attr:
+            real_input = attr["_id"]
+        else:
+            real_input = str(field).replace(".", "_")
+
+        dummy_input = "dummy_%s" % real_input
+
+        if value:
+            try:
+                value = long(value)
+            except ValueError:
+                pass
+            # Provide the representation for the current/default Value
+            text = s3_unicode(field.represent(value))
+            if "<" in text:
+                text = s3_strip_markup(text)
+            represent = text.encode("utf-8")
+        else:
+            represent = ""
+
+        T = current.T
+        s3 = current.response.s3
+        script = '''i18n.person="%s"\ni18n.group="%s"''' % (T("Person"),
+                                                            T("Group"),
+                                                            )
+        s3.js_global.append(script)
+
+        if self.types:
+            # Something other than default: ("pr_person", "pr_group")
+            types = json.dumps(self.types)
+        else:
+            types = "''"
+
+        script = '''S3.autocomplete.pentity('%(controller)s','%(fn)s','%(input)s',"%(postprocess)s",%(delay)s,%(min_length)s,%(types)s)''' % \
+            dict(controller = self.c,
+                 fn = self.f,
+                 input = real_input,
+                 postprocess = self.post_process,
+                 delay = self.delay,
+                 min_length = self.min_length,
+                 types = types,
+                 )
+        
+        s3.jquery_ready.append(script)
         return TAG[""](INPUT(_id=dummy_input,
                              _class="string",
                              _value=represent),

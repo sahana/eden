@@ -70,7 +70,7 @@ from s3crud import S3CRUD
 from s3forms import S3SQLDefaultForm
 from s3utils import s3_debug
 from s3validators import IS_IN_SET, IS_ONE_OF, IS_ONE_OF_EMPTY
-from s3widgets import S3PersonAutocompleteWidget
+from s3widgets import S3PentityAutocompleteWidget
 
 IDENTITYTRANS = ALLCHARS = string.maketrans("", "")
 NOTPHONECHARS = ALLCHARS.translate(IDENTITYTRANS, string.digits)
@@ -327,7 +327,8 @@ class S3Msg(object):
                 subject = "",
                 message = "",
                 url = None,
-                formid = None,
+                # @ToDo: re-implement
+                #formid = None,
                 ):
         """
             Form to Compose a Message
@@ -347,17 +348,10 @@ class S3Msg(object):
             @param formid: If set, allows multiple forms open in different tabs
         """
 
-        T = current.T
-        request = current.request
-        vars = request.vars
-        db = current.db
-        s3db = current.s3db
-        mtable = s3db.msg_message
-        otable = s3db.msg_outbox
-
         if not url:
             url = URL(c="msg", f="compose")
 
+        # Unauthenticated users aren't allowed to Compose Messages
         auth = current.auth
         if auth.is_logged_in() or auth.basic():
             pass
@@ -365,178 +359,29 @@ class S3Msg(object):
             redirect(URL(c="default", f="user", args="login",
                          vars={"_next" : url}))
 
-        mtable.body.default = message
-        mtable.inbound.default = False
-        mtable.inbound.writable = False
+        # Authenticated users need to have update rights on the msg controller
+        if not auth.permission.has_permission("update", c="msg"):
+            current.session.error = T("You do not have permission to send messages")
+            redirect(URL(f="index"))
 
-        otable.pr_message_method.default = type
+        # Configure an instance of S3Compose
+        instance = S3Compose()
+        instance.contact_method = type
+        instance.recipient = recipient
+        instance.recipients = None
+        instance.recipient_type = recipient_type
+        instance.subject = subject
+        instance.message = message
+        #instance.formid = formid
+        instance.resource = None
+        instance.url = url
 
-        if not recipient:
-            if "pe_id" in vars:
-                recipient = vars.pe_id
-            elif "person_id" in vars:
-                # @ToDo
-                pass
-            elif "group_id" in vars:
-                # @ToDo
-                pass
-            elif "human_resource.id" in vars:
-                # @ToDo
-                pass
-
-        if recipient:
-            otable.pe_id.default = recipient
-
-            # Restrict message options to those available for the entity
-            petable = s3db.pr_pentity
-            entity_type = db(petable.pe_id == recipient).select(petable.instance_type,
-                                                                limitby=(0, 1)
-                                                                ).first().instance_type
-            if entity_type == "pr_person":
-                all_contact_opts = self.MSG_CONTACT_OPTS
-                contact_method_opts = {}
-                ctable = s3db.pr_contact
-                query = (ctable.deleted != True) & \
-                        (ctable.pe_id == recipient)
-                rows = db(query).select(ctable.contact_method)
-                for row in rows:
-                    if row.contact_method in all_contact_opts:
-                        contact_method_opts[row.contact_method] = all_contact_opts[row.contact_method]
-                if not contact_method_opts:
-                    current.session.error = T("There are no contacts available for this person!")
-                    controller = request.controller
-                    vars = request.get_vars
-                    if controller == "hrm":
-                        url = URL(c="hrm", f="person", args="contacts",
-                                  vars={"group": "staff",
-                                        "human_resource.id": vars.get("human_resource.id")})
-                    elif controller == "vol":
-                        url = URL(c="vol", f="person", args="contacts",
-                                  vars={"group": "volunteer",
-                                        "human_resource.id": vars.get("human_resource.id")})
-                    elif controller == "member":
-                        url = URL(c="member", f="person", args="contacts",
-                                  vars={"membership.id": vars.get("membership.id")})
-                    else:
-                        # @ToDo: Lookup the type
-                        url = URL(f="index")
-                    redirect(url)
-                otable.pr_message_method.requires = IS_IN_SET(contact_method_opts,
-                                                              zero=None)
-                if type not in contact_method_opts:
-                    otable.pr_message_method.default = contact_method_opts.popitem()[0]
-            #elif entity_type = "pr_group":
-                # @ToDo: Loop through members
-        else:
-            if recipient_type:
-                # Filter by Recipient Type
-                otable.pe_id.requires = IS_ONE_OF(db,
-                                                  "pr_pentity.pe_id",
-                                                  # Breaks PG
-                                                  #orderby="instance_type",
-                                                  filterby="instance_type",
-                                                  filter_opts=(recipient_type,))
-            otable.pe_id.comment = DIV(_class="tooltip",
-                                       _title="%s|%s" % \
-                (T("Recipients"),
-                 T("Please enter the first few letters of the Person/Group for the autocomplete.")))
-        otable.pe_id.writable = True
-        otable.pe_id.label = T("Recipient(s)")
-        # @ToDo A new widget required to handle multiple persons and groups
-        otable.pe_id.widget = S3PersonAutocompleteWidget()
-
-        def compose_onvalidation(form):
-            """
-                Set the sender
-                Route the message
-            """
-
-            if not vars.pe_id:
-                current.session.error = T("Please enter the recipient(s)")
-                redirect(url)
-            if auth.user:
-                sender_pe_id = auth.user.pe_id
-            else:
-                return
-            if self.send_by_pe_id(vars.pe_id,
-                                  vars.subject,
-                                  vars.body,
-                                  sender_pe_id,
-                                  vars.pr_message_method):
-                current.session.confirmation = T("Check outbox for the message status")
-                redirect(url)
-            else:
-                current.session.error = T("Error sending message!")
-                redirect(url)
-
-        # Source forms
-        sqlform = S3SQLDefaultForm()
-        logform = sqlform(request=request,
-                          resource=s3db.resource("msg_message"),
-                          onvalidation=compose_onvalidation,
-                          message="Message Sent",
-                          format="html")
-        outboxform = sqlform(request=request,
-                             resource=s3db.resource("msg_outbox"),
-                             message="Message Sent",
-                             format="html")
-
-        mailform = sqlform(request=request,
-                           resource=s3db.resource("msg_email"),
-                           message="Message Sent",
-                           format="html")
-
-        # Shortcuts
-        lcustom = logform.custom
-        ocustom = outboxform.custom
-        mcustom = mailform.custom
-
-        pe_row = TR(TD(LABEL(ocustom.label.pe_id)),
-                    _id="msg_outbox_pe_id__row")
-        if recipient:
-            ocustom.widget.pe_id["_class"] = "hide"
-            pe_row.append(TD(ocustom.widget.pe_id,
-                             s3db.pr_pentity_represent(recipient)))
-        else:
-            pe_row.append(TD(ocustom.widget.pe_id))
-            pe_row.append(TD(ocustom.comment.pe_id))
-
-        # Build a custom form from the 2 source forms
-        form = DIV(lcustom.begin,
-                   TABLE(TBODY(TR(TD(LABEL(ocustom.label.pr_message_method)),
-                                  TD(ocustom.widget.pr_message_method),
-                                  TD(ocustom.comment.pr_message_method),
-                                  _id="msg_outbox_pr_message_method__row"
-                                  ),
-                               pe_row,
-                               TR(TD(LABEL(mcustom.label.subject)),
-                                  TD(mcustom.widget.subject),
-                                  TD(mcustom.comment.subject),
-                                  _id="msg_log_subject__row"
-                                  ),
-                               TR(TD(LABEL(lcustom.label.body)),
-                                  TD(lcustom.widget.body),
-                                  TD(lcustom.comment.body),
-                                  _id="msg_log_message__row"
-                                  ),
-                               #TR(TD(LABEL(lcustom.label.priority)),
-                                  #TD(lcustom.widget.priority),
-                                  #TD(lcustom.comment.priority),
-                                  #_id="msg_log_priority__row"
-                                  #),
-                               TR(TD(),
-                                  TD(INPUT(_type="submit",
-                                           _value=T("Send message"),
-                                           _id="dummy_submit")),
-                                  _id="submit_record__row"
-                               ),
-                         ),
-                   ),
-                   lcustom.end)
+        # Generate the form
+        form = instance._compose_form()
 
         # Default title
         # - can be overridden by the calling function
-        title = T("Send Message")
+        title = current.T("Send Message")
 
         return dict(form = form,
                     title = title)
@@ -581,8 +426,6 @@ class S3Msg(object):
             s3db.update_super(table, record)
             message_id = record.message_id
         elif pr_message_method == "SMS":
-            # @ToDo: Lookup the Channel used
-            # - for now assume WebAPI
             table = s3db.msg_sms_outbox
             id = table.insert(body=message,
                               )
@@ -591,8 +434,17 @@ class S3Msg(object):
                                                limitby=(0, 1)).first()
             s3db.update_super(table, record)
             message_id = record.message_id
+        elif pr_message_method == "TWITTER":
+            table = s3db.msg_twitter_outbox
+            id = table.insert(body=message,
+                              )
+            record = db(table.id == id).select(table.id,
+                                               table.message_id,
+                                               limitby=(0, 1)).first()
+            s3db.update_super(table, record)
+            message_id = record.message_id
         else:
-            # @ToDo!!
+            # @ToDo
             pass
 
         # Place the Message in the OutBox
@@ -716,6 +568,14 @@ class S3Msg(object):
             mailbox = s3db.msg_email
             fields.extend([mailbox.subject, mailbox.body])
             left.append(mailbox.on(mailbox.message_id == outbox.message_id))
+        elif contact_method == "SMS":
+            mailbox = s3db.msg_sms_outbox
+            fields.append(mailbox.body)
+            left.append(mailbox.on(mailbox.message_id == outbox.message_id))
+        elif contact_method == "TWITTER":
+            mailbox = s3db.msg_twitter_outbox
+            fields.append(mailbox.body)
+            left.append(mailbox.on(mailbox.message_id == outbox.message_id))
         else:
             # @ToDo
             return
@@ -756,6 +616,12 @@ class S3Msg(object):
             if contact_method == "EMAIL":
                 subject = row["msg_email.subject"] or ""
                 message = row["msg_email.body"] or ""
+            elif contact_method == "SMS":
+                subject = ""
+                message = row["msg_sms_outbox.body"] or ""
+            elif contact_method == "TWITTER":
+                subject = ""
+                message = row["msg_twitter_outbox.body"] or ""
             else:
                 # @ToDo
                 continue
@@ -1916,15 +1782,14 @@ class S3Compose(S3CRUD):
         T = current.T
         auth = current.auth
 
-        url = r.url()
-        self.url = url
+        self.url = url = r.url()
 
         # @ToDo: Use API
         if auth.is_logged_in() or auth.basic():
             pass
         else:
             redirect(URL(c="default", f="user", args="login",
-                         vars={"_next" : url}))
+                         vars={"_next": url}))
 
         if not current.deployment_settings.has_module("msg"):
             current.session.error = T("Cannot send messages if Messaging module disabled")
@@ -1936,7 +1801,14 @@ class S3Compose(S3CRUD):
 
         #_vars = r.get_vars
 
+        # Set defaults (used if coming via msg.compose())
+        self.contact_method = None
+        self.recipient = None
         self.recipients = None
+        self.recipient_type = None
+        self.subject = None
+        self.message = None
+        #self.formid = None
         form = self._compose_form()
         # @ToDo: A 2nd Filter form
         # if form.accepts(r.post_vars, current.session,
@@ -1948,17 +1820,13 @@ class S3Compose(S3CRUD):
             # _vars = form.vars
 
         # Apply method
-        resource = self.resource
-        representation = r.representation
-
         if self.method == "compose":
-            #output = dict(items=items)
             output = dict(form=form)
         else:
             r.error(501, current.manager.ERROR.BAD_METHOD)
 
         # Complete the page
-        if representation == "html":
+        if r.representation == "html":
             title = self.crud_string(self.tablename, "title_compose")
             if not title:
                 title = T("Send Message")
@@ -1988,217 +1856,247 @@ class S3Compose(S3CRUD):
             Route the message
         """
 
-        T = current.T
         auth = current.auth
-        msg = current.msg
-        session = current.session
+        if auth.user:
+            sender_pe_id = auth.user.pe_id
+        else:
+            return
 
         vars = current.request.post_vars
 
         recipients = self.recipients
         if not recipients:
             if not vars.pe_id:
-                session.error = T("Please enter the recipient(s)")
+                current.session.error = current.T("Please enter the recipient(s)")
                 redirect(self.url)
             else:
                 recipients = vars.pe_id
 
-        table = current.s3db.pr_person
-        if auth.user:
-            sender_pe_id = auth.user.pe_id
-        else:
-            return
-        if msg.send_by_pe_id(recipients,
-                             vars.subject,
-                             vars.message,
-                             sender_pe_id,
-                             vars.pr_message_method):
-            session.confirmation = T("Check outbox for the message status")
+        if current.msg.send_by_pe_id(recipients,
+                                     vars.subject,
+                                     vars.message,
+                                     sender_pe_id,
+                                     vars.pr_message_method):
+            current.session.confirmation = current.T("Check outbox for the message status")
             redirect(self.url)
         else:
-            session.error = T("Error in message")
+            if current.mail.error:
+                # set by mail.error
+                current.session.error = "%s: %s" % (current.T("Error sending message"),
+                                                    current.mail.error)
+            else:
+                current.session.error = current.T("Error sending message!")
             redirect(self.url)
 
     # -------------------------------------------------------------------------
     def _compose_form(self):
         """ Creates the form for composing the message """
 
-        resource = self.resource
-        table = resource.table
-
         T = current.T
-        db = current.db
         s3db = current.s3db
-        s3 = current.response.s3
+        request = current.request
+        vars = request.get_vars
 
-        ltable = s3db.msg_log
+        mtable = s3db.msg_message
         otable = s3db.msg_outbox
 
-        # @ToDo: read request.get_vars.message?
-        #ltable.message.default = message
+        mtable.body.default = self.message
+        mtable.inbound.default = False
+        mtable.inbound.writable = False
 
-        # See if we have defined a custom recipient type for this table
-        # pr_person or pr_group
-        recipient_type = self._config("msg_recipient_type", None)
+        resource = self.resource
 
-        # See if we have defined a custom default contact method for this table
-        type = self._config("msg_contact_method", "SMS")
-        otable.pr_message_method.default = type
+        recipient_type = self.recipient_type # from msg.compose()
+        if not recipient_type and resource:
+            # See if we have defined a custom recipient type for this table
+            # pr_person or pr_group
+            recipient_type = self._config("msg_recipient_type", None)
 
-        ltable.pe_id.writable = ltable.pe_id.readable = False
-        ltable.sender.writable = ltable.sender.readable = False
-        ltable.fromaddress.writable = ltable.fromaddress.readable = False
-        ltable.verified.writable = ltable.verified.readable = False
-        ltable.verified_comments.writable = ltable.verified_comments.readable = False
-        ltable.actioned.writable = ltable.actioned.readable = False
-        ltable.actionable.writable = ltable.actionable.readable = False
-        ltable.actioned_comments.writable = ltable.actioned_comments.readable = False
+        contact_method = self.contact_method # from msg.compose()
+        if not contact_method and resource:
+            # See if we have defined a custom default contact method for this table
+            contact_method = self._config("msg_contact_method", "EMAIL")
 
-        ltable.subject.label = T("Subject")
-        ltable.message.label = T("Message")
-        #ltable.priority.label = T("Priority")
+        otable.pr_message_method.default = contact_method
 
-        recipients = []
+        recipient = self.recipient # from msg.compose()
+        if not recipient:
+            if "pe_id" in vars:
+                recipient = vars.pe_id
+            elif "person_id" in vars:
+                # @ToDo
+                pass
+            elif "group_id" in vars:
+                # @ToDo
+                pass
+            elif "human_resource.id" in vars:
+                # @ToDo
+                pass
 
-        if "pe_id" in table:
-            field = "pe_id"
-        elif "person_id" in table:
-            field = "person_id$pe_id"
-        #elif "group_id" in table:
-        #    # @ToDo
-        #    field = "group_id$pe_id"
+        if recipient:
+            recipients = [recipient]
         else:
-            field = None
+            recipients = []
 
-        if field:
-            records = resource.select([field], limit=None)["rows"]
-            recipients = [record.values()[0] for record in records]
+            if resource:
+                table = resource.table
+                if "pe_id" in table:
+                    field = "pe_id"
+                elif "person_id" in table:
+                    field = "person_id$pe_id"
+                #elif "group_id" in table:
+                #    # @ToDo
+                #    field = "group_id$pe_id"
+                else:
+                    field = None
 
+                if field:
+                    records = resource.select([field], limit=None)["rows"]
+                    recipients = [record.values()[0] for record in records]
+
+        pe_field = otable.pe_id
+        pe_field.label = T("Recipient(s)")
         if recipients:
+            # Tell onvalidation about them
             self.recipients = recipients
-            ltable.pe_id.default = recipients
-            otable.pe_id.default = recipients
-            ltable.pe_id.requires = IS_ONE_OF_EMPTY(db, "pr_pentity.pe_id", multiple=True)
+
+            pe_field.default = recipients
+
+            if len(recipients) == 1:
+                recipient = recipients[0]
+                represent = s3db.pr_PersonEntityRepresent(show_label=False)(recipient)
+                # Restrict message options to those available for the entity
+                petable = s3db.pr_pentity
+                entity_type = db(petable.pe_id == recipient).select(petable.instance_type,
+                                                                    limitby=(0, 1)
+                                                                    ).first().instance_type
+                if entity_type == "pr_person":
+                    all_contact_opts = current.msg.MSG_CONTACT_OPTS
+                    contact_method_opts = {}
+                    ctable = s3db.pr_contact
+                    query = (ctable.deleted != True) & \
+                            (ctable.pe_id == recipient)
+                    rows = db(query).select(ctable.contact_method)
+                    for row in rows:
+                        if row.contact_method in all_contact_opts:
+                            contact_method_opts[row.contact_method] = all_contact_opts[row.contact_method]
+                    if not contact_method_opts:
+                        current.session.error = T("There are no contacts available for this person!")
+                        controller = request.controller
+                        if controller == "hrm":
+                            url = URL(c="hrm", f="person", args="contacts",
+                                      vars={"group": "staff",
+                                            "human_resource.id": vars.get("human_resource.id")})
+                        elif controller == "vol":
+                            url = URL(c="vol", f="person", args="contacts",
+                                      vars={"group": "volunteer",
+                                            "human_resource.id": vars.get("human_resource.id")})
+                        elif controller == "member":
+                            url = URL(c="member", f="person", args="contacts",
+                                      vars={"membership.id": vars.get("membership.id")})
+                        else:
+                            # @ToDo: Lookup the type
+                            url = URL(f="index")
+                        redirect(url)
+                    otable.pr_message_method.requires = IS_IN_SET(contact_method_opts,
+                                                                  zero=None)
+                    if msg_contact_method not in contact_method_opts:
+                        otable.pr_message_method.default = contact_method_opts.popitem()[0]
+                #elif entity_type = "pr_group":
+                    # @ToDo: Loop through members
+            else:
+                # @ToDo: This should display all the Recipients (truncated with option to see all)
+                # - use pr_PersonEntityRepresent for bulk representation
+                represent = T("%(count)s Recipients") % dict(count=len(recipients))
         else:
+            pe_field.writable = True
             if recipient_type:
                 # Filter by Recipient Type
-                otable.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
-                                                  orderby="instance_type",
-                                                  filterby="instance_type",
-                                                  filter_opts=(recipient_type,))
-            otable.pe_id.comment = DIV(_class="tooltip",
-                                       _title="%s|%s" % \
-                                        (T("Recipients"),
-                                         T("Please enter the first few letters of the Person/Group for the autocomplete.")))
-        otable.pe_id.writable = True
-        otable.pe_id.label = T("Recipient(s)")
+                pe_field.requires = IS_ONE_OF(db,
+                                              "pr_pentity.pe_id",
+                                              # Breaks PG
+                                              #orderby="instance_type",
+                                              filterby="instance_type",
+                                              filter_opts=(recipient_type,))
+                pe_field.widget = S3PentityAutocompleteWidget(types=(recipient_type,))
+            else:
+                # @ToDo A new widget (tree?) required to handle multiple persons and groups
+                pe_field.widget = S3PentityAutocompleteWidget()
+                
+            pe_field.comment = DIV(_class="tooltip",
+                                   _title="%s|%s" % \
+                (T("Recipients"),
+                 T("Please enter the first few letters of the Person/Group for the autocomplete.")))
 
-        # Source forms
-        # @ToDo: Rewrite using SQLFORM or S3SQLCustomForm
-        crud = CrudS3()
-        crud.messages.submit_button = T("Save")
-        crud.settings.formstyle = s3.crud.formstyle
-        logform = crud.create(ltable,
-                              onvalidation = self._compose_onvalidation)
-        outboxform = crud.create(otable)
+        sqlform = S3SQLDefaultForm()
+        logform = sqlform(request=request,
+                          resource=s3db.resource("msg_message"),
+                          onvalidation=self._compose_onvalidation,
+                          message="Message Sent",
+                          format="html")
+        outboxform = sqlform(request=request,
+                             resource=s3db.resource("msg_outbox"),
+                             message="Message Sent",
+                             format="html")
+
+        mailform = sqlform(request=request,
+                           resource=s3db.resource("msg_email"),
+                           message="Message Sent",
+                           format="html")
 
         # Shortcuts
         lcustom = logform.custom
         ocustom = outboxform.custom
+        mcustom = mailform.custom
 
-        pe_row = TR(TD(LABEL("%s:" % ocustom.label.pe_id)),
+        pe_row = TR(TD(LABEL(ocustom.label.pe_id)),
                     _id="msg_outbox_pe_id__row")
         if recipients:
-            if len(recipients) == 1:
-                recipient = recipients[0]
-                represent = s3db.pr_pentity_represent(recipient)
-                # Restrict message options to those available for the entity
-                # @ToDo: Support Groups, etc by looking up Entity Type
-                ctable = s3db.pr_contact
-                rows = db(ctable.pe_id == recipient).select(ctable.contact_method)
-                contact_method_opts = [row.contact_method for row in rows]
-                if not contact_method_opts:
-                    current.session.error = T("There are no contacts available for this person!")
-                    request = current.request
-                    controller = request.controller
-                    vars = request.get_vars
-                    if controller == "hrm":
-                        url = URL(c="hrm", f="person", args="contacts",
-                                  vars={"group": "staff",
-                                        "human_resource.id": vars.get("human_resource.id")})
-                    elif controller == "vol":
-                        url = URL(c="vol", f="person", args="contacts",
-                                  vars={"group": "volunteer",
-                                        "human_resource.id": vars.get("human_resource.id")})
-                    elif controller == "member":
-                        url = URL(c="member", f="person", args="contacts",
-                                  vars={"membership.id": vars.get("membership.id")})
-                    else:
-                        # @ToDo: Lookup the type
-                        url = URL(f="index")
-                    redirect(url)
-                otable.pr_message_method.requires = IS_IN_SET(contact_method_opts,
-                                                              zero=None)
-                if type not in contact_method_opts:
-                    otable.pr_message_method.default = contact_method_opts[0]
-            else:
-                # @ToDo: This should display all the Recipients (truncated with option to see all)
-                # - wait for pr_PersonEntityRepresent for bulk representation.
-                represent = "%(number)s Recipients" % dict(number=len(recipients))
-            pe_row.append(TD(represent))
+            ocustom.widget.pe_id["_class"] = "hide"
+            pe_row.append(TD(ocustom.widget.pe_id,
+                             represent))
         else:
-            # @ToDo: This should be an S3Search form
-            pe_row.append(TD(INPUT(_id="dummy", _class="ac_input", _size="50"),
-                             ocustom.widget.pe_id))
+            pe_row.append(TD(ocustom.widget.pe_id))
             pe_row.append(TD(ocustom.comment.pe_id))
 
         # Build a custom form from the 2 source forms
-        form = DIV( lcustom.begin,
-                    TABLE(
-                        TBODY(
-                            TR(TD(LABEL("%s:" % \
-                                ocustom.label.pr_message_method)),
-                               TD(ocustom.widget.pr_message_method),
-                               TD(ocustom.comment.pr_message_method),
-                               _id="msg_outbox_pr_message_method__row"
-                            ),
-                            pe_row,
-                            TR(TD(LABEL("%s:" % lcustom.label.subject)),
-                               TD(lcustom.widget.subject),
-                               TD(lcustom.comment.subject),
-                               _id="msg_log_subject__row"
-                            ),
-                            TR(TD(LABEL("%s:" % lcustom.label.message)),
-                               TD(lcustom.widget.message),
-                               TD(lcustom.comment.message),
-                               _id="msg_log_message__row"
-                            ),
-                            # TR(TD(LABEL("%s:" % lcustom.label.priority)),
-                               # TD(lcustom.widget.priority),
-                               # TD(lcustom.comment.priority),
-                               # _id="msg_log_priority__row"
-                            # ),
-                            TR(TD(),
-                               TD(INPUT(_type="submit",
-                                        _value=T("Send message"),
-                                        _id="dummy_submit")),
-                               _id="submit_record__row"
-                            ),
-                        )
-                    ),
-                    lcustom.end)
+        form = DIV(lcustom.begin,
+                   TABLE(TBODY(TR(TD(LABEL(ocustom.label.pr_message_method)),
+                                  TD(ocustom.widget.pr_message_method),
+                                  TD(ocustom.comment.pr_message_method),
+                                  _id="msg_outbox_pr_message_method__row"
+                                  ),
+                               pe_row,
+                               TR(TD(LABEL(mcustom.label.subject)),
+                                  TD(mcustom.widget.subject),
+                                  TD(mcustom.comment.subject),
+                                  _id="msg_log_subject__row"
+                                  ),
+                               TR(TD(LABEL(lcustom.label.body)),
+                                  TD(lcustom.widget.body),
+                                  TD(lcustom.comment.body),
+                                  _id="msg_log_message__row"
+                                  ),
+                               #TR(TD(LABEL(lcustom.label.priority)),
+                                  #TD(lcustom.widget.priority),
+                                  #TD(lcustom.comment.priority),
+                                  #_id="msg_log_priority__row"
+                                  #),
+                               TR(TD(),
+                                  TD(INPUT(_type="submit",
+                                           _value=T("Send message"),
+                                           _id="dummy_submit")),
+                                  _id="submit_record__row"
+                               ),
+                         ),
+                   ),
+                   lcustom.end)
 
-        # Control the Javascript in static/scripts/S3/s3.msg.js
-        if not recipients:
-            if recipient_type:
-                s3.js_global.append('''S3.msg_search_url="%s"''' % \
-                                    URL(c="msg", f="search",
-                                        vars={"type": recipient_type}))
-            else:
-                s3.js_global.append('''S3.msg_search_url="%s"''' % \
-                                    URL(c="msg", f="search"))
-
-            s3.jquery_ready.append('''s3_msg_ac_pe_input()''')
+        s3 = current.response.s3
+        if s3.debug:
+            s3.scripts.append("/%s/static/scripts/S3/s3.msg.js" % request.application)
+        else:
+            s3.scripts.append("/%s/static/scripts/S3/s3.msg.min.js" % request.application)
 
         return form
 

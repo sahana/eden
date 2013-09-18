@@ -21,6 +21,9 @@
         }
 
         var real_input = $('#' + input);
+        // Bootstrap overides .hide :/
+        real_input.hide();
+
         var throbber = $('#' + dummy + '_throbber');
 
         var url = S3.Ap.concat('/', module, '/', resourcename, '/search_ac?filter=~&field=', fieldname);
@@ -137,6 +140,9 @@
         }
 
         var real_input = $('#' + input);
+        // Bootstrap overides .hide :/
+        real_input.hide();
+
         var throbber = $('#' + dummy + '_throbber');
 
         if (delay == 'undefined') {
@@ -250,7 +256,7 @@
      * S3PersonAutocompleteWidget & hence S3AddPersonWidget
      * - uses first/middle/last
      */
-    S3.autocomplete.person = function(module, resourcename, input, postprocess, delay, min_length) {
+    S3.autocomplete.person = function(controller, fn, input, postprocess, delay, min_length) {
         var dummy = 'dummy_' + input;
         var dummy_input = $('#' + dummy);
 
@@ -259,9 +265,12 @@
         }
 
         var real_input = $('#' + input);
+        // Bootstrap overides .hide :/
+        real_input.hide();
+
         var throbber = $('#' + dummy + '_throbber');
 
-        var url = S3.Ap.concat('/', module, '/', resourcename, '/search_ac');
+        var url = S3.Ap.concat('/', controller, '/', fn, '/search_ac');
 
         // Optional args
         if (delay == 'undefined') {
@@ -355,6 +364,120 @@
         });
     };
 
+    /**
+     * S3PentityAutocompleteWidget
+     */
+    S3.autocomplete.pentity = function(controller, fn, input, postprocess, delay, min_length, types) {
+        var dummy = 'dummy_' + input;
+        var dummy_input = $('#' + dummy);
+
+        if (dummy_input == 'undefined') {
+            return;
+        }
+
+        var real_input = $('#' + input);
+        // Bootstrap overides .hide :/
+        real_input.hide();
+
+        var throbber = $('#' + dummy + '_throbber');
+
+        var url = S3.Ap.concat('/', controller, '/', fn, '/search_ac');
+
+        // Optional args
+        if (delay == 'undefined') {
+            delay = 450;
+        }
+        if (min_length == 'undefined') {
+            min_length = 2;
+        }
+        if (types) {
+            url += '?types=' + types;
+        }
+
+        var data = {
+            val: dummy_input.val(),
+            accept: false
+        };
+        dummy_input.autocomplete({
+            delay: delay,
+            minLength: min_length,
+            source: function(request, response) {
+                // Patch the source so that we can handle No Matches
+                $.ajax({
+                    url: url,
+                    data: {
+                        term: request.term
+                    }
+                }).done(function (data) {
+                    if (data.length == 0) {
+                        var no_matching_records = i18n.no_matching_records;
+                        data.push({
+                            id: 0,
+                            value: '',
+                            label: no_matching_records,
+                            name: no_matching_records
+                        });
+                    }
+                    response(data);
+                });
+            },
+            search: function(event, ui) {
+                dummy_input.hide();
+                throbber.removeClass('hide').show();
+                return true;
+            },
+            response: function(event, ui, content) {
+                throbber.hide();
+                dummy_input.show();
+                return content;
+            },
+            focus: function(event, ui) {
+                var name = ui.item.name;
+                dummy_input.val(name);
+                return false;
+            },
+            select: function(event, ui) {
+                var item = ui.item;
+                if (item.id) {
+                    var name = item.name;
+                    dummy_input.val(name);
+                    real_input.val(item.id)
+                              .change();
+                } else {
+                    // No matching results
+                    dummy_input.val('');
+                    real_input.val('')
+                              .change();
+                }
+                if (postprocess) {
+                    // postprocess has to be able to handle the 'no match' option
+                    eval(postprocess);
+                }
+                data.accept = true;
+                return false;
+            }
+        })
+        .data('ui-autocomplete')._renderItem = function(ul, item) {
+            var name = item.name;
+            return $('<li>').data('item.autocomplete', item)
+                            .append('<a>' + name + '</a>')
+                            .appendTo(ul);
+        };
+        // @ToDo: Do this only if new_items=False
+        dummy_input.blur(function() {
+            if (!dummy_input.val()) {
+                real_input.val('');
+                data.accept = true;
+            }
+            if (!data.accept) {
+                dummy_input.val(data.val);
+            } else {
+                data.val = dummy_input.val();
+            }
+            data.accept = false;
+        });
+    };
+
     /*
      * Represent a Human Resource
      */
@@ -395,6 +518,9 @@
         }
 
         var real_input = $('#' + input);
+        // Bootstrap overides .hide :/
+        real_input.hide();
+
         var throbber = $('#' + dummy + '_throbber');
 
         if (group == 'staff') {
@@ -513,6 +639,9 @@
         }
 
         var real_input = $('#' + input);
+        // Bootstrap overides .hide :/
+        real_input.hide();
+
         var throbber = $('#' + dummy + '_throbber');
 
         var url = S3.Ap.concat('/org/site/search_ac?field=name&filter=~');
