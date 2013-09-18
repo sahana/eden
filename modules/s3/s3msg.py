@@ -1900,6 +1900,7 @@ class S3Compose(S3CRUD):
         mtable = s3db.msg_message
         otable = s3db.msg_outbox
 
+        mtable.body.label = T("Message")
         mtable.body.default = self.message
         mtable.inbound.default = False
         mtable.inbound.writable = False
