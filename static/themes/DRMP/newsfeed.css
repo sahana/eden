@@ -125,7 +125,7 @@ a.card-organisation {
 
 /* Forms to add Data */
 #popup.cf .form-horizontal.cms_post {
-    margin-left: -70px;
+    margin-left: -60px;
 }
 #post-cms_post_created_on-date-filter-le.date-filter-input.anytime, 
 #post-cms_post_created_on-date-filter-ge.date-filter-input.anytime {
