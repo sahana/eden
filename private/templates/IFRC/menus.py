@@ -384,7 +384,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     # This provides the link to switch to the personal mode:
                     #M("Personal Profile", c="hrm", f="person",
                     #  check=manager_mode, vars=dict(mode="personal"))
-                    M("Staff & Volunteers", c="hrm", f="human_resource", m="summary"),
+                    #M("Staff & Volunteers", c="hrm", f="human_resource", m="summary"),
                 )
 
     # -------------------------------------------------------------------------
@@ -522,6 +522,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     # This provides the link to switch to the personal mode:
                     #M("Personal Profile", f="person",
                     #  check=manager_mode, vars=dict(mode="personal"))
+                    #M("Staff & Volunteers", c="hrm", f="human_resource", m="summary"),
                 )
 
     # -------------------------------------------------------------------------
