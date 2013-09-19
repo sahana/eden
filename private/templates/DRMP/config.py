@@ -1798,7 +1798,7 @@ def render_resources(listid, resource, rfields, record, **attr):
     date = record["org_resource.modified_on"]
     quantity = record["org_resource.value"]
     resource_type = record["org_resource.parameter_id"]
-    body = "%s %s" % (quantity, resource_type)
+    body = "%s %s" % (quantity, T(resource_type))
     comments = raw["org_resource.comments"]
     organisation = record["org_resource.organisation_id"]
     organisation_id = raw["org_resource.organisation_id"]
@@ -2269,7 +2269,9 @@ def customize_cms_post(**attr):
             
             field = table.body
             field.label = T("Description")
-            field.widget = None
+            # Plain text not Rich
+            from s3.s3widgets import s3_comments_widget
+            field.widget = s3_comments_widget
             #table.comments.readable = table.comments.writable = False
 
             if current.request.controller == "default":
@@ -3095,8 +3097,8 @@ def customize_org_office(**attr):
                 # L1s only
                 from s3.s3validators import IS_LOCATION_SELECTOR2
                 from s3.s3widgets import S3LocationSelectorWidget2
-                location_field.requires = IS_LOCATION_SELECTOR2(levels=["L1"])
-                location_field.widget = S3LocationSelectorWidget2(levels=["L1"],
+                location_field.requires = IS_LOCATION_SELECTOR2(levels=["L1", "L2"])
+                location_field.widget = S3LocationSelectorWidget2(levels=["L1", "L2"],
                                                                   show_address=True,
                                                                   show_map=False)
             s3.cancel = True
@@ -3572,6 +3574,21 @@ def customize_org_resource(**attr):
 settings.ui.customize_org_resource = customize_org_resource
 
 # -----------------------------------------------------------------------------
+def customize_org_resource_type(**attr):
+    """
+        Customize org_resource_type controller
+    """
+
+    table = current.s3db.org_resource_type
+    table.name.represent = lambda v: T(v) if v else ""
+    table.comments.label = T("Units")
+    table.comments.represent = lambda v: T(v) if v else ""
+
+    return attr
+
+settings.ui.customize_org_resource_type = customize_org_resource_type
+
+# -----------------------------------------------------------------------------
 def customize_pr_person(**attr):
     """
         Customize pr_person controller
@@ -3639,6 +3656,8 @@ def customize_pr_person(**attr):
             image_field = s3db.pr_image.image
             image_field.label = ""
             # ImageCrop widget doesn't currently work within an Inline Form
+            from gluon.validators import IS_IMAGE
+            image_field.requires = IS_IMAGE()
             image_field.widget = None
 
             hr_fields = ["organisation_id",

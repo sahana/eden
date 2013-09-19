@@ -105,31 +105,31 @@ if len(pop_list) > 0:
                              timeout=300, # seconds
                              repeats=0    # unlimited
                              )
-        # saved search notifications
-        s3task.schedule_task("msg_search_subscription_notifications",
-                             vars={"frequency":"hourly"},
-                             period=3600,
-                             timeout=300,
-                             repeats=0
-                             )
-        s3task.schedule_task("msg_search_subscription_notifications",
-                             vars={"frequency":"daily"},
-                             period=86400,
-                             timeout=300,
-                             repeats=0
-                             )
-        s3task.schedule_task("msg_search_subscription_notifications",
-                             vars={"frequency":"weekly"},
-                             period=604800,
-                             timeout=300,
-                             repeats=0
-                             )
-        s3task.schedule_task("msg_search_subscription_notifications",
-                             vars={"frequency":"monthly"},
-                             period=2419200,
-                             timeout=300,
-                             repeats=0
-                             )
+        # Old saved search notifications
+        #s3task.schedule_task("msg_search_subscription_notifications",
+        #                     vars={"frequency":"hourly"},
+        #                     period=3600,
+        #                     timeout=300,
+        #                     repeats=0
+        #                     )
+        #s3task.schedule_task("msg_search_subscription_notifications",
+        #                     vars={"frequency":"daily"},
+        #                     period=86400,
+        #                     timeout=300,
+        #                     repeats=0
+        #                     )
+        #s3task.schedule_task("msg_search_subscription_notifications",
+        #                     vars={"frequency":"weekly"},
+        #                     period=604800,
+        #                     timeout=300,
+        #                     repeats=0
+        #                     )
+        #s3task.schedule_task("msg_search_subscription_notifications",
+        #                     vars={"frequency":"monthly"},
+        #                     period=2419200,
+        #                     timeout=300,
+        #                     repeats=0
+        #                     )
 
         # Subscription notifications
         s3task.schedule_task("notify_check_subscriptions",

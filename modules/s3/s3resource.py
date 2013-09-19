@@ -3030,18 +3030,17 @@ class S3Resource(object):
         """
 
         manager = current.manager
-        xml = current.xml
-        permit = manager.permit
-
-        tree = None
-
-        self.job = None
 
         # Check permission for the resource
+        permit = manager.permit
         authorised = permit("create", self.table) and \
                      permit("update", self.table)
         if not authorised:
             raise IOError("Insufficient permissions")
+
+        xml = current.xml
+        tree = None
+        self.job = None
 
         if not job_id:
 
@@ -3186,12 +3185,10 @@ class S3Resource(object):
 
         from s3import import S3ImportJob
 
-        manager = current.manager
         db = current.db
         xml = current.xml
         auth = current.auth
         permit = auth.s3_has_permission
-        audit = current.audit
         tablename = self.tablename
         table = self.table
 
@@ -3201,7 +3198,7 @@ class S3Resource(object):
             self.error = None
             self.error_tree = None
             try:
-                import_job = S3ImportJob(manager, table,
+                import_job = S3ImportJob(table,
                                          job_id=job_id,
                                          strategy=strategy,
                                          update_policy=update_policy,
@@ -3238,9 +3235,10 @@ class S3Resource(object):
 
             # Call the import pre-processor to prepare tables
             # and cleanup the tree as necessary
-            if manager.import_prep:
+            import_prep = current.manager.import_prep
+            if import_prep:
                 tree = import_job.get_tree()
-                callback(manager.import_prep,
+                callback(import_prep,
                          # takes tuple (resource, tree) as argument
                          (self, tree),
                          tablename=tablename)
@@ -3263,10 +3261,11 @@ class S3Resource(object):
 
             # Call the import pre-processor to prepare tables
             # and cleanup the tree as necessary
-            if manager.import_prep:
+            import_prep = current.manager.import_prep
+            if import_prep:
                 if not isinstance(tree, etree._ElementTree):
                     tree = etree.ElementTree(tree)
-                callback(manager.import_prep,
+                callback(import_prep,
                          # takes tuple (resource, tree) as argument
                          (self, tree),
                          tablename=tablename)
@@ -3312,7 +3311,7 @@ class S3Resource(object):
                     elements = matches
 
             # Import all matching elements
-            import_job = S3ImportJob(manager, table,
+            import_job = S3ImportJob(table,
                                      tree=tree,
                                      files=self.files,
                                      strategy=strategy,

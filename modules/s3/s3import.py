@@ -2804,7 +2804,7 @@ class S3ImportJob():
     ITEM_TABLE_NAME = "s3_import_item"
 
     # -------------------------------------------------------------------------
-    def __init__(self, manager, table,
+    def __init__(self, table,
                  tree=None,
                  files=None,
                  job_id=None,
@@ -2816,7 +2816,6 @@ class S3ImportJob():
         """
             Constructor
 
-            @param manager: the S3RequestManager instance performing this job
             @param tree: the element tree to import
             @param files: files attached to the import (for upload fields)
             @param job_id: restore job from database (record ID or job_id)
@@ -3689,9 +3688,7 @@ class S3BulkImporter(object):
 
         start = datetime.now()
         if task[0] == 1:
-            db = current.db
             s3db = current.s3db
-            request = current.request
             response = current.response
             errorString = "prepopulate error: file %s missing"
             # Store the view
@@ -3775,7 +3772,7 @@ class S3BulkImporter(object):
                 return
 
             if not resource.error:
-                db.commit()
+                current.db.commit()
             else:
                 # Must roll back if there was an error!
                 error = resource.error
@@ -3784,7 +3781,7 @@ class S3BulkImporter(object):
                 errors = current.xml.collect_errors(resource)
                 if errors:
                     self.errorList.extend(errors)
-                db.rollback()
+                current.db.rollback()
                 
             auth.rollback = False
 
@@ -3795,7 +3792,7 @@ class S3BulkImporter(object):
             csvName = task[3][task[3].rfind("/") + 1:]
             try:
                 # Python 2.7
-                duration = '{:.2f}'.format(duration.total_seconds()/60)
+                duration = '{:.2f}'.format(duration.total_seconds() / 60)
                 msg = "%s import job completed in %s mins" % (csvName, duration)
             except AttributeError:
                 # older Python
