@@ -1798,7 +1798,7 @@ def render_resources(listid, resource, rfields, record, **attr):
     date = record["org_resource.modified_on"]
     quantity = record["org_resource.value"]
     resource_type = record["org_resource.parameter_id"]
-    body = "%s %s" % (quantity, resource_type)
+    body = "%s %s" % (quantity, T(resource_type))
     comments = raw["org_resource.comments"]
     organisation = record["org_resource.organisation_id"]
     organisation_id = raw["org_resource.organisation_id"]
@@ -3572,6 +3572,21 @@ def customize_org_resource(**attr):
     return attr
 
 settings.ui.customize_org_resource = customize_org_resource
+
+# -----------------------------------------------------------------------------
+def customize_org_resource_type(**attr):
+    """
+        Customize org_resource_type controller
+    """
+
+    table = current.s3db.org_resource_type
+    table.name.represent = lambda v: T(v) if v else ""
+    table.comments.label = T("Units")
+    table.comments.represent = lambda v: T(v) if v else ""
+
+    return attr
+
+settings.ui.customize_org_resource_type = customize_org_resource_type
 
 # -----------------------------------------------------------------------------
 def customize_pr_person(**attr):

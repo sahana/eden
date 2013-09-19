@@ -371,6 +371,8 @@ def customize_pr_person(**attr):
             image_field = s3db.pr_image.image
             image_field.label = ""
             # ImageCrop widget doesn't currently work within an Inline Form
+            from gluon.validators import IS_IMAGE
+            image_field.requires = IS_IMAGE()
             image_field.widget = None
 
             hr_fields = ["organisation_id",

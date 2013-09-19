@@ -3,12 +3,12 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Project Beneficiary Types - CSV Import Stylesheet
+         Organisation Resource Types - CSV Import Stylesheet
 
          CSV column...........Format..........Content
 
          Name.................string..........Type Name
-         Description..........string..........Type Description
+         Description..........string..........Type Comments
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -22,9 +22,9 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
-        <resource name="project_beneficiary_type">
+        <resource name="org_resource_type">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
-            <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
+            <data field="comments"><xsl:value-of select="col[@field='Description']"/></data>
         </resource>
     </xsl:template>
     <!-- ****************************************************************** -->
