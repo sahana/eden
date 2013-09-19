@@ -129,7 +129,7 @@ for(var i=0,len=layers.length;i<len;i++){
  if(layer.name=='All Coalitions'){layer.setVisibility(true)}}
 '''
         map = current.gis.show_map(width=770,
-                                   height=270,
+                                   height=345,
                                    callback=callback,
                                    catalogue_layers=True,
                                    collapsed=True,
@@ -138,20 +138,20 @@ for(var i=0,len=layers.length;i<len;i++){
         output["map"] = map
 
         # Button to go full-screen
-        fullscreen = A(I(_class="icon icon-fullscreen"),
-                       _href=URL(c="gis", f="map_viewing_client"),
-                       _class="gis_fullscreen_map-btn fright",
-                       # If we need to support multiple maps on a page
-                       #_map="default",
-                       _title=T("View full screen"),
-                       )
+        #fullscreen = A(I(_class="icon icon-fullscreen"),
+        #               _href=URL(c="gis", f="map_viewing_client"),
+        #               _class="gis_fullscreen_map-btn fright",
+        #               # If we need to support multiple maps on a page
+        #               #_map="default",
+        #               _title=T("View full screen"),
+        #               )
 
-        output["fullscreen"] = fullscreen
-        if debug:
-            script = "/%s/static/scripts/S3/s3.gis.fullscreen.js" % appname
-        else:
-            script = "/%s/static/scripts/S3/s3.gis.fullscreen.min.js" % appname
-        scripts_append(script)
+        #output["fullscreen"] = fullscreen
+        #if debug:
+        #    script = "/%s/static/scripts/S3/s3.gis.fullscreen.js" % appname
+        #else:
+        #    script = "/%s/static/scripts/S3/s3.gis.fullscreen.min.js" % appname
+        #scripts_append(script)
 
         from s3db.cms import S3CMS
         for item in response.menu:
@@ -229,7 +229,7 @@ def render_log(listid, resource, rfields, record, **attr):
                 body = T("Added an Activity")
             elif method == "update":
                 body = T("Edited an Activity")
-        elif tablename == "stats_resident":
+        elif tablename == "stats_people":
             if method == "create":
                 body = T("Added People")
             elif method == "update":

@@ -3,7 +3,7 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Resident Type - CSV Import Stylesheet
+         People Type - CSV Import Stylesheet
 
          Column headers defined in this stylesheet:
 
@@ -17,15 +17,15 @@
 
     <xsl:template match="/">
         <s3xml>
-            <!-- Create the Resident Type records -->
+            <!-- Create the People Type records -->
             <xsl:apply-templates select="table/row"/>
         </s3xml>
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <!--  Resident Type Record -->
+    <!--  People Type Record -->
     <xsl:template match="row">
-        <resource name="stats_resident_type">
+        <resource name="stats_people_type">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
         </resource>
