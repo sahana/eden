@@ -173,7 +173,7 @@ table.embeddedComponent tr.label-row td {
 /* Summary Page */
 #summary-tabs {
     /* Hide while loading */
-    display: none;
+    visibility: hidden;
 }
 
 #summary-filter-form {
