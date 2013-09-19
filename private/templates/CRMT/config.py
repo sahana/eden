@@ -1246,7 +1246,7 @@ def customize_stats_people(**attr):
         tablename = "stats_people"
         table = s3db[tablename]
 
-        # Disable (sepcific) locations
+        # Disable Locations: located just via Coalition
         table.location_id.readable = False
         table.location_id.writable = False
 
@@ -1273,7 +1273,7 @@ def customize_stats_people(**attr):
 
         if r.interactive:
             # CRUD Strings
-            table.location_id.label = T("Address")
+            #table.location_id.label = T("Address")
 
             s3.crud_strings[tablename] = Storage(
                 title_create = T("Add People"),
@@ -1307,7 +1307,7 @@ def customize_stats_people(**attr):
                 report_fields = ["name",
                                  "parameter_id",
                                  "people_group.group_id",
-                                 "location_id$L3",
+                                 #"location_id$L3",
                                  ]
 
                 report_options = Storage(
@@ -1335,21 +1335,21 @@ def customize_stats_people(**attr):
                 if r.method in ("create", "update"):
                     # Custom Widgets/Validators
                     widgets = True
-                    from s3.s3validators import IS_ADD_PERSON_WIDGET2, IS_LOCATION_SELECTOR2
+                    #from s3.s3validators import IS_ADD_PERSON_WIDGET2, IS_LOCATION_SELECTOR2
                     from s3.s3widgets import S3AddPersonWidget2, S3LocationSelectorWidget2
                 else:
                     widgets = False
 
                 if widgets:
-                    field = table.location_id
-                    field.label = "" # Gets replaced by widget
-                    field.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
-                    field.widget = S3LocationSelectorWidget2(levels=["L3"],
-                                                             hide_lx=False,
-                                                             reverse_lx=True,
-                                                             show_postcode=True,
-                                                             show_map=False,
-                                                             )
+                    #field = table.location_id
+                    #field.label = "" # Gets replaced by widget
+                    #field.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
+                    #field.widget = S3LocationSelectorWidget2(levels=["L3"],
+                                                             #hide_lx=False,
+                                                             #reverse_lx=True,
+                                                             #show_postcode=True,
+                                                             #show_map=False,
+                                                             #)
     
                     # L3s only
                     #from s3.s3fields import S3Represent
@@ -1386,7 +1386,7 @@ def customize_stats_people(**attr):
                         fields = ["group_id"],
                         multiple = False,
                     ),
-                    "location_id",
+                    #"location_id",
                     "person_id",
                     S3SQLInlineComponent(
                         "document",
@@ -1520,7 +1520,6 @@ def customize_vulnerability_evac_route(**attr):
                                                                          polygons=True,
                                                                          )
 
-
                     table.hazard_id.comment = S3AddResourceLink(c="vulnerability",
                                                                 f="hazard",
                                                                 title=T("Add Hazard Type")),
@@ -1528,8 +1527,6 @@ def customize_vulnerability_evac_route(**attr):
                 # Hide Labels when just 1 column in inline form
                 s3db.doc_document.file.label = ""
                 current.db.vulnerability_evac_route_group.group_id.label = ""
-
-
 
                 # Custom Crud Form
                 crud_form = S3SQLCustomForm(
