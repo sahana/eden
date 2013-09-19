@@ -1076,6 +1076,10 @@ class S3Search(S3CRUD):
 
         # SSPag response => CRUD native
         elif format == "aadata" and self.__interactive:
+            session = current.session
+            if session.s3.filter is not None:
+                self.resource.build_query(filter=current.response.s3.filter,
+                                          vars=session.s3.filter)
             output = self.select(r, **attr)
 
         # Search form for popup on Map Layers

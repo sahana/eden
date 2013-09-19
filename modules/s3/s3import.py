@@ -66,7 +66,7 @@ from gluon.serializers import json as jsons
 from gluon.storage import Storage, Messages
 from gluon.tools import callback, fetch
 
-from s3crud import S3CRUD
+from s3rest import S3Method
 from s3resource import S3Resource
 from s3utils import s3_debug, s3_mark_required, s3_has_foreign_key, s3_get_foreign_key, s3_unicode
 from s3xml import S3XML
@@ -80,7 +80,7 @@ else:
     _debug = lambda m: None
 
 # =============================================================================
-class S3Importer(S3CRUD):
+class S3Importer(S3Method):
     """
         Transformable formats (XML, JSON, CSV) import handler
     """
