@@ -5885,10 +5885,10 @@ class MAP(DIV):
                     # MAP_ADMIN better for simpler deployments
                     #if auth.s3_has_permission("create", "cms_post_layer"):
                     if MAP_ADMIN:
-                        i18n["gis_metadata_create"] = T("Create Metadata")
-                        i18n["gis_metadata_edit"] = T("Edit Metadata")
+                        i18n["gis_metadata_create"] = T("Create 'More Info'")
+                        i18n["gis_metadata_edit"] = T("Edit 'More Info'")
                     else:
-                        i18n["gis_metadata"] = T("View Metadata")
+                        i18n["gis_metadata"] = T("More Info")
             else:
                 options["legend"] = True
 

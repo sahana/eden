@@ -85,7 +85,7 @@ class S3DocumentLibrary(S3Model):
                                cr_shelter=T("Shelter"),
                                inv_adj=T("Stock Adjustment"),
                                inv_warehouse=T("Warehouse"),
-                               stats_resident=T("Resident"),
+                               stats_people=T("People"),
                                vulnerability_document=T("Vulnerability Document"),
                                vulnerability_risk=T("Risk"),
                                vulnerability_evac_route=T("Evacuation Route"),
