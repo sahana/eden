@@ -233,7 +233,8 @@ def _newsfeed():
                                                         args="datalist_dl_post"),
                                      filter_ajax_url = URL(f="index",
                                                            args="datalist_dl_filter",
-                                                           vars={}))
+                                                           vars={}),
+                                     )
 
     if ajax == "list":
         # Don't override view if this is an Ajax-deletion request
@@ -251,15 +252,9 @@ def _newsfeed():
             from gluon.http import HTTP
             raise HTTP("404", "Unable to open Custom View: %s" % view)
 
-        scripts = []
-        sappend = scripts.append
-        # Style the Search TextFilter widget
-        sappend('''$('#post-cms_post_body-text-filter__row').addClass('input-append').append('<span class="add-on"><i class="icon-search"></i></span>')''')
-        # Button to toggle Advanced Form
-        sappend('''$('#list-filter').append('<a class="accordion-toggle"><i class="icon-reorder"></i> %s</a>')''' % T("Advanced Search"))
-        sappend('''$('.accordion-toggle').click(function(){$('.advanced').toggle()})''')
-        s3.jquery_ready.append('''\n'''.join(scripts))
-        
+        s3.js_global.append('''i18n.adv_search="%s"''' % T("Advanced Search"))
+        s3.scripts.append("/%s/static/themes/%s/js/newsfeed.js" % (request.application, THEME))
+
         # Latest 5 Disasters
         resource = s3db.resource("event_event")
         layout = render_events

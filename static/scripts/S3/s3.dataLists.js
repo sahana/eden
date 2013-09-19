@@ -256,7 +256,7 @@ function dlAjaxDeleteItem(anchor) {
  */
 function dlAjaxReload(list_id, filters) {
 
-    datalist = $('#' + list_id);
+    var datalist = $('#' + list_id);
     if (!datalist.length) {
         return;
     }
@@ -366,8 +366,9 @@ function dlInfiniteScroll(datalist) {
         initialitems = $(datalist).find('.dl-item').length;
 
     // Compute maxpage
-    var maxpage = 1, ajaxitems = (maxitems - initialitems);
-    if ( ajaxitems > 0) {
+    var maxpage = 1,
+        ajaxitems = (maxitems - initialitems);
+    if (ajaxitems > 0) {
         maxpage += Math.ceil(ajaxitems / pagesize);
     } else {
         if (pagination.length) {
@@ -378,38 +379,37 @@ function dlInfiniteScroll(datalist) {
 
     if (pagination.length) {
         $(datalist).infinitescroll({
-                debug: false,
-                loading: {
-                    finishedMsg: "no more items to load",
-                    msgText: "loading...",
-                    img: S3.Ap.concat('/static/img/indicator.gif')
-                },
-                navSelector: "div.dl-navigation",
-                nextSelector: "div.dl-navigation a:first",
-                itemSelector: "div.dl-row",
-                path: function(page) {
-                    // Compute start+limit
-                    var start = initialitems + (page - 2) * pagesize;
-                    var limit = Math.min(pagesize, maxindex - start);
-                    // Construct Ajax URL
-                    var url = dlURLAppend(ajaxurl, 'start=' + start + '&limit=' + limit);
-                    return url;
-                },
-                maxPage: maxpage
-
+            debug: false,
+            loading: {
+                finishedMsg: "no more items to load",
+                msgText: "loading...",
+                img: S3.Ap.concat('/static/img/indicator.gif')
             },
-            function(data) {
-                $('.dl').each(function() {
-                    $(this).find('.dl-row:last:in-viewport').each(function() {
-                        if (!$(this).hasClass('autoretrieve')) {
-                            $(this).addClass('autoretrieve');
-                            dlAutoRetrieve(this);
-                        }
-                    });
+            navSelector: "div.dl-navigation",
+            nextSelector: "div.dl-navigation a:first",
+            itemSelector: "div.dl-row",
+            path: function(page) {
+                // Compute start+limit
+                var start = initialitems + (page - 2) * pagesize;
+                var limit = Math.min(pagesize, maxindex - start);
+                // Construct Ajax URL
+                var url = dlURLAppend(ajaxurl, 'start=' + start + '&limit=' + limit);
+                return url;
+            },
+            maxPage: maxpage
+
+        },
+        function(data) {
+            $('.dl').each(function() {
+                $(this).find('.dl-row:last:in-viewport').each(function() {
+                    if (!$(this).hasClass('autoretrieve')) {
+                        $(this).addClass('autoretrieve');
+                        dlAutoRetrieve(this);
+                    }
                 });
-                dlItemBindEvents();
-            }
-        );
+            });
+            dlItemBindEvents();
+        });
     }
 }
 

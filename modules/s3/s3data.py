@@ -960,26 +960,28 @@ class S3DataList(object):
             # template
             raise NotImplementedError
 
-        dl = DIV(items, _class = "dl", _id = listid)
+        dl = DIV(items,
+                 _class="dl",
+                 _id=listid,
+                 )
 
         dl_data = {"startindex": start,
                    "maxitems": limit,
                    "totalitems": self.total,
                    "pagesize": pagesize,
                    "rowsize": rowsize,
-                   "ajaxurl": ajaxurl
+                   "ajaxurl": ajaxurl,
                    }
         from gluon.serializers import json as jsons
         dl_data = jsons(dl_data)
-        dl.append(DIV(
-                    FORM(
-                        INPUT(_type="hidden",
-                              _class="dl-pagination",
-                              _value=dl_data)),
-                    A(T("more..."),
-                      _href=ajaxurl,
-                      _class="dl-pagination"),
-                    _class="dl-navigation"))
+        dl.append(DIV(FORM(INPUT(_type="hidden",
+                                 _class="dl-pagination",
+                                 _value=dl_data)
+                           ),
+                      A(T("more..."),
+                        _href=ajaxurl,
+                        _class="dl-pagination"),
+                      _class="dl-navigation"))
 
         return dl
 
@@ -1005,6 +1007,7 @@ class S3DataList(object):
     def render(listid, resource, rfields, record, **attr):
         """
             Default item renderer
+            - not normally used, instead a custom renderer is normally defined
 
             @param listid: the HTML ID for this list
             @param resource: the S3Resource to render
