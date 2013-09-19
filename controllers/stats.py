@@ -61,13 +61,13 @@ def demographic_aggregate():
     return output
 
 # -----------------------------------------------------------------------------
-def resident_type():
+def people_type():
     """ REST Controller """
 
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def resident():
+def people():
     """ REST Controller """
 
     return s3_rest_controller()

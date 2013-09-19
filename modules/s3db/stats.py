@@ -29,7 +29,7 @@
 
 __all__ = ["S3StatsModel",
            "S3StatsDemographicModel",
-           "S3StatsResidentModel",
+           "S3StatsPeopleModel",
            "S3StatsTrainedPeopleModel",
            "stats_demographic_data_controller",
            ]
@@ -71,7 +71,7 @@ class S3StatsModel(S3Model):
                            project_beneficiary_type = T("Project Beneficiary Type"),
                            project_campaign_keyword = T("Project Campaign Keyword"),
                            stats_demographic = T("Demographic"),
-                           stats_resident_type = T("Types of Residents"),
+                           stats_people_type = T("Types of People"),
                            stats_trained_type = T("Types of Trained People"),
                            supply_distribution_item = T("Distribution Item"),
                            vulnerability_indicator = T("Vulnerability Indicator"),
@@ -97,7 +97,7 @@ class S3StatsModel(S3Model):
                            project_beneficiary = T("Project Beneficiary"),
                            project_campaign_response_summary = T("Project Campaign Response Summary"),
                            stats_demographic_data = T("Demographic Data"),
-                           stats_resident = T("Residents"),
+                           stats_people = T("People"),
                            stats_trained = T("Trained People"),
                            supply_distribution = T("Distribution"),
                            vulnerability_data = T("Vulnerability Data"),
@@ -1095,14 +1095,14 @@ def stats_demographic_data_controller():
     return output
 
 # =============================================================================
-class S3StatsResidentModel(S3Model):
+class S3StatsPeopleModel(S3Model):
     """
-        Used to record residents in the CRMT (Community Resilience Mapping Tool) template
+        Used to record people in the CRMT (Community Resilience Mapping Tool) template
     """
 
-    names = ["stats_resident",
-             "stats_resident_type",
-             "stats_resident_group",
+    names = ["stats_people",
+             "stats_people_type",
+             "stats_people_group",
              ]
 
     def model(self):
@@ -1116,9 +1116,9 @@ class S3StatsResidentModel(S3Model):
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
-        # Resident Types
+        # Type of Peoples
         #
-        tablename = "stats_resident_type"
+        tablename = "stats_people_type"
         table = define_table(tablename,
                              # Instance
                              super_link("doc_id", "doc_entity"),
@@ -1129,35 +1129,35 @@ class S3StatsResidentModel(S3Model):
                              s3_comments(),
                              *s3_meta_fields())
 
-        ADD_RESIDENT_TYPE = T("Add New Resident Type")
+        ADD_PEOPLE_TYPE = T("Add New Type of People")
         crud_strings[tablename] = Storage(
-            title_create=T("Add Resident Type"),
-            title_display=T("Resident Type Details"),
-            title_list=T("Resident Types"),
-            title_update=T("Edit Resident Type"),
-            #title_search=T("Search Resident Types"),
-            #title_upload=T("Import Resident Types"),
-            subtitle_create=ADD_RESIDENT_TYPE,
-            label_list_button=T("Resident Types"),
-            label_create_button=ADD_RESIDENT_TYPE,
-            label_delete_button=T("Delete Resident Type"),
-            msg_record_created=T("Resident Type added"),
-            msg_record_modified=T("Resident Type updated"),
-            msg_record_deleted=T("Resident Type deleted"),
-            msg_list_empty=T("No Resident Types defined"))
+            title_create=T("Add Type of People"),
+            title_display=T("Type of People Details"),
+            title_list=T("Type of Peoples"),
+            title_update=T("Edit Type of People"),
+            #title_search=T("Search Type of Peoples"),
+            #title_upload=T("Import Type of Peoples"),
+            subtitle_create=ADD_PEOPLE_TYPE,
+            label_list_button=T("Type of Peoples"),
+            label_create_button=ADD_PEOPLE_TYPE,
+            label_delete_button=T("Delete Type of People"),
+            msg_record_created=T("Type of People added"),
+            msg_record_modified=T("Type of People updated"),
+            msg_record_deleted=T("Type of People deleted"),
+            msg_list_empty=T("No Type of Peoples defined"))
 
         # Resource Configuration
         configure(tablename,
                   super_entity = ("doc_entity", "stats_parameter"),
-                  deduplicate = self.stats_resident_type_duplicate,
+                  deduplicate = self.stats_people_type_duplicate,
                   )
 
         represent = S3Represent(lookup=tablename)
 
         # ---------------------------------------------------------------------
-        # Residents
+        # People
         #
-        tablename = "stats_resident"
+        tablename = "stats_people"
         table = define_table(tablename,
                              # Instance
                              super_link("data_id", "stats_data"),
@@ -1168,45 +1168,45 @@ class S3StatsResidentModel(S3Model):
                              # This is a component, so needs to be a super_link
                              # - can't override field name, ondelete or requires
                              super_link("parameter_id", "stats_parameter",
-                                        label = T("Resident Type"),
-                                        instance_types = ["stats_resident_type"],
+                                        label = T("Type of People"),
+                                        instance_types = ["stats_people_type"],
                                         represent = S3Represent(lookup="stats_parameter"),
                                         readable = True,
                                         writable = True,
                                         empty = True,
                                         comment = S3AddResourceLink(c="stats",
-                                                                    f="resident_type",
+                                                                    f="people_type",
                                                                     vars = dict(child = "parameter_id"),
-                                                                    title=ADD_RESIDENT_TYPE),
+                                                                    title=ADD_PEOPLE_TYPE),
                                         ),
                              Field("value", "integer", 
                                    requires=IS_NULL_OR(
                                                IS_INT_IN_RANGE(0, 999999)
                                                ),
-                                   label=T("Number of Residents")),
+                                   label=T("Number of People")),
                              self.gis_location_id(label=T("Address")),
                              self.pr_person_id(label=T("Contact Person")),
                              s3_comments(),
                              *s3_meta_fields())
 
-        ADD_RESIDENT = T("Add New Resident")
+        ADD_PEOPLE = T("Add New People")
         crud_strings[tablename] = Storage(
-            title_create=T("Add Resident"),
-            title_display=T("Resident Details"),
-            title_list=T("Residents"),
-            title_update=T("Edit Resident"),
-            title_search=T("Search Residents"),
-            title_upload=T("Import Residents"),
-            subtitle_create=ADD_RESIDENT,
-            label_list_button=T("Residents"),
-            label_create_button=ADD_RESIDENT,
-            label_delete_button=T("Delete Resident"),
-            msg_record_created=T("Resident added"),
-            msg_record_modified=T("Resident updated"),
-            msg_record_deleted=T("Resident deleted"),
-            msg_list_empty=T("No Residents defined"))
+            title_create=T("Add People"),
+            title_display=T("People Details"),
+            title_list=T("People"),
+            title_update=T("Edit People"),
+            title_search=T("Search People"),
+            title_upload=T("Import People"),
+            subtitle_create=ADD_PEOPLE,
+            label_list_button=T("People"),
+            label_create_button=ADD_PEOPLE,
+            label_delete_button=T("Delete People"),
+            msg_record_created=T("People added"),
+            msg_record_modified=T("People updated"),
+            msg_record_deleted=T("People deleted"),
+            msg_list_empty=T("No People defined"))
 
-        filter_widgets = [S3OptionsFilter("resident_group.group_id",
+        filter_widgets = [S3OptionsFilter("people_group.group_id",
                                           label=T("Coalition"),
                                           represent="%(name)s",
                                           widget="multiselect",
@@ -1225,23 +1225,23 @@ class S3StatsResidentModel(S3Model):
 
         # Coalitions
         add_component("org_group",
-                      stats_resident=dict(link="stats_resident_group",
-                                          joinby="resident_id",
+                      stats_people=dict(link="stats_people_group",
+                                          joinby="people_id",
                                           key="group_id",
                                           actuate="hide"))
         # Format for InlineComponent/filter_widget
-        add_component("stats_resident_group",
-                      stats_resident="resident_id")
+        add_component("stats_people_group",
+                      stats_people="people_id")
 
         represent = S3Represent(lookup=tablename)
 
         # ---------------------------------------------------------------------
-        # Residents <> Coalitions link table
+        # People <> Coalitions link table
         #
-        tablename = "stats_resident_group"
+        tablename = "stats_people_group"
         table = define_table(tablename,
-                             Field("resident_id", table,
-                                   requires = IS_ONE_OF(current.db, "stats_resident.id",
+                             Field("people_id", table,
+                                   requires = IS_ONE_OF(current.db, "stats_people.id",
                                                         represent,
                                                         sort=True,
                                                         ),
@@ -1255,12 +1255,12 @@ class S3StatsResidentModel(S3Model):
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def stats_resident_type_duplicate(item):
+    def stats_people_type_duplicate(item):
         """
-            Deduplication of Resident Types
+            Deduplication of Type of Peoples
         """
 
-        if item.tablename != "stats_resident_type":
+        if item.tablename != "stats_people_type":
             return
 
         data = item.data
@@ -1300,7 +1300,7 @@ class S3StatsTrainedPeopleModel(S3Model):
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
-        # Trained People Types
+        # Trained Type of Peoples
         #
         tablename = "stats_trained_type"
         table = define_table(tablename,
@@ -1318,7 +1318,7 @@ class S3StatsTrainedPeopleModel(S3Model):
             title_display=T("Type of Trained People  Details"),
             title_list=T("Types of Trained People"),
             title_update=T("Edit Type of Trained People"),
-            #title_search=T("Search Trained People Types"),
+            #title_search=T("Search Trained Type of Peoples"),
             #title_upload=T("Import Types of Trained People"),
             subtitle_create=ADD_TRAINED_PEOPLE_TYPE,
             label_list_button=T("Types of Trained People"),

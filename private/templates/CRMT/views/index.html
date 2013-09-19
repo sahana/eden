@@ -12,10 +12,10 @@
   <div class="row">
    <div class="span4">
     <div class="intro">
+     <h3>Understand Your </br>Community Resilience</h3>
+     <p>Use maps and charts to understand the relationships between different factors which affect your community's resilience.</p>
      <h3>All Your Data in One Place</h3>
      <p>Manage the data you collect with data from external sources such as Hazard Data from USGS and Census Data</p>
-     <h3>Understand Your</br>Community Resilience</h3>
-     <p>Use maps and charts to understand the relationships between different factors which affect your community's resilience.</p>
     </div>
    </div>
    <div class="span4">
@@ -29,9 +29,7 @@
    </div>
   </div>
   <div class="row">
-   <div class="span8">
-    {{=fullscreen}}
-   </div>
+   <a class='btn map-btn' href='/{{=appname}}/gis/index'><i class='icon-globe'></i> {{=T("Make a Map")}}</a>
    <div class="span8 map">
     {{=XML(map)}}
    </div>

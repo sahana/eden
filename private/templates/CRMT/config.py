@@ -78,7 +78,7 @@ def audit_write(method, tablename, form, record, representation):
                      "org_organisation",
                      "pr_filter",
                      "project_activity",
-                     "stats_resident",
+                     "stats_people",
                      "vulnerability_evac_route",
                      "vulnerability_risk",
                      ):
@@ -188,7 +188,7 @@ current.response.menu = [
      },
     {"name": T("People"),
      "c":"stats", 
-     "f":"resident",
+     "f":"people",
      "icon": "icon-group"
      },
     #{"name": T("Incidents"),
@@ -1042,7 +1042,7 @@ def customize_org_facility(**attr):
         if r.method == "summary" or r.representation == "aadata":
             # Modify list_fields
             list_fields = ["name",
-                           "facility_type.name",
+                           (T("Type of Place"),"facility_type.name"),
                            "organisation_id",
                            "site_org_group.group_id",
                            "location_id",
@@ -1214,11 +1214,11 @@ def customize_org_facility(**attr):
 settings.ui.customize_org_facility = customize_org_facility
 
 #-----------------------------------------------------------------------------
-# Residents
+# People
 #-----------------------------------------------------------------------------
-def customize_stats_resident(**attr):
+def customize_stats_people(**attr):
     """
-        Customize stats_resident controller
+        Customize stats_people controller
     """
 
     request = current.request
@@ -1228,9 +1228,9 @@ def customize_stats_resident(**attr):
         if auth.is_logged_in():
             org_group_id = auth.user.org_group_id
             if org_group_id:
-                coalition = request.get_vars.get("resident_group.group_id__belongs", None)
+                coalition = request.get_vars.get("people_group.group_id__belongs", None)
                 if not coalition:
-                    request.get_vars["resident_group.group_id__belongs"] = str(org_group_id)
+                    request.get_vars["people_group.group_id__belongs"] = str(org_group_id)
 
     # Custom PreP
     s3 = current.response.s3
@@ -1241,8 +1241,12 @@ def customize_stats_resident(**attr):
             result = standard_prep(r)
 
         s3db = current.s3db
-        tablename = "stats_resident"
+        tablename = "stats_people"
         table = s3db[tablename]
+
+        # Disable (sepcific) locations
+        table.location_id.readable = False
+        table.location_id.writable = False
 
         if r.method == "summary" or r.representation == "aadata":
             # Modify list_fields
@@ -1250,8 +1254,8 @@ def customize_stats_resident(**attr):
                            "name",
                            "parameter_id",
                            "value",
-                           "resident_group.group_id",
-                           "location_id",
+                           "people_group.group_id",
+                           #"location_id",
                            "person_id",
                            "comments",
                            ]
@@ -1260,10 +1264,10 @@ def customize_stats_resident(**attr):
                            list_fields = list_fields,
                            )
 
-            s3db.stats_resident_group.group_id.label = T("Coalition")
+            s3db.stats_people_group.group_id.label = T("Coalition")
 
         elif r.method == "report2":
-            s3db.stats_resident_group.group_id.label = T("Coalition")
+            s3db.stats_people_group.group_id.label = T("Coalition")
 
         if r.interactive:
             # CRUD Strings
@@ -1286,13 +1290,13 @@ def customize_stats_resident(**attr):
             
             if r.method == "summary":
                 from s3.s3filter import S3OptionsFilter
-                filter_widgets = [S3OptionsFilter("resident_group.group_id",
+                filter_widgets = [S3OptionsFilter("people_group.group_id",
                                                   label=T("Coalition"),
                                                   represent="%(name)s",
                                                   widget="multiselect",
                                                   ),
                                   S3OptionsFilter("parameter_id",
-                                                  label=T("Resident Type"),
+                                                  label=T("Type of People"),
                                                   represent="%(name)s",
                                                   widget="multiselect",
                                                   ),
@@ -1300,7 +1304,7 @@ def customize_stats_resident(**attr):
 
                 report_fields = ["name",
                                  "parameter_id",
-                                 "resident_group.group_id",
+                                 "people_group.group_id",
                                  "location_id$L3",
                                  ]
 
@@ -1308,9 +1312,9 @@ def customize_stats_resident(**attr):
                     rows=report_fields,
                     cols=report_fields,
                     fact=report_fields,
-                    defaults=Storage(rows="resident_group.group_id",
-                                     cols="resident.parameter_id",
-                                     fact="sum(resident.value)",
+                    defaults=Storage(rows="people_group.group_id",
+                                     cols="people.parameter_id",
+                                     fact="sum(people.value)",
                                      totals=True
                                      )
                     )
@@ -1367,7 +1371,7 @@ def customize_stats_resident(**attr):
     
                 # Hide Labels when just 1 column in inline form
                 s3db.doc_document.file.label = ""
-                current.db.stats_resident_group.group_id.label = ""
+                current.db.stats_people_group.group_id.label = ""
     
                 # Custom Crud Form
                 crud_form = S3SQLCustomForm(
@@ -1375,7 +1379,7 @@ def customize_stats_resident(**attr):
                     "parameter_id",
                     "value",
                     S3SQLInlineComponent(
-                        "resident_group",
+                        "people_group",
                         label = T("Coalition"),
                         fields = ["group_id"],
                         multiple = False,
@@ -1404,7 +1408,7 @@ def customize_stats_resident(**attr):
 
     return attr
 
-settings.ui.customize_stats_resident = customize_stats_resident
+settings.ui.customize_stats_people = customize_stats_people
 
 #-----------------------------------------------------------------------------
 # Evacuation Routes
@@ -1506,17 +1510,25 @@ def customize_vulnerability_evac_route(**attr):
                     # Custom Widgets/Validators
                     from s3.s3validators import IS_LOCATION_SELECTOR2
                     from s3.s3widgets import S3LocationSelectorWidget2
+                    from s3layouts import S3AddResourceLink
 
                     table.location_id.label = "" # Gets replaced by widget
                     table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
                     table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
                                                                          polygons=True,
                                                                          )
-    
+
+
+                    table.hazard_id.comment = S3AddResourceLink(c="vulnerability",
+                                                                f="hazard",
+                                                                title=T("Add Hazard Type")),
+
                 # Hide Labels when just 1 column in inline form
                 s3db.doc_document.file.label = ""
                 current.db.vulnerability_evac_route_group.group_id.label = ""
-    
+
+
+
                 # Custom Crud Form
                 crud_form = S3SQLCustomForm(
                     "name",
@@ -1681,8 +1693,8 @@ def customize_vulnerability_risk(**attr):
                                                              hide_lx=False,
                                                              reverse_lx=True,
                                                              polygons=True,
-                                                             #show_address=True,
-                                                             #show_postcode=True,
+                                                             show_address=True,
+                                                             show_postcode=True,
                                                              )
     
                 # Hide Labels when just 1 column in inline form

@@ -3,17 +3,17 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Residents - CSV Import Stylesheet
+         People - CSV Import Stylesheet
 
          CSV fields:
-         Name.................................stats_resident.name
-         Type.................................stats_resident.parameter_id
-         Number...............................stats_resident.value
+         Name.................................stats_people.name
+         Type.................................stats_people.parameter_id
+         Number...............................stats_people.value
          Contact First Name...................person_id.first_name
          Contact Last Name....................person_id.first_name
          Contact Phone........................person_id -> pr_contact.value
          Contact Email........................person_id -> pr_contact.value
-         Organisation Group...................stats_resident_group.group_id  
+         Organisation Group...................stats_people_group.group_id  
          Address.................optional.....gis_location.addr_street
          Postcode................optional.....gis_location.addr_postcode
          Country.................optional.....gis_location.L0 Name or ISO2
@@ -22,7 +22,7 @@
          L3......................optional.....gis_location.L3
          Lat..................................gis_location.lat
          Lon..................................gis_location.lon
-         Comments.............................stats_resident.comments
+         Comments.............................stats_people.comments
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -60,7 +60,7 @@
                 <xsl:call-template name="OrganisationGroup"/>
             </xsl:for-each>
 
-            <!-- Residents -->
+            <!-- People -->
             <xsl:apply-templates select="table/row"/>
 
         </s3xml>
@@ -69,13 +69,13 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
 
-        <!-- Residents -->
-        <resource name="stats_resident">
+        <!-- People -->
+        <resource name="stats_people">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="value"><xsl:value-of select="col[@field='Number']"/></data>
             
             <xsl:if test="col[@field='Type']!=''">
-                <reference field="parameter_id" resource="stats_resident_type">
+                <reference field="parameter_id" resource="stats_people_type">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat('Type:', col[@field='Type'])"/>
                     </xsl:attribute>
@@ -111,7 +111,7 @@
 
             <!-- Organisation Group -->
             <xsl:if test="col[@field='Organisation Group']!=''">
-                <resource name="stats_resident_group">
+                <resource name="stats_people_group">
 	                <reference field="group_id" resource="org_group">
 	                    <xsl:attribute name="tuid">
 	                        <xsl:value-of select="concat('OrganisationGroup:', col[@field='Organisation Group'])"/>
@@ -152,7 +152,7 @@
         <xsl:variable name="Type" select="col[@field='Type']"/>
 
         <xsl:if test="$Type!=''">
-            <resource name="stats_resident_type">
+            <resource name="stats_people_type">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="concat('Type:', $Type)"/>
                 </xsl:attribute>
