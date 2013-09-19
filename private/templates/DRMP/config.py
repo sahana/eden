@@ -2269,7 +2269,9 @@ def customize_cms_post(**attr):
             
             field = table.body
             field.label = T("Description")
-            field.widget = None
+            # Plain text not Rich
+            from s3.s3widgets import s3_comments_widget
+            field.widget = s3_comments_widget
             #table.comments.readable = table.comments.writable = False
 
             if current.request.controller == "default":
@@ -3095,8 +3097,8 @@ def customize_org_office(**attr):
                 # L1s only
                 from s3.s3validators import IS_LOCATION_SELECTOR2
                 from s3.s3widgets import S3LocationSelectorWidget2
-                location_field.requires = IS_LOCATION_SELECTOR2(levels=["L1"])
-                location_field.widget = S3LocationSelectorWidget2(levels=["L1"],
+                location_field.requires = IS_LOCATION_SELECTOR2(levels=["L1", "L2"])
+                location_field.widget = S3LocationSelectorWidget2(levels=["L1", "L2"],
                                                                   show_address=True,
                                                                   show_map=False)
             s3.cancel = True
@@ -3639,6 +3641,8 @@ def customize_pr_person(**attr):
             image_field = s3db.pr_image.image
             image_field.label = ""
             # ImageCrop widget doesn't currently work within an Inline Form
+            from gluon.validators import IS_IMAGE
+            image_field.requires = IS_IMAGE()
             image_field.widget = None
 
             hr_fields = ["organisation_id",

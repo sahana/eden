@@ -1437,93 +1437,105 @@ S3OptionsFilter({
 
         db = current.db
         s3db = current.s3db
-        cache = s3db.cache
+        update_super = s3db.update_super
         otable = s3db.org_organisation
 
         resource, tree = data
 
         # Memberships
         elements = tree.getroot().xpath("/s3xml//resource[@name='auth_membership']/data[@field='pe_id']")
-        pe_values = set()
+        looked_up = dict(org_organisation = {})
         for element in elements:
             pe_string = element.text
 
             if pe_string and "=" in pe_string:
                 pe_type, pe_value =  pe_string.split("=")
-                if pe_value in pe_values:
+                pe_tablename, pe_field =  pe_type.split(".")
+                if pe_tablename in looked_up and \
+                   pe_value in looked_up[pe_tablename]:
+                    # Replace string with pe_id
+                    element.text = looked_up[pe_tablename][pe_value]["pe_id"]
                     # Don't check again
                     continue
-                else:
-                    pe_values.add(pe_value)
-                pe_tablename, pe_field =  pe_type.split(".")
 
                 if pe_tablename == "org_organisation":
                     table = otable
                 else:
                     table = s3db[pe_tablename]
-                record = db(table[pe_field] == pe_value).select(table.pe_id,
-                                                                #cache=cache,
+                    if pe_tablename not in looked_up:
+                        looked_up[pe_tablename] = {}
+                record = db(table[pe_field] == pe_value).select(table.id, # Stored for Org/Groups later
+                                                                table.pe_id,
                                                                 limitby=(0, 1)
                                                                 ).first()
-                if record:
-                    element.text = str(record.pe_id)
-                else:
+                if not record:
                     # Add a new record
                     id = table.insert(**{pe_field: pe_value})
-                    record = db(table._id == id).select(table._id,
-                                                        limitby=(0, 1)).first()
-                    s3db.update_super(table, record)
-                    element.text = str(record.pe_id)
+                    update_super(table, Storage(id=id))
+                    record = db(table.id == id).select(table.id,
+                                                       table.pe_id,
+                                                       limitby=(0, 1)).first()
+                new_value = str(record.pe_id)
+                # Replace string with pe_id
+                element.text = new_value
+                # Store in case we get called again with same value
+                looked_up[pe_tablename][pe_value] = dict(pe_id=new_value,
+                                                         id=str(record.id),
+                                                         )
 
         # Organisations
         elements = tree.getroot().xpath("/s3xml//resource[@name='auth_user']/data[@field='organisation_id']")
-        names = set()
+        orgs = looked_up["org_organisation"]
         for element in elements:
             name = element.text
-            if name in names:
-                continue
-            else:
+            if name in orgs:
+                # Replace string with id
+                element.text = orgs[name]["id"]
                 # Don't check again
-                names.add(name)
-            if name:
-                record = db(otable.name == name).select(otable.id,
-                                                        #cache=cache,
-                                                        limitby=(0, 1)
-                                                        ).first()
-                if record:
-                    element.text = str(record.id)
-                else:
-                    # Add a new record
-                    id = otable.insert(name=name)
-                    element.text = str(id)
-                    record = Storage(id=id)
-                    s3db.update_super(otable, record)
+                continue
+
+            record = db(otable.name == name).select(otable.id,
+                                                    limitby=(0, 1)
+                                                    ).first()
+            if record:
+                id = record.id
+            else:
+                # Add a new record
+                id = otable.insert(name=name)
+                update_super(otable, Storage(id=id))
+            # Replace string with id
+            id = str(id)
+            element.text = id
+            # Store in case we get called again with same value
+            orgs[name] = dict(id=id)
 
         # Organisation Groups
         elements = tree.getroot().xpath("/s3xml//resource[@name='auth_user']/data[@field='org_group_id']")
         if elements:
             gtable = s3db.org_group
-            names = set()
+            org_groups = looked_up.get("org_organisation_group", {})
             for element in elements:
                 name = element.text
-                if name in names:
+                if name in org_groups:
+                    # Replace string with id
+                    element.text = org_groups[name]["id"]
                     # Don't check again
                     continue
+
+                record = db(gtable.name == name).select(gtable.id,
+                                                        limitby=(0, 1)
+                                                        ).first()
+                if record:
+                    id = record.id
                 else:
-                    names.add(name)
-                if name:
-                    record = db(gtable.name == name).select(gtable.id,
-                                                            #cache=cache,
-                                                            limitby=(0, 1)
-                                                            ).first()
-                    if record:
-                        element.text = str(record.id)
-                    else:
-                        # Add a new record
-                        id = gtable.insert(name=name)
-                        element.text = str(id)
-                        record = Storage(id=id)
-                        s3db.update_super(gtable, record)
+                    # Add a new record
+                    id = gtable.insert(name=name)
+                    update_super(gtable, Storage(id=id))
+                # Replace string with id
+                id = str(id)
+                element.text = id
+                # Store in case we get called again with same value
+                org_groups[name] = dict(id=id)
 
     # =============================================================================
     @staticmethod
