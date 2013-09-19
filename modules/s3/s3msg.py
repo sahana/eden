@@ -1893,6 +1893,7 @@ class S3Compose(S3CRUD):
         """ Creates the form for composing the message """
 
         T = current.T
+        db = current.db
         s3db = current.s3db
         request = current.request
         vars = request.get_vars
@@ -1957,6 +1958,7 @@ class S3Compose(S3CRUD):
 
         pe_field = otable.pe_id
         pe_field.label = T("Recipient(s)")
+        pe_field.writable = True
         if recipients:
             # Tell onvalidation about them
             self.recipients = recipients
@@ -2001,7 +2003,7 @@ class S3Compose(S3CRUD):
                         redirect(url)
                     otable.pr_message_method.requires = IS_IN_SET(contact_method_opts,
                                                                   zero=None)
-                    if msg_contact_method not in contact_method_opts:
+                    if contact_method not in contact_method_opts:
                         otable.pr_message_method.default = contact_method_opts.popitem()[0]
                 #elif entity_type = "pr_group":
                     # @ToDo: Loop through members
@@ -2010,7 +2012,6 @@ class S3Compose(S3CRUD):
                 # - use pr_PersonEntityRepresent for bulk representation
                 represent = T("%(count)s Recipients") % dict(count=len(recipients))
         else:
-            pe_field.writable = True
             if recipient_type:
                 # Filter by Recipient Type
                 pe_field.requires = IS_ONE_OF(db,
