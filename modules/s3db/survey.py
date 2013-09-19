@@ -473,12 +473,6 @@ class S3SurveyTemplateModel(S3Model):
             template = "template_id" in data and data.template_id
             query = (table.name == name) & \
                     (table.template_id == template)
-            posn = "posn" in data and data.posn
-            query = query & (table.posn == 0)
-            record = current.db(query).select(table.posn,
-                                              limitby=(0, 1)).first()
-            if not record:
-                query = query & (table.posn == posn)
             return duplicator(job, query)
 
 # =============================================================================
