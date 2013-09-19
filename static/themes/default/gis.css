@@ -83,7 +83,8 @@ form .map_loader {
 .map_legend_panel {
     background-color: #FBFBFB;
     border: solid;
-    border-radius: 5px 5px 5px 5px;
+    border-right: none;
+    border-radius: 5px 0 5px 5px;
     padding: 1px;
     margin: 0 0 20px; /* Ref'd in hideLegend & showLegend in gis.js */
     width: auto;
@@ -95,14 +96,15 @@ form .map_loader {
     float: left;
     background-color: #FBFBFB;
     border: solid;
+    border-right: none;
     border-width: 2px;
     border-right-width: 0;
-    border-radius: 3px 3px 3px 3px;
-    margin-right: -1px;
+    border-radius: 3px 0 3px 3px;
+    margin-right: -6px;
     margin-left: -12px;
     margin-top: 5px;
     padding-left: 2px;
-    padding-right: 2px;
+    padding-right: 3px;
     font-family: FontAwesome;
     font-weight: normal;
     font-style: normal;

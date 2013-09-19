@@ -4,6 +4,6 @@ Name,Height,Width,Image
 "evac_route",34,22,"gis_marker.image.CRMT_Evac_Route.png"
 "facility",34,22,"gis_marker.image.CRMT_Facility.png"
 "incident",34,22,"gis_marker.image.CRMT_Incident.png"
-"resident",34,22,"gis_marker.image.CRMT_Resident.png"
+"people",34,22,"gis_marker.image.CRMT_People.png"
 "risk",34,22,"gis_marker.image.CRMT_Risk.png"
 "trained",34,22,"gis_marker.image.CRMT_Trained.png"

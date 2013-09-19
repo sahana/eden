@@ -73,7 +73,7 @@ h2.summary {
 
 #summary-tabs #table,
 #summary-tabs #charts {
-    padding: 0 20px 20px 20px;
+    padding: 132px 20px 20px 20px;
 }
 
 #summary-2_filter {
@@ -83,7 +83,7 @@ h2.summary {
 /* Hide the colons for Location Selectors before JS can hide */
 .form-container #org_facility_location_id__label,
 .form-container #project_activity_location_id__label,
-.form-container #stats_resident_location_id__label,
+.form-container #stats_people_location_id__label,
 .form-container #vulnerability_evac_route_location_id__label,
 .form-container #vulnerability_risk_location_id__label {
     display: none;
@@ -244,10 +244,6 @@ form#summary-filter-form
 /* Saved Filters Page - Inline Editor for Filter Titles */
 form.jeditable-input input {
     max-width: 400px !important;
-}
-
-#summary-sections {
-    padding-top: 132px;
 }
 
 .pt-form legend {

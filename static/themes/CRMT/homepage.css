@@ -55,13 +55,13 @@ p {
 .intro h3 {
     font-size: 20px;
     line-height: 25px;
-    padding-top: 20px;
+    padding-top: 25px;
     margin-bottom: 5px;
 }
 .intro p {
     font-size: 14px;
     font-weight: 800;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
 }
 
 .updates,
@@ -118,8 +118,16 @@ p {
     margin: 0;
 }
 
-.map {
+.map-btn {
+    float: right;
+    position: relative;
+    z-index:1;
+    margin: 15px
+}
+
+div.map {
     overflow: auto;
+    margin-top: -65px
 }
 
 .community-data {
