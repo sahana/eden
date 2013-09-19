@@ -308,7 +308,7 @@ div.form-container form fieldset input.errorfield {
 .action-btn,
 .delete-btn-ajax,
 .delete-btn {
-    color: #fff;
+    color: #fff !important;
     background-color: #590f12;
     border: #c6bea7;
     border-bottom: #164b8b;

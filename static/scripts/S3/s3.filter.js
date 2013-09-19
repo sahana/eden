@@ -147,12 +147,13 @@ S3.search = {};
         });
 
         // Options widgets
-        form.find('.ui-multiselect:visible').prev(
-                  '.options-filter.multiselect-filter-widget,' +
+        form.find('.s3-groupedopts-widget:visible').prev(
                   '.options-filter.groupedopts-filter-widget')
         .add(
+        form.find('.ui-multiselect:visible').prev(
+                  '.options-filter.multiselect-filter-widget'))
+        .add(
         form.find('.options-filter:visible,' +
-                  '.options-filter.groupedopts-filter-widget.active,' +
                   '.options-filter.multiselect-filter-widget.active,' +
                   '.options-filter.multiselect-filter-bootstrap.active'))
         .each(function() {
@@ -362,12 +363,13 @@ S3.search = {};
         });
 
         // Options widgets
-        form.find('.ui-multiselect:visible').prev(
-                  '.options-filter.multiselect-filter-widget,' +
+        form.find('.s3-groupedopts-widget:visible').prev(
                   '.options-filter.groupedopts-filter-widget')
         .add(
+        form.find('.ui-multiselect:visible').prev(
+                  '.options-filter.multiselect-filter-widget'))
+        .add(
         form.find('.options-filter:visible,' +
-                  '.options-filter.groupedopts-filter-widget.active,' +
                   '.options-filter.multiselect-filter-widget.active,' +
                   '.options-filter.multiselect-filter-bootstrap.active'))
         .each(function() {
@@ -926,7 +928,9 @@ S3.search = {};
                 // Update all just-unhidden widgets which have pending updates
                 updatePendingTargets(form);
             }
-        }).show();
+        }).css({visibility: 'visible'});
+        // Activate not called? Unhide initial section anyway:
+        $('.ui-tabs-panel[aria-hidden="false"]').first().removeClass('hide');
     };
 
     /**

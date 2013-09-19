@@ -37,11 +37,43 @@ def human_resource():
     tablename = "hrm_human_resource"
     table = s3db[tablename]
 
-    # Default to Staff
-    _type = table.type
-    s3.filter = (_type == 1)
 
     def prep(r):
+        if r.method == "summary":
+            # Experimental
+            from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
+            settings.ui.filter_auto_submit=750
+            settings.ui.report_auto_submit=750
+            s3.crud_strings["hrm_human_resource"]["title_list"] = T("Staff & Volunteers")
+            s3db.configure("hrm_human_resource",
+                           summary=[{"name": "table",
+                                     "label": "Table",
+                                     "widgets": [{"method": "datatable"}]
+                                    },
+                                    {"name": "report",
+                                     "label": "Report",
+                                     "widgets": [{"method": "report2",
+                                                  "ajax_init": True}]
+                                    },
+                                    {"name": "map",
+                                     "label": "Map",
+                                     "widgets": [{"method": "map",
+                                                  "ajax_init": True}],
+                                    },
+                            ],
+                            filter_widgets = [
+                                    S3TextFilter(["person_id$first_name",
+                                                  "person_id$last_name"]),
+                                    S3OptionsFilter("type"),
+                                    S3OptionsFilter("organisation_id",
+                                                    widget="multiselect"),
+                            ]
+            )
+            s3.filter = None
+        else:
+            # Default to Staff
+            type_filter = s3base.S3FieldSelector("type") == 1
+            r.resource.add_filter(type_filter)
         if r.method in ("form", "lookup"):
             return True
         if r.interactive:
@@ -92,7 +124,7 @@ def human_resource():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller()
+    output = s3_rest_controller(hide_filter=False)
     return output
 
 # -----------------------------------------------------------------------------

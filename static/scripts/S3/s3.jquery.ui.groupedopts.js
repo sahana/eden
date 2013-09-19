@@ -55,17 +55,16 @@
             }
             this.selected = el.val();
 
-            var classes = el.attr('class');
             var groups = el.find('optgroup'), i;
             if (groups.length) {
                 this.grouped = true;
-                this.menu = $('<div class="s3-groupedopts-widget ' + classes + '"/>');
+                this.menu = $('<div class="s3-groupedopts-widget"/>');
                 for (i=0; i<groups.length; i++) {
                     this._renderGroup(groups[i]);
                 }
             } else {
                 this.grouped = false;
-                this.menu = $('<table class="s3-groupedopts-widget ' + classes + '"/>');
+                this.menu = $('<table class="s3-groupedopts-widget"/>');
                 var items = el.find('option');
                 this._renderRows(items, this.menu);
             }
