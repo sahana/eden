@@ -74,8 +74,12 @@ p {
 }
 
 .updates {
-    padding-top: 5px;
+    padding: 5px 0;
 }
+.updates .dl-item {
+    float: none;
+}
+
 .updates p {
     font-size: 14px;
     line-height: 16px;
