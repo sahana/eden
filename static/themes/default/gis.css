@@ -35,15 +35,12 @@ form .map_loader {
 .gis_coord_wrap .decimal {
     width: 174px;
 }
-
 .gis_coord_wrap .gis_coord_dms input {
     width: 37px;
 }
-
 .gis_coord_wrap .gis_coord_dms input.seconds {
     width: 70px;
 }
-
 .gis_coord_wrap div {
     padding-top: 8px;
 }
@@ -129,7 +126,6 @@ form .map_loader {
 div.map_legend_panel  div.x-panel-header-noborder {
     border: none;
 }
-
 
 .gis_legend_title {
     font-weight: bold;

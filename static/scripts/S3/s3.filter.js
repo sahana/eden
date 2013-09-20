@@ -222,7 +222,7 @@ S3.search = {};
         form.find('.date-filter-input:visible').each(function() {
             $this = $(this);
             id = $this.attr('id');
-            url_var = $('#' + id + '-data').val(), dt, dtstr;
+            url_var = $('#' + id + '-data').val();
             value = $this.val();
             var pad = function (val, len) {
                 val = String(val);
@@ -238,6 +238,7 @@ S3.search = {};
                        pad(dt.getMinutes(), 2) + ':' +
                        pad(dt.getSeconds(), 2);
             };
+            var dt, dtstr;
             if (value) {
                 if ($this.hasClass('datetimepicker')) {
                     if ($this.hasClass('hide-time')) {

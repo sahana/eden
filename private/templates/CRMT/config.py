@@ -616,11 +616,13 @@ def customize_project_activity(**attr):
                 report_options = Storage(
                     rows=report_fields,
                     cols=report_fields,
-                    fact=report_fields,
+                    fact=["count(name)"],
                     defaults=Storage(rows="activity_group.group_id",
                                      cols="activity.activity_type_id",
-                                     fact="count(activity.name)",
-                                     totals=True
+                                     fact="count(name)",
+                                     totals=True,
+                                     chart = "breakdown:cols",
+                                     table = "collapse",
                                      )
                     )
 
@@ -744,9 +746,6 @@ def customize_org_organisation(**attr):
     s3 = current.response.s3
     standard_prep = s3.prep
 
-    #No Summary Map for Organisations
-    settings.ui.summary = settings.ui.summary[:3]
-
     def custom_prep(r):
         # Call standard prep
         if callable(standard_prep):
@@ -813,13 +812,13 @@ def customize_org_organisation(**attr):
                 report_options = Storage(
                     rows = report_fields,
                     cols = report_fields,
-                    fact = report_fields,
+                    fact = ["count(name)"],
                     defaults = Storage(rows = "service_organisation.service_id",
                                        cols = "sector_organisation.sector_id",
                                        fact = "count(name)",
                                        totals = True,
                                        chart = "breakdown:cols",
-                                       table = "collapse"
+                                       table = "collapse",
                                        )
                     )
 
@@ -830,6 +829,8 @@ def customize_org_organisation(**attr):
                                filter_widgets = filter_widgets,
                                filter_formstyle = filter_formstyle,
                                report_options = report_options,
+                               # No Map for Organisations
+                               summary = [s for s in settings.ui.summary if s["name"] != "map"],
                                )
 
             else:
@@ -1115,11 +1116,13 @@ def customize_org_facility(**attr):
                 report_options = Storage(
                     rows=report_fields,
                     cols=report_fields,
-                    fact=report_fields,
+                    fact=["count(name)"],
                     defaults=Storage(rows="site_org_group.group_id",
                                      cols="site_facility_type.facility_type_id",
-                                     fact="count(facility.name)",
-                                     totals=True
+                                     fact="count(name)",
+                                     totals=True,
+                                     chart = "breakdown:cols",
+                                     table = "collapse",
                                      )
                     )
 
@@ -1233,9 +1236,6 @@ def customize_stats_people(**attr):
 
     request = current.request
 
-    #No Summary Map for People
-    settings.ui.summary = settings.ui.summary[:3]
-
     if "summary" in request.args:
         # Default the Coalition Filter
         auth = current.auth
@@ -1325,11 +1325,13 @@ def customize_stats_people(**attr):
                 report_options = Storage(
                     rows=report_fields,
                     cols=report_fields,
-                    fact=report_fields,
+                    fact=["sum(value)"],
                     defaults=Storage(rows="people_group.group_id",
                                      cols="people.parameter_id",
-                                     fact="sum(people.value)",
-                                     totals=True
+                                     fact="sum(value)",
+                                     totals=True,
+                                     chart = "breakdown:cols",
+                                     table = "collapse",
                                      )
                     )
 
@@ -1340,6 +1342,8 @@ def customize_stats_people(**attr):
                                filter_widgets = filter_widgets,
                                filter_formstyle = filter_formstyle,
                                report_options = report_options,
+                               # No Map for People
+                               summary = [s for s in settings.ui.summary if s["name"] != "map"],
                                )
             else:
                 # Custom Form (Read/Create/Update)
@@ -1500,11 +1504,13 @@ def customize_vulnerability_evac_route(**attr):
                 report_options = Storage(
                     rows=report_fields,
                     cols=report_fields,
-                    fact=report_fields,
+                    fact=["count(name)"],
                     defaults=Storage(rows="evac_route_group.group_id",
                                      cols="evac_route.hazard_id",
-                                     fact="count(evac_route.name)",
-                                     totals=True
+                                     fact="count(name)",
+                                     totals=True,
+                                     chart = "breakdown:cols",
+                                     table = "collapse",
                                      )
                     )
 
@@ -1672,11 +1678,13 @@ def customize_vulnerability_risk(**attr):
                 report_options = Storage(
                     rows=report_fields,
                     cols=report_fields,
-                    fact=report_fields,
+                    fact=["count(name)"],
                     defaults=Storage(rows="risk_group.group_id",
                                      cols="risk.hazard_id",
-                                     fact="count(risk.name)",
-                                     totals=True
+                                     fact="count(name)",
+                                     totals=True,
+                                     chart = "breakdown:cols",
+                                     table = "collapse",
                                      )
                     )
 
