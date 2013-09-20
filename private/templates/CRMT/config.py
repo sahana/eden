@@ -762,6 +762,10 @@ def customize_org_organisation(**attr):
             current.s3db.org_facility.location_id.requires = None
 
         elif r.method == "summary" or r.representation == "aadata":
+            #No Summary Map for Organisations
+            s3db.configure(tablename, summary = [s for s in settings.ui.summary 
+                                                   if s["name"] != "map"])
+
             # Modify list_fields
             list_fields = ["id",
                            "name",
@@ -1263,6 +1267,10 @@ def customize_stats_people(**attr):
         table.location_id.writable = False
 
         if r.method == "summary" or r.representation == "aadata":
+            #No Summary Map for People
+            s3db.configure(tablename, summary = [s for s in settings.ui.summary 
+                                                   if s["name"] != "map"])
+
             # Modify list_fields
             list_fields = ["id",
                            "name",
