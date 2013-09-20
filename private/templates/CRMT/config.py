@@ -959,8 +959,9 @@ def facility_onaccept(form):
 
     # Check if we already have a Coalition
     db = current.db
+    s3db = current.s3db
     site_id = form.vars.site_id
-    ltable = current.s3db.org_site_org_group
+    ltable = s3db.org_site_org_group
     exists = db(ltable.site_id == site_id).select(ltable.id, limitby=(0, 1))
     if not exists:
         # Have we got a LatLon?
@@ -979,6 +980,7 @@ def facility_onaccept(form):
                         (ctable.location_id == gtable.id)
                 polygons = db(query).select(ctable.id,
                                             gtable.wkt,
+                                            cache=s3db.cache,
                                             )
                 match = False
                 from shapely.geometry import point

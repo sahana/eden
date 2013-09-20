@@ -508,7 +508,6 @@ def survey_template_rheader(r, tabs=[]):
 
             T = current.T
             s3db = current.s3db
-            request = current.request
 
             # Tabs
             tabs = [(T("Basic Details"), "read"),
@@ -521,10 +520,11 @@ def survey_template_rheader(r, tabs=[]):
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
-            sectionTable = s3db["survey_section"]
-            qlistTable = s3db["survey_question_list"]
-            if "vars" in request and "viewing" in request.vars:
-                dummy, template_id = request.vars.viewing.split(".")
+            sectionTable = s3db.survey_section
+            qlistTable = s3db.survey_question_list
+            viewing = current.request.get_vars.get("viewing", None)
+            if viewing:
+                dummy, template_id = viewing.split(".")
             else:
                 template_id = r.id
 
@@ -1769,12 +1769,13 @@ class S3SurveySeriesModel(S3Model):
             output["help"] = ""
         else:
             crud_strings = s3.crud_strings["survey_series"]
-            if "viewing" in request.vars:
-                dummy, series_id = request.vars.viewing.split(".")
-            elif "series" in request.vars:
-                series_id = request.vars.series
+            viewing = request.get_vars.get("viewing", None)
+            if viewing:
+                dummy, series_id = viewing.split(".")
             else:
-                series_id = r.id
+                series_id = request.get_vars.get("series", None)
+                if not seried_id:
+                    series_id = r.id
             form = buildSeriesSummary(series_id, posn_offset)
             output["items"] = form
             output["sortby"] = [[0, "asc"]]
@@ -2071,12 +2072,13 @@ $('#chart_btn').click(function(){
         else:
             output = dict()
         crud_strings = s3.crud_strings["survey_series"]
-        if "viewing" in request.vars:
-            dummy, series_id = request.vars.viewing.split(".")
-        elif "series" in request.vars:
-            series_id = request.vars.series
+        viewing = request.get_vars.get("viewing", None)
+        if viewing:
+            dummy, series_id = viewing.split(".")
         else:
-            series_id = r.id
+            series_id = request.get_vars.get("series", None)
+            if not series_id:
+                series_id = r.id
         if series_id == None:
             seriesList = []
             append = seriesList.append
@@ -2085,11 +2087,8 @@ $('#chart_btn').click(function(){
                 append(row.id)
         else:
             seriesList = [series_id]
-        pqstn_name = None
         pqstn = {}
-        if "post_vars" in request and \
-           "pqstn_name" in request.post_vars:
-            pqstn_name = request.post_vars.pqstn_name
+        pqstn_name = request.post_vars.get("pqstn_name", None)
         if pqstn_name is None:
             pqstn = survey_getPriorityQuestionForSeries(series_id)
             if "name" in pqstn:

@@ -3374,10 +3374,9 @@ def req_match():
 
     output = dict()
 
-    if "viewing" not in request.vars:
+    viewing = request.get_vars.get("viewing", None)
+    if not viewing:
         return output
-    else:
-        viewing = request.vars.viewing
     if "." in viewing:
         tablename, id = viewing.split(".", 1)
     else:

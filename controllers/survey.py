@@ -161,8 +161,8 @@ def templateRead():
     """
     """
 
-    if "vars" in request and len(request.vars) > 0:
-        dummy, template_id = request.vars.viewing.split(".")
+    if len(request.get_vars) > 0:
+        dummy, template_id = request.get_vars.viewing.split(".")
     else:
         template_id = request.args[0]
 
@@ -201,8 +201,8 @@ def templateSummary():
 
     def postp(r, output):
         if r.interactive:
-            if "vars" in request and len(request.vars) > 0:
-                dummy, template_id = request.vars.viewing.split(".")
+            if len(request.get_vars) > 0:
+                dummy, template_id = request.get_vars.viewing.split(".")
             else:
                 template_id = r.id
             form = s3db.survey_build_template_summary(template_id)
@@ -363,13 +363,13 @@ def series():
             if r.method == "update":
                 if r.http == "GET":
                     form = s3db.survey_buildQuestionnaireFromSeries(r.id,
-                                                                  r.component_id)
+                                                                    r.component_id)
                     output["form"] = form
                 elif r.http == "POST":
-                    if "post_vars" in request and len(request.post_vars) > 0:
+                    if len(request.post_vars) > 0:
                         id = s3db.survey_save_answers_for_series(r.id,
-                                                               r.component_id, # Update
-                                                               request.post_vars)
+                                                                 r.component_id, # Update
+                                                                 request.post_vars)
                         response.confirmation = \
                             s3.crud_strings["survey_complete"].msg_record_modified
             else:
@@ -512,8 +512,8 @@ def series_export_formatted():
 
     # Get the translation dictionary
     langDict = dict()
-    if "translationLanguage" in request.post_vars:
-        lang = request.post_vars.translationLanguage
+    lang = request.post_vars.get("translationLanguage", None)
+    if lang:
         if lang == "Default":
             langDict = dict()
         else:
@@ -1123,19 +1123,21 @@ def newAssessment():
 
     def prep(r):
         if r.interactive:
-            if "viewing" in request.vars:
-                dummy, series_id = request.vars.viewing.split(".")
-            elif "series" in request.vars:
-                series_id = request.vars.series
+            viewing = request.get_vars.get("viewing", None)
+            if viewing:
+                dummy, series_id = viewing.split(".")
             else:
+                series_id = request.get_vars.get("series", None)
+
+            if not series_id:
                 series_id = r.id
-            if series_id == None:
+            if series_id is None:
                 # The URL is bad, without a series id we're lost so list all series
                 redirect(URL(c="survey", f="series", args=[], vars={}))
-            if "post_vars" in request and len(request.post_vars) > 0:
+            if len(request.post_vars) > 0:
                 id = s3db.survey_save_answers_for_series(series_id,
-                                                       None, # Insert
-                                                       request.post_vars)
+                                                         None, # Insert
+                                                         request.post_vars)
                 response.confirmation = \
                     s3.crud_strings["survey_complete"].msg_record_created
             r.method = "create"
@@ -1144,13 +1146,16 @@ def newAssessment():
 
     def postp(r, output):
         if r.interactive:
-            if "viewing" in request.vars:
-                dummy, series_id = request.vars.viewing.split(".")
-            elif "series" in request.vars:
-                series_id = request.vars.series
+            # Not sure why we need to repeat this & can't do it outside the prep/postp
+            viewing = request.get_vars.get("viewing", None)
+            if viewing:
+                dummy, series_id = viewing.split(".")
             else:
+                series_id = request.get_vars.get("series", None)
+
+            if not series_id:
                 series_id = r.id
-            if output["form"] == None:
+            if output["form"] is None:
                 # The user is not authorised to create so switch to read
                 redirect(URL(c="survey", f="series",
                              args=[series_id, "read"],
@@ -1195,8 +1200,9 @@ def complete():
 
     series_id = None
     try:
-        if "viewing" in request.vars:
-            dummy, series_id = request.vars.viewing.split(".")
+        viewing = request.get_vars.get("viewing", None)
+        if viewing:
+            dummy, series_id = viewing.split(".")
             series_name = s3.survey_getSeriesName(series_id)
         if series_name != "":
             csv_extra_fields = [dict(label="Series", value=series_name)]

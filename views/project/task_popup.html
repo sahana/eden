@@ -1,9 +1,8 @@
 {{extend "layout.html"}}
 {{include "_popup.html"}}
-{{if "caller" in request.vars:}}
+{{caller = request.get_vars.get("caller", None)}}{{if caller and "irs_ireport" in caller:}}
 <script type="text/javascript">//<![CDATA[
 $(function() {
-  {{if "irs_ireport" in request.vars.caller:}}
     // If coming from an Incident then pre-populate fields
     var subject = self.parent.$('#irs_ireport_name').val();
     $('#project_task_subject').val(subject);
@@ -21,7 +20,6 @@ $(function() {
         // - but this isn't possible unless the parent record is saved, which is currently doesn't need to be
         $('[id*=location]').hide()
     }
-  {{pass}}
 });
 //]]></script>
 {{pass}}
