@@ -76,6 +76,7 @@ form .map_loader {
     bottom: 0;
     right: 0;
 }
+
 .map_legend_div.fullscreen {
     z-index: 9100;
     margin-bottom: -600px;
@@ -84,7 +85,7 @@ form .map_loader {
     background-color: #FBFBFB;
     border: solid;
     border-right: none;
-    border-radius: 5px 0 5px 5px;
+    border-radius: 5px 0 0 5px;
     padding: 1px;
     margin: 0 0 20px; /* Ref'd in hideLegend & showLegend in gis.js */
     width: auto;
@@ -124,9 +125,17 @@ form .map_loader {
     /* http://fortawesome.github.io/Font-Awesome/icon/double-angle-right/ */
     content: "\f101";
 }
+
+div.map_legend_panel  div.x-panel-header-noborder {
+    border: none;
+}
+
+
 .gis_legend_title {
     font-weight: bold;
+    margin-top: 10px;
 }
+
 .gis_legend_desc {
     max-width: 200px;
 }
@@ -137,10 +146,10 @@ form .map_loader {
     position: absolute;
     top: 0;
     right: 0;
-    margin: 0;
+    margin: 10px 0;
     padding: 5px;
     border: solid;
-    border-radius: 5px 5px 5px 5px;
+    border-radius: 5px 0 0 5px;
     /*width: 210px;*/
     width: auto;
 }
@@ -154,6 +163,7 @@ form .map_loader {
 .map_save_button {
     background-color: #FBFBFB;
     padding: 5px;
+    margin-right: 10px;
     border: solid;
     border-radius: 5px 5px 5px 5px;
     float: right;

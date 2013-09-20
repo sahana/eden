@@ -743,6 +743,10 @@ def customize_org_organisation(**attr):
     # Custom PreP
     s3 = current.response.s3
     standard_prep = s3.prep
+
+    #No Summary Map for Organisations
+    settings.ui.summary = settings.ui.summary[:3]
+
     def custom_prep(r):
         # Call standard prep
         if callable(standard_prep):
@@ -1228,6 +1232,10 @@ def customize_stats_people(**attr):
     """
 
     request = current.request
+
+    #No Summary Map for People
+    settings.ui.summary = settings.ui.summary[:3]
+
     if "summary" in request.args:
         # Default the Coalition Filter
         auth = current.auth
@@ -1339,7 +1347,7 @@ def customize_stats_people(**attr):
                 if r.method in ("create", "update"):
                     # Custom Widgets/Validators
                     widgets = True
-                    #from s3.s3validators import IS_ADD_PERSON_WIDGET2, IS_LOCATION_SELECTOR2
+                    from s3.s3validators import IS_ADD_PERSON_WIDGET2, IS_LOCATION_SELECTOR2
                     from s3.s3widgets import S3AddPersonWidget2, S3LocationSelectorWidget2
                 else:
                     widgets = False
