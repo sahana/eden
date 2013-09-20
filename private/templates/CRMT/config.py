@@ -11,6 +11,8 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
+from s3.s3utils import s3_avatar_represent
+
 T = current.T
 settings = current.deployment_settings
 
@@ -1745,6 +1747,173 @@ def customize_vulnerability_risk(**attr):
     return attr
 
 settings.ui.customize_vulnerability_risk = customize_vulnerability_risk
+
+#-----------------------------------------------------------------------------
+# Site Activity Log
+# -----------------------------------------------------------------------------
+def render_log(listid, resource, rfields, record, **attr):
+    """
+        Custom dataList item renderer for 'Site Activity Logs' on the Home page
+
+        @param listid: the HTML ID for this list
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+        @param attr: additional HTML attributes for the item
+    """
+
+    pkey = "s3_audit.id"
+
+    # Construct the item ID
+    if pkey in record:
+        record_id = record[pkey]
+        item_id = "%s-%s" % (listid, record_id)
+    else:
+        # template
+        item_id = "%s-[id]" % listid
+
+    #item_class = "thumbnail"
+    item_class = ""
+
+    raw = record._row
+    author = record["s3_audit.user_id"]
+    author_id = raw["s3_audit.user_id"]
+    method = raw["s3_audit.method"]
+    tablename = raw["s3_audit.tablename"]
+    record_id = raw["s3_audit.record_id"]
+
+    T = current.T
+    db = current.db
+    s3db = current.s3db
+
+    if tablename == "pr_filter":
+        label = T("Saved Filters")
+        url = URL(c="default", f="index", args=["filters"])
+        if method == "create":
+            body = T("Saved a Filter")
+        elif method == "update":
+            body = T("Updated a Filter")
+    else:
+        table = s3db[tablename]
+        row = db(table.id == record_id).select(table.name,
+                                               limitby=(0, 1)
+                                               ).first()
+        if row:
+            label = row.name or ""
+        else:
+            label = ""
+        c, f = tablename.split("_")
+        url = URL(c=c, f=f, args=[record_id, "read"])
+        if tablename == "org_facility":
+            if method == "create":
+                body = T("Added a Place")
+            elif method == "update":
+                body = T("Edited a Place")
+        elif tablename == "org_organisation":
+            if method == "create":
+                body = T("Added an Organization")
+            elif method == "update":
+                body = T("Edited an Organization")
+        elif tablename == "project_activity":
+            if method == "create":
+                body = T("Added an Activity")
+            elif method == "update":
+                body = T("Edited an Activity")
+        elif tablename == "stats_people":
+            if method == "create":
+                body = T("Added People")
+            elif method == "update":
+                body = T("Edited People")
+        elif tablename == "vulnerability_evac_route":
+            if method == "create":
+                body = T("Added an Evacuation Route")
+            elif method == "update":
+                body = T("Edited an Evacuation Route")
+        elif tablename == "vulnerability_risk":
+            if method == "create":
+                body = T("Added a Hazard")
+            elif method == "update":
+                body = T("Edited a Hazard")
+        elif tablename == "gis_config":
+            if method == "create":
+                body = T("Saved a Map")
+            elif method == "update":
+                body = T("Updated a Map")
+
+    body = P(body,
+             BR(),
+             A(label,
+               _href=url),
+             )
+
+    # @ToDo: Optimise by not doing DB lookups (especially duplicate) within render, but doing these in the bulk query
+    avatar = s3_avatar_represent(author_id,
+                                 _class="media-object",
+                                 _style="width:50px;padding:5px;padding-top:0px;")
+    ptable = s3db.pr_person
+    ltable = db.pr_person_user
+    query = (ltable.user_id == author_id) & \
+            (ltable.pe_id == ptable.pe_id)
+    row = db(query).select(ptable.id,
+                           limitby=(0, 1)
+                           ).first()
+    if row:
+        person_url = URL(c="pr", f="person", args=[row.id])
+    else:
+        person_url = "#"
+    author = A(author,
+               _href=person_url,
+               )
+    avatar = A(avatar,
+               _href=person_url,
+               _class="pull-left",
+               )
+
+    # Render the item
+    item = DIV(DIV(avatar,
+  		           DIV(H5(author,
+                          _class="media-heading"),
+                       body,
+                       _class="media-body",
+                       ),
+                   _class="media",
+                   ),
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
+
+# For access from custom controllers
+current.response.s3.render_log = render_log
+
+# -----------------------------------------------------------------------------
+def customize_s3_audit(**attr):
+    """
+        Customize s3_audit controller
+    """
+
+    from s3.s3utils import s3_auth_user_represent_name
+    current.db.s3_audit.user_id.represent = s3_auth_user_represent_name
+
+    from s3.s3resource import S3FieldSelector
+    current.response.s3.filter = (S3FieldSelector("~.method") != "delete")
+
+    tablename = "s3_audit"
+    current.s3db.configure(tablename,
+                           list_layout = render_log,
+                           orderby = "s3_audit.timestmp desc",
+                           list_fields = ["id",
+                                          "method",
+                                          "user_id",
+                                          "tablename",
+                                          "record_id",
+                                          ],
+                           )
+
+    return attr
+
+settings.ui.customize_s3_audit = customize_s3_audit
 
 # =============================================================================
 # Template Modules

@@ -1144,16 +1144,17 @@ class S3OptionsFilter(S3FilterWidget):
                     filter = opts.get("filter", False),
                     header = opts.get("header", False),
                     selectedList = opts.get("selectedList", 3))
-        elif widget_type == "radio":
-            widget_class = "radio-filter-widget"
-            w = S3RadioOptionsWidget(options = options,
-                                     cols = opts["cols"],
-                                     help_field = opts["help_field"],
-                                     )
+        # Radio is just GroupedOpts with multiple=False
+        #elif widget_type == "radio":
+        #    widget_class = "radio-filter-widget"
+        #    w = S3RadioOptionsWidget(options = options,
+        #                             cols = opts["cols"],
+        #                             help_field = opts["help_field"],
+        #                             )
         else:
             widget_class = "groupedopts-filter-widget"
             w = S3GroupedOptionsWidget(options = options,
-                                       multiple = True,
+                                       multiple = opts.get("multiple", True),
                                        cols = opts["cols"],
                                        size = opts["size"] or 12,
                                        help_field = opts["help_field"],

@@ -1774,7 +1774,7 @@ class S3SurveySeriesModel(S3Model):
                 dummy, series_id = viewing.split(".")
             else:
                 series_id = request.get_vars.get("series", None)
-                if not seried_id:
+                if not series_id:
                     series_id = r.id
             form = buildSeriesSummary(series_id, posn_offset)
             output["items"] = form

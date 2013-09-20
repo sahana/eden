@@ -18,32 +18,25 @@ from gluon.html import *
 from s3.s3filter import S3FilterForm, S3FilterString, S3OptionsFilter
 from s3.s3resource import S3FieldSelector, S3URLQuery
 from s3.s3summary import S3Summary
-from s3.s3utils import s3_auth_user_represent_name, s3_avatar_represent, S3CustomController
+from s3.s3utils import s3_auth_user_represent_name, S3CustomController
 
 THEME = "CRMT"
 
 # =============================================================================
-class index():
+class index(S3CustomController):
     """ Custom Home Page """
 
     def __call__(self):
 
-        request = current.request
-        response = current.response
-        output = {}
-        output["title"] = response.title = current.deployment_settings.get_system_name()
-        view = path.join(request.folder, "private", "templates",
-                         THEME, "views", "index.html")
-        try:
-            # Pass view as file not str to work in compiled mode
-            response.view = open(view, "rb")
-        except IOError:
-            from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
-
         T = current.T
         db = current.db
         s3db = current.s3db
+        request = current.request
+        response = current.response
+        s3 = response.s3
+
+        output = {}
+        output["title"] = response.title = current.deployment_settings.get_system_name()
 
         # Map
         auth = current.auth
@@ -82,21 +75,11 @@ for(var i=0,len=layers.length;i<len;i++){
                                    )
         output["map"] = map
 
-        # Button to go full-screen
-        #fullscreen = A(I(_class="icon icon-fullscreen"),
-        #               _href=URL(c="gis", f="map_viewing_client"),
-        #               _class="gis_fullscreen_map-btn fright",
-        #               # If we need to support multiple maps on a page
-        #               #_map="default",
-        #               _title=T("View full screen"),
-        #               )
-
-        #output["fullscreen"] = fullscreen
-        #if debug:
-        #    script = "/%s/static/scripts/S3/s3.gis.fullscreen.js" % appname
-        #else:
-        #    script = "/%s/static/scripts/S3/s3.gis.fullscreen.min.js" % appname
-        #scripts_append(script)
+        # Description of available Modules
+        from s3db.cms import S3CMS
+        for item in response.menu:
+            item["cms"] = S3CMS.resource_content(module = item["c"], 
+                                                 resource = item["f"])
 
         # Site Activity Log
         resource = s3db.resource("s3_audit")
@@ -108,6 +91,7 @@ for(var i=0,len=layers.length;i<len;i++){
                        "tablename",
                        "record_id",
                        ]
+        #current.deployment_settings.ui.customize_s3_audit()
         db.s3_audit.user_id.represent = s3_auth_user_represent_name
         listid = "log"
         datalist, numrows, ids = resource.datalist(fields=list_fields,
@@ -115,7 +99,7 @@ for(var i=0,len=layers.length;i<len;i++){
                                                    limit=4,
                                                    listid=listid,
                                                    orderby=orderby,
-                                                   layout=render_log)
+                                                   layout=s3.render_log)
 
         # Placeholder
         filter_form = DIV(_class="filter_form")
@@ -139,7 +123,7 @@ for(var i=0,len=layers.length;i<len;i++){
             data = msg
         else:
             # Render the list
-            ajaxurl = URL(c="default", f="audit.dl")
+            ajaxurl = URL(c="default", f="audit", args="datalist_f.dl")
             dl = datalist.html(pagesize=4,
                                ajaxurl=ajaxurl,
                                )
@@ -149,11 +133,12 @@ for(var i=0,len=layers.length;i<len;i++){
                 # Add a Filter
                 filter_widgets = [S3OptionsFilter("user_id$org_group_id",
                                                   label="",
-                                                  options = {1: T("All"),
+                                                  # Can't just use "" as this is then omitted from rendering
+                                                  options = {"*": T("All"),
                                                              org_group_id: T("My Community"),
                                                              },
-                                                  widget="radio",
-                                                  cols=2,
+                                                  #widget="radio",
+                                                  multiple=False
                                                   ),
                                   ]
 
@@ -177,13 +162,12 @@ for(var i=0,len=layers.length;i<len;i++){
         output["updates"] = data
         output["filter_form"] = filter_form
 
-        # JS
+        # Add JavaScript
         appname = request.application
-        s3 = response.s3
         debug = s3.debug
         scripts_append = s3.scripts.append
-        # Infinite Scroll doesn't make sense here
         if debug:
+            # Infinite Scroll doesn't make sense here, but currently required by dataLists.js
             scripts_append("/%s/static/scripts/jquery.infinitescroll.js" % appname)
             scripts_append("/%s/static/scripts/jquery.viewport.js" % appname)
             scripts_append("/%s/static/scripts/S3/s3.dataLists.js" % appname)
@@ -191,15 +175,10 @@ for(var i=0,len=layers.length;i<len;i++){
             scripts_append("/%s/static/scripts/S3/s3.dataLists.min.js" % appname)
         scripts_append("/%s/static/themes/%s/js/homepage.js" % (appname, THEME))
 
-        # Description of available Modules
-        from s3db.cms import S3CMS
-        for item in response.menu:
-            item["cms"] = S3CMS.resource_content(module = item["c"], 
-                                                 resource = item["f"])
-
+        self._view(THEME, "index.html")
         return output
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 def filter_formstyle(row_id, label, widget, comment, hidden=False):
     """
         Custom Formstyle for FilterForm
@@ -220,140 +199,6 @@ def filter_formstyle(row_id, label, widget, comment, hidden=False):
         return DIV(label, widget, _id=row_id, _class=_class)
     else:
         return DIV(widget, _id=row_id, _class=_class)
-
-# -----------------------------------------------------------------------------
-def render_log(listid, resource, rfields, record, **attr):
-    """
-        Custom dataList item renderer for 'Site Activity Logs' on the Home page
-
-        @param listid: the HTML ID for this list
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
-        @param attr: additional HTML attributes for the item
-    """
-
-    pkey = "s3_audit.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
-    #item_class = "thumbnail"
-    item_class = ""
-
-    raw = record._row
-    author = record["s3_audit.user_id"]
-    author_id = raw["s3_audit.user_id"]
-    method = raw["s3_audit.method"]
-    tablename = raw["s3_audit.tablename"]
-    record_id = raw["s3_audit.record_id"]
-
-    T = current.T
-    db = current.db
-    s3db = current.s3db
-
-    if tablename == "pr_filter":
-        label = T("Saved Filters")
-        url = URL(c="default", f="index", args=["filters"])
-        if method == "create":
-            body = T("Saved a Filter")
-        elif method == "update":
-            body = T("Updated a Filter")
-    else:
-        table = s3db[tablename]
-        row = db(table.id == record_id).select(table.name,
-                                               limitby=(0, 1)
-                                               ).first()
-        if row:
-            label = row.name or ""
-        else:
-            label = ""
-        c, f = tablename.split("_")
-        url = URL(c=c, f=f, args=[record_id, "read"])
-        if tablename == "org_facility":
-            if method == "create":
-                body = T("Added a Place")
-            elif method == "update":
-                body = T("Edited a Place")
-        elif tablename == "org_organisation":
-            if method == "create":
-                body = T("Added an Organization")
-            elif method == "update":
-                body = T("Edited an Organization")
-        elif tablename == "project_activity":
-            if method == "create":
-                body = T("Added an Activity")
-            elif method == "update":
-                body = T("Edited an Activity")
-        elif tablename == "stats_people":
-            if method == "create":
-                body = T("Added People")
-            elif method == "update":
-                body = T("Edited People")
-        elif tablename == "vulnerability_evac_route":
-            if method == "create":
-                body = T("Added an Evacuation Route")
-            elif method == "update":
-                body = T("Edited an Evacuation Route")
-        elif tablename == "vulnerability_risk":
-            if method == "create":
-                body = T("Added a Hazard")
-            elif method == "update":
-                body = T("Edited a Hazard")
-        elif tablename == "gis_config":
-            if method == "create":
-                body = T("Saved a Map")
-            elif method == "update":
-                body = T("Updated a Map")
-
-    body = P(body,
-             BR(),
-             A(label,
-               _href=url),
-             )
-
-    # @ToDo: Optimise by not doing DB lookups (especially duplicate) within render, but doing these in the bulk query
-    avatar = s3_avatar_represent(author_id,
-                                 _class="media-object",
-                                 _style="width:50px;padding:5px;padding-top:0px;")
-    ptable = s3db.pr_person
-    ltable = db.pr_person_user
-    query = (ltable.user_id == author_id) & \
-            (ltable.pe_id == ptable.pe_id)
-    row = db(query).select(ptable.id,
-                           limitby=(0, 1)
-                           ).first()
-    if row:
-        person_url = URL(c="pr", f="person", args=[row.id])
-    else:
-        person_url = "#"
-    author = A(author,
-               _href=person_url,
-               )
-    avatar = A(avatar,
-               _href=person_url,
-               _class="pull-left",
-               )
-
-    # Render the item
-    item = DIV(DIV(avatar,
-  		           DIV(H5(author,
-                          _class="media-heading"),
-                       body,
-                       _class="media-body",
-                       ),
-                   _class="media",
-                   ),
-               _class=item_class,
-               _id=item_id,
-               )
-
-    return item
 
 # =============================================================================
 class filters(S3CustomController):

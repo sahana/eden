@@ -911,7 +911,7 @@ class S3CRUD(S3Method):
                 if not filter_submit_url:
                     _vars = self._remove_filters(r.get_vars)
                     filter_submit_url = r.url(vars=_vars)
-                    
+
                 # Where to retrieve updated filter options from:
                 filter_ajax_url = attr.get("filter_ajax_url",
                                            r.url(method="filter",
@@ -1387,11 +1387,13 @@ class S3CRUD(S3Method):
                     limit = None
                 else:
                     try:
-                        start = int(start)
                         limit = int(limit)
                     except ValueError:
-                        start = None
                         limit = 0 # use default
+                    try:
+                        start = int(start)
+                    except ValueError:
+                        start = None
             else:
                 start = None
 

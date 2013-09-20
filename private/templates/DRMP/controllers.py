@@ -27,7 +27,7 @@ class index(S3CustomController):
     def __call__(self):
 
         response = current.response
-        
+
         output = {}
         #output["title"] = response.title = current.deployment_settings.get_system_name()
 

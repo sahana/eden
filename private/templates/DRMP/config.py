@@ -1293,6 +1293,7 @@ def render_posts(listid, resource, rfields, record,
 
     return item
 
+# For access from custom controllers
 s3.render_posts = render_posts
 
 # -----------------------------------------------------------------------------

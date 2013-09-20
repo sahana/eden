@@ -1216,14 +1216,15 @@ class S3ProjectActivityModel(S3Model):
             list_fields.insert(4, "time_actual")
             append((T("Time Estimated"), "time_estimated"))
             append((T("Time Actual"), "time_actual"))
-            create_next = URL(c="project", f="activity",
-                              args=["[id]", "task"])
-        else:
-            create_next = URL(c="project", f="activity", args=["[id]"])
+            #create_next = URL(c="project", f="activity",
+            #                  args=["[id]", "task"])
+        #else:
+        #    create_next = URL(c="project", f="activity", args=["[id]"])
 
         self.configure(tablename,
                        super_entity="doc_entity",
-                       create_next=create_next,
+                       # Leave these workflows for Templates
+                       #create_next=create_next,
                        deduplicate=self.project_activity_deduplicate,
                        filter_widgets = filter_widgets,
                        report_options=Storage(

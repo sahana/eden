@@ -55,11 +55,11 @@
             }
             this.selected = el.val();
 
-            var groups = el.find('optgroup'), i;
+            var groups = el.find('optgroup');
             if (groups.length) {
                 this.grouped = true;
                 this.menu = $('<div class="s3-groupedopts-widget"/>');
-                for (i=0; i<groups.length; i++) {
+                for (var i=0; i < groups.length; i++) {
                     this._renderGroup(groups[i]);
                 }
             } else {
@@ -101,7 +101,7 @@
                     tail = [];
                 }
                 var row = $('<tr/>');
-                for (var i=0; i<head.length; i++) {
+                for (var i=0; i < head.length; i++) {
                     item = head[i];
                     this._renderItem(item, row);
                 }
