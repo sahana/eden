@@ -742,9 +742,6 @@ def customize_org_organisation(**attr):
     s3 = current.response.s3
     standard_prep = s3.prep
 
-    #No Summary Map for Organisations
-    settings.ui.summary = settings.ui.summary[:3]
-
     def custom_prep(r):
         # Call standard prep
         if callable(standard_prep):
@@ -761,6 +758,10 @@ def customize_org_organisation(**attr):
             current.s3db.org_facility.location_id.requires = None
 
         elif r.method == "summary" or r.representation == "aadata":
+            #No Summary Map for Organisations
+            s3db.configure(tablename, summary = [s for s in settings.ui.summary 
+                                                   if s["name"] != "map"])
+
             # Modify list_fields
             list_fields = ["id",
                            "name",
@@ -1229,9 +1230,6 @@ def customize_stats_people(**attr):
 
     request = current.request
 
-    #No Summary Map for People
-    settings.ui.summary = settings.ui.summary[:3]
-
     if "summary" in request.args:
         # Default the Coalition Filter
         auth = current.auth
@@ -1259,6 +1257,10 @@ def customize_stats_people(**attr):
         table.location_id.writable = False
 
         if r.method == "summary" or r.representation == "aadata":
+            #No Summary Map for People
+            s3db.configure(tablename, summary = [s for s in settings.ui.summary 
+                                                   if s["name"] != "map"])
+
             # Modify list_fields
             list_fields = ["id",
                            "name",
