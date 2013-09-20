@@ -711,18 +711,15 @@ class S3OrganisationModel(S3Model):
             field2 = table.acronym
 
             # Fields to return
-            fields = [table.id, field, field2]
+            fields = ["id", "name", "acronym"]
             if use_branches:
-                btable = current.s3db.org_organisation_branch
-                field3 = btable.organisation_id
-                fields.append(field3)
-                db = current.db
+                fields.append("parent.name")
 
-            attributes = dict(orderby=field)
-            limitby = resource.limitby(start=0, limit=limit)
-            if limitby is not None:
-                attributes["limitby"] = limitby
-            rows = resource._load(*fields, **attributes)
+            rows = resource.select(fields,
+                                   start=0,
+                                   limit=limit,
+                                   orderby=field,
+                                   as_rows=True)
             output = []
             append = output.append
             for row in rows:
@@ -732,12 +729,12 @@ class S3OrganisationModel(S3Model):
                     _row = row
                 name = _row.name
                 parent = None
-                if "org_organisation_branch" in row:
-                    query = (table.id == row[btable].organisation_id)
-                    parent = db(query).select(table.name,
-                                              limitby = (0, 1)).first()
-                    if parent:
+                if "org_parent_organisation" in row:
+                    parent = object.__getattribute__(row, "org_parent_organisation")
+                    if parent.name is not None:
                         name = "%s > %s" % (parent.name, name)
+                    else:
+                        parent = None
                 if not parent:
                     acronym = _row.acronym
                     if acronym:
@@ -2030,28 +2027,23 @@ class S3SiteModel(S3Model):
                                  % MAX_SEARCH_RESULTS)])
         else:
             s3db = current.s3db
-            field = table.name
-            field2 = s3db.gis_location.address
 
             # Fields to return
-            fields = [table.id, field, field2]
-
-            attributes = dict(orderby=field)
-            limitby = resource.limitby(start=0, limit=limit)
-            if limitby is not None:
-                attributes["limitby"] = limitby
-            rows = resource._load(*fields, **attributes)
+            fields = ["site_id", "name", "location_id$address"]
+            rows = resource.select([f.name for f in fields],
+                                   start=0,
+                                   limit=limit,
+                                   orderby=field,
+                                   as_rows=True)
             output = []
             append = output.append
-            represent = s3db.org_site_represent
             for row in rows:
-                name = represent(row[table].site_id)
                 address = row.gis_location.address
                 if address:
-                        name = "%s, %s" % (name, address)
-                record = dict(id = row[table].site_id,
-                              name = name,
-                              )
+                    name = "%s, %s" % (row.org_site.name, address)
+                else:
+                    name = row.org_site.name
+                record = dict(id = row.org_site.site_id, name = name)
                 append(record)
             output = jsons(output)
 

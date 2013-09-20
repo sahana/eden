@@ -831,7 +831,13 @@ class S3Resource(object):
                         if as_rows and \
                            tname != tablename and \
                            tname not in qtables:
-                            qtables.append(tname)
+                            left = rfield.left
+                            if left:
+                                for tn in left:
+                                    qtables.extend([j.first._tablename
+                                                    for j in left[tn]])
+                            else:
+                                qtables.append(tname)
 
         if not groupby:
             if distinct and orderby:
@@ -1272,9 +1278,9 @@ class S3Resource(object):
 
         # Get all rows
         if "uuid" in table.fields:
-            rows = self._load(table._id, table.uuid)
+            rows = self.select([table._id.name, "uuid"], as_rows=True)
         else:
-            rows = self._load(table._id)
+            rows = self.select([table._id.name], as_rows=True)
 
         if not rows:
             # No rows? => that was it already :)
@@ -1566,9 +1572,9 @@ class S3Resource(object):
 
         # Get all rows
         if "uuid" in table.fields:
-            rows = self._load(table._id, table.uuid)
+            rows = self.select([table._id.name, "uuid"], as_rows=True)
         else:
-            rows = self._load(table._id)
+            rows = self.select([table._id.name], as_rows=True)
         if not rows:
             return True
 
@@ -1879,72 +1885,6 @@ class S3Resource(object):
                            distinct=distinct)["rows"]
 
         return json.dumps(data)
-
-    # -------------------------------------------------------------------------
-    # Deprecated API methods (retained for backward-compatiblity)
-    # -------------------------------------------------------------------------
-    def _load(self, *fields, **attributes):
-        """
-            Select records with the current query
-
-            @param fields: fields to select
-            @param attributes: select attributes
-
-            @status: deprecated, use select() instead
-        """
-
-        attr = Storage(attributes)
-        rfilter = self.rfilter
-
-        if rfilter is None:
-            rfilter = self.build_query()
-        query = rfilter.get_query()
-        vfltr = rfilter.get_filter()
-
-        distinct = attr.pop("distinct", False) and True or False
-        distinct = rfilter.distinct or distinct
-        attr["distinct"] = distinct
-
-        # Add the left joins from the filter
-        left_joins = []
-        joined_tables = []
-        fjoins = rfilter.get_left_joins()
-        for join in fjoins:
-            tn = str(join.first)
-            if tn not in joined_tables:
-                joined_tables.append(str(join.first))
-                left_joins.append(join)
-        if left_joins:
-            try:
-                left_joins = self.sortleft(left_joins)
-            except:
-                pass
-            left = left_joins
-            attr["left"] = left
-
-        if vfltr is not None:
-            if "limitby" in attr:
-                limitby = attr["limitby"]
-                start = limitby[0]
-                limit = limitby[1]
-                if limit is not None:
-                    limit = limit - start
-                del attr["limitby"]
-            else:
-                start = limit = None
-            # @todo: override fields => needed for vfilter
-
-        # Get the rows
-        rows = current.db(query).select(*fields, **attr)
-        if vfltr is not None:
-            rows = rfilter(rows, start=start, limit=limit)
-
-        # Audit
-        current.audit("list", self.prefix, self.name)
-
-        # Keep the rows for later access
-        self._rows = rows
-        return rows
 
     # -------------------------------------------------------------------------
     # Data Object API

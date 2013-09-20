@@ -147,7 +147,9 @@ class S3Report2(S3Method):
         if pivottable is not None:
             pivotdata = pivottable.json(maxrows=maxrows,
                                         maxcols=maxcols,
-                                        url=r.url(method=""))
+                                        url=r.url(method="",
+                                                  representation="",
+                                                  vars={}))
         else:
             pivotdata = None
 
@@ -292,7 +294,9 @@ class S3Report2(S3Method):
         if pivottable is not None:
             pivotdata = pivottable.json(maxrows=maxrows,
                                         maxcols=maxcols,
-                                        url=r.url(method=""))
+                                        url=r.url(method="",
+                                                  representation="",
+                                                  vars={}))
         else:
             pivotdata = None
 

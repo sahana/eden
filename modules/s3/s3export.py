@@ -77,7 +77,7 @@ class S3Exporter(object):
             response.headers["Content-Type"] = contenttype(".csv")
             response.headers["Content-disposition"] = "attachment; filename=%s" % filename
 
-        rows = resource._load()
+        rows = resource.select(None, as_rows=True)
         return str(rows)
 
     # -------------------------------------------------------------------------
@@ -100,19 +100,14 @@ class S3Exporter(object):
         """
 
         if fields is None:
-            fields = [f for f in resource.table if f.readable]
-
-        attributes = dict()
-
-        if orderby is not None:
-            attributes["orderby"] = orderby
-
-        limitby = resource.limitby(start=start, limit=limit)
-        if limitby is not None:
-            attributes["limitby"] = limitby
+            fields = [f.name for f in resource.table if f.readable]
 
         # Get the rows and return as json
-        rows = resource._load(*fields, **attributes)
+        rows = resource.select(fields,
+                               start=start,
+                               limit=limit,
+                               orderby=orderby,
+                               as_rows=True)
 
         response = current.response
         if response:
