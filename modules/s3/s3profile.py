@@ -302,7 +302,9 @@ class S3Profile(S3CRUD):
         # Render the list
         ajaxurl = r.url(vars={"update": widget["index"]},
                         representation="dl")
-        data = datalist.html(ajaxurl=ajaxurl, pagesize=pagesize)
+        data = datalist.html(ajaxurl=ajaxurl,
+                             pagesize=pagesize
+                             )
         if numrows == 0:
             msg = P(I(_class="icon-folder-open-alt"),
                     BR(),

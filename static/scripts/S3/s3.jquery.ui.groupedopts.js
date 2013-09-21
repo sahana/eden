@@ -10,7 +10,7 @@
  */
 
 (function($, undefined) {
-    
+
     var groupedoptsID = 0;
 
     $.widget('s3.groupedopts', {
@@ -23,7 +23,7 @@
         _create: function() {
             // create the widget
             var el = this.element.hide();
-            
+
             this.id = groupedoptsID;
             groupedoptsID += 1;
 
@@ -47,7 +47,7 @@
         refresh: function() {
             // re-draw contents
             var el = this.element;
-            
+
             this.index = 0;
             this.name = 's3-groupedopts-' + groupedoptsID;
             if (this.menu) {
@@ -110,21 +110,28 @@
         },
 
         _renderItem: function(item, row) {
-            // Render one checkbox item
+            // Render one checkbox/radio item
+
+            var multiple = this.multiple;
 
             var $item = $(item),
                 id = 's3-groupedopts-option-' + this.id + '-' + this.index,
-                type = this.multiple ? 'checkbox' : 'radio';
-                
+                type = multiple ? 'checkbox' : 'radio';
+
             this.index += 1;
-            
+
             var value = $item.val(),
                 label = $item.html(),
-                title = $item.attr('title');
-                
+                title = $item.attr('title'),
+                selected = this.selected;
+
             var olabel = '<label for="' + id + '"';
             if (title && title != '') {
                 olabel += ' title="' + title + '"';
+            }
+            if ((!multiple) && (value != selected)) {
+                // Radio labels have a class for unselected items (to be able to make these appear as clickable hyperlinks)
+                olabel += ' class="inactive"';
             }
             olabel += '>' + label + '</label>';
 
@@ -136,15 +143,15 @@
                            'value="' + value + '"/>'),
                 pos;
 
-            if (this.multiple) {
-                pos = $.inArray(value, this.selected);
+            if (multiple) {
+                pos = $.inArray(value, selected);
             } else {
-                pos = value == this.selected ? 1 : -1;
+                pos = value == selected ? 1 : -1;
             }
             if (pos >= 0) {
                 $(oinput).prop('checked', true);
             }
-            
+
             widget = $('<td>').append(oinput).append($(olabel));
             row.append(widget);
         },
@@ -154,7 +161,8 @@
 
             var self = this;
             self.menu.find('.s3-groupedopts-option').click(function() {
-                var value = $(this).val(),
+                var $this = $(this);
+                var value = $this.val(),
                     el = self.element,
                     multiple = self.multiple;
                 var selected = el.val();
@@ -164,7 +172,7 @@
                 }
                 if (multiple) {
                     var pos = $.inArray(value, selected);
-                    if ($(this).is(':checked')) {
+                    if ($this.is(':checked')) {
                         if (pos < 0) {
                             selected.push(value);
                         }
@@ -174,8 +182,16 @@
                         }
                     }
                 } else {
-                    if ($(this).is(':checked')) {
+                    if ($this.is(':checked')) {
                         selected = value;
+                        self.menu.find('.s3-groupedopts-option').each(function() {
+                            $this = $(this);
+                            if ($this.is(':checked')) {
+                                $this.next().removeClass('inactive');
+                            } else {
+                                $this.next().addClass('inactive');
+                            }
+                        });
                     }
                 }
                 this.selected = selected;

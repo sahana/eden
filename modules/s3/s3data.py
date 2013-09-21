@@ -897,7 +897,10 @@ class S3DataList(object):
              limit=None,
              pagesize=None,
              rowsize=None,
-             ajaxurl=None):
+             ajaxurl=None,
+             popup_url=None,
+             popup_title=None,
+             ):
         """
             Render list data as HTML (nested DIVs)
 
@@ -906,6 +909,9 @@ class S3DataList(object):
             @param pagesize: maximum number of items per page
             @param rowsize: number of items per row
             @param ajaxurl: the URL to Ajax-update the datalist
+            @param popup_url: the URL for the modal used for the 'more'
+                              button (=> we deactivate InfiniteScroll)
+            @param popup_title: the title for the modal
         """
 
         T = current.T
@@ -972,16 +978,27 @@ class S3DataList(object):
                    "rowsize": rowsize,
                    "ajaxurl": ajaxurl,
                    }
+        if popup_url:
+            input_class = "dl-pagination"
+            a_class = "s3_modal"
+            #dl_data["popup_url"] = popup_url
+            #dl_data["popup_title"] = popup_title
+        else:
+            input_class = "dl-pagination dl-scroll"
+            a_class = ""
         from gluon.serializers import json as jsons
         dl_data = jsons(dl_data)
         dl.append(DIV(FORM(INPUT(_type="hidden",
-                                 _class="dl-pagination",
+                                 _class=input_class,
                                  _value=dl_data)
                            ),
                       A(T("more..."),
-                        _href=ajaxurl,
-                        _class="dl-pagination"),
-                      _class="dl-navigation"))
+                        _href=popup_url or ajaxurl,
+                        _class=a_class,
+                        _title=popup_title,
+                        ),
+                      _class="dl-navigation",
+                      ))
 
         return dl
 

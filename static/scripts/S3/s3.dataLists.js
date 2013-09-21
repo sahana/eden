@@ -9,8 +9,9 @@
  */
 function dlURLAppend(url, query) {
     // Append extra query elements to a URL
-    
-    var parts = url.split('?'), q = '';
+
+    var parts = url.split('?'),
+        q = '';
     var newurl = parts[0];
     if (parts.length > 1) {
         if (query) {
@@ -31,9 +32,9 @@ function dlURLAppend(url, query) {
 function dlItemBindEvents() {
 
     // Click-event for dl-item-delete
-    $('.dl-item-delete').css({cursor: 'pointer'});
-    $('.dl-item-delete').unbind('click');
-    $('.dl-item-delete').click(function(event) {
+    $('.dl-item-delete').css({cursor: 'pointer'})
+                        .unbind('click')
+                        .click(function(event) {
         if (confirm(i18n.delete_confirmation)) {
             dlAjaxDeleteItem(this);
             return true;
@@ -60,23 +61,22 @@ function dlAutoRetrieve(row) {
  */
 function dlAjaxReloadItem(list_id, record_id) {
 
-    var datalist = '#' + list_id,
-        item_id = '#' + list_id + '-' + record_id;
-
+    var datalist = '#' + list_id;
     var pagination = $(datalist).find('input.dl-pagination');
     if (!pagination.length) {
         // No such datalist or no pagination data
         return;
     }
-    var dl_data = JSON.parse($(pagination[0]).val());
 
     // Do we have an Ajax-URL?
+    var dl_data = JSON.parse($(pagination[0]).val());
     var ajaxurl = dl_data['ajaxurl'];
     if (ajaxurl === null) {
         return;
     }
 
     // Is the item currently loaded?
+    var item_id = '#' + list_id + '-' + record_id;
     var item = $(item_id);
     if (!item.length) {
         return;
@@ -88,7 +88,7 @@ function dlAjaxReloadItem(list_id, record_id) {
         'success': function(data) {
             var item_data = $(data.slice(data.indexOf('<'))).find(item_id);
             if (item_data.length) {
-                $(item).replaceWith(item_data);
+                item.replaceWith(item_data);
             }
             dlItemBindEvents();
         },
@@ -113,11 +113,8 @@ function dlAjaxDeleteItem(anchor) {
     if (!item.length) {
         return;
     }
-    var item_id = $(item).attr('id');
-    var item_list = item_id.split('-');
-    var record_id = item_list.pop();
-
-    var datalist = $(item).closest('.dl');
+    var $item = $(item);
+    var datalist = $item.closest('.dl');
     var pagination = $(datalist).find('input.dl-pagination').first();
     if (!pagination.length) {
         // No such datalist or no pagination data
@@ -133,30 +130,35 @@ function dlAjaxDeleteItem(anchor) {
     var pagesize = dl_data['pagesize'],
         rowsize = dl_data['rowsize'];
 
+    var item_id = $item.attr('id');
+    var item_list = item_id.split('-');
+    var record_id = item_list.pop();
+
     // Ajax-delete the item
     $.ajax({
         'url': dlURLAppend(ajaxurl, 'delete=' + record_id),
         'success': function(data) {
 
-            var row_index = $(item).index(),
-                row = $(item).closest('.dl-row'),
+            var row_index = $item.index(),
+                row = $item.closest('.dl-row'),
                 i, prev, next;
 
             // 1. Remove the item
-            $(item).remove();
+            $item.remove();
 
             // 2. Move all following items in the row 1 position to the left
+            var $row = $(row);
             if (row_index < rowsize - 1) {
                 for (i=row_index + 1; i < rowsize; i++) {
                     prev = 'dl-col-' + (i-1);
                     next = 'dl-col-' + i;
-                    $(row).find('.' + next).removeClass(next).addClass(prev);
+                    $row.find('.' + next).removeClass(next).addClass(prev);
                 }
             }
             
             // 3. Move all first items of all following rows to the end of the previous row
             var prev_row = row;
-            $(row).nextAll('.dl-row').each(function() {
+            $row.nextAll('.dl-row').each(function() {
                 $(this).find('.dl-col-0').first()
                        .appendTo(prev_row)
                        .removeClass('dl-col-0')
@@ -172,8 +174,8 @@ function dlAjaxDeleteItem(anchor) {
             });
 
             // 4. Load 1 more item to fill up the last row
-            last_row = $(row).closest('.dl').find('.dl-row').last();
-            var numitems = $(row).closest('.dl').find('.dl-item').length;
+            last_row = $row.closest('.dl').find('.dl-row').last();
+            var numitems = $row.closest('.dl').find('.dl-item').length;
             
             $.ajax({
                 'url': dlURLAppend(ajaxurl, 'start=' + numitems + '&limit=1'),
@@ -205,6 +207,7 @@ function dlAjaxDeleteItem(anchor) {
             $(pagination).val(JSON.stringify(dl_data));
 
             // Also update the layer on the Map (if any)
+            // @ToDo: Which Map?
             if (typeof map != 'undefined') {
                 var layers = map.layers;
                 var needle = item_list.join('_');
@@ -256,36 +259,38 @@ function dlAjaxDeleteItem(anchor) {
  */
 function dlAjaxReload(list_id, filters) {
 
-    var datalist = $('#' + list_id);
-    if (!datalist.length) {
+    var datalist = '#' + list_id;
+    var $datalist = $(datalist);
+    if (!$datalist.length) {
         return;
     }
-    
-    var pagination = $(datalist).find('input.dl-pagination');
+
+    var pagination = $datalist.find('input.dl-pagination');
     if (!pagination.length) {
-        // No pagination
+        // No pagination data
         return;
     }
-    var dl_data = JSON.parse($(pagination[0]).val());
 
     // Read dl_data
+    var $pagination0 = $(pagination[0]);
+    var dl_data = JSON.parse($pagination0.val());
     var startindex = dl_data['startindex'],
         pagesize = dl_data['pagesize'],
         maxitems = dl_data['maxitems'],
         totalitems = dl_data['totalitems'],
         ajaxurl = dl_data['ajaxurl'];
 
+    if (pagesize === null) {
+        // No pagination
+        return;
+    }
+
     if (filters) {
         try {
             ajaxurl = S3.search.filterURL(ajaxurl, filters);
             dl_data['ajaxurl'] = ajaxurl;
-            $(pagination[0]).val(JSON.stringify(dl_data));
+            $pagination0.val(JSON.stringify(dl_data));
         } catch(e) {}
-    }
-
-    if (pagesize === null) {
-        // No pagination
-        return;
     }
 
     var start = startindex;
@@ -296,26 +301,41 @@ function dlAjaxReload(list_id, filters) {
         'url': dlURLAppend(ajaxurl, 'start=' + startindex + '&limit=' + pagesize),
         'success': function(data) {
             var newlist = $(data.slice(data.indexOf('<'))).find('.dl');
-            $(datalist).infinitescroll('destroy');
-            $(datalist).data('infinitescroll', null);
+            $datalist.infinitescroll('destroy');
+            $datalist.data('infinitescroll', null);
             if (newlist.length) {
                 var pagination_new = $(newlist).find('input.dl-pagination');
                 if (pagination_new.length) {
                     var dl_data_new = JSON.parse($(pagination_new[0]).val());
                     dl_data['totalitems'] = dl_data_new['totalitems'];
-                    $(pagination[0]).val(JSON.stringify(dl_data));
+                    $pagination0.val(JSON.stringify(dl_data));
                 }
-                $(datalist).empty().html(newlist.html());
-                $(datalist).find('input.dl-pagination').replaceWith(pagination);
+                var modal_more = $datalist.find('a.s3_modal');
+                if (modal_more.length) {
+                    // Read attributes
+                    var popup_url = $(modal_more[0]).attr('href');
+                    var popup_title = $(modal_more[0]).attr('title');
+                }
+                $datalist.empty().html(newlist.html());
+                $datalist.find('input.dl-pagination').replaceWith(pagination);
+                if (modal_more.length) {
+                    // Restore attributes
+                    if (filters) {
+                        popup_url = S3.search.filterURL(popup_url, filters);
+                    }
+                    $($datalist.find('.dl-navigation a')[0]).addClass('s3_modal')
+                                                            .attr('href', popup_url)
+                                                            .attr('title', popup_title);
+                }
             } else {
                 // List is empty
-                var nav = $(datalist).find('.dl-navigation').css({display: 'none'});
+                var nav = $datalist.find('.dl-navigation').css({display: 'none'});
                 newlist = $(data.slice(data.indexOf('<'))).find('.empty');
-                $(datalist).empty().append(newlist);
-                $(datalist).append(nav);
+                $datalist.empty().append(newlist);
+                $datalist.append(nav);
             }
             dlInfiniteScroll(datalist);
-            $(datalist).find('.dl-item:last:in-viewport').each(function() {
+            $datalist.find('.dl-item:last:in-viewport').each(function() {
                 $(this).addClass('autoretrieve');
                 dlAutoRetrieve(this);
             });
@@ -338,23 +358,33 @@ function dlAjaxReload(list_id, filters) {
  */
 function dlInfiniteScroll(datalist) {
 
-    var pagination = $(datalist).find('input.dl-pagination');
+    var $datalist = $(datalist);
+    var pagination = $datalist.find('input.dl-pagination');
     if (!pagination.length) {
         // No pagination
         return;
     }
-    var dl_data = JSON.parse($(pagination[0]).val());
 
     // Read dl_data
+    var dl_data = JSON.parse($(pagination[0]).val());
     var startindex = dl_data['startindex'],
         maxitems = dl_data['maxitems'],
         totalitems = dl_data['totalitems'],
         pagesize = dl_data['pagesize'],
         ajaxurl = dl_data['ajaxurl'];
 
+    if (!pagination.hasClass('dl-scroll')) {
+        // No infiniteScroll
+        if (pagesize > totalitems) {
+            // Hide the 'more' button if we can see all items
+            pagination.closest('.dl-navigation').css({display: 'none'});
+        }
+        return;
+    }
+
     if (pagesize === null) {
         // No pagination
-        pagination.closest('.dl-navigation').css({display:'none'});
+        pagination.closest('.dl-navigation').css({display: 'none'});
         return;
     }
 
@@ -363,7 +393,7 @@ function dlInfiniteScroll(datalist) {
 
     // Compute bounds
     var maxindex = startindex + maxitems,
-        initialitems = $(datalist).find('.dl-item').length;
+        initialitems = $datalist.find('.dl-item').length;
 
     // Compute maxpage
     var maxpage = 1,
@@ -372,22 +402,23 @@ function dlInfiniteScroll(datalist) {
         maxpage += Math.ceil(ajaxitems / pagesize);
     } else {
         if (pagination.length) {
-            pagination.closest('.dl-navigation').css({display:'none'});
+            pagination.closest('.dl-navigation').css({display: 'none'});
         }
         return;
     }
 
     if (pagination.length) {
-        $(datalist).infinitescroll({
+        $datalist.infinitescroll({
             debug: false,
             loading: {
-                finishedMsg: "no more items to load",
-                msgText: "loading...",
+                // @ToDo: i18n
+                finishedMsg: 'no more items to load',
+                msgText: 'loading...',
                 img: S3.Ap.concat('/static/img/indicator.gif')
             },
-            navSelector: "div.dl-navigation",
-            nextSelector: "div.dl-navigation a:first",
-            itemSelector: "div.dl-row",
+            navSelector: 'div.dl-navigation',
+            nextSelector: 'div.dl-navigation a:first',
+            itemSelector: 'div.dl-row',
             path: function(page) {
                 // Compute start+limit
                 var start = initialitems + (page - 2) * pagesize;

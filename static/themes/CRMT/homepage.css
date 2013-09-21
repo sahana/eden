@@ -92,6 +92,10 @@ p {
 .updates h5 {
     margin-bottom: 0;
 }
+.update .empty {
+    margin-left: 10px;
+    margin-top: 10px;
+}
 #log-filter-form {
     float: right;
 }
@@ -106,7 +110,14 @@ p {
     border-right: solid 1px;
 }
 
-.updates .media {
+#popup .form-container {
+    margin: 0;
+}
+#popup #table-container {
+    margin: 0;
+}
+.updates .media,
+#popup .media {
     background: linear-gradient(to bottom, #EDEDED 0%, #F6F6F6 10%, #FFFFFF 50%) repeat scroll 0 0 transparent;
     border-top: 1px solid #C8C8C8;
     padding: 5px 10px;
@@ -119,17 +130,27 @@ p {
 .updates .dl-col-0 {
     margin-right: 0;
 }
-.updates .dl-row.even,
-.updates .dl-row.odd,
-.updates .dl-row.even .dl-item,
-.updates .dl-row.odd .dl-item {
-    background-color: transparent;
+.updates .dl-row,
+.updates .dl-row .dl-item,
+#popup .dl-row,
+#popup .dl-row .dl-item {
+    /*background-color: transparent;*/
     padding: 0;
 }
 .updates .dl-navigation {
     border-top: 1px solid #C8C8C8;
-    padding: 5px 10px;
+    padding-left: 5px;
     margin: 0;
+}
+.updates form {
+    margin: 0;
+}
+#audit-auth_user_org_group_id-options-filter {
+    display: none;
+}
+label.inactive {
+    color: #0088CC;
+    text-decoration: underline;
 }
 
 .map-btn {

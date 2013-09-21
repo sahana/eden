@@ -1919,6 +1919,7 @@ def customize_s3_audit(**attr):
     current.s3db.configure(tablename,
                            list_layout = render_log,
                            orderby = "s3_audit.timestmp desc",
+                           insertable = False,
                            list_fields = ["id",
                                           "method",
                                           "user_id",

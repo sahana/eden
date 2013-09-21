@@ -42,9 +42,10 @@ h5 {
 h6 {
   font-size: 11.9px;
 }
+/* Done already by bootstrap
 form {
     margin: 0 0 20px;
-}
+} */
 
 /* Over-ride Footer */
 #footer {

@@ -45,7 +45,11 @@ form .map_loader {
     padding-top: 8px;
 }
 
-/* LayerTree */
+/* LayerTree
+.x-tree .x-panel-bwrap {
+    overflow: auto;
+    overflow-x: hidden;
+} */
 .x-tree-elbow,
 .x-tree-elbow-end,
 .x-tree-node-indent,
@@ -54,6 +58,7 @@ form .map_loader {
 }
 .x-tree-node-anchor {
     padding-left: 5px;
+    padding-right: 5px;
 }
 .x-tree-node {
     font-size: 12px;
@@ -90,6 +95,9 @@ form .map_loader {
     max-height: 500px;
     overflow-y: auto;
 }
+.map_legend_panel  .x-panel-header-noborder {
+    border: none;
+}
 .map_legend_tab {
     float: left;
     background-color: #FBFBFB;
@@ -122,16 +130,10 @@ form .map_loader {
     /* http://fortawesome.github.io/Font-Awesome/icon/double-angle-right/ */
     content: "\f101";
 }
-
-div.map_legend_panel  div.x-panel-header-noborder {
-    border: none;
-}
-
 .gis_legend_title {
     font-weight: bold;
     margin-top: 10px;
 }
-
 .gis_legend_desc {
     max-width: 200px;
 }

@@ -753,12 +753,15 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
 
         var layerTree = new Ext.tree.TreePanel({
+            //cls: 'gis_layer_tree',
+            //height: options.map_height,
             title: i18n.gis_layers,
             loader: new Ext.tree.TreeLoader({applyLoader: false}),
             root: treeRoot,
             rootVisible: false,
             split: true,
-            autoScroll: true,
+            //autoScroll: true,
+            //containerScroll: true,
             collapsible: collapsible,
             collapseMode: 'mini',
             lines: false,

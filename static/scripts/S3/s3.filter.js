@@ -750,7 +750,8 @@ S3.search = {};
     S3.search.ajaxUpdateOptions = function(form) {
 
         // Ajax-load the item
-        var ajaxurl = $(form).find('input.filter-ajax-url');
+        var $form = $(form);
+        var ajaxurl = $form.find('input.filter-ajax-url');
         if (ajaxurl.length) {
             ajaxurl = $(ajaxurl[0]).val();
         }
@@ -758,9 +759,9 @@ S3.search = {};
             'url': ajaxurl,
             'dataType': 'json'
         }).done(function(data) {
-            $(form).data('noAutoSubmit', 1);
+            $form.data('noAutoSubmit', 1);
             updateOptions(data);
-            $(form).data('noAutoSubmit', 0);
+            $form.data('noAutoSubmit', 0);
         }).fail(function(jqXHR, textStatus, errorThrown) {
             if (errorThrown == 'UNAUTHORIZED') {
                 msg = i18n.gis_requires_login;
@@ -850,20 +851,20 @@ S3.search = {};
         if (!filter_form.length || !timeout) {
             return;
         }
-        filter_form.on('optionChanged', function (){
-            var that = $(this);
-            if (that.data('noAutoSubmit')) {
+        filter_form.on('optionChanged', function() {
+            var $this = $(this);
+            if ($this.data('noAutoSubmit')) {
                 // Event temporarily disabled
                 return;
             }
-            var timer = that.data('autoSubmitTimeout');
+            var timer = $this.data('autoSubmitTimeout');
             if (timer) {
                 clearTimeout(timer);
             }
-            timer = setTimeout(function () {
-                filterSubmit(that);
+            timer = setTimeout(function() {
+                filterSubmit($this);
             }, timeout);
-            that.data('autoSubmitTimeout', timer);
+            $this.data('autoSubmitTimeout', timer);
         });
     };
 

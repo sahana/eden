@@ -124,8 +124,11 @@ for(var i=0,len=layers.length;i<len;i++){
         else:
             # Render the list
             ajaxurl = URL(c="default", f="audit", args="datalist_f.dl")
-            dl = datalist.html(pagesize=4,
-                               ajaxurl=ajaxurl,
+            popup_url = URL(c="default", f="audit", args="datalist.popup")
+            dl = datalist.html(ajaxurl=ajaxurl,
+                               pagesize=4,
+                               popup_url=popup_url,
+                               popup_title=T("Updates"),
                                )
             data = dl
 
@@ -137,7 +140,6 @@ for(var i=0,len=layers.length;i<len;i++){
                                                   options = {"*": T("All"),
                                                              org_group_id: T("My Community"),
                                                              },
-                                                  #widget="radio",
                                                   multiple=False
                                                   ),
                                   ]
@@ -173,7 +175,7 @@ for(var i=0,len=layers.length;i<len;i++){
             scripts_append("/%s/static/scripts/S3/s3.dataLists.js" % appname)
         else:
             scripts_append("/%s/static/scripts/S3/s3.dataLists.min.js" % appname)
-        scripts_append("/%s/static/themes/%s/js/homepage.js" % (appname, THEME))
+        #scripts_append("/%s/static/themes/%s/js/homepage.js" % (appname, THEME))
 
         self._view(THEME, "index.html")
         return output
