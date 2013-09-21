@@ -583,11 +583,11 @@ def customize_project_activity(**attr):
         elif r.method == "report2":
             s3db.project_activity_group.group_id.label = T("Coalition")
 
-        if r.interactive:
+        if r.interactive or r.representation == "json":
             # CRUD Strings
             table.location_id.label = T("Address")
             s3db.project_activity_group.group_id.label = T("Coalition")
-            if r.method == "summary":
+            if r.method in ("summary", "report2"):
                 from s3.s3filter import S3OptionsFilter, S3DateFilter
                 filter_widgets = [S3OptionsFilter("activity_group.group_id",
                                                   label=T("Coalition"),
@@ -616,7 +616,7 @@ def customize_project_activity(**attr):
                 report_options = Storage(
                     rows=report_fields,
                     cols=report_fields,
-                    fact=["count(name)"],
+                    fact=[("count(name)", T("Number of Activities"))],
                     defaults=Storage(rows="activity_group.group_id",
                                      cols="activity.activity_type_id",
                                      fact="count(name)",
@@ -778,10 +778,10 @@ def customize_org_organisation(**attr):
         elif r.method == "report2":
             s3db.org_group_membership.group_id.label = T("Coalition")
 
-        if r.interactive and not r.component:
+        if (r.interactive or r.representation=="json") and not r.component:
             # CRUD Strings
 
-            if r.method == "summary":
+            if r.method in ("summary", "report2"):
                 from s3.s3filter import S3OptionsFilter
                 filter_widgets = [S3OptionsFilter("group_membership.group_id",
                                                   label=T("Coalition"),
@@ -812,7 +812,7 @@ def customize_org_organisation(**attr):
                 report_options = Storage(
                     rows = report_fields,
                     cols = report_fields,
-                    fact = ["count(name)"],
+                    fact = [("count(name)", T("Number of Organizations"))],
                     defaults = Storage(rows = "service_organisation.service_id",
                                        cols = "sector_organisation.sector_id",
                                        fact = "count(name)",
@@ -1067,7 +1067,7 @@ def customize_org_facility(**attr):
         elif r.method == "report2":
             s3db.org_site_org_group.group_id.label = T("Coalition")
 
-        if r.interactive:
+        if r.interactive or r.representation == "json":
             # CRUD Strings
             table.location_id.label = T("Address")
             s3db.org_site_org_group.group_id.label = T("Coalition")
@@ -1087,7 +1087,7 @@ def customize_org_facility(**attr):
                 msg_record_deleted = T("Place removed"),
                 msg_list_empty = T("No Places currently recorded"))
 
-            if r.method == "summary":
+            if r.method in ("summary", "report2"):
                 from s3.s3filter import S3OptionsFilter
                 filter_widgets = [S3OptionsFilter("site_org_group.group_id",
                                                   label=T("Coalition"),
@@ -1116,7 +1116,7 @@ def customize_org_facility(**attr):
                 report_options = Storage(
                     rows=report_fields,
                     cols=report_fields,
-                    fact=["count(name)"],
+                    fact=[("count(name)", T("Number of Places"))],
                     defaults=Storage(rows="site_org_group.group_id",
                                      cols="site_facility_type.facility_type_id",
                                      fact="count(name)",
@@ -1283,7 +1283,7 @@ def customize_stats_people(**attr):
         elif r.method == "report2":
             s3db.stats_people_group.group_id.label = T("Coalition")
 
-        if r.interactive:
+        if r.interactive or r.representation == "json":
             # CRUD Strings
             #table.location_id.label = T("Address")
 
@@ -1302,7 +1302,7 @@ def customize_stats_people(**attr):
                 msg_record_deleted = T("People removed"),
                 msg_list_empty = T("No People currently recorded"))
             
-            if r.method == "summary":
+            if r.method in ("summary", "report2"):
                 from s3.s3filter import S3OptionsFilter
                 filter_widgets = [S3OptionsFilter("people_group.group_id",
                                                   label=T("Coalition"),
@@ -1325,7 +1325,7 @@ def customize_stats_people(**attr):
                 report_options = Storage(
                     rows=report_fields,
                     cols=report_fields,
-                    fact=["sum(value)"],
+                    fact=[("sum(value)", T("Number of People"))],
                     defaults=Storage(rows="people_group.group_id",
                                      cols="people.parameter_id",
                                      fact="sum(value)",
@@ -1476,12 +1476,12 @@ def customize_vulnerability_evac_route(**attr):
         elif r.method == "report2":
             s3db.vulnerability_evac_route_group.group_id.label = T("Coalition")
 
-        if r.interactive:
+        if r.interactive or r.representation == "json":
             # CRUD Strings
             table.location_id.label = T("Address")
             s3db.vulnerability_evac_route_group.group_id.label = T("Coalition")
 
-            if r.method == "summary":
+            if r.method in ("summary", "report2"):
                 from s3.s3filter import S3OptionsFilter
                 filter_widgets = [S3OptionsFilter("evac_route_group.group_id",
                                                   label=T("Coalition"),
@@ -1496,7 +1496,7 @@ def customize_vulnerability_evac_route(**attr):
                                   ]
 
                 report_fields = ["name",
-                                 "hazard_id",
+                                 (T("Hazard"), "hazard_id"),
                                  "evac_route_group.group_id",
                                  "location_id$L3",
                                  ]
@@ -1504,7 +1504,7 @@ def customize_vulnerability_evac_route(**attr):
                 report_options = Storage(
                     rows=report_fields,
                     cols=report_fields,
-                    fact=["count(name)"],
+                    fact=[("count(name)", T("Number of Evacuation Routes"))],
                     defaults=Storage(rows="evac_route_group.group_id",
                                      cols="evac_route.hazard_id",
                                      fact="count(name)",
@@ -1629,7 +1629,7 @@ def customize_vulnerability_risk(**attr):
         elif r.method == "report2":
             s3db.vulnerability_risk_group.group_id.label = T("Coalition")
 
-        if r.interactive:
+        if r.interactive or r.representation == "json":
             # CRUD Strings
             table.location_id.label = T("Address")
             s3db.vulnerability_risk_group.group_id.label = T("Coalition")
@@ -1649,7 +1649,7 @@ def customize_vulnerability_risk(**attr):
                 msg_record_deleted = T("Hazard removed"),
                 msg_list_empty = T("No Hazards currently recorded"))
             
-            if r.method == "summary":
+            if r.method in ("summary", "report2"):
                 # Not needed now that Risk data is moved to WMS
                 # Filter out data not associated with any Coalition
                 #from s3.s3resource import S3FieldSelector
@@ -1678,7 +1678,7 @@ def customize_vulnerability_risk(**attr):
                 report_options = Storage(
                     rows=report_fields,
                     cols=report_fields,
-                    fact=["count(name)"],
+                    fact=[("count(name)", T("Number of Risks"))],
                     defaults=Storage(rows="risk_group.group_id",
                                      cols="risk.hazard_id",
                                      fact="count(name)",

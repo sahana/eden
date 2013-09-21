@@ -141,7 +141,8 @@ S3.search = {};
             url_var = $('#' + id + '-data').val();
             value = $this.val();
             if (value) {
-                values = value.split(' '), v;
+                values = value.split(' ');
+                var v;
                 for (i=0; i < values.length; i++) {
                     v = '*' + values[i] + '*';
                     queries.push([url_var, quoteValue(v)]);

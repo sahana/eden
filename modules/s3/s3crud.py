@@ -1027,14 +1027,11 @@ class S3CRUD(S3Method):
             else:
                 start = None
 
-            table = resource.table
-            if list_fields:
-                fields = [table[f] for f in list_fields if f in table.fields]
-                if table._id.name not in list_fields:
-                    fields.insert(0, table._id)
-            else:
-                fields = [f for f in table if f.type == "id" or f.readable]
-
+            fields = resource.list_fields(id_column=True)
+            rfields, j, l, d = resource.resolve_selectors(fields,
+                                                          extra_fields=False)
+            fields = [rfield.fname for rfield in rfields
+                                   if rfield.tname == tablename]
             orderby = get_config("orderby", None)
 
             exporter = S3Exporter().json

@@ -48,6 +48,7 @@ except ImportError:
 from gluon import current
 from gluon.dal import Expression, Field
 from gluon.html import *
+from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.validators import IS_EMPTY_OR, IS_IN_SET
 
@@ -1368,7 +1369,7 @@ class S3PivotTable(object):
                 labels.append(s3_unicode(label))
             else:
                 # Construct label from field-label and method
-                label = get_label(rfields, layer[0], tablename, "fact")
+                label = get_label(rfields, layer[0], resource, "fact")
                 mname = get_mname(layer[1])
                 if not labels:
                     m = layer[1] == "list" and get_mname("count") or mname
@@ -1379,7 +1380,7 @@ class S3PivotTable(object):
 
         # Columns field title
         if cols:
-            col_label = get_label(rfields, cols, tablename, "cols")
+            col_label = get_label(rfields, cols, resource, "cols")
             _colspan = numcols + 1
         else:
             col_label = ""
@@ -1414,7 +1415,7 @@ class S3PivotTable(object):
         # Build the column headers:
 
         # Header for the row-titles column
-        row_label = get_label(rfields, rows, tablename, "rows")
+        row_label = get_label(rfields, rows, resource, "rows")
         rows_title = TH(row_label, _scope="col")
         headers = TR(rows_title)
 
@@ -1773,6 +1774,15 @@ class S3PivotTable(object):
             value_map = {}
             rappend = orows.append
             cappend = ocols.append
+            
+            rfield = rfields[field]
+            f = rfield.field
+            has_fk = f is not None and s3_has_foreign_key(f)
+            if has_fk:
+                _repr = lambda v: s3_unicode(f.represent(v))
+            else:
+                _repr = lambda v: s3_unicode(self._represent_method(field)(v))
+
             for rindex, rtotal, rtitle in rows:
                 orow = []
                 rval = s3_unicode(rtitle.value) \
@@ -1805,13 +1815,6 @@ class S3PivotTable(object):
                     # Build a lookup table for field values if counting
                     if method == "count":
                         keys = []
-                        rfield = rfields[field]
-                        f = rfield.field
-                        has_fk = f is not None and s3_has_foreign_key(f)
-                        if has_fk:
-                            represent = f.represent
-                        else:
-                            represent = self._represent_method(field)
                         for record_id in cell_records:
                             record = self.records[record_id]
                             try:
@@ -1829,13 +1832,13 @@ class S3PivotTable(object):
                                     if v not in keys:
                                         keys.append(v)
                                     if v not in lookup:
-                                        lookup[v] = s3_unicode(represent(v))
+                                        lookup[v] = _repr(v)
                                 else:
                                     if v not in value_map:
                                         next_id = len(value_map)
                                         value_map[v] = next_id
                                         keys.append(next_id)
-                                        lookup[next_id] = s3_unicode(represent(v))
+                                        lookup[next_id] = _repr(v)
                                     else:
                                         prev_id = value_map[v]
                                         if prev_id not in keys:
@@ -1875,8 +1878,7 @@ class S3PivotTable(object):
         get_label = self._get_field_label
         get_mname = self._get_method_label
 
-        labels = {
-                  "total": str(T("Total")),
+        labels = {"total": str(T("Total")),
                   "none": str(current.messages["NONE"]),
                   "per": str(T("per")),
                   "breakdown": str(T("Breakdown")),
@@ -1886,20 +1888,37 @@ class S3PivotTable(object):
         layer_title = None
         report_options = resource.get_config("report_options", None)
 
-        # @todo: move this lookup into S3Report2
         if report_options and "fact" in report_options:
-            # Custom label from report options?
+            
+            # Custom layer title from report options?
+            import re
+            layer_pattern = re.compile("([a-zA-Z]+)\((.*)\)\Z")
+            prefix = resource.prefix_selector
+            selector = prefix(field)
             for item in report_options["fact"]:
-                if isinstance(item, (tuple, list)) and len(item) == 3:
-                    selector = item[0]
-                    if not "." in selector.split("$")[0]:
-                        selector = "%s.%s" % (resource.alias, item[0])
-                    if selector == field and item[1] == method:
-                        layer_title= s3_unicode(item[2])
+                if type(item) is tuple:
+                    if isinstance(item[0], lazyT):
+                        opt = [item]
+                    else:
+                        opt = list(item)
+                else:
+                    opt = [item]
+                if isinstance(opt[-1], lazyT):
+                    s, m = opt[:2] if len(opt) > 2 else (opt[0], None)
+                    if isinstance(s, tuple):
+                        s = s[-1]
+                    match = layer_pattern.match(s)
+                    if match is not None:
+                        s, m = match.group(2), match.group(1)
+                    if not m:
+                        continue
+                    elif prefix(s) == selector and m == method:
+                        layer_title = s3_unicode(opt[-1])
                         break
+                        
         if layer_title is None:
             # Construct label from field and method
-            fname = get_label(rfields, field, tablename, "fact")
+            fname = get_label(rfields, field, resource, "fact")
             mname = get_mname(method)
             layer_title = "%s (%s)" % (fname, mname)
         labels["layer"] = layer_title
@@ -1908,7 +1927,7 @@ class S3PivotTable(object):
         if rows_dim:
             labels["rows"] = str(get_label(rfields,
                                            rows_dim,
-                                           tablename,
+                                           resource,
                                            "rows"))
         else:
             labels["rows"] = ""
@@ -1917,7 +1936,7 @@ class S3PivotTable(object):
         if cols_dim:
             labels["cols"] = str(get_label(rfields,
                                            cols_dim,
-                                           tablename,
+                                           resource,
                                            "cols"))
         else:
             labels["cols"] = ""
@@ -1929,8 +1948,6 @@ class S3PivotTable(object):
         output["filter"] = (str(url) if url else None,
                             prefix(rows_dim) if rows_dim else None,
                             prefix(cols_dim) if cols_dim else None)
-
-        # @todo: add the record layer
 
         return output
         
@@ -2577,12 +2594,14 @@ class S3PivotTable(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _get_field_label(rfields, field, tablename, key):
+    def _get_field_label(rfields, field, resource, key):
         """
             Get the label for a field
 
-            @param rfields: the list fields map
-            @param key: the configuration key
+            @param rfields: the resource field map
+            @param field: the key for the resource field map
+            @param resource: the S3Resource
+            @param key: the key for the report_options
         """
 
         DEFAULT = ""
@@ -2592,15 +2611,19 @@ class S3PivotTable(object):
         else:
             return DEFAULT
 
-        # @todo: cleanup this:
-        get_config = lambda key, default, tablename=tablename: \
-                     current.s3db.get_config(tablename, key, default)
-        list_fields = get_config("list_fields", None)
-        fields = get_config(key, list_fields)
+        get_config = resource.get_config
+        fields = None
+        report_options = get_config("report_options")
+        if report_options and key in report_options:
+            fields = report_options[key]
+        if not fields:
+            fields = get_config("list_fields")
 
+        prefix = resource.prefix_selector
+        selector = prefix(rfield.selector)
         if fields:
             for f in fields:
-                if isinstance(f, (tuple, list)) and f[1] == rfield.selector:
+                if isinstance(f, (tuple, list)) and prefix(f[1]) == selector:
                     return f[0]
 
         if rfield:
