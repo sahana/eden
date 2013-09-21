@@ -842,6 +842,16 @@ class S3Config(Storage):
         """
         return self.L10n.get("translate_gis_location", False)
 
+    def get_L10n_pootle_url(self):
+        """ URL for Pootle server """
+        return self.L10n.get("pootle_url", "http://pootle.sahanafoundation.org/")
+    def get_L10n_pootle_username(self):
+        """ Username for Pootle server """
+        return self.L10n.get("pootle_username", False)
+    def get_L10n_pootle_password(self):
+        """ Password for Pootle server """
+        return self.L10n.get("pootle_password", False)
+
     # -------------------------------------------------------------------------
     # PDF settings
     def get_paper_size(self):

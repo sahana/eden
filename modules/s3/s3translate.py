@@ -1467,4 +1467,223 @@ class CsvToWeb2py:
             f.close()
             return data
 
+
+# =============================================================================
+class Pootle:
+        """ Class to merge pootle with web2py """
+
+        # ---------------------------------------------------------------------
+        def upload_to_pootle(self, lang_code, filename):
+
+            import mechanize
+            import re
+            from s3.s3utils import s3_debug
+
+            br = mechanize.Browser()
+            br.addheaders = [("User-agent", "Firefox")]
+
+            br.set_handle_equiv(False)
+            # Ignore robots.txt
+            br.set_handle_robots(False)
+            # Don't add Referer (sic) header
+            br.set_handle_referer(False)
+
+            settings = current.deployment_settings
+            url = "%saccounts/login" % settings.get_L10n_pootle_url()
+            try:
+                br.open(url)
+            except:
+                s3_debug("Connecton Error")
+                return
+
+            br.select_form("loginform")
+            username = settings.get_L10n_pootle_username()
+            if username == False:
+                s3_debug("No login information found")
+                return
+
+            password = settings.get_L10n_pootle_password()
+            br.form["username"] = username
+            br.form["password"] = password
+            br.submit()
+
+            current_url = br.geturl()
+            if current_url.endswith("login/"):
+                s3_debug("Login Error")
+                return
+
+            pattern = "<option value=(.+?)>%s.po" % lang_code
+
+            # Process lang_code (if of form ab_cd --> convert to ab_CD)
+            if len(lang_code) > 2:
+                lang_code = "%s_%s" % (lang_code[:2], lang_code[-2:].upper())
+
+            link = "%s%s/eden/" % (settings.get_L10n_pootle_url(), lang_code)
+
+            page_source = br.open(link).read()
+            # Use Regex to extract the value for field : "upload to"
+            regex = re.search(pattern, page_source)
+            result = regex.group(0)
+            result = re.split(r'[="]', result)
+            upload_code = result[2]
+
+            try:
+                br.select_form("uploadform")
+                # If user is not admin then overwrite option is not there
+                br.form.find_control(name="overwrite").value = ["overwrite"]
+                br.form.find_control(name ="upload_to").value = [upload_code]
+                br.form.add_file(open(filename), "text/plain", file_name)
+                br.submit()
+            except:
+                s3_debug("Error in Uploading form")
+                return
+
+        # ---------------------------------------------------------------------
+        def download_strings(self, lang_code):
+
+            import requests
+            import zipfile
+            import StringIO
+            from subprocess import call
+            from tempfile import NamedTemporaryFile
+
+            from s3.s3utils import s3_debug
+
+            code = lang_code
+            if len(lang_code) > 2:
+                code = "%s_%s" % (lang_code[:2], lang_code[-2:].upper())
+
+            settings = current.deployment_settings
+            link = "%s%s/eden/export/zip" % (settings.get_L10n_pootle_url(), code)
+            try:
+                r = requests.get(link)
+            except:
+                s3_debug("Connection Error")
+                return False		
+
+            zipf = zipfile.ZipFile(StringIO.StringIO(r.content))
+            zipf.extractall()
+            file_name_po = "%s.po" % lang_code
+            file_name_py = "%s.py" % lang_code
+
+            f = NamedTemporaryFile(delete=False)
+            w2pfilename = "%s.py" % f.name
+
+            call(["po2web2py", "-i", file_name_po, "-o", w2pfilename])
+
+            tfile = TranslateReadFiles()
+            path = os.path.join(current.request.folder, "languages", file_name_py)
+            pystrings = tfile.read_w2pfile(path)
+            pystrings.sort(key=lambda tup: tup[0])
+
+            postrings = tfile.read_w2pfile(w2pfilename)
+            postrings.sort(key=lambda tup: tup[0])
+
+            os.unlink(file_name_po)
+            os.unlink(w2pfilename)
+            return (postrings, pystrings)
+
+        # ---------------------------------------------------------------------
+        def merge_strings(self, postrings, pystrings, preference):
+
+            lim_po = len(postrings)
+            lim_py = len(pystrings)
+            i = 0
+            j = 0
+
+            # Store strings which are missing from pootle
+            extra = []
+            eappend = extra.append
+
+            while i < lim_py and j < lim_po:
+                if pystrings[i][0] < postrings[j][0]:
+                    if preference == False:
+                        eappend(pystrings[i])
+                    i += 1
+                elif pystrings[i][0] > postrings[j][0]:
+                    j += 1
+
+                # pystrings[i] == postrings[j]
+                else:
+                    # Pootle is being given preference
+                    if preference:
+                        # Check if string is not empty
+                        if postrings[j][1] and not postrings[j][1].startswith("***"):
+                            pystrings[i] = postrings[j]
+                    # Py is being given prefernece
+                    else:
+                        if pystrings[i][1] and not pystrings[i][1].startswith("***"):
+                            postrings[j] = pystrings[i]
+                    i += 1
+                    j += 1
+
+
+            if preference:
+                return pystrings
+
+            else:
+                # Add strings which were left
+                while i < lim_py:
+                    extra.append(pystrings[i])
+                    i += 1
+                # Add extra strings to Pootle list
+                for st in extra:
+                    postrings.append(st)
+
+                postrings.sort(key=lambda tup: tup[0])
+                return postrings
+
+
+        # ---------------------------------------------------------------------
+        def merge_pootle(self, preference, lang_code):
+
+            from subprocess import call
+            from tempfile import NamedTemporaryFile
+            import sys
+
+            # returns a tuple (postrings, pystrings)
+            ret = self.download_strings(lang_code)
+            if not ret:
+                return
+
+            # returns pystrings if preference was True else returns postrings
+            ret = self.merge_strings(ret[0], ret[1], preference)
+
+            cfile = CsvToWeb2py()
+
+            data = []
+            dappend = data.append
+
+            temp_csv = NamedTemporaryFile(delete=False)
+            csvfilename = "%s.csv" % temp_csv.name
+
+            if preference:
+                # Only python file has been changed
+                file_name_py = "%s.py" %lang_code
+                for i in ret:
+                    dappend(("", i[0], i[1].decode("string-escape")))
+
+                cfile.write_csvfile(csvfilename, data)
+                # overwrite option
+                cfile.convert_to_w2p([csvfilename], file_name_py, "o")
+
+                os.unlink(csvfilename)
+
+            else:
+                # Only pootle file has been changed
+                for i in ret:
+                    dappend(("", i[0], i[1].decode("string-escape")))
+
+                cfile.write_csvfile(csvfilename, data)
+
+                temp_po = NamedTemporaryFile(delete=False)
+                pofilename = "%s.po" % temp_po.name
+
+                call(["csv2po", "-i", csvfilename, "-o", pofilename])
+                self.upload_to_pootle(lang_code, pofilename)
+
+                # Clean up extra created files
+                os.unlink(csvfilename)
+                os.unlink(pofilename)
+
 # END =========================================================================
