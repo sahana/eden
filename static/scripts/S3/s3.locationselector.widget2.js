@@ -14,7 +14,7 @@
  */
 
 // Module pattern to hide internal vars
-(function () {
+(function() {
 
     /**
      * Instantiate a LocationSelector

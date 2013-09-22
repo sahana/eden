@@ -13,7 +13,7 @@
 //S3.dataTables = {};
 
 // Module pattern to hide internal vars
-(function () {
+(function() {
     // Module scope
     var bulk_action_controls;
     var selected;

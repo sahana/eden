@@ -54,6 +54,14 @@ def index():
             script = "/%s/static/scripts/S3/s3.gis.fullscreen.min.js" % appname
         s3.scripts.append(script)
 
+    help = T("To Print or Share the Map you will have to take a screenshot. If you need help taking a screen shot, have a look at these instructions for %(windows)s or %(mac)s") \
+        % dict(windows="<a href='http://www.wikihow.com/Take-a-Screenshot-in-Microsoft-Windows' target='_blank'>Windows</a>",
+               mac="<a href='http://www.wikihow.com/Take-a-Screenshot-in-Mac-OS-X' target='_blank'>Mac</a>")
+    script = '''i18n.gis_print_help="%s"''' % help
+    s3.js_global.append(script)
+    script = "/%s/static/scripts/S3/s3.gis.print_help.js" % appname
+    s3.scripts.append(script)
+
     # Include an embedded Map on the index page
     map = define_map(height=height,
                      width=width,

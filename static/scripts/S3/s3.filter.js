@@ -5,7 +5,7 @@
 S3.search = {};
 
 // Module pattern to hide internal vars
-(function () {
+(function() {
 
     /**
      * pendingTargets: targets which were invisible during last filter-submit

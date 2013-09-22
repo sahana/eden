@@ -21,7 +21,7 @@ OpenLayers.Util.onImageLoadErrorColor = 'transparent';
 OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 
 // Module pattern to hide internal vars
-(function () {
+(function() {
 
     // Module scope
     var format_geojson = new OpenLayers.Format.GeoJSON();

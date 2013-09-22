@@ -8,6 +8,11 @@
     max-width: 200px;
 }
 
+/* Main Map */
+.gis_print_map-btn {
+    display: none;
+}
+
 /* Posts */
 #cms_post_body.text.input-xlarge {
     height: 100px;

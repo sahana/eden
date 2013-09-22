@@ -1,5 +1,5 @@
 // Module pattern to hide internal vars
-(function () {
+(function() {
     // Module scope
     var map;
 

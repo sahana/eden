@@ -1,13 +1,11 @@
 /* GIS module */
 
-.map_home {
-    margin: 0 0 0 -12px;
-}
 .map_wrapper {
     /* Allow Absolutely positioned panels within */
     position: relative;
     /* Allow legendPanel to slide out */
     overflow: hidden;
+    clear: right;
 }
 /* Ensure Throbber shows centered on main map (but not on location selector)
    - core definition in widgets.css */
@@ -22,6 +20,20 @@ form .map_loader {
 
 .x-form-item-label {
     margin: 0 0 0 4px;
+}
+
+/* Main Map */
+.map_home {
+    margin: 0 0 0 -12px;
+}
+.gis_fullscreen_map-btn {
+    font-weight: bold;
+    padding-left: 8px;
+}
+.gis_print_map-btn {
+    font-weight: bold;
+    float: right;
+    padding-right: 8px;
 }
 
 /* Location Selector Widget */
@@ -161,7 +173,7 @@ form .map_loader {
 .map_save_button {
     background-color: #FBFBFB;
     padding: 5px;
-    margin-right: 10px;
+    /*margin-right: 10px;*/
     border: solid;
     border-radius: 5px 5px 5px 5px;
     float: right;

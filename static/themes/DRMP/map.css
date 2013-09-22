@@ -5,11 +5,16 @@
 .map_wrapper img {
     max-width: none;
 }
+/* Over-ride jQuery UI Bootstrap */
+#gis_print_help_popup a {
+    color: #0088CC;
+}
 
 .map_loader {
     height: 48px;
     width: 48px;
 }
+
 
 /* West Panel */
 .x-panel-body {
