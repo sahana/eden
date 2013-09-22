@@ -62,7 +62,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var projection_current = new OpenLayers.Projection('EPSG:' + projection);
         options.projection_current = projection_current;
         if (projection == 900913) {
-            options.maxExtent = new OpenLayers.Bounds(-20037508, -20037508, 20037508, 20037508.34);
+            options.maxExtent = new OpenLayers.Bounds(-20037508.34, -20037508.34, 20037508.34, 20037508.34);
             options.maxResolution = 156543.0339;
             options.units = 'm';
         } else if (projection == 4326) {

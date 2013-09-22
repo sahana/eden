@@ -139,13 +139,13 @@ div.dl {
     padding: 4px 12px;
 }
 
-/* Push down below Nav */
+/* Push down below Nav
 #alert-space {
     position: fixed;
     left: 0;
     right: 0;
     z-index: 7000;
-}
+} */
 
 #home {
     margin-top: 55px;
