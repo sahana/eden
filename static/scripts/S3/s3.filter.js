@@ -1321,17 +1321,17 @@ S3.search = {};
         $('.groupedopts-filter-widget:visible').addClass('active');
 
         // Activate MultiSelect Widgets
-        $('.multiselect-filter-widget').each(function() {
-            if ($(this).find('option').length > 5) {
-                $(this).multiselect({
-                    selectedList: 5
-                }).multiselectfilter();
-            } else {
-                $(this).multiselect({
-                    selectedList: 5
-                });
-            }
-        });
+//         $('.multiselect-filter-widget').each(function() {
+//             if ($(this).find('option').length > 5) {
+//                 $(this).multiselect({
+//                     selectedList: 5
+//                 }).multiselectfilter();
+//             } else {
+//                 $(this).multiselect({
+//                     selectedList: 5
+//                 });
+//             }
+//         });
         if (typeof($.fn.multiselect_bs) != 'undefined') {
             // Alternative with bootstrap-multiselect (note the hack for the fn-name):
             $('.multiselect-filter-bootstrap:visible').addClass('active');
