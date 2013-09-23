@@ -226,7 +226,7 @@ form#summary-filter-form
 }
 
 /* Contacts Page */
-#pr_person_sub_human_resourcehuman_resource__label {
+.form-container #pr_person_sub_human_resourcehuman_resource__label {
     /* Hide the colon */
     display: none;
 }

@@ -3826,7 +3826,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             options.config_name = name;
             if (options.pe_id) {
                 // Normal user
-                var pe_url = '/?~.pe_id=' + options.pe_id;
+                var pe_url = '?~.pe_id__belongs=' + options.pe_id;
             } else {
                 // Map Admin
                 var pe_url = '';

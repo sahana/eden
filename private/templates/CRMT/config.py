@@ -275,6 +275,30 @@ settings.hrm.teams = False
 # -----------------------------------------------------------------------------
 # Contacts
 # -----------------------------------------------------------------------------
+def user_coalition(row):
+    """
+        The Coalition of the user
+        - required since Inline Component uses the link table
+    """
+
+    if hasattr(row, "pr_person_user"):
+        row = row.pr_person_user
+    try:
+       user_id = row.user_id
+    except:
+        # not available
+        return current.messages["NONE"]
+
+    db = current.db
+    table = db.auth_user
+    row = db(table.id == user_id).select(table.org_group_id,
+                                         limitby=(0, 1)
+                                         ).first()
+    if row:
+        return current.s3db.org_group_represent(row.org_group_id)
+    else:
+        return current.messages["NONE"]
+
 def customize_pr_person(**attr):
     """
         Customize pr_person controller
@@ -301,15 +325,19 @@ def customize_pr_person(**attr):
 
         elif r.interactive or r.representation == "aadata":
             # Modify list_fields
-            is_logged_in = current.auth.is_logged_in()
-            
+            db = current.db
+            field = db.auth_user.org_group_id
+            field.readable = True
+            field.represent = s3db.org_group_represent
             list_fields = [(current.messages.ORGANISATION, "human_resource.organisation_id"),
+                           (T("Coalition"), "user.org_group_id"),
                            "first_name",
                            #"middle_name",
                            "last_name",
                            (T("Job Title"), "human_resource.job_title_id"),
                            (T("Office"), "human_resource.site_id"),
                            ]
+            is_logged_in = current.auth.is_logged_in()
             if is_logged_in:
                 # Don't include Email/Phone for unauthenticated users
                 MOBILE = settings.get_ui_label_mobile_phone()
@@ -357,7 +385,7 @@ def customize_pr_person(**attr):
             represent = S3Represent(lookup="org_site")
             site_field.represent = represent
             if widgets:
-                site_field.requires = IS_ONE_OF(current.db, "org_site.site_id",
+                site_field.requires = IS_ONE_OF(db, "org_site.site_id",
                                                 represent,
                                                 orderby = "org_site.name")
                 site_field.comment = S3AddResourceLink(c="org", f="office",
@@ -390,6 +418,11 @@ def customize_pr_person(**attr):
             #        field.readable = field.writable = False
             #        hr_fields.remove("organisation_id")
 
+            # S3SQLInlineComponent uses the link table, so cannot access org_group_id
+            # => use a readonly virtual field instead
+            from gluon import Field
+            s3db.pr_person_user.org_group_id = Field.Lazy(user_coalition)
+
             s3_sql_custom_fields = [
                     "first_name",
                     #"middle_name",
@@ -397,12 +430,23 @@ def customize_pr_person(**attr):
                     S3SQLInlineComponent(
                         "human_resource",
                         name = "human_resource",
-                        label = "",
+                        label = "" if widgets else T("Organization"),
                         multiple = False,
                         fields = hr_fields,
                         filterby = dict(field = "contact_method",
                                         options = "SMS"
                                         )
+                    ),
+                    S3SQLInlineComponent(
+                        "user",
+                        name = "user",
+                        label = T("Coalition"),
+                        multiple = False,
+                        fields = [],
+                        # Fields needed to load for Virtual Fields
+                        extra_fields = ["user_id"],
+                        virtual_fields = [("", "org_group_id"),
+                                          ],
                     ),
                     S3SQLInlineComponent(
                         "image",
@@ -415,7 +459,7 @@ def customize_pr_person(**attr):
 
             # Don't include Email/Phone for unauthenticated users
             if is_logged_in:
-                s3_sql_custom_fields.insert(3,
+                s3_sql_custom_fields.insert(4,
                                             S3SQLInlineComponent(
                                             "contact",
                                             name = "phone",
@@ -425,7 +469,7 @@ def customize_pr_person(**attr):
                                             filterby = dict(field = "contact_method",
                                                             options = "SMS")),
                                             )
-                s3_sql_custom_fields.insert(3,
+                s3_sql_custom_fields.insert(4,
                                             S3SQLInlineComponent(
                                             "contact",
                                             name = "email",
