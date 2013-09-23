@@ -3999,7 +3999,6 @@ class pr_PersonEntityRepresent(S3Represent):
 
         if self.linkto == URL(c="pr", f="pentity", args=["[id]"]):
             # Default linkto, so modify this to the instance type-specific URLs
-            # @ToDo: I'm sure this could be optimised
             k = s3_unicode(k)
             db = current.db
             petable = db.pr_pentity
@@ -4009,14 +4008,8 @@ class pr_PersonEntityRepresent(S3Represent):
             if not pe_record:
                 return v
             tablename = pe_record.instance_type
-            table = current.s3db[tablename]
-            record = db(table.pe_id == k).select(table.id,
-                                                 limitby=(0, 1)
-                                                 ).first()
-            if not record:
-                return v
             prefix, name = tablename.split("_", 1)
-            url = URL(c=prefix, f=name, args=[record.id])
+            url = URL(c=prefix, f=name, args=["read"], vars={"~.pe_id": k})
             # Strip off any .aadata extension!
             url = url.replace(".aadata", "")
             return A(v, _href=url)
