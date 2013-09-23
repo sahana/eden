@@ -74,7 +74,8 @@ GeoExt.VectorLegend = Ext.extend(GeoExt.LayerLegend, {
      *  name.  Default is ``"Untitled "``.  Prefix will be appended with a
      *  number that corresponds to the index of the rule (1 for first rule).
      */
-    untitledPrefix: "Untitled ",
+    //untitledPrefix: "Untitled ",
+    untitledPrefix: '',
     
     /** api: config[clickableSymbol]
      *  ``Boolean``
@@ -474,6 +475,7 @@ GeoExt.VectorLegend = Ext.extend(GeoExt.LayerLegend, {
             // Copy object so that we don't affect the map markers
             var symbolizerCopy = OpenLayers.Util.extend({}, symbolizer);
             // Remove attributes which break the Legend
+            delete symbolizerCopy['label'];
             delete symbolizerCopy['graphicHeight'];
             delete symbolizerCopy['graphicWidth'];
             delete symbolizerCopy['graphicXOffset'];

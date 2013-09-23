@@ -20,7 +20,7 @@ a.brand img{
 
 /*NAV BAR AND NAV-DROPDOWN STYLING*/
 
-div.navbar-inner {
+.navbar-inner {
     position: fixed;
     top: 0px;
     width: 100%;
@@ -39,7 +39,7 @@ div.navbar-inner {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-div.navbar-inner{
+.navbar-inner{
     padding: 0;
     border-radius: 0px;
     border: none;
@@ -63,6 +63,8 @@ ul.nav li.dropdown:hover > ul.dropdown-menu{
 .navbar .nav  {
     list-style: none;
     margin: 0;
+    /* Push above Alerts */
+    z-index: 7001;
 }
 
 i.icon-cog {
