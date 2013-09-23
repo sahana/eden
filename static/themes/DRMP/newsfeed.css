@@ -181,6 +181,10 @@ label#post-cms_post_created_on-date-filter__label{
 	margin-left: 24px;
 }
 
+button.ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
+    width: 100% !important;
+}
+
 /* Large desktop */
 @media (min-width: 1200px) { 
     #post-cms_post_created_on-date-filter-ge,

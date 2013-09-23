@@ -671,11 +671,11 @@ body.popup {
 }
 
 .input_throbber {
-    background-size: 50%;
+    background-size: 60% !important;
     height: 24px;
     width: 24px;
     display: inline-block;
-    margin: 0 0 -12px -24px;
+    margin: 0 0 -11px -24px;
 }
 
 /* Resource Header */

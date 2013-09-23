@@ -1163,7 +1163,7 @@ class S3StatsPeopleModel(S3Model):
                              super_link("data_id", "stats_data"),
                              # Instance (link to Photos)
                              super_link("doc_id", "doc_entity"),
-                             Field("name", notnull=True,
+                             Field("name", #notnull=True,
                                    label=T("Name")),
                              # This is a component, so needs to be a super_link
                              # - can't override field name, ondelete or requires
