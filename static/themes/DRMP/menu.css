@@ -2,23 +2,10 @@
 
 /* Main Navigation (S3MainMenu or modules menu) */
 
-
-a.brand img{
-    width: 60px;
-    position: relative;
-    top: -13px;
+.dropdown-menu {
+    /* Default 160px from Bootstrap is too wide for just Login/Register &makes menu hard to use */
+    min-width: 100px;
 }
-
-.navbar .brand {
-    width: 200px;
-    text-shadow: none;
-    color: #fff;
-    letter-spacing: 2px;
-    font-family: "Lucida Grande", Lucida, Verdana, sans-serif;
-    margin-top: 0.4em;
-}
-
-/*NAV BAR AND NAV-DROPDOWN STYLING*/
 
 .navbar-inner {
     position: fixed;
@@ -39,15 +26,11 @@ a.brand img{
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-.navbar-inner{
+.navbar-inner {
     padding: 0;
     border-radius: 0px;
     border: none;
     border-bottom: 1px solid hsl(205, 57%, 21%);
-}
-
-#nav {
-    text-align: right;
 }
 
 .navbar .nav > li > a  {
@@ -64,7 +47,7 @@ ul.nav li.dropdown:hover > ul.dropdown-menu{
     list-style: none;
     margin: 0;
     /* Push above Alerts */
-    z-index: 7001;
+    z-index: 1000;
 }
 
 i.icon-cog {

@@ -1173,16 +1173,14 @@ class S3StatsPeopleModel(S3Model):
                                         represent = S3Represent(lookup="stats_parameter"),
                                         readable = True,
                                         writable = True,
-                                        empty = True,
+                                        empty = False,
                                         comment = S3AddResourceLink(c="stats",
                                                                     f="people_type",
                                                                     vars = dict(child = "parameter_id"),
                                                                     title=ADD_PEOPLE_TYPE),
                                         ),
                              Field("value", "integer", 
-                                   requires=IS_NULL_OR(
-                                               IS_INT_IN_RANGE(0, 999999)
-                                               ),
+                                   requires=IS_INT_IN_RANGE(0, 999999),
                                    label=T("Number of People")),
                              self.gis_location_id(label=T("Address")),
                              self.pr_person_id(label=T("Contact Person")),

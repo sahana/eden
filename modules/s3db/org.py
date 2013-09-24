@@ -1156,16 +1156,14 @@ class S3OrganisationResourceModel(S3Model):
                                                                      translate=True),
                                              readable = True,
                                              writable = True,
-                                             empty = True,
+                                             empty = False,
                                              comment = S3AddResourceLink(c="org",
                                                                          f="resource_type",
                                                                          vars = dict(child = "parameter_id"),
                                                                          title=ADD_RESOURCE_TYPE),
                                              ),
                                   Field("value", "integer", 
-                                        requires=IS_NULL_OR(
-                                                    IS_INT_IN_RANGE(0, 999999)
-                                                    ),
+                                        requires=IS_INT_IN_RANGE(0, 999999),
                                         label=T("Quantity")),
                                   s3_comments(),
                                   *s3_meta_fields())
