@@ -92,17 +92,22 @@
       </li>
       <li class='dropdown'><a href='#' class='dropdown-toggle disabled' data-toggle='dropdown'><i class='icon-cog'></i><b class='caret'></b></a>
        <ul class='dropdown-menu'>
-        <li><a href='/{{=appname}}/pr/person'><i class='icon-user'></i> {{=T("Contact People")}}</a></li>
-        <li class='divider'></li>
         {{if auth.is_logged_in():}}
+        <li>{{=auth.user.email}}</li>
         <li><a href='/{{=appname}}/default/person'><i class='icon-cog'></i> {{=T("Preferences")}}</a></li>
         <li><a href='/{{=appname}}/default/index/filters'><i class='icon-filter'></i> {{=T("Saved Filters")}}</a></li>
         <li><a href='/{{=appname}}/gis/config'><i class='icon-globe'></i> {{=T("Saved Maps")}}</a></li>
         <li><a href='/{{=appname}}/default/user/change_password'><i class='icon-lock'></i> {{=T("Change Password")}}</a></li>
         <li><a href='/{{=appname}}/default/user/logout'><i class='icon-off'></i> {{=T("Logout")}}</a></li>
+        {{if auth.s3_has_role("ADMIN"):}}
+        <li class='divider'></li>
+        <li><a href='/{{=appname}}/admin/user'><i class='icon-cogs'></i> {{=T("Admin")}}</a></li>
+        {{pass}}
+        <li class='divider'></li>
+        <li><a href='/{{=appname}}/pr/person'><i class='icon-list'></i> {{=T("Contact People")}}</a></li>
         {{else:}}
         <li><a href='/{{=appname}}/default/user/login'><i class='icon-signin'></i> {{=T("Login")}}</a></li>
-        <li><a href='/{{=appname}}/default/user/login'><i class='icon-check'></i> {{=T("Register")}}</a></li>
+        <li><a href='/{{=appname}}/default/user/register'><i class='icon-check'></i> {{=T("Register")}}</a></li>
         {{pass}}
        </ul>
       </li>

@@ -104,9 +104,11 @@ settings.base.system_name_short = T("CRMT")
 settings.base.theme = "CRMT"
 settings.ui.formstyle_row = "bootstrap"
 settings.ui.formstyle = "bootstrap"
+settings.ui.hide_report_options = False
 #settings.gis.map_height = 600
 #settings.gis.map_width = 854
 
+settings.base.youtube_id = "HR-FtR2XkBU"
 # -----------------------------------------------------------------------------
 # L10n (Localization) settings
 settings.L10n.languages = OrderedDict([
@@ -653,7 +655,7 @@ def customize_project_activity(**attr):
                                   ]
 
                 # @ToDo: Month/Year Lazy virtual fields (like in PM tool)
-                report_fields = ["name",
+                report_fields = [#"name",
                                  "activity_type_id",
                                  "activity_group.group_id",
                                  "location_id$L3",
@@ -663,11 +665,11 @@ def customize_project_activity(**attr):
                     rows=report_fields,
                     cols=report_fields,
                     fact=[("count(name)", T("Number of Activities"))],
-                    defaults=Storage(rows="activity_group.group_id",
-                                     cols="activity.activity_type_id",
+                    defaults=Storage(rows="activity.activity_type_id",
+                                     #cols="activity_group.group_id",
                                      fact="count(name)",
                                      totals=True,
-                                     chart = "breakdown:cols",
+                                     chart = "barchart:rows",
                                      table = "collapse",
                                      )
                     )
@@ -852,7 +854,7 @@ def customize_org_organisation(**attr):
                 s3.crud_strings.org_organisation.title_report = T("Organization Matrix")
 
                 # Custom Report Fields
-                report_fields = ["name",
+                report_fields = [#"name",
                                  (T("Coalitions"), "group_membership.group_id"),
                                  (T("Sectors"), "sector_organisation.sector_id"),
                                  (T("Services"), "service_organisation.service_id"),
@@ -862,11 +864,11 @@ def customize_org_organisation(**attr):
                     rows = report_fields,
                     cols = report_fields,
                     fact = [("count(name)", T("Number of Organizations"))],
-                    defaults = Storage(rows = "service_organisation.service_id",
-                                       cols = "sector_organisation.sector_id",
+                    defaults = Storage(rows = "sector_organisation.sector_id",
+                                       #cols = "service_organisation.service_id",
                                        fact = "count(name)",
                                        totals = True,
-                                       chart = "breakdown:cols",
+                                       chart = "barchart:rows",
                                        table = "collapse",
                                        )
                     )
@@ -1158,8 +1160,8 @@ def customize_org_facility(**attr):
                                                   ),
                                   ]
 
-                report_fields = ["name",
-                                 "site_facility_type.facility_type_id",
+                report_fields = [#"name",
+                                 (T("Type of Place"),"site_facility_type.facility_type_id"),
                                  "site_org_group.group_id",
                                  "location_id$L3",
                                  "organisation_id",
@@ -1169,11 +1171,11 @@ def customize_org_facility(**attr):
                     rows=report_fields,
                     cols=report_fields,
                     fact=[("count(name)", T("Number of Places"))],
-                    defaults=Storage(rows="site_org_group.group_id",
-                                     cols="site_facility_type.facility_type_id",
+                    defaults=Storage(rows="site_facility_type.facility_type_id",
+                                     #cols="site_org_group.group_id",
                                      fact="count(name)",
                                      totals=True,
-                                     chart = "breakdown:cols",
+                                     chart = "barchart:rows",
                                      table = "collapse",
                                      )
                     )
@@ -1310,18 +1312,18 @@ def customize_stats_people(**attr):
         tablename = "stats_people"
         table = s3db[tablename]
 
-        # Disable Locations: located just via Coalition
-        table.location_id.readable = False
-        table.location_id.writable = False
+        # Disable name
+        table.name.readable = False
+        table.name.writable = False
 
         if r.method == "summary" or r.representation == "aadata":
             # Modify list_fields
             list_fields = ["id",
-                           "name",
+                           #"name",
                            "parameter_id",
                            "value",
                            "people_group.group_id",
-                           #"location_id",
+                           "location_id",
                            "person_id",
                            "comments",
                            ]
@@ -1370,21 +1372,21 @@ def customize_stats_people(**attr):
                                                   ),
                                   ]
 
-                report_fields = ["name",
+                report_fields = [#"name",
                                  "parameter_id",
                                  "people_group.group_id",
-                                 #"location_id$L3",
+                                 "location_id$L3",
                                  ]
 
                 report_options = Storage(
                     rows=report_fields,
                     cols=report_fields,
                     fact=[("sum(value)", T("Number of People"))],
-                    defaults=Storage(rows="people_group.group_id",
-                                     cols="people.parameter_id",
+                    defaults=Storage(rows="people.parameter_id",
+                                     #cols="people_group.group_id",
                                      fact="sum(value)",
                                      totals=True,
-                                     chart = "breakdown:cols",
+                                     chart = "barchart:rows",
                                      table = "collapse",
                                      )
                     )
@@ -1397,7 +1399,7 @@ def customize_stats_people(**attr):
                                filter_formstyle = filter_formstyle,
                                report_options = report_options,
                                # No Map for People
-                               summary = [s for s in settings.ui.summary if s["name"] != "map"],
+                               #summary = [s for s in settings.ui.summary if s["name"] != "map"],
                                )
             else:
                 # Custom Form (Read/Create/Update)
@@ -1411,15 +1413,15 @@ def customize_stats_people(**attr):
                     widgets = False
 
                 if widgets:
-                    #field = table.location_id
-                    #field.label = "" # Gets replaced by widget
-                    #field.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
-                    #field.widget = S3LocationSelectorWidget2(levels=["L3"],
-                                                             #hide_lx=False,
-                                                             #reverse_lx=True,
-                                                             #show_postcode=True,
-                                                             #show_map=False,
-                                                             #)
+                    field = table.location_id
+                    field.label = "" # Gets replaced by widget
+                    field.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
+                    field.widget = S3LocationSelectorWidget2(levels=["L3"],
+                                                             hide_lx=False,
+                                                             reverse_lx=True,
+                                                             show_postcode=True,
+                                                             show_map=False,
+                                                             )
     
                     # L3s only
                     #from s3.s3fields import S3Represent
@@ -1456,7 +1458,7 @@ def customize_stats_people(**attr):
                         fields = ["group_id"],
                         multiple = False,
                     ),
-                    #"location_id",
+                    "location_id",
                     "person_id",
                     S3SQLInlineComponent(
                         "document",
@@ -1517,7 +1519,7 @@ def customize_vulnerability_evac_route(**attr):
             # Modify list_fields
             list_fields = ["id",
                            "name",
-                           "hazard_id",
+                           (T("Hazard Type"),"hazard_id"),
                            "evac_route_group.group_id",
                            "location_id",
                            "comments",
@@ -1551,8 +1553,8 @@ def customize_vulnerability_evac_route(**attr):
                                                   ),
                                   ]
 
-                report_fields = ["name",
-                                 (T("Hazard"), "hazard_id"),
+                report_fields = [#"name",
+                                 (T("Hazard Type"),"hazard_id"),
                                  "evac_route_group.group_id",
                                  "location_id$L3",
                                  ]
@@ -1561,11 +1563,11 @@ def customize_vulnerability_evac_route(**attr):
                     rows=report_fields,
                     cols=report_fields,
                     fact=[("count(name)", T("Number of Evacuation Routes"))],
-                    defaults=Storage(rows="evac_route_group.group_id",
-                                     cols="evac_route.hazard_id",
+                    defaults=Storage(rows="evac_route.hazard_id",
+                                     #cols="evac_route_group.group_id",
                                      fact="count(name)",
                                      totals=True,
-                                     chart = "breakdown:cols",
+                                     chart = "barchart:rows",
                                      table = "collapse",
                                      )
                     )
@@ -1672,7 +1674,7 @@ def customize_vulnerability_risk(**attr):
             # Modify list_fields
             list_fields = ["id",
                            "name",
-                           "hazard_id",
+                           (T("Hazard Type"),"hazard_id"),
                            "risk_group.group_id",
                            "location_id",
                            "comments",
@@ -1727,8 +1729,8 @@ def customize_vulnerability_risk(**attr):
                                                   ),
                                   ]
 
-                report_fields = ["name",
-                                 "hazard_id",
+                report_fields = [#"name",
+                                 (T("Hazard Type"),"hazard_id"),
                                  "risk_group.group_id",
                                  "location_id$L3",
                                  ]
@@ -1737,11 +1739,11 @@ def customize_vulnerability_risk(**attr):
                     rows=report_fields,
                     cols=report_fields,
                     fact=[("count(name)", T("Number of Risks"))],
-                    defaults=Storage(rows="risk_group.group_id",
-                                     cols="risk.hazard_id",
+                    defaults=Storage(rows="risk.hazard_id",
+                                     #cols="risk_group.group_id",
                                      fact="count(name)",
                                      totals=True,
-                                     chart = "breakdown:cols",
+                                     chart = "barchart:rows",
                                      table = "collapse",
                                      )
                     )

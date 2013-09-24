@@ -297,3 +297,37 @@ div#ext-gen113 {
 div.map_legend_panel {
     margin-bottom: 30px;
 }
+
+/* Report */
+#charts .pt-form,
+#charts .pt-form fieldset {
+    border: none;
+    background-color: transparent;
+    margin-top: 0;
+    padding-top: 0;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.pt-chart-title {
+    text-align: center;
+    width: 100%;
+}
+
+.pt-chart-contents {
+    background-color: white;
+    border: 1px solid #b2b2b2;
+    border-radius: 5px;
+}
+
+#charts legend,
+.pt-fact-single-option,
+#charts tr td:nth-child(3),
+#summary-2-cols,
+.pt-show-totals-option,
+.pt-chart-controls,
+.pt-hide-chart,
+.pt-toggle-table
+ {
+    display: none;
+}
