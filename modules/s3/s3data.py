@@ -428,67 +428,69 @@ class S3DataTable(object):
             div.append(link)
             div.append(" | ")
 
-        div.append("%s:" % current.T("Export to"))
-        iconList = []
-        formats = s3.formats
         export_formats = current.deployment_settings.get_ui_export_formats()
-        EXPORT = T("Export in %(format)s format")
+        if export_formats:
+            div.append("%s:" % current.T("Export to"))
+            iconList = []
+            formats = s3.formats
+            EXPORT = T("Export in %(format)s format")
 
-        # In reverse-order of appearance due to float-right
-        if "map" in formats and "map" in export_formats:
-            iconList.append(DIV(_class="export_map",
-                                _onclick="S3.dataTables.formatRequest('map','%s','%s');" % (id, formats.map),
-                                _title=T("Show on Map"),
-                                ))
-        if "kml" in export_formats:
-            if "kml" in formats:
-                iconList.append(DIV(_class="export_kml",
-                                    _onclick="S3.dataTables.formatRequest('kml','%s','%s');" % (id, formats.kml),
-                                    _title=EXPORT % dict(format="KML"),
+            # In reverse-order of appearance due to float-right
+            if "map" in formats and "map" in export_formats:
+                iconList.append(DIV(_class="export_map",
+                                    _onclick="S3.dataTables.formatRequest('map','%s','%s');" % (id, formats.map),
+                                    _title=T("Show on Map"),
                                     ))
-            elif rfields:
-                kml_list = ["location_id",
-                            "site_id",
-                            ]
-                for r in rfields:
-                    if r.fname in kml_list:
-                        iconList.append(DIV(_class="export_kml",
-                                            _onclick="S3.dataTables.formatRequest('kml','%s','%s');" % (id, default_url),
-                                            _title=EXPORT % dict(format="KML"),
-                                            ))
-                        break
-        if "have" in formats and "have" in export_formats:
-            iconList.append(DIV(_class="export_have",
-                                _onclick="S3.dataTables.formatRequest('have','%s','%s');" % (id, formats.have),
-                                _title=EXPORT % dict(format="HAVE"),
-                                ))
-        if "xml" in export_formats:
-            url = formats.xml if formats.xml else default_url
-            iconList.append(DIV(_class="export_xml",
-                                _onclick="S3.dataTables.formatRequest('xml','%s','%s');" % (id, url),
-                                _title=EXPORT % dict(format="XML"),
-                                ))
-        if "rss" in export_formats:
-            url = formats.rss if formats.rss else default_url
-            iconList.append(DIV(_class="export_rss",
-                                _onclick="S3.dataTables.formatRequest('rss','%s','%s');" % (id, url),
-                                _title=EXPORT % dict(format="RSS"),
-                                ))
-        if "xls" in export_formats:
-            url = formats.xls if formats.xls else default_url
-            iconList.append(DIV(_class="export_xls",
-                                _onclick="S3.dataTables.formatRequest('xls','%s','%s');" % (id, url),
-                                _title=EXPORT % dict(format="XLS"),
-                                ))
-        if "pdf" in export_formats:
-            url = formats.pdf if formats.pdf else default_url
-            iconList.append(DIV(_class="export_pdf",
-                                _onclick="S3.dataTables.formatRequest('pdf','%s','%s');" % (id, url),
-                                _title=EXPORT % dict(format="PDF"),
-                                ))
+            if "kml" in export_formats:
+                if "kml" in formats:
+                    iconList.append(DIV(_class="export_kml",
+                                        _onclick="S3.dataTables.formatRequest('kml','%s','%s');" % (id, formats.kml),
+                                        _title=EXPORT % dict(format="KML"),
+                                        ))
+                elif rfields:
+                    kml_list = ["location_id",
+                                "site_id",
+                                ]
+                    for r in rfields:
+                        if r.fname in kml_list:
+                            iconList.append(DIV(_class="export_kml",
+                                                _onclick="S3.dataTables.formatRequest('kml','%s','%s');" % (id, default_url),
+                                                _title=EXPORT % dict(format="KML"),
+                                                ))
+                            break
+            if "have" in formats and "have" in export_formats:
+                iconList.append(DIV(_class="export_have",
+                                    _onclick="S3.dataTables.formatRequest('have','%s','%s');" % (id, formats.have),
+                                    _title=EXPORT % dict(format="HAVE"),
+                                    ))
+            if "xml" in export_formats:
+                url = formats.xml if formats.xml else default_url
+                iconList.append(DIV(_class="export_xml",
+                                    _onclick="S3.dataTables.formatRequest('xml','%s','%s');" % (id, url),
+                                    _title=EXPORT % dict(format="XML"),
+                                    ))
+            if "rss" in export_formats:
+                url = formats.rss if formats.rss else default_url
+                iconList.append(DIV(_class="export_rss",
+                                    _onclick="S3.dataTables.formatRequest('rss','%s','%s');" % (id, url),
+                                    _title=EXPORT % dict(format="RSS"),
+                                    ))
+            if "xls" in export_formats:
+                url = formats.xls if formats.xls else default_url
+                iconList.append(DIV(_class="export_xls",
+                                    _onclick="S3.dataTables.formatRequest('xls','%s','%s');" % (id, url),
+                                    _title=EXPORT % dict(format="XLS"),
+                                    ))
+            if "pdf" in export_formats:
+                url = formats.pdf if formats.pdf else default_url
+                iconList.append(DIV(_class="export_pdf",
+                                    _onclick="S3.dataTables.formatRequest('pdf','%s','%s');" % (id, url),
+                                    _title=EXPORT % dict(format="PDF"),
+                                    ))
 
-        for icon in iconList:
-            div.append(icon)
+            for icon in iconList:
+                div.append(icon)
+
         return div
 
     # -------------------------------------------------------------------------

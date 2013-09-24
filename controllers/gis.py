@@ -791,7 +791,16 @@ def config():
 
     # Pre-process
     def prep(r):
-        if r.interactive:
+        if r.representation == "url":
+            # Save from Map
+            if r.method == "create" and \
+                 auth.is_logged_in() and \
+                 not auth.s3_has_role(MAP_ADMIN):
+                pe_id = auth.user.pe_id
+                r.table.pe_id.default = pe_id
+                r.table.pe_type.default = 1
+
+        elif r.interactive or r.representation == "aadata":
             if not r.component:
                 s3db.gis_config_form_setup()
                 if auth.s3_has_role(MAP_ADMIN):
@@ -808,24 +817,36 @@ def config():
                                                   },
                                    )
                 else:
+                    s3.crud_strings.gis_config.title_list = T("Saved Maps")
+                    # Hide Exports
+                    settings.ui.export_formats = []
                     # Filter Region & Default Configs
                     table = r.table
                     s3.filter = (table.region_location_id == None) & \
                                 (table.uuid != "SITE_DEFAULT")
                     list_fields = ["name",
+                                   "pe_id",
+                                   "pe_default",
                                    ]
+                    CREATED_BY = T("Created By")
+                    field = table.pe_id
+                    field.label = CREATED_BY
+                    field.represent = s3db.pr_PersonEntityRepresent(show_label = False,
+                                                                    show_type = False,
+                                                                    show_link = True,
+                                                                    )
+                    settings.search.filter_manager = False
+                    from s3.s3filter import S3OptionsFilter
+                    filter_widgets = [
+                            S3OptionsFilter("pe_id",
+                                            label = CREATED_BY,
+                                            widget = "multiselect",
+                                            )
+                        ]
+                    s3db.configure("gis_config",
+                                   filter_widgets = filter_widgets)
                     if auth.is_logged_in():
-                        if "~.pe_id" in request.get_vars:
-                            s3.crud_strings.gis_config.title_list = T("My Maps")
-                            list_fields.append("pe_default")
-                        else:
-                            s3.crud_strings.gis_config.title_list = T("Saved Maps")
-                            list_fields.append("pe_id")
-                            field = table.pe_id
-                            field.label = T("Person")
-                            field.represent = s3db.pr_PersonEntityRepresent(show_label=False, show_type=False)
                         # For Create forms
-                        field = table.pe_id
                         field.default = auth.user.pe_id
                         field.readable = field.writable = False
                         fields = ["name",
@@ -918,15 +939,6 @@ def config():
                                                          not_filter_opts=[row.layer_id for row in rows]
                                                          )
 
-        elif r.representation == "url":
-            # Save from Map
-            if r.method == "create" and \
-                 auth.is_logged_in() and \
-                 not auth.s3_has_role(MAP_ADMIN):
-                pe_id = auth.user.pe_id
-                r.table.pe_id.default = pe_id
-                r.table.pe_type.default = 1
-
         return True
     s3.prep = prep
 
@@ -1009,7 +1021,9 @@ def config():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader)
+    output = s3_rest_controller(rheader=s3db.gis_rheader,
+                                hide_filter = False,
+                                )
     return output
 
 # -----------------------------------------------------------------------------

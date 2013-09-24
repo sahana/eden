@@ -35,6 +35,18 @@ form .map_loader {
     float: right;
     padding-right: 8px;
 }
+.notitle .ui-dialog-titlebar {
+    background-image: none !important;
+    border: 0;
+    padding: 0;
+}
+.notitle .ui-dialog-title {
+    margin: 0;
+    padding: 0;
+}
+.notitle .ui-dialog-titlebar-close {
+    margin-top: -10px;
+}
 
 /* Location Selector Widget */
 .form-container form button.gis_loc_select_btn {

@@ -4,7 +4,10 @@ $(document).ready(function() {
             $('#gis_print_help_popup').dialog('open');
         } else {
             $(this).append('<div id="gis_print_help_popup">' + i18n.gis_print_help + '</div>');
-            $('#gis_print_help_popup').dialog();
+            $('#gis_print_help_popup').dialog({
+                dialogClass: 'notitle',
+                minHeight: 50
+            });
         }
     })
 });

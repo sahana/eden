@@ -918,6 +918,14 @@ class S3PersonModel(S3Model):
 
         add_component("member_membership", pr_person="person_id")
 
+        # Users
+        add_component("auth_user", pr_person=dict(link="pr_person_user",
+                                                  joinby="pe_id",
+                                                  key="user_id",
+                                                  fkey="id",
+                                                  pkey="pe_id",
+                                                  ))
+
         # HR Record
         add_component("hrm_human_resource", pr_person="person_id")
 
@@ -3948,7 +3956,10 @@ class pr_PersonEntityRepresent(S3Represent):
                  show_label=True,
                  default_label="[No ID Tag]",
                  show_type=True,
-                 multiple=False):
+                 multiple=False,
+                 show_link=False,
+                 linkto=None,
+                 ):
         """
             Constructor
 
@@ -3964,7 +3975,49 @@ class pr_PersonEntityRepresent(S3Represent):
 
         super(pr_PersonEntityRepresent, self).__init__(lookup="pr_pentity",
                                                        key="pe_id",
-                                                       multiple=multiple)
+                                                       multiple=multiple,
+                                                       show_link=show_link,
+                                                       linkto=linkto,
+                                                       )
+
+    # -------------------------------------------------------------------------
+    def link(self, k, v, rows=None):
+        """
+            Represent a (key, value) as hypertext link.
+
+                - Typically, k is a foreign key value, and v the
+                  representation of the referenced record, and the link
+                  shall open a read view of the referenced record.
+
+                - The linkto-parameter expects a URL (as string) with "[id]"
+                  as placeholder for the key.
+
+            @param k: the key
+            @param v: the representation of the key
+            @param rows: the rows
+        """
+
+        if self.linkto == URL(c="pr", f="pentity", args=["[id]"]):
+            # Default linkto, so modify this to the instance type-specific URLs
+            k = s3_unicode(k)
+            db = current.db
+            petable = db.pr_pentity
+            pe_record = db(petable._id == k).select(petable.instance_type,
+                                                    limitby=(0, 1)
+                                                    ).first()
+            if not pe_record:
+                return v
+            tablename = pe_record.instance_type
+            prefix, name = tablename.split("_", 1)
+            url = URL(c=prefix, f=name, args=["read"], vars={"~.pe_id": k})
+            # Strip off any .aadata extension!
+            url = url.replace(".aadata", "")
+            return A(v, _href=url)
+        else:
+            # Custom linkto
+            k = s3_unicode(k)
+            return A(v, _href=self.linkto.replace("[id]", k) \
+                                         .replace("%5Bid%5D", k))
 
     # -------------------------------------------------------------------------
     def lookup_rows(self, key, values, fields=[]):
