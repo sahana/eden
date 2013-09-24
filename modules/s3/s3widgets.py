@@ -4500,8 +4500,8 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         # * Show Selected List
         if self.header is True:
             header = '''checkAllText:'%s',uncheckAllText:"%s"''' % \
-                (T("Check all"),
-                 T("Uncheck all"))
+                (T("Select all"),
+                 T("Clear all"))
         elif self.header is False:
             header = '''header:false'''
         else:
