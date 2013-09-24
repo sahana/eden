@@ -1,6 +1,13 @@
 {{extend "layout.html"}}
 <div class = "banner">
   <img class = "banner" src="/{{=appname}}/static/themes/CRMT/LA.jpg" alt="Banner"/>
+  <div class='banner-btns'>
+    <a class='btn' href='/{{=appname}}/default/video'><i class='icon-youtube-play'></i> {{=T("Introduction")}}</a>
+    {{if not auth.is_logged_in():}}
+    <a class='btn' href='/{{=appname}}/default/user/register'><i class='icon-check'></i> {{=T("Register")}}</a>
+    <a class='btn' href='/{{=appname}}/default/user/login'><i class='icon-signin'></i> {{=T("Login")}}</a>
+    {{pass}}
+  </div>
   <div class="title">
     <!-- <img class = "logo" src="/{{=appname}}/static/img/sahanalarge_14.png" alt="Sahana Logo"/> -->
     <h1>Sahana</h1>
@@ -13,7 +20,7 @@
    <div class="span4">
     <div class="intro">
      <h3>Understand Your </br>Community Resilience</h3>
-     <p>Use maps and charts to understand the relationships between different factors which affect your community's resilience.</p>
+     <p>Use maps and charts to picture and understand you community's resilience.</p>
      <h3>All Your Data in One Place</h3>
      <p>Manage the data you collect with data from external sources such as Hazard Data from USGS and Census Data</p>
     </div>
@@ -39,8 +46,8 @@
  </div>
  <div class="span4"> 
   <div class="community-data ">
-   <h3>Community Data</h3>
-   <p>Record the vulnerabilities, hazards, activities and resources which affect your community's resilience</p>
+   <h3>Your Community</h3>
+   <p>Manage data about the  resources, hazards and activities which affect your community resilience.</p>
    {{for opt in response.menu:}}
     <a href='{{=opt["url"]}}/summary' class="">
      <i class='{{=opt["icon"]}}'></i> {{=opt["name"]}}
