@@ -491,7 +491,7 @@ $(function() {
 
         // Collect the values from the edit-row
         var data = inline_deserialize(formname);
-        var row_data = inline_collect_data(formname, data, rowindex);
+        var row_data = inline_collect_data(formname, data, '0');
 
         if (row_data['_delete']) {
 
