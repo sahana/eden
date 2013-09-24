@@ -1,5 +1,20 @@
 /* Stuff which is DRMP-specific */
 
+.navbar .brand {
+    width: 200px;
+    text-shadow: none;
+    color: #fff;
+    letter-spacing: 2px;
+    font-family: "Lucida Grande", Lucida, Verdana, sans-serif;
+    margin-top: 0.4em;
+}
+
+a.brand img{
+    width: 60px;
+    position: relative;
+    top: -13px;
+}
+
 .export_xls {
     background-image: url(img/icon-xls.png);
 }

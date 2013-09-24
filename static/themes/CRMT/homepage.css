@@ -20,7 +20,7 @@ p {
 
 .title {
     position: absolute;
-    width: 100%;
+    width: 80%;
     top: 0;
     margin: 35px 0 0 60px;
 }
@@ -44,6 +44,19 @@ p {
 .title h2 {
     font-size: 24pt;
     margin: 0;
+}
+
+.banner-btns {
+    width: 100%;
+    padding-left: 82%;
+    position: absolute;
+    top: 15px;
+}
+
+.banner .btn {
+    clear: left;
+    float: left;
+    margin: 0 15px 15px 0;
 }
 
 .intro { 
@@ -156,8 +169,8 @@ label.inactive {
 .map-btn {
     float: right;
     position: relative;
-    z-index:1;
-    margin: 15px
+    margin: 15px;
+    z-index: 1;
 }
 
 div.map {
