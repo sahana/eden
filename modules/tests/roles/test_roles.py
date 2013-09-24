@@ -35,37 +35,39 @@ import unittest
 from tests.web2unittest import SeleniumUnitTest
 from tests.roles.create_role_test_data import *
 
+
 #----------------------------------------------------------------------
-# Test Permissions against Role Matrix File
 def test_roles():
+    """
+    Test Permissions against Role Matrix File
+    Documentation - http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing/Roles
+    """
 
     db = current.db
     s3db = current.s3db
 
+    template = current.deployment_settings.base.template
+
     suite = unittest.TestSuite()
-    
-    # Define Organisations
-    orgs = ["Org-A",
-            "Org-B",
-            "Org-C",
-            ]
-    branches = [None,
-                "Branch-A"
-                ]
+
+    # Get orgs and branches from template specific file.
+    exec("from tests.roles." + template + ".test_orgs import get_org_branches")
+    #from tests.roles.IFRC.test_orgs import get_org_branches
+    (orgs, branches) = get_org_branches()
 
     create_role_test_data(orgs, branches)
 
     orgs = ["Org-A"]
-    table_lookup = {"hrm_staff":"hrm_human_resource",
-                    "vol_volunteer":"hrm_human_resource",
+    table_lookup = {"hrm_staff": "hrm_human_resource",
+                    "vol_volunteer": "hrm_human_resource",
                     }
 
     for org in orgs:
-        permission_matrix_filename = os.path.join(current.request.folder,"modules", "tests", "roles",
-                                                  current.deployment_settings.base.template, "%s_permission_matrix.csv" % org)
+        permission_matrix_filename = os.path.join(current.request.folder, "modules", "tests", "roles",
+                                                  template, "%s_permission_matrix.csv" % org)
         permission_matrix_file = open(permission_matrix_filename, "rb")
         permission_matrix = csv.DictReader(permission_matrix_file)
-        row_num = 1 # Header Row
+        row_num = 1  # Header Row
         for test in permission_matrix:
             row_num = row_num + 1
 
@@ -81,7 +83,7 @@ def test_roles():
             elif c and f:
                 tablename = "%s_%s" % (c, f)
                 try:
-                    db_table =  s3db[table_lookup.get(tablename, tablename)]
+                    db_table = s3db[table_lookup.get(tablename, tablename)]
                 except:
                     db_table = None
             else:
@@ -91,9 +93,9 @@ def test_roles():
             if uuid:
                 #print "%s, %s, %s, %s" % (table,c,f, uuid)
                 #print uuid
-                rec = db(db_table.uuid==uuid).select(db_table._id,
-                                                     limitby=(0, 1)
-                                                    )
+                rec = db(db_table.uuid == uuid).select(db_table._id,
+                                                       limitby=(0, 1)
+                                                       )
                 if rec:
                     record_id = rec.first()[db_table._id]
                 else:
@@ -102,24 +104,25 @@ def test_roles():
                 record_id = None
 
             for user, permission in test.items():
-                if user in ["table","c", "f", "method", "uuid"] or not user:
+                if user in ["table", "c", "f", "method", "uuid"] or not user:
                     continue
                 test_role = TestRole()
-                test_role.set(org = org,
-                              row_num = row_num,
-                                     user = user,
-                                     method = method,
-                                     table = table,
-                                     c = c,
-                                     f = f,
-                                     record_id = record_id,
-                                     uuid = uuid,
-                                     permission = permission)
+                test_role.set(org=org,
+                              row_num=row_num,
+                              user=user,
+                              method=method,
+                              table=table,
+                              c=c,
+                              f=f,
+                              record_id=record_id,
+                              uuid=uuid,
+                              permission=permission)
                 suite.addTest(test_role)
 
     return suite
     #self.assertFalse(permitted)
     #self.assertTrue(False,"This Should have been True")
+
 
 class TestRole(SeleniumUnitTest):
     def set(self,
@@ -160,11 +163,11 @@ class TestRole(SeleniumUnitTest):
         permission = self.permission
 
         auth.s3_impersonate(user)
-        permitted = auth.permission.has_permission(method = method,
-                                                   t = table,
-                                                   c = c,
-                                                   f = f,
-                                                   record = record_id)
+        permitted = auth.permission.has_permission(method=method,
+                                                   t=table,
+                                                   c=c,
+                                                   f=f,
+                                                   record=record_id)
         msg = """Permission Error
 Organisation:%s (Row:%s)
 user:%s
