@@ -1187,7 +1187,7 @@ def render_posts(listid, resource, rfields, record,
         for doc in documents:
             try:
                 doc_name = retrieve(doc)[0]
-            except IOError:
+            except (IOError, TypeError):
                 doc_name = current.messages["NONE"]
             doc_url = URL(c="default", f="download",
                           args=[doc])

@@ -22,6 +22,7 @@ h2.summary {
     margin: 15px;
     padding: 4px 6px;
     float: left;
+    z-index: 1000; /* Push above alert-space: Not working :/ */
 }
 
 .ui-tabs {
@@ -52,6 +53,10 @@ h2.summary {
 }
 #summary-sections .map_loader { 
     margin-top: 125px;
+}
+
+#summary-tab-headers li {
+    z-index: 1000; /* Push above alert-space */
 }
 
 #summary-tabs .ui-tabs-nav {
