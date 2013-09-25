@@ -76,7 +76,7 @@
     <ul class='nav'>
      <li><a class='home' href='/{{=appname}}/default/index'><img src="/{{=appname}}/static/img/sahanalarge_14.png" alt="Sahana"/></a></li>
      <li><a class='map' href='/{{=appname}}/gis/index'><i class='icon-globe'></i> {{=T("Make a Map")}}</a></li>
-     <li class='dropdown'> <a href='#' class='dropdown-toggle disabled top-level' id='community-data' data-toggle='dropdown'><i class='icon-folder-open-alt'></i> {{=T("Explore Community Data")}}<b class='caret'></b></a>
+     <li class='dropdown'> <a href='#' class='dropdown-toggle top-level' id='community-data' data-toggle='dropdown'><i class='icon-folder-open-alt'></i> {{=T("Explore Community Data")}}<b class='caret'></b></a>
       <ul class='dropdown-menu' role='menu' aria-labelledby='profiles'>
        {{for opt in response.menu:}}
         <li role='menuitem'>
@@ -89,25 +89,29 @@
     </ul>
     <ul class='nav pull-right'>
      </li>
-     <li class='dropdown'><a href='#' class='dropdown-toggle disabled' data-toggle='dropdown'><i class='icon-cog'></i><b class='caret'></b></a>
+     {{if auth.is_logged_in():}}
+     <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-cog'></i><b class='caret'></b></a>
       <ul class='dropdown-menu'>
        {{if auth.s3_has_role("ADMIN"):}}
        <li><a href='/{{=appname}}/admin/user'><i class='icon-cogs'></i> {{=T("Admin")}}</a></li>
        {{pass}}
        <li><a href='/{{=appname}}/pr/person'><i class='icon-list'></i> {{=T("Contact People")}}</a></li>
        <li class='divider'></li>
-       {{if auth.is_logged_in():}}
        <li><a href='/{{=appname}}/default/person'><i class='icon-user'></i> {{=auth.user.email}}</a></li>
        <li><a href='/{{=appname}}/default/index/filters'><i class='icon-filter'></i> {{=T("Saved Filters")}}</a></li>
        <li><a href='/{{=appname}}/gis/config'><i class='icon-globe'></i> {{=T("Saved Maps")}}</a></li>
        <li><a href='/{{=appname}}/default/user/change_password'><i class='icon-lock'></i> {{=T("Change Password")}}</a></li>
        <li><a href='/{{=appname}}/default/user/logout'><i class='icon-off'></i> {{=T("Logout")}}</a></li>
-       {{else:}}
-       <li><a href='/{{=appname}}/default/user/login'><i class='icon-signin'></i> {{=T("Login")}}</a></li>
        <!--<li><a href='/{{=appname}}/default/user/register'><i class='icon-check'></i> {{=T("Register")}}</a></li>-->
-       {{pass}}
       </ul>
      </li>
+     {{else:}}
+     <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-signin'></i><b class='caret'></b></a>
+      <ul class='dropdown-menu'>
+      {{=auth.login()}}
+      </ul>
+     </li>
+     {{pass}}
     </ul>
    </div>
   </div>

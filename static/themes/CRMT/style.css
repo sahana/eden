@@ -85,6 +85,11 @@ h2.summary {
     width: auto;
 }
 
+#summary-tabs #table #table-container th,
+#summary-tabs #table #table-container tr td {
+    border-left: 1px solid #d9d8d8;
+}
+
 #summary-tabs #map {
     border-radius: 5px;
     margin: 0;
@@ -218,6 +223,13 @@ form#summary-filter-form
 /* Read & Update - Migrate to DRMP */ 
 #edit-btn {
     float: left;
+}
+
+.ui-multiselect-all span,
+.ui-multiselect-none span,
+.filter-clear.action-lnk {
+    text-decoration: underline;
+    color: #0088CC;
 }
 
 /* Register screen */
