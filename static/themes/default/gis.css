@@ -247,6 +247,9 @@ form .map_loader {
 }
 
 /* Popups */
+.olPopup {
+    
+}
 .olFramedCloudPopupContent label {
     padding-right: 5px;
 }

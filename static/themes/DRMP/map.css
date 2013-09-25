@@ -15,7 +15,6 @@
     width: 48px;
 }
 
-
 /* West Panel */
 .x-panel-body {
     background-color: #f5f6f5;
@@ -40,6 +39,10 @@
 }
 
 /* Popups */
+.olPopup {
+    /* Ensure go over Markers */
+    z-index: 800;
+}
 .olPopupCloseBox {
   background: url(img/close.gif) no-repeat;
 }

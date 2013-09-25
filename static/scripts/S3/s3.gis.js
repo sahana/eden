@@ -101,6 +101,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         // Build the OpenLayers map
         var map = addMap(map_id, options);
 
+        // Allow more room for Features
+        map.Z_INDEX_BASE.Popup = 800;
+
         // Add the GeoExt UI
         // @ToDo: Make this optional
         // @ToDo: Make the map DIV configurable (needed to support >1/page)
@@ -2514,6 +2517,17 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 
     /* Popups */
     var addPopupControls = function(map) {
+
+        OpenLayers.Handler.FeatureS3 = OpenLayers.Class(OpenLayers.Handler.Feature, {
+            dblclick: function(evt) {
+                //return !this.handle(evt);
+                // Ensure that we still Zoom (ideally we'd propagate but this isn't working)
+                this.map.zoomTo(this.map.zoom + 1, evt.xy);
+                return false;
+            },
+            CLASS_NAME: 'OpenLayers.Handler.FeatureS3'
+        });
+
         var layers_all = map.s3.layers_all;
         // onClick Popup
         var popupControl = new OpenLayers.Control.SelectFeature(
@@ -2522,6 +2536,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 //multiple: true
             }
         );
+        popupControl.handlers.feature = new OpenLayers.Handler.FeatureS3(popupControl, popupControl.layer, popupControl.callbacks, {
+            geometryTypes: popupControl.geometryTypes
+        });
         // onHover Tooltip
         var highlightControl = new OpenLayers.Control.SelectFeature(
             layers_all, {
