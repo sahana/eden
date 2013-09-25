@@ -63,18 +63,16 @@ p {
     background-color: #3788B3;
     color: white;
     margin: 20px 0;
-    padding: 0 20px 10px 20px;
+    padding: 25px 40px;
 }
 .intro h3 {
-    font-size: 20px;
-    line-height: 25px;
-    padding-top: 25px;
+    font-size: 30px;
+    line-height: 36px;
     margin-bottom: 5px;
 }
 .intro p {
-    font-size: 14px;
+    font-size: 18px;
     font-weight: 800;
-    margin-bottom: 20px;
 }
 
 .updates,

@@ -94,7 +94,8 @@ ul.nav li.dropdown ul.dropdown-menu {
     text-transform: none;
     border: 1px solid #b2b2b2;
     border-top: none;
-    margin-top: 1px;
+    margin-top: 0px;
+    margin-left: 1px;
     border-top-left-radius: 0;
     border-top-right-radius: 0;
     background-color: #f2f3f2;
@@ -180,7 +181,7 @@ button.btn.btn-navbar:hover {
     ul.nav li.dropdown:hover > ul.dropdown-menu{
         display: block;
         padding: 0;
-        margin: -7px -1px -1px;
+        margin: -9px -1px -1px;
         background: none;
         border: none;	 
     }

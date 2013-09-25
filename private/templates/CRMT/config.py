@@ -50,16 +50,19 @@ settings.base.paper_size = T("Letter")
 # -----------------------------------------------------------------------------
 # Authorization Settings
 settings.auth.registration_requires_approval = True
-settings.auth.registration_requires_verification = True
+settings.auth.registration_requires_verification = False
 settings.auth.registration_requests_organisation = True
-settings.auth.registration_organisation_required = True
+settings.auth.registration_organisation_required = False
 settings.auth.registration_requests_organisation_group = True
-settings.auth.registration_organisation_group_required = True
+settings.auth.registration_organisation_group_required = False
 settings.auth.registration_requests_site = False
 
 settings.auth.registration_link_user_to = {"staff": T("Staff")}
 
 settings.auth.record_approval = False
+
+# Approval emails get sent to all admins
+settings.mail.approver = "ADMIN"
 
 # -----------------------------------------------------------------------------
 # Security Policy
@@ -1819,6 +1822,7 @@ def customize_vulnerability_risk(**attr):
     s3.prep = custom_prep
 
     attr["hide_filter"] = False
+    attr["rheader"] = None
 
     return attr
 
