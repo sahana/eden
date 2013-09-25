@@ -22,7 +22,9 @@ h2.summary {
     margin: 15px;
     padding: 4px 6px;
     float: left;
-    z-index: 1000; /* Push above alert-space: Not working :/ */
+    /* Push above alert-space */
+    position: relative;
+    z-index: 1000;
 }
 
 .ui-tabs {
