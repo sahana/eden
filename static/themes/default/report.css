@@ -79,8 +79,9 @@
 }
 .pt-throbber {
     position: absolute;
-    left: 8;
-    top: 8;
+    left: 10;
+    top: 10;
+    z-index: 999;
 }
 
 .chart-icon {

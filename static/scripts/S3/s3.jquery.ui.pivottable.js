@@ -638,9 +638,13 @@
                         min: 0,
                         max: items.length+1,
                         tickLength: 0
+                        // Rotate labels with jquery.flot.tickrotor.js:
+                        // rotateTicks: 135
                     }
                 }
             );
+            // jquery.flot.tickrotor.js doesn't hide the original labels:
+            // $('.xAxis .tickLabel').hide();
 
             var pt = this;
 

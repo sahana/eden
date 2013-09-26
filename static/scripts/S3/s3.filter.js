@@ -336,7 +336,7 @@ S3.search = {};
         var expression,
             i,
             id,
-            q = {}.
+            q = {},
             len,
             $this,
             value,
@@ -1571,7 +1571,8 @@ S3.search = {};
             // @todo: ignore if readOnly
 
             // Hide selector and buttons
-            var el = this.element.hide();
+            var el = this.element.hide(),
+                fm = this;
             this.create_btn.hide();
             this.load_btn.hide();
             this.save_btn.hide();
@@ -1598,6 +1599,15 @@ S3.search = {};
                                 $(this).removeClass('changed')
                                        .css({color: 'grey'})
                                        .val(hint);
+                            }
+                        }).keypress(function(e) {
+                            if(e.which == 13) {
+                                e.preventDefault();
+                                $this = $(this);
+                                if ($this.val()) {
+                                    $this.addClass('changed');
+                                }
+                                fm._accept();
                             }
                         });
             this.input = input;

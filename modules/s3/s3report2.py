@@ -399,29 +399,30 @@ class S3ReportForm(object):
                         ),
                         _class="pt-form-container form-container"
                    ),
-                   DIV(DIV(_class="pt-chart-controls"),
-                       DIV(DIV(_class="pt-hide-chart"),
-                           DIV(_class="pt-chart-title"),
-                           DIV(_class="pt-chart"),
-                           _class="pt-chart-contents"
+                   DIV(IMG(_src=throbber,
+                           _alt=current.T("Processing"),
+                           _class="pt-throbber"),
+                       DIV(DIV(_class="pt-chart-controls"),
+                           DIV(DIV(_class="pt-hide-chart"),
+                               DIV(_class="pt-chart-title"),
+                               DIV(_class="pt-chart"),
+                               _class="pt-chart-contents"
+                           ),
+                           _class="pt-chart-container"
                        ),
-                       _class="pt-chart-container"
-                   ),
-                   DIV(hide,
-                       _class="pt-toggle-table pt-hide-table"),
-                   DIV(show,
-                       _class="pt-toggle-table pt-show-table",
-                       _style="display:none"),
-                   DIV(DIV(_class="pt-table-controls"),
-                       DIV(IMG(_src=throbber,
-                               _alt=current.T("Processing"),
-                               _class="pt-throbber"),
-                           DIV(_class="pt-table"),
-                           _class="pt-table-contents"
+                       DIV(hide,
+                           _class="pt-toggle-table pt-hide-table"),
+                       DIV(show,
+                           _class="pt-toggle-table pt-show-table",
+                           _style="display:none"),
+                       DIV(DIV(_class="pt-table-controls"),
+                           DIV(DIV(_class="pt-table"),
+                               _class="pt-table-contents"
+                           ),
+                           _class="pt-table-container"
                        ),
-                       _class="pt-table-container"
+                       DIV(empty, _class="pt-empty"),
                    ),
-                   DIV(empty, _class="pt-empty"),
                    _class="pt-container",
                    _id=widget_id
                )
