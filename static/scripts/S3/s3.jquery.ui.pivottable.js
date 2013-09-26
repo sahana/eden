@@ -571,9 +571,8 @@
             if (filter_url && selector) {
                 $(chart).bind('plotclick', function(event, pos, item) {
                     if (item) {
-                        var filter={};
                         try {
-                            filter[selector] = items[item.seriesIndex]['key'];
+                            var filter = [[selector, items[item.seriesIndex]['key']]];
                         }
                         catch(e) {
                             return;
@@ -672,9 +671,8 @@
             if (filter_url && selector) {
                 $(chart).bind('plotclick', function(event, pos, item) {
                     if (item) {
-                        var filter={};
                         try {
-                            filter[selector] = items[item.seriesIndex]['key'];
+                            var filter = [[selector, items[item.seriesIndex]['key']]];
                         }
                         catch(e) {
                             return;
@@ -831,10 +829,9 @@
             if (filter_url && rows_selector && cols_selector) {
                 $(chart).bind('plotclick', function(event, pos, item) {
                     if (item) {
-                        var filter = {};
                         try {
-                            filter[rows_selector] = rows[item.dataIndex][3];
-                            filter[cols_selector] = cols[item.seriesIndex][3];
+                            var filter = [[rows_selector, rows[item.dataIndex][3]],
+                                          [cols_selector, cols[item.seriesIndex][3]]];
                         }
                         catch(e) {
                             return;
@@ -905,39 +902,65 @@
         },
 
         _updateURL: function(url, filters) {
-            // Update a URL with new filters
+            // Update a URL with both Ajax- and axis-filters
 
             // Construct the URL
-            var url_parts = url.split('?'), query = {};
+            var url_parts,
+                url_vars,
+                queries = [],
+                update = {},
+                seen = {},
+                i, f, q, k;
 
+            // Add axis filters
+            if (filters) {
+                for (i=0, len=filters.length; i<len; i++) {
+                    f = filters[i];
+                    k = f[0];
+                    update[k] = true;
+                    queries.push(k + '=' + f[1]);
+                }
+            }
+
+            // Add filters from ajaxURL
+            var ajaxURL = this.options.ajaxURL;
+            url_parts = ajaxURL.split('?');
             if (url_parts.length > 1) {
-                var qstr = url_parts[1];
+                url_vars = url_parts[1].split('&');
+                var seen = {};
+                for (i=0, len=url_vars.length; i < len; i++) {
+                    q = url_vars[i].split('=');
+                    if (q.length > 1) {
+                        k = decodeURIComponent(q[0]);
+                        if (!update[k]) {
+                            queries.push(k + '=' + decodeURIComponent(q[1]));
+                            seen[k] = true;
+                        }
+                    }
+                }
+                for (k in seen) {
+                    update[k] = true;
+                }
+            }
 
-                var a = qstr.split('&'),
-                b, v, i, len;
-                for (i=0, len=a.length; i < len; i++) {
-                    b = a[i].split('=');
-                    if (b.length > 1) {
-                        query[decodeURIComponent(b[0])] = decodeURIComponent(b[1]);
+            // Extract all original filters
+            url_parts = url.split('?');
+            if (url_parts.length > 1) {
+                url_vars = url_parts[1].split('&');
+                var seen = {};
+                for (i=0, len=url_vars.length; i < len; i++) {
+                    q = url_vars[i].split('=');
+                    if (q.length > 1) {
+                        k = decodeURIComponent(q[0]);
+                        if (!update[k]) {
+                            queries.push(k + '=' + decodeURIComponent(q[1]));
+                        }
                     }
                 }
             }
 
-            if (filters) {
-                for (option in filters) {
-                    newopt = filters[option];
-                    query[option] = newopt ? newopt : null;
-                }
-            }
-
-            var url_queries = [], url_query;
-            for (option in query) {
-                if (query[option] !== null) {
-                    url_queries.push(option + '=' + query[option]);
-                }
-            }
-            url_query = url_queries.join('&');
-            
+            // Update URL
+            var url_query = queries.join('&');
             var filtered_url = url_parts[0];
             if (url_query) {
                 filtered_url = filtered_url + '?' + url_query;
@@ -953,7 +976,7 @@
             // Construct the URL
             var url_parts = ajaxURL.split('?'),
                 url_query = null,
-                query = [];
+                query = [],
                 needs_reload = false;
 
             var qstr, url_vars;
