@@ -4240,10 +4240,10 @@ def source_url_field():
 def gis_layer_folder():
     T = current.T
     FOLDER = T("Folder")
-    return S3ReusableField("dir", length=32,
+    return S3ReusableField("dir", length=64,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (FOLDER,
-                                                           T("If you enter a foldername then the layer will appear in this folder in the Map's layer switcher."))),
+                                                           T("If you enter a foldername then the layer will appear in this folder in the Map's layer switcher. A sub-folder can be created by separating names with a '/'"))),
                            label = FOLDER)
 
 # =============================================================================

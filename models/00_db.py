@@ -11,8 +11,8 @@ if settings.get_L10n_languages_readonly():
     T.is_writable = False
 
 # Are we running in debug mode?
-s3.debug = request.vars.get("debug", None) or \
-                    settings.get_base_debug()
+s3.debug = request.get_vars.get("debug", None) or \
+           settings.get_base_debug()
 
 if s3.debug:
     # Reload all modules every request

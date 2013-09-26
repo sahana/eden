@@ -711,36 +711,167 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
 
         // User-specified Folders
-        var dirs = map.s3.dirs;
-        var baseAttrs, child, folder;
-        for (var i = 0; i < dirs.length; i++) {
-            folder = dirs[i];
-            baseAttrs = {
-                listeners: leaf_listeners
+        var dirs = map.s3.dirs // A simple Array of folder names: []
+        var len = dirs.length;
+        if (len) {
+            // Extend GeoExt to support sub-folders
+            GeoExt.tree.LayerLoaderS3 = function(config) {
+                Ext.apply(this, config);
+                GeoExt.tree.LayerLoaderS3.superclass.constructor.call(this);
+            };
+            Ext.extend(GeoExt.tree.LayerLoaderS3, GeoExt.tree.LayerLoader, {
+                load: function(node, callback) {
+                    if (this.fireEvent('beforeload', this, node)) {
+                        this.removeStoreHandlers();
+                        // Clear all current children
+                        while (node.firstChild) {
+                            node.removeChild(node.firstChild);
+                        }
+
+                        if (!this.uiProviders) {
+                            this.uiProviders = node.getOwnerTree().getLoader().uiProviders;
+                        }
+
+                        // Add Layers
+                        if (!this.store) {
+                            this.store = GeoExt.MapPanel.guess().layers;
+                        }
+                        this.store.each(function(record) {
+                            this.addLayerNode(node, record);
+                        }, this);
+                        this.addStoreHandlers(node);
+
+                        // Add Folders
+                        var children = node.attributes.children;
+                        var len = children.length;
+                        if (len) {
+                            var child,
+                                dir,
+                                sibling;
+                            for (var i=0; i < len; i++) {
+                                dir = children[i];
+                                //child = this.createNode(dir); // Adds baseAttrs which we don't want
+                                child = new Ext.tree.TreePanel.nodeTypes[dir.nodeType](dir)
+                                sibling = node.item(0);
+                                if (sibling) {
+                                    node.insertBefore(child, sibling);
+                                } else {
+                                    node.appendChild(child);
+                                }
+                            }
+                        }
+
+                        if (typeof callback == 'function') {
+                            callback();
+                        }
+
+                        this.fireEvent('load', this, node);
+                    }
+                }
+            });
+
+            var baseAttrs,
+                child,
+                children,
+                dir,
+                _dir,
+                _dirs,
+                _dirslength,
+                folder,
+                folders = {},
+                _folders,
+                i,
+                j,
+                loader,
+                parent,
+                sub;
+            // Place folders into subfolders
+            for (i = 0; i < len; i++) {
+                dir = dirs[i];
+                _dirs = dir.split('/');
+                _dirslength = _dirs.length;
+                for (j = 0; j < _dirslength; j++) {
+                    if (j == 0) {
+                        // Top level
+                        _folders = folders;
+                    } else {
+                        parent = folder;
+                        _folders = _folders[parent];
+                    }
+                    folder = _dirs[j];
+                    if (!_folders.hasOwnProperty(folder)) {
+                        // Not yet in Hash, so add it
+                        _folders[folder] = {};
+                    }
+                }
             }
-            // @ToDo: Allow per-folder configuration
-            if (folders_radio) {
-                baseAttrs['checkedGroup'] = dirs[i];
-            }
-            child = {
-                text: dirs[i],
-                nodeType: 'gx_layercontainer',
-                layerStore: layerStore,
-                loader: {
+            //var LayerNodeUI = Ext.extend(GeoExt.tree.LayerNodeUI, new GeoExt.tree.TreeNodeUIEventMixin());
+            for (dir in folders) {
+                _dir = folders[dir];
+                children = []
+                // @ToDo: Recursive (currently just 1 layer)
+                for (sub in _dir) {
+                    baseAttrs = {
+                        listeners: leaf_listeners
+                    }
+                    // @ToDo: Allow per-folder configuration
+                    if (folders_radio) {
+                        // @ToDo: Don't assume all folders have unique names
+                        baseAttrs['checkedGroup'] = sub;
+                    }
+                    loader = new GeoExt.tree.LayerLoaderS3({
+                        baseAttrs: baseAttrs,
+                        filter: (function(dir, sub) {
+                            return function(read) {
+                                if (read.data.layer.dir !== 'undefined')
+                                    return read.data.layer.dir === dir + '/' + sub;
+                            };
+                        })(dir, sub)
+                    });
+                    child = {
+                        text: sub,
+                        nodeType: 'gx_layercontainer',
+                        layerStore: layerStore,
+                        // @ToDo: Sub-folders
+                        children: [],
+                        loader: loader,
+                        leaf: false,
+                        listeners: folder_listeners,
+                        singleClickExpand: true,
+                        expanded: expanded
+                    };
+                    children.push(child);
+                }
+                baseAttrs = {
+                    listeners: leaf_listeners
+                }
+                // @ToDo: Allow per-folder configuration
+                if (folders_radio) {
+                    // @ToDo: Don't assume all folders have unique names
+                    baseAttrs['checkedGroup'] = dir;
+                }
+                loader = new GeoExt.tree.LayerLoaderS3({
                     baseAttrs: baseAttrs,
-                    filter: (function(folder) {
+                    filter: (function(dir) {
                         return function(read) {
                             if (read.data.layer.dir !== 'undefined')
-                                return read.data.layer.dir === folder;
+                                return read.data.layer.dir === dir;
                         };
-                    })(folder)
-                },
-                leaf: false,
-                listeners: folder_listeners,
-                singleClickExpand: true,
-                expanded: expanded
-            };
-            nodesArr.push(child);
+                    })(dir)
+                });
+                child = {
+                    text: dir,
+                    nodeType: 'gx_layercontainer',
+                    layerStore: layerStore,
+                    children: children,
+                    loader: loader,
+                    leaf: false,
+                    listeners: folder_listeners,
+                    singleClickExpand: true,
+                    expanded: expanded
+                };
+                nodesArr.push(child);
+            }
         }
 
         var treeRoot = new Ext.tree.AsyncTreeNode({
@@ -748,18 +879,17 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             children: nodesArr
         });
 
-        var tbar;
         if (i18n.gis_properties || i18n.gis_uploadlayer) {
-            tbar = new Ext.Toolbar();
+            var tbar = new Ext.Toolbar();
         } else {
-            tbar = null;
+            var tbar = null;
         }
 
         var layerTree = new Ext.tree.TreePanel({
             //cls: 'gis_layer_tree',
             //height: options.map_height,
             title: i18n.gis_layers,
-            loader: new Ext.tree.TreeLoader({applyLoader: false}),
+            loaderloader: new Ext.tree.TreeLoader({applyLoader: false}),
             root: treeRoot,
             rootVisible: false,
             split: true,
@@ -1109,7 +1239,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
         if (undefined != layer.dir) {
             var dir = layer.dir;
-            if ( $.inArray(dir, map.s3.dirs) == -1 ) {
+            if ($.inArray(dir, map.s3.dirs) == -1) {
                 // Add this folder to the list of folders
                 map.s3.dirs.push(dir);
             }
@@ -1602,7 +1732,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
         if (undefined != layer.dir) {
             var dir = layer.dir;
-            if ( $.inArray(dir, map.s3.dirs) == -1 ) {
+            if ($.inArray(dir, map.s3.dirs) == -1) {
                 // Add this folder to the list of folders
                 map.s3.dirs.push(dir);
             }
@@ -1829,7 +1959,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
         if (undefined != layer.dir) {
             var dir = layer.dir;
-            if ( $.inArray(dir, map.s3.dirs) == -1 ) {
+            if ($.inArray(dir, map.s3.dirs) == -1) {
                 // Add this folder to the list of folders
                 map.s3.dirs.push(dir);
             }
@@ -1958,7 +2088,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
         if (undefined != layer.dir) {
             var dir = layer.dir;
-            if ( $.inArray(dir, map.s3.dirs) == -1 ) {
+            if ($.inArray(dir, map.s3.dirs) == -1) {
                 // Add this folder to the list of folders
                 map.s3.dirs.push(dir);
             }
@@ -2034,7 +2164,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
         if (undefined != layer.dir) {
             var dir = layer.dir;
-            if ( $.inArray(dir, map.s3.dirs) == -1 ) {
+            if ($.inArray(dir, map.s3.dirs) == -1) {
                 // Add this folder to the list of folders
                 map.s3.dirs.push(dir);
             }
@@ -2219,7 +2349,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
         if (undefined != layer.dir) {
             var dir = layer.dir;
-            if ( $.inArray(dir, map.s3.dirs) == -1 ) {
+            if ($.inArray(dir, map.s3.dirs) == -1) {
                 // Add this folder to the list of folders
                 map.s3.dirs.push(dir);
             }
@@ -2415,7 +2545,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
         if (undefined != layer.dir) {
             var dir = layer.dir;
-            if ( $.inArray(dir, map.s3.dirs) == -1 ) {
+            if ($.inArray(dir, map.s3.dirs) == -1) {
                 // Add this folder to the list of folders
                 map.s3.dirs.push(dir);
             }
@@ -2518,10 +2648,13 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     /* Popups */
     var addPopupControls = function(map) {
 
+        // Could also use static/themes/Vulnerability/js/FeatureDoubleClick.js
         OpenLayers.Handler.FeatureS3 = OpenLayers.Class(OpenLayers.Handler.Feature, {
             dblclick: function(evt) {
+                // Propagate Event to ensure we still zoom (not working)
                 //return !this.handle(evt);
-                // Ensure that we still Zoom (ideally we'd propagate but this isn't working)
+                //return true;
+                // Ensure that we still Zoom
                 this.map.zoomTo(this.map.zoom + 1, evt.xy);
                 return false;
             },

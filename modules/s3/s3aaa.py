@@ -4586,7 +4586,7 @@ class S3Permission(object):
                                    "default/about")
 
         # Default landing pages
-        _next = URL(args=request.args, vars=request.vars)
+        _next = URL(args=request.args, vars=request.get_vars)
         self.homepage = URL(c="default", f="index")
         self.loginpage = URL(c="default", f="user", args="login",
                              vars=dict(_next=_next))

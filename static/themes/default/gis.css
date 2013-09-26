@@ -76,7 +76,6 @@ form .map_loader {
 } */
 .x-tree-elbow,
 .x-tree-elbow-end,
-.x-tree-node-indent,
 .x-tree-node-icon {
     display: none;
 }
@@ -247,8 +246,8 @@ form .map_loader {
 }
 
 /* Popups */
-.olPopup {
-    
+.olPopup #plain {
+    max-width: 450px;
 }
 .olFramedCloudPopupContent label {
     padding-right: 5px;
