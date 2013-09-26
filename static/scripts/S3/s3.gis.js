@@ -600,6 +600,46 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     // Add LayerTree (to be called after the layers are added)
     var addLayerTree = function(map) {
 
+        // Extend LayerNodeUI to not force a folder with Radio buttons to have one active
+        // - so opening folder doesn't open first layer
+        // - so we can deselect a layer
+        GeoExt.tree.LayerNodeUIS3 = Ext.extend(GeoExt.tree.LayerNodeUI, {
+            enforceOneVisible: function() {
+                var attributes = this.node.attributes;
+                var group = attributes.checkedGroup;
+                // If we are in the baselayer group, the map will take care of
+                // enforcing visibility.
+                if (group && group !== 'gx_baselayer') {
+                    var layer = this.node.layer;
+                    var checkedNodes = this.node.getOwnerTree().getChecked();
+                    //var checkedCount = 0;
+                    // enforce "not more than one visible"
+                    Ext.each(checkedNodes, function(n){
+                        var l = n.layer;
+                        if (!n.hidden && n.attributes.checkedGroup === group) {
+                            //checkedCount++;
+                            if (l != layer && attributes.checked) {
+                                l.setVisibility(false);
+                            }
+                        }
+                    });
+                    // enforce "at least one visible"
+                    //if(checkedCount === 0 && attributes.checked == false) {
+                    //    layer.setVisibility(true);
+                    //}
+                }
+            }
+        });
+
+        // Extend LayerNode to use our new LayerNodeUIS3
+        GeoExt.tree.LayerNodeS3 = Ext.extend(GeoExt.tree.LayerNode, {
+            constructor: function(config) {
+                this.defaultUI = GeoExt.tree.LayerNodeUIS3;
+                GeoExt.tree.LayerNodeS3.superclass.constructor.apply(this, arguments);
+            }
+        });
+        Ext.tree.TreePanel.nodeTypes.gx_layer = GeoExt.tree.LayerNodeS3;
+
         var s3 = map.s3;
         var options = s3.options;
         if (options.hide_base) {
@@ -636,15 +676,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var leaf_listeners = {
             click: function(node) {
                 // Provide a bigger click target area, by allowing click on layer name as well as checkbox/radio
-                if (node.attributes.checked) {
-                    node.ui.checkbox.checked = false;
-                    node.fireEvent('checkchange', node);
-                } else {
-                    // Can't simply do this as otherwise it refires the Event with the checkbox changed!
-                    //node.ui.toggleCheck();
-                    node.ui.checkbox.checked = true;
-                    node.layer.setVisibility(true);
-                }
+                var checked = !node.attributes.checked;
+                node.attributes.checked = checked;
+                node.ui.checkbox.checked = checked;
+                node.layer.setVisibility(checked);
             }
         };
 
@@ -805,7 +840,6 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     }
                 }
             }
-            //var LayerNodeUI = Ext.extend(GeoExt.tree.LayerNodeUI, new GeoExt.tree.TreeNodeUIEventMixin());
             for (dir in folders) {
                 _dir = folders[dir];
                 children = []

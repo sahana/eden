@@ -49,7 +49,7 @@ GeoExt.tree.LayerNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
         }
         this.enforceOneVisible();
     },
-    
+
     /** private: method[onClick]
      *  :param e: ``Object``
      */
@@ -60,17 +60,17 @@ GeoExt.tree.LayerNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
             GeoExt.tree.LayerNodeUI.superclass.onClick.apply(this, arguments);
         }
     },
-    
+
     /** private: method[toggleCheck]
      * :param value: ``Boolean``
      */
     toggleCheck: function(value) {
         value = (value === undefined ? !this.isChecked() : value);
         GeoExt.tree.LayerNodeUI.superclass.toggleCheck.call(this, value);
-        
+
         this.enforceOneVisible();
     },
-    
+
     /** private: method[enforceOneVisible]
      * 
      *  Makes sure that only one layer is visible if checkedGroup is set.
@@ -86,7 +86,7 @@ GeoExt.tree.LayerNodeUI = Ext.extend(Ext.tree.TreeNodeUI, {
             var checkedCount = 0;
             // enforce "not more than one visible"
             Ext.each(checkedNodes, function(n){
-                var l = n.layer
+                var l = n.layer;
                 if(!n.hidden && n.attributes.checkedGroup === group) {
                     checkedCount++;
                     if(l != layer && attributes.checked) {
