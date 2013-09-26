@@ -39,10 +39,6 @@
 }
 
 /* Popups */
-.olPopup {
-    /* Ensure go over Markers */
-    z-index: 800;
-}
 .olPopupCloseBox {
   background: url(img/close.gif) no-repeat;
 }

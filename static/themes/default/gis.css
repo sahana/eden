@@ -76,10 +76,12 @@ form .map_loader {
 } */
 .x-tree-elbow,
 .x-tree-elbow-end,
-.x-tree-node-indent,
 .x-tree-node-icon {
     display: none;
 }
+/*.x-tree-node-indent {
+    display: none;
+}*/
 .x-tree-node-anchor {
     padding-left: 5px;
     padding-right: 5px;
@@ -247,9 +249,6 @@ form .map_loader {
 }
 
 /* Popups */
-.olPopup {
-    
-}
 .olFramedCloudPopupContent label {
     padding-right: 5px;
 }
