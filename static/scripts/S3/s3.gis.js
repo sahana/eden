@@ -604,6 +604,26 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         // - so opening folder doesn't open first layer
         // - so we can deselect a layer
         GeoExt.tree.LayerNodeUIS3 = Ext.extend(GeoExt.tree.LayerNodeUI, {
+            onClick: function(e) {
+                if (e.getTarget('.x-tree-node-cb', 1)) {
+                    var node = this.node;
+                    var attributes = this.node.attributes;
+                    var group = attributes.checkedGroup;
+                    if (group && group !== 'gx_baselayer') {
+                        // Radio button folders need different behaviour
+                        var checked = !attributes.checked;
+                        attributes.checked = checked;
+                        node.ui.checkbox.checked = checked;
+                        node.layer.setVisibility(checked);
+                        this.enforceOneVisible();
+                    } else {
+                        // Normal behaviour for Radio folders & Base Layers folder
+                        this.toggleCheck(this.isChecked());
+                    }
+                } else {
+                    GeoExt.tree.LayerNodeUI.superclass.onClick.apply(this, arguments);
+                }
+            },
             enforceOneVisible: function() {
                 var attributes = this.node.attributes;
                 var group = attributes.checkedGroup;
