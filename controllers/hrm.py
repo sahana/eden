@@ -42,10 +42,20 @@ def human_resource():
         if r.method == "summary":
             # Experimental
             from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
-            settings.ui.filter_auto_submit=750
-            settings.ui.report_auto_submit=750
+            settings.ui.filter_auto_submit = 750
+            settings.ui.report_auto_submit = 750
             s3.crud_strings["hrm_human_resource"]["title_list"] = T("Staff & Volunteers")
             s3db.configure("hrm_human_resource",
+                           # Match staff
+                           list_fields = ["id",
+                                          "person_id",
+                                          "job_title_id",
+                                          "organisation_id",
+                                          "department_id",
+                                          "site_id",
+                                          (T("Email"), "email.value"),
+                                          (settings.get_ui_label_mobile_phone(), "phone.value"),
+                                          ],
                            summary=[{"name": "table",
                                      "label": "Table",
                                      "widgets": [{"method": "datatable"}]
@@ -63,7 +73,9 @@ def human_resource():
                             ],
                             filter_widgets = [
                                     S3TextFilter(["person_id$first_name",
-                                                  "person_id$last_name"]),
+                                                  "person_id$last_name"],
+                                                 label=T("Name"),
+                                                 ),
                                     S3OptionsFilter("type"),
                                     S3OptionsFilter("organisation_id",
                                                     widget="multiselect"),

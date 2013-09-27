@@ -347,3 +347,8 @@ span.tab_prev_active {
 span.tab_next_active {
     color: #000000;
 }
+
+/* Ensure jQueryUI Dialog Modal Popup goes above header */
+.ui-front {
+    z-index: 999;
+}
