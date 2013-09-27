@@ -191,24 +191,26 @@
             if (hi == undefined) {
                 // Read the values from server
                 var url = S3.Ap.concat('/gis/hdata/' + id);
-                $.ajax({
+                $.ajaxS3({
                     async: false,
                     url: url,
-                    dataType: 'script'
-                }).done(function(data) {
-                    // Copy the elements across
-                    hi = {};
-                    for (var prop in n) {
-                        hi[prop] = n[prop];
-                    }
-                    h[id] =  hi;
-                    // Clear the memory
-                    n = null;
-                }).fail(function(request, status, error) {
-                    if (error == 'UNAUTHORIZED') {
-                        msg = i18n.gis_requires_login;
-                    } else {
-                        msg = request.responseText;
+                    dataType: 'script',
+                    success: function(data) {
+                        // Copy the elements across
+                        hi = {};
+                        for (var prop in n) {
+                            hi[prop] = n[prop];
+                        }
+                        h[id] =  hi;
+                        // Clear the memory
+                        n = null;
+                    },
+                    error: function(request, status, error) {
+                        if (error == 'UNAUTHORIZED') {
+                            msg = i18n.gis_requires_login;
+                        } else {
+                            msg = request.responseText;
+                        }
                     }
                 });
             }
@@ -352,26 +354,28 @@
 
         // Download Location Data
         var url = S3.Ap.concat('/gis/ldata/' + id);
-        $.ajax({
+        $.ajaxS3({
             async: false,
             url: url,
-            dataType: 'script'
-        }).done(function(data) {
-            // Copy the elements across
-            for (var prop in n) {
-                l[prop] = n[prop];
-            }
-            // Clear the memory
-            n = null;
-            // Hide Throbber
-            throbber.hide();
-            // Show dropdown
-            dropdown.show();
-        }).fail(function(request, status, error) {
-            if (error == 'UNAUTHORIZED') {
-                msg = i18n.gis_requires_login;
-            } else {
-                msg = request.responseText;
+            dataType: 'script',
+            success: function(data) {
+                // Copy the elements across
+                for (var prop in n) {
+                    l[prop] = n[prop];
+                }
+                // Clear the memory
+                n = null;
+                // Hide Throbber
+                throbber.hide();
+                // Show dropdown
+                dropdown.show();
+            },
+            error: function(request, status, error) {
+                if (error == 'UNAUTHORIZED') {
+                    msg = i18n.gis_requires_login;
+                } else {
+                    msg = request.responseText;
+                }
             }
         });
     }
@@ -515,52 +519,54 @@
 
         // Submit to Geocoder
         var url = S3.Ap.concat('/gis/geocode');
-        $.ajax({
+        $.ajaxS3({
             async: false,
             url: url,
             type: 'POST',
             data: post_data,
-            dataType: 'json'
-        }).done(function(data) {
-            var lat = data.lat;
-            var lon = data.lon;
-            if (lat || lon) {
-                // Update fields
-                $(selector + '_lat').val(lat);
-                $(selector + '_lon').val(lon);
-                // If Map Showing then add/move Point
-                gis = S3.gis
-                if (gis.maps) {
-                    var map_id = 'location_selector_' + fieldname;
-                    var map = gis.maps[map_id];
-                    if (map) {
-                        var draftLayer = map.s3.draftLayer
-                        draftLayer.removeAllFeatures();
-                        var geometry = new OpenLayers.Geometry.Point(parseFloat(lon), parseFloat(lat));
-                        geometry.transform(gis.proj4326, map.getProjectionObject());
-                        var feature = new OpenLayers.Feature.Vector(geometry);
-                        draftLayer.addFeatures([feature]);
+            dataType: 'json',
+            success: function(data) {
+                var lat = data.lat;
+                var lon = data.lon;
+                if (lat || lon) {
+                    // Update fields
+                    $(selector + '_lat').val(lat);
+                    $(selector + '_lon').val(lon);
+                    // If Map Showing then add/move Point
+                    gis = S3.gis
+                    if (gis.maps) {
+                        var map_id = 'location_selector_' + fieldname;
+                        var map = gis.maps[map_id];
+                        if (map) {
+                            var draftLayer = map.s3.draftLayer
+                            draftLayer.removeAllFeatures();
+                            var geometry = new OpenLayers.Geometry.Point(parseFloat(lon), parseFloat(lat));
+                            geometry.transform(gis.proj4326, map.getProjectionObject());
+                            var feature = new OpenLayers.Feature.Vector(geometry);
+                            draftLayer.addFeatures([feature]);
+                        }
                     }
+                    // Notify results
+                    throbber.hide();
+                    success.removeClass('hide').show();
+                } else {
+                    // Notify results
+                    throbber.hide();
+                    fail.removeClass('hide').show();
+                    s3_debug(data);
+                }
+            },
+            error: function(request, status, error) {
+                if (error == 'UNAUTHORIZED') {
+                    msg = i18n.gis_requires_login;
+                } else {
+                    msg = request.responseText;
                 }
                 // Notify results
                 throbber.hide();
-                success.removeClass('hide').show();
-            } else {
-                // Notify results
-                throbber.hide();
                 fail.removeClass('hide').show();
-                s3_debug(data);
+                s3_debug(msg);
             }
-        }).fail(function(request, status, error) {
-            if (error == 'UNAUTHORIZED') {
-                msg = i18n.gis_requires_login;
-            } else {
-                msg = request.responseText;
-            }
-            // Notify results
-            throbber.hide();
-            fail.removeClass('hide').show();
-            s3_debug(msg);
         });
     }
 
@@ -587,56 +593,58 @@
 
         // Submit to Geocoder
         var url = S3.Ap.concat('/gis/geocode_r');
-        $.ajax({
+        $.ajaxS3({
             async: false,
             url: url,
             type: 'POST',
             data: post_data,
-            dataType: 'json'
-        }).done(function(data) {
-            if (data.L0) {
-                // Update fields
-                $(selector + '_L0_input').val(data.L0);
-                $(selector + '_L0').val(data.L0);
-                if (data.L1) {
-                    $(selector + '_L1_input').val(data.L1);
-                    $(selector + '_L1').val(data.L1);
+            dataType: 'json',
+            success: function(data) {
+                if (data.L0) {
+                    // Update fields
+                    $(selector + '_L0_input').val(data.L0);
+                    $(selector + '_L0').val(data.L0);
+                    if (data.L1) {
+                        $(selector + '_L1_input').val(data.L1);
+                        $(selector + '_L1').val(data.L1);
+                    }
+                    if (data.L2) {
+                        $(selector + '_L2_input').val(data.L2);
+                        $(selector + '_L2').val(data.L2);
+                    }
+                    if (data.L3) {
+                        $(selector + '_L3_input').val(data.L3);
+                        $(selector + '_L3').val(data.L3);
+                    }
+                    if (data.L4) {
+                        $(selector + '_L4_input').val(data.L4);
+                        $(selector + '_L4').val(data.L4);
+                    }
+                    if (data.L5) {
+                        $(selector + '_L5_input').val(data.L5);
+                        $(selector + '_L5').val(data.L5);
+                    }
+                    // Notify results
+                    throbber.hide();
+                    success.removeClass('hide').show();
+                } else {
+                    // Notify results
+                    throbber.hide();
+                    fail.removeClass('hide').show();
+                    //s3_debug(data);
                 }
-                if (data.L2) {
-                    $(selector + '_L2_input').val(data.L2);
-                    $(selector + '_L2').val(data.L2);
+            },
+            error: function(request, status, error) {
+                if (error == 'UNAUTHORIZED') {
+                    msg = i18n.gis_requires_login;
+                } else {
+                    msg = request.responseText;
                 }
-                if (data.L3) {
-                    $(selector + '_L3_input').val(data.L3);
-                    $(selector + '_L3').val(data.L3);
-                }
-                if (data.L4) {
-                    $(selector + '_L4_input').val(data.L4);
-                    $(selector + '_L4').val(data.L4);
-                }
-                if (data.L5) {
-                    $(selector + '_L5_input').val(data.L5);
-                    $(selector + '_L5').val(data.L5);
-                }
-                // Notify results
-                throbber.hide();
-                success.removeClass('hide').show();
-            } else {
                 // Notify results
                 throbber.hide();
                 fail.removeClass('hide').show();
-                //s3_debug(data);
+                s3_debug(msg);
             }
-        }).fail(function(request, status, error) {
-            if (error == 'UNAUTHORIZED') {
-                msg = i18n.gis_requires_login;
-            } else {
-                msg = request.responseText;
-            }
-            // Notify results
-            throbber.hide();
-            fail.removeClass('hide').show();
-            s3_debug(msg);
         });
     }
 
