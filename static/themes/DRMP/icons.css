@@ -226,12 +226,10 @@ you can use the generic selector below, but it's slower:
 /* Icons still coming from font-awesome */
 
 /* Contact */
-/*.icon-group*/
 .icon-contact:before {
     content: "\f0c0";
 }
 /* Resource */
-/*.icon-truck*/
 .icon-resource:before {
     content: "\f0d1";
 }
