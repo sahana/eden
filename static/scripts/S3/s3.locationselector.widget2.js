@@ -211,6 +211,11 @@
                         } else {
                             msg = request.responseText;
                         }
+                        s3_debug(msg);
+                        // Ugly, but better than hiding completely
+                        //alert(msg);
+                        // Revert state of widget to allow user to retry without reloading page
+                        // - not necessary since this is just labels & we already have fallback
                     }
                 });
             }
@@ -376,6 +381,14 @@
                 } else {
                     msg = request.responseText;
                 }
+                s3_debug(msg);
+                // Ugly, but better than hiding completely
+                alert(msg);
+                // Revert state of widget to allow user to retry without reloading page
+                // Hide Throbber
+                throbber.hide();
+                // Show dropdown
+                dropdown.show();
             }
         });
     }

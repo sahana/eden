@@ -372,6 +372,14 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             addMapPanel(map);
         }
 
+        // Trigger a layout update on the westPanelContainer
+        // - this fixes up layout if the layerTree has scrollbars initially
+        var westPanelContainer = s3.westPanelContainer;
+        westPanelContainer.fireEvent('collapse');
+        window.setTimeout(function() {
+            westPanelContainer.fireEvent('expand')
+        }, 300);
+
         // Disable throbber when unchecked
         layerTree.root.eachChild( function() {
             // no layers at top-level, so recurse inside
@@ -486,7 +494,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var west_collapsed = s3.options.west_collapsed || false;
 
         var mapWestPanel = new Ext.Panel({
-            //cls: 'map_tools',
+            //cls: 'gis_west',
             header: false,
             border: false,
             split: true,
@@ -501,6 +509,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
 
         var westPanelContainer = new Ext.Panel({
+            cls: 'gis_west',
             region: 'west',
             //header: true,
             header: false, // Can't collapse Panel if this is hidden unless we create custom control

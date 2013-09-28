@@ -7,6 +7,10 @@
     overflow: hidden;
     clear: right;
 }
+/* Allow LayerTree to Scroll */
+.gis_west .x-panel-body {
+    overflow-y: auto;
+}
 /* Ensure Throbber shows centered on main map (but not on location selector)
    - core definition in widgets.css */
 .map_loader {
