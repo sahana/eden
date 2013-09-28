@@ -26,13 +26,13 @@
         var date_of_birth_row = $(selector + '_date_of_birth__row');
         var gender_row = $(selector + '_gender__row');
         var occupation_row = $(selector + '_occupation__row');
-        var email_row = $(selector + '_email__row');
         var mobile_phone_row = $(selector + '_mobile_phone__row');
+        var email_row = $(selector + '_email__row');
         var box_bottom = $(selector + '_box_bottom');
         $(selector + '__row').hide()
                              .after(box_bottom)
-                             .after(mobile_phone_row)
                              .after(email_row)
+                             .after(mobile_phone_row)
                              .after(occupation_row)
                              .after(gender_row)
                              .after(date_of_birth_row)
@@ -47,8 +47,8 @@
         date_of_birth_row.show();
         gender_row.show();
         occupation_row.show();
-        email_row.show();
         mobile_phone_row.show();
+        email_row.show();
         box_bottom.show();
 
         var value = real_input.val();
@@ -114,8 +114,8 @@
         $(selector + '_gender').prop('disabled', false);
         $(selector + '_date_of_birth').prop('disabled', false);
         $(selector + '_occupation').prop('disabled', false);
-        $(selector + '_email').prop('disabled', false);
         $(selector + '_mobile_phone').prop('disabled', false);
+        $(selector + '_email').prop('disabled', false);
     }
 
     var disable_person_fields = function(fieldname) {
@@ -125,8 +125,8 @@
         $(selector + '_gender').prop('disabled', true);
         $(selector + '_date_of_birth').prop('disabled', true);
         $(selector + '_occupation').prop('disabled', true);
-        $(selector + '_email').prop('disabled', true);
         $(selector + '_mobile_phone').prop('disabled', true);
+        $(selector + '_email').prop('disabled', true);
         // Show the edit button
         $(selector + '_edit_bar .icon-edit').show();
         // Hide the cancel button
@@ -144,8 +144,8 @@
         $(selector + '_gender').prop('disabled', false).val('');
         $(selector + '_date_of_birth').prop('disabled', false).val('');
         $(selector + '_occupation').prop('disabled', false).val('');
-        $(selector + '_email').prop('disabled', false).val('');
         $(selector + '_mobile_phone').prop('disabled', false).val('');
+        $(selector + '_email').prop('disabled', false).val('');
         // Hide the edit button
         $(selector + '_edit_bar .icon-edit').hide();
         // Show the cancel button
@@ -164,8 +164,8 @@
             $(selector + '_gender').prop('disabled', true).val(existing.gender);
             $(selector + '_date_of_birth').prop('disabled', true).val(existing.date_of_birth);
             $(selector + '_occupation').prop('disabled', true).val(existing.occupation);
-            $(selector + '_email').prop('disabled', true).val(existing.email);
             $(selector + '_mobile_phone').prop('disabled', true).val(existing.mobile_phone);
+            $(selector + '_email').prop('disabled', true).val(existing.email);
             // Show the edit button
             $(selector + '_edit_bar .icon-edit').show();
             // Hide the cancel button
@@ -186,8 +186,8 @@
         $(selector + '_gender').prop('disabled', false).val('');
         $(selector + '_date_of_birth').prop('disabled', false).val('');
         $(selector + '_occupation').prop('disabled', false).val('');
-        $(selector + '_email').prop('disabled', false).val('');
         $(selector + '_mobile_phone').prop('disabled', false).val('');
+        $(selector + '_email').prop('disabled', false).val('');
         // Hide the edit bar
         //$(selector + '_edit_bar').hide();
     }
@@ -246,8 +246,8 @@
                 gender: $(selector + '_gender').val(),
                 date_of_birth: $(selector + '_date_of_birth').val(),
                 occupation: $(selector + '_occupation').val(),
-                email: $(selector + '_email').val(),
-                mobile_phone: $(selector + '_mobile_phone').val()
+                mobile_phone: $(selector + '_mobile_phone').val(),
+                email: $(selector + '_email').val()
             };
         } else {
             var existing = {};

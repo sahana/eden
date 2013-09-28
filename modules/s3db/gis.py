@@ -4420,14 +4420,16 @@ class gis_LocationRepresent(S3Represent):
     """ Representation of Locations """
 
     def __init__(self,
-                 show_link=False,
-                 multiple=False,
-                 sep=None
+                 show_link = False,
+                 multiple = False,
+                 sep = None,
+                 address_only = False
                  ):
 
         # Translation uses gis_location_name & not T()
         translate = current.deployment_settings.get_L10n_translate_gis_location() 
 
+        self.address_only = address_only
         self.sep = sep
 
         if sep:
@@ -4443,6 +4445,10 @@ class gis_LocationRepresent(S3Represent):
                       "L5",
                       ]
             self.multi_country = len(current.deployment_settings.get_gis_countries()) != 1
+        elif address_only:
+            fields = ["id",
+                      "addr_street",
+                      ]
         else:
             fields = ["id",
                       "name",
@@ -4535,10 +4541,19 @@ class gis_LocationRepresent(S3Represent):
             @param row: the gis_location Row
         """
 
+        if self.address_only:
+            if row.addr_street:
+                # Get the 1st line of the street address.
+                represent = row.addr_street.splitlines()[0]
+                return s3_unicode(represent)
+            else:
+                return current.messages["NONE"]
+
         sep = self.sep
         translate = self.translate
-        path = row.path
-        ids = path.split("/")
+        if sep or translate:
+            path = row.path
+            ids = path.split("/")
         if translate:
             language = current.session.s3.language
             if language == current.deployment_settings.get_L10n_default_language():
@@ -4622,54 +4637,53 @@ class gis_LocationRepresent(S3Represent):
             # @ToDo: Support translate=True
             if level == "L0":
                 represent = "%s (%s)" % (name, current.messages.COUNTRY)
-            else:
-                if level in ["L1", "L2", "L3", "L4", "L5"]:
-                    # Lookup the hierarchy for labels
-                    s3db = current.s3db
-                    htable = s3db.gis_hierarchy
-                    L0_name = row.L0
-                    if L0_name:
-                        path = path.split("/")
-                        L0_id = path[0]
-                        level_name = current.gis.get_location_hierarchy(level,
-                                                                        L0_id)
-                    else:
-                        # Fallback to system default
-                        level_name = current.gis.get_location_hierarchy(level)
-
-                    represent = name
-                    if level_name:
-                        represent = "%s (%s)" % (represent, level_name)
-                    if row.parent:
-                        parent_level = "L%s" % (int(level[1]) - 1)
-                        parent_name = row[parent_level]
-                        if parent_name:
-                            represent = "%s, %s" % (represent, parent_name)
+            elif level in ["L1", "L2", "L3", "L4", "L5"]:
+                # Lookup the hierarchy for labels
+                s3db = current.s3db
+                htable = s3db.gis_hierarchy
+                L0_name = row.L0
+                if L0_name:
+                    path = row.path.split("/")
+                    L0_id = path[0]
+                    level_name = current.gis.get_location_hierarchy(level,
+                                                                    L0_id)
                 else:
-                    # Specific location:
-                    # Don't duplicate the Resource Name
-                    # Street address or lat/lon as base
-                    represent = ""
-                    if row.addr_street:
-                        # Get the 1st line of the street address.
-                        represent = row.addr_street.splitlines()[0]
-                    if (not represent) and \
-                       (row.inherited == False) and \
-                       (row.lat is not None) and \
-                       (row.lon is not None):
-                        represent = self.lat_lon_represent(row)
-                    if row.parent:
-                        # @ToDo: Assumes no missing levels in PATH
-                        path = path.split("/")
-                        parent_level = "L%s" % (len(path) - 2)
-                        parent_name = row[parent_level]
-                        if parent_name:
-                            if represent:
-                                represent = "%s, %s" % (represent, parent_name)
-                            else:
-                                represent = parent_name
-                    if not represent:
-                        represent = name or row.id
+                    # Fallback to system default
+                    level_name = current.gis.get_location_hierarchy(level)
+
+                represent = name
+                if level_name:
+                    represent = "%s (%s)" % (represent, level_name)
+                if row.parent:
+                    parent_level = "L%s" % (int(level[1]) - 1)
+                    parent_name = row[parent_level]
+                    if parent_name:
+                        represent = "%s, %s" % (represent, parent_name)
+            else:
+                # Specific location:
+                # Don't duplicate the Resource Name
+                # Street address or lat/lon as base
+                represent = ""
+                if row.addr_street:
+                    # Get the 1st line of the street address.
+                    represent = row.addr_street.splitlines()[0]
+                if (not represent) and \
+                   (row.inherited == False) and \
+                   (row.lat is not None) and \
+                   (row.lon is not None):
+                    represent = self.lat_lon_represent(row)
+                if row.parent:
+                    # @ToDo: Assumes no missing levels in PATH
+                    path = row.path.split("/")
+                    parent_level = "L%s" % (len(path) - 2)
+                    parent_name = row[parent_level]
+                    if parent_name:
+                        if represent:
+                            represent = "%s, %s" % (represent, parent_name)
+                        else:
+                            represent = parent_name
+                if not represent:
+                    represent = name or row.id
 
         return s3_unicode(represent)
         

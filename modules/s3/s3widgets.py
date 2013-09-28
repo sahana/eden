@@ -829,8 +829,8 @@ class S3AddPersonWidget2(FormWidget):
         if occupation:
             fields.append(("occupation", occupation.label, INPUT(), False))
 
-        fields.append(("email", T("Email Address"), INPUT(), emailRequired))
         fields.append(("mobile_phone", settings.get_ui_label_mobile_phone(), INPUT(), False))
+        fields.append(("email", T("Email"), INPUT(), emailRequired))
 
         for f in fields:
             fname = f[0]

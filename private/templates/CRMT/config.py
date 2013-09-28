@@ -633,9 +633,11 @@ def customize_project_activity(**attr):
             s3db.project_activity_group.group_id.label = T("Coalition")
 
         if r.interactive or r.representation == "json":
-            # CRUD Strings
+            # CRUD Strings / Represent
             table.location_id.label = T("Address")
+            table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
             s3db.project_activity_group.group_id.label = T("Coalition")
+
             if r.method in ("summary", "report2"):
                 from s3.s3filter import S3OptionsFilter, S3DateFilter
                 filter_widgets = [S3OptionsFilter("activity_group.group_id",
@@ -830,7 +832,7 @@ def customize_org_organisation(**attr):
             s3db.org_group_membership.group_id.label = T("Coalition")
 
         if (r.interactive or r.representation=="json") and not r.component:
-            # CRUD Strings
+            # CRUD Strings / Represent
 
             if r.method in ("summary", "report2"):
                 from s3.s3filter import S3OptionsFilter
@@ -894,6 +896,7 @@ def customize_org_organisation(**attr):
                 ftable = s3db.org_facility
                 field = ftable.location_id
                 field.label = T("Address")
+                field.represent = s3db.gis_LocationRepresent(address_only=True)
                 # We don't have a widget capable of creating/editing Locations inline
                 field.widget = None
                 field.writable = False
@@ -1122,8 +1125,9 @@ def customize_org_facility(**attr):
             s3db.org_site_org_group.group_id.label = T("Coalition")
 
         if r.interactive or r.representation == "json":
-            # CRUD Strings
+            # CRUD Strings / Represent
             table.location_id.label = T("Address")
+            table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
             s3db.org_site_org_group.group_id.label = T("Coalition")
 
             s3.crud_strings[tablename] = Storage(
@@ -1262,6 +1266,7 @@ def customize_org_facility(**attr):
              r.method != "search":
             # Map Popups
             table.location_id.label = T("Address")
+            table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
             table.organisation_id.comment = ""
             s3.crud_strings[tablename].title_display = T("Place Details")
             s3db.configure(tablename,
@@ -1341,8 +1346,9 @@ def customize_stats_people(**attr):
             s3db.stats_people_group.group_id.label = T("Coalition")
 
         if r.interactive or r.representation == "json":
-            # CRUD Strings
+            # CRUD Strings / Represent
             #table.location_id.label = T("Address")
+            #table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
 
             s3.crud_strings[tablename] = Storage(
                 title_create = T("Add People"),
@@ -1536,8 +1542,9 @@ def customize_vulnerability_evac_route(**attr):
             s3db.vulnerability_evac_route_group.group_id.label = T("Coalition")
 
         if r.interactive or r.representation == "json":
-            # CRUD Strings
+            # CRUD Strings / Represent
             table.location_id.label = T("Address")
+            table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
             s3db.vulnerability_evac_route_group.group_id.label = T("Coalition")
 
             if r.method in ("summary", "report2"):
@@ -1691,8 +1698,9 @@ def customize_vulnerability_risk(**attr):
             s3db.vulnerability_risk_group.group_id.label = T("Coalition")
 
         if r.interactive or r.representation == "json":
-            # CRUD Strings
+            # CRUD Strings / Represent
             table.location_id.label = T("Address")
+            table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
             s3db.vulnerability_risk_group.group_id.label = T("Coalition")
 
             s3.crud_strings[tablename] = Storage(

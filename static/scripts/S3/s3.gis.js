@@ -84,16 +84,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             center.transform(proj4326, projection_current);
         } else {
             // BBOX
-            var bbox = options.bbox;
-            var bottom_left = new OpenLayers.LonLat(bbox[0], bbox[1]);
-            bottom_left.transform(proj4326, projection_current);
-            var left = bottom_left.lon;
-            var bottom = bottom_left.lat;
-            var top_right = new OpenLayers.LonLat(bbox[2], bbox[3]);
-            top_right.transform(proj4326, projection_current);
-            var right = top_right.lon;
-            var top = top_right.lat;
-            bounds = OpenLayers.Bounds.fromArray([left, bottom, right, top]);
+            bounds = OpenLayers.Bounds.fromArray(options.bbox)
+                                      .transform(proj4326, projection_current);
             var center = bounds.getCenterLonLat();
         }
         options.center = center;
@@ -131,8 +123,38 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         // Zoom Out to Cluster
         //layer.map.zoomTo(0)
         if (bounds) {
+            // Ensure a minimal BBOX in case we just have a single data point
+            var min_size = 0.05;
+            // Convert to 4326 for standard numbers
+            var map = layer.map;
+            var current_projection = map.getProjectionObject();
+            bounds.transform(current_projection, proj4326);
+            var bbox = bounds.toArray();
+            var lon_min = bbox[0],
+                lat_min = bbox[1],
+                lon_max = bbox[2],
+                lat_max = bbox[3];
+            var delta = (min_size - (lon_max - lon_min)) / 2;
+            if (delta > 0) {
+                lon_min -= delta;
+                lon_max += delta;
+            }
+            delta = (min_size - (lat_max - lat_min)) / 2;
+            if (delta > 0) {
+                lat_min -= delta;
+                lat_max += delta;
+            }
+            // Add an Inset in order to not have points right at the edges of the map
+            var inset = 0.007;
+            lon_min -= inset;
+            lon_max += inset;
+            lat_min -= inset;
+            lat_max += inset;
+            bounds = new OpenLayers.Bounds(lon_min, lat_min, lon_max, lat_max);
+            // Convert back to Map projection
+            bounds.transform(proj4326, current_projection);
             // Zoom to Bounds
-            layer.map.zoomToExtent(bounds);
+            map.zoomToExtent(bounds);
         }
         var strategy,
             strategies = layer.strategies;
