@@ -3452,7 +3452,7 @@ class S3MapModel(S3Model):
                              Field("version",
                                    label=T("Version"),
                                    default="1.1.0",
-                                   requires=IS_IN_SET(["1.0.0", "1.1.0"],
+                                   requires=IS_IN_SET(["1.0.0", "1.1.0", "2.0.0"],
                                                       zero=None)),
                              gis_layer_folder()(),
                              gis_refresh()(default=0), # Default to Off as 'External Source' which is uneditable

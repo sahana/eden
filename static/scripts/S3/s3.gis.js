@@ -618,7 +618,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     var node = this.node;
                     var attributes = this.node.attributes;
                     var group = attributes.checkedGroup;
-                    if (group && group !== 'gx_baselayer') {
+                    if (group && group !== 'baselayer') {
                         // Radio button folders need different behaviour
                         var checked = !attributes.checked;
                         attributes.checked = checked;
@@ -626,7 +626,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                         node.layer.setVisibility(checked);
                         this.enforceOneVisible();
                     } else {
-                        // Normal behaviour for Radio folders & Base Layers folder
+                        // Normal behaviour for Checkbox folders & Base Layers folder
                         this.toggleCheck(this.isChecked());
                     }
                 } else {
@@ -638,7 +638,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 var group = attributes.checkedGroup;
                 // If we are in the baselayer group, the map will take care of
                 // enforcing visibility.
-                if (group && group !== 'gx_baselayer') {
+                if (group && group !== 'baselayer') {
                     var layer = this.node.layer;
                     var checkedNodes = this.node.getOwnerTree().getChecked();
                     //var checkedCount = 0;
@@ -652,10 +652,12 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             }
                         }
                     });
-                    // enforce "at least one visible"
-                    //if(checkedCount === 0 && attributes.checked == false) {
-                    //    layer.setVisibility(true);
-                    //}
+                    /*if (!emptyok) {
+                        // enforce "at least one visible"
+                        if(checkedCount === 0 && attributes.checked == false) {
+                            layer.setVisibility(true);
+                        }
+                    }*/
                 }
             }
         });
@@ -705,10 +707,17 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var leaf_listeners = {
             click: function(node) {
                 // Provide a bigger click target area, by allowing click on layer name as well as checkbox/radio
-                var checked = !node.attributes.checked;
-                node.attributes.checked = checked;
-                node.ui.checkbox.checked = checked;
-                node.layer.setVisibility(checked);
+                var attributes = node.attributes;
+                if (attributes.checkedGroup == 'baselayer') {
+                    // Base Layer - allow normal behaviour
+                    node.ui.toggleCheck(!node.ui.isChecked())
+                } else {
+                    // Overlay
+                    var checked = !attributes.checked;
+                    attributes.checked = checked;
+                    node.ui.checkbox.checked = checked;
+                    node.layer.setVisibility(checked);
+                }
             }
         };
 
