@@ -4006,7 +4006,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             name_display += config_name;
         }
         name_display += '</div></div>';
-        var div = '<div class="map_save_panel off">' + name_display + '<div class="map_save_button"><div class="map_save_label">' + i18n.gis_save_map + '</div></div></div>';
+        var div = '<div class="map_save_panel off">' + name_display + '<div class="btn map_save_button"><div class="map_save_label">' + i18n.gis_save_map + '</div></div></div>';
         $('#' + map_id).append(div);
         if (config_name) {
             $('#' + map_id + ' .map_save_panel').removeClass('off');
