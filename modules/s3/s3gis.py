@@ -5482,6 +5482,7 @@ class GIS(object):
                  permalink = None,
                  scaleline = None,
                  zoomcontrol = None,
+                 zoomWheelEnabled = True,
                  print_tool = {},
                  mgrs = {},
                  window = False,
@@ -5616,6 +5617,7 @@ class GIS(object):
                    permalink = permalink,
                    scaleline = scaleline,
                    zoomcontrol = zoomcontrol,
+                   zoomWheelEnabled = zoomWheelEnabled,
                    print_tool = print_tool,
                    mgrs = mgrs,
                    window = window,
@@ -6053,6 +6055,10 @@ class MAP(DIV):
             zoomcontrol = settings.get_gis_zoomcontrol()
         if not zoomcontrol:
             options["zoomcontrol"] = False
+
+        zoomWheelEnabled = opts.get("zoomWheelEnabled", True)
+        if not zoomWheelEnabled:
+            options["no_zoom_wheel"] = True
 
         ########
         # Layers

@@ -2691,7 +2691,11 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         // The default controls (normally added in OpenLayers.Map, but brought here for greater control)
         // Navigation or TouchNavigation depending on what is in build
         //if (OpenLayers.Control.Navigation) {
-            map.addControl(new OpenLayers.Control.Navigation());
+            var navControl = new OpenLayers.Control.Navigation();
+            if (options.no_zoom_wheel) {
+                navControl.zoomWheelEnabled = false;
+            }
+            map.addControl(navControl);
         //} else if (OpenLayers.Control.TouchNavigation) {
         //    map.addControl(new OpenLayers.Control.TouchNavigation());
         //}

@@ -3152,6 +3152,7 @@ S3.gis.tab="%s"''' % s3.gis.tab
                                                  search = True,
                                                  window = True,
                                                  window_hide = True,
+                                                 zoomWheelEnabled = False,
                                                  )
                 else:
                     # Bad location_id
@@ -3196,6 +3197,7 @@ S3.gis.tab="%s"''' % s3.gis.tab
                                              search = True,
                                              window = True,
                                              window_hide = True,
+                                             zoomWheelEnabled = False,
                                              )
             else:
                 # No Permission to create a location, so don't render a row
@@ -4409,6 +4411,7 @@ class S3LocationSelectorWidget2(FormWidget):
                                # Hide controls from toolbar
                                nav = False,
                                area = False,
+                               zoomWheelEnabled = False,
                                # Don't use normal callback (since we postpone rendering Map until DIV unhidden)
                                # but use our one if we need to display a map by default
                                callback = callback if use_callback else None,
