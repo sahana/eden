@@ -157,8 +157,8 @@ class S3Report2(S3Method):
 
             response = current.response
             tablename = resource.tablename
-            title = response.s3.crud_strings[tablename].get("title_report",
-                                                            current.T("Report"))
+            crud_strings = response.s3.crud_strings[tablename]
+            title = crud_strings and crud_strings.get("title_report") or current.T("Report")
             output["title"] = title
 
             # Filter widgets
