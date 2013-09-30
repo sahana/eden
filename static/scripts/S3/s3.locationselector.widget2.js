@@ -561,11 +561,11 @@
                     }
                     // Notify results
                     throbber.hide();
-                    success.removeClass('hide').show();
+                    success.html(i18n.address_mapped).removeClass('hide').show();
                 } else {
                     // Notify results
                     throbber.hide();
-                    fail.removeClass('hide').show();
+                    fail.html(i18n.address_not_mapped).removeClass('hide').show();
                     s3_debug(data);
                 }
             },
@@ -577,7 +577,7 @@
                 }
                 // Notify results
                 throbber.hide();
-                fail.removeClass('hide').show();
+                fail.html(i18n.address_not_mapped).removeClass('hide').show();
                 s3_debug(msg);
             }
         });
@@ -639,11 +639,11 @@
                     }
                     // Notify results
                     throbber.hide();
-                    success.removeClass('hide').show();
+                    success.html(i18n.location_found).removeClass('hide').show();
                 } else {
                     // Notify results
                     throbber.hide();
-                    fail.removeClass('hide').show();
+                    fail.html(i18n.location_not_found).removeClass('hide').show();
                     //s3_debug(data);
                 }
             },
@@ -655,7 +655,7 @@
                 }
                 // Notify results
                 throbber.hide();
-                fail.removeClass('hide').show();
+                fail.html(i18n.location_not_found).removeClass('hide').show();
                 s3_debug(msg);
             }
         });
@@ -769,8 +769,10 @@
                         lonfield.val(centerPoint.lon);
                         // Store the fact that we've now added Marker manually
                         real_input.data('manually_geocoded', true);
+                        //if (!$(selector + '_address').val()) {
                         // Reverse Geocode the Point
                         geocode_r(fieldname);
+                        //}
                     } else {
                         // Polygon
                         var WKT = geometry.transform(map.getProjectionObject(), gis.proj4326).toString();

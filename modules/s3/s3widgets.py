@@ -3678,7 +3678,7 @@ class S3LocationSelectorWidget2(FormWidget):
         Limitations:
         * Doesn't support variable Levels by Country
         * Doesn't allow creation of new Lx Locations
-        * Doesn't allow selection of existing Locations
+        * Doesn't allow selection of existing specific Locations
         * Doesn't support manual entry of LatLons
 
         May evolve into a replacement in-time if missing features get migrated here.
@@ -4439,11 +4439,18 @@ class S3LocationSelectorWidget2(FormWidget):
                 comment = ""
                 map_icon = formstyle(row_id, label, widget, comment)
             if geocoder:
+                if not location_selector_loaded:
+                    global_append('''i18n.address_mapped="%s"
+i18n.address_not_mapped="%s"
+i18n.location_found="%s"
+i18n.location_not_found="%s"''' % (T("Address Mapped"),
+                                  T("Address NOT Mapped"),
+                                  T("Location Found"),
+                                  T("Location NOT Found"),
+                                  ))
                 map_icon.append(DIV(DIV(_class="throbber hide"),
-                                    DIV(T("Address Mapped"),
-                                        _class="geocode_success hide"),
-                                    DIV(T("Address NOT Mapped"),
-                                        _class="geocode_fail hide"),
+                                    DIV(_class="geocode_success hide"),
+                                    DIV(_class="geocode_fail hide"),
                                     BUTTON(T("Geocode"),
                                            _class="hide"),
                                     _id="%s_geocode" % fieldname,

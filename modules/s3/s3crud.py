@@ -554,7 +554,7 @@ class S3CRUD(S3Method):
                 if popup_url is None:
                     popup_url = r.url(method="read", representation="html")
                 if popup_url:
-                    details_btn = A(T("Show Details"),
+                    details_btn = A(T("Open"),
                                     _href=popup_url,
                                     _id="details-btn",
                                     _target="_blank")
