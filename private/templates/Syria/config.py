@@ -137,7 +137,7 @@ settings.L10n.thousands_separator = ","
 settings.L10n.translate_gis_location = True
 
 # Restrict the Location Selector to just certain countries
-settings.gis.countries = ["SY", "IQ", "LB", "TR", "JO"]
+settings.gis.countries = ["SY", "IQ", "LB", "TR", "JO", "EG", "DZ"]
 
 # Until we add support to LocationSelector2 to set dropdowns from LatLons
 #settings.gis.check_within_parent_boundaries = False
@@ -151,7 +151,9 @@ settings.gis.legend = "float"
 # -----------------------------------------------------------------------------
 # Finance settings
 settings.fin.currencies = {
+    "CHF" : T("Swiss Francs"),
     "EUR" : T("Euros"),
+    "GBP" : T("Great British Pounds"),
     "USD" : T("United States Dollars"),
 }
 
@@ -167,8 +169,10 @@ settings.ui.export_formats = ["xls"]
 
 settings.ui.update_label = "Edit"
 
-# Disabled until ready for prime-time
-settings.search.filter_manager = False
+settings.ui.filter_auto_submit = 750
+settings.ui.report_auto_submit = 750
+
+#settings.search.filter_manager = False
 
 # =============================================================================
 # Module Settings
@@ -202,6 +206,16 @@ settings.org.site_label = "Office"
 # Uncomment this to use multiple Organisations per project
 settings.project.multiple_organisations = True
 
+# Links to Filtered Components for Donors & Partners
+#settings.project.organisation_roles = {
+#    1: T("Host National Society"),
+#    2: T("Partner"),
+#    3: T("Donor"),
+#    #4: T("Customer"), # T("Beneficiary")?
+#    #5: T("Supplier"),
+#    9: T("Partner National Society"),
+#}
+
 # -----------------------------------------------------------------------------
 # Notifications
 # Template for the subject line in update notifications
@@ -217,8 +231,11 @@ def currency_represent(v):
         return "$"
     elif v == "EUR":
         return "€"
+    elif v == "GBP":
+        return "£"
     else:
-        return current.messages["NONE"]
+        # e.g. CHF
+        return v
 
 # -----------------------------------------------------------------------------
 def render_contacts(listid, resource, rfields, record, **attr):
@@ -2726,7 +2743,6 @@ def customize_gis_location(**attr):
         
                 # Customise tables used by widgets
                 customize_cms_post_fields()
-                customize_org_resource_fields("profile")
                 customize_project_project_fields()
 
                 # gis_location table (Sub-Locations)
@@ -2765,16 +2781,6 @@ def customize_gis_location(**attr):
                 #                        show_on_map = False,
                 #                        list_layout = render_locations_profile,
                 #                        )
-                resources_widget = dict(label = "Resources",
-                                        title_create = "Add New Resource",
-                                        type = "datalist",
-                                        tablename = "org_resource",
-                                        context = "location",
-                                        default = default,
-                                        icon = "icon-resource",
-                                        show_on_map = False, # No Marker yet & only show at L1-level anyway
-                                        list_layout = render_resources,
-                                        )
                 incidents_widget = dict(label = "Incidents",
                                         title_create = "Add New Incident",
                                         type = "datalist",
@@ -2788,6 +2794,16 @@ def customize_gis_location(**attr):
                                         #marker = "incident",
                                         list_layout = render_profile_posts,
                                         )
+                projects_widget = dict(label = "Projects",
+                                       title_create = "Add New Project",
+                                       type = "datalist",
+                                       tablename = "project_project",
+                                       context = "location",
+                                       default = default,
+                                       icon = "icon-project",
+                                       show_on_map = False, # No Marker yet & only show at L1-level anyway
+                                       list_layout = render_projects,
+                                       )
                 reports_widget = dict(label = "Reports",
                                       title_create = "Add New Report",
                                       type = "datalist",
@@ -2801,29 +2817,16 @@ def customize_gis_location(**attr):
                                       #marker = "report",
                                       list_layout = render_profile_posts,
                                       )
-                projects_widget = dict(label = "Projects",
-                                       title_create = "Add New Project",
-                                       type = "datalist",
-                                       tablename = "project_project",
-                                       context = "location",
-                                       default = default,
-                                       icon = "icon-project",
-                                       show_on_map = False, # No Marker yet & only show at L1-level anyway
-                                       list_layout = render_projects,
-                                       )
-                activities_widget = dict(label = "Activities",
-                                         title_create = "Add New Activity",
-                                         type = "datalist",
-                                         tablename = "cms_post",
-                                         context = "location",
-                                         default = default,
-                                         filter = S3FieldSelector("series_id$name") == "Activity",
-                                         icon = "icon-activity",
-                                         layer = "Activities",
-                                         # provided by Catalogue Layer
-                                         #marker = "activity",
-                                         list_layout = render_profile_posts,
-                                         )
+                # @ToDo: Renderer
+                #distributions_widget = dict(label = "Distributions",
+                #                            title_create = "Add New Distribution",
+                #                            type = "datalist",
+                #                            tablename = "supply_distribution",
+                #                            context = "location",
+                #                            default = default,
+                #                            icon = "icon-resource",
+                #                            list_layout = render_distributions,
+                #                            )
                 # Build the icon, if it doesn't already exist
                 filename = "%s.svg" % record_id
                 import os
@@ -2855,12 +2858,12 @@ def customize_gis_location(**attr):
                                                     _class="profile_header",
                                                     ),
                                profile_widgets = [#locations_widget,
-                                                  resources_widget,
-                                                  map_widget,
                                                   incidents_widget,
-                                                  reports_widget,
+                                                  map_widget,
                                                   projects_widget,
-                                                  activities_widget,
+                                                  reports_widget,
+                                                  #activities_widget,
+                                                  #distributions_widget,
                                                   ],
                                )
 
@@ -3225,7 +3228,6 @@ def customize_org_organisation(**attr):
                 customize_cms_post_fields()
                 customize_hrm_human_resource_fields()
                 customize_org_office_fields()
-                customize_org_resource_fields("profile")
                 customize_project_project_fields()
 
                 contacts_widget = dict(label = "Contacts",
@@ -3257,15 +3259,6 @@ def customize_org_organisation(**attr):
                                       #marker = "office",
                                       list_layout = render_offices,
                                       )
-                resources_widget = dict(label = "Resources",
-                                        title_create = "Add New Resource",
-                                        type = "datalist",
-                                        tablename = "org_resource",
-                                        context = "organisation",
-                                        icon = "icon-resource",
-                                        show_on_map = False, # No Marker yet & only show at L1-level anyway
-                                        list_layout = render_resources,
-                                        )
                 projects_widget = dict(label = "Projects",
                                        title_create = "Add New Project",
                                        type = "datalist",
@@ -3275,18 +3268,6 @@ def customize_org_organisation(**attr):
                                        show_on_map = False, # No Marker yet & only show at L1-level anyway
                                        list_layout = render_projects,
                                        )
-                activities_widget = dict(label = "Activities",
-                                         title_create = "Add New Activity",
-                                         type = "datalist",
-                                         tablename = "cms_post",
-                                         context = "organisation",
-                                         filter = S3FieldSelector("series_id$name") == "Activity",
-                                         icon = "icon-activity",
-                                         layer = "Activities",
-                                         # provided by Catalogue Layer
-                                         #marker = "activity",
-                                         list_layout = render_profile_posts,
-                                         )
                 reports_widget = dict(label = "Reports",
                                       title_create = "Add New Report",
                                       type = "datalist",
@@ -3311,6 +3292,16 @@ def customize_org_organisation(**attr):
                                           #marker = "assessment",
                                           list_layout = render_profile_posts,
                                           )
+                # @ToDo: Renderer
+                #distributions_widget = dict(label = "Distributions",
+                #                            title_create = "Add New Distribution",
+                #                            type = "datalist",
+                #                            tablename = "supply_distribution",
+                #                            context = "location",
+                #                            default = default,
+                #                            icon = "icon-resource",
+                #                            list_layout = render_distributions,
+                #                            )
                 record = r.record
                 s3db.configure("org_organisation",
                                profile_title = "%s : %s" % (s3.crud_strings["org_organisation"].title_list, 
@@ -3328,11 +3319,11 @@ def customize_org_organisation(**attr):
                                profile_widgets = [contacts_widget,
                                                   map_widget,
                                                   offices_widget,
-                                                  resources_widget,
                                                   projects_widget,
-                                                  activities_widget,
+                                                  #activities_widget,
                                                   reports_widget,
                                                   assessments_widget,
+                                                  #distributions_widget,
                                                   ]
                                )
             elif r.method == "datalist":
@@ -3409,173 +3400,6 @@ def customize_org_organisation(**attr):
     return attr
 
 settings.ui.customize_org_organisation = customize_org_organisation
-
-# -----------------------------------------------------------------------------
-def customize_org_resource_fields(method):
-    """
-        Customize org_resource fields for Profile widgets and 'more' popups
-    """
-
-    s3db = current.s3db
-
-    table = s3db.org_resource
-    table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
-
-    list_fields = ["organisation_id",
-                   "location_id",
-                   "parameter_id",
-                   "value",
-                   "comments",
-                   ]
-    if method in ("datalist", "profile"):
-        table.modified_by.represent = s3_auth_user_represent_name
-        table.modified_on.represent = datetime_represent
-        append = list_fields.append
-        append("modified_by")
-        append("modified_on")
-        append("organisation_id$logo")
-
-    s3db.configure("org_resource",
-                   list_fields = list_fields,
-                   )
-
-# -----------------------------------------------------------------------------
-def customize_org_resource(**attr):
-    """
-        Customize org_resource controller
-    """
-
-    s3 = current.response.s3
-    s3db = current.s3db
-    table = s3db.org_resource
-
-    # Custom PreP
-    standard_prep = s3.prep
-    def custom_prep(r):
-        # Call standard prep
-        if callable(standard_prep):
-            result = standard_prep(r)
-            if not result:
-                return False
-
-        if r.interactive or r.representation == "aadata":
-            customize_org_resource_fields(r.method)
-    
-            # Configure fields
-            #table.site_id.readable = table.site_id.readable = False
-            location_field = table.location_id
-            location_field.label = T("District")
-
-            # Filter from a Profile page?
-            # If so, then default the fields we know
-            get_vars = current.request.get_vars
-            location_id = get_vars.get("~.(location)", None)
-            organisation_id = get_vars.get("~.(organisation)", None)
-            if organisation_id:
-                org_field = table.organisation_id
-                org_field.default = organisation_id
-                org_field.readable = org_field.writable = False
-            if location_id:
-                location_field.default = location_id
-                location_field.readable = location_field.writable = False
-            else:
-                # L1s only
-                location_field.requires = IS_ONE_OF(current.db, "gis_location.id",
-                                                    S3Represent(lookup="gis_location"),
-                                                    sort = True,
-                                                    filterby = "level",
-                                                    filter_opts = ["L1"]
-                                                    )
-                # Don't add new Locations here
-                location_field.comment = None
-                # Simple dropdown
-                location_field.widget = None
-
-            # Return to List view after create/update/delete (unless done via Modal)
-            url_next = URL(c="org", f="resource")
-
-            s3db.configure("org_resource",
-                           create_next = url_next,
-                           delete_next = url_next,
-                           update_next = url_next,
-                           # Don't include a Create form in 'More' popups
-                           listadd = False if r.method=="datalist" else True,
-                           list_layout = render_resources,
-                           )
-
-            s3.cancel = True
-
-        return True
-    s3.prep = custom_prep
-
-    # Custom postp
-    standard_postp = s3.postp
-    def custom_postp(r, output):
-        if r.interactive:
-            actions = [dict(label=str(T("Open")),
-                            _class="action-btn",
-                            url=URL(c="org", f="resource",
-                                    args=["[id]", "read"]))
-                       ]
-            # All users just get "Open"
-            #db = current.db
-            #auth = current.auth
-            #has_permission = auth.s3_has_permission
-            #ownership_required = auth.permission.ownership_required
-            #s3_accessible_query = auth.s3_accessible_query
-            #if has_permission("update", table):
-            #    action = dict(label=str(T("Edit")),
-            #                  _class="action-btn",
-            #                  url=URL(c="org", f="resource",
-            #                          args=["[id]", "update"]),
-            #                  )
-            #    if ownership_required("update", table):
-            #        # Check which records can be updated
-            #        query = s3_accessible_query("update", table)
-            #        rows = db(query).select(table._id)
-            #        restrict = []
-            #        rappend = restrict.append
-            #        for row in rows:
-            #            row_id = row.get("id", None)
-            #            if row_id:
-            #                rappend(str(row_id))
-            #        action["restrict"] = restrict
-            #    actions.append(action)
-            #if has_permission("delete", table):
-            #    action = dict(label=str(T("Delete")),
-            #                  _class="action-btn",
-            #                  url=URL(c="org", f="resource",
-            #                          args=["[id]", "delete"]),
-            #                  )
-            #    if ownership_required("delete", table):
-            #        # Check which records can be deleted
-            #        query = s3_accessible_query("delete", table)
-            #        rows = db(query).select(table._id)
-            #        restrict = []
-            #        rappend = restrict.append
-            #        for row in rows:
-            #            row_id = row.get("id", None)
-            #            if row_id:
-            #                rappend(str(row_id))
-            #        action["restrict"] = restrict
-            #    actions.append(action)
-            s3.actions = actions
-            if isinstance(output, dict):
-                if "form" in output:
-                    output["form"].add_class("org_resource")
-                elif "item" in output and hasattr(output["item"], "add_class"):
-                    output["item"].add_class("org_resource")
-
-        # Call standard postp
-        if callable(standard_postp):
-            output = standard_postp(r, output)
-
-        return output
-    s3.postp = custom_postp
-
-    return attr
-
-settings.ui.customize_org_resource = customize_org_resource
 
 # -----------------------------------------------------------------------------
 def customize_pr_person(**attr):

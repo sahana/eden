@@ -1345,12 +1345,10 @@ class S3SupplyDistributionModel(S3Model):
             #                ),
             S3OptionsFilter("project_id$organisation_id",
                             label = T("Lead Organisation"),
-                            cols = 3,
                             widget="multiselect"
                             ),
             S3OptionsFilter("parameter_id",
                             label = T("Item"),
-                            cols = 3,
                             widget="multiselect"
                             ),
             #S3OptionsFilter("year",
@@ -1359,9 +1357,9 @@ class S3SupplyDistributionModel(S3Model):
             #                widget="multiselect",
             #                options = year_options
             #                ),
-            S3OptionsFilter("location_id$L1",
-                            location_level="L1",
-                            widget="multiselect"),
+            S3LocationFilter("location_id",
+                             levels=["L0", "L1", "L2", "L3"],
+                             widget="multiselect"),
             S3OptionsFilter("project_id$partner.organisation_id",
                             label = T("Partners"),
                             widget="multiselect"),
@@ -1388,6 +1386,9 @@ class S3SupplyDistributionModel(S3Model):
                   super_entity = "stats_data",
                   onaccept = self.supply_distribution_onaccept,
                   deduplicate = self.supply_distribution_deduplicate,
+                  context = {"location": "location_id",
+                             "organisation": "project_id$organisation_id",
+                             },
                   filter_widgets = filter_widgets,
                   report_options=Storage(
                     rows=report_fields,

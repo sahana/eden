@@ -348,7 +348,6 @@
                         <xsl:value-of select="concat($SectorPrefix, $item)"/>
                     </xsl:attribute>
                     <data field="name"><xsl:value-of select="$item"/></data>
-                    <data field="abrv"><xsl:value-of select="$item"/></data>
                 </resource>
             </xsl:when>
             <!-- Hazards -->
