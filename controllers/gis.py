@@ -835,17 +835,22 @@ def config():
                                                                     show_type = False,
                                                                     show_link = True,
                                                                     )
-                    settings.search.filter_manager = False
-                    from s3.s3filter import S3OptionsFilter
-                    filter_widgets = [
-                            S3OptionsFilter("pe_id",
-                                            label = CREATED_BY,
-                                            widget = "multiselect",
-                                            )
-                        ]
-                    s3db.configure("gis_config",
-                                   filter_widgets = filter_widgets)
                     if auth.is_logged_in():
+                        settings.search.filter_manager = False
+                        from s3.s3filter import S3OptionsFilter
+                        filter_widgets = [
+                            S3OptionsFilter("pe_id",
+                                            label = "",
+                                            options = {"*": T("All"),
+                                                       auth.user.pe_id: T("My Maps"),
+                                                       },
+                                            multiple = False,
+                                            )
+                            ]
+                        s3db.configure("gis_config",
+                                       filter_clear = False,
+                                       filter_widgets = filter_widgets,
+                                       )
                         # For Create forms
                         field.default = auth.user.pe_id
                         field.readable = field.writable = False

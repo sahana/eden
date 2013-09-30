@@ -30,7 +30,6 @@
             var multiple = el.attr('multiple');
             this.multiple = (typeof multiple != 'undefined') ? true : false;
             this.menu = null;
-
         },
 
         _init: function() {
@@ -89,7 +88,12 @@
 
         _renderRows: function(items, group) {
             // Render all rows in a group
-            var cols = this.options.columns, head = [], tail = items, pos = 0, size, item;
+            var cols = this.options.columns,
+                       head = [],
+                       tail = items,
+                       pos = 0,
+                       size,
+                       item;
 
             while(tail.length) {
                 size = Math.min(cols, tail.length);

@@ -919,22 +919,26 @@ class S3CRUD(S3Method):
                                                  representation="options"))
 
                 from s3filter import S3FilterForm
+                filter_clear = get_config("filter_clear", True)
                 filter_formstyle = get_config("filter_formstyle", None)
                 filter_submit = get_config("filter_submit", True)
                 filter_form = S3FilterForm(filter_widgets,
+                                           clear=filter_clear,
                                            formstyle=filter_formstyle,
                                            submit=filter_submit,
                                            ajax=filter_ajax,
                                            url=filter_submit_url,
                                            ajaxurl=filter_ajax_url,
                                            _class="filter-form",
-                                           _id="%s-filter-form" % target)
+                                           _id="%s-filter-form" % target
+                                           )
                 fresource = current.s3db.resource(resource.tablename)
                 alias = resource.alias if r.component else None
                 output["list_filter_form"] = filter_form.html(fresource,
                                                               r.get_vars,
                                                               target=target,
-                                                              alias=alias)
+                                                              alias=alias
+                                                              )
             else:
                 # Render as empty string to avoid the exception in the view
                 output["list_filter_form"] = ""

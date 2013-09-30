@@ -1881,6 +1881,20 @@ def render_log(listid, resource, rfields, record, **attr):
             body = T("Saved a Filter")
         elif method == "update":
             body = T("Updated a Filter")
+    elif tablename == "gis_config":
+        table = s3db[tablename]
+        row = db(table.id == record_id).select(table.name,
+                                               limitby=(0, 1)
+                                               ).first()
+        if row:
+            label = row.name or ""
+        else:
+            label = ""
+        url = URL(c="gis", f="index", vars={"config": record_id})
+        if method == "create":
+            body = T("Saved a Map")
+        elif method == "update":
+            body = T("Updated a Map")
     else:
         table = s3db[tablename]
         row = db(table.id == record_id).select(table.name,
@@ -1922,11 +1936,6 @@ def render_log(listid, resource, rfields, record, **attr):
                 body = T("Added a Hazard")
             elif method == "update":
                 body = T("Edited a Hazard")
-        elif tablename == "gis_config":
-            if method == "create":
-                body = T("Saved a Map")
-            elif method == "update":
-                body = T("Updated a Map")
 
     body = P(body,
              BR(),

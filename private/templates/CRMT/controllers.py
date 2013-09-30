@@ -135,12 +135,12 @@ for(var i=0,len=layers.length;i<len;i++){
             if is_logged_in and org_group_id:
                 # Add a Filter
                 filter_widgets = [S3OptionsFilter("user_id$org_group_id",
-                                                  label="",
+                                                  label = "",
                                                   # Can't just use "" as this is then omitted from rendering
                                                   options = {"*": T("All"),
                                                              org_group_id: T("My Community"),
                                                              },
-                                                  multiple=False
+                                                  multiple = False,
                                                   ),
                                   ]
 
@@ -155,7 +155,8 @@ for(var i=0,len=layers.length;i<len;i++){
                                            url = filter_submit_url,
                                            ajaxurl = filter_ajax_url,
                                            _class = "filter-form",
-                                           _id = "%s-filter-form" % listid)
+                                           _id = "%s-filter-form" % listid
+                                           )
                 filter_form = filter_form.html(resource,
                                                request.get_vars,
                                                target=listid,

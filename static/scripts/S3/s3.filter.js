@@ -179,13 +179,20 @@ S3.search = {};
                 value = '';
                 values = $this.val();
                 if (values) {
-                    for (i=0; i < values.length; i++) {
-                        v = quoteValue(values[i]);
-                        if (value === '') {
-                            value = v;
-                        } else {
-                            value = value + ',' + v;
+                    if (values instanceof Array) {
+                        // multiple=True
+                        var v;
+                        for (i=0; i < values.length; i++) {
+                            v = quoteValue(values[i]);
+                            if (value === '') {
+                                value = v;
+                            } else {
+                                value = value + ',' + v;
+                            }
                         }
+                    } else {
+                        // multiple=False
+                        value = quoteValue(values);
                     }
                 }
             } else {
@@ -244,7 +251,7 @@ S3.search = {};
                 if ($this.hasClass('datetimepicker')) {
                     if ($this.hasClass('hide-time')) {
                         dt = $this.datepicker('getDate');
-                        op = id.split('-').pop();
+                        var op = id.split('-').pop();
                         if (op == 'le' || op == 'gt') {
                             dt.setHours(23, 59, 59, 0);
                         } else {
@@ -548,7 +555,10 @@ S3.search = {};
             
             var url = $(submit_url).val();
             
-            var url_parts = url.split('?'), update_url, query, vars=[];
+            var url_parts = url.split('?'),
+                update_url,
+                query,
+                vars = [];
 
             if (url_parts.length > 1) {
                 

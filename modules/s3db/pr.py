@@ -3997,6 +3997,9 @@ class pr_PersonEntityRepresent(S3Represent):
             @param rows: the rows
         """
 
+        if not k:
+            return v
+
         if self.linkto == URL(c="pr", f="pentity", args=["[id]"]):
             # Default linkto, so modify this to the instance type-specific URLs
             k = s3_unicode(k)

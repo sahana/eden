@@ -101,7 +101,8 @@ label.over {
     color: #ccc;
     font-style: italic;
     position: absolute;
-    top: 5px;
+    /* Wrong on Save Map */
+    /*top: 5px;*/
     left: 5px;
 }
 
