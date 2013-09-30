@@ -32,6 +32,8 @@
             collapseChart: true,
             collapseTable: false,
 
+            exploreChart: false,
+
             autoSubmit: 1000
         },
 
@@ -420,6 +422,16 @@
             // Show the chart options
             $(container).append(chart_opts);
         },
+
+        _truncateLabel: function(label, len) {
+
+            if (label.length > len) {
+                return label.substring(0, len-3).replace(/\s+$/g,'') + '...';
+            } else {
+                return label;
+            }
+            
+        },
         
         _renderChart: function(chart_options) {
             // Render the chart (according to current options)
@@ -568,26 +580,29 @@
             });
 
             // Click-link to filtered URL
-            if (filter_url && selector) {
-                $(chart).bind('plotclick', function(event, pos, item) {
-                    if (item) {
-                        try {
-                            var filter = [[selector, items[item.seriesIndex]['key']]];
+            if (this.options.exploreChart) {
+                if (filter_url && selector) {
+                    $(chart).bind('plotclick', function(event, pos, item) {
+                        if (item) {
+                            try {
+                                var filter = [[selector, items[item.seriesIndex]['key']]];
+                            }
+                            catch(e) {
+                                return;
+                            }
+                            var page = pt._updateURL(filter_url, filter);
+                            window.open(page, '_blank');
                         }
-                        catch(e) {
-                            return;
-                        }
-                        var page = pt._updateURL(filter_url, filter);
-                        window.open(page, '_blank');
-                    }
-                });
+                    });
+                }
             }
         },
 
         _renderBarChart: function(data, title, filter_url, selector) {
             // Render a (vertical) bar chart
 
-            var chart = this.chart;
+            var chart = this.chart,
+                truncateLabel = this._truncateLabel;
             if (!chart) {
                 return;
             }
@@ -603,7 +618,7 @@
                         data: [[idx+1, item[2]]],
                         key: item[3]
                     });
-                    labels.push([idx+1, item[4]]);
+                    labels.push([idx+1, truncateLabel(item[4], 16)]);
                     idx++;
                 }
             }
@@ -668,19 +683,21 @@
             });
             
             // Click-link to filtered URL
-            if (filter_url && selector) {
-                $(chart).bind('plotclick', function(event, pos, item) {
-                    if (item) {
-                        try {
-                            var filter = [[selector, items[item.seriesIndex]['key']]];
+            if (this.options.exploreChart) {
+                if (filter_url && selector) {
+                    $(chart).bind('plotclick', function(event, pos, item) {
+                        if (item) {
+                            try {
+                                var filter = [[selector, items[item.seriesIndex]['key']]];
+                            }
+                            catch(e) {
+                                return;
+                            }
+                            var page = pt._updateURL(filter_url, filter);
+                            window.open(page, '_blank');
                         }
-                        catch(e) {
-                            return;
-                        }
-                        var page = pt._updateURL(filter_url, filter);
-                        window.open(page, '_blank');
-                    }
-                });
+                    });
+                }
             }
         },
 
@@ -826,20 +843,22 @@
             });
 
             // Click-link to filtered URL
-            if (filter_url && rows_selector && cols_selector) {
-                $(chart).bind('plotclick', function(event, pos, item) {
-                    if (item) {
-                        try {
-                            var filter = [[rows_selector, rows[item.dataIndex][3]],
-                                          [cols_selector, cols[item.seriesIndex][3]]];
+            if (this.options.exploreChart) {
+                if (filter_url && rows_selector && cols_selector) {
+                    $(chart).bind('plotclick', function(event, pos, item) {
+                        if (item) {
+                            try {
+                                var filter = [[rows_selector, rows[item.dataIndex][3]],
+                                            [cols_selector, cols[item.seriesIndex][3]]];
+                            }
+                            catch(e) {
+                                return;
+                            }
+                            var page = pt._updateURL(filter_url, filter);
+                            window.open(page, '_blank');
                         }
-                        catch(e) {
-                            return;
-                        }
-                        var page = pt._updateURL(filter_url, filter);
-                        window.open(page, '_blank');
-                    }
-                });
+                    });
+                }
             }
         },
 

@@ -88,8 +88,8 @@ class S3Report2(S3Method):
         widget_id = "pivottable"
 
         # @todo: make configurable:
-        maxrows = 20
-        maxcols = 20
+        maxrows = 10
+        maxcols = 10
 
         # Extract the relevant GET vars
         get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
