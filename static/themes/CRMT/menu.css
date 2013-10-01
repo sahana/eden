@@ -19,9 +19,10 @@
     display: inline-block;
 }
 
+/* Breaks 'Explore Community Data'
 .dropdown-menu > li > a:first-child {
     width: 190px;
-}
+}*/
 
 .dropdown-menu > li > a.create  {
     float: right;
