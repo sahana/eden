@@ -140,7 +140,7 @@ class S3SVG(S3Codec):
         wkt = items[0]["gis_location.wkt"]
         if not wkt:
             error = "No Geometry!"
-            from s3utils import s3_debug
+            from ..s3utils import s3_debug
             s3_debug(error)
         
         # Convert to SVG
@@ -179,10 +179,26 @@ class S3SVG(S3Codec):
             from shapely import speedups
             speedups.enable()
         except:
-            from s3utils import s3_debug
+            from ..s3utils import s3_debug
             s3_debug("S3GIS", "Upgrade Shapely for Performance enhancements")
 
         shape = wkt_loads(wkt)
+
+        geom_type = shape.geom_type
+        if geom_type == "MultiPolygon":
+            polygons = shape.geoms
+        elif geom_type == "Polygon":
+            polygons = [shape]
+        else:
+            error = "Unsupported Geometry: %s" % geom_type
+            from ..s3utils import s3_debug
+            s3_debug(error)
+            return
+        # @ToDo:
+        #elif geom_type == "LineString":
+        #    _points = shape
+        #elif geom_type == "Point":
+        #    _points = [shape]
 
         # Scale Points & invert Y axis
         from shapely import affinity
@@ -199,21 +215,6 @@ class S3SVG(S3Codec):
         #xoff = (iwidth / 2) - centroid.x
         #yoff = (iheight / 2) - centroid.y
         #affinity.translate(shape, xoff=xoff, yoff=yoff)
-
-        geom_type = shape.geom_type
-        if geom_type == "MultiPolygon":
-            polygons = shape.geoms
-        elif geom_type == "Polygon":
-            polygons = [shape]
-        else:
-            error = "Unsupported Geometry: %s" % geom_type
-            from s3utils import s3_debug
-            s3_debug(error)
-        # @ToDo:
-        #elif geom_type == "LineString":
-        #    _points = shape
-        #elif geom_type == "Point":
-        #    _points = [shape]
 
         points = []
         pappend = points.append

@@ -10,6 +10,10 @@ body.popup {
     padding-top: 0;
 }
 
+body.ext-ie10 {
+    padding-top: 60px;
+}
+
 /* Over-ride ext */
 p {
     margin: 0 0 10px;
@@ -78,6 +82,8 @@ textarea[class*="span"] {
 
 .tooltip {
     opacity: 1;
+    /* Over-ride Bootstrap */
+    z-index: auto;
 }
 
 /* Over-ride widgets */

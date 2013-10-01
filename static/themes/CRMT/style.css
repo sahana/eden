@@ -316,13 +316,6 @@ div.map_legend_tab {
     margin-right: -1px;
 }
 
-/* Hide border on main map (avoids 2x border) + layer panel*/ 
-div#ext-gen105,
-div#ext-gen113 {
-    border: none;
-    padding: 1px;
-}
-
 div.map_legend_panel {
     margin-bottom: 30px;
 }
@@ -356,7 +349,6 @@ div.map_legend_panel {
 .pt-show-totals-option,
 .pt-chart-controls,
 .pt-hide-chart,
-.pt-toggle-table
- {
+.pt-toggle-table {
     display: none;
 }
