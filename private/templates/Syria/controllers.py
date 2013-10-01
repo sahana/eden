@@ -60,8 +60,8 @@ class index(S3CustomController):
         output["events"] = latest_records(resource, layout, listid, limit, list_fields, orderby)
 
         resource = s3db.resource("cms_post")
-        resource.add_filter(S3FieldSelector("series_id$name") == "Alert")
-        # Order with most recent Alert first
+        resource.add_filter(S3FieldSelector("series_id$name") == "Incident")
+        # Order with most recent Incident first
         orderby = "date desc"
         output["alerts"] = latest_records(resource, layout, listid, limit, list_fields, orderby)
 

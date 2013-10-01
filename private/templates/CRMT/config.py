@@ -253,11 +253,11 @@ settings.ui.filter_auto_submit = 750
 settings.ui.report_auto_submit = 750
                        
 # -----------------------------------------------------------------------------
-# Filter forms
+# Filter forms - style for Summary pages
 def filter_formstyle(row_id, label, widget, comment, hidden=False):
-        return DIV(label, widget, comment, 
-                   _id=row_id,
-                   _class="horiz_filter_form")
+    return DIV(label, widget, comment, 
+               _id=row_id,
+               _class="horiz_filter_form")
 
 # =============================================================================
 # Module Settings

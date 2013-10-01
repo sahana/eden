@@ -1330,46 +1330,55 @@ class S3SupplyDistributionModel(S3Model):
             return years
 
         filter_widgets = [
-            S3TextFilter([#"item_id$name",
-                          "project_id$name",
-                          "project_id$code",
-                          "location_id",
-                          "comments"
-                          ],
-                         label = T("Search Distributions"),
-                         ),
-            #S3OptionsFilter("project_id",
-            #                label = T("Project"),
-            #                cols = 3,
-            #                widget="multiselect"
-            #                ),
-            S3OptionsFilter("project_id$organisation_id",
-                            label = T("Lead Organisation"),
+            #S3TextFilter([#"item_id$name",
+            #              "project_id$name",
+            #              "project_id$code",
+            #              "location_id",
+            #              "comments"
+            #              ],
+            #             label = T("Search Distributions"),
+            #             ),
+            S3LocationFilter("location_id",
+                             levels=["L0", "L1", "L2", "L3"],
+                             widget="multiselect"
+                             ),
+            S3OptionsFilter("project_id$sector_project.sector_id",
+                            label = T("Sector"),
                             widget="multiselect"
                             ),
             S3OptionsFilter("parameter_id",
                             label = T("Item"),
                             widget="multiselect"
                             ),
+            # @ToDo: Range Slider using start_date & end_date
+            #S3DateFilter("date",
+            #             )
+            #S3OptionsFilter("project_id",
+            #                label = T("Project"),
+            #                cols = 3,
+            #                widget="multiselect"
+            #                ),
+            #S3OptionsFilter("project_id$organisation_id",
+            #                label = T("Lead Organisation"),
+            #                widget="multiselect"
+            #                ),
             #S3OptionsFilter("year",
             #                label = T("Year"),
             #                cols = 3,
             #                widget="multiselect",
             #                options = year_options
             #                ),
-            S3LocationFilter("location_id",
-                             levels=["L0", "L1", "L2", "L3"],
-                             widget="multiselect"),
-            S3OptionsFilter("project_id$partner.organisation_id",
-                            label = T("Partners"),
-                            widget="multiselect"),
-            S3OptionsFilter("project_id$donor.organisation_id",
-                            label = T("Donors"),
-                            location_level="L1",
-                            widget="multiselect")
+            #S3OptionsFilter("project_id$partner.organisation_id",
+            #                label = T("Partners"),
+            #                widget="multiselect"),
+            #S3OptionsFilter("project_id$donor.organisation_id",
+            #                label = T("Donors"),
+            #                location_level="L1",
+            #                widget="multiselect")
             ]
 
         report_fields = ["project_location_id",
+                         "project_id$sector_project.sector_id",
                          (T("Item"), "parameter_id"),
                          #"project_id",
                          (T("Year"), "year"),

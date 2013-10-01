@@ -169,10 +169,30 @@ settings.ui.export_formats = ["xls"]
 
 settings.ui.update_label = "Edit"
 
+# -----------------------------------------------------------------------------
+# Summary Pages
+settings.ui.summary = [#{"common": True,
+                       # "name": "cms",
+                       # "widgets": [{"method": "cms"}]
+                       # },
+                       {"name": "map",
+                        "label": "Map",
+                        "widgets": [{"method": "map", "ajax_init": True}],
+                        },
+                       {"name": "charts",
+                        "label": "Charts",
+                        "widgets": [{"method": "report2", "ajax_init": True}]
+                        },
+                       {"name": "table",
+                        "label": "Table",
+                        "widgets": [{"method": "datatable"}]
+                        },
+                       ]
+
 settings.ui.filter_auto_submit = 750
 settings.ui.report_auto_submit = 750
 
-#settings.search.filter_manager = False
+settings.search.filter_manager = False
 
 # =============================================================================
 # Module Settings
@@ -473,7 +493,7 @@ def render_events(listid, resource, rfields, record, **attr):
     ltable = s3db.event_event_post
     table = db.cms_post
     stable = db.cms_series
-    types = ["Alert", "Incident", "Assessment", "Activity", "Report"]
+    types = ["Incident", "Assessment", "Report"]
     query = (table.deleted == False) & \
             (ltable.event_id == record_id) & \
             (ltable.post_id == table.id) & \
@@ -482,14 +502,10 @@ def render_events(listid, resource, rfields, record, **attr):
     rows = db(query).select(stable.name)
     for row in rows:
         series = row.name
-        if series == "Alert":
-            tally_alerts += 1
-        elif series == "Incident":
+        if series == "Incident":
             tally_incidents += 1
         elif series == "Assessment":
             tally_assessments += 1
-        elif series == "Activity":
-            tally_activities += 1
         elif series == "Report":
             tally_reports += 1
 
@@ -514,23 +530,15 @@ def render_events(listid, resource, rfields, record, **attr):
                        _class="card-header-select",
                        ),
                    DIV(P(comments),
-                       P(T("Alerts"),
-                         SPAN(tally_alerts,
-                              _class="badge badge-warning",
-                              ),
-                         T("Incidents"),
+                       P(T("Incidents"),
                          SPAN(tally_incidents,
-                              _class="badge",
+                              _class="badge badge-warning",
                               ),
                          T("Assessments"),
                          SPAN(tally_assessments,
                               _class="badge",
                               ),
-                         T("Activities"),
-                         SPAN(tally_activities,
-                              _class="badge",
-                              ),
-                         T("Reports"),
+                        T("Reports"),
                          SPAN(tally_reports,
                               _class="badge",
                               ),
@@ -1241,8 +1249,8 @@ def render_posts(listid, resource, rfields, record,
                              SPAN(" %s" % T(series),
                                   _class="card-title"))
         # Type cards
-        if series == "Alert": 
-            # Apply additional highlighting for Alerts
+        if series == "Incident": 
+            # Apply additional highlighting for Incidents
             item_class = "%s disaster" % item_class
     else:
         card_label = SPAN(" ", _class="card-title")
@@ -2096,8 +2104,8 @@ def cms_post_popup(r):
                          SPAN(" %s" % T(series),
                               _class="card-title"))
     # Type cards
-    if series == "Alert": 
-        # Apply additional highlighting for Alerts
+    if series == "Incident": 
+        # Apply additional highlighting for Incidents
         item_class = "%s disaster" % item_class
 
     # Render the item
@@ -2136,76 +2144,11 @@ def cms_post_popup(r):
 
     return item
     
-# -----------------------------------------------------------------------------
-def cms_post_marker_fn(record):
-    """
-        Function to decide which Marker to use for Posts
-        Alerts & Incidents vary colour by age
-
-        @ToDo: A Bulk function
-
-        Unused: Using Style instead
-    """
-
-    db = current.db
-    s3db = current.s3db
-    table = s3db.cms_post
-    stable = db.cms_series
-    series = db(stable.id == record.series_id).select(stable.name,
-                                                      limitby=(0, 1),
-                                                      cache=s3db.cache
-                                                      ).first().name
-    if series == "Alert":
-        marker = "alert"
-    elif series == "Activity":
-        marker = "activity"
-    elif series == "Assessment":
-        marker = "assessment"
-    #elif series == "Event":
-    #    marker = "event"
-    elif series == "Incident":
-        marker = "incident"
-    #elif series == "Plan":
-    #    marker = "plan"
-    elif series == "Report":
-        marker = "report"
-    elif series == "Training Material":
-        marker = "training"
-
-    if series in ("Alert", "Incident"):
-        # Colour code by open/priority requests
-        date = record.date
-        now = current.request.utcnow
-        age = now - date
-        if age < timedelta(days=2):
-            marker = "%s_red" % marker
-        elif age < timedelta(days=7):
-            marker = "%s_yellow" % marker
-        else:
-            marker = "%s_green" % marker
-
-    mtable = db.gis_marker
-    try:
-        marker = db(mtable.name == marker).select(mtable.image,
-                                                  mtable.height,
-                                                  mtable.width,
-                                                  cache=s3db.cache,
-                                                  limitby=(0, 1)
-                                                  ).first()
-    except:
-        marker = db(mtable.name == "marker_red").select(mtable.image,
-                                                        mtable.height,
-                                                        mtable.width,
-                                                        cache=s3db.cache,
-                                                        limitby=(0, 1)
-                                                        ).first()
-    return marker
-
 # =============================================================================
 def cms_post_age(row):
     """
         The age of the post
-        - used for colour-coding markers of Alerts & Incidents
+        - used for colour-coding markers of Incidents
     """
 
     if hasattr(row, "cms_post"):
@@ -2260,18 +2203,7 @@ def customize_cms_post(**attr):
             if r.method == "read":
                 # Restore the label for the Location
                 table.location_id.label = T("Location")
-            elif r.method == "create":
-                ADMIN = current.session.s3.system_roles.ADMIN
-                if (not current.auth.s3_has_role(ADMIN)):
-                    represent = S3Represent(lookup="cms_series", 
-                                            translate=settings.get_L10n_translate_cms_series())
-                    field.requires = IS_ONE_OF(current.db, 
-                                               "cms_series.id",
-                                               represent,
-                                               not_filterby="name",
-                                               not_filter_opts = ["Alert"], 
-                                               )
-            
+
             refresh = get_vars.get("refresh", None)
             if refresh == "datalist":
                 # We must be coming from the News Feed page so can change the type on-the-fly
@@ -2519,19 +2451,6 @@ def customize_event_event(**attr):
                                   width = 568,
                                   bbox = bbox,
                                   )
-                alerts_widget = dict(label = "Alerts",
-                                     title_create = "Add New Alert",
-                                     type = "datalist",
-                                     tablename = "cms_post",
-                                     context = "event",
-                                     default = default,
-                                     filter = S3FieldSelector("series_id$name") == "Alert",
-                                     icon = "icon-alert",
-                                     layer = "Alerts",
-                                     # provided by Catalogue Layer
-                                     #marker = "alert",
-                                     list_layout = render_profile_posts,
-                                     )
                 incidents_widget = dict(label = "Incidents",
                                         title_create = "Add New Incident",
                                         type = "datalist",
@@ -2610,9 +2529,8 @@ def customize_event_event(**attr):
                                                     #P(record.comments),
                                                     _class="profile_header",
                                                     ),
-                               profile_widgets = [alerts_widget,
+                               profile_widgets = [incidents_widget,
                                                   map_widget,
-                                                  incidents_widget,
                                                   assessments_widget,
                                                   activities_widget,
                                                   reports_widget,
@@ -3834,12 +3752,11 @@ def customize_project_project(**attr):
                              ),
                 S3OptionsFilter("organisation_id",
                                 label = T("Lead Organisation"),
-                                cols = 3,
                                 widget="multiselect"
                                 ),
-                S3OptionsFilter("location.location_id$L1",
-                                location_level="L1",
-                                widget="multiselect"),
+                S3LocationFilter("location.location_id",
+                                 levels=["L0", "L1", "L2", "L3"],
+                                 widget="multiselect"),
                 S3OptionsFilter("partner.organisation_id",
                                 label = T("Partners"),
                                 widget="multiselect"),
@@ -3935,6 +3852,157 @@ def customize_project_project(**attr):
 settings.ui.customize_project_project = customize_project_project
 
 # -----------------------------------------------------------------------------
+def customize_project_beneficiary(**attr):
+    """
+        Customize project_beneficiary controller
+    """
+
+    s3 = current.response.s3
+
+    # Remove rheader
+    attr["rheader"] = None
+
+    # Custom PreP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+
+        s3db = current.s3db
+        table = s3db.project_beneficiary
+
+        from s3.s3filter import S3LocationFilter, S3OptionsFilter
+        filter_widgets = [
+            S3LocationFilter("location_id",
+                             levels=["L0", "L1", "L2", "L3"],
+                             widget="multiselect"),
+            S3OptionsFilter("project_id$sector_project.sector_id",
+                            label = T("Sector"),
+                            widget="multiselect"
+                            ),
+            S3OptionsFilter("parameter_id",
+                            label = T("Beneficiary Type"),
+                            widget="multiselect"
+                            ),
+            # @ToDo: Range Slider using start_date & end_date
+            #S3DateFilter("date",
+            #             )
+            #S3OptionsFilter("project_id$organisation_id",
+            #                label = T("Lead Organisation"),
+            #                widget="multiselect"
+            #                ),
+            ]
+
+        report_fields = [(T("Beneficiary Type"), "parameter_id"),
+                         "project_id$sector_project.sector_id",
+                         (T("Year"), "year"),
+                         (current.messages.COUNTRY, "location_id$L0"),
+                         "location_id$L1",
+                         "location_id$L2",
+                         "location_id$L3",
+                         ]
+
+        report_options = Storage(
+            rows=report_fields,
+            cols=report_fields,
+            fact=[("sum(value)", T("Number of Beneficiaries"))],
+            defaults=Storage(rows="location_id$L1",
+                             cols="parameter_id",
+                             fact="sum(value)",
+                             totals=True,
+                             #chart = "barchart:rows",
+                             #table = "collapse",
+                             )
+            )
+
+        s3db.configure("project_beneficiary",
+                       #list_fields = list_fields,
+                       filter_widgets = filter_widgets,
+                       # For Summary View
+                       #filter_formstyle = filter_formstyle,
+                       report_options = report_options,
+                       )
+
+        s3.cancel = True
+
+        return True
+    s3.prep = custom_prep
+
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        if r.interactive:
+            actions = [dict(label=str(T("Open")),
+                            _class="action-btn",
+                            url=URL(c="project", f="beneficiary",
+                                    args=["[id]", "read"]))
+                       ]
+            # All users just get "Open"
+            #db = current.db
+            #auth = current.auth
+            #has_permission = auth.s3_has_permission
+            #ownership_required = auth.permission.ownership_required
+            #s3_accessible_query = auth.s3_accessible_query
+            #if has_permission("update", table):
+            #    action = dict(label=str(T("Edit")),
+            #                  _class="action-btn",
+            #                  url=URL(c="project", f="project",
+            #                          args=["[id]", "update"]),
+            #                  )
+            #    if ownership_required("update", table):
+            #        # Check which records can be updated
+            #        query = s3_accessible_query("update", table)
+            #        rows = db(query).select(table._id)
+            #        restrict = []
+            #        rappend = restrict.append
+            #        for row in rows:
+            #            row_id = row.get("id", None)
+            #            if row_id:
+            #                rappend(str(row_id))
+            #        action["restrict"] = restrict
+            #    actions.append(action)
+            #if has_permission("delete", table):
+            #    action = dict(label=str(T("Delete")),
+            #                  _class="action-btn",
+            #                  url=URL(c="project", f="project",
+            #                          args=["[id]", "delete"]),
+            #                  )
+            #    if ownership_required("delete", table):
+            #        # Check which records can be deleted
+            #        query = s3_accessible_query("delete", table)
+            #        rows = db(query).select(table._id)
+            #        restrict = []
+            #        rappend = restrict.append
+            #        for row in rows:
+            #            row_id = row.get("id", None)
+            #            if row_id:
+            #                rappend(str(row_id))
+            #        action["restrict"] = restrict
+            #    actions.append(action)
+            s3.actions = actions
+            if isinstance(output, dict):
+                if "form" in output:
+                    output["form"].add_class("project_beneficiary")
+                elif "item" in output and hasattr(output["item"], "add_class"):
+                    output["item"].add_class("project_beneficiary")
+
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        return output
+    s3.postp = custom_postp
+
+    attr["hide_filter"] = False
+
+    return attr
+
+settings.ui.customize_project_beneficiary = customize_project_beneficiary
+
+# -----------------------------------------------------------------------------
 def customize_doc_document(**attr):
     """
         Customize doc_document controller
@@ -3993,6 +4061,13 @@ def customize_doc_document(**attr):
     return attr
 
 settings.ui.customize_doc_document = customize_doc_document
+
+# -----------------------------------------------------------------------------
+# Filter forms - style for Summary pages
+def filter_formstyle(row_id, label, widget, comment, hidden=False):
+    return DIV(label, widget, comment, 
+               _id=row_id,
+               _class="horiz_filter_form")
 
 # =============================================================================
 # Template Modules

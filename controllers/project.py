@@ -585,12 +585,6 @@ def location():
         if r.representation == "plain":
             # Replace the Map Popup contents with custom content
             item = TABLE()
-            def represent(record, field):
-                if field.represent:
-                    return field.represent(record[field])
-                else:
-                    return record[field]
-
             if settings.get_project_community():
                 # The Community is the primary resource
                 record = r.record
@@ -628,6 +622,10 @@ def location():
                 ptable.id.readable = False
                 fields = [ptable[f] for f in ptable.fields if ptable[f].readable]
                 for field in fields:
+                    if field == "currency":
+                        # Don't display Currency if no Budget
+                        if not project["budget"]:
+                            continue
                     data = project[field]
                     if data:
                         represent = field.represent
@@ -639,7 +637,7 @@ def location():
                 title = s3.crud_strings["project_project"].title_display
                 # Assume authorised to see details
                 popup_url = URL(f="project", args=[project_id])
-                details_btn = A(T("Show Details"), _href=popup_url,
+                details_btn = A(T("Open"), _href=popup_url,
                                 _id="details-btn", _target="_blank")
                 output = dict(item = item,
                               title = title,

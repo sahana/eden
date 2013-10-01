@@ -1,8 +1,10 @@
 Name,Height,Width,Image
 "marker_red",34,20,"gis_marker.image.marker_red.png"
 "airport",40,40,"OCHA/logistics_airport_40px.png"
-"assessment",34,22,"OCHA/activity_assessment_40px.png.png"
+"assessment",40,40,"OCHA/activity_assessment_40px.png"
+"beneficiary",40,40,"OCHA/people_affected_population_40px.png"
 "bridge",40,40,"OCHA/logistics_bridge_40px.png"
+"distribution",40,40,"OCHA/infrastructure_distribution_site_40px.png"
 "hospital",40,40,"OCHA/infrastructure_hospital_40px.png"
 "incident",40,40,"OCHA/damage_affected_40px.png"
 "office",40,40,"OCHA/infrastructure_NGO_office_40px.png"
