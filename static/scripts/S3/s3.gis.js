@@ -743,15 +743,22 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             }
         };
 
-        // @ToDo: Run this when clicking on + as well as title
+        var updateLayout = function() {
+            // Trigger a layout update on the westPanelContainer
+            var westPanelContainer = s3.westPanelContainer;
+            westPanelContainer.fireEvent('collapse');
+            window.setTimeout(function() {
+                westPanelContainer.fireEvent('expand')
+            }, 300);
+        };
         var folder_listeners = {
-            click: function(node) {
+            collapse: function(node) {
                 // Trigger a layout update on the westPanelContainer
-                var westPanelContainer = s3.westPanelContainer;
-                westPanelContainer.fireEvent('collapse');
-                window.setTimeout(function() {
-                    westPanelContainer.fireEvent('expand')
-                }, 300);
+                updateLayout()
+            },
+            expand: function(node) {
+                // Trigger a layout update on the westPanelContainer
+                updateLayout()
             }
         };
 

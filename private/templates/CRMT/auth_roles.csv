@@ -1,5 +1,6 @@
 uid,role,description,controller,function,table,entity,uacl,oacl,hidden,system,protected,Notes
 ANONYMOUS,Anonymous,,org,group,,,READ,,,,,Allow display of Coalition Polygons on homepage
+ANONYMOUS,Anonymous,,,,org_group,,READ,,,,,Allow selection of Coalition during Registration
 ANONYMOUS,Anonymous,,"cms","page",,,"READ","READ",,,,Allow display of Map Layer Metadata
 ANONYMOUS,Anonymous,,,,"s3_audit",,"READ",,,,,Allow display of Site Activity on Homepage
 AUTHENTICATED,Authenticated,,"default","person",,,"READ|CREATE|UPDATE",,,,,
