@@ -58,6 +58,7 @@ settings.auth.registration_organisation_group_required = False
 settings.auth.registration_requests_site = False
 
 settings.auth.registration_link_user_to = {"staff": T("Staff")}
+settings.auth.registration_link_user_to_default = "staff"
 
 settings.auth.record_approval = False
 
