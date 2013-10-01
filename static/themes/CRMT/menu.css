@@ -7,7 +7,7 @@
     height: 30px;
 }
 .navbar .nav > li > a.home  {
-    padding: 5px;
+    padding: 8px 5px;
 }
 .navbar .nav > li > a  {
     padding: 12px;
@@ -19,10 +19,10 @@
     display: inline-block;
 }
 
-/* Breaks 'Explore Community Data'
 .dropdown-menu > li > a:first-child {
     width: 190px;
-}*/
+}
+
 .dropdown-menu > li > a.create  {
     float: right;
 }
