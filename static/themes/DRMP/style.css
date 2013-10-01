@@ -10,7 +10,9 @@ body.popup {
     padding-top: 0;
 }
 
-body.ext-ie10 {
+body.ext-ie9,
+body.ext-ie10,
+body.ext-ie11 {
     padding-top: 60px;
 }
 
