@@ -27,6 +27,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+from __future__ import division
+
 __all__ = ["S3LocationModel",
            "S3LocationNameModel",
            "S3LocationTagModel",
@@ -4120,13 +4122,20 @@ class S3GISThemeModel(S3Model):
         # Theme Data
         add_component("gis_theme_data", gis_layer_theme="layer_theme_id")
 
+        represent = S3Represent(lookup=tablename)
         layer_theme_id = S3ReusableField("layer_theme_id", table,
                                          label = "Theme Layer",
                                          requires = IS_ONE_OF(db,
                                                               "gis_layer_theme.id",
-                                                              "%(name)s"),
-                                         represent = self.theme_represent,
+                                                              represent
+                                                              ),
+                                         represent = represent,
                                          ondelete = "CASCADE")
+
+        # Custom Method to generate a style
+        self.set_method("gis", "layer_theme",
+                        method="style",
+                        action=self.gis_theme_style)
 
         # =====================================================================
         # GIS Theme Data
@@ -4170,21 +4179,55 @@ class S3GISThemeModel(S3Model):
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def theme_represent(id):
+    def gis_theme_style(r, **attr):
         """
+            Custom method to create a Style for a Theme Layer
+            - splits data into 5 quintiles
+            - uses Colorbrewer to create a 5-class colorblind-safe printer-friendly Sequential scheme
+
+            @ToDo: Divergent colour scheme option
+            @ToDo: Select # of classes
+            @ToDo: Select full range of colour schemes
+            @ToDo: Alternate class breaks mechanisms (pretty breaks, etc)
         """
 
-        if not id:
-            return current.messages["NONE"]
+        classes = 5
+        nature = "sequential"
+
         db = current.db
-        table = db.gis_layer_theme
-        query = (table.id == id)
-        theme = db(query).select(table.name,
-                                 limitby=(0, 1)).first()
-        try:
-            return theme.name
-        except:
-            return current.messages.UNKNOWN_OPT
+        table = db.gis_theme_data
+        rows = db(table.layer_theme_id == r.id).select(table.value)
+        values = [float(row.value) for row in rows]
+        q = []
+        qappend = q.append
+        for i in range(classes - 1):
+            qappend(1 / classes * (i + 1))
+        breaks = current.s3db.stats_quantile(values, q)
+        # Make mutable
+        breaks = list(breaks)
+        values_min = min(values)
+        values_max = max(values)
+        breaks.insert(0, values_min)
+        breaks.append(values_max)
+
+        if nature == "sequential":
+            # PuRd
+            colours = ["F1EEF6", "D7B5D8", "DF65B0", "DD1C77", "980043"]
+        elif nature == "divergent":
+            # BrBG
+            colours = ["A6611A", "DFC27D", "F5F5F5", "80CDC1", "018571"]
+
+        style = []
+        sappend = style.append
+        for i in range(classes):
+            element = {"low": breaks[i],
+                       "high": breaks[i + 1],
+                       "fill": colours[i]
+                       }
+            sappend(element)
+
+        current.response.headers["Content-Type"] = "application/json"
+        return json.dumps(style)
 
 # =============================================================================
 class S3POIFeedModel(S3Model):
@@ -4553,6 +4596,8 @@ class gis_LocationRepresent(S3Represent):
         translate = self.translate
         if sep or translate:
             path = row.path
+            if not path:
+                path = current.gis.update_location_tree(row)
             ids = path.split("/")
         if translate:
             language = current.session.s3.language
