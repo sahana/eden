@@ -4017,6 +4017,10 @@ class GIS(object):
                 features = db(table.level == level).select(*fields)
                 for feature in features:
                     feature["level"] = level
+                    wkt = feature["wkt"]
+                    if wkt and not wkt.startswith("POI"):
+                        # Polygons aren't inherited
+                        feature["inherited"] = False
                     update_location_tree(feature)
                     # Also do the Bounds/Centroid/WKT
                     bounds_centroid_wkt(feature)

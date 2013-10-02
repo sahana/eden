@@ -27,6 +27,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+from __future__ import division
+
 __all__ = ["S3StatsModel",
            "S3StatsDemographicModel",
            "S3StatsPeopleModel",
@@ -54,6 +56,7 @@ class S3StatsModel(S3Model):
              "stats_source_superlink",
              "stats_source_id",
              #"stats_source_details",
+             "stats_quantile",
              ]
 
     def model(self):
@@ -171,6 +174,7 @@ class S3StatsModel(S3Model):
         # Pass names back to global scope (s3.*)
         return dict(stats_source_superlink = source_superlink,
                     stats_source_id = source_id,
+                    stats_quantile = self.quantile,
                     )
 
     # -------------------------------------------------------------------------
@@ -184,6 +188,30 @@ class S3StatsModel(S3Model):
                                                      writable=False,
                                                      )(),
             )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def quantile(data, q):
+        """
+            Return the specified quantile(s) q of the supplied list.
+            The function can be called with either a single value for q or a
+            list of values. In the latter case, the returned value is a tuple.
+        """
+
+        sx = sorted(data)
+        def get_quantile(q1):
+            pos = (len(sx) - 1) * q1
+            if abs(pos - int(pos) - 0.5) < 0.1:
+                # quantile in the middle between two values, average them
+                return (sx[int(pos)] + sx[int(pos) + 1]) * 0.5
+            else:
+                # otherwise return the nearest value
+                return sx[int(pos + 0.5)]
+
+        if hasattr(q, "__iter__"):
+            return tuple([get_quantile(qi) for qi in q])
+        else:
+            return get_quantile(q)
 
 # =============================================================================
 class S3StatsDemographicModel(S3Model):
