@@ -18,23 +18,33 @@
 .dropdown-menu > li > a  {
     display: inline-block;
 }
-
-/* Breaks 'Explore Community Data'
 .dropdown-menu > li > a:first-child {
-    width: 190px;
-}*/
-
+    width: 185px;
+}
 .dropdown-menu > li > a.create  {
     float: right;
 }
 
 /* Login Form */
 .dropdown-menu form {
-    height: 90px
+    height: 90px;
 }
-
+.dropdown-menu .checkbox {
+    /* Override Bootstrap on IE */
+    padding-left: 0;
+}
 .dropdown-menu input.btn {
-    left: 250px;
+    /* Make appear on same row */
     position: relative;
+    left: 250px;
     top: -45px;
+}
+@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+    /* IE 10 */
+    .dropdown-menu form {
+        height: 100px;
+    }
+    .dropdown-menu input.btn {
+        left: 268px;
+    }
 }

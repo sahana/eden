@@ -150,6 +150,7 @@ settings.gis.layer_tree_overlays = False
 settings.gis.layer_tree_expanded = False
 # Uncomment to have custom folders in the LayerTree use Radio Buttons
 settings.gis.layer_tree_radio = True
+settings.gis.layers_label = "Map Data"
 # Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
 # Mouse Position: 'normal', 'mgrs' or None

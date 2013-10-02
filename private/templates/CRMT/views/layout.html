@@ -46,6 +46,9 @@
  {{# Built by /static/scripts/tools/build.sahana.py }}
  <link href="/{{=appname}}/static/themes/{{=response.s3.theme}}/eden.min.css" rel="stylesheet" type="text/css" />
 {{pass}}
+<!--[if IE]>
+ <link rel="stylesheet" type="text/css" href="/{{=appname}}/static/themes/{{=response.s3.theme}}/ie.css"></link>
+<![endif]-->
 {{include "scripts_top.html"}}
 </head>
 {{try:}}
