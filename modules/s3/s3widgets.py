@@ -4487,7 +4487,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
     """
 
     def __init__(self,
-                 filter = True,
+                 filter = True, # Only works if header is not False (can be "" though)
                  header = True,
                  selectedList = 3,
                  noneSelectedText = "Select"

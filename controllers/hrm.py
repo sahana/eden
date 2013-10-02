@@ -40,7 +40,6 @@ def human_resource():
 
     def prep(r):
         if r.method == "summary":
-            # Experimental
             from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
             settings.ui.filter_auto_submit = 750
             settings.ui.report_auto_submit = 750
@@ -73,12 +72,17 @@ def human_resource():
                             ],
                             filter_widgets = [
                                     S3TextFilter(["person_id$first_name",
-                                                  "person_id$last_name"],
+                                                  "person_id$middle_name",
+                                                  "person_id$last_name",
+                                                  ],
                                                  label=T("Name"),
                                                  ),
                                     S3OptionsFilter("type"),
                                     S3OptionsFilter("organisation_id",
-                                                    widget="multiselect"),
+                                                    widget="multiselect",
+                                                    filter=True,
+                                                    header="",
+                                                    ),
                             ]
             )
             s3.filter = None
