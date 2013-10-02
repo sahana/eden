@@ -1,7 +1,7 @@
+# -*- coding: utf-8 -*-
 
 """
-   This file is used to define the configration of the workflows
-   for the workflow engine.
+   S3 Workflow Engine Data Model
    
    @copyright: 2012-13 (c) Sahana Software Foundation
    @license: MIT
@@ -28,16 +28,19 @@
    OTHER DEALINGS IN THE SOFTWARE.
 """
 
+__all__ = ["S3WorkflowStatusModel"]
+
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
 
-__all__ = ["S3WorkflowModel"]
-
-class S3WorkflowModel(S3Model):
+# =============================================================================
+class S3WorkflowStatusModel(S3Model):
+    """ Model to store the workflow status of records """
 
     name = ["workflow_status",
-            "workflow_entity"]
+            "workflow_entity",
+           ]
 
     def model(self):
 
@@ -45,22 +48,42 @@ class S3WorkflowModel(S3Model):
         define_table = self.define_table
         db = current.db
 
-        we_types = Storage(project_task = T("Project Task"))
+        # ---------------------------------------------------------------------
+        # Entities which can have a workflow status
+        #
+        # @note: the respective entity tables need to also define the
+        #        super_link("workflow_id", "workflow_entity"), and have
+        #        their super-entity configured like:
+        #        s3db.configure(tablename, super_entity="workflow_entity")
+        #
+        we_types = Storage(project_task = T("Project Task"),
+                          )
 
         tablename = "workflow_entity" 
-        table = s3db.super_entity(tablename,"workflow_entity_id",
+        table = s3db.super_entity(tablename, "workflow_id",
                                   we_types)
 
+        # Status as component
+        add_component("workflow_status", workflow_entity = "workflow_id")
 
-        add_component("workflow_status", workflow_entity = "workflow_entity_id")
 
-
+        # ---------------------------------------------------------------------
+        # Workflow Status
+        # - as tuple (workflow name, status name)
+        # - as component of workflow entities
+        #
         tablename = "workflow_status"
         table = define_table(tablename,
-                             Field("name"),
-                             Field("status"),
-                             super_link("workflow_entity_id","workflow_entity"),
+                             super_link("workflow_id", "workflow_entity"),
+                             Field("name",
+                                   length=64,
+                                   notnull=True),
+                             Field("status",
+                                   length=64,
+                                   notnull=True),
                              *s3_meta_fields()
                             )
 
         return Storage()
+        
+# END =========================================================================
