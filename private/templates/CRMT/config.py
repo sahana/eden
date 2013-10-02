@@ -179,6 +179,7 @@ settings.fin.currencies = {
 }
 
 settings.search.filter_manager = True
+settings.search.filter_manager_allow_delete = False
 settings.search.filter_manager_save = "Save"
 settings.search.filter_manager_update = "Update"
 

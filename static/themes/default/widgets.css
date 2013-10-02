@@ -1328,6 +1328,7 @@ input#sub_defaulttime_defaulttime_hours_edit_none {
 }
 .fm-load,
 .fm-save,
+.fm-delete,
 .fm-create,
 .fm-accept,
 .fm-cancel {
@@ -1337,6 +1338,7 @@ input#sub_defaulttime_defaulttime_hours_edit_none {
 
 div.fm-load,
 div.fm-save,
+div.fm-delete,
 div.fm-create,
 div.fm-accept,
 div.fm-cancel {
@@ -1349,6 +1351,9 @@ div.fm-load {
 }
 div.fm-save {
     background: url(../../img/filter/save.png) no-repeat;
+}
+div.fm-delete {
+    background: url(../../img/filter/delete.png) no-repeat;
 }
 div.fm-create {
     background: url(../../img/filter/create.png) no-repeat;
