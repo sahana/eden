@@ -352,3 +352,8 @@ span.tab_next_active {
 .ui-front {
     z-index: 999;
 }
+
+/* Default width 100px doesn't allow 'Enter keywords' to be visible */
+.ui-multiselect-filter input {
+    width: auto;
+}

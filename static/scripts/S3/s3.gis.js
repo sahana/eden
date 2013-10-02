@@ -591,6 +591,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             if (options.save) {
                 addSavePanel(map);
             }
+            addThrobber(map);
         }
 
         var mapPanelContainer = new Ext.Panel({
@@ -4001,6 +4002,24 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         toolbar.addButton(saveButton);
     }
 
+    // Save throbber as floating DIV to see when map layers are loading
+    var addThrobber = function(map) {
+        var s3 = map.s3;
+        var map_id = s3.id;
+        if ($('#' + map_id + ' .layer_throbber').length) {
+            // We already have a Throbber
+            // (this happens when switching between full-screen & embedded)
+            return;
+        }
+        var div = '<div class="layer_throbber float hide';
+        if (s3.options.save) {
+            // Add save class so that we know to push throbber down below save button
+            div += ' save';
+        }
+        div += '"></div>';
+        $('#' + map_id).append(div);
+    }
+    
     // Save button as floating DIV to save the Viewport settings
     var addSavePanel = function(map) {
         var s3 = map.s3;

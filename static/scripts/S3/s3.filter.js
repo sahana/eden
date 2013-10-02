@@ -950,21 +950,66 @@ S3.search = {};
                 }
                 // Find any Map widgets in this section
                 var maps = newPanel.find('.map_wrapper');
-                var gis = S3.gis;
-                for (var i=0; i < maps.length; i++) {
-                    var map_id = maps[i].attributes['id'].value;
-                    if (undefined === gis.maps[map_id]) {
-                        // Instantiate the map (can't be done when the DIV is hidden)
-                        var options = gis.options[map_id];
-                        gis.show_map(map_id, options);
-                    }
+                var maps_len = maps.length;
+                if (maps_len) {
+                    // Check that Maps JS is Loaded
+                    $.when(jsLoaded()).then(
+                        function(status) {
+                            // Success: Instantiate Maps
+                            var gis = S3.gis;
+                            for (var i=0; i < maps_len; i++) {
+                                var map_id = maps[i].attributes['id'].value;
+                                if (undefined === gis.maps[map_id]) {
+                                    // Instantiate the map (can't be done when the DIV is hidden)
+                                    var options = gis.options[map_id];
+                                    gis.show_map(map_id, options);
+                                }
+                            }
+                            // Update all just-unhidden widgets which have pending updates
+                            updatePendingTargets(form);
+                        },
+                        function(status) {
+                            // Failed
+                            s3_debug(status);
+                        },
+                        function(status) {
+                            // Progress
+                            s3_debug(status);
+                        }
+                    );
+                } else {
+                    // Update all just-unhidden widgets which have pending updates
+                    updatePendingTargets(form);
                 }
-                // Update all just-unhidden widgets which have pending updates
-                updatePendingTargets(form);
             }
         }).css({visibility: 'visible'});
         // Activate not called? Unhide initial section anyway:
         $('.ui-tabs-panel[aria-hidden="false"]').first().removeClass('hide');
+    };
+
+    /**
+     * Check that Map JS is Loaded
+     * - used if a tab containing a Map is unhidden
+     */
+    var jsLoaded = function() {
+        var dfd = new jQuery.Deferred();
+
+        // Test every half-second
+        setTimeout(function working() {
+            if (S3.gis.maps != undefined) {
+                dfd.resolve('loaded');
+            } else if (dfd.state() === 'pending') {
+                // Notify progress
+                dfd.notify('waiting for JS to load...');
+                // Loop
+                setTimeout(working, 500);
+            } else {
+                // Failed!?
+            }
+        }, 1);
+
+        // Return the Promise so caller can't change the Deferred
+        return dfd.promise();
     };
 
     /**

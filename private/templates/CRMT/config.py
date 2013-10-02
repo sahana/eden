@@ -137,7 +137,7 @@ settings.gis.geocode_imported_addresses = "google"
 # Uncomment to Hide the Toolbar from the main Map
 settings.gis.toolbar = False
 # Hide unnecessary Toolbar items
-settings.gis.nav_controls = False
+#settings.gis.nav_controls = False
 # Uncomment to use CMS to provide Metadata on Map Layers
 settings.gis.layer_metadata = True
 # Uncomment to hide Layer Properties tool
@@ -150,6 +150,7 @@ settings.gis.layer_tree_overlays = False
 settings.gis.layer_tree_expanded = False
 # Uncomment to have custom folders in the LayerTree use Radio Buttons
 settings.gis.layer_tree_radio = True
+settings.gis.layers_label = "Map Data"
 # Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
 # Mouse Position: 'normal', 'mgrs' or None
@@ -592,16 +593,21 @@ def customize_project_activity(**attr):
         Customize project_activity controller
     """
 
+    s3db = current.s3db
     request = current.request
     if "summary" in request.args:
-        # Default the Coalition Filter
-        auth = current.auth
-        if auth.is_logged_in():
-            org_group_id = auth.user.org_group_id
+        coalition = request.get_vars.get("activity_group.group_id__belongs", None)
+        if not coalition:
+            # Default the Coalition Filter
+            auth = current.auth
+            org_group_id = auth.is_logged_in() and auth.user.org_group_id
             if org_group_id:
-                coalition = request.get_vars.get("activity_group.group_id__belongs", None)
-                if not coalition:
-                    request.get_vars["activity_group.group_id__belongs"] = str(org_group_id)
+                request.get_vars["activity_group.group_id__belongs"] = str(org_group_id)
+            else:
+                # Filter to all Coalitions
+                gtable = s3db.org_group
+                rows = current.db(gtable.deleted == False).select(gtable.id)
+                request.get_vars["activity_group.group_id__belongs"] = ",".join([str(row.id) for row in rows])
 
     # Custom PreP
     s3 = current.response.s3
@@ -611,7 +617,6 @@ def customize_project_activity(**attr):
         if callable(standard_prep):
             result = standard_prep(r)
 
-        s3db = current.s3db
         tablename = "project_activity"
         table = s3db[tablename]
 
@@ -1085,16 +1090,21 @@ def customize_org_facility(**attr):
         Customize org_facility controller
     """
 
+    s3db = current.s3db
     request = current.request
     if "summary" in request.args:
-        # Default the Coalition Filter
-        auth = current.auth
-        if auth.is_logged_in():
-            org_group_id = auth.user.org_group_id
+        coalition = request.get_vars.get("site_org_group.group_id__belongs", None)
+        if not coalition:
+            # Default the Coalition Filter
+            auth = current.auth
+            org_group_id = auth.is_logged_in() and auth.user.org_group_id
             if org_group_id:
-                coalition = request.get_vars.get("site_org_group.group_id__belongs", None)
-                if not coalition:
-                    request.get_vars["site_org_group.group_id__belongs"] = str(org_group_id)
+                request.get_vars["site_org_group.group_id__belongs"] = str(org_group_id)
+            else:
+                # Filter to all Coalitions
+                gtable = s3db.org_group
+                rows = current.db(gtable.deleted == False).select(gtable.id)
+                request.get_vars["site_org_group.group_id__belongs"] = ",".join([str(row.id) for row in rows])
 
     # Custom PreP
     s3 = current.response.s3
@@ -1104,7 +1114,6 @@ def customize_org_facility(**attr):
         if callable(standard_prep):
             result = standard_prep(r)
 
-        s3db = current.s3db
         tablename = "org_facility"
         table = s3db[tablename]
 
@@ -1297,17 +1306,21 @@ def customize_stats_people(**attr):
         Customize stats_people controller
     """
 
+    s3db = current.s3db
     request = current.request
-
     if "summary" in request.args:
-        # Default the Coalition Filter
-        auth = current.auth
-        if auth.is_logged_in():
-            org_group_id = auth.user.org_group_id
+        coalition = request.get_vars.get("people_group.group_id__belongs", None)
+        if not coalition:
+            # Default the Coalition Filter
+            auth = current.auth
+            org_group_id = auth.is_logged_in() and auth.user.org_group_id
             if org_group_id:
-                coalition = request.get_vars.get("people_group.group_id__belongs", None)
-                if not coalition:
-                    request.get_vars["people_group.group_id__belongs"] = str(org_group_id)
+                request.get_vars["people_group.group_id__belongs"] = str(org_group_id)
+            else:
+                # Filter to all Coalitions
+                gtable = s3db.org_group
+                rows = current.db(gtable.deleted == False).select(gtable.id)
+                request.get_vars["people_group.group_id__belongs"] = ",".join([str(row.id) for row in rows])
 
     # Custom PreP
     s3 = current.response.s3
@@ -1317,7 +1330,6 @@ def customize_stats_people(**attr):
         if callable(standard_prep):
             result = standard_prep(r)
 
-        s3db = current.s3db
         tablename = "stats_people"
         table = s3db[tablename]
 
@@ -1502,16 +1514,21 @@ def customize_vulnerability_evac_route(**attr):
         Customize vulnerability_evac_route controller
     """
 
+    s3db = current.s3db
     request = current.request
     if "summary" in request.args:
-        # Default the Coalition Filter
-        auth = current.auth
-        if auth.is_logged_in():
-            org_group_id = auth.user.org_group_id
+        coalition = request.get_vars.get("evac_route_group.group_id__belongs", None)
+        if not coalition:
+            # Default the Coalition Filter
+            auth = current.auth
+            org_group_id = auth.is_logged_in() and auth.user.org_group_id
             if org_group_id:
-                coalition = request.get_vars.get("evac_route_group.group_id__belongs", None)
-                if not coalition:
-                    request.get_vars["evac_route_group.group_id__belongs"] = str(org_group_id)
+                request.get_vars["evac_route_group.group_id__belongs"] = str(org_group_id)
+            else:
+                # Filter to all Coalitions
+                gtable = s3db.org_group
+                rows = current.db(gtable.deleted == False).select(gtable.id)
+                request.get_vars["evac_route_group.group_id__belongs"] = ",".join([str(row.id) for row in rows])
 
     # Custom PreP
     s3 = current.response.s3
@@ -1521,7 +1538,6 @@ def customize_vulnerability_evac_route(**attr):
         if callable(standard_prep):
             result = standard_prep(r)
 
-        s3db = current.s3db
         tablename = "vulnerability_evac_route"
         table = s3db[tablename]
 
@@ -1658,16 +1674,21 @@ def customize_vulnerability_risk(**attr):
         Customize vulnerability_risk controller
     """
 
+    s3db = current.s3db
     request = current.request
     if "summary" in request.args:
-        # Default the Coalition Filter
-        auth = current.auth
-        if auth.is_logged_in():
-            org_group_id = auth.user.org_group_id
+        coalition = request.get_vars.get("risk_group.group_id__belongs", None)
+        if not coalition:
+            # Default the Coalition Filter
+            auth = current.auth
+            org_group_id = auth.is_logged_in() and auth.user.org_group_id
             if org_group_id:
-                coalition = request.get_vars.get("risk_group.group_id__belongs", None)
-                if not coalition:
-                    request.get_vars["risk_group.group_id__belongs"] = str(org_group_id)
+                request.get_vars["risk_group.group_id__belongs"] = str(org_group_id)
+            else:
+                # Filter to all Coalitions
+                gtable = s3db.org_group
+                rows = current.db(gtable.deleted == False).select(gtable.id)
+                request.get_vars["risk_group.group_id__belongs"] = ",".join([str(row.id) for row in rows])
 
     # Custom PreP
     s3 = current.response.s3
@@ -1677,7 +1698,6 @@ def customize_vulnerability_risk(**attr):
         if callable(standard_prep):
             result = standard_prep(r)
 
-        s3db = current.s3db
         tablename = "vulnerability_risk"
         table = s3db[tablename]
 

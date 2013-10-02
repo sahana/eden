@@ -103,8 +103,8 @@ p {
 .updates h5 {
     margin-bottom: 0;
 }
-.update .empty {
-    margin-left: 10px;
+.updates .empty {
+    margin-left: 15px;
     margin-top: 10px;
 }
 #log-filter-form {

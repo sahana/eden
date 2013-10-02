@@ -618,6 +618,10 @@ class S3Config(Storage):
         " Use a radio button for custom folders in the Map's Layer Tree "
         return self.gis.get("layer_tree_radio", False)
 
+    def get_gis_layers_label(self):
+        " Label for the Map's Layer Tree "
+        return self.gis.get("layers_label", "Layers")
+
     def get_gis_map_height(self):
         """
             Height of the Embedded Map
