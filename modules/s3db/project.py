@@ -2482,14 +2482,20 @@ class S3ProjectHazardModel(S3Model):
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+        NONE = current.messages["NONE"]
 
         # ---------------------------------------------------------------------
         # Hazard
         #
         tablename = "project_hazard"
         table = define_table(tablename,
-                             Field("name", length=128, notnull=True, unique=True,
+                             Field("name",
+                                   length=128,
+                                   notnull=True,
+                                   unique=True,
                                    label=T("Name"),
+                                   represent=lambda v: T(v) if v is not None \
+                                                            else NONE,
                                    ),
                              s3_comments(),
                              *s3_meta_fields())
@@ -3382,13 +3388,20 @@ class S3ProjectThemeModel(S3Model):
         define_table = self.define_table
         theme_percentages = current.deployment_settings.get_project_theme_percentages()
 
+        NONE = current.messages["NONE"]
+
         # ---------------------------------------------------------------------
         # Themes
         #
         tablename = "project_theme"
         table = define_table(tablename,
-                             Field("name", length=128, notnull=True, unique=True,
-                                   label = T("Name"),
+                             Field("name",
+                                   length=128,
+                                   notnull=True,
+                                   unique=True,
+                                   label=T("Name"),
+                                   represent=lambda v: T(v) if v is not None \
+                                                       else NONE,
                                    ),
                              s3_comments(),
                              *s3_meta_fields())

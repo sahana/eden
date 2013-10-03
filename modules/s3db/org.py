@@ -1235,10 +1235,13 @@ class S3OrganisationSectorModel(S3Model):
         #
         tablename = "org_sector"
         table = define_table(tablename,
-                             Field("name", length=128,
+                             Field("name",
+                                   length=128,
                                    notnull=True,
-                                   represent=lambda v: T(v) if v is not None else NONE,
-                                   label=T("Name")),
+                                   label=T("Name"),
+                                   represent=lambda v: T(v) if v is not None \
+                                                       else NONE,
+                                  ),
                              Field("abrv", length=64,
                                    #notnull=True,
                                    label=T("Abbreviation")),
