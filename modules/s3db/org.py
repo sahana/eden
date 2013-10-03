@@ -1219,6 +1219,8 @@ class S3OrganisationSectorModel(S3Model):
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
+        NONE = current.messages["NONE"]
+        
         location = current.session.s3.location_filter
         if location:
             filterby = "location_id"
@@ -1235,6 +1237,7 @@ class S3OrganisationSectorModel(S3Model):
         table = define_table(tablename,
                              Field("name", length=128,
                                    notnull=True,
+                                   represent=lambda v: T(v) if v is not None else NONE,
                                    label=T("Name")),
                              Field("abrv", length=64,
                                    #notnull=True,
