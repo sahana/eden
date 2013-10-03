@@ -1806,8 +1806,8 @@ S3.search = {};
 
             // Collect data
             var filter = {
-                id: id,
-            }
+                id: id
+            };
 
             var url = new String(this.options.ajaxURL);
             if (url.search(/.*\?.*/) != -1) {

@@ -675,7 +675,8 @@ class S3ProjectModel(S3Model):
         query = (table.deleted != True) & \
                 (table.project_id == project_id)
         sum_field = table.amount.sum()
-        return current.db(query).select(sum_field).first()[sum_field]
+        return current.db(query).select(sum_field).first()[sum_field] or \
+               current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     @staticmethod
