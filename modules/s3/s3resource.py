@@ -1014,7 +1014,7 @@ class S3Resource(object):
                 # Get the renderer
                 renderer = dfield.represent
                 if not callable(renderer):
-                    renderer = lambda v: s3_unicode(v)
+                    renderer = lambda v: s3_unicode(v) if v is not None else NONE
 
                 # Deactivate linkto if so requested
                 if not show_links and hasattr(renderer, "linkto"):
