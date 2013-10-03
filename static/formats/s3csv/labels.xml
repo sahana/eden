@@ -132,6 +132,7 @@
     </column>
 
     <column name="Country">
+        <match>|Country|country|L0|ADM0_NAME|</match>
         <label>country</label>
         <!-- breaks countries.csv import
         <label>ISO2</label>-->
