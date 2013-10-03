@@ -227,6 +227,36 @@ class S3DataTable(object):
         return html
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def i18n():
+        """
+            Return the i18n strings needed by dataTables
+            - called by views/dataTables.html
+        """
+
+        T = current.T
+        scripts = ['''i18n.sSortAscending="%s"''' % T("activate to sort column ascending"),
+                   '''i18n.sSortDescending="%s"''' % T("activate to sort column descending"),
+                   '''i18n.sFirst="%s"''' % T("First"),
+                   '''i18n.sLast="%s"''' % T("Last"),
+                   '''i18n.sNext="%s"''' % T("Next"),
+                   '''i18n.sPrevious="%s"''' % T("Previous"),
+                   '''i18n.sEmptyTable="%s"''' % T("No data available in table"),
+                   '''i18n.sInfo="%s"''' % T("Showing _START_ to _END_ of _TOTAL_ entries"),
+                   '''i18n.sInfoEmpty="%s"''' % T("Showing 0 to 0 of 0 entries"),
+                   '''i18n.sInfoFiltered="%s"''' % T("(filtered from _MAX_ total entries)"),
+                   '''i18n.sInfoThousands="%s"''' % current.deployment_settings.get_L10n_thousands_separator(),
+                   '''i18n.sLengthMenu="%s"''' % T("Show _MENU_ entries"),
+                   '''i18n.sLoadingRecords="%s"''' % T("Loading"),
+                   '''i18n.sProcessing="%s"''' % T("Processing"),
+                   '''i18n.sSearch="%s"''' % T("Search"),
+                   '''i18n.sZeroRecords="%s"''' % T("No matching records found"),
+                   ]
+        script = "\n".join(scripts)
+
+        return script
+
+    # -------------------------------------------------------------------------
     def json(self,
              totalrows,
              displayrows,

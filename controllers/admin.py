@@ -1034,7 +1034,7 @@ def translate():
                     strings.append(line)
                 # Update the file containing user strings
                 R.merge_user_strings_file(strings)
-                response.confirmation = T("File Uploaded")
+                response.confirmation = T("File uploaded")
 
             div = DIV(T("Upload a text file containing new-line separated strings:"),
                       INPUT(_type="file", _name="upload"),

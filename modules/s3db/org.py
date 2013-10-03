@@ -1585,7 +1585,7 @@ class S3OrganisationServiceModel(S3Model):
             msg_list_empty = T("No Services currently registered"))
 
         # Reusable Field
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup=tablename, translate=True)
         service_id = S3ReusableField("service_id", table,
                                     sortby = "name",
                                     label = T("Services"),

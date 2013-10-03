@@ -55,7 +55,7 @@
    <div id='personal-menu'>
     {{if auth.is_logged_in():}}<div class="username fright">{{=auth.user.email}}</div>{{pass}}
     {{=current.menu.personal}}
-    <p>Managing material and human resources together to better prepare for future hazards and vulnerabilities.</p>
+    <p>{{=T("Managing material and human resources together to better prepare for future hazards and vulnerabilities.")}}</p>
    </div>
    <a href='#main-content' class='skipnavigation'>Skip to Content</a>
    {{=current.menu.main}}

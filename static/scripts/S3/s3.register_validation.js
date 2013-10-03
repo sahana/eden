@@ -111,7 +111,9 @@ var s3_register_validation = function() {
 
     // Password Strength indicator
     $('.password:' + password_position).pstrength({
-        'minChar': S3.password_min_length
+        'minChar': S3.password_min_length,
+        'minCharText': i18n.password_min_chars,
+		'verdicts':	[i18n.weak, i18n.normal, i18n.medium, i18n.strong, i18n.very_strong]
     });
 
 };

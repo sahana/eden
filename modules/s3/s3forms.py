@@ -2720,14 +2720,17 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
             widget = T("No options currently available")
         else:
             # Translate the Options?
-            translate = False
-            s3db = current.s3db
-            if hasattr(s3db, fieldname):
-                reusable_field = s3db.get(fieldname)
-                if reusable_field:
-                    represent = reusable_field.attr.represent
-                    if hasattr(represent, "translate"):
-                        translate = represent.translate
+            translate = opts.get("translate", None)
+            if translate is None:
+                # Try to lookup presence of reusable field
+                # - how do we know the module though?
+                s3db = current.s3db
+                if hasattr(s3db, fieldname):
+                    reusable_field = s3db.get(fieldname)
+                    if reusable_field:
+                        represent = reusable_field.attr.represent
+                        if hasattr(represent, "translate"):
+                            translate = represent.translate
 
             # Render the options
             cols = opts.get("cols", 1)
@@ -3075,14 +3078,18 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
             widget = T("No options currently available")
         else:
             # Translate the Options?
-            translate = False
-            s3db = current.s3db
-            if hasattr(s3db, fieldname):
-                reusable_field = s3db.get(fieldname)
-                if reusable_field:
-                    represent = reusable_field.attr.represent
-                    if hasattr(represent, "translate"):
-                        translate = represent.translate
+            translate = opts.get("translate", None)
+            if translate is None:
+                # Try to lookup presence of reusable field
+                # - how do we know the module though?
+                s3db = current.s3db
+                if hasattr(s3db, fieldname):
+                    reusable_field = s3db.get(fieldname)
+                    if reusable_field:
+                        represent = reusable_field.attr.represent
+                        if hasattr(represent, "translate"):
+                            translate = represent.translate
+
             # Render the options
             opts = []
             vals = []

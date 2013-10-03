@@ -7,6 +7,7 @@
  {{s3.scripts.append("/%s/static/scripts/S3/s3.dataTables.js" % appname)}}
 {{else:}}{{s3.scripts.append("/%s/static/scripts/S3/s3.dataTables.min.js" % appname)}}{{pass}}
 <script type="text/javascript">
+{{=XML(s3base.S3DataTable.i18n())}}
 S3.dataTables={}
 {{if s3.dataTableID:}}{{idlist=[s3.dataTableID] if not isinstance(s3.dataTableID, (tuple, list)) else s3.dataTableID}}
  S3.dataTables.id=[{{=XML(",".join(["'%s'" % id for id in idlist]))}}]

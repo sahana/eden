@@ -3739,7 +3739,7 @@ def customize_project_project(**attr):
             # Return to List view after create/update/delete (unless done via Modal)
             url_next = URL(c="project", f="project")
 
-            from s3.s3filter import S3TextFilter, S3OptionsFilter
+            from s3.s3filter import S3LocationFilter, S3TextFilter, S3OptionsFilter
             filter_widgets = [
                 S3TextFilter(["name",
                               "description",

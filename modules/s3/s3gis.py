@@ -7659,7 +7659,7 @@ class LayerTheme(Layer):
                       }
 
             # Attributes which are defaulted client-side if not set
-            self.setup_folder_and_visibility(output)
+            self.setup_folder_visibility_and_opacity(output)
             self.setup_clustering(output)
             style = self.style
             if style:

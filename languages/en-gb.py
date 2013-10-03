@@ -151,6 +151,7 @@
 'Request Canceled': 'Request Cancelled',
 'Request for Donations Canceled': 'Request for Donations Cancelled',
 'Request for Volunteers Canceled': 'Request for Volunteers Cancelled',
+'Resource Mobilization': 'Resource Mobilisation',
 'Schedule synchronization jobs': 'Schedule synchronisation jobs',
 'Search by organization.': 'Search by organisation.',
 'Search for an Organization by name or acronym': 'Search for an Organisation by name or acronym',

@@ -5,8 +5,6 @@ from os import path
 from gluon import current
 from gluon.html import *
 
-from s3.s3utils import s3_register_validation
-
 # =============================================================================
 class index():
     """ Custom Home Page """
@@ -59,10 +57,6 @@ class index():
                                    P(XML(T("If you would like to help, then please %(sign_up_now)s") % \
                                             dict(sign_up_now=B(T("sign-up now"))))))
 
-                if s3.debug:
-                    s3.scripts.append("/%s/static/scripts/jquery.validate.js" % appname)
-                else:
-                    s3.scripts.append("/%s/static/scripts/jquery.validate.min.js" % appname)
                 if request.env.request_method == "POST":
                     post_script = \
 '''$('#register_form').removeClass('hide')

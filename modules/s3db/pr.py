@@ -3216,7 +3216,7 @@ class S3PersonPresence(S3Model):
             label_create_button = ADD_LOG_ENTRY,
             msg_record_created = T("Log entry added"),
             msg_record_modified = T("Log entry updated"),
-            msg_record_deleted = T("Log entry deleted"),
+            msg_record_deleted = T("Log Entry Deleted"),
             msg_list_empty = T("No Presence Log Entries currently registered"))
 
         # Resource configuration

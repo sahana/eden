@@ -209,6 +209,7 @@ Thank you
         #self.messages.logged_in = "Signed In"
         #self.messages.submit_button = "Signed In"
         #self.messages.logged_out = "Signed Out"
+        self.messages.profile_save_button = "Apply changes"
         self.messages.lock_keys = True
 
         # S3Permission
@@ -1612,6 +1613,12 @@ S3OptionsFilter({
         js_append('''i18n.please_enter_valid_email="%s"''' % T("Please enter a valid email address"))
 
         js_append('''S3.password_min_length=%i''' % settings.get_auth_password_min_length())
+        js_append('''i18n.password_min_chars="%s"''' % T("You must enter a minimum of %d characters"))
+        js_append('''i18n.weak="%s"''' % T("Weak"))
+        js_append('''i18n.normal="%s"''' % T("Normal"))
+        js_append('''i18n.medium="%s"''' % T("Medium"))
+        js_append('''i18n.strong="%s"''' % T("Strong"))
+        js_append('''i18n.very_strong="%s"''' % T("Very Strong"))
 
         script = '''\n'''.join(js_global)
         s3.js_global.append(script)

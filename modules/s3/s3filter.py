@@ -1719,16 +1719,21 @@ class S3FilterForm(object):
         _t = lambda s: str(T(s))
 
         # Configure the widget
+        settings = current.deployment_settings
         config = dict(
 
             # Filters and Ajax URL
             filters = filters,
             ajaxURL = ajaxurl,
 
+            # Workflow Options
+            allowDelete = settings.get_search_filter_manager_allow_delete(),
+
             # Tooltips for action icons/buttons
-            saveTooltip = _t("Update saved filter"),
+            createTooltip = _t("Save current options as new filter"),
             loadTooltip = _t("Load filter"),
-            createTooltip = _t("Create new filter from current options"),
+            saveTooltip = _t("Update saved filter"),
+            deleteTooltip = _t("Delete saved filter"),
 
             # Hints
             titleHint = _t("Enter a title..."),
@@ -1736,19 +1741,21 @@ class S3FilterForm(object):
             emptyHint = _t("No saved filters"),
 
             # Confirm update + confirmation text
-            confirmUpdate = True,
-            confirmText = _t("Update this filter?"),
+            confirmUpdate = _t("Update this filter?"),
+            confirmDelete = _t("Delete this filter?"),
         )
 
         # Render actions as buttons with text if configured, otherwise
         # they will appear as empty DIVs with classes for CSS icons
-        settings = current.deployment_settings
         create_text = settings.get_search_filter_manager_save()
         if create_text:
             config["createText"] = _t(create_text)
         update_text = settings.get_search_filter_manager_update()
         if update_text:
             config["saveText"] = _t(update_text)
+        delete_text = settings.get_search_filter_manager_delete()
+        if delete_text:
+            config["deleteText"] = _t(delete_text)
         load_text = settings.get_search_filter_manager_load()
         if load_text:
             config["loadText"] = _t(load_text)
@@ -1820,8 +1827,12 @@ class S3Filter(S3Method):
                 # Load list of saved filters
                 return self._load(r, **attr)
             elif r.http == "POST":
-                # Save a filter
-                return self._save(r, **attr)
+                if "delete" in r.get_vars:
+                    # Delete a filter
+                    return self._delete(r, **attr)
+                else:
+                    # Save a filter
+                    return self._save(r, **attr)
             else:
                 r.error(405, r.ERROR.BAD_METHOD)
                 
@@ -1876,11 +1887,60 @@ class S3Filter(S3Method):
         return options
 
     # -------------------------------------------------------------------------
+    def _delete(self, r, **attr):
+        """
+            Delete a filter, responds to POST filter.json?delete=
+            
+            @param r: the S3Request
+            @param attr: additional controller parameters
+        """
+            
+        # Authorization, get pe_id
+        auth = current.auth
+        if auth.s3_logged_in():
+            pe_id = current.auth.user.pe_id
+        else:
+            pe_id = None
+        if not pe_id:
+            r.unauthorised()
+
+        # Read the source
+        source = r.body
+        source.seek(0)
+
+        try:
+            data = json.load(source)
+        except ValueError:
+            # Syntax error: no JSON data
+            r.error(501, r.ERROR.BAD_SOURCE)
+
+        # Try to find the record
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.pr_filter
+        record = None
+        record_id = data.get("id")
+        if record_id:
+            query = (table.id == record_id) & (table.pe_id == pe_id)
+            record = db(query).select(table.id, limitby=(0, 1)).first()
+        if not record:
+            r.error(501, r.ERROR.BAD_RECORD)
+            
+        resource = s3db.resource("pr_filter", id=record_id)
+        success = resource.delete(ondelete=resource.get_config("ondelete"),
+                                 format=r.representation)
+
+        if not success:
+            raise(400, current.manager.error)
+        else:
+            current.response.headers["Content-Type"] = "application/json"
+            return current.xml.json_message(deleted=record_id)
+
+    # -------------------------------------------------------------------------
     def _save(self, r, **attr):
         """
-            Save a filter
-
-            POST filter.json
+            Save a filter, responds to POST filter.json
             
             @param r: the S3Request
             @param attr: additional controller parameters

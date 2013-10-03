@@ -4098,6 +4098,7 @@ class S3GISThemeModel(S3Model):
                              Field("date", "datetime",
                                    label = T("Date")),
                              gis_layer_folder()(),
+                             gis_opacity()(),
                              # Avoid clustering
                              cluster_distance()(default = 1),
                              cluster_threshold()(),

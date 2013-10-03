@@ -419,6 +419,7 @@ def theme_sector_widget():
         label = T("Themes"),
         field = "theme_id",
         cols = 4,
+        translate = True,
         # Filter Theme by Sector
         filter = {"linktable": "project_theme_sector",
                   "lkey": "theme_id",

@@ -905,6 +905,28 @@
             'iDisplayLength': tableConfig['displayLength'],
             'sPaginationType': tableConfig['paginationType'],
             'sAjaxSource': tableConfig['ajaxUrl'],
+            'oLanguage': {
+                'oAria': {
+                    'sSortAscending': ': ' + i18n.sSortAscending,
+                    'sSortDescending': ': ' + i18n.sSortDescending
+                },
+                'oPaginate': {
+                    'sFirst': i18n.sFirst,
+                    'sLast': i18n.sLast,
+                    'sNext': i18n.sNext,
+                    'sPrevious': i18n.sPrevious
+                },
+                'sEmptyTable': i18n.sEmptyTable,
+                'sInfo': i18n.sInfo,
+                'sInfoEmpty': i18n.sInfoEmpty,
+                'sInfoFiltered': i18n.sInfoFiltered,
+                'sInfoThousands': i18n.sInfoThousands,
+                'sLengthMenu': i18n.sLengthMenu,
+                'sLoadingRecords': i18n.sLoadingRecords + '...',
+                'sProcessing': i18n.sProcessing + '...',
+                'sSearch': i18n.sSearch + ':',
+                'sZeroRecords': i18n.sZeroRecords
+            },
             'fnHeaderCallback' : function (nHead, aasData, iStart, iEnd, aiDisplay) {
                 $('#modeSelectionAll').on('click', function(event) {
                     //var wrapper = $(this).parents('.dataTables_wrapper')[0].id;

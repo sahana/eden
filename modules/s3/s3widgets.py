@@ -3248,7 +3248,7 @@ S3.gis.tab="%s"''' % s3.gis.tab
                       _class="locselect box_middle")
 
         # L0 selector
-        SELECT_COUNTRY = T("Choose country")
+        SELECT_COUNTRY = T("Choose Country")
         level = "L0"
         L0_rows = ""
         if len(countries) == 1:

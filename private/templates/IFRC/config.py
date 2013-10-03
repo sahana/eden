@@ -7,10 +7,10 @@
 #    # Python 2.6
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
-from gluon import current, IS_EMPTY_OR
+from gluon import current
 from gluon.storage import Storage
 
-from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
+from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponentCheckbox
 
 T = current.T
 settings = current.deployment_settings
@@ -311,6 +311,7 @@ def ns_only(f, required=True, branches=True, updateable=True):
                          orderby = "org_organisation.name",
                          sort = True)
     if not required:
+        from gluon import IS_EMPTY_OR
         requires = IS_EMPTY_OR(requires)
     f.requires = requires
     # Dropdown not Autocomplete
@@ -652,6 +653,7 @@ def customize_project_project(**attr):
     f.label = T("Host National Society")
 
     # Custom Crud Form
+    from s3.s3forms import S3SQLInlineComponent
     crud_form = S3SQLCustomForm(
         "organisation_id",
         "name",
@@ -677,18 +679,21 @@ def customize_project_project(**attr):
             label = T("Hazards"),
             field = "hazard_id",
             cols = 4,
+            translate = True,
         ),
         S3SQLInlineComponentCheckbox(
             "sector",
             label = T("Sectors"),
             field = "sector_id",
             cols = 4,
+            translate = True,
         ),
         S3SQLInlineComponentCheckbox(
             "theme",
             label = T("Themes"),
             field = "theme_id",
             cols = 4,
+            translate = True,
             # Filter Theme by Sector
             filter = {"linktable": "project_theme_sector",
                       "lkey": "theme_id",
@@ -768,23 +773,24 @@ S3OptionsFilter({
 settings.ui.customize_project_project = customize_project_project
 
 settings.ui.crud_form_project_location = S3SQLCustomForm(
-        "project_id",
-        "location_id",
-        # @ToDo: Grouped Checkboxes
-        S3SQLInlineComponentCheckbox(
-            "activity_type",
-            label = T("Activity Types"),
-            field = "activity_type_id",
-            cols = 3,
-            # Filter Activity Type by Sector
-            filter = {"linktable": "project_activity_type_sector",
-                      "lkey": "activity_type_id",
-                      "rkey": "sector_id",
-                      "lookuptable": "project_project",
-                      "lookupkey": "project_id",
-                      },
-        ),
-        "comments",
+    "project_id",
+    "location_id",
+    # @ToDo: Grouped Checkboxes
+    S3SQLInlineComponentCheckbox(
+        "activity_type",
+        label = T("Activity Types"),
+        field = "activity_type_id",
+        cols = 3,
+        # Filter Activity Type by Sector
+        filter = {"linktable": "project_activity_type_sector",
+                  "lkey": "activity_type_id",
+                  "rkey": "sector_id",
+                  "lookuptable": "project_project",
+                  "lookupkey": "project_id",
+                  },
+        translate = True,
+    ),
+    "comments",
     )
 
 # -----------------------------------------------------------------------------
