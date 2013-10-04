@@ -89,14 +89,12 @@ class S3Exporter(object):
         """
             Export a resource as JSON
 
-            @note: export does not include components!
-
-            @ToDo: Deprecate (after modifying search_ac functions)
-
-            @param resource: the resource to export
-            @param start: index of the first record to export (for slicing)
-            @param limit: maximum number of records to export (for slicing)
-            @param fields: fields to include in the export (None for all fields)
+            @param resource: the resource to export from
+            @param start: index of the first record to export
+            @param limit: maximum number of records to export
+            @param fields: list of field selectors for fields to include in
+                           the export (None for all fields)
+            @param orderby: ORDERBY expression
         """
 
         if fields is None:
