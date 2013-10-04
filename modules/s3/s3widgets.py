@@ -5633,21 +5633,22 @@ def search_ac(r, **attr):
     value = value.lower().strip()
 
     if _vars.field and _vars.filter and value:
+        
         s3db = current.s3db
         resource = r.resource
         table = resource.table
 
         limit = int(_vars.limit or 0)
 
+        from s3resource import S3FieldSelector
         fieldname = str.lower(_vars.field)
-        field = table[fieldname]
+        field = S3FieldSelector(fieldname)
 
         # Default fields to return
-        fields = [table.id, field]
+        fields = ["id", fieldname]
         if resource.tablename == "org_site":
             # Simpler to provide an exception case than write a whole new class
-            table = s3db.org_site
-            fields.append(table.instance_type)
+            fields.append("instance_type")
 
         filter = _vars.filter
         if filter == "~":
@@ -5686,8 +5687,9 @@ def search_ac(r, **attr):
                 fq = (linktable[rkey] == table[fkey]) & \
                      (linktable[lkey] == _id)
                 linked = current.db(fq).select(table._id)
-                exclude = (~(table._id.belongs([r[table._id.name]
-                                                for r in linked])))
+                pkey = S3FieldSelector("id")
+                exclude = (~(pkey.belongs([r[table._id.name]
+                                           for r in linked])))
             except Exception, e:
                 pass # ignore
             else:
@@ -5735,10 +5737,10 @@ def search_ac(r, **attr):
 
         if output is None:
             output = S3Exporter().json(resource,
-                                            start=0,
-                                            limit=limit,
-                                            fields=fields,
-                                            orderby=field)
+                                       start=0,
+                                       limit=limit,
+                                       fields=fields,
+                                       orderby=field)
         current.response.headers["Content-Type"] = "application/json"
 
     else:
