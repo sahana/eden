@@ -2720,7 +2720,7 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
             widget = T("No options currently available")
         else:
             # Translate the Options?
-            translate = opts.get("translate", None)
+            translate = options.get("translate", None)
             if translate is None:
                 # Try to lookup presence of reusable field
                 # - how do we know the module though?
@@ -2733,7 +2733,7 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                             translate = represent.translate
 
             # Render the options
-            cols = opts.get("cols", 1)
+            cols = options.get("cols", 1)
             count = len(options)
             num_of_rows = count / cols
             if count % cols:
@@ -3078,7 +3078,7 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
             widget = T("No options currently available")
         else:
             # Translate the Options?
-            translate = opts.get("translate", None)
+            translate = options.get("translate", None)
             if translate is None:
                 # Try to lookup presence of reusable field
                 # - how do we know the module though?
