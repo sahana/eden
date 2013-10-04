@@ -45,7 +45,7 @@ from gluon.storage import Storage
 from gluon.languages import lazyT
 
 from s3navigation import S3ScriptItem
-from s3utils import S3DateTime, s3_auth_user_represent, s3_auth_user_represent_name, s3_auth_group_represent, s3_unicode
+from s3utils import S3DateTime, s3_auth_user_represent, s3_auth_user_represent_name, s3_unicode
 from s3validators import IS_ONE_OF, IS_UTC_DATETIME
 from s3widgets import S3AutocompleteWidget, S3DateWidget, S3DateTimeWidget
 
@@ -900,7 +900,9 @@ def s3_ownerstamp():
                                              writable=False,
                                              requires=None,
                                              default=None,
-                                             represent=s3_auth_group_represent)
+                                             represent=S3Represent(lookup="auth_group",
+                                                                   fields=["role"])
+                                             )
 
     # Person Entity controlling access to this record
     s3_meta_realm_entity = S3ReusableField("realm_entity", "integer",
@@ -957,16 +959,17 @@ def s3_role_required():
 
     T = current.T
     gtable = current.auth.settings.table_group
+    represent = S3Represent(lookup="auth_group", fields=["role"])
     f = S3ReusableField("role_required", gtable,
             sortby="role",
             requires = IS_NULL_OR(
-                        IS_ONE_OF(db, "auth_group.id",
-                                  "%(role)s",
+                        IS_ONE_OF(current.db, "auth_group.id",
+                                  represent,
                                   zero=T("Public"))),
-            widget = S3AutocompleteWidget("admin",
-                                          "group",
-                                          fieldname="role"),
-            represent = s3_auth_group_represent,
+            #widget = S3AutocompleteWidget("admin",
+            #                              "group",
+            #                              fieldname="role"),
+            represent = represent,
             label = T("Role Required"),
             comment = DIV(_class="tooltip",
                           _title="%s|%s" % (T("Role Required"),
@@ -985,16 +988,17 @@ def s3_roles_permitted(name="roles_permitted", **attr):
     from s3validators import IS_ONE_OF
 
     T = current.T
+    represent = S3Represent(lookup="auth_group", fields=["role"])
     if "label" not in attr:
         attr["label"] = T("Roles Permitted")
     if "sortby" not in attr:
         attr["sortby"] = "role"
     if "represent" not in attr:
-        attr["represent"] = s3_auth_group_represent
+        attr["represent"] = represent
     if "requires" not in attr:
         attr["requires"] = IS_NULL_OR(IS_ONE_OF(current.db,
                                                 "auth_group.id",
-                                                "%(role)s",
+                                                represent,
                                                 multiple=True))
     if "comment" not in attr:
         attr["comment"] = DIV(_class="tooltip",

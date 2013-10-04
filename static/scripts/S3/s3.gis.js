@@ -5235,7 +5235,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 if (undefined != elem.fillOpacity) {
                     fillOpacity = elem.fillOpacity;
                 } else {
-                    fillOpacity = 1;
+                    fillOpacity = opacity;
                 }
                 if (undefined != elem.strokeOpacity) {
                     strokeOpacity = elem.strokeOpacity;

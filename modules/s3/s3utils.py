@@ -533,36 +533,6 @@ def s3_auth_user_represent_name(id, row=None):
         return current.messages.UNKNOWN_OPT
 
 # =============================================================================
-def s3_auth_group_represent(opt):
-    """
-        Represent user groups by their role names
-    """
-
-    if not opt:
-        return current.messages["NONE"]
-
-    auth = current.auth
-    s3db = current.s3db
-
-    table = auth.settings.table_group
-    groups = current.db(table.id > 0).select(table.id,
-                                             table.role,
-                                             cache=s3db.cache).as_dict()
-    if not isinstance(opt, (list, tuple)):
-        opt = [opt]
-    roles = []
-    for o in opt:
-        try:
-            key = int(o)
-        except ValueError:
-            continue
-        if key in groups:
-            roles.append(groups[key]["role"])
-    if not roles:
-        return current.messages["NONE"]
-    return ", ".join(roles)
-
-# =============================================================================
 def s3_yes_no_represent(value):
     " Represent a Boolean field as Yes/No instead of True/False "
 
