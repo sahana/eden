@@ -3078,7 +3078,7 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
             widget = T("No options currently available")
         else:
             # Translate the Options?
-            translate = opts.get("translate", None)
+            translate = self.options.get("translate", None)
             if translate is None:
                 # Try to lookup presence of reusable field
                 # - how do we know the module though?
