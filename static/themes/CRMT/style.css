@@ -13,13 +13,11 @@ body {
 }
 
 /* Saved Maps */
-#config-gis_config_pe_id-options-filter__row .s3-groupedopts-option {
-    /* Hide the Radios (we can click on labels) */
-    display: none;
-}
-#config-gis_config_pe_id-options-filter__row .s3-groupedopts-widget td:first-child {
-    border-right: solid 1px;
+#config-gis_config_pe_id-options-filter__row .s3-groupedopts-widget td {
     padding-right: 10px;
+}
+#config-gis_config_pe_id-options-filter__row .s3-groupedopts-widget td:last-child {
+    border-left: solid 1px;
 }
 
 /* Summary Page */

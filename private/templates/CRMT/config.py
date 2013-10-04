@@ -1859,6 +1859,63 @@ def customize_vulnerability_risk(**attr):
 settings.ui.customize_vulnerability_risk = customize_vulnerability_risk
 
 #-----------------------------------------------------------------------------
+# Saved Maps
+#-----------------------------------------------------------------------------
+def customize_gis_config(**attr):
+    """
+        Customize gis_config controller
+    """
+
+    # Custom PreP
+    s3 = current.response.s3
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+
+        if r.interactive:
+            auth = current.auth
+            coalition = auth.user.org_group_id
+            if not coalition:
+                return True
+
+            db = current.db
+            s3db = current.s3db
+            utable = db.auth_user
+            ltable = s3db.pr_person_user
+            table = s3db.gis_config
+            query = (table.deleted == False) & \
+                    (table.pe_id == ltable.pe_id) & \
+                    (ltable.user_id == utable.id) & \
+                    (utable.org_group_id == coalition)
+            rows = db(query).select(ltable.pe_id,
+                                    distinct=True)
+            if rows:
+                coalition_pe_ids = ",".join([str(row.pe_id) for row in rows])
+                from s3.s3filter import S3OptionsFilter
+                filter_widgets = [
+                    S3OptionsFilter("pe_id",
+                                    label = "",
+                                    options = {"*": T("All"),
+                                               coalition_pe_ids: T("My Coalition's Maps"),
+                                               auth.user.pe_id: T("My Maps"),
+                                               },
+                                    multiple = False,
+                                    )
+                    ]
+                s3db.configure("gis_config",
+                               filter_widgets = filter_widgets,
+                               )
+
+        return True
+    s3.prep = custom_prep
+
+    return attr
+
+settings.ui.customize_gis_config = customize_gis_config
+
+#-----------------------------------------------------------------------------
 # Site Activity Log
 # -----------------------------------------------------------------------------
 def render_log(listid, resource, rfields, record, **attr):
