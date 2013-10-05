@@ -2107,43 +2107,40 @@ def poll_twilio_inbox():
 
 # =============================================================================
 # Enabled only for testing:
-#
-@auth.s3_requires_membership(1)
 def readKeyGraph(queryID):
-    """ RESTful CRUD controller """
+    """  """
 
     import os
     curpath = os.getcwd()
 
-    f = open("%s.txt"%queryID, 'r')
+    f = open("%s.txt" % queryID, "r")
 
     topics = int(f.next())
 
     nodelabel = {}
     E = []
     nodetopic = {}
-    for x in range(0,topics):
+    for x in range(0, topics):
         thisnodes = []
-        nodes = int(f.next().split('KEYGRAPH_NODES:')[1])
-        for y in range(0,nodes):
+        nodes = int(f.next().split("KEYGRAPH_NODES:")[1])
+        for y in range(0, nodes):
             s = f.next()
-            nodeid = s.split(':')[0]
+            nodeid = s.split(":")[0]
             nodetopic[str(nodeid)] = x
-            l1 = s.split(':')[1]
-            l2 = s.split(':')[2]
+            l1 = s.split(":")[1]
+            l2 = s.split(":")[2]
             try:
                 nodelabel[str(nodeid)] = unicode(l2.strip())
             except:
                 pass
-        edges = int(f.next().split('KEYGRAPH_EDGES:')[1])
-        edges = edges/2
+        edges = int(f.next().split("KEYGRAPH_EDGES:")[1])
+        edges = edges / 2
         for y in range(0,edges):
             s = f.next()
-            n1 = s.split(' ')[0].strip()
-            n2 = s.split(' ')[1].strip()
+            n1 = s.split(" ")[0].strip()
+            n2 = s.split(" ")[1].strip()
             if (n1 in nodelabel.keys()) and (n2 in nodelabel.keys()):
-                E.append((str(n1),str(n2)))
-
+                E.append((str(n1), str(n2)))
 
         f.next()
         f.next()
@@ -2155,7 +2152,7 @@ def readKeyGraph(queryID):
         E[x] = tuple(lx)
     """
     #import networkx as nx
-    from igraph import *
+    from igraph import Graph, write_svg
     #g = nx.Graph()
     g = Graph()
     g.add_vertices([ str(s) for s in nodelabel.keys()])
@@ -2177,8 +2174,8 @@ def readKeyGraph(queryID):
     #plot(g, **visual_style)
     #c =  g.clusters().subgraphs()
     #print g.ecount()
-    filename = "%s.svg"%queryID
-    write_svg(g.community_fastgreedy().as_clustering().graph, layout=layout,**visual_style)
+    filename = "%s.svg" % queryID
+    write_svg(g.community_fastgreedy().as_clustering().graph, layout=layout, **visual_style)
     #plot(g.community_fastgreedy().as_clustering(), layout=layout)
     #plot(g)
     #g.add_weighted_edges_from(E)
