@@ -215,6 +215,36 @@ class S3Msg(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def sort_by_sender(row):
+        """
+           Helper method to sort messages according to sender priority.
+        """
+
+        s3db = current.s3db
+        db = current.db
+        ptable = s3db.msg_parsing_status
+        mtable = s3db.msg_message
+        stable = s3db.msg_sender
+
+        try:
+            pmessage = db(ptable.id == row.id).select(ptable.message_id)
+            id = pmessage.message_id
+
+            message = db(mtable.id == id).select(mtable.from_address,
+                                                 limitby=(0, 1)).first()
+            sender = message.from_address
+
+            srecord = db(stable.sender == sender).select(stable.priority,
+                                                         limitby=(0, 1)).first()
+
+            return srecord.priority
+        except:
+            import sys
+            # Return max value i.e. assign lowest priority
+            return sys.maxint
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def parse_import(workflow, source):
         """
            Parse Inbound Messages
@@ -234,6 +264,7 @@ class S3Msg(object):
         contact_method = ctable.contact_method
         value = ctable.value
         send_msg = S3Msg.send_by_pe_id
+        sort_by_sender = S3Msg.sort_by_sender
 
         query = (wtable.workflow_task_id == workflow) & \
                 (wtable.source_task_id == source)
@@ -246,7 +277,7 @@ class S3Msg(object):
                     (ptable.source_task_id == record.source_task_id)
             rows = db(query).select()
 
-            for row in rows:
+            for row in rows.sort(lambda row:sort_by_sender(row)):
                 rquery = (mtable.id == row.message_id)
                 rmessage = db(rquery).select(mtable.id,
                                              mtable.body,
@@ -546,20 +577,20 @@ class S3Msg(object):
                                                         message)
                 elif contact_method == "TWITTER":
                     return self.send_tweet(message, address)
-                    
+
             return False
 
         outbox = s3db.msg_outbox
-        
+
         petable = s3db.pr_pentity
         left = [petable.on(petable.pe_id == outbox.pe_id)]
-        
+
         fields = [outbox.id,
                   outbox.message_id,
                   outbox.pe_id,
                   outbox.retries,
                   petable.instance_type]
-                  
+
         query = (outbox.pr_message_method == contact_method) & \
                 (outbox.status == 1) & \
                 (outbox.deleted == False)
@@ -585,7 +616,7 @@ class S3Msg(object):
                                 orderby=~outbox.retries)
         if not rows:
             return
-                                
+
         ptable = s3db.pr_person
         gtable = s3db.pr_group
         mtable = s3db.pr_group_membership
@@ -604,13 +635,13 @@ class S3Msg(object):
                            (htable.deleted != True)),
                  ptable.on((ptable.id == htable.person_id) &
                            (ptable.deleted != True))]
-                           
+
         # chainrun: used to fire process_outbox again,
         # when messages are sent to groups or organisations
         chainrun = False
 
         for row in rows:
-            
+
             status = True
 
             if contact_method == "EMAIL":
@@ -1121,6 +1152,7 @@ class S3Msg(object):
             Breaks long text to chunks if needed.
 
             @ToDo: Option to Send via Tropo
+            @ToDo: Store outgoing tweets in db.msg_twitter
         """
 
         # Initialize Twitter API
@@ -1151,8 +1183,29 @@ class S3Msg(object):
                     try:
                         # Note: send_direct_message() requires explicit kwargs (at least in tweepy 1.5)
                         # See http://groups.google.com/group/tweepy/msg/790fcab8bc6affb5
-                        twitter_api.send_direct_message(screen_name=recipient,
-                                                        text=c)
+                        rec = recipient
+                        if twitter_api.send_direct_message(screen_name=rec,
+                                                           text=c):
+                            table = s3db.msg_twitter
+                            myname = twitter_api.me()['screen_name']
+                            id = table.insert(body=c,
+                                              from_address=myname,
+                                              )
+                            query = (table.id == id)
+                            record = db(query).select(table.id,
+                                                      table.message_id,
+                                                      limitby=(0, 1)).first()
+                            s3db.update_super(table, record)
+                            message_id = record.message_id
+
+                            otable = s3db.msg_outbox
+
+                            otable.insert(message_id = message_id,
+                                          address = rec,
+                                          status = 2,
+                                          pr_message_method = "TWITTER",
+                                         )
+
                     except tweepy.TweepError:
                         s3_debug("Unable to Tweet DM")
             else:
@@ -1177,8 +1230,8 @@ class S3Msg(object):
     #-------------------------------------------------------------------------
     def receive_subscribed_tweets(self):
         """
-            Function  to call to drop the tweets into search_results table
-            - called via cron or twitter_search_results controller
+            Function  to call to drop the tweets into twitter_inbox table
+            - called via cron or twitter_inbox controller
         """
 
         # Initialize Twitter API
@@ -1201,66 +1254,56 @@ class S3Msg(object):
 
         db = current.db
         s3db = current.s3db
-        results_table = s3db.msg_twitter_search_results
-        table = s3db.msg_twitter_search
-        rows = db(table.id > 0).select(table.id,
-                                       table.search_query)
+        inbox_table = s3db.msg_twitter
 
-        # Get the latest updated post time to use it as since_id in twitter search
-        recent_time = results_table.posted_at.max()
+        # Get the latest updated post time to use it as since_id
+        recent_time = inbox_table.posted_at.max()
 
-        for row in rows:
-            query = row.search_query
-            try:
-                if recent_time:
-                    search_results = twitter_api.search(query,
-                                                        result_type="recent",
-                                                        show_user=True,
-                                                        since_id=recent_time)
+        try:
+            if recent_time:
+                messages = twitter_api.direct_messages(since_id=recent_time)
+            else:
+                messages = twitter_api.direct_messages()
+
+            messages.reverse()
+
+            for message in messages:
+                # Check if the tweet already exists in the inbox_table
+                query = (inbox_table.from_address == message['sender']['name'])
+                query = (query) & \
+                        (inbox_table.posted_at == message["created_on"])
+                tweet_exists = db(query).select(inbox_table.id,
+                                                limitby=(0, 1)
+                                                ).first()
+
+                if tweet_exists:
+                    continue
                 else:
-                    search_results = twitter_api.search(query,
-                                                        result_type="recent",
-                                                        show_user=True)
-
-                search_results.reverse()
-
-                id = row.id
-                for result in search_results:
-                    # Check if the tweet already exists in the table
-                    query = (results_table.posted_by == result.from_user) & \
-                            (results_table.posted_at == result.created_at)
-                    tweet_exists = db(query).select(results_table.id,
-                                                    limitby=(0, 1)
-                                                    ).first()
-
-                    if tweet_exists:
-                        continue
+                    tweet = message.text
+                    posted_by = message["sender"]["name"]
+                    if message["geo_enabled"]:
+                        coordinates = message["geo"]["coordinates"]
                     else:
-                        tweet = result.text
-                        posted_by = result.from_user
-                        if result.geo:
-                            coordinates = result.geo["coordinates"]
-                        else:
-                            coordinates = None
-                        category, priority, location_id = parser("filter",
-                                                                 tweet,
-                                                                 posted_by,
-                                                                 service="twitter",
-                                                                 coordinates=coordinates)
-                        results_table.insert(tweet = tweet,
-                                             category = category,
-                                             priority = priority,
-                                             location_id = location_id,
-                                             posted_by = posted_by,
-                                             posted_at = result.created_at,
-                                             twitter_search = id
-                                             )
-            except tweepy.TweepError:
-                s3_debug("Unable to get the Tweets for the user search query.")
-                return False
+                        coordinates = None
+                    category, priority, location_id = parser("filter",
+                                                             tweet,
+                                                             posted_by,
+                                                             service="twitter",
+                                                             coordinates=coordinates)
+                    inbox_table.insert(body = tweet,
+                                       category = category,
+                                       priority = priority,
+                                       location_id = location_id,
+                                       from_address = posted_by,
+                                       posted_at = message["created_on"],
+                                       inbound = True,
+                                       )
+        except tweepy.TweepError:
+            s3_debug("Unable to get the Tweets for the user.")
+            return False
 
-            # Explicitly commit DB operations when running from Cron
-            db.commit()
+        # Explicitly commit DB operations when running from Cron
+        db.commit()
 
         return True
 
@@ -1695,8 +1738,10 @@ class S3Msg(object):
         try:
             import TwitterSearch
         except ImportError:
-            s3_debug("s3msg", "Message Parsing unresolved dependency: TwitterSearch required for fetching results from twitter keyword queries")
-            raise
+            error = "Message Parsing unresolved dependency: TwitterSearch required for fetching results from twitter keyword queries"
+            s3_debug("s3msg", error)
+            current.session.error = error
+            redirect(URL(f="index"))
 
         try:
             tso = TwitterSearch.TwitterSearchOrder()
@@ -1750,6 +1795,87 @@ class S3Msg(object):
         # Commit as this is a task normally run async
         db.commit()
         return
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def process_keygraph(query_id):
+        """ Process results of twitter search with KeyGraph."""
+
+        import subprocess
+        import os
+        import tempfile
+
+        db = current.db
+        s3db = current.s3db
+        curpath = os.getcwd()
+        preprocess = S3Msg.preprocess_tweet
+
+        def generateFiles():
+
+            dirpath = tempfile.mkdtemp()
+            os.chdir(dirpath)
+
+            rtable = s3db.msg_twitter_search_results
+            tweets = db(rtable.deleted == False).select(rtable.body)
+            tweetno = 1
+            for tweet in tweets:
+                filename = str(tweetno) + ".txt"
+                f = open(filename, 'w')
+                f.write(preprocess(tweet.body))
+                tweetno += 1
+
+            return dirpath
+
+        tpath = generateFiles()
+        jarpath = curpath + "static/KeyGraph/keygraph.jar"
+        resultpath = curpath + ("static/KeyGraph/results/%s.txt"%query_id)
+        return subprocess.call(['java', '-jar', jarpath, tpath , resultpath])
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def preprocess_tweet(tweet):
+        """
+            Preprocesses tweets to remove  URLs,
+            RTs, extra whitespaces and replace hashtags
+            with their definitions.
+        """
+        import re
+
+        tagdef = S3Msg.tagdef
+
+        tweet = tweet.lower()
+
+        tweet = re.sub('((www\.[\s]+)|(https?://[^\s]+))','',tweet)
+
+        tweet = re.sub('@[^\s]+','',tweet)
+
+        tweet = re.sub('[\s]+', ' ', tweet)
+
+        tweet = re.sub(r'#([^\s]+)', lambda m:tagdef(m.group(0)), tweet)
+
+        tweet = tweet.strip('\'"')
+
+        return tweet
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def tagdef(hashtag):
+        """
+            Returns the definition of a hashtag.
+        """
+        hashtag = hashtag.split('#')[1]
+
+        try:
+
+            import json
+            import urllib2
+            turl = "http://api.tagdef.com/one.%s.json"%hashtag
+            hashstr = urllib2.urlopen(turl).read()
+            hashdef = json.loads(hashstr)
+            return hashdef["defs"]["def"]["text"]
+
+        except:
+
+            return hashtag
 
 # =============================================================================
 class S3Compose(S3CRUD):
