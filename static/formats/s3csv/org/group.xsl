@@ -32,14 +32,23 @@
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
     <xsl:key name="L1" match="row"
-             use="concat(col[@field=$Country], '/', col[@field='L1'])"/>
+             use="concat(col[contains(
+                             document('../labels.xml')/labels/column[@name='Country']/match/text(),
+                             concat('|', @field, '|'))], '/', 
+                         col[@field='L1'])"/>
     <xsl:key name="L2" match="row"
-             use="concat(col[@field=$Country], '/', col[@field='L1'], '/',
-                                                    col[@field='L2'])"/>
+             use="concat(col[contains(
+                             document('../labels.xml')/labels/column[@name='Country']/match/text(),
+                             concat('|', @field, '|'))], '/', 
+                         col[@field='L1'], '/',
+                         col[@field='L2'])"/>
     <xsl:key name="L3" match="row"
-             use="concat(col[@field=$Country], '/', col[@field='L1'], '/',
-                                                    col[@field='L2'], '/',
-                                                    col[@field='L3'])"/>
+             use="concat(col[contains(
+                             document('../labels.xml')/labels/column[@name='Country']/match/text(),
+                             concat('|', @field, '|'))], '/', 
+                         col[@field='L1'], '/',
+                         col[@field='L2'], '/',
+                         col[@field='L3'])"/>
 
     <!-- ****************************************************************** -->
 
@@ -47,14 +56,18 @@
         <s3xml>
             <!-- L1 -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('L1',
-                                                                   concat(col[@field=$Country], '/',
+                                                                   concat(col[contains(
+                                                                              document('../labels.xml')/labels/column[@name='Country']/match/text(),
+                                                                              concat('|', @field, '|'))], '/',
                                                                           col[@field='L1']))[1])]">
                 <xsl:call-template name="L1"/>
             </xsl:for-each>
 
             <!-- L2 -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('L2',
-                                                                   concat(col[@field=$Country], '/',
+                                                                   concat(col[contains(
+                                                                              document('../labels.xml')/labels/column[@name='Country']/match/text(),
+                                                                              concat('|', @field, '|'))], '/',
                                                                           col[@field='L1'], '/',
                                                                           col[@field='L2']))[1])]">
                 <xsl:call-template name="L2"/>
@@ -62,7 +75,9 @@
 
             <!-- L3 -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('L3',
-                                                                   concat(col[@field=$Country], '/',
+                                                                   concat(col[contains(
+                                                                              document('../labels.xml')/labels/column[@name='Country']/match/text(),
+                                                                              concat('|', @field, '|'))], '/',
                                                                           col[@field='L1'], '/',
                                                                           col[@field='L2'], '/',
                                                                           col[@field='L3']))[1])]">
