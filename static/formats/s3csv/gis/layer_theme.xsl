@@ -11,6 +11,7 @@
          Description..........string..........Layer Description
          Date.................date............Layer Date
          Style................string..........Layer Style
+         Opacity..............double..........Layer Opacity
          Folder...............string..........Layer Folder
          Config...............string..........Configuration Name
          Enabled..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
@@ -56,6 +57,9 @@
             </xsl:if>
             <xsl:if test="col[@field='Date']!=''">
                 <data field="date"><xsl:value-of select="col[@field='Date']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Opacity']!=''">
+                <data field="opacity"><xsl:value-of select="col[@field='Opacity']"/></data>
             </xsl:if>
         </resource>
 

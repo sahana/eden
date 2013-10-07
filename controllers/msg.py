@@ -99,8 +99,60 @@ def message():
     )
 
     s3db.configure(tablename, listadd=False)
+
+
+    def postp(r, output):
+
+        rtable = r.table
+
+        s3_action_buttons(r)
+
+        s3.actions = \
+        s3.actions + [
+                      dict(label=str(T("Mark Sender")),
+                           _class="action-btn",
+                           url=URL(f="mark_sender",
+                                  args="[id]"))
+                     ]
+
+        return output
+
+    s3.postp = postp
+
     return s3_rest_controller()
 
+# =============================================================================
+def mark_sender():
+    """
+        Assign priority to the given sender
+    """
+
+    s3db = current.s3db
+    db = current.db
+
+    mid = request.args[0]
+    mtable = s3db.msg_message
+    stable = s3db.msg_sender
+
+    srecord = db(mtable.id == mid).select(mtable.from_address,
+                                          limitby=(0,1)).first()
+    sender = srecord.from_address
+
+    record = db(stable.sender == sender).select(stable.id,
+                                                limitby=(0, 1)).first()
+
+    if record:
+        args = "update"
+    else:
+        args = "create"
+
+    url = URL(f="sender",
+              args=args,
+              vars=dict(sender=sender))
+
+    redirect(url)
+
+    return
 # =============================================================================
 def log():
     """
@@ -200,15 +252,9 @@ def tropo():
         pass
 
 # =============================================================================
-def twitter_search():
-    """ Controller to modify Twitter search queries """
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def twitter_search_results():
+def twitter():
     """
-        Controller to view tweets from user saved search queries
+        Twitter RESTful Controller
 
         @ToDo: Action Button to update async
     """
@@ -226,7 +272,7 @@ def twitter_search_results():
         return True
     s3.prep = prep
 
-    s3db.configure("msg_twitter_search_results",
+    s3db.configure("msg_twitter",
                    insertable=False,
                    editable=False)
     return s3_rest_controller()
@@ -625,17 +671,14 @@ def twitter_search_query():
        for Twitter Search
     """
 
-    if not auth.s3_has_role(ADMIN):
-
-        session.error = UNAUTHORISED
-        redirect(URL(f="index"))
-
     tablename = "msg_twitter_search_query"
     table = s3db[tablename]
 
-    table.includeEntities.writable = False
     table.is_processed.writable = False
     table.is_searched.writable = False
+    table.is_processed.readable = False
+    table.is_searched.readable = False
+
     table.lang.requires = IS_IN_SET(settings.get_L10n_languages().keys())
     comment = "Add the keywords separated by single spaces."
     table.keywords.comment = DIV(_class="tooltip",
@@ -657,6 +700,17 @@ def twitter_search_query():
         )
 
     s3db.configure(tablename, listadd=True, deletable=True)
+
+    def prep(r):
+
+        table = s3db.msg_twitter_search_channel
+        if not db(table.id > 0).select(table.id,
+                                       limitby=(0, 1)).first():
+            session.error = T("Need to configure Twitter Authentication")
+            redirect(URL(f="twitter_search_channel"))
+        return True
+
+    s3.prep = prep
 
     def postp(r, output):
 
@@ -700,6 +754,19 @@ def twitter_search_query():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def process_keygraph():
+    """
+       Processes the result of the query with KeyGraph.
+    """
+
+    query_id = request.args[0]
+    # Process TwitterSearch async
+    s3task.async("msg_process_keygraph",
+                 args=[query_id])
+    redirect(URL(f="twitter_search_query"))
+    return
+
+# -----------------------------------------------------------------------------
 def search_tweet_query():
     """
        Searches for tweets using
@@ -712,6 +779,46 @@ def search_tweet_query():
                  args=[query_id])
     redirect(URL(f="twitter_search_query"))
     return
+
+# -----------------------------------------------------------------------------
+def sender():
+    """
+       RESTful CRUD controller for whitelisting senders.
+       User can assign priority to senders.
+    """
+
+    tablename = "msg_sender"
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_display = T("Whitelisted Senders"),
+        title_list = T("Whitelisted Senders"),
+        title_create = T("Whitelist a Sender"),
+        title_update = T("Edit Sender Priority"),
+        label_list_button = T("View Sender Priority"),
+        label_create_button = T("Add a Whitelisted Sender"),
+        msg_record_created = T("Sender Whitelisted"),
+        msg_record_deleted = T("Sender deleted"),
+        msg_list_empty = T("No Senders Whitelisted"),
+        msg_record_modified = T("Sender Priority updated")
+        )
+
+    s3db.configure(tablename, listadd=True)
+
+    def prep(r):
+
+        if r.method == "create":
+            dsender = request.vars['sender']
+            dpriority = request.vars['priority']
+            r.table.sender.default = dsender
+            r.table.priority.default = dpriority
+
+        return True
+
+    s3.prep = prep
+
+    return s3_rest_controller()
+
 # -----------------------------------------------------------------------------
 def twitter_result():
     """
@@ -993,12 +1100,6 @@ def twilio_inbound_channel():
 
 # -----------------------------------------------------------------------------
 def keyword():
-    """ REST Controller """
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def sender():
     """ REST Controller """
 
     return s3_rest_controller()
@@ -1393,6 +1494,38 @@ def inbox():
     s3db.configure(tablename, listadd=False)
 
     return s3_rest_controller(module, "message")
+
+# -----------------------------------------------------------------------------
+def twitter_inbox():
+    """
+        RESTful CRUD controller for the Twitter Inbox
+        - all Inbound Tweets (Directed Messages) go here
+    """
+
+    if not auth.s3_logged_in():
+        session.error = T("Requires Login!")
+        redirect(URL(c="default", f="user", args="login"))
+
+    ttable = s3db.msg_twitter
+    s3.filter = (ttable.inbound == True)
+
+    return s3_rest_controller(module, "twitter")
+
+# -----------------------------------------------------------------------------
+def twitter_outbox():
+    """
+        RESTful CRUD controller for the Twitter Outbox
+        - all sent Tweets go here
+    """
+
+    if not auth.s3_logged_in():
+        session.error = T("Requires Login!")
+        redirect(URL(c="default", f="user", args="login"))
+
+    ttable = s3db.msg_twitter
+    s3.filter = (ttable.inbound == True)
+
+    return s3_rest_controller(module, "twitter")
 
 # -----------------------------------------------------------------------------
 def email_inbox():
@@ -1971,5 +2104,86 @@ def poll_twilio_inbox():
     msg.twilio_poll(account_name = account_name)
 
     redirect(URL(f="twilio_inbox"))
+
+# =============================================================================
+# Enabled only for testing:
+def readKeyGraph(queryID):
+    """  """
+
+    import os
+    curpath = os.getcwd()
+
+    f = open("%s.txt" % queryID, "r")
+
+    topics = int(f.next())
+
+    nodelabel = {}
+    E = []
+    nodetopic = {}
+    for x in range(0, topics):
+        thisnodes = []
+        nodes = int(f.next().split("KEYGRAPH_NODES:")[1])
+        for y in range(0, nodes):
+            s = f.next()
+            nodeid = s.split(":")[0]
+            nodetopic[str(nodeid)] = x
+            l1 = s.split(":")[1]
+            l2 = s.split(":")[2]
+            try:
+                nodelabel[str(nodeid)] = unicode(l2.strip())
+            except:
+                pass
+        edges = int(f.next().split("KEYGRAPH_EDGES:")[1])
+        edges = edges / 2
+        for y in range(0,edges):
+            s = f.next()
+            n1 = s.split(" ")[0].strip()
+            n2 = s.split(" ")[1].strip()
+            if (n1 in nodelabel.keys()) and (n2 in nodelabel.keys()):
+                E.append((str(n1), str(n2)))
+
+        f.next()
+        f.next()
+
+    """
+    for x in range(0,len(E)):
+        lx = list(E[x])
+        lx.append((nodetopic[E[x][0]] - nodetopic[E[x][1]] + 3)*100)
+        E[x] = tuple(lx)
+    """
+    #import networkx as nx
+    from igraph import Graph, write_svg
+    #g = nx.Graph()
+    g = Graph()
+    g.add_vertices([ str(s) for s in nodelabel.keys()])
+    #g.add_nodes_from(nodelabel)
+    g.add_edges(E)
+    g.vs["name"] = nodelabel.values()
+    g.vs["label"] = g.vs["name"]
+    g.vs["doc_id"] = nodelabel.keys()
+    layout = g.layout_lgl()
+    #layout = g.layout_kamada_kawai()
+    visual_style = {}
+    visual_style["vertex_size"] = 20
+    #visual_style["vertex_color"] = [color_dict[gender] for gender in g.vs["gender"]]
+    visual_style["vertex_label"] = g.vs["name"]
+    #visual_style["edge_width"] = [1 + 2 * int(len(is_formal)) for is_formal in g.vs["label"]]
+    visual_style["layout"] = layout
+    visual_style["bbox"] = (2000, 2000)
+    visual_style["margin"] = 20
+    #plot(g, **visual_style)
+    #c =  g.clusters().subgraphs()
+    #print g.ecount()
+    filename = "%s.svg" % queryID
+    write_svg(g.community_fastgreedy().as_clustering().graph, layout=layout, **visual_style)
+    #plot(g.community_fastgreedy().as_clustering(), layout=layout)
+    #plot(g)
+    #g.add_weighted_edges_from(E)
+    #nx.relabel_nodes(g, nodelabel, copy=False)
+    #nx.draw(g, node_size=100, font_size=8, edge_size=10000)
+    #labels = nx.draw_networkx_labels(g,pos=nx.spring_layout(g),labels=nodelabel)
+    #import matplotlib.pyplot as plt
+    #plt.savefig('kg3.png', facecolor='w', edgecolor='w',orientation='portrait', papertype=None, format=None,transparent=False, bbox_inches=None, pad_inches=0.1)
+    #plt.show()
 
 # END ================================================================================

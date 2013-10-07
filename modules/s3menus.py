@@ -1446,11 +1446,9 @@ class S3OptionsMenu(object):
                     M("Twilio SMS InBox", f="twilio_inbox"),
                     M("Message Log", f="message"),
                     M("Outbox", f="outbox"),
-                    M("Search Twitter Tags", f="twitter_search")(
-                       M("Keywords", f="keyword"),
-                       M("Senders", f="sender"),
-                       M("Queries", f="twitter_search"),
-                       M("Results", f="twitter_search_results")
+                    M("Twitter", f="twitter_channel")(
+                       M("Twitter InBox", f="twitter_inbox"),
+                       M("Twitter Outbox", f="twitter_outbox"),
                     ),
                     M("Twitter Search", f="twitter_result")(
                        M("Twitter Settings", f="twitter_search_channel"),

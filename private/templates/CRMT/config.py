@@ -621,7 +621,9 @@ def customize_project_activity(**attr):
         tablename = "project_activity"
         table = s3db[tablename]
 
-        if r.method == "summary" or r.representation == "aadata":
+        method = r.method
+        representation = r.representation
+        if method == "summary" or representation == "aadata":
             # Modify list_fields
             list_fields = ["date",
                            "name",
@@ -636,16 +638,16 @@ def customize_project_activity(**attr):
                            list_fields = list_fields,
                            )
 
-        elif r.method == "report2":
+        elif method == "report2":
             s3db.project_activity_group.group_id.label = T("Coalition")
 
-        if r.interactive or r.representation == "json":
+        elif r.interactive or representation == "json" or representation == "plain":
             # CRUD Strings / Represent
             table.location_id.label = T("Address")
             table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
             s3db.project_activity_group.group_id.label = T("Coalition")
 
-            if r.method in ("summary", "report2"):
+            if method in ("summary", "report2"):
                 from s3.s3filter import S3OptionsFilter, S3DateFilter
                 filter_widgets = [S3OptionsFilter("activity_group.group_id",
                                                   label=T("Coalition"),
@@ -698,7 +700,7 @@ def customize_project_activity(**attr):
             else:
                 # Custom Form (Read/Create/Update)
                 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-                if r.method in ("create", "update"):
+                if method in ("create", "update"):
                     # Custom Widgets/Validators
                     widgets = True
                     from s3.s3validators import IS_ADD_PERSON_WIDGET2, IS_LOCATION_SELECTOR2
@@ -1118,7 +1120,9 @@ def customize_org_facility(**attr):
         tablename = "org_facility"
         table = s3db[tablename]
 
-        if r.method == "summary" or r.representation == "aadata":
+        method = r.method
+        representation = r.representation
+        if method == "summary" or representation == "aadata":
             # Modify list_fields
             list_fields = ["name",
                            (T("Type of Place"),"facility_type.name"),
@@ -1132,10 +1136,10 @@ def customize_org_facility(**attr):
                            list_fields=list_fields,
                            )
 
-        elif r.method == "report2":
+        elif method == "report2":
             s3db.org_site_org_group.group_id.label = T("Coalition")
 
-        if r.interactive or r.representation == "json":
+        if r.interactive or representation == "json":
             # CRUD Strings / Represent
             table.location_id.label = T("Address")
             table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
@@ -1156,7 +1160,7 @@ def customize_org_facility(**attr):
                 msg_record_deleted = T("Place removed"),
                 msg_list_empty = T("No Places currently recorded"))
 
-            if r.method in ("summary", "report2"):
+            if method in ("summary", "report2"):
                 from s3.s3filter import S3OptionsFilter
                 filter_widgets = [S3OptionsFilter("site_org_group.group_id",
                                                   label=T("Coalition"),
@@ -1209,7 +1213,7 @@ def customize_org_facility(**attr):
             else:
                 # Custom Form (Read/Create/Update)
                 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
-                if r.method in ("create", "update"):
+                if method in ("create", "update"):
                     # Custom Widgets/Validators
                     widgets = True
                     from s3.s3validators import IS_LOCATION_SELECTOR2
@@ -1273,12 +1277,13 @@ def customize_org_facility(**attr):
                                crud_form = crud_form,
                                )
 
-        elif r.representation == "plain" and \
-             r.method != "search":
+        elif representation == "plain" and \
+             method != "search":
             # Map Popups
             table.location_id.label = T("Address")
             table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
             table.organisation_id.comment = ""
+            s3db.org_site_org_group.group_id.label = T("Coalition")
             s3.crud_strings[tablename].title_display = T("Place Details")
             s3db.configure(tablename,
                            popup_url="",
@@ -1338,7 +1343,9 @@ def customize_stats_people(**attr):
         table.name.readable = False
         table.name.writable = False
 
-        if r.method == "summary" or r.representation == "aadata":
+        method = r.method
+        representation = r.representation
+        if method == "summary" or representation == "aadata":
             # Modify list_fields
             list_fields = ["id",
                            #"name",
@@ -1356,10 +1363,10 @@ def customize_stats_people(**attr):
 
             s3db.stats_people_group.group_id.label = T("Coalition")
 
-        elif r.method == "report2":
+        elif method == "report2":
             s3db.stats_people_group.group_id.label = T("Coalition")
 
-        if r.interactive or r.representation == "json":
+        if r.interactive or representation == "json": #or representation == "plain"
             # CRUD Strings / Represent
             #table.location_id.label = T("Address")
             #table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
@@ -1379,7 +1386,7 @@ def customize_stats_people(**attr):
                 msg_record_deleted = T("People removed"),
                 msg_list_empty = T("No People currently recorded"))
             
-            if r.method in ("summary", "report2"):
+            if method in ("summary", "report2"):
                 from s3.s3filter import S3OptionsFilter
                 filter_widgets = [S3OptionsFilter("people_group.group_id",
                                                   label=T("Coalition"),
@@ -1427,7 +1434,7 @@ def customize_stats_people(**attr):
             else:
                 # Custom Form (Read/Create/Update)
                 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-                if r.method in ("create", "update"):
+                if method in ("create", "update"):
                     # Custom Widgets/Validators
                     widgets = True
                     from s3.s3validators import IS_ADD_PERSON_WIDGET2, IS_LOCATION_SELECTOR2
@@ -1542,7 +1549,9 @@ def customize_vulnerability_evac_route(**attr):
         tablename = "vulnerability_evac_route"
         table = s3db[tablename]
 
-        if r.method == "summary" or r.representation == "aadata":
+        method = r.method
+        representation = r.representation
+        if method == "summary" or representation == "aadata":
             # Modify list_fields
             list_fields = ["id",
                            "name",
@@ -1556,16 +1565,16 @@ def customize_vulnerability_evac_route(**attr):
                            list_fields = list_fields,
                            )
 
-        elif r.method == "report2":
+        elif method == "report2":
             s3db.vulnerability_evac_route_group.group_id.label = T("Coalition")
 
-        if r.interactive or r.representation == "json":
+        if r.interactive or representation == "json" or representation == "plain":
             # CRUD Strings / Represent
             table.location_id.label = T("Address")
             table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
             s3db.vulnerability_evac_route_group.group_id.label = T("Coalition")
 
-            if r.method in ("summary", "report2"):
+            if method in ("summary", "report2"):
                 from s3.s3filter import S3OptionsFilter
                 filter_widgets = [S3OptionsFilter("evac_route_group.group_id",
                                                   label=T("Coalition"),
@@ -1612,7 +1621,7 @@ def customize_vulnerability_evac_route(**attr):
             else:
                 # Custom Form (Read/Create/Update)
                 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-                if r.method in ("create", "update"):
+                if method in ("create", "update"):
                     # Custom Widgets/Validators
                     from s3.s3validators import IS_LOCATION_SELECTOR2
                     from s3.s3widgets import S3LocationSelectorWidget2
@@ -1702,7 +1711,9 @@ def customize_vulnerability_risk(**attr):
         tablename = "vulnerability_risk"
         table = s3db[tablename]
 
-        if r.method == "summary" or r.representation == "aadata":
+        method = r.method
+        representation = r.representation
+        if method == "summary" or representation == "aadata":
             # Modify list_fields
             list_fields = ["id",
                            "name",
@@ -1716,10 +1727,10 @@ def customize_vulnerability_risk(**attr):
                            list_fields = list_fields,
                            )
 
-        elif r.method == "report2":
+        elif method == "report2":
             s3db.vulnerability_risk_group.group_id.label = T("Coalition")
 
-        if r.interactive or r.representation == "json":
+        if r.interactive or representation == "json" or representation == "plain":
             # CRUD Strings / Represent
             table.location_id.label = T("Address")
             table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
@@ -1740,7 +1751,7 @@ def customize_vulnerability_risk(**attr):
                 msg_record_deleted = T("Hazard removed"),
                 msg_list_empty = T("No Hazards currently recorded"))
             
-            if r.method in ("summary", "report2"):
+            if method in ("summary", "report2"):
                 # Not needed now that Risk data is moved to WMS
                 # Filter out data not associated with any Coalition
                 #from s3.s3resource import S3FieldSelector
@@ -1793,7 +1804,7 @@ def customize_vulnerability_risk(**attr):
             else:
                 # Custom Form (Read/Create/Update)
                 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-                if r.method in ("create", "update"):
+                if method in ("create", "update"):
                     # Custom Widgets/Validators
                     from s3.s3validators import IS_LOCATION_SELECTOR2
                     from s3.s3widgets import S3LocationSelectorWidget2
@@ -1857,6 +1868,63 @@ def customize_vulnerability_risk(**attr):
     return attr
 
 settings.ui.customize_vulnerability_risk = customize_vulnerability_risk
+
+#-----------------------------------------------------------------------------
+# Saved Maps
+#-----------------------------------------------------------------------------
+def customize_gis_config(**attr):
+    """
+        Customize gis_config controller
+    """
+
+    # Custom PreP
+    s3 = current.response.s3
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+
+        if r.interactive:
+            auth = current.auth
+            coalition = auth.user.org_group_id
+            if not coalition:
+                return True
+
+            db = current.db
+            s3db = current.s3db
+            utable = db.auth_user
+            ltable = s3db.pr_person_user
+            table = s3db.gis_config
+            query = (table.deleted == False) & \
+                    (table.pe_id == ltable.pe_id) & \
+                    (ltable.user_id == utable.id) & \
+                    (utable.org_group_id == coalition)
+            rows = db(query).select(ltable.pe_id,
+                                    distinct=True)
+            if rows:
+                coalition_pe_ids = ",".join([str(row.pe_id) for row in rows])
+                from s3.s3filter import S3OptionsFilter
+                filter_widgets = [
+                    S3OptionsFilter("pe_id",
+                                    label = "",
+                                    options = {"*": T("All"),
+                                               coalition_pe_ids: T("My Coalition's Maps"),
+                                               auth.user.pe_id: T("My Maps"),
+                                               },
+                                    multiple = False,
+                                    )
+                    ]
+                s3db.configure("gis_config",
+                               filter_widgets = filter_widgets,
+                               )
+
+        return True
+    s3.prep = custom_prep
+
+    return attr
+
+settings.ui.customize_gis_config = customize_gis_config
 
 #-----------------------------------------------------------------------------
 # Site Activity Log

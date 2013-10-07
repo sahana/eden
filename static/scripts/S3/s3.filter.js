@@ -181,18 +181,18 @@ S3.search = {};
                 if (values) {
                     if (values instanceof Array) {
                         // multiple=True
-                        var v;
-                        for (i=0; i < values.length; i++) {
-                            v = quoteValue(values[i]);
-                            if (value === '') {
-                                value = v;
-                            } else {
-                                value = value + ',' + v;
-                            }
-                        }
                     } else {
-                        // multiple=False
-                        value = quoteValue(values);
+                        // multiple=False, but a single option may contain multiple
+                        values = values.split(',');
+                    }
+                    var v;
+                    for (i=0; i < values.length; i++) {
+                        v = quoteValue(values[i]);
+                        if (value === '') {
+                            value = v;
+                        } else {
+                            value = value + ',' + v;
+                        }
                     }
                 }
             } else {

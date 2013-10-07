@@ -3138,13 +3138,14 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var popup = new OpenLayers.Popup.FramedCloud(
             popup_id,
             centerPoint,
-            new OpenLayers.Size(200, 200),
+            new OpenLayers.Size(400, 400),
             contents,
-            null,
-            true,
-            onPopupClose
+            null,        // anchor
+            true,        // closeBox
+            onPopupClose // closeBoxCallback
         );
-        popup.disableFirefoxOverflowHack = true;
+        //popup.disableFirefoxOverflowHack = true; // Still needed
+        //popup.keepInMap = false; // Not working
         if (undefined != popup_url) {
             // call AJAX to get the contentHTML
             loadDetails(popup_url, popup_id + '_contentDiv', popup);
@@ -5235,7 +5236,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 if (undefined != elem.fillOpacity) {
                     fillOpacity = elem.fillOpacity;
                 } else {
-                    fillOpacity = 1;
+                    fillOpacity = opacity;
                 }
                 if (undefined != elem.strokeOpacity) {
                     strokeOpacity = elem.strokeOpacity;

@@ -558,9 +558,10 @@ def track_movement():
         if r.interactive:
             if "viewing" in request.vars:
                 dummy, item_id = request.vars.viewing.split(".")
-                filter = (table.send_inv_item_id == item_id ) | \
+                if item_id != "None":
+                    filter = (table.send_inv_item_id == item_id ) | \
                          (table.recv_inv_item_id == item_id)
-                s3.filter = filter
+                    s3.filter = filter
         return True
     s3.prep = prep
 
