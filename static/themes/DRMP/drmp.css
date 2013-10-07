@@ -47,8 +47,11 @@ a.brand img{
     /* Hide the colon */
     display: none;
 }
+
 /* Adjust Field Widths to match Titles/Data */
-#sub_human_resourcehuman_resource_human_resourcehuman_resource_i_organisation_id_edit_none,
+#sub_human_resourcehuman_resource_human_resourcehuman_resource_i_organisation_id_edit_none {
+    width: 140px !important;
+}
 #sub_human_resourcehuman_resource_human_resourcehuman_resource_i_organisation_id_edit_0 {
     width: 250px;
 }
@@ -83,7 +86,7 @@ a.brand img{
 }
 
 #project_project_objectives{
-	height: 100px;
+    height: 100px;
 }
  
 #sub_donororganisation_donororganisation_i_amount_edit_none {
@@ -117,6 +120,7 @@ a.brand img{
     top: -13px;
     
 }
+
 /* Adjust Field Widths to match Titles/Data */
 
 #project_project_human_resource_id_organisation_id,
@@ -128,7 +132,7 @@ a.brand img{
 }
 
 #sub_donororganisation_donororganisation_i_organisation_id_edit_none {
-	width: 150px;
+    width: 150px;
 }
 
 #sub_donororganisation_donororganisation_i_amount_edit_none,
@@ -169,23 +173,10 @@ a.brand img{
     display: none;
 }
 
+/* Subscriptions Page */
 #subscription-form.form-horizontal {
     border: 1px solid #b2b2b2;
     width: 400px;
     margin-left: auto;
     margin-right: auto;
 }
-
-#cms_post_location_id_map_wrapper {
-	width: 450px;
-	margin-left: 50px!important;
-}
-
-form.form-horizontal.cms_post {
-	margin-left: 0px!important;
-}
-
-#sub_human_resourcehuman_resource_human_resourcehuman_resource_i_organisation_id_edit_none {
-	width: 140px!important;
-}
-

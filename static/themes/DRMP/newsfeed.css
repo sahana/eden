@@ -131,24 +131,15 @@ a.card-organisation {
     height: 100px;
 }
 
+form.form-horizontal.cms_post {
+	margin-left: 0 !important;
+}
+
 /* Hide the colons for Location Selectors before JS can hide */
 .form-container #cms_post_location_id__label {
     display: none;
 }
 
-#body__error,
-#name__error,
-#location_id__error {
-    width: 50%;
-    padding: 5px;
-    border-radius: 4px;
-    border: 1px solid #b2b2b2;
-    font-weight: normal;
-    font-style: normal;
-    color: #b84947;
-    background-color: #f2dedd;
-    margin-top: 7px;
-}
 div.defaultlocation_error.error{
     padding: 5px;
     border-radius: 4px;
@@ -158,6 +149,11 @@ div.defaultlocation_error.error{
     color: #b84947;
     background-color: #f2dedd;
     margin-top: 7px;
+}
+
+#cms_post_location_id_map_wrapper {
+	width: 450px;
+	margin-left: 50px !important;
 }
 
 #cms_post_date {
