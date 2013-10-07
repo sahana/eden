@@ -493,7 +493,7 @@ def vol_service_record(r, **attr):
         logo = org.logo
         if logo:
             logo = s3db.org_organisation_logo(org)
-        else:
+        elif current.deployment_settings.get_org_branches():
             root_org = current.cache.ram(
                 # Common key with auth.root_org
                 "root_org_%s" % org_id,
