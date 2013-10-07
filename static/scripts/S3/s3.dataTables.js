@@ -992,7 +992,7 @@
                                     label = '<img src="' + Actions[i].icon + '" alt="' + label + '" title="' + label + '">';
                                 }
                                 var url = Actions[i].url.replace(re, action_id);
-                                Buttons = Buttons + '<a db_id="'+ action_id +'" class="'+ c + '" href="' + url + '">' + label + '</a>' + '&nbsp;';
+                                Buttons = Buttons + '<a db_id="'+ action_id + '" class="' + c + '" href="' + url + '" title="' + label + '">' + label + '</a>' + '&nbsp;';
                             }
                         } // end of loop through for each row Action for this table
                     } // end of if there are to be Row Actions for this table

@@ -75,7 +75,7 @@ def human_resource():
                     s3.actions.append({
                         "url": URL(f="compose",
                                    vars = {"human_resource.id": "[id]"}),
-                        "_class": "action-btn",
+                        "_class": "action-btn send",
                         "label": str(T("Send Message"))})
         elif r.representation == "plain" and \
              r.method !="search":
@@ -253,7 +253,7 @@ def volunteer():
                     s3.actions.append({
                             "url": URL(f="compose",
                                        vars = {"human_resource.id": "[id]"}),
-                            "_class": "action-btn",
+                            "_class": "action-btn send",
                             "label": str(T("Send Message"))
                         })
                 if settings.get_hrm_vol_experience() == "programme" and \
