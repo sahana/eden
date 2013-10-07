@@ -25,6 +25,7 @@ from tests.project import *
 from tests.staff import *
 from tests.volunteer import *
 from tests.helpers import *
+from tests.event import *
 
 def loadAllTests():
 

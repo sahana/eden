@@ -11,5 +11,5 @@
 from gluon import current
 
 current.selenium_tests = ["SearchStaff",
-                          "CreateProject",
+                          "CreateProject"
                           ]
