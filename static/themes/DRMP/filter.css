@@ -23,7 +23,7 @@ input.btn.btn-primary.filter-submit.filter-ajax {
 /* Responsive styling */
 input.filter-search{
     width: 50%;
-    text-align: center;
+    text-align: left;
 }
 
 /* Large desktop */
