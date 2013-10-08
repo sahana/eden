@@ -30,6 +30,7 @@
 """
 
 import collections
+import copy
 import datetime
 import os
 import re
@@ -93,36 +94,54 @@ def s3_dev_toolbar():
         Shows useful stuff at the bottom of the page in Debug mode
     """
 
-    try:
-        # New web2py
-        from gluon.dal import THREAD_LOCAL
-    except:
-        # Old web2py
-        from gluon.dal import thread as THREAD_LOCAL
+    from gluon.dal import DAL
     from gluon.utils import web2py_uuid
 
+    #admin = URL("admin", "default", "design", extension="html",
+    #            args=current.request.application)
     BUTTON = TAG.button
 
-    if hasattr(THREAD_LOCAL, "instances"):
-        dbstats = [TABLE(*[TR(PRE(row[0]),
-                           "%.2fms" % (row[1]*1000)) \
-                           for row in i.db._timings]) \
-                         for i in THREAD_LOCAL.instances]
-    else:
-        dbstats = [] # if no db or on GAE
+    dbstats = []
+    dbtables = {}
+    infos = DAL.get_instances()
+    for k, v in infos.iteritems():
+        dbstats.append(TABLE(*[TR(PRE(row[0]), "%.2fms" %
+                                      (row[1] * 1000))
+                                       for row in v["dbstats"]]))
+        dbtables[k] = dict(defined=v["dbtables"]["defined"] or "[no defined tables]",
+                           lazy=v["dbtables"]["lazy"] or "[no lazy tables]")
+
     u = web2py_uuid()
+    backtotop = A("Back to top", _href="#totop-%s" % u)
+    # Convert lazy request.vars from property to Storage so they
+    # will be displayed in the toolbar.
+    request = copy.copy(current.request)
+    request.update(vars=current.request.vars,
+                   get_vars=current.request.get_vars,
+                   post_vars=current.request.post_vars)
     return DIV(
-        BUTTON("request", _onclick="$('#request-%s').slideToggle()" % u),
-        DIV(BEAUTIFY(current.request), _class="dbg_hidden", _id="request-%s" % u),
-        BUTTON("session", _onclick="$('#session-%s').slideToggle()" % u),
-        DIV(BEAUTIFY(current.session), _class="dbg_hidden", _id="session-%s" % u),
-        # Disabled response as it breaks S3SearchLocationWidget
-        #BUTTON("response", _onclick="$('#response-%s').slideToggle()" % u),
-        #DIV(BEAUTIFY(current.response), _class="dbg_hidden", _id="response-%s" % u),
-        BUTTON("db stats", _onclick="$('#db-stats-%s').slideToggle()" % u),
-        DIV(BEAUTIFY(dbstats), _class="dbg_hidden", _id="db-stats-%s" % u),
-        SCRIPT("$('.dbg_hidden').hide()")
-        )
+        #BUTTON("design", _onclick="document.location='%s'" % admin),
+        BUTTON("request",
+               _onclick="jQuery('#request-%s').slideToggle().removeClass('hide')" % u),
+        BUTTON("response",
+               _onclick="jQuery('#response-%s').slideToggle().removeClass('hide')" % u),
+        BUTTON("session",
+               _onclick="jQuery('#session-%s').slideToggle().removeClass('hide')" % u),
+        BUTTON("db tables",
+               _onclick="jQuery('#db-tables-%s').slideToggle().removeClass('hide')" % u),
+        BUTTON("db stats",
+               _onclick="jQuery('#db-stats-%s').slideToggle().removeClass('hide')" % u),
+        DIV(BEAUTIFY(request), backtotop,
+            _class="hide", _id="request-%s" % u),
+        DIV(BEAUTIFY(current.session), backtotop,
+            _class="hide", _id="session-%s" % u),
+        DIV(BEAUTIFY(current.response), backtotop,
+            _class="hide", _id="response-%s" % u),
+        DIV(BEAUTIFY(dbtables), backtotop, _class="hide",
+            _id="db-tables-%s" % u),
+        DIV(BEAUTIFY(dbstats), backtotop, _class="hide", _id="db-stats-%s" % u),
+        SCRIPT("jQuery('.hidden').hide()"), _id="totop-%s" % u
+    )
 
 # =============================================================================
 def s3_mark_required(fields,
