@@ -127,7 +127,7 @@ def incident():
                     if "msg" in settings.modules:
                         s3.crud.action_button(url = URL(f="compose",
                                                         vars = {"hrm_id": "[id]"}),
-                                              _class = "action-btn",
+                                              _class = "action-btn send",
                                               label = str(T("Send Notification")))
         return output
     s3.postp = postp

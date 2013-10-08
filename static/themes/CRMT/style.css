@@ -11,6 +11,10 @@ body {
 .gis_fullscreen_map-btn {
     display: none;
 }
+/* Hide the large legend for the Floods layer */
+.map_legend_div {
+    max-width: 400px;
+}
 
 /* Saved Maps */
 #config-gis_config_pe_id-options-filter__row .s3-groupedopts-widget td {

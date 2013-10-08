@@ -234,6 +234,8 @@ div.more_profile {
     color: #888787;
     padding-top: 7px;
     padding-bottom: 4px;
+    width: 102%;
+    margin-left: 0;
 }
 
 .card-header-select span a.media-heading {
@@ -244,7 +246,7 @@ div.more_profile {
 
 .card-header-select span a.media-heading:hover{
     color: #0187cc;
-    text-decoration: none;
+    text-decoration: underline;
 }
 
 .card-header-select span.date-title {

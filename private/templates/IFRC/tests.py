@@ -44,5 +44,6 @@ current.selenium_tests = ["CreateOrganisation",
                           "CreateMember",
                           "SearchMember",
                           "ReportTestHelper",
-                          "CreateFacility"
+                          "CreateFacility",
+                          "CreateEvent"
                           ]

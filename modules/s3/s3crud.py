@@ -2283,12 +2283,17 @@ class S3CRUD(S3Method):
             s3crud.action_button(labels.UPDATE, update_url,
                                  # To use modals
                                  #_class="action-btn s3_modal"
+                                 _class="action-btn edit"
                                  )
         else:
             if not read_url:
                 read_url = URL(args = args,
                                vars = get_vars)
-            s3crud.action_button(labels.READ, read_url)
+            s3crud.action_button(labels.READ, read_url,
+                                 # To use modals
+                                 #_class="action-btn s3_modal"
+                                 _class="action-btn read"
+                                 )
 
         # Delete-action
         if deletable and has_permission("delete", table):

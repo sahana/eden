@@ -3951,7 +3951,7 @@ def org_organisation_controller():
                             S3SearchOptionsWidget(
                                 name="org_search_sector",
                                 label=SECTOR,
-                                field="sector.name",
+                                field="sector_organisation.sector_id",
                                 options=s3db.org_sector_opts,
                                 cols=3
                             ),

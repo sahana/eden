@@ -4429,6 +4429,8 @@ S3OptionsFilter({
         org_id = self.user.organisation_id
         if not org_id:
             return None
+        if not current.deployment_settings.get_org_branches():
+            return org_id
         return current.cache.ram(
                     # Common key for all users of this org & vol_service_record()
                     "root_org_%s" % org_id,

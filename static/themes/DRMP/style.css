@@ -77,7 +77,6 @@ textarea[class*="span"] {
 /* Web2Py styles Inputs as x-large, which don't match other form inputs */
 .input-xlarge {
     -moz-box-sizing: inherit;
-    min-height: inherit;
     width: 206px;
     padding: 4px;
 }
@@ -173,6 +172,7 @@ div.dl {
     -moz-box-shadow: 0 1px 1px #aaaaa7;
     -webkit-box-shadow: 0 1px 1px #aaaaa7;
     box-shadow: 0 1px 1px #aaaaa7;
+    margin-top: -22px;
 }
 
 a.btn.btn-primary.main-add {
@@ -805,11 +805,31 @@ label.ui-corner-all span {
     background-color: #f2dedd;
 }
 
+#acronym__error,
+#body__error,
+#name__error,
+#location_id__error {
+	padding: 5px;
+	border-radius: 4px;
+	width: 250px;
+	border: 1px solid #b2b2b2;
+	font-weight: normal;
+	font-style: normal;
+	color: #b84947;
+	background-color: #f2dedd;
+    margin-top: 7px;
+}
+
+#location_id__error{
+    margin-left: 170px;
+    width: 277px !important;
+}
+
 #submit_record__row td.w2p_fw input.btn.btn-primary {
     margin-right: 30px;
-    margin-left: 1px;
     width: auto;
-    margin-bottom: 11px;
+    margin-bottom: 1px;
+    margin-left: 19px;
 }
 a#register-btn.action-lnk {
     margin-left: -1px;
