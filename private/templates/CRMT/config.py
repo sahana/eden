@@ -959,8 +959,6 @@ def customize_org_organisation(**attr):
                         "human_resource",
                         label = T("Organization's Contacts"),
                         fields = hr_fields,
-                        #filterby = dict(field = "site_id",
-                        #                options = [list_of_site_ids_for_this_org]),
                     ),
                     S3SQLInlineComponent(
                         "resource",

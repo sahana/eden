@@ -2115,17 +2115,19 @@ class GIS(object):
             query = (ftable.controller == controller) & \
                     (ftable.function == function)
 
-            layers = db(query).select(ftable.trackable,
+            layers = db(query).select(ftable.style_default,
+                                      ftable.trackable,
                                       ftable.polygons,
                                       ftable.popup_label,
                                       ftable.popup_fields,
                                       ftable.attr_fields,
                                       )
             if len(layers) > 1:
-                # We can't provide details for the whole layer, but need to do a per-record check
-                # Suggest creating separate controllers to avoid this problem
-                return None
-            elif layers:
+                layers.exclude(lambda row: row.style_default == False)
+                if len(layers) > 1:
+                    # We can't provide details for the whole layer, but need to do a per-record check
+                    return None
+            if layers:
                 layer = layers.first()
 
         if layer:

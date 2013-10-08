@@ -2446,14 +2446,6 @@ class S3FeatureLayerModel(S3Model):
                                   self.super_link("layer_id", "gis_layer_entity"),
                                   name_field()(),
                                   desc_field()(),
-                                  Field("trackable", "boolean",
-                                        label = T("Trackable"),
-                                        represent = s3_yes_no_represent,
-                                        default = False,
-                                        comment = DIV(_class="tooltip",
-                                                      _title="%s|%s" % (T("Trackable"),
-                                                                        T("Whether the resource should be tracked using S3Track rather than just using the Base Location"))),
-                                        ),
                                   # REST Query added to Map JS to call back to server
                                   Field("controller",
                                         requires = IS_NOT_EMPTY(),
@@ -2483,6 +2475,7 @@ class S3FeatureLayerModel(S3Model):
                                                     _title="%s|%s" % (T("Popup Label"),
                                                                       T("Used in onHover Tooltip & Cluster Popups to differentiate between types."))),
                                         ),
+                                  # @ToDo: Build Popups from Attributes & Format to avoid duplication
                                   Field("popup_fields", "list:string",
                                         default = "name",
                                         label = T("Popup Fields"),
@@ -2496,6 +2489,26 @@ class S3FeatureLayerModel(S3Model):
                                                       _title="%s|%s" % (T("Attributes"),
                                                                         T("Used to populate feature attributes which can be used for Styling."))),
                                         ),
+                                  Field("style_default", "boolean",
+                                        default=False,
+                                        label=T("Default"),
+                                        represent = s3_yes_no_represent,
+                                        comment = DIV(_class="tooltip",
+                                                      _title="%s|%s" % (T("Default"),
+                                                                        T("Whether calls to this resource should use this configuration as the default one"))),
+                                        ),
+                                  Field("polygons", "boolean",
+                                        default=False,
+                                        represent = s3_yes_no_represent,
+                                        label=T("Display Polygons?")),
+                                  Field("trackable", "boolean",
+                                        label = T("Trackable"),
+                                        represent = s3_yes_no_represent,
+                                        default = False,
+                                        comment = DIV(_class="tooltip",
+                                                      _title="%s|%s" % (T("Trackable"),
+                                                                        T("Whether the resource should be tracked using S3Track rather than just using the Base Location"))),
+                                        ),
                                   Field("use_site", "boolean",
                                         default = False,
                                         label = T("Use Site?"),
@@ -2504,9 +2517,6 @@ class S3FeatureLayerModel(S3Model):
                                                                         T("Select this if you need this resource to be mapped from site_id instead of location_id."))),
                                         ),
                                   gis_layer_folder()(),
-                                  Field("polygons", "boolean", default=False,
-                                        represent = s3_yes_no_represent,
-                                        label=T("Display Polygons?")),
                                   gis_opacity()(),
                                   gis_refresh()(),
                                   cluster_attribute()(),
@@ -2534,20 +2544,20 @@ class S3FeatureLayerModel(S3Model):
             msg_list_empty = T("No Feature Layers currently defined"))
 
         self.configure(tablename,
-                        onaccept=gis_layer_onaccept,
-                        super_entity="gis_layer_entity",
-                        deduplicate=self.gis_layer_feature_deduplicate,
-                        list_fields=["id",
-                                     "name",
-                                     "description",
-                                     "controller",
-                                     "function",
-                                     "filter",
-                                     "attr_fields",
-                                     "dir",
-                                     "trackable",
-                                     "polygons",
-                                     ])
+                       onaccept=self.gis_layer_feature_onaccept,
+                       super_entity="gis_layer_entity",
+                       deduplicate=self.gis_layer_feature_deduplicate,
+                       list_fields=["id",
+                                    "name",
+                                    "description",
+                                    "controller",
+                                    "function",
+                                    "filter",
+                                    "attr_fields",
+                                    "dir",
+                                    "trackable",
+                                    "polygons",
+                                    ])
 
         # Components
         # Configs
@@ -2572,6 +2582,32 @@ class S3FeatureLayerModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_layer_feature_onaccept(form):
+        """
+            Ensure that only a single layer for each controller/function
+            is set as Default
+        """
+
+        id = form.vars.id
+        vars = form.vars
+        c = vars.get("controller", None)
+        f = vars.get("function", None)
+        default = vars.get("style_default", None)
+        if default and c and f and id:
+            # Ensure no other records for this controller/function are marked
+            # as default
+            db = current.db
+            table = db.gis_layer_feature
+            query = (table.controller == c) & \
+                    (table.function == f) & \
+                    (table.id != id)
+            db(query).update(style_default=False)
+
+        # Normal Layer onaccept
+        gis_layer_onaccept(form)
 
     # -------------------------------------------------------------------------
     @staticmethod

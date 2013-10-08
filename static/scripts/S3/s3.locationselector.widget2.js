@@ -91,7 +91,7 @@
             lx_select(fieldname, 0, L0);
         } else {
             // Show the Country row
-            L0_row.show();
+            L0_row.removeClass('hide').show();
             // Populate with values
             var values = [];
             for (var i in l) {
@@ -129,7 +129,7 @@
         // Show Address/Postcode Rows
         showAddress(fieldname);
         // Show Map icon
-        map_icon_row.show();
+        map_icon_row.removeClass('hide').show();
 
         var lat = $(selector + '_lat').val();
         var lon = $(selector + '_lon').val();
@@ -252,7 +252,7 @@
             level += 1;
             var dropdown = $(selector + '_L' + level + '__row');
             if (dropdown.length) {
-                dropdown.show();
+                dropdown.removeClass('hide').show();
                 // Do we need to read hierarchy?
                 var read = true; 
                 for (var i in l) {
@@ -355,7 +355,7 @@
 
         // Show Throbber
         var throbber = $(selector + '_L' + level + '__throbber');
-        throbber.show();
+        throbber.removeClass('hide').show();
 
         // Download Location Data
         var url = S3.Ap.concat('/gis/ldata/' + id);
@@ -373,7 +373,7 @@
                 // Hide Throbber
                 throbber.hide();
                 // Show dropdown
-                dropdown.show();
+                dropdown.removeClass('hide').show();
             },
             error: function(request, status, error) {
                 if (error == 'UNAUTHORIZED') {
@@ -388,7 +388,7 @@
                 // Hide Throbber
                 throbber.hide();
                 // Show dropdown
-                dropdown.show();
+                dropdown.removeClass('hide').show();
             }
         });
     }
@@ -453,8 +453,8 @@
         var selector = '#' + fieldname;
 
         // Display the rows
-        $(selector + '_address__row').show();
-        $(selector + '_postcode__row').show();
+        $(selector + '_address__row').removeClass('hide').show();
+        $(selector + '_postcode__row').removeClass('hide').show();
 
         var geocode_button = $(selector + '_geocode button');
         if (geocode_button.length) {
@@ -691,6 +691,31 @@
     }
 
     /**
+     * Check that Map JS is Loaded
+     * - used if a tab containing a Map is unhidden
+     */
+    var jsLoaded = function() {
+        var dfd = new jQuery.Deferred();
+
+        // Test every half-second
+        setTimeout(function working() {
+            if (S3.gis.maps != undefined) {
+                dfd.resolve('loaded');
+            } else if (dfd.state() === 'pending') {
+                // Notify progress
+                dfd.notify('waiting for JS to load...');
+                // Loop
+                setTimeout(working, 500);
+            } else {
+                // Failed!?
+            }
+        }, 1);
+
+        // Return the Promise so caller can't change the Deferred
+        return dfd.promise();
+    };
+
+    /**
      * Show the Map
      * - this doesn't imply that a specific location is to be created
      * - that only happens if a Point is created on the Map
@@ -705,88 +730,102 @@
         });
 
         // Show the Map
-        $(selector + '_map_wrapper').show();
+        $(selector + '_map_wrapper').removeClass('hide').show();
 
-        var map_id = 'location_selector_' + fieldname;
-        var gis = S3.gis;
-        if (!gis.maps || !gis.maps[map_id]) {
-            // Instantiate the Map as we couldn't do it when DIV is hidden
-            var map = gis.show_map(map_id);
+        // Check if Maps JS is Loaded
+        $.when(jsLoaded()).then(
+            function(status) {
+                // Success: Instantiate Maps
+                var map_id = 'location_selector_' + fieldname;
+                var gis = S3.gis;
+                if (!gis.maps[map_id]) {
+                    // Instantiate the Map as we couldn't do it when DIV is hidden
+                    var map = gis.show_map(map_id);
 
-            var real_input = $(selector);
-            var parent_input = $(selector + '_parent');
-            // Zoom to the appropriate bounds
-            var id = lookupParent(fieldname);
-            if (!id) {
-                // Use default bounds
-                id = 'd';
-            }
-            zoomMap(fieldname, id);
-
-            var latfield = $(selector + '_lat');
-            var lonfield = $(selector + '_lon');
-            var wktfield = $(selector + '_wkt');
-            var lat = latfield.val();
-            var lon = lonfield.val();
-            var wkt = wktfield.val();
-            if (lat || lon || wkt) {
-                // Display feature
-                if (wkt != undefined) {
-                    var in_options = {
-                        'internalProjection': map.getProjectionObject(),
-                        'externalProjection': gis.proj4326
-                        };
-                    var feature = new OpenLayers.Format.WKT(in_options).read(wkt);
-                } else {
-                    var geometry = new OpenLayers.Geometry.Point(parseFloat(lon), parseFloat(lat));
-                    geometry.transform(gis.proj4326, map.getProjectionObject());
-                    var feature = new OpenLayers.Feature.Vector(geometry);
-                }
-                map.s3.draftLayer.addFeatures([feature]);
-                // Update the Hidden Fields
-                resetHidden(fieldname);
-            }
-            // Watch for new features being selected, so that we can store the Lat/Lon/WKT
-            var control;
-            var controls = map.controls;
-            for (var i=0, len=controls.length; i < len; i++) {
-                if (controls[i].CLASS_NAME == 'OpenLayers.Control.DrawFeature') {
-                    control = controls[i];
-                    break;
-                }
-            }
-            if (control) {
-                var pointPlaced = function(event) {
-                    // Hide any Geocoder messages
-                    $(selector + '_geocode .geocode_fail').hide();
-                    $(selector + '_geocode .geocode_success').hide();
-                    // Update the Form fields
-                    var geometry = event.feature.geometry;
-                    if (geometry.CLASS_NAME == 'OpenLayers.Geometry.Point') {
-                        var centerPoint = geometry.getBounds().getCenterLonLat();
-                        centerPoint.transform(map.getProjectionObject(), gis.proj4326);
-                        latfield.val(centerPoint.lat);
-                        lonfield.val(centerPoint.lon);
-                        // Store the fact that we've now added Marker manually
-                        real_input.data('manually_geocoded', true);
-                        //if (!$(selector + '_address').val()) {
-                        // Reverse Geocode the Point
-                        geocode_r(fieldname);
-                        //}
-                    } else {
-                        // Polygon
-                        var WKT = geometry.transform(map.getProjectionObject(), gis.proj4326).toString();
-                        wktfield.val(WKT);
+                    var real_input = $(selector);
+                    var parent_input = $(selector + '_parent');
+                    // Zoom to the appropriate bounds
+                    var id = lookupParent(fieldname);
+                    if (!id) {
+                        // Use default bounds
+                        id = 'd';
                     }
-                    // Update the Hidden Fields
-                    resetHidden(fieldname);
+                    zoomMap(fieldname, id);
+
+                    var latfield = $(selector + '_lat');
+                    var lonfield = $(selector + '_lon');
+                    var wktfield = $(selector + '_wkt');
+                    var lat = latfield.val();
+                    var lon = lonfield.val();
+                    var wkt = wktfield.val();
+                    if (lat || lon || wkt) {
+                        // Display feature
+                        if (wkt != undefined) {
+                            var in_options = {
+                                'internalProjection': map.getProjectionObject(),
+                                'externalProjection': gis.proj4326
+                                };
+                            var feature = new OpenLayers.Format.WKT(in_options).read(wkt);
+                        } else {
+                            var geometry = new OpenLayers.Geometry.Point(parseFloat(lon), parseFloat(lat));
+                            geometry.transform(gis.proj4326, map.getProjectionObject());
+                            var feature = new OpenLayers.Feature.Vector(geometry);
+                        }
+                        map.s3.draftLayer.addFeatures([feature]);
+                        // Update the Hidden Fields
+                        resetHidden(fieldname);
+                    }
+                    // Watch for new features being selected, so that we can store the Lat/Lon/WKT
+                    var control;
+                    var controls = map.controls;
+                    for (var i=0, len=controls.length; i < len; i++) {
+                        if (controls[i].CLASS_NAME == 'OpenLayers.Control.DrawFeature') {
+                            control = controls[i];
+                            break;
+                        }
+                    }
+                    if (control) {
+                        var pointPlaced = function(event) {
+                            // Hide any Geocoder messages
+                            $(selector + '_geocode .geocode_fail').hide();
+                            $(selector + '_geocode .geocode_success').hide();
+                            // Update the Form fields
+                            var geometry = event.feature.geometry;
+                            if (geometry.CLASS_NAME == 'OpenLayers.Geometry.Point') {
+                                var centerPoint = geometry.getBounds().getCenterLonLat();
+                                centerPoint.transform(map.getProjectionObject(), gis.proj4326);
+                                latfield.val(centerPoint.lat);
+                                lonfield.val(centerPoint.lon);
+                                // Store the fact that we've now added Marker manually
+                                real_input.data('manually_geocoded', true);
+                                //if (!$(selector + '_address').val()) {
+                                // Reverse Geocode the Point
+                                geocode_r(fieldname);
+                                //}
+                            } else {
+                                // Polygon
+                                var WKT = geometry.transform(map.getProjectionObject(), gis.proj4326).toString();
+                                wktfield.val(WKT);
+                            }
+                            // Update the Hidden Fields
+                            resetHidden(fieldname);
+                        }
+                        control.events.register('featureadded', null, pointPlaced);
+                    }
+                } else {
+                    // Map already instantiated
+                    //var map = gis.maps[map_id];
                 }
-                control.events.register('featureadded', null, pointPlaced);
+            },
+            function(status) {
+                // Failed
+                s3_debug(status);
+            },
+            function(status) {
+                // Progress
+                s3_debug(status);
             }
-        } else {
-            // Map already instantiated
-            //var map = gis.maps[map_id];
-        }
+        );
     }
 
     /**

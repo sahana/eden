@@ -18,9 +18,10 @@
          Popup Fields.........comma-sep list..Layer Popup Fields (Fields to build feature OnHover tooltip)
          Attributes...........comma-sep list..Layer Attributes (Fields to put in feature attributes to be visible to Styler)
          Filter...............string..........Layer Filter
-         Site.................boolean.........Layer Site (use Site for location)
-         Trackable............boolean.........Layer Trackable
+         Default..............boolean.........Layer Default
          Polygons.............boolean.........Layer Polygons
+         Trackable............boolean.........Layer Trackable
+         Site.................boolean.........Layer Site (use Site for location)
          Style................string..........Layer Style
          Folder...............string..........Layer Folder
          Config...............string..........Configuration Name
@@ -135,14 +136,17 @@
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$Layer"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
-            <xsl:if test="col[@field='Site']">
-                <data field="use_site"><xsl:value-of select="col[@field='Site']"/></data>
+            <xsl:if test="col[@field='Default']">
+                <data field="style_default"><xsl:value-of select="col[@field='Default']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Polygons']">
+                <data field="polygons"><xsl:value-of select="col[@field='Polygons']"/></data>
             </xsl:if>
             <xsl:if test="col[@field='Trackable']">
                 <data field="trackable"><xsl:value-of select="col[@field='Trackable']"/></data>
             </xsl:if>
-            <xsl:if test="col[@field='Polygons']">
-                <data field="polygons"><xsl:value-of select="col[@field='Polygons']"/></data>
+            <xsl:if test="col[@field='Site']">
+                <data field="use_site"><xsl:value-of select="col[@field='Site']"/></data>
             </xsl:if>
             <data field="controller"><xsl:value-of select="col[@field='Controller']"/></data>
             <data field="function"><xsl:value-of select="col[@field='Function']"/></data>
