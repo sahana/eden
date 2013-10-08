@@ -280,6 +280,10 @@ settings.hrm.use_skills = False
 # Uncomment to disable the use of HR Teams
 settings.hrm.teams = False
 
+# Organisations
+# Disable the use of Organisation Branches
+settings.org.branches = False
+
 # -----------------------------------------------------------------------------
 # Contacts
 # -----------------------------------------------------------------------------
@@ -819,11 +823,12 @@ def customize_org_organisation(**attr):
         tablename = "org_organisation"
         table = s3db[tablename]
 
-        if r.method == "validate":
+        method = r.method
+        if method == "validate":
             # Need to override .requires here too
             current.s3db.org_facility.location_id.requires = None
 
-        elif r.method == "summary" or r.representation == "aadata":
+        elif method == "summary" or r.representation == "aadata":
             # Modify list_fields
             list_fields = ["id",
                            "name",
@@ -837,13 +842,13 @@ def customize_org_organisation(**attr):
                            list_fields = list_fields,
                            )
 
-        elif r.method == "report2":
+        elif method == "report2":
             s3db.org_group_membership.group_id.label = T("Coalition")
 
         if (r.interactive or r.representation=="json") and not r.component:
             # CRUD Strings / Represent
 
-            if r.method in ("summary", "report2"):
+            if method in ("summary", "report2"):
                 from s3.s3filter import S3OptionsFilter
                 filter_widgets = [S3OptionsFilter("group_membership.group_id",
                                                   label=T("Coalition"),
@@ -925,7 +930,7 @@ def customize_org_organisation(**attr):
                 hrtable.site_id.label = T("Place")
 
                 # Custom Crud Form
-                crud_form = S3SQLCustomForm(
+                form_fields = [
                     "name",
                     "logo",
                     S3SQLInlineComponentMultiSelectWidget(
@@ -954,6 +959,17 @@ def customize_org_organisation(**attr):
                                   ],
                     ),
                     S3SQLInlineComponent(
+                        "resource",
+                        label = T("Organization's Resources"),
+                        fields = ["parameter_id", 
+                                  "value",
+                                  "comments",
+                                  ],
+                    ),
+                    "comments",
+                ]
+                if method != "create":
+                    form_fields.insert(6, S3SQLInlineComponent(
                         "facility",
                         label = T("Organization's Places"),
                         fields = ["name", 
@@ -965,18 +981,9 @@ def customize_org_organisation(**attr):
                         extra_fields = ["site_id"],
                         virtual_fields = [(T("Facility Type"), "facility_types"),
                                           ],
-                    ),
-                    S3SQLInlineComponent(
-                        "resource",
-                        label = T("Organization's Resources"),
-                        fields = ["parameter_id", 
-                                  "value",
-                                  "comments",
-                                  ],
-                    ),
-                    "comments",
-                )
+                    ))
 
+                crud_form = S3SQLCustomForm(*form_fields)
                 s3db.configure(tablename,
                                crud_form = crud_form,
                                )

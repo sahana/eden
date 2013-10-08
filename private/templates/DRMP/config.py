@@ -190,6 +190,9 @@ settings.pr.request_gender = False
 # -----------------------------------------------------------------------------
 # Org
 settings.org.site_label = "Office"
+# Disable the use of Organisation Branches
+settings.org.branches = False
+
 
 # -----------------------------------------------------------------------------
 # Project
