@@ -129,10 +129,10 @@
  </div>
  {{include}}
 </div>
- <div id='footer'>
-  {{include "../private/templates/%s/views/footer.html" % response.s3.theme}}
-  {{if s3.debug:}}{{=s3.toolbar()}}{{pass}}
- </div>
+<div id='footer'>
+ {{include "../private/templates/%s/views/footer.html" % response.s3.theme}}
+ {{if s3.debug:}}{{=s3.toolbar()}}{{pass}}
+</div>
 {{pass}}
 {{include "bootstrap_js.html"}}
 {{include "scripts.html"}}

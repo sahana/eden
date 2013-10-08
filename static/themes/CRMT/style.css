@@ -279,6 +279,12 @@ form#summary-filter-form
     width: 240px;
 }
 
+/* Organisations/Places Forms */
+#sub_defaulthuman_resource_defaulthuman_resource_i_person_id_edit_none,
+#sub_defaultresource_defaultresource_i_value_edit_none {
+    margin-top: -20px;
+}
+
 /* Action Toolbar */
 .action-bar.fleft {
     color: #8a8989;

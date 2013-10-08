@@ -929,6 +929,13 @@ def customize_org_organisation(**attr):
                 hrtable.person_id.widget = None
                 hrtable.site_id.label = T("Place")
 
+                hr_fields = ["person_id",
+                             "job_title_id",
+                             #"email",
+                             #"phone",
+                             ]
+                if method != "create":
+                    hr_fields.insert(1, "site_id")
                 # Custom Crud Form
                 form_fields = [
                     "name",
@@ -951,12 +958,9 @@ def customize_org_organisation(**attr):
                     S3SQLInlineComponent(
                         "human_resource",
                         label = T("Organization's Contacts"),
-                        fields = ["person_id",
-                                  "site_id",
-                                  "job_title_id",
-                                  #"email",
-                                  #"phone",
-                                  ],
+                        fields = hr_fields,
+                        #filterby = dict(field = "site_id",
+                        #                options = [list_of_site_ids_for_this_org]),
                     ),
                     S3SQLInlineComponent(
                         "resource",

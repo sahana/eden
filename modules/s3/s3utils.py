@@ -122,25 +122,26 @@ def s3_dev_toolbar():
     return DIV(
         #BUTTON("design", _onclick="document.location='%s'" % admin),
         BUTTON("request",
-               _onclick="jQuery('#request-%s').slideToggle().removeClass('hide')" % u),
-        BUTTON("response",
-               _onclick="jQuery('#response-%s').slideToggle().removeClass('hide')" % u),
+               _onclick="$('#request-%s').slideToggle().removeClass('hide')" % u),
+        #BUTTON("response",
+        #       _onclick="$('#response-%s').slideToggle().removeClass('hide')" % u),
         BUTTON("session",
-               _onclick="jQuery('#session-%s').slideToggle().removeClass('hide')" % u),
+               _onclick="$('#session-%s').slideToggle().removeClass('hide')" % u),
         BUTTON("db tables",
-               _onclick="jQuery('#db-tables-%s').slideToggle().removeClass('hide')" % u),
+               _onclick="$('#db-tables-%s').slideToggle().removeClass('hide')" % u),
         BUTTON("db stats",
-               _onclick="jQuery('#db-stats-%s').slideToggle().removeClass('hide')" % u),
+               _onclick="$('#db-stats-%s').slideToggle().removeClass('hide')" % u),
         DIV(BEAUTIFY(request), backtotop,
             _class="hide", _id="request-%s" % u),
+        #DIV(BEAUTIFY(current.response), backtotop,
+        #    _class="hide", _id="response-%s" % u),
         DIV(BEAUTIFY(current.session), backtotop,
             _class="hide", _id="session-%s" % u),
-        DIV(BEAUTIFY(current.response), backtotop,
-            _class="hide", _id="response-%s" % u),
-        DIV(BEAUTIFY(dbtables), backtotop, _class="hide",
-            _id="db-tables-%s" % u),
-        DIV(BEAUTIFY(dbstats), backtotop, _class="hide", _id="db-stats-%s" % u),
-        SCRIPT("jQuery('.hidden').hide()"), _id="totop-%s" % u
+        DIV(BEAUTIFY(dbtables), backtotop,
+            _class="hide", _id="db-tables-%s" % u),
+        DIV(BEAUTIFY(dbstats), backtotop,
+            _class="hide", _id="db-stats-%s" % u),
+        _id="totop-%s" % u
     )
 
 # =============================================================================
