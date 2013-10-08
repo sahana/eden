@@ -924,6 +924,25 @@ def customize_org_organisation(**attr):
                 hrtable.person_id.widget = None
                 hrtable.site_id.label = T("Place")
 
+                if r.id and r.method == "update":
+                    # Filter the options for site_id in the organisation contacts
+                    # inline component to just the sites of this organisation
+                    from s3.s3validators import IS_ONE_OF
+                    auth = current.auth
+                    realms = auth.permission.permitted_realms("hrm_human_resource",
+                                                              method="create")
+                    instance_types = auth.org_site_types
+                    hrtable.site_id.requires = IS_ONE_OF(current.db,
+                                                         "org_site.site_id",
+                                                         label=s3db.org_site_represent,
+                                                         orderby="org_site.name",
+                                                         filterby="organisation_id",
+                                                         filter_opts=[r.id],
+                                                         instance_types=instance_types,
+                                                         realms=realms,
+                                                         not_filterby="obsolete",
+                                                         not_filter_opts=[True])
+
                 # Custom Crud Form
                 crud_form = S3SQLCustomForm(
                     "name",
