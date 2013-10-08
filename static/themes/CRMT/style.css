@@ -281,6 +281,7 @@ form#summary-filter-form
 
 /* Organisations/Places Forms */
 #sub_defaulthuman_resource_defaulthuman_resource_i_person_id_edit_none,
+#sub_defaulthuman_resource_defaulthuman_resource_i_site_id_edit_none,
 #sub_defaultresource_defaultresource_i_value_edit_none {
     margin-top: -20px;
 }
