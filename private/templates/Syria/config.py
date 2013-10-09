@@ -3762,7 +3762,6 @@ def customize_project_project(**attr):
                                 widget="multiselect"),
                 S3OptionsFilter("donor.organisation_id",
                                 label = T("Donors"),
-                                location_level="L1",
                                 widget="multiselect")
                 ]
 

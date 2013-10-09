@@ -160,8 +160,8 @@ S3.search = {};
                   '.options-filter.multiselect-filter-widget'))
         .add(
         form.find('.options-filter:visible,' +
-                  '.options-filter.multiselect-filter-widget.active,' +
-                  '.options-filter.multiselect-filter-bootstrap.active'))
+                  '.options-filter.multiselect-filter-widget.active' /*+
+                  ',.options-filter.multiselect-filter-bootstrap.active'*/))
         .each(function() {
             $this = $(this);
             id = $this.attr('id');
@@ -283,8 +283,8 @@ S3.search = {};
           '.location-filter.groupedopts-filter-widget')
         .add(
         form.find('.location-filter:visible,' +
-          '.location-filter.multiselect-filter-widget.active,' +
-          '.location-filter.multiselect-filter-bootstrap.active'))
+          '.location-filter.multiselect-filter-widget.active' /*+
+          ',.location-filter.multiselect-filter-bootstrap.active'*/))
         .each(function() {
             id = $(this).attr('id');
             url_var = $('#' + id + '-data').val();
@@ -398,8 +398,8 @@ S3.search = {};
                   '.options-filter.multiselect-filter-widget'))
         .add(
         form.find('.options-filter:visible,' +
-                  '.options-filter.multiselect-filter-widget.active,' +
-                  '.options-filter.multiselect-filter-bootstrap.active'))
+                  '.options-filter.multiselect-filter-widget.active' /*+
+                  ',.options-filter.multiselect-filter-bootstrap.active'*/))
         .each(function() {
             $this = $(this);
             id = $this.attr('id');
@@ -489,8 +489,8 @@ S3.search = {};
           '.location-filter.groupedopts-filter-widget')
         .add(
         form.find('.location-filter:visible,' +
-          '.location-filter.multiselect-filter-widget.active,' +
-          '.location-filter.multiselect-filter-bootstrap.active'))
+          '.location-filter.multiselect-filter-widget.active' /*+
+          ',.location-filter.multiselect-filter-bootstrap.active'*/))
         .each(function() {
             $this = $(this);
             id = $this.attr('id');
@@ -743,7 +743,7 @@ S3.search = {};
                         }
 
                     } else {
-                        // other widget types of options filter (e.g. grouped_checkboxes)
+                        // other widget types of options filter
                     }
 
                 } else {
@@ -1372,26 +1372,26 @@ S3.search = {};
     $(document).ready(function() {
 
         // Mark visible widgets as active, otherwise submit won't use them
-        $('.multiselect-filter-widget:visible').addClass('active');
-        $('.groupedopts-filter-widget:visible').addClass('active');
+        $('.groupedopts-filter-widget:visible,.multiselect-filter-widget:visible').addClass('active');
 
         // Activate MultiSelect Widgets
-//         $('.multiselect-filter-widget').each(function() {
-//             if ($(this).find('option').length > 5) {
-//                 $(this).multiselect({
-//                     selectedList: 5
-//                 }).multiselectfilter();
-//             } else {
-//                 $(this).multiselect({
-//                     selectedList: 5
-//                 });
-//             }
-//         });
+        /*
+        $('.multiselect-filter-widget').each(function() {
+            if ($(this).find('option').length > 5) {
+                $(this).multiselect({
+                    selectedList: 5
+                }).multiselectfilter();
+            } else {
+                $(this).multiselect({
+                    selectedList: 5
+                });
+            }
+        });
         if (typeof($.fn.multiselect_bs) != 'undefined') {
             // Alternative with bootstrap-multiselect (note the hack for the fn-name):
             $('.multiselect-filter-bootstrap:visible').addClass('active');
             $('.multiselect-filter-bootstrap').multiselect_bs();
-        }
+        }*/
 
         // Advanced button
         $('.filter-advanced').on('click', function() {
@@ -1407,9 +1407,18 @@ S3.search = {};
                     // Show the Widgets
                     that.removeClass('hide')
                         .show()
-                        // Mark them as Active
-                        .find(selectors)
-                        .addClass('active');
+                        .find(selectors).each( function() {
+                            $this = $(this)
+                            // Mark them as Active
+                            $this.addClass('active');
+                            // Refresh the contents
+                            if ($this.hasClass('groupedopts-filter-widget') && typeof $this.groupedopts != 'undefined') {
+                                $this.groupedopts('refresh');
+                            } else
+                            if ($this.hasClass('multiselect-filter-widget') && typeof $this.multiselect != 'undefined') {
+                                $this.multiselect('refresh');
+                            }
+                        });
                     hidden = true;
                 } else {
                     // Hide the Widgets

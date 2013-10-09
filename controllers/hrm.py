@@ -42,6 +42,69 @@ def human_resource():
             settings.ui.filter_auto_submit = 750
             settings.ui.report_auto_submit = 750
             s3.crud_strings["hrm_human_resource"]["title_list"] = T("Staff & Volunteers")
+            filter_widgets = [
+                S3TextFilter(["person_id$first_name",
+                              "person_id$middle_name",
+                              "person_id$last_name",
+                              ],
+                             label=T("Name"),
+                             ),
+                S3OptionsFilter("type",
+                                label="",
+                                options=s3db.hrm_type_opts,
+                                hidden=True,
+                                ),
+                S3OptionsFilter("organisation_id",
+                                widget="multiselect",
+                                filter=True,
+                                header="",
+                                hidden=True,
+                                ),
+                S3LocationFilter("location_id",
+                                 label = T("Location"),
+                                 widget="multiselect",
+                                 levels=["L0", "L1", "L2", "L3"],
+                                 hidden=True,
+                                 ),
+                S3OptionsFilter("site_id",
+                                widget="multiselect",
+                                hidden=True,
+                                ),
+                S3OptionsFilter("training.course_id",
+                                label = T("Training"),
+                                widget="multiselect",
+                                hidden=True,
+                                ),
+                ]
+            if settings.get_hrm_teams():
+                filter_widgets.append(
+                    S3OptionsFilter("group_membership.group_id",
+                                    label = T("Team"),
+                                    widget="multiselect",
+                                    hidden=True,
+                                    ))
+            report_fields = ["organisation_id",
+                             "person_id",
+                             "person_id$gender",
+                             "job_title_id",
+                             (T("Training"), "training.course_id"),
+                             "location_id$L1",
+                             "location_id$L2",
+                             "site_id",
+                             "department_id",
+                             ]
+
+            report_options = Storage(
+                rows=report_fields,
+                cols=report_fields,
+                fact=report_fields,
+                defaults=Storage(rows="organisation_id",
+                                 cols="training.course_id",
+                                 fact="count(person_id)",
+                                 totals=True
+                                 )
+                )
+
             s3db.configure("hrm_human_resource",
                            # Match staff
                            list_fields = ["id",
@@ -68,21 +131,9 @@ def human_resource():
                                                   "ajax_init": True}],
                                     },
                             ],
-                            filter_widgets = [
-                                    S3TextFilter(["person_id$first_name",
-                                                  "person_id$middle_name",
-                                                  "person_id$last_name",
-                                                  ],
-                                                 label=T("Name"),
-                                                 ),
-                                    S3OptionsFilter("type"),
-                                    S3OptionsFilter("organisation_id",
-                                                    widget="multiselect",
-                                                    filter=True,
-                                                    header="",
-                                                    ),
-                            ]
-            )
+                            filter_widgets = filter_widgets,
+                            report_options = report_options,
+                            )
             s3.filter = None
         else:
             # Default to Staff

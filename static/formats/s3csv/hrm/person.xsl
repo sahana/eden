@@ -67,6 +67,7 @@
          Permanent L4...................optional.....person permanent address L4
          Skills.........................optional.....comma-separated list of Skills
          Teams..........................optional.....comma-separated list of Groups
+         Trainings......................optional.....comma-separated list of Courses
          Education Level................optional.....person education level of award (highest)
          Degree Name....................optional.....person education award
          Major..........................optional.....person education major
@@ -603,8 +604,10 @@
                 <xsl:with-param name="skill_list" select="col[@field='Skills']"/>
             </xsl:call-template>
 
-            <!-- Trainings
-            <xsl:call-template name="Trainings"/> -->
+            <!-- Trainings -->
+            <xsl:call-template name="Trainings">
+                <xsl:with-param name="course_list" select="col[@field='Trainings']"/>
+            </xsl:call-template>
 
             <!-- Teams -->
             <xsl:call-template name="splitList">
@@ -1344,6 +1347,50 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="Training">
+
+        <xsl:param name="course"/>
+
+        <xsl:if test="$course and $course!=''">
+            <resource name="hrm_training">
+                <reference field="course_id" resource="hrm_course">
+                    <resource name="hrm_course">
+                        <data field="name"><xsl:value-of select="$course"/></data>
+                    </resource>
+                </reference>
+            </resource>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Trainings">
+
+        <xsl:param name="course_list"/>
+
+        <xsl:if test="$course_list">
+            <xsl:choose>
+                <xsl:when test="contains($course_list, ',')">
+                    <xsl:variable name="head" select="normalize-space(substring-before($course_list, ','))"/>
+                    <xsl:variable name="tail" select="substring-after($course_list, ',')"/>
+                    <xsl:call-template name="Training">
+                        <xsl:with-param name="course" select="$head"/>
+                    </xsl:call-template>
+                    <xsl:call-template name="Trainings">
+                        <xsl:with-param name="course_list" select="$tail"/>
+                    </xsl:call-template>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:call-template name="Training">
+                        <xsl:with-param name="course" select="$course_list"/>
+                    </xsl:call-template>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <!-- Pull this in from training_event.xsl if-required
     <xsl:template name="Course">
 
@@ -1355,7 +1402,6 @@
 
     </xsl:template> -->
 
-    <!-- ****************************************************************** -->
     <!-- Pull this in from training_event.xsl if-required
     <xsl:template name="Trainings">
 

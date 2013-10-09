@@ -545,6 +545,67 @@ class S3HRModel(S3Model):
                                               filterfor=["SMS"],
                                               ))
 
+        # Skills
+        add_component("hrm_certification",
+                      hrm_human_resource=dict(link="pr_person",
+                                              joinby="id",
+                                              key="id",
+                                              fkey="person_id",
+                                              pkey="person_id",
+                                              ))
+        add_component("hrm_competency",
+                      hrm_human_resource=dict(link="pr_person",
+                                              joinby="id",
+                                              key="id",
+                                              fkey="person_id",
+                                              pkey="person_id",
+                                              ))
+        add_component("hrm_credential",
+                      hrm_human_resource=dict(link="pr_person",
+                                              joinby="id",
+                                              key="id",
+                                              fkey="person_id",
+                                              pkey="person_id",
+                                              ))
+        add_component("hrm_training",
+                      hrm_human_resource=dict(link="pr_person",
+                                              joinby="id",
+                                              key="id",
+                                              fkey="person_id",
+                                              pkey="person_id",
+                                              ))
+
+        teams = settings.get_hrm_teams()
+        if teams:
+            # Teams
+            add_component("pr_group_membership",
+                          hrm_human_resource=dict(link="pr_person",
+                                                  joinby="id",
+                                                  key="id",
+                                                  fkey="person_id",
+                                                  pkey="person_id",
+                                                  ))
+
+        if group == "volunteer":
+            # Programmes
+            add_component("hrm_programme_hours",
+                          hrm_human_resource=dict(link="pr_person",
+                                                  joinby="id",
+                                                  key="id",
+                                                  fkey="person_id",
+                                                  pkey="person_id",
+                                                  ))
+
+            # Volunteer Details
+            add_component("vol_details",
+                          hrm_human_resource=dict(joinby="human_resource_id",
+                                                  multiple=False))
+
+            # Volunteer Cluster
+            add_component("vol_volunteer_cluster",
+                          hrm_human_resource=dict(joinby="human_resource_id",
+                                                  multiple=False))
+
         if settings.get_hrm_multiple_job_titles():
             # Job Titles
             add_component("hrm_job_title_human_resource",
@@ -557,15 +618,6 @@ class S3HRModel(S3Model):
         #add_component("hrm_hours",
         #              hrm_human_resource="human_resource_id")
 
-        # Volunteer Details
-        add_component("vol_details",
-                      hrm_human_resource=dict(joinby="human_resource_id",
-                                              multiple=False))
-
-        # Volunteer Cluster
-        add_component("vol_volunteer_cluster",
-                      hrm_human_resource=dict(joinby="human_resource_id",
-                                              multiple=False))
         crud_fields = ["organisation_id",
                        "person_id",
                        "job_title_id",
@@ -574,7 +626,6 @@ class S3HRModel(S3Model):
                        "status",
                        ]
 
-        teams = settings.get_hrm_teams()
         if teams:
             team_search = S3SearchOptionsWidget(
                             name="human_resource_search_teams",
@@ -803,11 +854,11 @@ class S3HRModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(hrm_department_id = department_id,
-                       hrm_job_title_id = job_title_id,
-                       hrm_human_resource_id = human_resource_id,
-                       hrm_type_opts = hrm_type_opts,
-                       )
+        return dict(hrm_department_id = department_id,
+                    hrm_job_title_id = job_title_id,
+                    hrm_human_resource_id = human_resource_id,
+                    hrm_type_opts = hrm_type_opts,
+                    )
 
     # -------------------------------------------------------------------------
     def defaults(self):
@@ -816,9 +867,8 @@ class S3HRModel(S3Model):
         """
         human_resource_id = S3ReusableField("human_resource_id", "integer",
                                             readable=False, writable=False)
-        return Storage(
-                hrm_human_resource_id = human_resource_id
-            )
+        return dict(hrm_human_resource_id = human_resource_id,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1231,8 +1281,7 @@ class S3HRSiteModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                )
+        return dict()
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1463,8 +1512,7 @@ class S3HRJobModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                    #hrm_position_id = position_id
+        return dict(#hrm_position_id = position_id,
                     )
 
 # =============================================================================
@@ -2467,11 +2515,10 @@ class S3HRSkillModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                    hrm_skill_id = skill_id,
+        return dict(hrm_skill_id = skill_id,
                     hrm_multi_skill_id = multi_skill_id,
                     hrm_certification_onaccept = self.hrm_certification_onaccept,
-                )
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3057,8 +3104,7 @@ class S3HRExperienceModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                )
+        return dict()
 
 # =============================================================================
 class S3HRProgrammeModel(S3Model):
@@ -3257,8 +3303,7 @@ class S3HRProgrammeModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                )
+        return dict()
 
     # -------------------------------------------------------------------------
     @staticmethod
