@@ -949,8 +949,6 @@
             },
             'fnServerData': fnAjaxCallback[t],
             'fnRowCallback': function(nRow, aData, iDisplayIndex) {
-                // Extract the index # from the link (should be in-scope still)
-                //var t = tableIdReverse(this.selector);
                 var actionCol = tableConfig['actionCol'];
                 var re = />(.*)</i;
                 var result = re.exec(aData[actionCol]);
@@ -968,7 +966,7 @@
                         // Loop through each action to build the button
                         for (var i=0; i < Actions.length; i++) {
 
-                            $('th:eq(0)').css( { 'width': 'auto' } );
+                            //$('th:eq(0)').css( { 'width': 'auto' } );
 
                             // Check if action is restricted to a subset of records
                             if ('restrict' in Actions[i]) {
@@ -1000,7 +998,7 @@
                     if ((tableConfig['group'].length > 0) && (tableConfig['group'][0][0] < actionCol)) {
                         actionCol -= 1;
                     }
-                    $('td:eq(' + actionCol + ')', nRow).html( Buttons );
+                    $('td:eq(' + actionCol + ')', nRow).addClass('actions').html(Buttons);
                 } // end of processing for the action and bulk buttons
 
                 // Code to toggle the selection of the row

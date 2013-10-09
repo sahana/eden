@@ -924,6 +924,7 @@ class S3OptionsMenu(object):
         settings = current.deployment_settings
         teams = settings.get_hrm_teams()
         use_teams = lambda i: teams
+        vol_enabled = lambda i: settings.has_module("vol")
 
         return M(c="hrm")(
                     M(settings.get_hrm_staff_label(), f="staff",
@@ -935,6 +936,9 @@ class S3OptionsMenu(object):
                         M("Import", f="person", m="import",
                           vars={"group":"staff"}, p="create"),
                     ),
+                    M("Staff & Volunteers (Combined)",
+                      c="hrm", f="human_resource", m="summary",
+                      check=[manager_mode, vol_enabled]),
                     M(teams, f="group",
                       check=[manager_mode, use_teams])(
                         M("New", m="create"),
@@ -1016,6 +1020,7 @@ class S3OptionsMenu(object):
                                settings.get_project_mode_task()
         teams = settings.get_hrm_teams()
         use_teams = lambda i: teams
+        show_staff = lambda i: settings.get_hrm_show_staff()
 
         return M(c="vol")(
                     M("Volunteers", f="volunteer",
@@ -1027,6 +1032,9 @@ class S3OptionsMenu(object):
                         M("Import", f="person", m="import",
                           vars={"group":"volunteer"}, p="create"),
                     ),
+                    M("Staff & Volunteers (Combined)",
+                      c="vol", f="human_resource", m="summary",
+                      check=[manager_mode, show_staff]),
                     M(teams, f="group",
                       check=[manager_mode, use_teams])(
                         M("New", m="create"),

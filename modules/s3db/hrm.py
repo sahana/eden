@@ -4853,8 +4853,8 @@ def hrm_group_controller():
                     s3.actions.append({
                         "url": URL(f="compose",
                                    vars = {"group_id": "[id]"}),
-                        "_class": "action-btn",
-                        "label": str(T("Send Notification"))})
+                        "_class": "action-btn send",
+                        "label": str(T("Send Message"))})
 
         return output
     s3.postp = postp

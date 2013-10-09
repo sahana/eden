@@ -31,22 +31,70 @@ def human_resource():
     """
         HR Controller
         - combined
-        Used for Imports, S3AddPersonWidget2 and the service record
+        Used for Summary view, Imports, S3AddPersonWidget2 and the service record
     """
-
-    table = s3db.hrm_human_resource
-    _type = table.type
-    s3.filter = (_type == 2)
 
     # Custom method for Service Record
     s3db.set_method("hrm", "human_resource",
                     method="form",
                     action=s3db.vol_service_record
-                   )
+                    )
 
     def prep(r):
         if r.method in ("form", "lookup"):
             return True
+        elif r.method == "summary":
+            from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
+            settings.ui.filter_auto_submit = 750
+            settings.ui.report_auto_submit = 750
+            s3.crud_strings["hrm_human_resource"]["title_list"] = T("Staff & Volunteers")
+            s3db.configure("hrm_human_resource",
+                           # Match staff
+                           list_fields = ["id",
+                                          "person_id",
+                                          "job_title_id",
+                                          "organisation_id",
+                                          "department_id",
+                                          "site_id",
+                                          (T("Email"), "email.value"),
+                                          (settings.get_ui_label_mobile_phone(), "phone.value"),
+                                          ],
+                           summary=[{"name": "table",
+                                     "label": "Table",
+                                     "widgets": [{"method": "datatable"}]
+                                    },
+                                    {"name": "report",
+                                     "label": "Report",
+                                     "widgets": [{"method": "report2",
+                                                  "ajax_init": True}]
+                                    },
+                                    {"name": "map",
+                                     "label": "Map",
+                                     "widgets": [{"method": "map",
+                                                  "ajax_init": True}],
+                                    },
+                            ],
+                            filter_widgets = [
+                                    S3TextFilter(["person_id$first_name",
+                                                  "person_id$middle_name",
+                                                  "person_id$last_name",
+                                                  ],
+                                                 label=T("Name"),
+                                                 ),
+                                    S3OptionsFilter("type"),
+                                    S3OptionsFilter("organisation_id",
+                                                    widget="multiselect",
+                                                    filter=True,
+                                                    header="",
+                                                    ),
+                            ]
+            )
+            s3.filter = None
+        else:
+            # Default to Volunteers
+            type_filter = s3base.S3FieldSelector("type") == 2
+            r.resource.add_filter(type_filter)
+
         if r.interactive:
             if r.method == "create" and not r.component:
                 redirect(URL(f="volunteer",
@@ -84,7 +132,7 @@ def human_resource():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller("hrm", "human_resource")
+    output = s3_rest_controller("hrm", "human_resource", hide_filter=False)
     return output
 
 # -----------------------------------------------------------------------------

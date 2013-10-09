@@ -227,8 +227,10 @@ settings.ui.camp = True
 
 # -----------------------------------------------------------------------------
 # Save Search Widget
+# New S3Filter
+settings.search.filter_manager = False
+# Old S3Search
 settings.search.save_widget = False
-
 
 # =============================================================================
 # Module Settings

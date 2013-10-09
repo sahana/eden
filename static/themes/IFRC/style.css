@@ -72,12 +72,14 @@ caption {
     background: #eee;
 }
 
-table td,table th {
+table td,
+table th {
     border-right: 1px #9C9C9C dashed;
     border-bottom: 2px #fff solid;
     line-height:1.25em;
 }
-table th, table th label {
+table th,
+table th label {
     vertical-align: bottom;
     padding-top: 20px;
     color: #590f12;
@@ -330,6 +332,7 @@ div.form-container form fieldset input.errorfield {
 table.dataTable .action-btn.edit,
 table.dataTable .action-btn.read,
 table.dataTable .action-btn.send,
+table.dataTable .action-btn.dispatch,
 table.dataTable .delete-btn {
     font-size: 0;
     line-height: 0;
@@ -346,6 +349,13 @@ table.dataTable .action-btn.read:before {
 table.dataTable .action-btn.send:before {
     content: url(img/envelope.png);
 }
+table.dataTable .action-btn.dispatch:before {
+    content: url(img/truck.png);
+}
+/*
+table.dataTable td.actions {
+    max-width: 55px;
+}*/
 
 /* Tabs */
 div.tabs {

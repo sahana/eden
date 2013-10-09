@@ -566,6 +566,9 @@ settings.L10n.decimal_separator = "."
 
 # -----------------------------------------------------------------------------
 # Save Search Widget
+# New S3Filter
+#settings.search.filter_manager = False
+# Old S3Search
 #settings.search.save_widget = False
 # Maximum number of search results for an Autocomplete Widget
 #settings.search.max_results = 200

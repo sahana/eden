@@ -252,19 +252,22 @@ class S3OptionsMenu(default.S3OptionsMenu):
         """ HRM Human Resource Management """
 
         session = current.session
+        s3 = current.session.s3
+        ADMIN = s3.system_roles.ADMIN
 
-        if "hrm" not in session.s3:
+        if "hrm" not in s3:
             current.s3db.hrm_vars()
-        hrm_vars = session.s3.hrm
+        hrm_vars = s3.hrm
 
-        ADMIN = current.auth.get_system_roles().ADMIN
         SECTORS = "Clusters" if current.deployment_settings.get_ui_label_cluster() \
                              else "Sectors"
 
         manager_mode = lambda i: hrm_vars.mode is None
         personal_mode = lambda i: hrm_vars.mode is not None
         is_org_admin = lambda i: hrm_vars.orgs and True or \
-                                 ADMIN in session.s3.roles
+                                 ADMIN in s3.roles
+        is_super_editor = lambda i: current.auth.s3_has_role("staff_super") or \
+                                    current.auth.s3_has_role("vol_super")
 
         staff = {"group": "staff"}
 
@@ -277,6 +280,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Import", f="person", m="import",
                           vars=staff, p="create"),
                     ),
+                    M("Staff & Volunteers (Combined)",
+                      c="hrm", f="human_resource", m="summary",
+                      check=[manager_mode, is_super_editor]),
                     M("Teams", c="hrm", f="group",
                       check=manager_mode)(
                         M("New", m="create"),
@@ -384,7 +390,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     # This provides the link to switch to the personal mode:
                     #M("Personal Profile", c="hrm", f="person",
                     #  check=manager_mode, vars=dict(mode="personal"))
-                    #M("Staff & Volunteers", c="hrm", f="human_resource", m="summary"),
                 )
 
     # -------------------------------------------------------------------------
@@ -400,6 +405,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
         personal_mode = lambda i: s3.hrm.mode is not None
         is_org_admin = lambda i: s3.hrm.orgs and True or \
                                  ADMIN in s3.roles
+        is_super_editor = lambda i: current.auth.s3_has_role("vol_super") or \
+                                    current.auth.s3_has_role("staff_super")
 
         settings = current.deployment_settings
         show_programmes = lambda i: settings.get_hrm_vol_experience() == "programme"
@@ -421,6 +428,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Import", f="person", m="import",
                           vars={"group":"volunteer"}, p="create"),
                     ),
+                    M("Staff & Volunteers (Combined)",
+                      c="vol", f="human_resource", m="summary",
+                      check=[manager_mode, is_super_editor]),
                     M(teams, f="group",
                       check=[manager_mode, use_teams])(
                         M("New", m="create"),
@@ -522,7 +532,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     # This provides the link to switch to the personal mode:
                     #M("Personal Profile", f="person",
                     #  check=manager_mode, vars=dict(mode="personal"))
-                    #M("Staff & Volunteers", c="hrm", f="human_resource", m="summary"),
                 )
 
     # -------------------------------------------------------------------------

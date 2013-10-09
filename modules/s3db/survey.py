@@ -2252,17 +2252,16 @@ $('#chart_btn').click(function(){
 # =============================================================================
 def survey_serieslist_dataTable_post(r):
     """
+        Replace the Action Buttons
     """
 
-    S3CRUD.action_buttons(r)
-    url = URL(c="survey",
-              f="series",
-              args=["[id]", "summary"]
-              )
+    #S3CRUD.action_buttons(r)
     current.response.s3.actions = [
                    dict(label=current.messages.UPDATE,
-                        _class="action-btn",
-                        url=url
+                        _class="action-btn edit",
+                        url=URL(c="survey", f="series",
+                                args=["[id]", "summary"]
+                                )
                        ),
                   ]
 
@@ -2934,14 +2933,14 @@ def survey_answerlist_dataTable_pre():
 # =============================================================================
 def survey_answerlist_dataTable_post(r):
     """
+        Replace Action Buttons
     """
 
-    S3CRUD.action_buttons(r)
+    #S3CRUD.action_buttons(r)
     current.response.s3.actions = [
                    dict(label=current.messages["UPDATE"],
-                        _class="action-btn",
-                        url=URL(c="survey",
-                                f="series",
+                        _class="action-btn edit",
+                        url=URL(c="survey", f="series",
                                 args=[r.id, "complete", "[id]", "update"])
                        ),
                   ]

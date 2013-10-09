@@ -580,7 +580,7 @@ S3OptionsFilter({
                 s3.actions.append(
                         dict(url = URL(c="req", f="req",
                                        args=["[id]", "commit_all", "send"]),
-                             _class = "action-btn send-btn",
+                             _class = "action-btn send-btn dispatch",
                              label = str(T("Send"))
                             )
                         )
@@ -1603,8 +1603,7 @@ def send_req():
                 dict(site=site_name)
 
     # Redirect to view the list of items in the Send
-    redirect(URL(c = "inv",
-                 f = "send",
+    redirect(URL(c = "inv", f = "send",
                  args = [send_id, "track_item"])
              )
 

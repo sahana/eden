@@ -3413,7 +3413,7 @@ def req_match():
                            args = ["[id]"],
                            vars = {"site_id": site_id}
                            ),
-                 _class = "action-btn",
+                 _class = "action-btn dispatch",
                  label = str(T("Send")),
                 )
         )

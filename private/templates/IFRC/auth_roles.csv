@@ -465,7 +465,7 @@
 "vol_editor","Volunteer Editor",,,,"pr_image",,"READ|CREATE|UPDATE",,,,,
 "vol_editor","Volunteer Editor",,,,"pr_person",,"READ|CREATE|UPDATE",,,,,
 "vol_editor","Volunteer Editor",,,,"pr_physical_description",,"READ|CREATE|UPDATE",,,,,
-"vol_super","Volunteer Super Editor",,"hrm","human_resource",,,"READ",,,,,"Needed for Options lookup when adding Job Title/Department"
+"vol_super","Volunteer Super Editor",,"hrm","human_resource",,,"READ",,,,,"Needed for Summary view and Options lookup when adding Job Title/Department."
 "vol_super","Volunteer Super Editor",,"org",,,,"READ|CREATE|UPDATE",,,,,
 "vol_super","Volunteer Super Editor",,"pr",,,,"READ|CREATE|UPDATE|DELETE",,,,,
 "vol_super","Volunteer Super Editor",,"pr","contact",,,"READ|CREATE|UPDATE|DELETE",,,,,
