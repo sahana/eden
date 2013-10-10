@@ -78,7 +78,7 @@ def outbox():
 # =============================================================================
 def message():
     """
-        RESTful CRUD controller for the master message log.
+        RESTful CRUD controller for the master message log
     """
 
     tablename = "msg_message"
@@ -87,6 +87,7 @@ def message():
 
     table.instance_type.readable = True
     table.instance_type.label = T("Channel")
+
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
         title_list = T("View Message Log"),
@@ -100,20 +101,17 @@ def message():
 
     s3db.configure(tablename, listadd=False)
 
-
     def postp(r, output):
 
-        rtable = r.table
+        if r.interactive:
+            s3_action_buttons(r)
 
-        s3_action_buttons(r)
-
-        s3.actions = \
-        s3.actions + [
-                      dict(label=str(T("Mark Sender")),
-                           _class="action-btn",
-                           url=URL(f="mark_sender",
-                                  args="[id]"))
-                     ]
+            s3.actions += [
+                dict(label=str(T("Mark Sender")),
+                     _class="action-btn",
+                     url=URL(f="mark_sender",
+                             args="[id]"))
+                ]
 
         return output
 
@@ -127,66 +125,32 @@ def mark_sender():
         Assign priority to the given sender
     """
 
-    s3db = current.s3db
-    db = current.db
+    try:
+        mid = request.args[0]
+    except:
+        raise SyntaxError
 
-    mid = request.args[0]
+    db = current.db
+    s3db = current.s3db
     mtable = s3db.msg_message
     stable = s3db.msg_sender
 
+    # @ToDo: Replace 2 queries with Join
     srecord = db(mtable.id == mid).select(mtable.from_address,
-                                          limitby=(0,1)).first()
+                                          limitby=(0,1)
+                                          ).first()
     sender = srecord.from_address
-
     record = db(stable.sender == sender).select(stable.id,
-                                                limitby=(0, 1)).first()
+                                                limitby=(0, 1)
+                                                ).first()
 
     if record:
         args = "update"
     else:
         args = "create"
 
-    url = URL(f="sender",
-              args=args,
-              vars=dict(sender=sender))
-
+    url = URL(f="sender", args=args, vars=dict(sender=sender))
     redirect(url)
-
-    return
-# =============================================================================
-def log():
-    """
-        RESTful CRUD controller for the Master Message Log
-        - all Inbound & Outbound Messages go here
-
-        @ToDo: Field Labels for i18n
-    """
-
-    if not auth.s3_logged_in():
-        session.error = T("Requires Login!")
-        redirect(URL(c="default", f="user", args="login"))
-
-    tablename = "%s_%s" % (module, resourcename)
-    table = s3db[tablename]
-
-    # CRUD Strings
-    ADD_MESSAGE = T("Add Message")
-    s3.crud_strings[tablename] = Storage(
-        title_create = ADD_MESSAGE,
-        title_display = T("Message Details"),
-        title_list = T("Messages"),
-        title_update = T("Edit message"),
-        title_search = T("Search messages"),
-        subtitle_create = T("Send new message"),
-        label_list_button = T("List Messages"),
-        label_create_button = ADD_MESSAGE,
-        msg_record_created = T("Message added"),
-        msg_record_modified = T("Message updated"),
-        msg_record_deleted = T("Message deleted"),
-        msg_list_empty = T("No messages in the system"))
-
-    s3db.configure(tablename, listadd=False)
-    return s3_rest_controller()
 
 # =============================================================================
 def tropo():

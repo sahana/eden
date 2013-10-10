@@ -451,34 +451,29 @@ class S3Msg(object):
                               from_address=fromaddress,
                               inbound=False,
                               )
-            record = db(table.id == id).select(table.id,
-                                               table.message_id,
-                                               limitby=(0, 1)).first()
-            s3db.update_super(table, record)
-            message_id = record.message_id
+            s3db.update_super(table, dict(id=id))
+            message_id = record["message_id"]
         elif pr_message_method == "SMS":
             table = s3db.msg_sms_outbox
             id = table.insert(body=message,
+                              #from_address=fromaddress,
+                              inbound=False,
                               )
-            record = db(table.id == id).select(table.id,
-                                               table.message_id,
-                                               limitby=(0, 1)).first()
-            s3db.update_super(table, record)
-            message_id = record.message_id
+            s3db.update_super(table, dict(id=id))
+            message_id = record["message_id"]
         elif pr_message_method == "TWITTER":
             table = s3db.msg_twitter_outbox
             id = table.insert(body=message,
+                              from_address=fromaddress,
+                              inbound=False,
                               )
-            record = db(table.id == id).select(table.id,
-                                               table.message_id,
-                                               limitby=(0, 1)).first()
-            s3db.update_super(table, record)
-            message_id = record.message_id
+            s3db.update_super(table, dict(id=id))
+            message_id = record["message_id"]
         else:
             # @ToDo
             pass
 
-        # Place the Message in the OutBox
+        # Place the Message in the main OutBox
         table = s3db.msg_outbox
         if isinstance(pe_id, list):
             # Add an entry per recipient
@@ -617,11 +612,11 @@ class S3Msg(object):
         if not rows:
             return
 
-        ptable = s3db.pr_person
-        gtable = s3db.pr_group
-        mtable = s3db.pr_group_membership
-        otable = s3db.org_organisation
         htable = s3db.hrm_human_resource
+        otable = db.org_organisation
+        ptable = db.pr_person
+        gtable = s3db.pr_group
+        mtable = db.pr_group_membership
 
         # Left joins for multi-recipient lookups
         gleft = [mtable.on((mtable.group_id == gtable.id) &
@@ -1705,35 +1700,26 @@ class S3Msg(object):
     def twitter_search_poll(query_id):
         """ Fetches Twitter Search Results."""
 
-        s3db = current.s3db
         db = current.db
+        s3db = current.s3db
 
-        mtable = s3db.msg_message
-        rtable = s3db.msg_twitter_result
-        qtable = s3db.msg_twitter_search_query
-        query = db(qtable.id == query_id).select(qtable.id,
-                                                 qtable.keywords,
-                                                 qtable.lang,
-                                                 qtable.count,
-                                                 qtable.includeEntities,
-                                                 limitby=(0, 1)).first()
-
-        keywords = query.keywords.split(" ")
-        language = query.lang
-        count = int(query.count)
-        includeEntities = query.includeEntities
-
+        # Read Settings
         ttable = s3db.msg_twitter_search_channel
-        settings = db(ttable.id>0).select(ttable.id,
-                                          ttable.consumer_key,
-                                          ttable.consumer_secret,
-                                          ttable.access_token,
-                                          ttable.access_token_secret,
-                                          limitby=(0, 1)).first()
-        consumer_key = settings.consumer_key
-        consumer_secret = settings.consumer_secret
-        access_token = settings.access_token
-        access_token_secret = settings.access_token_secret
+        settings = db(ttable.id > 0).select(ttable.consumer_key,
+                                            ttable.consumer_secret,
+                                            ttable.access_token,
+                                            ttable.access_token_secret,
+                                            limitby=(0, 1)).first()
+
+        qtable = db.msg_twitter_search_query
+        rtable = db.msg_twitter_result
+        mtable = db.msg_message
+        search_query = db(qtable.id == query_id).select(qtable.id,
+                                                        qtable.keywords,
+                                                        qtable.lang,
+                                                        qtable.count,
+                                                        qtable.include_entities,
+                                                        limitby=(0, 1)).first()
 
         try:
             import TwitterSearch
@@ -1745,18 +1731,18 @@ class S3Msg(object):
 
         try:
             tso = TwitterSearch.TwitterSearchOrder()
-            tso.setKeywords(keywords)
-            tso.setLanguage(language)
+            tso.setKeywords(search_query.keywords.split(" "))
+            tso.setLanguage(search_query.lang)
             # @ToDo Handle more than 100 results per page
             # This may have to be changed upstream
-            tso.setCount(count)
-            tso.setIncludeEntities(includeEntities)
+            tso.setCount(int(search_query.count))
+            tso.setIncludeEntities(search_query.include_entities)
 
             ts = TwitterSearch.TwitterSearch(
-                consumer_key = consumer_key,
-                consumer_secret = consumer_secret,
-                access_token = access_token,
-                access_token_secret = access_token_secret
+                consumer_key = settings.consumer_key,
+                consumer_secret = settings.consumer_secret,
+                access_token = settings.access_token,
+                access_token_secret = settings.access_token_secret
              )
 
             update_super = s3db.update_super
@@ -1778,14 +1764,12 @@ class S3Msg(object):
                                    tweet_id = tweet_id,
                                    lang = lang,
                                    created_on = created_on,
+                                   inbound = True,
+                                   # @ToDo: Use gis_location instead!
                                    lat = lat,
-                                   lon = lon)
-                rquery = (rtable.id == id)
-                record = db(rquery).select(rtable.id,
-                                           rtable.message_id,
-                                           limitby=(0, 1)).first()
-                update_super(rtable, record)
-                db(mtable.id == record.message_id).update(inbound = True)
+                                   lon = lon,
+                                   )
+                update_super(rtable, dict(id=id))
 
         except TwitterSearch.TwitterSearchException as e:
             return(str(e))
@@ -1795,6 +1779,7 @@ class S3Msg(object):
         # Commit as this is a task normally run async
         db.commit()
         return
+
     # -------------------------------------------------------------------------
     @staticmethod
     def process_keygraph(query_id):

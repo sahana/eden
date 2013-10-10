@@ -66,6 +66,7 @@ class S3DocumentLibrary(S3Model):
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
+        folder = current.request.folder
         super_key = self.super_key
         super_link = self.super_link
 
@@ -108,21 +109,31 @@ class S3DocumentLibrary(S3Model):
                              # Component not instance
                              super_link("doc_id", doc_entity),
                              super_link("site_id", "org_site"),
-                             Field("file", "upload", autodelete=True),
+                             Field("file", "upload",
+                                   # upload folder needs to be visible to the download() function as well as the upload
+                                   uploadfolder = os.path.join(folder,
+                                                               "uploads"),
+                                   autodelete=True
+                                   ),
                              Field("name", length=128,
                                    # Allow Name to be added onvalidation
                                    requires = IS_NULL_OR(IS_LENGTH(128)),
-                                   label=T("Name")),
+                                   label=T("Name")
+                                   ),
                              Field("url", label=T("URL"),
                                    requires = IS_NULL_OR(IS_URL()),
                                    represent = lambda url: \
-                                               url and A(url, _href=url) or NONE),
+                                               url and A(url, _href=url) or NONE
+                                   ),
                              Field("has_been_indexed", "boolean", 
-                                   readable=False, writable=False,
-                                   default = False),
+                                   default = False,
+                                   readable = False,
+                                   writable = False,
+                                   ),
                              person_id(label=T("Author"),
                                        comment=person_comment(T("Author"),
-                                                              T("The Author of this Document (optional)"))),
+                                                              T("The Author of this Document (optional)"))
+                                       ),
                              organisation_id(
                                 widget = S3OrganisationAutocompleteWidget(default_from_profile=True)
                                 ),
@@ -198,7 +209,7 @@ class S3DocumentLibrary(S3Model):
                                                          )),
                                    represent = doc_image_represent,
                                    # upload folder needs to be visible to the download() function as well as the upload
-                                   uploadfolder = os.path.join(current.request.folder,
+                                   uploadfolder = os.path.join(folder,
                                                                "uploads",
                                                                "images"),
                                    widget=S3ImageCropWidget((300, 300))),

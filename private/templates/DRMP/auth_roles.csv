@@ -2,6 +2,7 @@ uid,role,description,controller,function,table,entity,uacl,oacl,hidden,system,pr
 ANONYMOUS,Anonymous,,org,organisation,,,READ,,,,,Allow new users to see orgs during registration 
 ANONYMOUS,Anonymous,,,,org_organisation,,READ,,,,,Allow new users to see orgs during registration 
 ANONYMOUS,Anonymous,,default,index,auth_user,,READ,,,,,Allow users to decode the modified_by field
+ANONYMOUS,Anonymous,,doc,,,any,READ,READ,,,,
 ANONYMOUS,Anonymous,,org,,,any,READ,READ,,,,
 ANONYMOUS,Anonymous,,project,,,any,READ,READ,,,,
 ANONYMOUS,Anonymous,,event,,,,READ,READ,,,,
@@ -18,16 +19,18 @@ ANONYMOUS,Anonymous,,,,pr_group_membership,,,READ,,,,
 ANONYMOUS,Anonymous,,cms,post,,any,READ,READ,,,,
 ANONYMOUS,Anonymous,,,,cms_post,any,READ,READ,,,,
 ANONYMOUS,Anonymous,,,,cms_series,any,READ,READ,,,,
+ANONYMOUS,Anonymous,,,,doc_document,any,READ,READ,,,,
 ANONYMOUS,Anonymous,,,,event_event,any,READ,READ,,,,
 ANONYMOUS,Anonymous,,,,event_event_type,any,READ,READ,,,,
 ANONYMOUS,Anonymous,,,,event_event_post,any,READ,READ,,,,
-ANONYMOUS,Anonymous,,,,doc_document,any,READ,READ,,,,
 ANONYMOUS,Anonymous,,gis,,,,READ,READ,,,,
 USER,User,,default,person,,,READ|CREATE|UPDATE,,,,,
 USER,User,,default,person,gis_location,,READ|CREATE|UPDATE,,,,,
 USER,User,,default,person,pr_saved_search,,,READ|CREATE|UPDATE,,,,
 USER,User,,cms,post,,,READ|CREATE|UPDATE,READ|CREATE|UPDATE|DELETE,,,,
 USER,User,,,,cms_post,,READ|CREATE|UPDATE,READ|CREATE|UPDATE|DELETE,,,,
+USER,User,,,,doc_document,,READ|CREATE|UPDATE,READ|CREATE|UPDATE|DELETE,,,,
+USER,User,,doc,,,,READ|CREATE|UPDATE,READ|CREATE|UPDATE|DELETE,,,,
 USER,User,,org,,,,READ|CREATE|UPDATE|REVIEW|APPROVE,READ|CREATE|UPDATE|DELETE|REVIEW|APPROVE,,,,
 USER,User,,,,org_organisation,,READ|CREATE|UPDATE|REVIEW|APPROVE,READ|CREATE|UPDATE|DELETE|REVIEW|APPROVE,,,,For Profile Organisation Select Updateable Filter
 USER,User,,project,,,,READ|CREATE|UPDATE,READ|CREATE|UPDATE|DELETE,,,,
