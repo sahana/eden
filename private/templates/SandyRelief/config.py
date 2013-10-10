@@ -273,6 +273,7 @@ def customize_org_organisation(**attr):
             from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
             s3db.pr_address.comments.label = ""
             s3db.pr_contact.value.label = ""
+            s3db.doc_document.url.label = ""
             crud_form = S3SQLCustomForm(
                 "name",
                 "acronym",
@@ -304,6 +305,7 @@ def customize_org_organisation(**attr):
                     filterby = dict(field = "level",
                                     options = "L4"
                                     ),
+                    # @ToDo: GroupedCheckbox Widget or Hierarchical MultiSelectWidget
                     cols = 5,
                 ),
                 "phone",
@@ -338,6 +340,28 @@ def customize_org_organisation(**attr):
                                     options = "RSS"
                                     )
                 ),
+                S3SQLInlineComponent(
+                    "document",
+                    name = "iCal",
+                    label = "iCAL",
+                    multiple = False,
+                    fields = ["url",
+                              ],
+                    filterby = dict(field = "name",
+                                    options="iCal"
+                                    )
+                ),                                                                
+                S3SQLInlineComponent(
+                    "document",
+                    name = "data",
+                    label = T("Data"),
+                    multiple = False,
+                    fields = ["url",
+                              ],
+                    filterby = dict(field = "name",
+                                    options="Data"
+                                    )
+                ),                                                                
                 S3SQLInlineComponent(
                     "contact",
                     name = "twitter",
@@ -624,7 +648,7 @@ def customize_project_project(**attr):
                 #"objectives",
                 "human_resource_id",
                 # Activities
-               S3SQLInlineComponent(
+                S3SQLInlineComponent(
                     "location",
                     label = T("Location"),
                     fields = ["location_id"],
