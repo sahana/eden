@@ -64,7 +64,8 @@ class S3MainMenu(default.S3MainMenu):
         return [
             homepage(),
             homepage("project"),
-            homepage("req", f="req_item", m="search")(
+            homepage("req", f="req", m="search")(
+                MM("Fulfill Requests", f="req", m="search"),
                 MM("Request Supplies", f="req", m="create", vars={"type": 1}),
                 MM("Request People", f="req", m="create", vars={"type": 3})
             ),
@@ -74,9 +75,10 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Create a Facility", c="org", f="facility", m="create")
             ),
             MM("Contacts", c="hrm", f="staff", m="search")(
+                MM("Staff", c="hrm", f="staff", m="search"),
                 MM("Groups", c="hrm", f="group"),
                 MM("Organizations", c="org", f="organisation", m="search"),
-                MM("People Registry", c="pr", f="index")
+                #MM("People Registry", c="pr", f="index")
             ),                
             MM("Resources", url="http://occupysandy.net/resources/coordination/")(
                 MM("Assets", c="asset", f="asset", m="search"),
@@ -322,7 +324,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Requests", f="req")(
                         M("Request Supplies", m="create", vars={"type": 1}),
                         M("Request People", m="create", vars={"type": 3}),
-                        M("Search Requests", m="search"),
+                        M("Fulfill Requests", m="search"),
                         #M("List All"),
                         M("List Recurring Requests", f="req_template"),
                         #M("Search", m="search"),

@@ -84,7 +84,7 @@ button,.button,.button:visited,.button:active{display:-moz-inline-stack;display:
 .content{width:100%;}
 #component{margin:30px 0 60px;border-left:1px dashed #dddddd;padding:0 30px;}#component h2{font-size:22px;margin-top:1.5em;}
 #component #delete-btn{margin-bottom:30px;}
-#component label{text-transform:uppercase;letter-spacing:1px;line-height:1.2em;font-size:12px;margin-top:1em;display:block;}
+#component label{text-transform:uppercase;letter-spacing:1px;line-height:1.2em;font-size:12px;margin-top:1em;}
 #modulenav{zoom:1;width:100%;clear:both;margin:0;padding:0 10px;background:#ffffff;}#modulenav:before{content:"\0020";display:block;height:0;overflow:hidden;}
 #modulenav:after{content:"\0020";display:block;height:0;overflow:hidden;clear:both;}
 #modulenav li{display:-moz-inline-stack;display:inline-block;zoom:1;*display:inline;}

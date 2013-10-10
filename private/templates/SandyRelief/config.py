@@ -270,7 +270,7 @@ def customize_org_organisation(**attr):
             s3db.configure("org_organisation", list_fields=list_fields)
             
         if r.interactive:
-            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
+            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
             s3db.pr_address.comments.label = ""
             s3db.pr_contact.value.label = ""
             s3db.doc_document.url.label = ""
@@ -278,13 +278,15 @@ def customize_org_organisation(**attr):
                 "name",
                 "acronym",
                 "organisation_type_id",
-                S3SQLInlineComponentCheckbox(
+                #S3SQLInlineComponentCheckbox(
+                S3SQLInlineComponentMultiSelectWidget(
                     "service",
                     label = T("Services"),
                     field = "service_id",
                     cols = 4,
                 ),
-                S3SQLInlineComponentCheckbox(
+                #S3SQLInlineComponentCheckbox(
+                S3SQLInlineComponentMultiSelectWidget(
                     "group",
                     label = T("Network"),
                     field = "group_id",
@@ -298,7 +300,8 @@ def customize_org_organisation(**attr):
                     # Ultimately should go into location_id$addr_street
                     fields = ["comments"],
                 ),
-                S3SQLInlineComponentCheckbox(
+                #S3SQLInlineComponentCheckbox(
+                S3SQLInlineComponentMultiSelectWidget(
                     "location",
                     label = T("Neighborhoods Served"),
                     field = "location_id",
