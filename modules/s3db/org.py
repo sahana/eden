@@ -262,8 +262,7 @@ class S3OrganisationModel(S3Model):
         #else:
         #    widget = SQLFORM.widgets.options.widget
 
-        organisation_comment = S3AddResourceLink(c="org",
-                                                 f="organisation",
+        organisation_comment = S3AddResourceLink(c="org", f="organisation",
                                                  label=ADD_ORGANIZATION,
                                                  title=ORGANISATION,
                                                  tooltip=help)
@@ -739,10 +738,9 @@ class S3OrganisationModel(S3Model):
                     acronym = _row.acronym
                     if acronym:
                         name = "%s (%s)" % (name, acronym)
-                record = dict(
-                    id = _row.id,
-                    name = name,
-                    )
+                record = dict(id = _row.id,
+                              name = name,
+                              )
                 append(record)
             output = jsons(output)
 

@@ -168,8 +168,12 @@
                 </xsl:attribute>
             </reference>
             <data field="quantity"><xsl:value-of select="col[@field='Quantity']/text()"/></data>
-            <data field="pack_value"><xsl:value-of select="col[@field='Unit Value']/text()"/></data>
-            <data field="currency"><xsl:value-of select="col[@field='Currency']/text()"/></data>
+            <xsl:if test="col[@field='Unit Value']!=''">
+                <data field="pack_value"><xsl:value-of select="col[@field='Unit Value']/text()"/></data>
+                <xsl:if test="col[@field='Currency']!=''">
+                    <data field="currency"><xsl:value-of select="col[@field='Currency']/text()"/></data>
+                </xsl:if>
+            </xsl:if>
             <data field="tracking_no"><xsl:value-of select="col[@field='Tracking Number']/text()"/></data>
             <data field="bin"><xsl:value-of select="col[@field='Bin']/text()"/></data>
             <data field="expiry_date"><xsl:value-of select="col[@field='Expiry Date']/text()"/></data>

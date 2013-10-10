@@ -768,7 +768,7 @@ class S3LocationModel(S3Model):
         fields = []
         field = table.id
 
-        if _vars.field and _vars.filter == "~" and value:
+        if _vars.field and value:
             pass
         else:
             raise
@@ -779,8 +779,8 @@ class S3LocationModel(S3Model):
         loc_select = _vars.get("loc_select", None)
         if loc_select:
             # S3LocationSelectorWidget
-            fields = [table.id,
-                      table.name,
+            fields = ["id",
+                      "name",
                       ]
         else:
             # S3LocationAutocompleteWidget
@@ -827,15 +827,15 @@ class S3LocationModel(S3Model):
             # addr_street
             fieldname = str.lower(_vars.field2)
             field2 = table[fieldname]
-            fields.append(field2)
+            fields.append(fieldname)
             query = ((field.lower().like(value + "%")) | \
                      (field2.lower().like(value + "%")))
         else:
             # Normal single-field
             query = (field.lower().like(value + "%"))
             if loc_select:
-                fields.append(table.level)
-                fields.append(table.parent)
+                fields.append("level")
+                fields.append("parent")
         resource.add_filter(query)
 
         if level:
@@ -867,59 +867,58 @@ class S3LocationModel(S3Model):
                                  name="Search results are over %d. Please input more characters." \
                                     % MAX_SEARCH_RESULTS)])
 
-        else:
-            if "loc_select" in _vars:
-                # LocationSelector
-                # @ToDo: Deprecate
-                output = S3Exporter().json(resource,
-                                           start=0,
-                                           limit=limit,
-                                           fields=fields,
-                                           orderby=field)
-            else:
-                # S3LocationAutocompleteWidget
-                rows = resource.select(fields=fields,
+        elif loc_select:
+            # LocationSelector
+            # @ToDo: Deprecate
+            output = S3Exporter().json(resource,
                                        start=0,
                                        limit=limit,
-                                       orderby="gis_location.name")["rows"]
-                items = []
-                iappend = items.append
-                COUNTRY = current.messages.COUNTRY
-                for row in rows:
-                    level = row["gis_location.level"]
-                    name = row["gis_location.name"]
-                    if level == "L0":
-                        represent = "%s (%s)" % (name, COUNTRY)
-                    elif level == "L1":
-                        represent = "%s (%s)" % (name, row["gis_location.L0"])
-                    elif level == "L2":
-                        represent = "%s (%s, %s)" % (name, row["gis_location.L1"],
+                                       fields=fields,
+                                       orderby=field)
+        else:
+            # S3LocationAutocompleteWidget
+            rows = resource.select(fields=fields,
+                                   start=0,
+                                   limit=limit,
+                                   orderby="gis_location.name")["rows"]
+            items = []
+            iappend = items.append
+            COUNTRY = current.messages.COUNTRY
+            for row in rows:
+                level = row["gis_location.level"]
+                name = row["gis_location.name"]
+                if level == "L0":
+                    represent = "%s (%s)" % (name, COUNTRY)
+                elif level == "L1":
+                    represent = "%s (%s)" % (name, row["gis_location.L0"])
+                elif level == "L2":
+                    represent = "%s (%s, %s)" % (name, row["gis_location.L1"],
+                                                 row["gis_location.L0"])
+                elif level == "L3":
+                    represent = "%s (%s, %s, %s)" % (name,
+                                                     row["gis_location.L2"],
+                                                     row["gis_location.L1"],
                                                      row["gis_location.L0"])
-                    elif level == "L3":
-                        represent = "%s (%s, %s, %s)" % (name,
+                elif level == "L4":
+                    represent = "%s (%s, %s, %s, %s)" % (name,
+                                                         row["gis_location.L3"],
                                                          row["gis_location.L2"],
                                                          row["gis_location.L1"],
                                                          row["gis_location.L0"])
-                    elif level == "L4":
-                        represent = "%s (%s, %s, %s, %s)" % (name,
+                elif level == "L5":
+                    represent = "%s (%s, %s, %s, %s, %s)" % (name,
+                                                             row["gis_location.L4"],
                                                              row["gis_location.L3"],
                                                              row["gis_location.L2"],
                                                              row["gis_location.L1"],
                                                              row["gis_location.L0"])
-                    elif level == "L5":
-                        represent = "%s (%s, %s, %s, %s, %s)" % (name,
-                                                                 row["gis_location.L4"],
-                                                                 row["gis_location.L3"],
-                                                                 row["gis_location.L2"],
-                                                                 row["gis_location.L1"],
-                                                                 row["gis_location.L0"])
-                    else:
-                        represent = name
-                    iappend({"id"   : row["gis_location.id"],
-                             "name" : represent
-                             })
+                else:
+                    represent = name
+                iappend({"id"   : row["gis_location.id"],
+                         "name" : represent
+                         })
 
-                output = json.dumps(items)
+            output = json.dumps(items)
                                        
         response.headers["Content-Type"] = "application/json"
         return output

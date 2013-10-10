@@ -282,7 +282,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Import", m="import")
                     ),
                     M("Organizations", f="organisation")(
-                        M("Add Organization", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                         M("Search", m="search"),
                         M("Import", m="import")

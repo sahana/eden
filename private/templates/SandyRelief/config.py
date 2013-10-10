@@ -348,6 +348,16 @@ def customize_org_organisation(**attr):
                                     options = "TWITTER"
                                     )
                 ),
+                S3SQLInlineComponent(
+                    "contact",
+                    name = "facebook",
+                    label = T("Facebook"),
+                    multiple = False,
+                    fields = ["value"],
+                    filterby = dict(field = "contact_method",
+                                    options = "FACEBOOK"
+                                    )
+                ),
                 "comments",
             )
             
