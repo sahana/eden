@@ -966,13 +966,13 @@ def about():
     mysqldb_version = None
     pgsql_version = None
     psycopg_version = None
-    if db_string[0].find("sqlite") != -1:
+    if db_string.find("sqlite") != -1:
         try:
             import sqlite3
             sqlite_version = sqlite3.version
         except:
             sqlite_version = T("Unknown")
-    elif db_string[0].find("mysql") != -1:
+    elif db_string.find("mysql") != -1:
         try:
             import MySQLdb
             mysqldb_version = MySQLdb.__revision__
