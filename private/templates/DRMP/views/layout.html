@@ -112,7 +112,7 @@
        <li class='divider'></li>
        {{pass}}
        {{if is_logged_in:}}
-       <li><a href='/{{=appname}}/default/user/profile'><i class='icon-user'></i> {{=auth.user.email}}</li>
+       <li><a href='/{{=appname}}/default/user/profile'><i class='icon-user'></i> {{=auth.user.email}}</a></li>
        {{pass}}
        {{if response.s3.language == "en":}}{{tet_vars=dict(_language="tet")}}{{for var in vars:}}{{tet_vars[var]=vars[var]}}{{pass}}
        <li><a href='{{=URL(args=request.args, vars=tet_vars)}}'><i class='icon-comment-alt'></i> Tetum</a></li>

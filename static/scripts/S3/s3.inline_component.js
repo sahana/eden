@@ -109,7 +109,7 @@ $(function() {
 
         // Collect the input data
         var fieldname,
-            element,
+            selector,
             input,
             value,
             cssclass,
@@ -117,36 +117,44 @@ $(function() {
             fields = data['fields'];
         for (var i=0; i < fields.length; i++) {
             fieldname = fields[i]['name'];
-            element = '#sub_' +
-                      formname + '_' + formname + '_i_' +
-                      fieldname + '_edit_' + rowindex;
-            input = $(element);
+            selector = '#sub_' +
+                       formname + '_' + formname + '_i_' +
+                       fieldname + '_edit_' + rowindex;
+            input = $(selector);
             if (input.length) {
                 // Field is Writable
                 value = input.val();
                 if (input.attr('type') == 'file') {
-                    // Store the upload at the end of the form
-                    var form = input.closest('form');
+                    // Clone the Input ready to accept new files
                     var cloned = input.clone();
-                    if (rowindex == 'none') {
+                    cloned.insertAfter(input);
+                    // Store the original input at the end of the form
+                    // - we move the original input as it doesn't contain the file otherwise on IE, etc
+                    // http://stackoverflow.com/questions/415483/clone-a-file-input-element-in-javascript
+                    var add_button = $('#add-' + formname + '-' + rowindex);
+                    if (add_button.length) {
+                        var multiple = true;
+                    } else {
+                        // Only one row can exist & this must be added during form submission
+                        var multiple = false;
+                    }
+                    if (!multiple && rowindex == 'none') {
                         upload_index = '0';
                     } else {
                         upload_index = rowindex;
                     }
                     var upload_id = 'upload_' + formname + '_' + fieldname + '_' + upload_index;
+                    // Remove any old upload for this index
                     $('#' + upload_id).remove();
-                    if (value.match(/fakepath/)) {
-                        // IE, etc: Remove 'fakepath' from filename
-                        value = value.replace(/(c:\\)*fakepath\\/i, '');
-                    }
-                    // Clone the Input ready for any additional files
-                    cloned.insertAfter(input);
-                    // We move the original input as it doesn't contain the file otherwise on IE, etc
-                    // http://stackoverflow.com/questions/415483/clone-a-file-input-element-in-javascript
+                    var form = input.closest('form');
                     input.css({display: 'none'})
                          .attr('id', upload_id)
                          .attr('name', upload_id)
                          .appendTo(form);
+                    if (value.match(/fakepath/)) {
+                        // IE, etc: Remove 'fakepath' from filename
+                        value = value.replace(/(c:\\)*fakepath\\/i, '');
+                    }
                 } else {
                     cssclass = input.attr('class');
                     if (cssclass == 'generic-widget') {
@@ -427,7 +435,12 @@ $(function() {
                     if (f.attr('type') == 'file') {
                         var empty = d.clone();
                         empty.attr('id', f.attr('id'))
-                             .attr('name', f.attr('name'));
+                             .attr('name', f.attr('name'))
+                             // Set event onto new input to Mark row changed when new files uploaded
+                             .change(function() {
+                            inline_mark_changed(this);
+                            inline_catch_submit(true, this);
+                        });
                         f.replaceWith(empty);
                     } else {
                         default_value = d.val();
@@ -529,7 +542,12 @@ $(function() {
                         if (f.attr('type') == 'file') {
                             var empty = d.clone();
                             empty.attr('id', f.attr('id'))
-                                 .attr('name', f.attr('name'));
+                                 .attr('name', f.attr('name'))
+                                 // Set event onto new input to Mark row changed when new files uploaded
+                                 .change(function() {
+                                inline_mark_changed(this);
+                                inline_catch_submit(true, this);
+                            });
                             f.replaceWith(empty);
                         } else {
                             default_value = d.val();
@@ -615,12 +633,12 @@ $(function() {
         var $form = $(this);
         var success = false;
         $form.find('tr.inline-form.changed').each(function() {
-            var that = $(this);
-            var formname = that.attr('id').split('-').pop();
-            if (that.hasClass('add-row')) {
+            var $this = $(this);
+            var formname = $this.attr('id').split('-').pop();
+            if ($this.hasClass('add-row')) {
                 success = inline_add(formname);
             } else {
-                var rowindex = that.data('rowindex');
+                var rowindex = $this.data('rowindex');
                 success = inline_update(formname, rowindex);
             }
         });
@@ -750,9 +768,9 @@ $(function() {
     var inline_checkbox_events = function() {
         // Listen for changes on all Inline Checkboxes
         $('.inline-checkbox :checkbox').click(function() {
-            var that = $(this);
-            var value = that.val();
-            var names = that.attr('id').split('-');
+            var $this = $(this);
+            var value = $this.val();
+            var names = $this.attr('id').split('-');
             var formname = names[1];
             var fieldname = names[2];
             // Read current data from real input
@@ -767,10 +785,10 @@ $(function() {
                 }
             }
             // Modify data
-            if (that.prop('checked')) {
+            if ($this.prop('checked')) {
                 if (!item) {
                     // Not yet found, so initialise
-                    var label = that.next().html(); // May be fragile to different formstyles :/
+                    var label = $this.next().html(); // May be fragile to different formstyles :/
                     item = {};
                     item[fieldname] = {'text': label, 'value': value};
                     _data.push(item);
@@ -788,9 +806,9 @@ $(function() {
     var inline_multiselect_events = function() {
         // Listen for changes on all Inline MultiSelect Widgets
         $('.inline-multiselect-widget').change(function() {
-            var that = $(this);
-            var values = that.val();
-            var names = that.attr('id').split('-');
+            var $this = $(this);
+            var values = $this.val();
+            var names = $this.attr('id').split('-');
             var formname = names[0];
             var fieldname = names[1];
             // Read current data from real input
@@ -814,7 +832,7 @@ $(function() {
                 for (i = 0; i < len; i++) {
                     item = {};
                     value = new_items[i];
-                    label = that.find('option[value=' + value + ']').html();
+                    label = $this.find('option[value=' + value + ']').html();
                     item[fieldname] = {'text': label,
                                        'value': value
                                        };
@@ -845,11 +863,11 @@ $(function() {
             // Used by S3SQLInlineComponentCheckbox
             // Errors in form, so ensure we show correct checkbox status
             var checkboxes = $('.inline-checkbox :checkbox');
-            var that, value, names, formname, fieldname, data, _data, item, i;
+            var checkbox, value, names, formname, fieldname, data, _data, item, i;
             for (var c=0; c < checkboxes.length; c++) {
-                that = $(checkboxes[c]);
-                value = that.val();
-                names = that.attr('id').split('-');
+                checkbox = $(checkboxes[c]);
+                value = checkbox.val();
+                names = checkbox.attr('id').split('-');
                 formname = names[1];
                 fieldname = names[2];
                 // Read current data from real input
@@ -866,9 +884,9 @@ $(function() {
                 // Modify checkbox state, as-required
                 if (item) {
                     if (item['_changed']) {
-                        that.prop('checked', true);
+                        checkbox.prop('checked', true);
                     } else if (item['_delete']) {
-                        that.prop('checked', false);
+                        checkbox.prop('checked', false);
                     }
                 }
             }
@@ -888,6 +906,5 @@ $(function() {
         inline_button_events();
         inline_checkbox_events();
         inline_multiselect_events();
-
     });
 });

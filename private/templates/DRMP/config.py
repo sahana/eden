@@ -4034,18 +4034,21 @@ def customize_project_project(**attr):
                              ),
                 S3OptionsFilter("organisation_id",
                                 label = T("Lead Organisation"),
-                                cols = 3,
-                                widget="multiselect"
+                                #cols = 3,
+                                widget="multiselect",
                                 ),
                 S3OptionsFilter("location.location_id$L1",
-                                location_level="L1",
-                                widget="multiselect"),
+                                #location_level="L1",
+                                widget="multiselect",
+                                ),
                 S3OptionsFilter("partner.organisation_id",
                                 label = T("Partners"),
-                                widget="multiselect"),
+                                widget="multiselect",
+                                ),
                 S3OptionsFilter("donor.organisation_id",
                                 label = T("Donors"),
-                                widget="multiselect")
+                                widget="multiselect",
+                                )
                 ]
 
             s3db.configure("project_project",
@@ -4151,7 +4154,7 @@ def customize_doc_document(**attr):
         if callable(standard_prep):
             result = standard_prep(r)
 
-        # Filter Out Docs from Newsfeed
+        # Filter Out Docs from Newsfeed & Projects
         current.response.s3.filter = (table.name != None)
 
         if r.interactive:
