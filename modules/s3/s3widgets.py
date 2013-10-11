@@ -619,6 +619,8 @@ class S3AddPersonWidget2(FormWidget):
         with an embedded Autocomplete to select existing people.
 
         It relies on JS code in static/S3/s3.add_person.js
+
+        @ToDo: get working in a non-Bootstrap formstyle
     """
 
     def __init__(self,
@@ -788,9 +790,14 @@ class S3AddPersonWidget2(FormWidget):
                       _id="%s__row" % id,
                       )
         elif callable(formstyle):
-            # @ToDo: Test
+            # @ToDo: Complete (not currently working)
             row = formstyle(id, label, widget, comment)
-            row.add_class("box_top")
+            if isinstance(row, DIV):
+                row.add_class("box_top")
+            else:
+                row[0].add_class("box_top")
+                for i in range(1, len(row)):
+                    row[i].add_class("box_middle")
         else:
             # Unsupported
             raise
@@ -861,8 +868,12 @@ class S3AddPersonWidget2(FormWidget):
                           )
             elif callable(formstyle):
                 # @ToDo: Test
-                row = formstyle(id, label, widget, comment, hidden=hidden)
-                row.add_class("box_middle")
+                row = formstyle(id, label, widget, comment, hidden=False)
+                if isinstance(row, DIV):
+                    row.add_class("box_middle")
+                else:
+                    for i in range(0, len(row)):
+                        row[i].add_class("box_middle")
             else:
                 # Unsupported
                 raise
@@ -4309,9 +4320,14 @@ class S3LocationSelectorWidget2(FormWidget):
                 location_dict[int(l.id)] = data
         else:
             for l in locations:
+                level = l.level
+                if level:
+                    level = int(level[1])
+                else:
+                    s3_debug("Location Hierarchy not setup properly")
+                    continue
                 data = dict(n=l.name,
-                            l=int(l.level[1]),
-                            )
+                            l=level)
                 if l.parent:
                     data["f"] = int(l.parent)
                 if not l.inherited:

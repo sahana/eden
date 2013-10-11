@@ -1720,8 +1720,9 @@ class S3HRSkillModel(S3Model):
         table = define_table(tablename,
                              skill_type_id(empty=False),
                              Field("name",
+                                   length=64, # Mayon Compatibility
                                    label = T("Name"),
-                                   length=64),       # Mayon Compatibility
+                                   ),
                              Field("priority", "integer",
                                    label = T("Priority"),
                                    default = 1,
@@ -1729,7 +1730,8 @@ class S3HRSkillModel(S3Model):
                                    widget = S3SliderWidget(minval=1, maxval=9, steprange=1),
                                    comment = DIV(_class="tooltip",
                                                  _title="%s|%s" % (T("Priority"),
-                                                                   T("Priority from 1 to 9. 1 is most preferred.")))),
+                                                                   T("Priority from 1 to 9. 1 is most preferred.")))
+                                   ),
                              s3_comments(),
                              *s3_meta_fields())
 
@@ -1786,11 +1788,13 @@ class S3HRSkillModel(S3Model):
                                              #widget = S3OrganisationAutocompleteWidget(
                                              #           default_from_profile=True),
                                              comment = None,
-                                             writable = False),
+                                             writable = False,
+                                             ),
                              Field("from_certification", "boolean",
-                                   default=False,
-                                   readable=False,
-                                   writable=False),
+                                   default = False,
+                                   readable = False,
+                                   writable = False,
+                                   ),
                              s3_comments(),
                              *s3_meta_fields())
 
@@ -3052,6 +3056,7 @@ class S3HRExperienceModel(S3Model):
     def model(self):
 
         T = current.T
+        person_id = self.pr_person_id
 
         # =====================================================================
         # Professional Experience (Mission Record)
@@ -3066,7 +3071,7 @@ class S3HRExperienceModel(S3Model):
 
         tablename = "hrm_experience"
         table = self.define_table(tablename,
-                                  self.pr_person_id(),
+                                  person_id(),
                                   self.org_organisation_id(
                                     widget = S3OrganisationAutocompleteWidget(
                                                 default_from_profile=True)
@@ -3079,9 +3084,19 @@ class S3HRExperienceModel(S3Model):
                                           label=T("End Date"),
                                           ),
                                   Field("hours", "double",
-                                        label=T("Hours")),
+                                        label=T("Hours"),
+                                        ),
                                   Field("place",              # We could make this an event_id?
-                                        label=T("Place")),
+                                        label=T("Place"),
+                                        ),
+                                  person_id("supervisor_id",
+                                            label=T("Supervisor"),
+                                            requires = IS_ADD_PERSON_WIDGET(),
+                                            widget = S3AddPersonWidget(),
+                                            # Doesn't work outside of Bootstrap yet
+                                            #requires = IS_ADD_PERSON_WIDGET2(),
+                                            #widget = S3AddPersonWidget2(),
+                                            ),
                                   s3_comments(comment=None),
                                   *s3_meta_fields())
 

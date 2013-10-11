@@ -18,38 +18,41 @@
         var selector = '#' + fieldname;
         var real_input = $(selector);
 
-        // Move the user-visible rows underneath the real (hidden) one
-        var error_row = real_input.next('.error_wrapper');
-        var title_row = $(selector + '_title__row');
-        var org_row = $(selector + '_organisation_id__row');
-        var name_row = $(selector + '_full_name__row');
-        var date_of_birth_row = $(selector + '_date_of_birth__row');
-        var gender_row = $(selector + '_gender__row');
-        var occupation_row = $(selector + '_occupation__row');
-        var mobile_phone_row = $(selector + '_mobile_phone__row');
-        var email_row = $(selector + '_email__row');
-        var box_bottom = $(selector + '_box_bottom');
-        $(selector + '__row').hide()
-                             .after(box_bottom)
-                             .after(email_row)
-                             .after(mobile_phone_row)
-                             .after(occupation_row)
-                             .after(gender_row)
-                             .after(date_of_birth_row)
-                             .after(name_row)
-                             .after(org_row)
-                             .after(title_row)
-                             .after(error_row);
+        if ($(selector + '__row').hasClass('control-group')) {
+            // Bootstrap:
+            // Move the user-visible rows underneath the real (hidden) one
+            var error_row = real_input.next('.error_wrapper');
+            var title_row = $(selector + '_title__row');
+            var org_row = $(selector + '_organisation_id__row');
+            var name_row = $(selector + '_full_name__row');
+            var date_of_birth_row = $(selector + '_date_of_birth__row');
+            var gender_row = $(selector + '_gender__row');
+            var occupation_row = $(selector + '_occupation__row');
+            var mobile_phone_row = $(selector + '_mobile_phone__row');
+            var email_row = $(selector + '_email__row');
+            var box_bottom = $(selector + '_box_bottom');
+            $(selector + '__row').hide()
+                                 .after(box_bottom)
+                                 .after(email_row)
+                                 .after(mobile_phone_row)
+                                 .after(occupation_row)
+                                 .after(gender_row)
+                                 .after(date_of_birth_row)
+                                 .after(name_row)
+                                 .after(org_row)
+                                 .after(title_row)
+                                 .after(error_row);
 
-        title_row.show();
-        org_row.show();
-        name_row.show();
-        date_of_birth_row.show();
-        gender_row.show();
-        occupation_row.show();
-        mobile_phone_row.show();
-        email_row.show();
-        box_bottom.show();
+            title_row.removeClass('hide').show();
+            org_row.removeClass('hide').show();
+            name_row.removeClass('hide').show();
+            date_of_birth_row.removeClass('hide').show();
+            gender_row.removeClass('hide').show();
+            occupation_row.removeClass('hide').show();
+            mobile_phone_row.removeClass('hide').show();
+            email_row.removeClass('hide').show();
+            box_bottom.removeClass('hide').show();
+        }
 
         var value = real_input.val();
         if (value) {
@@ -128,7 +131,7 @@
         $(selector + '_mobile_phone').prop('disabled', true);
         $(selector + '_email').prop('disabled', true);
         // Show the edit button
-        $(selector + '_edit_bar .icon-edit').show();
+        $(selector + '_edit_bar .icon-edit').removeClass('hide').show();
         // Hide the cancel button
         $(selector + '_edit_bar .icon-remove').hide();
     }
@@ -149,7 +152,7 @@
         // Hide the edit button
         $(selector + '_edit_bar .icon-edit').hide();
         // Show the cancel button
-        $(selector + '_edit_bar .icon-remove').show();
+        $(selector + '_edit_bar .icon-remove').removeClass('hide').show();
     }
 
     var cancel = function(fieldname) {
@@ -167,7 +170,7 @@
             $(selector + '_mobile_phone').prop('disabled', true).val(existing.mobile_phone);
             $(selector + '_email').prop('disabled', true).val(existing.email);
             // Show the edit button
-            $(selector + '_edit_bar .icon-edit').show();
+            $(selector + '_edit_bar .icon-edit').removeClass('hide').show();
             // Hide the cancel button
             $(selector + '_edit_bar .icon-remove').hide();
         } else {
@@ -293,7 +296,7 @@
                 });
             },
             search: function(event, ui) {
-                throbber.removeClass('hide').show();
+                throbber.removeClass('hide').removeClass('hide').show();
                 return true;
             },
             response: function(event, ui, content) {

@@ -264,16 +264,21 @@ settings.hrm.filter_certificates = True
 settings.hrm.show_organisation = True
 # Uncomment to allow HRs to have multiple Job Titles
 settings.hrm.multiple_job_titles = True
-# Uncomment to disable Staff experience
-settings.hrm.staff_experience = False
 # Uncomment to disable the use of HR Credentials
 settings.hrm.use_credentials = False
 # Uncomment to enable the use of HR Education
 settings.hrm.use_education = True
-# Uncomment to disable the use of HR Skills
-settings.hrm.use_skills = False
 # Custom label for Organisations in HR module
 settings.hrm.organisation_label = "National Society / Branch"
+
+# RDRT
+# Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
+settings.hrm.skill_types = True
+# RDRT will need these 3 changing within a limited context:
+# Uncomment to disable Staff experience
+settings.hrm.staff_experience = False
+# Uncomment to disable the use of HR Skills
+settings.hrm.use_skills = False
 
 # -----------------------------------------------------------------------------
 def ns_only(f, required=True, branches=True, updateable=True):
