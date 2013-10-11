@@ -38,6 +38,12 @@ def group():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def region():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def sector():
     """ RESTful CRUD controller """
 

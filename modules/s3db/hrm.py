@@ -1540,6 +1540,7 @@ class S3HRSkillModel(S3Model):
         T = current.T
         db = current.db
         auth = current.auth
+        request = current.request
         settings = current.deployment_settings
 
         person_id = self.pr_person_id
@@ -1570,7 +1571,7 @@ class S3HRSkillModel(S3Model):
         else:
             filter_opts = (None,)
 
-        group = current.request.get_vars.get("group", None)
+        group = request.get_vars.get("group", None)
 
         # ---------------------------------------------------------------------
         # Skill Types
@@ -1656,7 +1657,7 @@ class S3HRSkillModel(S3Model):
         label_create = crud_strings[tablename].label_create_button
         if autocomplete:
             # NB FilterField widget needs fixing for that too
-            widget = S3AutocompleteWidget(current.request.controller,
+            widget = S3AutocompleteWidget(request.controller,
                                           "skill")
             tooltip = T("Enter some characters to bring up a list of possible matches")
         else:
@@ -2410,21 +2411,31 @@ class S3HRSkillModel(S3Model):
         table = define_table(tablename,
                              person_id(),
                              certificate_id(),
-                             Field("number", label=T("License Number")),
+                             Field("number",
+                                   label=T("License Number"),
+                                   ),
                              #Field("status", label=T("Status")),
-                             s3_date(label=T("Expiry Date")),
-                             Field("image", "upload", label=T("Scanned Copy")),
+                             s3_date(label = T("Expiry Date")),
+                             Field("image", "upload",
+                                   label=T("Scanned Copy"),
+                                   # upload folder needs to be visible to the download() function as well as the upload
+                                   uploadfolder = os.path.join(request.folder,
+                                                               "uploads"),
+                                   autodelete = True,
+                                   ),
                              # This field can only be filled-out by specific roles
                              # Once this has been filled-out then the other fields are locked
                              organisation_id(label = T("Confirming Organization"),
                                              widget = S3OrganisationAutocompleteWidget(
                                                         default_from_profile=True),
                                              comment = None,
-                                             writable = False),
+                                             writable = False,
+                                             ),
                              Field("from_training", "boolean",
-                                   default=False,
-                                   readable=False,
-                                   writable=False),
+                                   default = False,
+                                   readable = False,
+                                   writable = False,
+                                   ),
                              s3_comments(),
                              *s3_meta_fields())
 

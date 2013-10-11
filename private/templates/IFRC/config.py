@@ -272,6 +272,8 @@ settings.hrm.use_education = True
 settings.hrm.organisation_label = "National Society / Branch"
 
 # RDRT
+# Enable the use of Organisation Regions
+settings.org.regions = True
 # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
 settings.hrm.skill_types = True
 # RDRT will need these 3 changing within a limited context:
@@ -527,6 +529,96 @@ def customize_org_office(**attr):
 settings.ui.customize_org_office = customize_org_office
 
 # -----------------------------------------------------------------------------
+def customize_org_organisation(**attr):
+
+    s3 = current.response.s3
+
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        if not r.component or r.component.name == "branch":
+            if r.interactive or r.representation == "aadata":
+                s3db = current.s3db
+                list_fields = ["id",
+                               "name",
+                               "acronym",
+                               "organisation_type_id",
+                               #(T("Sectors"), "sector.name"),
+                               "country",
+                               "website"
+                               ]
+                
+                type_filter = current.request.get_vars.get("organisation.organisation_type_id$name",
+                                                           None)
+                if type_filter:
+                    type_names = type_filter.split(",")
+                    if len(type_names) == 1:
+                        # Strip Type from list_fields
+                        list_fields.remove("organisation_type_id")
+
+                    if type_filter == "Red Cross / Red Crescent":
+                        # Modify CRUD Strings
+                        ADD_NS = T("Add National Society")
+                        s3.crud_strings.org_organisation = Storage(
+                            title_create=ADD_NS,
+                            title_display=T("National Society Details"),
+                            title_list=T("Red Cross & Red Crescent National Societies"),
+                            title_update=T("Edit National Society"),
+                            title_search=T("Search Red Cross & Red Crescent National Societies"),
+                            title_upload=T("Import Red Cross & Red Crescent National Societies"),
+                            subtitle_create=ADD_NS,
+                            label_list_button=T("List Red Cross & Red Crescent National Societies"),
+                            label_create_button=ADD_NS,
+                            label_delete_button=T("Delete National Society"),
+                            msg_record_created=T("National Society added"),
+                            msg_record_modified=T("National Society updated"),
+                            msg_record_deleted=T("National Society deleted"),
+                            msg_list_empty=T("No Red Cross & Red Crescent National Societies currently registered")
+                            )
+                        # Add Region to list_fields
+                        list_fields.insert(-1, "region_id")
+                        # Region is required
+                        r.table.region_id.requires = r.table.region_id.requires.other
+                    else:
+                        r.table.region_id.readable = r.table.region_id.writable = False
+
+                s3db.configure("org_organisation", list_fields=list_fields)
+
+                if r.interactive:
+                    r.table.country.label = T("Country")
+                    crud_form = S3SQLCustomForm(
+                        "name",
+                        "acronym",
+                        "organisation_type_id",
+                        "region_id",
+                        "country",
+                        #S3SQLInlineComponentCheckbox(
+                        #    "sector",
+                        #    label = T("Sectors"),
+                        #    field = "sector_id",
+                        #    cols = 3,
+                        #),
+                        "phone",
+                        "website",
+                        "logo",
+                        "comments",
+                        )
+                    s3db.configure("org_organisation", crud_form=crud_form)
+
+        return result
+    s3.prep = custom_prep
+
+    return attr
+
+settings.ui.customize_org_organisation = customize_org_organisation
+
+# -----------------------------------------------------------------------------
 def customize_survey_series(**attr):
     """
         Customize survey_series controller
@@ -541,60 +633,6 @@ def customize_survey_series(**attr):
     return attr
 
 settings.ui.customize_survey_series = customize_survey_series
-
-# -----------------------------------------------------------------------------
-def customize_org_organisation(**attr):
-
-    s3 = current.response.s3
-
-    # Custom prep
-    standard_prep = s3.prep
-    def custom_prep(r):
-        # Call standard prep
-        if callable(standard_prep):
-            result = standard_prep(r)
-        else:
-            result = True
-
-        if r.interactive or r.representation.lower() == "aadata":
-            s3db = current.s3db
-            list_fields = ["id",
-                           "name",
-                           "acronym",
-                           "organisation_type_id",
-                           #(T("Sectors"), "sector.name"),
-                           "country",
-                           "website"
-                           ]
-            
-            s3db.configure("org_organisation", list_fields=list_fields)
-        
-        if r.interactive:
-            crud_form = S3SQLCustomForm(
-                "name",
-                "acronym",
-                "organisation_type_id",
-                "region",
-                "country",
-                #S3SQLInlineComponentCheckbox(
-                #    "sector",
-                #    label = T("Sectors"),
-                #    field = "sector_id",
-                #    cols = 3,
-                #),
-                "phone",
-                "website",
-                "logo",
-                "comments",
-            )
-            current.s3db.configure("org_organisation", crud_form=crud_form)
-            
-        return result
-    s3.prep = custom_prep
-
-    return attr
-
-settings.ui.customize_org_organisation = customize_org_organisation
 
 # -----------------------------------------------------------------------------
 # Projects

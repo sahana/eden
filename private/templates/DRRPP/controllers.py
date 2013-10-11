@@ -793,7 +793,7 @@ class organisations():
             "acronym",
             (T("Type"), "organisation_type_id"),
             "website",
-            "region",
+            "region_id",
             "year",
             (T("Notes"), "comments"),
         ]

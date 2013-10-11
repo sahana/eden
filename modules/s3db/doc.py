@@ -113,15 +113,15 @@ class S3DocumentLibrary(S3Model):
                                    # upload folder needs to be visible to the download() function as well as the upload
                                    uploadfolder = os.path.join(folder,
                                                                "uploads"),
-                                   autodelete=True
+                                   autodelete = True
                                    ),
                              Field("name", length=128,
                                    # Allow Name to be added onvalidation
                                    requires = IS_NULL_OR(IS_LENGTH(128)),
-                                   label=T("Name")
+                                   label = T("Name")
                                    ),
                              Field("url",
-                                   label=T("URL"),
+                                   label = T("URL"),
                                    requires = IS_NULL_OR(IS_URL()),
                                    represent = lambda url: \
                                     url and A(url, _href=url) or NONE

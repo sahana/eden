@@ -15,7 +15,7 @@
          Type....................org_organisation$organisation_type_id
          Sectors.................org_sector_organisation$sector_id
          Services................org_service_organisation$service_id
-         Region..................org_organisation.region
+         Region..................org_organisation.region_id
          Country.................org_organisation.country (ISO Code)
          Website.................org_organisation.website
          Phone...................org_organisation.phone
@@ -34,6 +34,7 @@
     <!-- Indexes for faster processing -->
     <xsl:key name="organisation_type" match="row" use="col[@field='Type']"/>
     <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
+    <xsl:key name="region" match="row" use="col[@field='Region']"/>
 
     <!-- ****************************************************************** -->
 
@@ -43,6 +44,12 @@
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation_type',
                                                                        col[@field='Type'])[1])]">
                 <xsl:call-template name="OrganisationType" />
+            </xsl:for-each>
+
+            <!-- Regions -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('region',
+                                                                       col[@field='Region'])[1])]">
+                <xsl:call-template name="Region" />
             </xsl:for-each>
 
             <!-- Branches -->
@@ -144,7 +151,11 @@
                 </data>
             </xsl:if>
             <xsl:if test="col[@field='Region']!=''">
-                <data field="region"><xsl:value-of select="col[@field='Region']"/></data>
+                <reference field="region_id" resource="org_region">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('Region:', col[@field='Region'])"/>
+                    </xsl:attribute>
+                </reference>
             </xsl:if>
             <xsl:if test="col[@field='Website']!=''">
                 <data field="website"><xsl:value-of select="col[@field='Website']"/></data>
@@ -231,6 +242,18 @@
                     <xsl:value-of select="concat('OrgType:', col[@field='Type'])"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="col[@field='Type']"/></data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Region">
+        <xsl:if test="col[@field='Region']!=''">
+            <resource name="org_region">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('Region:', col[@field='Region'])"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="col[@field='Region']"/></data>
             </resource>
         </xsl:if>
     </xsl:template>

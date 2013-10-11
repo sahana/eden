@@ -261,14 +261,14 @@ class S3PersonEntity(S3Model):
         table = define_table(tablename,
                              # The "parent" entity
                              super_link("pe_id", "pr_pentity",
-                                        label=T("Corporate Entity"),
-                                        readable=True,
-                                        writable=True),
+                                        label = T("Corporate Entity"),
+                                        readable = True,
+                                        writable = True),
                              # Role type
                              Field("role_type", "integer",
                                    requires = IS_IN_SET(role_types, zero=None),
                                    represent = lambda opt: \
-                                               role_types.get(opt, UNKNOWN_OPT)),
+                                    role_types.get(opt, UNKNOWN_OPT)),
                              # Role name
                              Field("role", notnull=True),
                              # Path, for faster lookups
@@ -277,8 +277,11 @@ class S3PersonEntity(S3Model):
                                    writable = False),
                              # Type filter, type of entities which can have this role
                              Field("entity_type", "string",
-                                   requires = IS_EMPTY_OR(IS_IN_SET(pe_types, zero=T("ANY"))),
-                                   represent = lambda opt: pe_types.get(opt, UNKNOWN_OPT)),
+                                   requires = IS_EMPTY_OR(IS_IN_SET(pe_types,
+                                                                    zero=T("ANY"))),
+                                   represent = lambda opt: \
+                                    pe_types.get(opt, UNKNOWN_OPT),
+                                   ),
                              # Subtype filter, if the entity type defines its own type
                              Field("sub_type", "integer",
                                    readable = False,
@@ -328,9 +331,10 @@ class S3PersonEntity(S3Model):
         table = define_table(tablename,
                              role_id(),
                              super_link("pe_id", "pr_pentity",
-                                        label=T("Entity"),
-                                        readable=True,
-                                        writable=True),
+                                        label = T("Entity"),
+                                        readable = True,
+                                        writable = True,
+                                        ),
                              *s3_meta_fields())
 
         table.pe_id.requires = IS_ONE_OF(db, "pr_pentity.pe_id",
@@ -361,13 +365,12 @@ class S3PersonEntity(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-            pr_pe_types=pe_types,
-            pr_pe_label=pr_pe_label,
-            pr_role_types=role_types,
-            pr_role_id=role_id,
-            pr_pentity_represent=pr_pentity_represent
-        )
+        return dict(pr_pe_types=pe_types,
+                    pr_pe_label=pr_pe_label,
+                    pr_role_types=role_types,
+                    pr_role_id=role_id,
+                    pr_pentity_represent=pr_pentity_represent
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -668,7 +671,7 @@ class S3OrgAuthModel(S3Model):
                                   *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        return Storage()
+        return dict()
 
 # =============================================================================
 class S3PersonModel(S3Model):
@@ -4814,7 +4817,8 @@ def pr_add_affiliation(master, affiliate, role=None, role_type=OU):
         query = (rtable.pe_id == master_pe) & \
                 (rtable.role == role) & \
                 (rtable.deleted != True)
-        row = current.db(query).select(limitby=(0, 1)).first()
+        row = current.db(query).select(rtable.id,
+                                       limitby=(0, 1)).first()
         if not row:
             data = {"pe_id": master_pe,
                     "role": role,
@@ -4824,6 +4828,7 @@ def pr_add_affiliation(master, affiliate, role=None, role_type=OU):
             role_id = row.id
         if role_id:
             pr_add_to_role(role_id, affiliate_pe)
+
     return role_id
 
 # =============================================================================

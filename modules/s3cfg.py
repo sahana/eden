@@ -1593,6 +1593,12 @@ class S3Config(Storage):
         """
         return self.org.get("branches", True)
 
+    def get_org_regions(self):
+        """
+            Whether to support Organisation regions or not
+        """
+        return self.org.get("regions", False)
+
     def get_org_site_code_len(self):
         """
             Length of auto-generated Codes for Facilities (org_site)

@@ -116,6 +116,29 @@ def supplier():
     """ RESTful CRUD controller """
 
     request.get_vars["organisation.organisation_type_id$name"] = "Supplier"
+
+    # Load model
+    table = s3db.org_organisation
+
+    # Modify CRUD Strings
+    ADD_SUPPLIER = T("Add Supplier")
+    s3.crud_strings.org_organisation = Storage(
+        title_create=ADD_SUPPLIER,
+        title_display=T("Supplier Details"),
+        title_list=T("Suppliers"),
+        title_update=T("Edit Supplier"),
+        title_search=T("Search Suppliers"),
+        title_upload=T("Import Suppliers"),
+        subtitle_create=ADD_SUPPLIER,
+        label_list_button=T("List Suppliers"),
+        label_create_button=ADD_SUPPLIER,
+        label_delete_button=T("Delete Supplier"),
+        msg_record_created=T("Supplier added"),
+        msg_record_modified=T("Supplier updated"),
+        msg_record_deleted=T("Supplier deleted"),
+        msg_list_empty=T("No Suppliers currently registered")
+        )
+
     return s3db.org_organisation_controller()
 
 # END =========================================================================

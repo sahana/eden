@@ -244,7 +244,7 @@ def customize_org_organisation(**attr):
                 "name",
                 "acronym",
                 "organisation_type_id",
-                "region",
+                "region_id",
                 "country",
                 S3SQLInlineComponentCheckbox(
                     "sector",

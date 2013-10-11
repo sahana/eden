@@ -48,7 +48,6 @@ except:
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from gluon import *
-from gluon.dal import Row
 from gluon.sqlhtml import MultipleOptionsWidget
 from gluon.storage import Storage
 from gluon.tools import callback

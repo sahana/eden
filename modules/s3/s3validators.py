@@ -661,7 +661,15 @@ class IS_ONE_OF_EMPTY(Validator):
                 if not_filterby and not_filterby in table:
                     not_filter_opts = self.not_filter_opts
                     if not_filter_opts:
-                        query &= (~(table[not_filterby].belongs(not_filter_opts)))
+                        if None in not_filter_opts:
+                            # Needs special handling (doesn't show up in 'belongs')
+                            _query = (table[not_filterby] == None)
+                            not_filter_opts = [f for f in not_filter_opts if f is not None]
+                            if not_filter_opts:
+                                _query = _query | (table[not_filterby].belongs(not_filter_opts))
+                            query &= (~_query)
+                        else:
+                            query &= (~(table[not_filterby].belongs(not_filter_opts)))
                     if not self.orderby:
                         filterby_field = table[not_filterby]
                         dd.update(orderby=filterby_field)
