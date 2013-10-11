@@ -466,6 +466,9 @@ def customize_pr_person(**attr):
                         label = T("Photo"),
                         multiple = False,
                         fields = ["image"],
+                        filterby = dict(field = "profile",
+                                        options=[True]
+                                        )
                     ),
                 ]
 

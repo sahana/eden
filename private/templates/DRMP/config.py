@@ -255,7 +255,6 @@ def render_contacts(listid, resource, rfields, record, **attr):
     #organisation = record["hrm_human_resource.organisation_id"]
     organisation_id = raw["hrm_human_resource.organisation_id"]
     #org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
-    pe_id = raw["pr_person.pe_id"]
     person_id = raw["hrm_human_resource.person_id"]
     location = record["org_site.location_id"]
     location_id = raw["org_site.location_id"]
@@ -269,17 +268,11 @@ def render_contacts(listid, resource, rfields, record, **attr):
     if isinstance(phone, list):
         phone = phone[0]
 
-    db = current.db
-    s3db = current.s3db
-    ltable = s3db.pr_person_user
-    query = (ltable.pe_id == pe_id)
-    row = db(query).select(ltable.user_id,
-                           limitby=(0, 1)
-                           ).first()
-    if row:
+    if person_id:
         # Use Personal Avatar
-        # @ToDo: Optimise by not doing DB lookups (especially duplicate) within render, but doing these in the bulk query
-        avatar = s3_avatar_represent(row.user_id,
+        # @ToDo: Optimise by not doing DB lookups within render, but doing these in the bulk query
+        avatar = s3_avatar_represent(person_id,
+                                     tablename="pr_person",
                                      _class="media-object")
     else:
         avatar = IMG(_src=URL(c="static", f="img", args="blank-user.gif"),
@@ -287,7 +280,7 @@ def render_contacts(listid, resource, rfields, record, **attr):
 
     # Edit Bar
     permit = current.auth.s3_has_permission
-    table = db.pr_person
+    table = current.s3db.pr_person
     if permit("update", table, record_id=person_id):
         vars = {"refresh": listid,
                 "record": record_id,
@@ -2889,7 +2882,6 @@ def customize_hrm_human_resource_fields():
     table.modified_on.represent = datetime_represent
 
     list_fields = ["person_id",
-                   "person_id$pe_id",
                    "organisation_id",
                    "site_id$location_id",
                    "site_id$location_id$addr_street",
@@ -3312,12 +3304,15 @@ def customize_org_organisation(**attr):
                                           list_layout = render_profile_posts,
                                           )
                 record = r.record
+                if record.logo:
+                    logo = URL(c="default", f="download", args=[record.logo])
+                else:
+                    logo = ""
                 s3db.configure("org_organisation",
                                profile_title = "%s : %s" % (s3.crud_strings["org_organisation"].title_list, 
                                                             record.name),
                                profile_header = DIV(A(IMG(_class="media-object",
-                                                          _src=URL(c="default", f="download",
-                                                                   args=[record.logo]),
+                                                          _src=logo,
                                                           ),
                                                       _class="pull-left",
                                                       #_href=org_url,
@@ -3696,6 +3691,9 @@ def customize_pr_person(**attr):
                         label = T("Photo"),
                         multiple = False,
                         fields = ["image"],
+                        filterby = dict(field = "profile",
+                                        options=[True]
+                                        )
                     ),
                 ]
 
