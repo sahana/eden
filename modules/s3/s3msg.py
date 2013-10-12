@@ -451,7 +451,8 @@ class S3Msg(object):
                               from_address=fromaddress,
                               inbound=False,
                               )
-            s3db.update_super(table, dict(id=id))
+            record = dict(id=id)
+            s3db.update_super(table, record)
             message_id = record["message_id"]
         elif pr_message_method == "SMS":
             table = s3db.msg_sms_outbox
@@ -459,7 +460,8 @@ class S3Msg(object):
                               #from_address=fromaddress,
                               inbound=False,
                               )
-            s3db.update_super(table, dict(id=id))
+            record = dict(id=id)
+            s3db.update_super(table, record)
             message_id = record["message_id"]
         elif pr_message_method == "TWITTER":
             table = s3db.msg_twitter_outbox
@@ -467,7 +469,8 @@ class S3Msg(object):
                               from_address=fromaddress,
                               inbound=False,
                               )
-            s3db.update_super(table, dict(id=id))
+            record = dict(id=id)
+            s3db.update_super(table, record)
             message_id = record["message_id"]
         else:
             # @ToDo
