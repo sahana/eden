@@ -384,7 +384,7 @@ class S3SQLDefaultForm(S3SQLForm):
                                           onvalidation = onvalidation,
                                           onaccept = onaccept,
                                           link = link,
-                                          http = request.http
+                                          http = request.http,
                                           format = format,
                                           )
             if success:
