@@ -384,7 +384,9 @@ class S3SQLDefaultForm(S3SQLForm):
                                           onvalidation = onvalidation,
                                           onaccept = onaccept,
                                           link = link,
-                                          http = request.http)
+                                          http = request.http
+                                          format = format,
+                                          )
             if success:
                 response.confirmation = message
                 logged = True
@@ -521,7 +523,9 @@ class S3SQLDefaultForm(S3SQLForm):
                 onvalidation = None,
                 onaccept = None,
                 link = None,
-                http = "POST"):
+                http = "POST",
+                format = None,
+                ):
         """
             Process the form
 

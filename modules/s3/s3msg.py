@@ -285,12 +285,13 @@ class S3Msg(object):
                                              mtable.from_address,
                                              limitby=(0, 1)).first()
                 message = rmessage.body
-                subject_in = ""
+                subject = ""
                 if rmessage.instance_type == "msg_email":
-                    mquery = (s3db.msg_email.message_id == rmessage.id)
-                    subject_in = db(mquery).select(s3db.msg_email.subject,
-                                                   limitby=(0, 1)).first()
-                    subject_in = subject_in.subject
+                    etable = s3db.msg_email
+                    mquery = (etable.message_id == rmessage.id)
+                    email = db(mquery).select(etable.subject,
+                                              limitby=(0, 1)).first()
+                    subject = "Re: %s" % email.subject
                 try:
                     contact = rmessage.from_address.split("<")[1].split(">")[0]
                     query = (contact_method == "EMAIL") & \
@@ -329,11 +330,6 @@ class S3Msg(object):
                         db(pquery).update(reply = flow.reply + reply)
                         db.commit()
                         return
-
-                if subject_in:
-                    subject = "Re: " + subject_in
-                else:
-                    subject = ""
 
                 if pe_ids:
                     for pe_id in pe_ids:
@@ -449,6 +445,7 @@ class S3Msg(object):
             id = table.insert(body=message,
                               subject=subject,
                               from_address=fromaddress,
+                              #to_address=pe_id,
                               inbound=False,
                               )
             record = dict(id=id)
@@ -1671,7 +1668,7 @@ class S3Msg(object):
         s3db = current.s3db
         db = current.db
         ctable = s3db.msg_rss_channel
-        ftable = s3db.msg_rss_feed
+        ftable = s3db.msg_rss_inbox
         ptable = s3db.msg_parsing_status
 
         query = (ctable.deleted == False) & (ctable.subscribed == True)
@@ -2074,6 +2071,8 @@ class S3Compose(S3CRUD):
         pe_field.label = T("Recipient(s)")
         pe_field.writable = True
         if recipients:
+            # Don't download a SELECT
+            pe_field.requires = None
             # Tell onvalidation about them
             self.recipients = recipients
 

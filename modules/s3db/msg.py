@@ -82,7 +82,7 @@ class S3MessagingModel(S3Model):
         #
 
         message_types = Storage(msg_email = T("Email"),
-                                msg_rss_feed = T("RSS"),
+                                msg_rss_inbox = T("RSS"),
                                 msg_sms_outbox = T("SMS OutBox"),
                                 msg_twilio_inbox = T("Twilio SMS InBox"),
                                 msg_twitter = T("Twitter InBox"),
@@ -94,7 +94,7 @@ class S3MessagingModel(S3Model):
         table = self.super_entity(tablename, "message_id",
                                   message_types,
                                   Field("body", "text",
-                                        label = T("Body")),
+                                        label = T("Message")),
                                   Field("from_address",
                                         label = T("From")),
                                   Field("to_address",
@@ -569,14 +569,17 @@ class S3EmailModel(S3ChannelModel):
         tablename = "msg_email"
         table = define_table(tablename,
                              self.super_link("message_id", "msg_message"),
+                             Field("subject", length=78,    # RFC 2822
+                                   label = T("Subject")),
                              Field("body", "text",
-                                   label = T("Body")),
+                                   label = T("Message")),
                              Field("from_address", #notnull=True,
                                    default = sender,
                                    label = T("Sender"),
                                    requires = IS_EMAIL()),
-                             Field("subject", length=78,    # RFC 2822
-                                   label = T("Subject")),
+                             Field("to_address",
+                                   label = T("To"),
+                                   requires = IS_EMAIL()),
                              Field("inbound", "boolean",
                                    default = False,
                                    represent = lambda direction: \
@@ -589,24 +592,9 @@ class S3EmailModel(S3ChannelModel):
                        super_entity = "msg_message",
                        )
 
-        #table.sender.comment = SPAN("*", _class="req")
-        VIEW_EMAIL_INBOX = T("View Email InBox")
-        current.response.s3.crud_strings[tablename] = Storage(
-            #title_create = T("Add Incoming Email"),
-            title_display = T("Email Details"),
-            title_list = VIEW_EMAIL_INBOX,
-            #title_update = T("Edit Email"),
-            title_search = T("Search Email InBox"),
-            label_list_button = VIEW_EMAIL_INBOX,
-            #label_create_button = T("Add Incoming Email"),
-            #msg_record_created = T("Email added"),
-            #msg_record_modified = T("Email updated"),
-            msg_record_deleted = T("Email deleted"),
-            msg_list_empty = T("No Emails currently in InBox"))
-
         # ---------------------------------------------------------------------
         # Status
-        # - @ToDo: What is this used for?
+        # - record whether email sent ok or not
         tablename = "msg_email_inbound_status"
         table = define_table(tablename,
                              Field("status"))
@@ -902,7 +890,7 @@ class S3RSSModel(S3ChannelModel):
     """
 
     names = ["msg_rss_channel",
-             "msg_rss_feed"
+             "msg_rss_inbox"
              ]
 
     def model(self):
@@ -932,9 +920,9 @@ class S3RSSModel(S3ChannelModel):
                        )
 
         # ---------------------------------------------------------------------
-        # RSS Feeds
+        # RSS Feed Posts
         #
-        tablename = "msg_rss_feed"
+        tablename = "msg_rss_inbox"
         table = define_table(tablename,
                              self.super_link("message_id", "msg_message"),
                              Field("title"), # Subject?
@@ -1000,7 +988,7 @@ class S3SMSOutboundModel(S3Model):
         table = define_table(tablename,
                              self.super_link("message_id", "msg_message"),
                              Field("body", "text",
-                                   #label = T("Body"),
+                                   #label = T("Message"),
                                    ),
                              #Field("from_address",
                              #      default = sender,
@@ -1342,7 +1330,7 @@ class S3TwitterModel(S3Model):
         table = define_table(tablename,
                              self.super_link("message_id", "msg_message"),
                              Field("body", "text",
-                                   label = T("Body")
+                                   label = T("Message")
                                    ),
                              #Field("from_address",
                              #      default = sender,
@@ -1370,15 +1358,15 @@ class S3TwitterModel(S3Model):
         table = define_table(tablename,
                              self.super_link("message_id", "msg_message"),
                              Field("body", length=140,
-                                   label = T("Body"),
+                                   label = T("Message"),
                                    ),
                              Field("from_address", #notnull=True,
-                                   label = T("Posted by"),
+                                   label = T("From"),
                                    requires = IS_NOT_EMPTY(),
                                    represent = self.twitter_represent,
                                    ),
                              Field("to_address",
-                                   label = T("Sent To"),
+                                   label = T("To"),
                                    represent = self.twitter_represent,
                                    ),
                              Field("inbound", "boolean",

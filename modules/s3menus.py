@@ -1444,19 +1444,21 @@ class S3OptionsMenu(object):
 
         return M(c="msg")(
                     M("Compose", f="compose"),
+                    M("InBox", f="inbox")(
+                        M("Email", f="email_inbox"),
+                        M("RSS", f="rss_inbox"),
+                        M("Twilio SMS", f="twilio_inbox"),
+                        M("Twitter", f="twitter_inbox"),
+                    ),
+                    M("Outbox", f="outbox")(
+                       M("Email", f="email_outbox"),
+                       M("SMS", f="sms_outbox"),
+                       M("Twitter", f="twitter_outbox"),
+                    ),
+                    M("Message Log", f="message"),
                     M("Distribution groups", f="group")(
                         M("List/Add", f="group"),
                         M("Group Memberships", f="group_membership"),
-                    ),
-                    M("InBox", f="inbox"),
-                    M("Email InBox", f="email_inbox"),
-                    M("RSS Feeds", f="rss_feed"),
-                    M("Twilio SMS InBox", f="twilio_inbox"),
-                    M("Message Log", f="message"),
-                    M("Outbox", f="outbox"),
-                    M("Twitter", f="twitter_channel")(
-                       M("Twitter InBox", f="twitter_inbox"),
-                       M("Twitter Outbox", f="twitter_outbox"),
                     ),
                     M("Twitter Search", f="twitter_result")(
                        M("Twitter Settings", f="twitter_search_channel"),

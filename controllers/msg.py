@@ -18,62 +18,17 @@ def index():
     response.title = module_name
     return dict(module_name=module_name)
 
+# -----------------------------------------------------------------------------
+def basestation():
+    """ RESTful CRUD controller for Base Stations """
+
+    return s3_rest_controller()
+
 # =============================================================================
 def compose():
     """ Compose a Message which can be sent to a pentity via a number of different communications channels """
 
     return msg.compose()
-
-# =============================================================================
-def outbox():
-    """ View the contents of the Outbox """
-
-    if not auth.s3_logged_in():
-        session.error = T("Requires Login!")
-        redirect(URL(c="default", f="user", args="login"))
-
-    tablename = "%s_%s" % (module, resourcename)
-    table = s3db[tablename]
-
-    table.message_id.label = T("Message")
-    table.message_id.writable = False
-    table.message_id.readable = True
-
-    table.pe_id.readable = True
-    table.pe_id.label = T("Recipient")
-
-    # Subject works for Email but not SMS
-    #table.message_id.represent = lambda id: db(db.msg_log.id == id).select(db.msg_log.message, limitby=(0, 1)).first().message
-    table.pe_id.represent = s3db.pr_PersonEntityRepresent(default_label="")
-
-    # CRUD Strings
-    s3.crud_strings[tablename] = Storage(
-        title_list = T("View Outbox"),
-        title_update = T("Edit Message"),
-        label_list_button = T("View Outbox"),
-        label_delete_button = T("Delete Message"),
-        msg_record_modified = T("Message updated"),
-        msg_record_deleted = T("Message deleted"),
-        msg_list_empty = T("No Messages currently in Outbox")
-    )
-
-    add_btn = A(T("Compose"),
-                _class="action-btn",
-                _href=URL(f="compose")
-                )
-
-    s3db.configure(tablename, listadd=False)
-
-    def postp(r, output):
-
-        if isinstance(output, dict):
-            output["rheader"] = add_btn
-
-        return output
-
-    s3.postp = postp
-
-    return s3_rest_controller(module, resourcename)
 
 # =============================================================================
 def message():
@@ -82,7 +37,6 @@ def message():
     """
 
     tablename = "msg_message"
-
     table = s3db.msg_message
 
     table.instance_type.readable = True
@@ -99,13 +53,9 @@ def message():
         msg_list_empty = T("No Messages currently in the Message Log")
     )
 
-    s3db.configure(tablename, listadd=False)
-
     def postp(r, output):
-
         if r.interactive:
             s3_action_buttons(r)
-
             s3.actions += [
                 dict(label=str(T("Mark Sender")),
                      _class="action-btn",
@@ -114,8 +64,11 @@ def message():
                 ]
 
         return output
-
     s3.postp = postp
+
+    s3db.configure(tablename,
+                   insertable=False,
+                   editable=False)
 
     return s3_rest_controller()
 
@@ -151,6 +104,339 @@ def mark_sender():
 
     url = URL(f="sender", args=args, vars=dict(sender=sender))
     redirect(url)
+
+# =============================================================================
+def outbox():
+    """ View the contents of the Outbox """
+
+    if not auth.s3_logged_in():
+        session.error = T("Requires Login!")
+        redirect(URL(c="default", f="user", args="login"))
+
+    tablename = "msg_outbox"
+    table = s3db[tablename]
+
+    table.message_id.label = T("Message")
+    table.message_id.writable = False
+    table.message_id.readable = True
+
+    table.pe_id.readable = True
+    table.pe_id.label = T("Recipient")
+
+    # Subject works for Email but not SMS
+    #table.message_id.represent = lambda id: db(db.msg_log.id == id).select(db.msg_log.message, limitby=(0, 1)).first().message
+    table.pe_id.represent = s3db.pr_PersonEntityRepresent(default_label="")
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_list = T("View Outbox"),
+        title_update = T("Edit Message"),
+        label_list_button = T("View Outbox"),
+        label_delete_button = T("Delete Message"),
+        msg_record_modified = T("Message updated"),
+        msg_record_deleted = T("Message deleted"),
+        msg_list_empty = T("No Messages currently in Outbox")
+    )
+
+    def postp(r, output):
+        if isinstance(output, dict):
+            add_btn = A(T("Compose"),
+                        _class="action-btn",
+                        _href=URL(f="compose")
+                        )
+            output["rheader"] = add_btn
+
+        return output
+    s3.postp = postp
+
+    s3db.configure(tablename,
+                   insertable=False,
+                   editable=False)
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def email_outbox():
+    """
+        RESTful CRUD controller for the Email Inbox
+        - all Outbound Email Messages are visible here
+    """
+
+    if not auth.s3_logged_in():
+        session.error = T("Requires Login!")
+        redirect(URL(c="default", f="user", args="login"))
+
+    tablename = "msg_email"
+    table = s3db.msg_email
+    s3.filter = (table.inbound == False)
+    table.inbound.readable = False
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_list = T("View Outbox"),
+        title_update = T("Edit Message"),
+        label_list_button = T("View Outbox"),
+        label_delete_button = T("Delete Message"),
+        msg_record_modified = T("Message updated"),
+        msg_record_deleted = T("Message deleted"),
+        msg_list_empty = T("No Messages currently in Outbox")
+    )
+
+    s3db.configure(tablename,
+                   insertable=False,
+                   editable=False)
+
+    return s3_rest_controller(module, "email")
+
+# -----------------------------------------------------------------------------
+def sms_outbox():
+    """
+        RESTful CRUD controller for the SMS Outbox
+        - all sent SMS are visible here
+    """
+
+    if not auth.s3_logged_in():
+        session.error = T("Requires Login!")
+        redirect(URL(c="default", f="user", args="login"))
+
+    tablename = "msg_sms_outbox"
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_list = T("View Outbox"),
+        title_update = T("Edit Message"),
+        label_list_button = T("View Outbox"),
+        label_delete_button = T("Delete Message"),
+        msg_record_modified = T("Message updated"),
+        msg_record_deleted = T("Message deleted"),
+        msg_list_empty = T("No Messages currently in Outbox")
+    )
+
+    s3db.configure(tablename,
+                   insertable=False,
+                   editable=False)
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def twitter_outbox():
+    """
+        RESTful CRUD controller for the Twitter Outbox
+        - all sent Tweets are visible here
+    """
+
+    if not auth.s3_logged_in():
+        session.error = T("Requires Login!")
+        redirect(URL(c="default", f="user", args="login"))
+
+    tablename = "msg_twitter_outbox"
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_list = T("View Outbox"),
+        title_update = T("Edit Message"),
+        label_list_button = T("View Outbox"),
+        label_delete_button = T("Delete Message"),
+        msg_record_modified = T("Message updated"),
+        msg_record_deleted = T("Message deleted"),
+        msg_list_empty = T("No Messages currently in Outbox")
+    )
+
+    s3db.configure(tablename,
+                   insertable=False,
+                   editable=False)
+
+    return s3_rest_controller()
+
+# =============================================================================
+def inbox():
+    """
+        RESTful CRUD controller for the Inbox
+        - all Inbound Messages are visible here
+    """
+
+    if not auth.s3_logged_in():
+        session.error = T("Requires Login!")
+        redirect(URL(c="default", f="user", args="login"))
+
+    table = s3db.msg_message
+    s3.filter = (table.inbound == True)
+    table.inbound.readable = False
+
+    tablename = "msg_message"
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_list = T("View InBox"),
+        title_update = T("Edit Message"),
+        label_list_button = T("View InBox"),
+        label_delete_button = T("Delete Message"),
+        msg_record_modified = T("Message updated"),
+        msg_record_deleted = T("Message deleted"),
+        msg_list_empty = T("No Messages currently in InBox")
+    )
+
+    s3db.configure(tablename,
+                   insertable=False,
+                   editable=False)
+
+    return s3_rest_controller(module, "message")
+
+# =============================================================================
+def rss_inbox():
+    """
+       RESTful CRUD controller for RSS feed posts
+    """
+
+    if not auth.s3_has_role(ADMIN):
+        session.error = UNAUTHORISED
+        redirect(URL(f="index"))
+
+    tablename = "msg_rss_inbox"
+    table = s3db.msg_rss_inbox
+
+    # To represent the description suitably
+    # If it is an image display an image
+    #table.description.represent = lambda description:  HTML(description)
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_display = T("RSS Post Details"),
+        title_list = T("RSS Posts"),
+        title_update = T("Edit RSS Post"),
+        label_list_button = T("View RSS Posts"),
+        msg_record_deleted = T("RSS Post deleted"),
+        msg_list_empty = T("No Posts available")
+        )
+
+    s3db.configure(tablename,
+                   insertable=False,
+                   editable=False)
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def email_inbox():
+    """
+        RESTful CRUD controller for the Email Inbox
+        - all Inbound Email Messages are visible here
+    """
+
+    if not auth.s3_logged_in():
+        session.error = T("Requires Login!")
+        redirect(URL(c="default", f="user", args="login"))
+
+    tablename = "msg_message"
+    table = s3db.msg_email
+    s3.filter = (table.inbound == True)
+    table.inbound.readable = False
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_list = T("View InBox"),
+        title_update = T("Edit Message"),
+        label_list_button = T("View InBox"),
+        label_delete_button = T("Delete Message"),
+        msg_record_modified = T("Message updated"),
+        msg_record_deleted = T("Message deleted"),
+        msg_list_empty = T("No Messages currently in InBox")
+    )
+
+    s3db.configure(tablename,
+                   insertable=False,
+                   editable=False)
+
+    return s3_rest_controller(module, "email")
+
+# -----------------------------------------------------------------------------
+def twilio_inbox():
+    """
+        RESTful CRUD controller for the Twilio SMS Inbox
+        - all Inbound SMS Messages from Twilio go here
+    """
+
+    if not auth.s3_logged_in():
+        session.error = T("Requires Login!")
+        redirect(URL(c="default", f="user", args="login"))
+
+    tablename = "msg_twilio_inbox"
+    table = s3db[tablename]
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_list = T("View InBox"),
+        title_update = T("Edit Message"),
+        label_list_button = T("View InBox"),
+        label_delete_button = T("Delete Message"),
+        msg_record_modified = T("Message updated"),
+        msg_record_deleted = T("Message deleted"),
+        msg_list_empty = T("No Messages currently in InBox")
+    )
+
+    s3db.configure(tablename,
+                   insertable=False,
+                   editable=False)
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def twitter():
+    """
+        Twitter RESTful Controller
+
+        @ToDo: Action Button to update async
+    """
+
+    def prep(r):
+        if r.interactive:
+            table = r.table
+            if not db(table.id > 0).select(table.id,
+                                           limitby=(0, 1)).first():
+                # Update results
+                result = msg.receive_subscribed_tweets()
+                if not result:
+                    session.error = T("Need to configure Twitter Authentication")
+                    redirect(URL(f="twitter_channel", args=[1, "update"]))
+        return True
+    s3.prep = prep
+
+    s3db.configure("msg_twitter",
+                   insertable=False,
+                   editable=False)
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def twitter_inbox():
+    """
+        RESTful CRUD controller for the Twitter Inbox
+        - all Inbound Tweets (Directed Messages) are visible here
+    """
+
+    if not auth.s3_logged_in():
+        session.error = T("Requires Login!")
+        redirect(URL(c="default", f="user", args="login"))
+
+    tablename = "msg_twitter"
+    table = s3db.msg_twitter
+    s3.filter = (table.inbound == True)
+    table.inbound.readable = False
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_list = T("View InBox"),
+        title_update = T("Edit Message"),
+        label_list_button = T("View InBox"),
+        label_delete_button = T("Delete Message"),
+        msg_record_modified = T("Message updated"),
+        msg_record_deleted = T("Message deleted"),
+        msg_list_empty = T("No Messages currently in InBox")
+    )
+
+    s3db.configure(tablename,
+                   insertable=False,
+                   editable=False)
+
+    return s3_rest_controller(module, "twitter")
 
 # =============================================================================
 def tropo():
@@ -214,32 +500,6 @@ def tropo():
     except:
         # GET request or some random POST
         pass
-
-# =============================================================================
-def twitter():
-    """
-        Twitter RESTful Controller
-
-        @ToDo: Action Button to update async
-    """
-
-    def prep(r):
-        if r.interactive:
-            table = r.table
-            if not db(table.id > 0).select(table.id,
-                                           limitby=(0, 1)).first():
-                # Update results
-                result = msg.receive_subscribed_tweets()
-                if not result:
-                    session.error = T("Need to configure Twitter Authentication")
-                    redirect(URL(f="twitter_channel", args=[1, "update"]))
-        return True
-    s3.prep = prep
-
-    s3db.configure("msg_twitter",
-                   insertable=False,
-                   editable=False)
-    return s3_rest_controller()
 
 # =============================================================================
 @auth.s3_requires_membership(1)
@@ -441,38 +701,136 @@ def email_inbound_channel():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def rss_feed():
+def mcommons_channel():
     """
-       RESTful CRUD controller for RSS feeds
-       - appears in the administration menu
+        RESTful CRUD controller for Mobile Commons SMS Channels
+            - appears in the administration menu
     """
 
     if not auth.s3_has_role(ADMIN):
-
         session.error = UNAUTHORISED
         redirect(URL(f="index"))
 
+    tablename = "msg_mcommons_channel"
+    table = s3db[tablename]
 
-    tablename = "msg_rss_feed"
-    table = s3db.msg_rss_feed
+    table.name.label = T("Account Name")
+    table.name.comment = DIV(_class="tooltip",
+                             _title="%s|%s" % (T("Account Name"),
+                                               T("Name for your Twilio Account.")))
 
-    # To represent the description suitably
-    # If it is an image display an image
-    #table.description.represent = lambda description:  HTML(description)
+    table.campaign_id.label = T("Campaign ID")
 
+    table.url.label = T("URL")
+    table.url.comment = DIV(_class="tooltip",
+                            _title="%s|%s" % (T("URL"),
+                                              T("URL for the Mobile Commons API")))
+
+    table.username.label = T("Username")
+    table.password.label = T("Password")
+    table.timestmp.label = T("Last Downloaded")
+    table.timestmp.writable = False
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
-        title_display = T("RSS Feeds Details"),
-        title_list = T("RSS Feeds"),
-        title_update = T("Edit RSS Feeds"),
-        label_list_button = T("View RSS Feeds"),
-        msg_record_deleted = T("RSS Feed deleted"),
-        msg_list_empty = T("No Feeds available")
+        title_display = T("Mobile Commons Setting Details"),
+        title_list = T("Mobile Commons Settings"),
+        title_create = T("Add Mobile Commons Settings"),
+        title_update = T("Edit Mobile Commons Settings"),
+        label_list_button = T("View Mobile Commons Settings"),
+        label_create_button = T("Add Mobile Commons Settings"),
+        msg_record_created = T("Mobile Commons Setting added"),
+        msg_record_deleted = T("Mobile Commons Setting deleted"),
+        msg_list_empty = T("No Mobile Commons Settings currently defined"),
+        msg_record_modified = T("Mobile Commons settings updated")
         )
 
-    #response.menu_options = admin_menu_options
-    s3db.configure(tablename, listadd=False, deletable=True)
+    def postp(r, output):
+        if r.interactive:
+            stable = s3db.scheduler_task
+            table = r.table
+
+            s3_action_buttons(r)
+            query = (stable.enabled == False) & \
+                    (stable.function_name == "msg_mcommons_poll")
+            records = db(query).select(stable.vars)
+            rows = []
+            for record in records:
+                if "account_id" in record.vars:
+                    r = record.vars.split("\"account_id\":")[1]
+                    s = r.split("}")[0]
+                    s = s.split("\"")[1].split("\"")[0]
+
+                    record1 = db(table.campaign_id == s).select(table.id)
+                    if record1:
+                        for rec in record1:
+                            rows += [rec]
+
+            restrict_e = [str(row.id) for row in rows]
+
+            query = (stable.enabled == True) & \
+                    (stable.function_name == "msg_mcommons_poll")
+            records = db(query).select(stable.vars)
+            rows = []
+            for record in records:
+                if "account_id" in record.vars:
+                    r = record.vars.split("\"account_id\":")[1]
+                    s = r.split("}")[0]
+                    s = s.split("\"")[1].split("\"")[0]
+
+                    record1 = db(table.campaign_id == s).select(table.id)
+                    if record1:
+                        for rec in record1:
+                            rows += [rec]
+
+            restrict_d = [str(row.id) for row in rows]
+
+            query = (stable.id > 0) & \
+                    (stable.function_name == "msg_mcommons_poll")
+            records = db(query).select(stable.vars)
+            tasks = [record.vars for record in records]
+            sources = []
+            for task in tasks:
+                if "account_id" in task:
+                    u = task.split("\"account_id\":")[1]
+                    v = u.split("}")[0]
+                    v = v.split("\"")[1].split("\"")[0]
+                    sources += [v]
+
+            settings = db(table.deleted == False).select(table.id,
+                                                         table.campaign_id)
+            rows = []
+            for setting in settings :
+                if setting.campaign_id:
+                    if (setting.campaign_id not in sources):
+                        if setting:
+                            rows += [setting]
+
+            restrict_a = [str(row.id) for row in rows]
+
+            s3.actions = \
+            s3.actions + [
+                           dict(label=str(T("Enable")),
+                                _class="action-btn",
+                                url=URL(f="enable_mcommons_sms",
+                                        args="[id]"),
+                                restrict = restrict_e)
+                           ]
+            s3.actions.append(dict(label=str(T("Disable")),
+                                   _class="action-btn",
+                                   url = URL(f = "disable_mcommons_sms",
+                                             args = "[id]"),
+                                   restrict = restrict_d)
+                              )
+            s3.actions.append(dict(label=str(T("Activate")),
+                                   _class="action-btn",
+                                   url = URL(f = "schedule_mcommons_sms",
+                                             args = "[id]"),
+                                   restrict = restrict_a)
+                              )
+        return output
+    s3.postp = postp
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
@@ -581,6 +939,391 @@ def rss_channel():
     s3.postp = postp
 
     return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def twilio_inbound_channel():
+    """
+        RESTful CRUD controller for Twilio SMS channels
+            - appears in the administration menu
+    """
+
+    if not auth.s3_has_role(ADMIN):
+        session.error = UNAUTHORISED
+        redirect(URL(f="index"))
+
+    tablename = "msg_twilio_inbound_channel"
+    table = s3db[tablename]
+
+    table.account_name.label = T("Account Name")
+    table.account_name.comment = DIV(_class="tooltip",
+                                     _title="%s|%s" % (T("Account Name"),
+                                                       T("Identifier Name for your Twilio Account.")))
+
+    table.url.label = T("URL")
+    table.url.comment = DIV(_class="tooltip",
+                            _title="%s|%s" % (T("URL"),
+                                              T("URL for the twilio API.")))
+
+    table.account_sid.label = "Account SID"
+    table.auth_token.label = T("AUTH TOKEN")
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_display = T("Twilio Setting Details"),
+        title_list = T("Twilio Settings"),
+        title_create = T("Add Twilio Settings"),
+        title_update = T("Edit Twilio Settings"),
+        label_list_button = T("View Twilio Settings"),
+        label_create_button = T("Add Twilio Settings"),
+        msg_record_created = T("Twilio Setting added"),
+        msg_record_deleted = T("Twilio Setting deleted"),
+        msg_list_empty = T("No Twilio Settings currently defined"),
+        msg_record_modified = T("Twilio settings updated")
+        )
+
+    def postp(r, output):
+
+        stable = s3db.scheduler_task
+        ttable = r.table
+
+        s3_action_buttons(r)
+        query = (stable.enabled == False) & \
+                (stable.function_name == "msg_twilio_poll")
+        records = db(query).select()
+        rows = []
+        for record in records:
+            if "account_id" in record.vars:
+                r = record.vars.split("\"account_id\":")[1]
+                s = r.split("}")[0]
+                s = s.split("\"")[1].split("\"")[0]
+
+                record1 = db(ttable.account_name == s).select(ttable.id)
+                if record1:
+                    for rec in record1:
+                        rows += [rec]
+
+        restrict_e = [str(row.id) for row in rows]
+
+        query = (stable.enabled == True) & \
+                (stable.function_name == "msg_twilio_poll")
+        records = db(query).select()
+        rows = []
+        for record in records:
+            if "account_id" in record.vars:
+                r = record.vars.split("\"account_id\":")[1]
+                s = r.split("}")[0]
+                s = s.split("\"")[1].split("\"")[0]
+
+                record1 = db(ttable.account_name == s).select(ttable.id)
+                if record1:
+                    for rec in record1:
+                        rows += [rec]
+
+        restrict_d = [str(row.id) for row in rows]
+
+        rows = []
+        query = (stable.id > 0) & (stable.function_name == "msg_twilio_poll")
+        records = db(query).select()
+        tasks = [record.vars for record in records]
+        sources = []
+        for task in tasks:
+            if "account_id" in task:
+                u = task.split("\"account_id\":")[1]
+                v = u.split(",")[0]
+                v = v.split("\"")[1]
+                sources += [v]
+
+        tsettings = db(ttable.deleted == False).select(ttable.ALL)
+        for tsetting in tsettings :
+            if tsetting.account_name:
+                if (tsetting.account_name not in sources):
+                    if tsetting:
+                        rows += [tsetting]
+
+        restrict_a = [str(row.id) for row in rows]
+
+        s3.actions = \
+        s3.actions + [
+                       dict(label=str(T("Enable")),
+                            _class="action-btn",
+                            url=URL(f="enable_twilio_sms",
+                                    args="[id]"),
+                            restrict = restrict_e)
+                       ]
+        s3.actions.append(dict(label=str(T("Disable")),
+                               _class="action-btn",
+                               url = URL(f = "disable_twilio_sms",
+                                         args = "[id]"),
+                               restrict = restrict_d)
+                          )
+        s3.actions.append(dict(label=str(T("Activate")),
+                               _class="action-btn",
+                               url = URL(f = "schedule_twilio_sms",
+                                         args = "[id]"),
+                               restrict = restrict_a)
+                          )
+        return output
+    s3.postp = postp
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+@auth.s3_requires_membership(1)
+def sms_modem_channel():
+    """
+        RESTful CRUD controller for modem channels
+        - appears in the administration menu
+        Multiple Modems can be configured to receive Inbound Messages
+    """
+
+    try:
+        import serial
+    except ImportError:
+        session.error = T("Python Serial module not available within the running Python - this needs installing to activate the Modem")
+        redirect(URL(c="admin", f="index"))
+
+    tablename = "%s_%s" % (module, resourcename)
+    table = s3db[tablename]
+
+    table.modem_port.label = T("Port")
+    table.modem_baud.label = T("Baud")
+    table.enabled.label = T("Enabled")
+    table.modem_port.comment = DIV(_class="tooltip",
+                                   _title="%s|%s" % (T("Port"),
+                                                     T("The serial port at which the modem is connected - /dev/ttyUSB0, etc on linux and com1, com2, etc on Windows")))
+    table.modem_baud.comment = DIV(_class="tooltip",
+                                   _title="%s|%s" % (T("Baud"),
+                                                     T("Baud rate to use for your modem - The default is safe for most cases")))
+    table.enabled.comment = DIV(_class="tooltip",
+                                _title="%s|%s" % (T("Enabled"),
+                                                  T("Unselect to disable the modem")))
+
+    # CRUD Strings
+    ADD_SETTING = T("Add Setting")
+    s3.crud_strings[tablename] = Storage(
+        title_create = ADD_SETTING,
+        title_display = T("Setting Details"),
+        title_list = T("Settings"),
+        title_update = T("Edit Modem Settings"),
+        label_list_button = T("View Settings"),
+        label_create_button = ADD_SETTING,
+        msg_record_created = T("Setting added"),
+        msg_record_modified = T("Modem settings updated"),
+        msg_record_deleted = T("Setting deleted"),
+        msg_list_empty = T("No Settings currently defined")
+    )
+
+    s3db.configure(tablename,
+                    #deletable=False,
+                    #listadd=False,
+                    #update_next = URL(args=[1, "update"])
+                    )
+    #response.menu_options = admin_menu_options
+    return s3_rest_controller()
+
+
+#------------------------------------------------------------------------------
+@auth.s3_requires_membership(1)
+def sms_smtp_channel():
+    """
+        RESTful CRUD controller for SMTP to SMS Outbound channels
+        - appears in the administration menu
+        Only 1 of these normally in existence
+            @ToDo: Don't enforce
+    """
+
+    tablename = "%s_%s" % (module, resourcename)
+    table = s3db[tablename]
+
+    table.address.label = T("Address")
+    table.subject.label = T("Subject")
+    table.enabled.label = T("Enabled")
+    table.address.comment = DIV(_class="tooltip",
+                                _title="%s|%s" % (T("Address"),
+                                                  T("Email Address to which to send SMS messages. Assumes sending to phonenumber@address")))
+    table.subject.comment = DIV(_class="tooltip",
+                                _title="%s|%s" % (T("Subject"),
+                                                  T("Optional Subject to put into Email - can be used as a Security Password by the service provider")))
+    table.enabled.comment = DIV(_class="tooltip",
+                                _title="%s|%s" % (T("Enabled"),
+                                                  T("Unselect to disable this SMTP service")))
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_update = T("Edit SMTP to SMS Settings"),
+        msg_record_modified = T("SMTP to SMS settings updated"),
+    )
+
+    s3db.configure(tablename,
+                    deletable=False,
+                    listadd=False,
+                    update_next = URL(args=[1, "update"]))
+
+    return s3_rest_controller()
+
+#------------------------------------------------------------------------------
+@auth.s3_requires_membership(1)
+def sms_webapi_channel():
+    """
+        RESTful CRUD controller for Web API channels
+        - appears in the administration menu
+        Only 1 of these normally in existence
+            @ToDo: Don't enforce
+    """
+
+    tablename = "%s_%s" % (module, resourcename)
+    table = s3db[tablename]
+
+    table.url.label = T("URL")
+    table.message_variable.label = T("Message variable")
+    table.to_variable.label = T("To variable")
+    table.username.label = T("Username")
+    table.password.label = T("Password")
+    table.enabled.label = T("Enabled")
+    table.url.comment = DIV(_class="tooltip",
+        _title="%s|%s" % (T("URL"),
+                          T("The URL of your web gateway without the POST parameters")))
+    table.parameters.comment = DIV(_class="tooltip",
+        _title="%s|%s" % (T("Parameters"),
+                          T("The POST variables other than the ones containing the message and the phone number")))
+    table.message_variable.comment = DIV(_class="tooltip",
+        _title="%s|%s" % (T("Message Variable"),
+                          T("The POST variable on the URL used for sending messages")))
+    table.to_variable.comment = DIV(_class="tooltip",
+        _title="%s|%s" % (T("To variable"),
+                          T("The POST variable containing the phone number")))
+    table.username.comment = DIV(_class="tooltip",
+        _title="%s|%s" % (T("Username"),
+                          T("If the service requries HTTP BASIC Auth (e.g. Mobile Commons)")))
+    table.password.comment = DIV(_class="tooltip",
+        _title="%s|%s" % (T("Password"),
+                          T("If the service requries HTTP BASIC Auth (e.g. Mobile Commons)")))
+    table.enabled.comment = DIV(_class="tooltip",
+        _title="%s|%s" % (T("Enabled"),
+                          T("Unselect to disable this API service")))
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_update = T("Edit Web API Settings"),
+        msg_record_modified = T("Web API settings updated"),
+    )
+
+    s3db.configure(tablename,
+                   deletable=False,
+                   listadd=False,
+                   update_next = URL(args=[1, "update"]))
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+@auth.s3_requires_membership(1)
+def tropo_channel():
+    """
+        RESTful CRUD controller for Tropo channels
+        - appears in the administration menu
+        Only 1 of these normally in existence
+            @ToDo: Don't enforce
+    """
+
+    tablename = "msg_tropo_channel"
+    table = s3db[tablename]
+
+    table.token_messaging.label = T("Tropo Messaging Token")
+    table.token_messaging.comment = DIV(DIV(_class="stickytip",
+                                            _title="%s|%s" % (T("Tropo Messaging Token"),
+                                                              T("The token associated with this application on") + " <a href='https://www.tropo.com/docs/scripting/troposessionapi.htm' target=_blank>Tropo.com</a>")))
+    #table.token_voice.label = T("Tropo Voice Token")
+    #table.token_voice.comment = DIV(DIV(_class="stickytip",_title=T("Tropo Voice Token") + "|" + T("The token associated with this application on") + " <a href='https://www.tropo.com/docs/scripting/troposessionapi.htm' target=_blank>Tropo.com</a>"))
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_update = T("Edit Tropo Settings"),
+        msg_record_modified = T("Tropo settings updated"),
+    )
+
+    s3db.configure(tablename,
+                    deletable=False,
+                    listadd=False,
+                    update_next = URL(args=[1, "update"]))
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+@auth.s3_requires_membership(1)
+def twitter_channel():
+    """
+        RESTful CRUD controller for Twitter channels
+        - appears in the administration menu
+        Only 1 of these normally in existence
+            @ToDo: Don't enforce
+    """
+
+    try:
+        import tweepy
+    except:
+        session.error = T("tweepy module not available within the running Python - this needs installing for non-Tropo Twitter support!")
+        redirect(URL(c="admin", f="index"))
+
+    tablename = "%s_%s" % (module, resourcename)
+    table = s3db[tablename]
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_update = T("Authenticate system's Twitter account"),
+        msg_record_modified = T("System's Twitter account updated"),
+    )
+
+    def prep(r):
+        oauth_consumer_key = settings.msg.twitter_oauth_consumer_key
+        oauth_consumer_secret = settings.msg.twitter_oauth_consumer_secret
+        if not (oauth_consumer_key and oauth_consumer_secret):
+            session.error = T("You should edit Twitter settings in models/000_config.py")
+            return True
+        oauth = tweepy.OAuthHandler(oauth_consumer_key,
+                                    oauth_consumer_secret)
+
+        #tablename = "%s_%s" % (module, resourcename)
+        #table = db[tablename]
+        table = r.table
+
+        if r.http == "GET" and r.method in ("create", "update"):
+            # We're showing the form
+            _s3 = session.s3
+            try:
+                _s3.twitter_oauth_url = oauth.get_authorization_url()
+                _s3.twitter_request_key = oauth.request_token.key
+                _s3.twitter_request_secret = oauth.request_token.secret
+            except tweepy.TweepError:
+                session.error = T("Problem connecting to twitter.com - please refresh")
+                return True
+            table.pin.readable = True
+            table.pin.label = T("PIN number from Twitter (leave empty to detach account)")
+            table.pin.value = ""
+            table.twitter_account.label = T("Current Twitter account")
+            return True
+        else:
+            # Not showing form, no need for pin
+            table.pin.readable = False
+            table.pin.label = T("PIN") # won't be seen
+            table.pin.value = ""       # but let's be on the safe side
+        return True
+    s3.prep = prep
+
+    # Post-process
+    def user_postp(r, output):
+        if r.interactive and isinstance(output, dict):
+            if r.http == "GET" and r.method in ("create", "update"):
+                rheader = A(T("Collect PIN from Twitter"),
+                            _href=session.s3.twitter_oauth_url,
+                            _target="_blank")
+                output["rheader"] = rheader
+        return output
+    s3.postp = user_postp
+
+    s3db.configure(tablename,
+                   listadd=False,
+                   deletable=False)
+
+    return s3_rest_controller(deduplicate="", list_btn="")
 
 # -----------------------------------------------------------------------------
 def twitter_search_channel():
@@ -718,6 +1461,25 @@ def twitter_search_query():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def twitter_result():
+    """
+       RESTful CRUD controller for Twitter Search Results.
+    """
+
+    tablename = "msg_twitter_result"
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_display = T("Twitter Search Results"),
+        title_list = T("Twitter Search Results"),
+        label_list_button = T("View Tweet"),
+        msg_record_deleted = T("Tweet deleted"),
+        msg_list_empty = T("No Tweets Available."),
+        )
+
+    s3db.configure(tablename, listadd=False)
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def process_keygraph():
     """
        Processes the result of the query with KeyGraph.
@@ -780,285 +1542,6 @@ def sender():
         return True
 
     s3.prep = prep
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def twitter_result():
-    """
-       RESTful CRUD controller for Twitter Search Results.
-    """
-
-    tablename = "msg_twitter_result"
-    # CRUD Strings
-    s3.crud_strings[tablename] = Storage(
-        title_display = T("Twitter Search Results"),
-        title_list = T("Twitter Search Results"),
-        label_list_button = T("View Tweet"),
-        msg_record_deleted = T("Tweet deleted"),
-        msg_list_empty = T("No Tweets Available."),
-        )
-
-    s3db.configure(tablename, listadd=False)
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def mcommons_channel():
-    """
-        RESTful CRUD controller for Mobile Commons SMS Channels
-            - appears in the administration menu
-    """
-
-    if not auth.s3_has_role(ADMIN):
-        session.error = UNAUTHORISED
-        redirect(URL(f="index"))
-
-    tablename = "msg_mcommons_channel"
-    table = s3db[tablename]
-
-    table.name.label = T("Account Name")
-    table.name.comment = DIV(_class="tooltip",
-                             _title="%s|%s" % (T("Account Name"),
-                                               T("Name for your Twilio Account.")))
-
-    table.campaign_id.label = T("Campaign ID")
-
-    table.url.label = T("URL")
-    table.url.comment = DIV(_class="tooltip",
-                            _title="%s|%s" % (T("URL"),
-                                              T("URL for the Mobile Commons API")))
-
-    table.username.label = T("Username")
-    table.password.label = T("Password")
-    table.timestmp.label = T("Last Downloaded")
-    table.timestmp.writable = False
-
-    # CRUD Strings
-    s3.crud_strings[tablename] = Storage(
-        title_display = T("Mobile Commons Setting Details"),
-        title_list = T("Mobile Commons Settings"),
-        title_create = T("Add Mobile Commons Settings"),
-        title_update = T("Edit Mobile Commons Settings"),
-        label_list_button = T("View Mobile Commons Settings"),
-        label_create_button = T("Add Mobile Commons Settings"),
-        msg_record_created = T("Mobile Commons Setting added"),
-        msg_record_deleted = T("Mobile Commons Setting deleted"),
-        msg_list_empty = T("No Mobile Commons Settings currently defined"),
-        msg_record_modified = T("Mobile Commons settings updated")
-        )
-
-    def postp(r, output):
-        if r.interactive:
-            stable = s3db.scheduler_task
-            table = r.table
-
-            s3_action_buttons(r)
-            query = (stable.enabled == False) & \
-                    (stable.function_name == "msg_mcommons_poll")
-            records = db(query).select(stable.vars)
-            rows = []
-            for record in records:
-                if "account_id" in record.vars:
-                    r = record.vars.split("\"account_id\":")[1]
-                    s = r.split("}")[0]
-                    s = s.split("\"")[1].split("\"")[0]
-
-                    record1 = db(table.campaign_id == s).select(table.id)
-                    if record1:
-                        for rec in record1:
-                            rows += [rec]
-
-            restrict_e = [str(row.id) for row in rows]
-
-            query = (stable.enabled == True) & \
-                    (stable.function_name == "msg_mcommons_poll")
-            records = db(query).select(stable.vars)
-            rows = []
-            for record in records:
-                if "account_id" in record.vars:
-                    r = record.vars.split("\"account_id\":")[1]
-                    s = r.split("}")[0]
-                    s = s.split("\"")[1].split("\"")[0]
-
-                    record1 = db(table.campaign_id == s).select(table.id)
-                    if record1:
-                        for rec in record1:
-                            rows += [rec]
-
-            restrict_d = [str(row.id) for row in rows]
-
-            query = (stable.id > 0) & \
-                    (stable.function_name == "msg_mcommons_poll")
-            records = db(query).select(stable.vars)
-            tasks = [record.vars for record in records]
-            sources = []
-            for task in tasks:
-                if "account_id" in task:
-                    u = task.split("\"account_id\":")[1]
-                    v = u.split("}")[0]
-                    v = v.split("\"")[1].split("\"")[0]
-                    sources += [v]
-
-            settings = db(table.deleted == False).select(table.id,
-                                                         table.campaign_id)
-            rows = []
-            for setting in settings :
-                if setting.campaign_id:
-                    if (setting.campaign_id not in sources):
-                        if setting:
-                            rows += [setting]
-
-            restrict_a = [str(row.id) for row in rows]
-
-            s3.actions = \
-            s3.actions + [
-                           dict(label=str(T("Enable")),
-                                _class="action-btn",
-                                url=URL(f="enable_mcommons_sms",
-                                        args="[id]"),
-                                restrict = restrict_e)
-                           ]
-            s3.actions.append(dict(label=str(T("Disable")),
-                                   _class="action-btn",
-                                   url = URL(f = "disable_mcommons_sms",
-                                             args = "[id]"),
-                                   restrict = restrict_d)
-                              )
-            s3.actions.append(dict(label=str(T("Activate")),
-                                   _class="action-btn",
-                                   url = URL(f = "schedule_mcommons_sms",
-                                             args = "[id]"),
-                                   restrict = restrict_a)
-                              )
-        return output
-    s3.postp = postp
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def twilio_inbound_channel():
-    """
-        RESTful CRUD controller for Twilio SMS channels
-            - appears in the administration menu
-    """
-
-    if not auth.s3_has_role(ADMIN):
-        session.error = UNAUTHORISED
-        redirect(URL(f="index"))
-
-    tablename = "msg_twilio_inbound_channel"
-    table = s3db[tablename]
-
-    table.account_name.label = T("Account Name")
-    table.account_name.comment = DIV(_class="tooltip",
-                                     _title="%s|%s" % (T("Account Name"),
-                                                       T("Identifier Name for your Twilio Account.")))
-
-    table.url.label = T("URL")
-    table.url.comment = DIV(_class="tooltip",
-                            _title="%s|%s" % (T("URL"),
-                                              T("URL for the twilio API.")))
-
-    table.account_sid.label = "Account SID"
-    table.auth_token.label = T("AUTH TOKEN")
-
-    # CRUD Strings
-    s3.crud_strings[tablename] = Storage(
-        title_display = T("Twilio Setting Details"),
-        title_list = T("Twilio Settings"),
-        title_create = T("Add Twilio Settings"),
-        title_update = T("Edit Twilio Settings"),
-        label_list_button = T("View Twilio Settings"),
-        label_create_button = T("Add Twilio Settings"),
-        msg_record_created = T("Twilio Setting added"),
-        msg_record_deleted = T("Twilio Setting deleted"),
-        msg_list_empty = T("No Twilio Settings currently defined"),
-        msg_record_modified = T("Twilio settings updated")
-        )
-
-    def postp(r, output):
-
-        stable = s3db.scheduler_task
-        ttable = r.table
-
-        s3_action_buttons(r)
-        query = (stable.enabled == False) & \
-                (stable.function_name == "msg_twilio_poll")
-        records = db(query).select()
-        rows = []
-        for record in records:
-            if "account_id" in record.vars:
-                r = record.vars.split("\"account_id\":")[1]
-                s = r.split("}")[0]
-                s = s.split("\"")[1].split("\"")[0]
-
-                record1 = db(ttable.account_name == s).select(ttable.id)
-                if record1:
-                    for rec in record1:
-                        rows += [rec]
-
-        restrict_e = [str(row.id) for row in rows]
-
-        query = (stable.enabled == True) & \
-                (stable.function_name == "msg_twilio_poll")
-        records = db(query).select()
-        rows = []
-        for record in records:
-            if "account_id" in record.vars:
-                r = record.vars.split("\"account_id\":")[1]
-                s = r.split("}")[0]
-                s = s.split("\"")[1].split("\"")[0]
-
-                record1 = db(ttable.account_name == s).select(ttable.id)
-                if record1:
-                    for rec in record1:
-                        rows += [rec]
-
-        restrict_d = [str(row.id) for row in rows]
-
-        rows = []
-        query = (stable.id > 0) & (stable.function_name == "msg_twilio_poll")
-        records = db(query).select()
-        tasks = [record.vars for record in records]
-        sources = []
-        for task in tasks:
-            if "account_id" in task:
-                u = task.split("\"account_id\":")[1]
-                v = u.split(",")[0]
-                v = v.split("\"")[1]
-                sources += [v]
-
-        tsettings = db(ttable.deleted == False).select(ttable.ALL)
-        for tsetting in tsettings :
-            if tsetting.account_name:
-                if (tsetting.account_name not in sources):
-                    if tsetting:
-                        rows += [tsetting]
-
-        restrict_a = [str(row.id) for row in rows]
-
-        s3.actions = \
-        s3.actions + [
-                       dict(label=str(T("Enable")),
-                            _class="action-btn",
-                            url=URL(f="enable_twilio_sms",
-                                    args="[id]"),
-                            restrict = restrict_e)
-                       ]
-        s3.actions.append(dict(label=str(T("Disable")),
-                               _class="action-btn",
-                               url = URL(f = "disable_twilio_sms",
-                                         args = "[id]"),
-                               restrict = restrict_d)
-                          )
-        s3.actions.append(dict(label=str(T("Activate")),
-                               _class="action-btn",
-                               url = URL(f = "schedule_twilio_sms",
-                                         args = "[id]"),
-                               restrict = restrict_a)
-                          )
-        return output
-    s3.postp = postp
 
     return s3_rest_controller()
 
@@ -1428,378 +1911,6 @@ def unsubscribe_rss():
 
     db(s3db.msg_rss_channel.id == request.args[0]).update(subscribed = False)
     redirect(URL(f="rss_channel"))
-
-# -----------------------------------------------------------------------------
-def inbox():
-    """
-        RESTful CRUD controller for the Inbox
-        - all Inbound Messages will go here
-    """
-
-    if not auth.s3_logged_in():
-        session.error = T("Requires Login!")
-        redirect(URL(c="default", f="user", args="login"))
-
-    mtable = s3db.msg_message
-    s3.filter = (mtable.inbound == True)
-
-    tablename = "msg_message"
-    # CRUD Strings
-    s3.crud_strings[tablename] = Storage(
-        title_list = T("View InBox"),
-        title_update = T("Edit Message"),
-        label_list_button = T("View Message InBox"),
-        label_delete_button = T("Delete Message"),
-        msg_record_modified = T("Message updated"),
-        msg_record_deleted = T("Message deleted"),
-        msg_list_empty = T("No Messages currently in InBox")
-    )
-
-    s3db.configure(tablename, listadd=False)
-
-    return s3_rest_controller(module, "message")
-
-# -----------------------------------------------------------------------------
-def twitter_inbox():
-    """
-        RESTful CRUD controller for the Twitter Inbox
-        - all Inbound Tweets (Directed Messages) go here
-    """
-
-    if not auth.s3_logged_in():
-        session.error = T("Requires Login!")
-        redirect(URL(c="default", f="user", args="login"))
-
-    ttable = s3db.msg_twitter
-    s3.filter = (ttable.inbound == True)
-
-    return s3_rest_controller(module, "twitter")
-
-# -----------------------------------------------------------------------------
-def twitter_outbox():
-    """
-        RESTful CRUD controller for the Twitter Outbox
-        - all sent Tweets go here
-    """
-
-    if not auth.s3_logged_in():
-        session.error = T("Requires Login!")
-        redirect(URL(c="default", f="user", args="login"))
-
-    ttable = s3db.msg_twitter
-    s3.filter = (ttable.inbound == True)
-
-    return s3_rest_controller(module, "twitter")
-
-# -----------------------------------------------------------------------------
-def email_inbox():
-    """
-        RESTful CRUD controller for the Email Inbox
-        - all Inbound Email Messages go here
-        @ToDo: Deprecate
-    """
-
-    if not auth.s3_logged_in():
-        session.error = T("Requires Login!")
-        redirect(URL(c="default", f="user", args="login"))
-
-    etable = s3db.msg_email
-    s3.filter = (etable.inbound == True)
-
-    return s3_rest_controller(module, "email")
-
-# -----------------------------------------------------------------------------
-def twilio_inbox():
-    """
-        RESTful CRUD controller for the Twilio SMS Inbox
-        - all Inbound SMS Messages from Twilio go here
-    """
-
-    if not auth.s3_logged_in():
-        session.error = T("Requires Login!")
-        redirect(URL(c="default", f="user", args="login"))
-
-    tablename = "msg_twilio_inbox"
-    table = s3db[tablename]
-
-    # CRUD Strings
-    s3.crud_strings[tablename] = Storage(
-        title_display = T("Twilio SMS Inbox"),
-        title_list = T("Twilio SMS Inbox"),
-        title_update = T("Edit SMS Message"),
-        title_search = T("Search Twilio SMS Inbox"),
-        label_list_button = T("View Twilio SMS"),
-        msg_record_deleted = T("Twilio SMS deleted"),
-        msg_list_empty = T("Twilio SMS Inbox empty"),
-        msg_record_modified = T("Twilio SMS updated")
-        )
-
-    s3db.configure(tablename, listadd=False)
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-@auth.s3_requires_membership(1)
-def sms_modem_channel():
-    """
-        RESTful CRUD controller for modem channels
-        - appears in the administration menu
-        Multiple Modems can be configured to receive Inbound Messages
-    """
-
-    try:
-        import serial
-    except ImportError:
-        session.error = T("Python Serial module not available within the running Python - this needs installing to activate the Modem")
-        redirect(URL(c="admin", f="index"))
-
-    tablename = "%s_%s" % (module, resourcename)
-    table = s3db[tablename]
-
-    table.modem_port.label = T("Port")
-    table.modem_baud.label = T("Baud")
-    table.enabled.label = T("Enabled")
-    table.modem_port.comment = DIV(_class="tooltip",
-                                   _title="%s|%s" % (T("Port"),
-                                                     T("The serial port at which the modem is connected - /dev/ttyUSB0, etc on linux and com1, com2, etc on Windows")))
-    table.modem_baud.comment = DIV(_class="tooltip",
-                                   _title="%s|%s" % (T("Baud"),
-                                                     T("Baud rate to use for your modem - The default is safe for most cases")))
-    table.enabled.comment = DIV(_class="tooltip",
-                                _title="%s|%s" % (T("Enabled"),
-                                                  T("Unselect to disable the modem")))
-
-    # CRUD Strings
-    ADD_SETTING = T("Add Setting")
-    s3.crud_strings[tablename] = Storage(
-        title_create = ADD_SETTING,
-        title_display = T("Setting Details"),
-        title_list = T("Settings"),
-        title_update = T("Edit Modem Settings"),
-        label_list_button = T("View Settings"),
-        label_create_button = ADD_SETTING,
-        msg_record_created = T("Setting added"),
-        msg_record_modified = T("Modem settings updated"),
-        msg_record_deleted = T("Setting deleted"),
-        msg_list_empty = T("No Settings currently defined")
-    )
-
-    s3db.configure(tablename,
-                    #deletable=False,
-                    #listadd=False,
-                    #update_next = URL(args=[1, "update"])
-                    )
-    #response.menu_options = admin_menu_options
-    return s3_rest_controller()
-
-
-#------------------------------------------------------------------------------
-@auth.s3_requires_membership(1)
-def sms_smtp_channel():
-    """
-        RESTful CRUD controller for SMTP to SMS Outbound channels
-        - appears in the administration menu
-        Only 1 of these normally in existence
-            @ToDo: Don't enforce
-    """
-
-    tablename = "%s_%s" % (module, resourcename)
-    table = s3db[tablename]
-
-    table.address.label = T("Address")
-    table.subject.label = T("Subject")
-    table.enabled.label = T("Enabled")
-    table.address.comment = DIV(_class="tooltip",
-                                _title="%s|%s" % (T("Address"),
-                                                  T("Email Address to which to send SMS messages. Assumes sending to phonenumber@address")))
-    table.subject.comment = DIV(_class="tooltip",
-                                _title="%s|%s" % (T("Subject"),
-                                                  T("Optional Subject to put into Email - can be used as a Security Password by the service provider")))
-    table.enabled.comment = DIV(_class="tooltip",
-                                _title="%s|%s" % (T("Enabled"),
-                                                  T("Unselect to disable this SMTP service")))
-
-    # CRUD Strings
-    s3.crud_strings[tablename] = Storage(
-        title_update = T("Edit SMTP to SMS Settings"),
-        msg_record_modified = T("SMTP to SMS settings updated"),
-    )
-
-    s3db.configure(tablename,
-                    deletable=False,
-                    listadd=False,
-                    update_next = URL(args=[1, "update"]))
-
-    return s3_rest_controller()
-
-#------------------------------------------------------------------------------
-@auth.s3_requires_membership(1)
-def sms_webapi_channel():
-    """
-        RESTful CRUD controller for Web API channels
-        - appears in the administration menu
-        Only 1 of these normally in existence
-            @ToDo: Don't enforce
-    """
-
-    tablename = "%s_%s" % (module, resourcename)
-    table = s3db[tablename]
-
-    table.url.label = T("URL")
-    table.message_variable.label = T("Message variable")
-    table.to_variable.label = T("To variable")
-    table.username.label = T("Username")
-    table.password.label = T("Password")
-    table.enabled.label = T("Enabled")
-    table.url.comment = DIV(_class="tooltip",
-        _title="%s|%s" % (T("URL"),
-                          T("The URL of your web gateway without the POST parameters")))
-    table.parameters.comment = DIV(_class="tooltip",
-        _title="%s|%s" % (T("Parameters"),
-                          T("The POST variables other than the ones containing the message and the phone number")))
-    table.message_variable.comment = DIV(_class="tooltip",
-        _title="%s|%s" % (T("Message Variable"),
-                          T("The POST variable on the URL used for sending messages")))
-    table.to_variable.comment = DIV(_class="tooltip",
-        _title="%s|%s" % (T("To variable"),
-                          T("The POST variable containing the phone number")))
-    table.username.comment = DIV(_class="tooltip",
-        _title="%s|%s" % (T("Username"),
-                          T("If the service requries HTTP BASIC Auth (e.g. Mobile Commons)")))
-    table.password.comment = DIV(_class="tooltip",
-        _title="%s|%s" % (T("Password"),
-                          T("If the service requries HTTP BASIC Auth (e.g. Mobile Commons)")))
-    table.enabled.comment = DIV(_class="tooltip",
-        _title="%s|%s" % (T("Enabled"),
-                          T("Unselect to disable this API service")))
-
-    # CRUD Strings
-    s3.crud_strings[tablename] = Storage(
-        title_update = T("Edit Web API Settings"),
-        msg_record_modified = T("Web API settings updated"),
-    )
-
-    s3db.configure(tablename,
-                   deletable=False,
-                   listadd=False,
-                   update_next = URL(args=[1, "update"]))
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-@auth.s3_requires_membership(1)
-def tropo_channel():
-    """
-        RESTful CRUD controller for Tropo channels
-        - appears in the administration menu
-        Only 1 of these normally in existence
-            @ToDo: Don't enforce
-    """
-
-    tablename = "msg_tropo_channel"
-    table = s3db[tablename]
-
-    table.token_messaging.label = T("Tropo Messaging Token")
-    table.token_messaging.comment = DIV(DIV(_class="stickytip",
-                                            _title="%s|%s" % (T("Tropo Messaging Token"),
-                                                              T("The token associated with this application on") + " <a href='https://www.tropo.com/docs/scripting/troposessionapi.htm' target=_blank>Tropo.com</a>")))
-    #table.token_voice.label = T("Tropo Voice Token")
-    #table.token_voice.comment = DIV(DIV(_class="stickytip",_title=T("Tropo Voice Token") + "|" + T("The token associated with this application on") + " <a href='https://www.tropo.com/docs/scripting/troposessionapi.htm' target=_blank>Tropo.com</a>"))
-    # CRUD Strings
-    s3.crud_strings[tablename] = Storage(
-        title_update = T("Edit Tropo Settings"),
-        msg_record_modified = T("Tropo settings updated"),
-    )
-
-    s3db.configure(tablename,
-                    deletable=False,
-                    listadd=False,
-                    update_next = URL(args=[1, "update"]))
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-@auth.s3_requires_membership(1)
-def twitter_channel():
-    """
-        RESTful CRUD controller for Twitter channels
-        - appears in the administration menu
-        Only 1 of these normally in existence
-            @ToDo: Don't enforce
-    """
-
-    try:
-        import tweepy
-    except:
-        session.error = T("tweepy module not available within the running Python - this needs installing for non-Tropo Twitter support!")
-        redirect(URL(c="admin", f="index"))
-
-    tablename = "%s_%s" % (module, resourcename)
-    table = s3db[tablename]
-
-    # CRUD Strings
-    s3.crud_strings[tablename] = Storage(
-        title_update = T("Authenticate system's Twitter account"),
-        msg_record_modified = T("System's Twitter account updated"),
-    )
-
-    def prep(r):
-        oauth_consumer_key = settings.msg.twitter_oauth_consumer_key
-        oauth_consumer_secret = settings.msg.twitter_oauth_consumer_secret
-        if not (oauth_consumer_key and oauth_consumer_secret):
-            session.error = T("You should edit Twitter settings in models/000_config.py")
-            return True
-        oauth = tweepy.OAuthHandler(oauth_consumer_key,
-                                    oauth_consumer_secret)
-
-        #tablename = "%s_%s" % (module, resourcename)
-        #table = db[tablename]
-        table = r.table
-
-        if r.http == "GET" and r.method in ("create", "update"):
-            # We're showing the form
-            _s3 = session.s3
-            try:
-                _s3.twitter_oauth_url = oauth.get_authorization_url()
-                _s3.twitter_request_key = oauth.request_token.key
-                _s3.twitter_request_secret = oauth.request_token.secret
-            except tweepy.TweepError:
-                session.error = T("Problem connecting to twitter.com - please refresh")
-                return True
-            table.pin.readable = True
-            table.pin.label = T("PIN number from Twitter (leave empty to detach account)")
-            table.pin.value = ""
-            table.twitter_account.label = T("Current Twitter account")
-            return True
-        else:
-            # Not showing form, no need for pin
-            table.pin.readable = False
-            table.pin.label = T("PIN") # won't be seen
-            table.pin.value = ""       # but let's be on the safe side
-        return True
-    s3.prep = prep
-
-    # Post-process
-    def user_postp(r, output):
-        if r.interactive and isinstance(output, dict):
-            if r.http == "GET" and r.method in ("create", "update"):
-                rheader = A(T("Collect PIN from Twitter"),
-                            _href=session.s3.twitter_oauth_url,
-                            _target="_blank")
-                output["rheader"] = rheader
-        return output
-    s3.postp = user_postp
-
-    s3db.configure(tablename,
-                   listadd=False,
-                   deletable=False)
-
-    return s3_rest_controller(deduplicate="", list_btn="")
-
-# -----------------------------------------------------------------------------
-def basestation():
-    """ RESTful CRUD controller for Base Stations """
-
-    return s3_rest_controller()
 
 # =============================================================================
 # The following functions hook into the pr functions:
