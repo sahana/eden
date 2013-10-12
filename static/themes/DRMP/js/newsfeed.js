@@ -13,6 +13,12 @@ $(document).ready(function(){
     // Button to toggle Advanced Form
     $('#list-filter').append('<a class="accordion-toggle"><i class="icon-reorder"></i> ' + i18n.adv_search + '</a>');
     $('.accordion-toggle').click(function() {
-        $('.advanced').toggle();
+        var advanced = $('.advanced');
+        if (advanced.hasClass('hide')) {
+            // Toggle doesn't work directly & requires a 2nd click to open
+            advanced.removeClass('hide').show();
+        } else {
+            advanced.toggle();
+        }
     })
 });

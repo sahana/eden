@@ -257,7 +257,8 @@ def _newsfeed():
         sappend('''$('#post-cms_post_body-text-filter__row').addClass('input-append').append('<span class="add-on"><i class="icon-search"></i></span>')''')
         # Button to toggle Advanced Form
         sappend('''$('#list-filter').append('<a class="accordion-toggle"><i class="icon-reorder"></i> %s</a>')''' % T("Advanced Search"))
-        sappend('''$('.accordion-toggle').click(function(){$('.advanced').toggle()})''')
+        # Toggle doesn't work directly when removing 'hide' & requires a 2nd click to open without this
+        sappend('''$('.accordion-toggle').click(function(){var a=$('.advanced');if(a.hasClass('hide')){a.removeClass('hide').show()}else{a.toggle()}})''')
         s3.jquery_ready.append('''\n'''.join(scripts))
         
         # Latest 5 Disasters
