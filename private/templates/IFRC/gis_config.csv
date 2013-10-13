@@ -3,6 +3,7 @@
 ,"WGS84",,,,,3,4.9,125,4326,"IFRC",-90,90,-180,180,"http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
 ,"AU","Australian Red Cross","organisation","AU","AU",6,-24.764639,136.180729,900913,"IFRC",-45,-4,105,165,
 ,"FI","Finnish Red Cross","organisation","FI","FI",5,65.4758,26.359,900913,"IFRC",59,71,18,32,
+,"IN",Indian Red Cross Society,"organisation",IN,IN,5,20.32,79.96,900913,"IFRC",4,36,65,100,
 ,"MM","Myanmar Red Cross Society","organisation","MM","MM",5,19.4122,97.2266,900913,"IFRC",9,29,92,102,
 ,"MN","Mongolian Red Cross Society","organisation","MN","MN",5,45.96946,104.209,900913,"IFRC",41,53,87,120,
 ,"MV","Maldivian Red Crescent","organisation","MV","MV",10,4.1552,73.5747,900913,"IFRC",-1,8,72,74,

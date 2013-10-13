@@ -1,3 +1,3 @@
 "UUID",Name,Region Country,Default Country,Zoom,Lat,Lon,Projection,Symbology,LatMin,LatMax,LonMin,LonMax,Geocoder,WMS Browser
-"SITE_DEFAULT",Default,,,6,34.56169,38.316955,900913,"OCHA",30,38,30,45,"False",
-"IN",India,,,6,34.56169,38.316955,900913,"OCHA",30,38,30,45,"False",
+"SITE_DEFAULT",Default,,,5,20.32,79.96,900913,"OCHA",4,36,65,100,"False",
+,IN,IN,IN,5,20.32,79.96,900913,"OCHA",4,36,65,100,"False",
