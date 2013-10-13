@@ -198,7 +198,7 @@ class S3ContentModel(S3Model):
             msg_record_created = T("Post added"),
             msg_record_modified = T("Post updated"),
             msg_record_deleted = T("Post deleted"),
-            msg_list_empty = T("No posts currently defined"))
+            msg_list_empty = T("No posts currently available"))
 
         # Reusable field
         represent = S3Represent(lookup=tablename)

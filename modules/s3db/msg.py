@@ -532,6 +532,7 @@ class S3EmailModel(S3ChannelModel):
 
         T = current.T
 
+        configure = self.configure
         define_table = self.define_table
 
         # ---------------------------------------------------------------------
@@ -557,9 +558,9 @@ class S3EmailModel(S3ChannelModel):
                              Field("delete_from_server", "boolean"),
                              *s3_meta_fields())
 
-        self.configure(tablename,
-                       super_entity = "msg_channel",
-                       )
+        configure(tablename,
+                  super_entity = "msg_channel",
+                  )
 
         # ---------------------------------------------------------------------
         # Email Log: InBox & Outbox
@@ -588,9 +589,9 @@ class S3EmailModel(S3ChannelModel):
                                    label = T("Direction")),
                              *s3_meta_fields())
 
-        self.configure(tablename,
-                       super_entity = "msg_message",
-                       )
+        configure(tablename,
+                  super_entity = "msg_message",
+                  )
 
         # ---------------------------------------------------------------------
         # Status
@@ -1233,6 +1234,7 @@ class S3TwilioModel(S3ChannelModel):
 
         #T = current.T
 
+        configure = self.configure
         define_table = self.define_table
 
         # ---------------------------------------------------------------------
@@ -1255,9 +1257,9 @@ class S3TwilioModel(S3ChannelModel):
                                    requires = IS_NOT_EMPTY()),
                              *s3_meta_fields())
 
-        self.configure(tablename,
-                       super_entity = "msg_channel",
-                       )
+        configure(tablename,
+                  super_entity = "msg_channel",
+                  )
 
         # ---------------------------------------------------------------------
         # Twilio InBox
@@ -1272,13 +1274,13 @@ class S3TwilioModel(S3ChannelModel):
                              Field("received_on"),
                              *s3_meta_fields())
 
-        self.configure(tablename,
-                       list_fields = ["body",
-                                      "sender",
-                                      "received_on"
-                                      ],
-                       super_entity = "msg_message",
-                       )
+        configure(tablename,
+                  list_fields = ["body",
+                                 "sender",
+                                 "received_on"
+                                 ],
+                  super_entity = "msg_message",
+                  )
 
         # ---------------------------------------------------------------------
         return dict()

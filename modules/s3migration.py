@@ -240,6 +240,9 @@ class S3Migration(object):
     def backup(self):
         """
             Backup the database to a local SQLite database
+
+            @ToDo: Option to use a temporary DB in Postgres/MySQL as this takes
+                   too long for a large DB
         """
 
         import os
@@ -362,8 +365,9 @@ class S3Migration(object):
                     dict(tablename=tablename, fk=fk)
 
             elif db_engine == "postgres":
-                # @ToDo: http://www.postgresql.org/docs/8.4/static/sql-altertable.html
-                raise NotImplementedError
+                # http://www.postgresql.org/docs/8.4/static/sql-altertable.html
+                sql = "ALTER TABLE %(tablename)s DROP CONSTRAINT %(tablename)s_%(fieldname)s_fkey;" % \
+                    dict(tablename=tablename, fieldname=fieldname)
 
             try:
                 executesql(sql)

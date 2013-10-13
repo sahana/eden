@@ -6,6 +6,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,CF,"Prefecture","Sub-Prefecture","Commune",,
 ,CM,"Region","Division","Sub-Division","District",
 ,FI,"Regional State Administrative Agency","Region","Sub-region","Municipality",,
+,IN,"State","District","Subdistrict",,,
 ,KE,"Province","District","Division","Location",
 ,MM,"State","District","Township","Village Tract","Village",
 ,MN,"Province / Aimag","District / Soum","Subdistrict / Bagh",,,
