@@ -39,7 +39,7 @@ from ..s3 import *
 class S3DeploymentModel(S3Model):
 
     names = ["deploy_deployment",
-             "deploy_human_resource"]
+             "deploy_human_resource_assignment"]
 
     def model(self):
 
@@ -49,6 +49,9 @@ class S3DeploymentModel(S3Model):
         configure = self.configure
         super_link = self.super_link
 
+        s3 = current.response.s3
+        crud_strings = s3.crud_strings
+        
         # ---------------------------------------------------------------------
         # Deployment
         #
@@ -65,6 +68,23 @@ class S3DeploymentModel(S3Model):
         configure(tablename,
                   super_entity="doc_entity")
 
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            title_create = T("New Deployment"),
+            title_display = T("Deployment Details"),
+            title_list = T("Deployments"),
+            title_update = T("Edit Deployment Details"),
+            title_search = T("Search Deployments"),
+            title_upload = T("Import Deployments"),
+            subtitle_create = T("Add New Deployment"),
+            label_list_button = T("List Deployments"),
+            label_create_button = T("Add Deployment"),
+            label_delete_button = T("Delete Deployment"),
+            msg_record_created = T("Deployment added"),
+            msg_record_modified = T("Deployment Details updated"),
+            msg_record_deleted = T("Deployment deleted"),
+            msg_list_empty = T("No Deployments currently registered"))
+                
         # Reusable field
         represent = S3Represent(lookup=tablename, fields=["title"])
         deployment_id = S3ReusableField("deployment_id", table,
@@ -78,21 +98,43 @@ class S3DeploymentModel(S3Model):
         # ---------------------------------------------------------------------
         # Deployment of human resources
         #
-        tablename = "deploy_human_resource"
+        tablename = "deploy_human_resource_assignment"
         table = define_table(tablename,
+                             super_link("doc_id", "doc_entity"),
+                             deployment_id(),
                              self.hrm_human_resource_id(empty=False,
                                                         label=T("Member")),
-                             deployment_id(),
                              s3_date("start_date",
                                      label = T("Start Date")),
                              s3_date("end_date",
                                      label = T("End Date")),
                              *s3_meta_fields())
 
+        # Table configuration
+        configure(tablename,
+                  super_entity="doc_entity")
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            title_create = T("New Assignment"),
+            title_display = T("Assignment Details"),
+            title_list = T("Assignments"),
+            title_update = T("Edit Assignment Details"),
+            title_search = T("Search Assignments"),
+            title_upload = T("Import Assignments"),
+            subtitle_create = T("Add New Assignment"),
+            label_list_button = T("List Assignments"),
+            label_create_button = T("Add Assignment"),
+            label_delete_button = T("Delete Assignment"),
+            msg_record_created = T("Assignment added"),
+            msg_record_modified = T("Assignment Details updated"),
+            msg_record_deleted = T("Assignment deleted"),
+            msg_list_empty = T("No Assignments currently registered"))
+
         # ---------------------------------------------------------------------
         # Deployment of assets
         #
-        # @todo: deploy_asset
+        # @todo: deploy_asset_assignment
         
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -129,7 +171,7 @@ class S3DeploymentAlertModel(S3Model):
         # ---------------------------------------------------------------------
         # Person entity to send alerts to
         #
-        tablename = "deploy_group"
+        tablename = "deploy_alert_group"
         table = define_table(tablename,
                              *s3_meta_fields())
 
