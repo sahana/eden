@@ -71,13 +71,14 @@ class S3MainMenu(default.S3MainMenu):
             ),
             MM("Locations", c="gis")(
                 MM("Facilities", c="org", f="facility", m="search"),
-                MM("Warehouses", c="inv", f="warehouse", m="search"),
+                #MM("Warehouses", c="inv", f="warehouse", m="search"),
                 MM("Create a Facility", c="org", f="facility", m="create")
             ),
             MM("Contacts", c="hrm", f="staff", m="search")(
                 MM("Staff", c="hrm", f="staff", m="search"),
                 MM("Groups", c="hrm", f="group"),
                 MM("Organizations", c="org", f="organisation", m="search"),
+                MM("Networks", c="org", f="group"),
                 #MM("People Registry", c="pr", f="index")
             ),                
             MM("Resources", url="http://occupysandy.net/resources/coordination/")(
@@ -131,7 +132,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         #inv_recv_search = crud_strings.inv_recv.title_search
 
         return M()(
-                    M("Facilities", c="org", f="facility")(
+                    M("Facilities", c="inv", f="facility")(
                         M("New", m="create"),
                         M("List All"),
                         M("Map", m="map"),

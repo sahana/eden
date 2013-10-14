@@ -784,7 +784,7 @@ def translate():
     if not request.vars.opt:
         return dict()
 
-    from s3.s3translate import TranslateAPI, StringsToExcel, TranslateReportStatus, TranslateReadFiles
+    from s3.s3translate import TranslateAPI, Strings, TranslateReportStatus, TranslateReadFiles
     from math import ceil
 
     def postp(r, output):
@@ -834,9 +834,9 @@ def translate():
                 # Obtaining the type of file to export to
                 filetype = form.request_vars.filetype
 
-                # Generating the xls file for download
-                X = StringsToExcel()
-                output = X.convert_to_xls(code, modlist, [], filetype, all_template_flag)
+                # Generate the file to download
+                X = Strings()
+                output = X.export_file(code, modlist, [], filetype, all_template_flag)
                 return output
 
             # Creating a form with checkboxes for list of modules

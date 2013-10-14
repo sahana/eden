@@ -66,13 +66,16 @@ for(var i=0,len=layers.length;i<len;i++){
  layer=layers[i];
  if(layer.name=='All Coalitions'){layer.setVisibility(true)}}
 '''
-        map = current.gis.show_map(width=770,
-                                   height=295,
-                                   callback=callback,
-                                   catalogue_layers=True,
-                                   collapsed=True,
-                                   save=False,
-                                   )
+        gis = current.gis
+        config = gis.get_config()
+        config.zoom = 8
+        map = gis.show_map(width=770,
+                           height=295,
+                           callback=callback,
+                           catalogue_layers=True,
+                           collapsed=True,
+                           save=False,
+                           )
         output["map"] = map
 
         # Description of available Modules

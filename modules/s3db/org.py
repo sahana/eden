@@ -50,6 +50,7 @@ __all__ = ["S3OrganisationModel",
            "org_rheader",
            "org_organisation_controller",
            "org_office_controller",
+           "org_facility_controller",
            "org_update_affiliations",
            "org_OrganisationRepresent",
            "org_SiteRepresent",
@@ -4431,19 +4432,223 @@ def org_office_controller():
         return output
     s3.postp = postp
 
-    #if "map" in request.args:
-        ## S3Map has migrated
-        #hide_filter = False
-    #else:
-        ## Not yet ready otherwise
-        #hide_filter = True
-    hide_filter = False
-
     output = current.rest_controller("org", "office",
-                                     hide_filter=hide_filter,
+                                     hide_filter=False,
                                      # Don't allow components with components (such as document) to breakout from tabs
                                      native=False,
                                      rheader=org_rheader)
+    return output
+
+# =============================================================================
+def org_facility_controller():
+    """
+        Facility Controller, defined in the model for use from
+        multiple controllers for unified menus
+    """
+
+    db = current.db
+    s3db = current.s3db
+    s3 = current.response.s3
+
+    # Pre-processor
+    def prep(r):
+        # Location Filter
+        s3db.gis_location_filter(r)
+
+        if r.interactive:
+            if r.component:
+                cname = r.component_name
+                if cname in ("inv_item", "recv", "send"):
+                    # Filter out items which are already in this inventory
+                    s3db.inv_prep(r)
+
+                    # remove CRUD generated buttons in the tabs
+                    s3db.configure("inv_inv_item",
+                                   create=False,
+                                   listadd=False,
+                                   editable=False,
+                                   deletable=False,
+                                   )
+
+                elif cname == "human_resource":
+                    # Filter to just Staff
+                    s3.filter = (s3db.hrm_human_resource.type == 1)
+                    # Make it clear that this is for adding new staff, not assigning existing
+                    s3.crud_strings.hrm_human_resource.label_create_button = T("Add New Staff Member")
+                    # Cascade the organisation_id from the office to the staff
+                    htable = s3db.hrm_human_resource
+                    field = htable.organisation_id
+                    field.default = r.record.organisation_id
+                    field.writable = False
+                    field.comment = None
+                    # Filter out people which are already staff for this office
+                    s3_filter_staff(r)
+                    # Modify list_fields
+                    s3db.configure("hrm_human_resource",
+                                   list_fields=["person_id",
+                                                "phone",
+                                                "email",
+                                                "organisation_id",
+                                                "job_title_id",
+                                                "department_id",
+                                                "site_contact",
+                                                "status",
+                                                "comments",
+                                                ]
+                                   )
+
+                elif cname == "req" and r.method not in ("update", "read"):
+                    # Hide fields which don't make sense in a Create form
+                    # inc list_create (list_fields over-rides)
+                    s3db.req_create_form_mods()
+
+                elif cname == "asset":
+                    # Default/Hide the Organisation & Site fields
+                    record = r.record
+                    atable = s3db.asset_asset
+                    field = atable.organisation_id
+                    field.default = record.organisation_id
+                    field.readable = field.writable = False
+                    field = atable.site_id
+                    field.default = record.site_id
+                    field.readable = field.writable = False
+                    # Stay within Facility tab
+                    s3db.configure("asset_asset",
+                                   create_next = None)
+
+            elif r.id:
+                field = r.table.obsolete
+                field.readable = field.writable = True
+
+        elif r.representation == "geojson":
+            # Load these models now as they'll be needed when we encode
+            mtable = s3db.gis_marker
+        
+        return True
+    s3.prep = prep
+
+    def postp(r, output):
+        if r.representation == "plain" and \
+             r.method !="search":
+            # Custom Map Popup
+            output = TABLE()
+            append = output.append
+            # Edit button
+            append(TR(TD(A(T("Edit"),
+                           _target="_blank",
+                           _id="edit-btn",
+                           _href=URL(args=[r.id, "update"])))))
+
+            # Name
+            append(TR(TD(B("%s:" % T("Name"))),
+                      TD(r.record.name)))
+
+            # Type(s)
+            ttable = db.org_facility_type
+            ltable = db.org_site_facility_type
+            query = (ltable.site_id == r.record.site_id) & \
+                    (ltable.facility_type_id == ttable.id)
+            rows = db(query).select(ttable.name)
+            if rows:
+                append(TR(TD(B("%s:" % ltable.facility_type_id.label)),
+                          TD(", ".join([row.name for row in rows]))))
+
+            # Comments
+            if r.record.comments:
+                append(TR(TD(B("%s:" % r.table.comments.label)),
+                          TD(r.record.comments)))
+
+            # Organisation (better with just name rather than Represent)
+            # @ToDo: Make this configurable - some users will only see
+            #        their staff so this is a meaningless field for them
+            table = db.org_organisation
+            org = db(table.id == r.record.organisation_id).select(table.name,
+                                                                  limitby=(0, 1)
+                                                                  ).first()
+            if org:
+                append(TR(TD(B("%s:" % r.table.organisation_id.label)),
+                          TD(org.name)))
+
+            site_id = r.record.site_id
+
+            if settings.has_module("req"):
+                # Open/High/Medium priority Requests
+                rtable = s3db.req_req
+                query = (rtable.site_id == site_id) & \
+                        (rtable.fulfil_status != 2) & \
+                        (rtable.priority.belongs((2, 3)))
+                reqs = db(query).select(rtable.id,
+                                        rtable.req_ref,
+                                        rtable.type,
+                                        )
+                if reqs:
+                    append(TR(TD(B("%s:" % T("Requests")))))
+                    req_types = {1:"req_item",
+                                 3:"req_skill",
+                                 8:"",
+                                 9:"",
+                                 }
+                    vals = [A(req.req_ref,
+                              _href=URL(c="req", f="req",
+                                        args=[req.id, req_types[req.type]])) for req in reqs]
+                    for val in vals:
+                        append(TR(TD(val, _colspan=2)))
+
+            # Street address
+            gtable = s3db.gis_location
+            stable = s3db.org_site
+            query = (gtable.id == stable.location_id) & \
+                    (stable.id == site_id)
+            location = db(query).select(gtable.addr_street,
+                                        limitby=(0, 1)).first()
+            if location.addr_street:
+                append(TR(TD(B("%s:" % gtable.addr_street.label)),
+                          TD(location.addr_street)))
+
+            # Opening Times
+            opens = r.record.opening_times
+            if opens:
+                append(TR(TD(B("%s:" % r.table.opening_times.label)),
+                          TD(opens)))
+
+            # Phone number
+            contact = r.record.contact
+            if contact:
+                append(TR(TD(B("%s:" % r.table.contact.label)),
+                          TD(contact)))
+
+            # Phone number
+            phone1 = r.record.phone1
+            if phone1:
+                append(TR(TD(B("%s:" % r.table.phone1.label)),
+                          TD(phone1)))
+
+            # Email address (as hyperlink)
+            email = r.record.email
+            if email:
+                append(TR(TD(B("%s:" % r.table.email.label)),
+                          TD(A(email, _href="mailto:%s" % email))))
+
+            # Website (as hyperlink)
+            website = r.record.website
+            if website:
+                append(TR(TD(B("%s:" % r.table.website.label)),
+                          TD(A(website, _href=website))))
+
+        return output
+    s3.postp = postp
+
+    if "map" in current.request.args:
+        # S3Map has migrated
+        hide_filter = False
+    else:
+        # Not yet ready otherwise
+        hide_filter = True
+
+    output = current.rest_controller("org", "facility",
+                                     rheader=s3db.org_rheader,
+                                     hide_filter=hide_filter,
+                                     )
     return output
 
 # =============================================================================

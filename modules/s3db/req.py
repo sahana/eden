@@ -166,6 +166,7 @@ class S3RequestModel(S3Model):
         tablename = "req_req"
         table = self.define_table(tablename,
                                   super_link("doc_id", "doc_entity"),
+                                  # @ToDo: Replace with Link Table
                                   self.event_event_id(
                                         default=session.s3.event,
                                         readable = False,
@@ -554,19 +555,18 @@ class S3RequestModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                req_create_form_mods = self.req_create_form_mods,
-                req_hide_quantities = self.req_hide_quantities,
-                req_inline_form = self.req_inline_form,
-                req_prep = self.req_prep,
-                req_priority_opts = req_priority_opts,
-                req_priority_represent = self.req_priority_represent,
-                req_req_id = req_id,
-                req_req_ref = req_ref,
-                req_status_opts = req_status_opts,
-                req_type_opts = req_type_opts,
-                req_tabs = self.req_tabs,
-            )
+        return dict(req_create_form_mods = self.req_create_form_mods,
+                    req_hide_quantities = self.req_hide_quantities,
+                    req_inline_form = self.req_inline_form,
+                    req_prep = self.req_prep,
+                    req_priority_opts = req_priority_opts,
+                    req_priority_represent = self.req_priority_represent,
+                    req_req_id = req_id,
+                    req_req_ref = req_ref,
+                    req_status_opts = req_status_opts,
+                    req_type_opts = req_type_opts,
+                    req_tabs = self.req_tabs,
+                    )
 
     # -------------------------------------------------------------------------
     def defaults(self):
@@ -576,9 +576,8 @@ class S3RequestModel(S3Model):
 
         req_ref = S3ReusableField("req_ref", "string",
                                   readable=False, writable=False)
-        return Storage(
-                req_req_ref = req_ref
-            )
+        return dict(req_req_ref = req_ref
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1551,10 +1550,9 @@ S3OptionsFilter({
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                req_item_id = req_item_id,
-                req_item_represent = self.req_item_represent,
-            )
+        return dict(req_item_id = req_item_id,
+                    req_item_represent = self.req_item_represent,
+                    )
 
     # -------------------------------------------------------------------------
     def defaults(self):
@@ -1563,9 +1561,8 @@ S3OptionsFilter({
         """
         req_item_id = S3ReusableField("req_item_id", "integer",
                                       readable=False, writable=False)
-        return Storage(
-                req_item_id = req_item_id
-            )
+        return dict(req_item_id = req_item_id
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1821,9 +1818,8 @@ class S3RequestSkillModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                req_skill_represent = self.req_skill_represent,
-            )
+        return dict(req_skill_represent = self.req_skill_represent,
+                    )
 
     # -----------------------------------------------------------------
     @staticmethod
@@ -1903,8 +1899,7 @@ class S3RequestRecurringModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-            )
+        return dict()
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1962,8 +1957,7 @@ class S3RequestSummaryModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-            )
+        return dict()
 
 # =============================================================================
 class S3RequestTaskModel(S3Model):
@@ -1992,8 +1986,7 @@ class S3RequestTaskModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-            )
+        return dict()
 
 # =============================================================================
 class S3CommitModel(S3Model):
@@ -2168,9 +2161,8 @@ class S3CommitModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                    req_commit_id = commit_id,
-                )
+        return dict(req_commit_id = commit_id,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2547,11 +2539,10 @@ class S3CommitItemModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                # Used by commit_req() controller
-                req_commit_item_onaccept = self.commit_item_onaccept,
-                req_send_commit = self.req_send_commit,
-            )
+        return dict(# Used by commit_req() controller
+                    req_commit_item_onaccept = self.commit_item_onaccept,
+                    req_send_commit = self.req_send_commit,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2767,7 +2758,7 @@ class S3CommitPersonModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage()
+        return dict()
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2852,7 +2843,7 @@ class S3CommitSkillModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage()
+        return dict()
 
     # -------------------------------------------------------------------------
     @staticmethod

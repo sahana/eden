@@ -437,9 +437,28 @@ def supplier():
 def inv_item():
     """ REST Controller """
 
+    # If this url has a viewing track items then redirect to track_movement
+    viewing = request.get_vars.get("viewing", None)
+    if viewing:
+        tn, id = viewing.split(".", 1)
+        if tn == "inv_track_item":
+            table = s3db.inv_track_item
+            record = db(table.id == id).select(table.item_id,
+                                               limitby=(0, 1)).first()
+            redirect(URL(c = "inv",
+                         f = "track_movement",
+                         args = [],
+                         vars = {"viewing" : "%s.%s" % ("inv_inv_item", record.item_id)}
+                         ))
+
     tablename = "inv_inv_item"
     # Load model to be able to override CRUD string(s)
     table = s3db[tablename]
+
+    # Limit site_id to sites the user has permissions for
+    auth.permitted_facilities(table=table,
+                              error_msg=T("You do not have permission for any site to add an inventory item."))
+
     s3.crud_strings[tablename].msg_list_empty = T("No Stock currently registered")
 
     if "report" in request.get_vars and \
@@ -447,7 +466,7 @@ def inv_item():
             s3.crud_strings[tablename].update(dict(
                 title_list = T("Monetization Report"),
                 subtitle_list = T("Monetization Details"),
-                msg_list_empty = T("No Stock currently registered"),
+                #msg_list_empty = T("No Stock currently registered"),
                 title_search = T("Monetization Report"),
               ))
             s3db.configure(tablename,
@@ -464,7 +483,7 @@ def inv_item():
                            )
     else:
         s3db.configure(tablename,
-                       insertable= settings.get_inv_direct_stock_edits(),
+                       insertable = settings.get_inv_direct_stock_edits(),
                        list_fields = ["id",
                                       "site_id",
                                       "item_id",
@@ -478,21 +497,17 @@ def inv_item():
                                       ]
                        )
 
-    # Upload for configuration (add replace option)
-    s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
+    if len(request.args) > 1 and request.args[1] == "track_item":
+        # remove CRUD generated buttons in the tabs
+        s3db.configure("inv_track_item",
+                       create=False,
+                       listadd=False,
+                       editable=False,
+                       deletable=False,
+                       )
+    else:
+        s3.filter = (table.quantity != 0)
 
-    # if this url has a viewing track items then redirect to track_movement
-    if "viewing" in request.get_vars:
-        viewing = request.get_vars.viewing
-        tn, id = viewing.split(".", 1)
-        if tn == "inv_track_item":
-            record = s3db.inv_track_item[id]
-            redirect(URL(c = "inv",
-                         f = "track_movement",
-                         args = [],
-                         vars = {"viewing" : "%s.%s" % ("inv_inv_item", record.item_id)}
-                        )
-                     )
     def prep(r):
         if r.method != "search" and r.method != "report":
             s3.dataTable_group = 1
@@ -536,20 +551,8 @@ def inv_item():
                         resource.delete(ondelete=ondelete, format="xml")
             resource.skip_import = True
     s3mgr.import_prep = import_prep
-
-
-    # Limit site_id to sites the user has permissions for
-    auth.permitted_facilities(table=table,
-                              error_msg=T("You do not have permission for any site to add an inventory item."))
-
-    if len(request.args) > 1 and request.args[1] == "track_item":
-        # remove CRUD generated buttons in the tabs
-        s3db.configure("inv_track_item",
-                       create=False,
-                       listadd=False,
-                       editable=False,
-                       deletable=False,
-                       )
+    # Upload for configuration (add replace option)
+    s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
 
     output = s3_rest_controller(rheader=s3db.inv_rheader,
                                 #csv_extra_fields = [dict(label="Organisation",
@@ -1664,7 +1667,7 @@ def kit():
 
 # -----------------------------------------------------------------------------
 def facility():
-    return s3_rest_controller("org", rheader = s3db.org_facility_rheader)
+    return s3db.org_facility_controller()
 
 # -----------------------------------------------------------------------------
 def facility_type():

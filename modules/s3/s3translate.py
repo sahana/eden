@@ -54,10 +54,10 @@ from gluon import current
                              language file for each module. It also updates
                              these percentages as and when required
 
-    StringsToExcel         : Class which obtains strings for translation based
+    Strings                : Class which obtains strings for translation based
                              on given modules, adds existing translations from
                              corresponding language file to this list, and then
-                             converts the list to a spreadsheet for translators
+                             outputs the list to a file for translators
 
     CsvToWeb2py            : Class which reads a list of csv files containing
                              translations, merges translations, and updates
@@ -1107,8 +1107,8 @@ class TranslateReportStatus:
             return percent_dict
 
 # =============================================================================
-class StringsToExcel:
-        """ Class to convert strings to .xls format """
+class Strings:
+        """ Class to export strings to a file """
 
         # ---------------------------------------------------------------------
         @staticmethod
@@ -1178,6 +1178,8 @@ class StringsToExcel:
 
             from gluon.contenttype import contenttype
 
+            from s3.s3utils import s3_debug
+
             # Define spreadsheet properties
             wbk = xlwt.Workbook("utf-8")
             sheet = wbk.add_sheet("Translate")
@@ -1196,7 +1198,11 @@ class StringsToExcel:
             for (loc, d1, d2) in Strings:
                 d2 = d2.decode("string-escape").decode("utf-8")
                 sheet.write(row_num, 0, loc, style)
-                sheet.write(row_num, 1, d1, style)
+                try:
+                    sheet.write(row_num, 1, d1, style)
+                except:
+                    s3_debug("Invalid source string!", loc)
+                    sheet.write(row_num, 1, "", style)
                 sheet.write(row_num, 2, d2, style)
                 row_num += 1
 
@@ -1221,7 +1227,7 @@ class StringsToExcel:
             return output.read()
 
         # ---------------------------------------------------------------------
-        def convert_to_xls(self, langfile, modlist, filelist, filetype, all_template_flag):
+        def export_file(self, langfile, modlist, filelist, filetype, all_template_flag):
             """
                 Function to get the strings by module(s)/file(s), merge with
                 those strings from existing w2p language file which are already
@@ -1244,33 +1250,33 @@ class StringsToExcel:
             NewStrings = []
             A = TranslateAPI()
 
-            # If all templates are selected
             if all_template_flag == 1:
-                A.grp.group_files(os.path.join(current.request.folder, "private", "templates"), "", 0)
-            # if some particular template is selected
+                # Select All Templates
+                A.grp.group_files(os.path.join(request.folder, "private", "templates"), "", 0)
             else:
-                template_folder = os.path.join(current.request.folder, "private", "templates", settings.base.template)
+                # A specific template is selected
+                template_folder = os.path.join(request.folder, "private", "templates", settings.get_template())
                 A.grp.group_files(template_folder, "", 0)
             R = TranslateReadFiles()
 
-            # Retrieve strings for a module
+            # Select Modules
 
             # Core Modules are always included
             core_modules = ["auth", "default"]
             for mod in core_modules:
                 modlist.append(mod)
 
-            # appadmin and error are a part of admin
+            # appadmin and error are part of admin
             if "admin" in modlist:
                 modlist.append("appadmin")
                 modlist.append("error")
 
-            # Choosing modules on which selected modules are dependent
+            # Select dependent modules
             models = current.models
             for mod in modlist:
                 if hasattr(models, mod):
                     obj = getattr(models, mod)
-                    # Right now only for inv depends list has been added
+                    # Currently only inv module has a depends list
                     if hasattr(obj, "depends"):
                         for element in obj.depends:
                             if element not in modlist:
