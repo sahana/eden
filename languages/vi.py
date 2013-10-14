@@ -4985,7 +4985,7 @@
 'Volunteer Role deleted': 'Vai trò của Tình nguyện viên đã xóa',
 'Volunteer Role Details': 'Chi tiết về Vai trò của Tình nguyện viên',
 'Volunteer Role updated': 'Vai trò của Tình nguyện viên được cập nhật',
-'Volunteer Roles': 'Volunteer Roles',
+'Volunteer Roles': 'Chức năng nhiệm vụ TNV',
 'Volunteer Service Record': 'Bản lưu Dịch vụ Tình nguyện viên',
 'VOLUNTEERS': 'TÌNH NGUYỆN VIÊN',
 'Volunteers': 'Tình nguyện viên',
