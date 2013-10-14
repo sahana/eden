@@ -39,6 +39,7 @@ from ..s3 import *
 class S3DeploymentModel(S3Model):
 
     names = ["deploy_deployment",
+             "deploy_deployment_id",
              "deploy_human_resource_assignment"]
 
     def model(self):
@@ -159,20 +160,49 @@ class S3DeploymentAlertModel(S3Model):
 
     def model(self):
 
+        T = current.T
+
         define_table = self.define_table
+        super_link = self.super_link
+        configure = self.configure
+        add_component = self.add_component
 
         # ---------------------------------------------------------------------
-        # Alerts
+        # Alert (also the PE representing its Recipients)
         #
         tablename = "deploy_alert"
         table = define_table(tablename,
+                             self.deploy_deployment_id(),
+                             super_link("pe_id", "pr_pentity"),
+                             # @todo: link to alert message
                              *s3_meta_fields())
 
+        # Table Configuration
+        configure(tablename,
+                  super_entity="pr_pentity")
+
+        # Components
+        add_component("deploy_alert_recipient",
+                      deploy_alert="alert_id")
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename)
+        alert_id = S3ReusableField("alert_id", table,
+                                   requires = IS_ONE_OF(db,
+                                                        "deploy_alert.id",
+                                                        represent),
+                                   represent = represent,
+                                   label = T("Alert"),
+                                   ondelete = "CASCADE")
+
         # ---------------------------------------------------------------------
-        # Person entity to send alerts to
+        # Recipient of the Alert
         #
-        tablename = "deploy_alert_group"
+        tablename = "deploy_alert_recipient"
         table = define_table(tablename,
+                             alert_id(),
+                             self.hrm_human_resource_id(empty=False,
+                                                        label=T("Member")),
                              *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -180,6 +210,10 @@ class S3DeploymentAlertModel(S3Model):
         #
         tablename = "deploy_response"
         table = define_table(tablename,
+                             self.deploy_deployment_id(),
+                             self.hrm_human_resource_id(empty=False,
+                                                        label=T("Member")),
+                             # @todo: link to response message
                              *s3_meta_fields())
 
         # ---------------------------------------------------------------------
