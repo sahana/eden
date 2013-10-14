@@ -38,28 +38,107 @@ from ..s3 import *
 # =============================================================================
 class S3DeploymentModel(S3Model):
 
-    names = []
+    names = ["deploy_deployment",
+             "deploy_human_resource"]
 
     def model(self):
 
+        T = current.T
+        db = current.db
+        define_table = self.define_table
+        configure = self.configure
+        super_link = self.super_link
+
+        # ---------------------------------------------------------------------
+        # Deployment
+        #
+        tablename = "deploy_deployment"
+        table = define_table(tablename,
+                             super_link("doc_id", "doc_entity"),
+                             Field("title"),
+                             self.gis_location_id(),
+                             Field("event_type"),        # @todo: replace by link
+                             Field("status", "integer"), # @todo: lookup?
+                             *s3_meta_fields())
+
+        # Table configuration
+        configure(tablename,
+                  super_entity="doc_entity")
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, fields=["title"])
+        deployment_id = S3ReusableField("deployment_id", table,
+                                        requires = IS_ONE_OF(db,
+                                                             "deploy_deployment.id",
+                                                             represent),
+                                        represent = represent,
+                                        label = T("Deployment"),
+                                        ondelete = "CASCADE")
+
+        # ---------------------------------------------------------------------
+        # Deployment of human resources
+        #
+        tablename = "deploy_human_resource"
+        table = define_table(tablename,
+                             self.hrm_human_resource_id(empty=False,
+                                                        label=T("Member")),
+                             deployment_id(),
+                             s3_date("start_date",
+                                     label = T("Start Date")),
+                             s3_date("end_date",
+                                     label = T("End Date")),
+                             *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Deployment of assets
+        #
+        # @todo: deploy_asset
+        
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return dict(deploy_deployment_id = deployment_id)
 
     # -------------------------------------------------------------------------
     def defaults(self):
         """
             Safe defaults for model-global names in case module is disabled
         """
-        return dict()
+        deployment_id = S3ReusableField("deployment_id", "integer",
+                                        readable=False, writable=False)
+        return dict(deploy_deployment_id = deployment_id)
 
 # =============================================================================
 class S3DeploymentAlertModel(S3Model):
 
-    names = []
+    names = ["deploy_alert",
+             "deploy_group",
+             "deploy_response"]
 
     def model(self):
+
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        # Alerts
+        #
+        tablename = "deploy_alert"
+        table = define_table(tablename,
+                             *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Person entity to send alerts to
+        #
+        tablename = "deploy_group"
+        table = define_table(tablename,
+                             *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Responses to Alerts
+        #
+        tablename = "deploy_response"
+        table = define_table(tablename,
+                             *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

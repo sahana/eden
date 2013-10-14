@@ -18,4 +18,14 @@ def index():
     response.title = module_name
     return dict(module_name=module_name)
     
+# =============================================================================
+def deployment():
+
+    return s3_rest_controller()
+
+# =============================================================================
+def human_resource():
+
+    return s3_rest_controller()
+
 # END =========================================================================
