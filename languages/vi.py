@@ -2190,7 +2190,7 @@
 'Item Catalog deleted': 'Đã xóa danh mục hàng hóa',
 'Item Catalog Details': 'Thông tin danh mục hàng hóa',
 'Item Catalog updated': 'Đã cập nhật danh mục hàng hóa',
-'Item Catalogues': 'Item Catalogues',
+'Item Catalogs': 'Item Catalogs',
 'Item Categories': 'Danh mục hàng hóa',
 'Item Category': 'Danh mục hàng hóa',
 'Item Category added': 'Danh mục hàng hóa đã được thêm',

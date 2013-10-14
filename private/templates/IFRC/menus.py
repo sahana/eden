@@ -72,7 +72,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Received Shipments", c="inv", f="recv"),
                 MM("Sent Shipments", c="inv", f="send"),
                 MM("Items", c="supply", f="item"),
-                MM("Item Catalogues", c="supply", f="catalog"),
+                MM("Item Catalogs", c="supply", f="catalog"),
                 MM("Item Categories", c="supply", f="item_category"),
                 M("Requests", c="req", f="req")(),
                 #M("Commitments", f="commit")(),
