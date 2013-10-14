@@ -1028,8 +1028,7 @@ class S3IRSResponseModel(S3Model):
 
         Currently this has code specific to Porto Firefighters
 
-        @ToDo: Move these to Events module?
-               - the response shouldn't live within the reporting system?
+        @ToDo: Replace with Deployment module
     """
 
     names = ["irs_ireport_human_resource",

@@ -318,6 +318,9 @@ settings.L10n.decimal_separator = "."
 # Uncomment to hide fields in S3AddPersonWidget[2]
 #settings.pr.request_dob = False
 #settings.pr.request_gender = False
+# Uncomment to show field in S3AddPersonWidget
+#settings.pr.request_home_phone = True
+# Uncomment to prevent selecting existing users in S3AddPersonWidget
 #settings.pr.select_existing = False
 
 # -----------------------------------------------------------------------------

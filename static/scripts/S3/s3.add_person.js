@@ -29,11 +29,13 @@
             var gender_row = $(selector + '_gender__row');
             var occupation_row = $(selector + '_occupation__row');
             var mobile_phone_row = $(selector + '_mobile_phone__row');
+            var home_phone_row = $(selector + '_home_phone__row');
             var email_row = $(selector + '_email__row');
             var box_bottom = $(selector + '_box_bottom');
             $(selector + '__row').hide()
                                  .after(box_bottom)
                                  .after(email_row)
+                                 .after(home_phone_row)
                                  .after(mobile_phone_row)
                                  .after(occupation_row)
                                  .after(gender_row)
@@ -50,6 +52,7 @@
             gender_row.removeClass('hide').show();
             occupation_row.removeClass('hide').show();
             mobile_phone_row.removeClass('hide').show();
+            home_phone_row.removeClass('hide').show();
             email_row.removeClass('hide').show();
             box_bottom.removeClass('hide').show();
         }
@@ -118,6 +121,7 @@
         $(selector + '_date_of_birth').prop('disabled', false);
         $(selector + '_occupation').prop('disabled', false);
         $(selector + '_mobile_phone').prop('disabled', false);
+        $(selector + '_home_phone').prop('disabled', false);
         $(selector + '_email').prop('disabled', false);
     }
 
@@ -129,6 +133,7 @@
         $(selector + '_date_of_birth').prop('disabled', true);
         $(selector + '_occupation').prop('disabled', true);
         $(selector + '_mobile_phone').prop('disabled', true);
+        $(selector + '_home_phone').prop('disabled', true);
         $(selector + '_email').prop('disabled', true);
         // Show the edit button
         $(selector + '_edit_bar .icon-edit').removeClass('hide').show();
@@ -148,6 +153,7 @@
         $(selector + '_date_of_birth').prop('disabled', false).val('');
         $(selector + '_occupation').prop('disabled', false).val('');
         $(selector + '_mobile_phone').prop('disabled', false).val('');
+        $(selector + '_home_phone').prop('disabled', false).val('');
         $(selector + '_email').prop('disabled', false).val('');
         // Hide the edit button
         $(selector + '_edit_bar .icon-edit').hide();
@@ -168,6 +174,7 @@
             $(selector + '_date_of_birth').prop('disabled', true).val(existing.date_of_birth);
             $(selector + '_occupation').prop('disabled', true).val(existing.occupation);
             $(selector + '_mobile_phone').prop('disabled', true).val(existing.mobile_phone);
+            $(selector + '_home_phone').prop('disabled', true).val(existing.home_phone);
             $(selector + '_email').prop('disabled', true).val(existing.email);
             // Show the edit button
             $(selector + '_edit_bar .icon-edit').removeClass('hide').show();
@@ -190,6 +197,7 @@
         $(selector + '_date_of_birth').prop('disabled', false).val('');
         $(selector + '_occupation').prop('disabled', false).val('');
         $(selector + '_mobile_phone').prop('disabled', false).val('');
+        $(selector + '_home_phone').prop('disabled', false).val('');
         $(selector + '_email').prop('disabled', false).val('');
         // Hide the edit bar
         //$(selector + '_edit_bar').hide();
@@ -250,6 +258,7 @@
                 date_of_birth: $(selector + '_date_of_birth').val(),
                 occupation: $(selector + '_occupation').val(),
                 mobile_phone: $(selector + '_mobile_phone').val(),
+                home_phone: $(selector + '_home_phone').val(),
                 email: $(selector + '_email').val()
             };
         } else {
@@ -374,10 +383,15 @@
                     $(selector + '_email').val(email);
                     existing['email'] = email;
                 }
-                if (data.hasOwnProperty('phone')) {
-                    var phone = data['phone'];
-                    $(selector + '_mobile_phone').val(phone);
-                    existing['mobile_phone'] = phone;
+                if (data.hasOwnProperty('mobile_phone')) {
+                    var mobile_phone = data['mobile_phone'];
+                    $(selector + '_mobile_phone').val(mobile_phone);
+                    existing['mobile_phone'] = mobile_phone;
+                }
+                if (data.hasOwnProperty('home_phone')) {
+                    var home_phone = data['home_phone'];
+                    $(selector + '_home_phone').val(home_phone);
+                    existing['home_phone'] = home_phone;
                 }
                 if (data.hasOwnProperty('gender')) {
                     var gender = data['gender'];

@@ -2246,6 +2246,14 @@ class IS_ADD_PERSON_WIDGET2(Validator):
                     error = T("Invalid phone number")
                     return (person_id, error)
 
+            home_phone = _vars.get("home_phone", None)
+            if home_phone:
+                # Validate the phone number
+                regex = re.compile(single_phone_number_pattern)
+                if not regex.match(home_phone):
+                    error = T("Invalid phone number")
+                    return (person_id, error)
+
             validate = current.manager.validate
             if person_id:
                 # Filter out location_id (location selector form values
@@ -2310,7 +2318,21 @@ class IS_ADD_PERSON_WIDGET2(Validator):
                                           contact_method="SMS",
                                           value=mobile)
 
-                    occupation = _vars["occupation"]
+                    if home_phone:
+                        query = (ctable.pe_id == pe_id) & \
+                                (ctable.contact_method == "HOME_PHONE") &\
+                                (ctable.deleted != True)
+                        r = db(query).select(ctable.value,
+                                             limitby=(0, 1)).first()
+                        if r: # update
+                            if home_phone != r.value:
+                                db(query).update(value=home_phone)
+                        else: # insert
+                            ctable.insert(pe_id=pe_id,
+                                          contact_method="HOME_PHONE",
+                                          value=home_phone)
+
+                    occupation = _vars.get("occupation", None)
                     if occupation:
                         pdtable = s3db.pr_person_details
                         query = (pdtable.person_id == person_id) & \
@@ -2374,6 +2396,10 @@ class IS_ADD_PERSON_WIDGET2(Validator):
                         ctable.insert(pe_id=person.pe_id,
                                       contact_method="SMS",
                                       value=_vars.mobile_phone)
+                    if home_phone:
+                        ctable.insert(pe_id=person.pe_id,
+                                      contact_method="HOME_PHONE",
+                                      value=_vars.home_phone)
                     if _vars.occupation:
                         s3db.pr_person_details.insert(person_id = person_id,
                                                       occupation = _vars.occupation)
