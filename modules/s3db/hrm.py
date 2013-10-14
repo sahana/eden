@@ -39,10 +39,12 @@ __all__ = ["S3HRModel",
            "hrm_map_popup",
            "hrm_rheader",
            "hrm_competency_controller",
-           "hrm_training_event_controller",
-           "hrm_training_controller",
-           "hrm_configure_pr_group_membership",
            "hrm_group_controller",
+           "hrm_human_resource_controller",
+           "hrm_person_controller",
+           "hrm_training_controller",
+           "hrm_training_event_controller",
+           "hrm_configure_pr_group_membership",
            ]
 
 import datetime
@@ -1061,6 +1063,7 @@ class S3HRModel(S3Model):
         settings = current.deployment_settings
         request_dob = settings.get_pr_request_dob()
         request_gender = settings.get_pr_request_gender()
+        home_phone = settings.get_pr_request_home_phone()
 
         htable = r.table
         ptable = db.pr_person
@@ -1106,20 +1109,36 @@ class S3HRModel(S3Model):
             gender = None
 
         # Lookup contacts separately as we can't limitby here
+        if home_phone:
+            contact_methods = ("SMS", "EMAIL", "HOME_PHONE")
+        else:
+            contact_methods = ("SMS", "EMAIL")
         query = (ctable.pe_id == row.pe_id) & \
-                (ctable.contact_method.belongs(("EMAIL", "SMS")))
+                (ctable.contact_method.belongs(contact_methods))
         rows = db(query).select(ctable.contact_method,
                                 ctable.value,
                                 orderby = ctable.priority,
                                 )
-        email = phone = None
-        for row in rows:
-            if not email and row.contact_method == "EMAIL":
-                email = row.value
-            elif not phone and row.contact_method == "SMS":
-                phone = row.value
-            if email and phone:
-                break
+        email = mobile_phone = None
+        if home_phone:
+            home_phone = None
+            for row in rows:
+                if not email and row.contact_method == "EMAIL":
+                    email = row.value
+                elif not mobile_phone and row.contact_method == "SMS":
+                    mobile_phone = row.value
+                elif not home_phone and row.contact_method == "HOME_PHONE":
+                    home_phone = row.value
+                if email and mobile_phone and home_phone:
+                    break
+        else:
+            for row in rows:
+                if not email and row.contact_method == "EMAIL":
+                    email = row.value
+                elif not mobile_phone and row.contact_method == "SMS":
+                    mobile_phone = row.value
+                if email and mobile_phone:
+                    break
 
         # Minimal flattened structure
         item = {}
@@ -1131,8 +1150,10 @@ class S3HRModel(S3Model):
         #    item["last_name"] = last_name
         if email:
             item["email"] = email
-        if phone:
-            item["phone"] = phone
+        if mobile_phone:
+            item["mobile_phone"] = mobile_phone
+        if home_phone:
+            item["home_phone"] = home_phone
         if gender:
             item["gender"] = gender
         if date_of_birth:
@@ -4564,119 +4585,6 @@ def hrm_rheader(r, tabs=[],
     return rheader
 
 # =============================================================================
-def hrm_training_event_controller():
-    """
-        Training Event Controller, defined in the model for use from
-        multiple controllers for unified menus
-    """
-
-    if current.session.s3.hrm.mode is not None:
-        current.session.error = T("Access denied")
-        redirect(URL(f="index"))
-
-    s3 = current.response.s3
-
-    def prep(r):
-        if r.component and \
-           (r.interactive or \
-            r.representation in ("aaData", "pdf", "xls")):
-
-            T = current.T
-            # Use appropriate CRUD strings
-            s3.crud_strings["hrm_training"] = Storage(
-                title_create = T("Add Participant"),
-                title_display = T("Participant Details"),
-                title_list = T("Participants"),
-                title_update = T("Edit Participant"),
-                title_search = T("Search Participants"),
-                title_upload = T("Import Participants"),
-                subtitle_create = T("Add Participant"),
-                label_list_button = T("List Participants"),
-                label_create_button = T("Add New Participant"),
-                label_delete_button = T("Delete Participant"),
-                msg_record_created = T("Participant added"),
-                msg_record_modified = T("Participant updated"),
-                msg_record_deleted = T("Participant deleted"),
-                msg_no_match = T("No entries found"),
-                msg_list_empty = T("Currently no Participants registered"))
-            # Hide/default fields which get populated from the Event
-            record = r.record
-            table = current.s3db.hrm_training
-            field = table.course_id
-            field.readable = False
-            field.writable = False
-            field.default = record.course_id
-            field = table.date
-            field.readable = False
-            field.writable = False
-            field.default = record.start_date
-            field = table.hours
-            field.readable = False
-            field.writable = False
-            field.default = record.hours
-            # Suitable list_fields
-            list_fields = ["person_id",
-                           (T("Job Title"), "job_title"),
-                           (current.messages.ORGANISATION, "organisation"),
-                           ]
-            current.s3db.configure("hrm_training",
-                                   list_fields=list_fields)
-        return True
-    s3.prep = prep
-
-    def postp(r, output):
-        if r.interactive and not r.component:
-            # Set the minimum end_date to the same as the start_date
-            s3.jquery_ready.append(
-'''S3.start_end_date('hrm_training_event_start_date','hrm_training_event_end_date')''')
-        return output
-    s3.postp = postp
-
-    output = current.rest_controller("hrm", "training_event",
-                                     rheader=hrm_rheader)
-    return output
-
-# =============================================================================
-def hrm_training_controller():
-    """
-        Training Controller, defined in the model for use from
-        multiple controllers for unified menus
-         - used for Searching for Participants
-    """
-
-    if current.session.s3.hrm.mode is not None:
-        current.session.error = current.T("Access denied")
-        redirect(URL(f="index"))
-
-    def prep(r):
-        if r.interactive or \
-           r.extension.lower() == "aadata":
-            # Suitable list_fields
-            T = current.T
-            list_fields = ["course_id",
-                           "person_id",
-                           (T("Job Title"), "job_title"),
-                           (current.messages.ORGANISATION, "organisation"),
-                           "date",
-                           ]
-            s3db = current.s3db
-            s3db.configure("hrm_training",
-                           insertable=False,
-                           list_fields=list_fields)
-            if r.method == "report":
-                s3db.configure("hrm_training", extra_fields=["date"])
-                table = s3db.hrm_training
-                table.year = Field.Lazy(hrm_training_year)
-                table.month = Field.Lazy(hrm_training_month)
-        return True
-    current.response.s3.prep = prep
-
-    output = current.rest_controller("hrm", "training",
-                                     csv_stylesheet=("hrm", "training.xsl"),
-                                     csv_template=("hrm", "training"))
-    return output
-
-# =============================================================================
 def hrm_competency_controller():
     """ RESTful CRUD controller used to allow searching for people by Skill"""
 
@@ -4762,84 +4670,6 @@ def hrm_skill_simple_search_widget(type):
                          "person_id$last_name",
                          "job_title_id$name",
                          ])
-
-# =============================================================================
-def hrm_configure_pr_group_membership():
-    """
-        Configures the labels and CRUD Strings of pr_group_membership
-    """
-
-    T = current.T
-    s3db = current.s3db
-    settings = current.deployment_settings
-    request = current.request
-    function = request.function
-
-    table = s3db.pr_group_membership
-    if settings.get_hrm_teams() == "Team":
-        table.group_id.label = T("Team Name")
-        table.group_head.label = T("Team Leader")
-
-        if function == "group":
-            current.response.s3.crud_strings["pr_group_membership"] = Storage(
-                title_create = T("Add Member"),
-                title_display = T("Membership Details"),
-                title_list = T("Team Members"),
-                title_update = T("Edit Membership"),
-                title_search = T("Search Members"),
-                subtitle_create = T("Add New Team Member"),
-                label_list_button = T("List Members"),
-                label_create_button = T("Add Team Member"),
-                label_delete_button = T("Delete Membership"),
-                msg_record_created = T("Team Member added"),
-                msg_record_modified = T("Membership updated"),
-                msg_record_deleted = T("Membership deleted"),
-                msg_list_empty = T("No Members currently registered"))
-    else:
-        table.group_head.label = T("Group Leader")
-
-    phone_label = settings.get_ui_label_mobile_phone()
-    site_label = settings.get_org_site_label()
-    if function == "group":
-        db = current.db
-        ptable = db.pr_person
-        controller = request.controller
-        def hrm_person_represent(id, row=None):
-            if row:
-                id = row.id
-            elif id:
-                row = db(ptable.id == id).select(ptable.first_name,
-                                                 limitby=(0, 1)
-                                                 ).first()
-            else:
-                return current.messages["NONE"]
-
-            return A(row.first_name,
-                     _href=URL(c=controller, f="person", args=id))
-
-        table.person_id.represent = hrm_person_represent
-        list_fields = ["id",
-                       (T("First Name"), "person_id"),
-                       "person_id$middle_name",
-                       "person_id$last_name",
-                       "group_head",
-                       (T("Email"), "person_id$email.value"),
-                       (phone_label, "person_id$phone.value"),
-                       (current.messages.ORGANISATION,
-                        "person_id$human_resource.organisation_id"),
-                       (site_label, "person_id$human_resource.site_id"),
-                       ]
-        orderby = "pr_person.first_name"
-    else:
-        list_fields = ["id",
-                       "group_id",
-                       "group_head",
-                       "group_id$description",
-                       ]
-        orderby = table.group_id
-    s3db.configure("pr_group_membership",
-                   list_fields=list_fields,
-                   orderby=orderby)
 
 # =============================================================================
 def hrm_group_controller():
@@ -4949,5 +4779,658 @@ def hrm_group_controller():
                                         s3db.pr_rheader(r, tabs=tabs))
 
     return output
+
+# =============================================================================
+def hrm_human_resource_controller():
+    """
+        Human Resources Controller, defined in the model for use from
+        multiple controllers for unified menus
+         - used for Summary view, Imports and S3AddPersonWidget2
+    """
+
+    T = current.T
+    s3db = current.s3db
+    s3 = current.response.s3
+    settings = current.deployment_settings
+
+    def prep(r):
+        method = r.method
+        if method in ("form", "lookup"):
+            return True
+        elif method == "summary":
+            settings.ui.filter_auto_submit = 750
+            settings.ui.report_auto_submit = 750
+            s3.crud_strings["hrm_human_resource"]["title_list"] = T("Staff & Volunteers")
+            filter_widgets = [
+                S3TextFilter(["person_id$first_name",
+                              "person_id$middle_name",
+                              "person_id$last_name",
+                              ],
+                             label=T("Name"),
+                             ),
+                S3OptionsFilter("type",
+                                label="",
+                                options=s3db.hrm_type_opts,
+                                hidden=True,
+                                ),
+                S3OptionsFilter("organisation_id",
+                                widget="multiselect",
+                                filter=True,
+                                header="",
+                                hidden=True,
+                                ),
+                S3LocationFilter("location_id",
+                                 label = T("Location"),
+                                 widget="multiselect",
+                                 levels=["L0", "L1", "L2", "L3"],
+                                 hidden=True,
+                                 ),
+                S3OptionsFilter("site_id",
+                                widget="multiselect",
+                                hidden=True,
+                                ),
+                S3OptionsFilter("training.course_id",
+                                label = T("Training"),
+                                widget="multiselect",
+                                hidden=True,
+                                ),
+                ]
+            if settings.get_hrm_teams():
+                filter_widgets.append(
+                    S3OptionsFilter("group_membership.group_id",
+                                    label = T("Team"),
+                                    widget="multiselect",
+                                    hidden=True,
+                                    ))
+            report_fields = ["organisation_id",
+                             "person_id",
+                             "person_id$gender",
+                             "job_title_id",
+                             (T("Training"), "training.course_id"),
+                             "location_id$L1",
+                             "location_id$L2",
+                             "site_id",
+                             "department_id",
+                             ]
+
+            report_options = Storage(
+                rows=report_fields,
+                cols=report_fields,
+                fact=report_fields,
+                defaults=Storage(rows="organisation_id",
+                                 cols="training.course_id",
+                                 fact="count(person_id)",
+                                 totals=True
+                                 )
+                )
+
+            s3db.configure("hrm_human_resource",
+                           # Match staff
+                           list_fields = ["id",
+                                          "person_id",
+                                          "job_title_id",
+                                          "organisation_id",
+                                          "department_id",
+                                          "site_id",
+                                          (T("Email"), "email.value"),
+                                          (settings.get_ui_label_mobile_phone(), "phone.value"),
+                                          ],
+                           summary=[{"name": "table",
+                                     "label": "Table",
+                                     "widgets": [{"method": "datatable"}]
+                                    },
+                                    {"name": "report",
+                                     "label": "Report",
+                                     "widgets": [{"method": "report2",
+                                                  "ajax_init": True}]
+                                    },
+                                    {"name": "map",
+                                     "label": "Map",
+                                     "widgets": [{"method": "map",
+                                                  "ajax_init": True}],
+                                    },
+                            ],
+                            filter_widgets = filter_widgets,
+                            report_options = report_options,
+                            )
+            s3.filter = None
+        else:
+            # Default to Staff
+            type_filter = S3FieldSelector("type") == 1
+            r.resource.add_filter(type_filter)
+
+        if r.interactive:
+            if method == "create" and not r.component:
+                redirect(URL(f="volunteer",
+                             args=request.args,
+                             vars=request.vars))
+            elif method == "delete":
+                # Don't redirect
+                pass
+            elif method == "deduplicate":
+                # Don't use AddPersonWidget here
+                from gluon.sqlhtml import OptionsWidget
+                field = r.table.person_id
+                field.requires = IS_ONE_OF(db, "pr_person.id",
+                                           label = field.represent)
+                field.widget = OptionsWidget.widget
+            elif r.id:
+                # Redirect to person controller
+                vars = {"human_resource.id" : r.id,
+                        "group" : "staff"
+                        }
+                redirect(URL(f="person",
+                             vars=vars))
+        return True
+    s3.prep = prep
+
+    def postp(r, output):
+        if r.interactive:
+            if not r.component:
+                # Set the minimum end_date to the same as the start_date
+                s3.jquery_ready.append(
+'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
+
+                S3CRUD.action_buttons(r, deletable=settings.get_hrm_deletable())
+                if "msg" in settings.modules and \
+                   current.auth.permission.has_permission("update",
+                                                          c="hrm",
+                                                          f="compose"):
+                    # @ToDo: Remove this now that we have it in Events?
+                    s3.actions.append({
+                        "url": URL(f="compose",
+                                   vars = {"human_resource.id": "[id]"}),
+                        "_class": "action-btn send",
+                        "label": str(T("Send Message"))})
+        elif r.representation == "plain" and \
+             r.method != "search":
+            # Map Popups
+            output = s3db.hrm_map_popup(r)
+        return output
+    s3.postp = postp
+
+    output = current.rest_controller("hrm", "human_resource",
+                                     hide_filter=False)
+    return output
+
+# =============================================================================
+def hrm_person_controller():
+    """
+        Persons Controller, defined in the model for use from
+        multiple controllers for unified menus
+         - used for access to component Tabs, Personal Profile & Imports
+         - includes components relevant to HRM
+    """
+
+    T = current.T
+    auth = current.auth
+    db = current.db
+    s3db = current.s3db
+    response = current.response
+    session = current.session
+    settings = current.deployment_settings
+    s3 = response.s3
+
+    configure = s3db.configure
+    set_method = s3db.set_method
+
+    # Custom Method for Contacts
+    set_method("pr", "person",
+               method="contacts",
+               action=s3db.pr_contacts)
+
+    # Plug-in role matrix for Admins/OrgAdmins
+    realms = auth.user is not None and auth.user.realms or []
+    system_roles = auth.get_system_roles()
+    if system_roles.ADMIN in realms or system_roles.ORG_ADMIN in realms:
+        set_method("pr", "person", method="roles",
+                   action=S3PersonRoleManager())
+
+    if settings.has_module("asset"):
+        # Assets as component of people
+        s3db.add_component("asset_asset",
+                           pr_person="assigned_to_id")
+        # Edits should always happen via the Asset Log
+        # @ToDo: Allow this method too, if we can do so safely
+        configure("asset_asset",
+                  insertable = False,
+                  editable = False,
+                  deletable = False)
+
+    get_vars = current.request.get_vars
+    group = get_vars.get("group", "staff")
+    hr_id = get_vars.get("human_resource.id", None)
+    if not str(hr_id).isdigit():
+        hr_id = None
+
+    # Configure human resource table
+    table = s3db.hrm_human_resource
+    table.type.default = 1
+    get_vars["xsltmode"] = "staff"
+    if hr_id:
+        hr = db(table.id == hr_id).select(table.type,
+                                          limitby=(0, 1)).first()
+        if hr:
+            group = hr.type == 2 and "volunteer" or "staff"
+            # Also inform the back-end of this finding
+            get_vars["group"] = group
+
+    # Configure person table
+    table = db.pr_person
+    tablename = "pr_person"
+    configure(tablename,
+              deletable=False)
+
+    mode = session.s3.hrm.mode
+    if mode is not None:
+        # Configure for personal mode
+        s3.crud_strings[tablename].update(
+            title_display = T("Personal Profile"),
+            title_update = T("Personal Profile"))
+        # People can view their own HR data, but not edit it
+        configure("hrm_human_resource",
+                  insertable = False,
+                  editable = False,
+                  deletable = False)
+        configure("hrm_certification",
+                  insertable = True,
+                  editable = True,
+                  deletable = True)
+        configure("hrm_credential",
+                  insertable = False,
+                  editable = False,
+                  deletable = False)
+        configure("hrm_competency",
+                  insertable = True,  # Can add unconfirmed
+                  editable = False,
+                  deletable = False)
+        configure("hrm_training",    # Can add but not provide grade
+                  insertable = True,
+                  editable = False,
+                  deletable = False)
+        configure("hrm_experience",
+                  insertable = False,
+                  editable = False,
+                  deletable = False)
+        configure("pr_group_membership",
+                  insertable = False,
+                  editable = False,
+                  deletable = False)
+    else:
+        # Configure for HR manager mode
+        s3.crud_strings[tablename].update(
+                title_upload = T("Import Staff"),
+                title_display = T("Staff Member Details"),
+                title_update = T("Staff Member Details")
+                )
+    # Upload for configuration (add replace option)
+    s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
+
+    # Import pre-process
+    def import_prep(data, group=group):
+        """
+            Deletes all HR records (of the given group) of the organisation
+            before processing a new data import, used for the import_prep
+            hook in s3mgr
+        """
+        resource, tree = data
+        xml = current.xml
+        tag = xml.TAG
+        att = xml.ATTRIBUTE
+        if s3.import_replace:
+            if tree is not None:
+                if group == "staff":
+                    group = 1
+                elif group == "volunteer":
+                    group = 2
+                else:
+                    return # don't delete if no group specified
+
+                root = tree.getroot()
+                expr = "/%s/%s[@%s='org_organisation']/%s[@%s='name']" % \
+                       (tag.root, tag.resource, att.name, tag.data, att.field)
+                orgs = root.xpath(expr)
+                for org in orgs:
+                    org_name = org.get("value", None) or org.text
+                    if org_name:
+                        try:
+                            org_name = json.loads(xml.xml_decode(org_name))
+                        except:
+                            pass
+                    if org_name:
+                        htable = s3db.hrm_human_resource
+                        otable = s3db.org_organisation
+                        query = (otable.name == org_name) & \
+                                (htable.organisation_id == otable.id) & \
+                                (htable.type == group)
+                        resource = s3db.resource("hrm_human_resource", filter=query)
+                        ondelete = s3db.get_config("hrm_human_resource", "ondelete")
+                        resource.delete(ondelete=ondelete, format="xml", cascade=True)
+
+    current.manager.import_prep = import_prep
+
+    # CRUD pre-process
+    def prep(r):
+        if r.representation == "s3json":
+            current.manager.show_ids = True
+        elif r.interactive and r.method != "import":
+            if not r.component:
+                table = r.table
+                table.pe_label.readable = table.pe_label.writable = False
+                table.missing.readable = table.missing.writable = False
+                table.age_group.readable = table.age_group.writable = False
+                # Assume volunteers only between 5-120
+                table.date_of_birth.widget = S3DateWidget(past=1440, future=-60)
+
+                person_details_table = s3db.pr_person_details
+                # No point showing the 'Occupation' field - that's the Job Title in the Staff Record
+                person_details_table.occupation.readable = person_details_table.occupation.writable = False
+
+                # Organisation Dependent Fields
+                set_org_dependent_field = settings.set_org_dependent_field
+                set_org_dependent_field("pr_person", "middle_name")
+                set_org_dependent_field("pr_person_details", "father_name")
+                set_org_dependent_field("pr_person_details", "mother_name")
+                set_org_dependent_field("pr_person_details", "affiliations")
+                set_org_dependent_field("pr_person_details", "company")
+            else:
+                if r.component_name == "human_resource":
+                    table = r.component.table
+                    table.site_id.writable = True
+                    table.site_id.readable = True
+                    org = session.s3.hrm.org
+                    f = table.organisation_id
+                    if org is None:
+                        f.widget = None
+                    else:
+                        f.default = org
+                        f.comment = None
+                        f.readable = f.writable = False
+                        table.site_id.requires = IS_EMPTY_OR(
+                            IS_ONE_OF(db,
+                                      "org_site.%s" % s3db.super_key(db.org_site),
+                                      s3db.org_site_represent,
+                                      filterby="organisation_id",
+                                      filter_opts=[session.s3.hrm.org]))
+                elif r.component_name == "physical_description":
+                    # Hide all but those details that we want
+                    # Lock all the fields
+                    table = r.component.table
+                    for field in table.fields:
+                        table[field].writable = table[field].readable = False
+                    # Now enable those that we want
+                    table.ethnicity.writable = table.ethnicity.readable = True
+                    table.blood_type.writable = table.blood_type.readable = True
+                    table.medical_conditions.writable = table.medical_conditions.readable = True
+                    table.other_details.writable = table.other_details.readable = True
+                elif r.component_name == "asset":
+                    # Edits should always happen via the Asset Log
+                    # @ToDo: Allow this method too, if we can do so safely
+                    configure("asset_asset",
+                              insertable = False,
+                              editable = False,
+                              deletable = False)
+                elif r.component_name == "group_membership":
+                    s3db.hrm_configure_pr_group_membership()
+
+            resource = r.resource
+            if mode is not None:
+                resource.build_query(id=s3_logged_in_person())
+            elif r.method not in ("deduplicate", "search_ac"):
+                if not r.id and not hr_id:
+                    # pre-action redirect => must retain prior errors
+                    if response.error:
+                        session.error = response.error
+                    redirect(URL(r=r, f="staff"))
+                if resource.count() == 1:
+                    resource.load()
+                    r.record = resource.records().first()
+                    if r.record:
+                        r.id = r.record.id
+                if not r.record:
+                    session.error = T("Record not found")
+                    redirect(URL(f="staff", args=["search"]))
+                if hr_id and r.component_name == "human_resource":
+                    r.component_id = hr_id
+                configure("hrm_human_resource", insertable = False)
+
+        elif r.component_name == "group_membership" and r.representation == "aadata":
+            s3db.hrm_configure_pr_group_membership()
+
+        return True
+    s3.prep = prep
+
+    # CRUD post-process
+    def postp(r, output):
+        if r.interactive and r.component:
+            if r.component_name == "human_resource":
+                # Set the minimum end_date to the same as the start_date
+                s3.jquery_ready.append(
+'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
+            if r.component_name == "experience":
+                # Set the minimum end_date to the same as the start_date
+                s3.jquery_ready.append(
+'''S3.start_end_date('hrm_experience_start_date','hrm_experience_end_date')''')
+            elif r.component_name == "asset":
+                # Provide a link to assign a new Asset
+                # @ToDo: Proper Widget to do this inline
+                output["add_btn"] = A(T("Assign Asset"),
+                                      _href=URL(c="asset", f="asset"),
+                                      _id="add-btn",
+                                      _class="action-btn")
+        return output
+    s3.postp = postp
+
+    # REST Interface
+    if session.s3.hrm.orgname and mode is None:
+        orgname = session.s3.hrm.orgname
+    else:
+        orgname = None
+
+    output = current.rest_controller("pr", "person",
+                                     rheader=s3db.hrm_rheader,
+                                     orgname=orgname,
+                                     replace_option=T("Remove existing data before import"),
+                                     csv_template="staff",
+                                     csv_stylesheet=("hrm", "person.xsl"),
+                                     csv_extra_fields=[
+                                        dict(label="Type",
+                                             field=s3db.hrm_human_resource.type)
+                                                      ],
+                                     # Better in the native person controller:
+                                     deduplicate="",
+                                     )
+    return output
+
+# =============================================================================
+def hrm_training_controller():
+    """
+        Training Controller, defined in the model for use from
+        multiple controllers for unified menus
+         - used for Searching for Participants
+    """
+
+    if current.session.s3.hrm.mode is not None:
+        current.session.error = current.T("Access denied")
+        redirect(URL(f="index"))
+
+    def prep(r):
+        if r.interactive or \
+           r.extension.lower() == "aadata":
+            # Suitable list_fields
+            T = current.T
+            list_fields = ["course_id",
+                           "person_id",
+                           (T("Job Title"), "job_title"),
+                           (current.messages.ORGANISATION, "organisation"),
+                           "date",
+                           ]
+            s3db = current.s3db
+            s3db.configure("hrm_training",
+                           insertable=False,
+                           list_fields=list_fields)
+            if r.method == "report":
+                s3db.configure("hrm_training", extra_fields=["date"])
+                table = s3db.hrm_training
+                table.year = Field.Lazy(hrm_training_year)
+                table.month = Field.Lazy(hrm_training_month)
+        return True
+    current.response.s3.prep = prep
+
+    output = current.rest_controller("hrm", "training",
+                                     csv_stylesheet=("hrm", "training.xsl"),
+                                     csv_template=("hrm", "training"))
+    return output
+
+# =============================================================================
+def hrm_training_event_controller():
+    """
+        Training Event Controller, defined in the model for use from
+        multiple controllers for unified menus
+    """
+
+    if current.session.s3.hrm.mode is not None:
+        current.session.error = T("Access denied")
+        redirect(URL(f="index"))
+
+    s3 = current.response.s3
+
+    def prep(r):
+        if r.component and \
+           (r.interactive or \
+            r.representation in ("aaData", "pdf", "xls")):
+
+            T = current.T
+            # Use appropriate CRUD strings
+            s3.crud_strings["hrm_training"] = Storage(
+                title_create = T("Add Participant"),
+                title_display = T("Participant Details"),
+                title_list = T("Participants"),
+                title_update = T("Edit Participant"),
+                title_search = T("Search Participants"),
+                title_upload = T("Import Participants"),
+                subtitle_create = T("Add Participant"),
+                label_list_button = T("List Participants"),
+                label_create_button = T("Add New Participant"),
+                label_delete_button = T("Delete Participant"),
+                msg_record_created = T("Participant added"),
+                msg_record_modified = T("Participant updated"),
+                msg_record_deleted = T("Participant deleted"),
+                msg_no_match = T("No entries found"),
+                msg_list_empty = T("Currently no Participants registered"))
+            # Hide/default fields which get populated from the Event
+            record = r.record
+            table = current.s3db.hrm_training
+            field = table.course_id
+            field.readable = False
+            field.writable = False
+            field.default = record.course_id
+            field = table.date
+            field.readable = False
+            field.writable = False
+            field.default = record.start_date
+            field = table.hours
+            field.readable = False
+            field.writable = False
+            field.default = record.hours
+            # Suitable list_fields
+            list_fields = ["person_id",
+                           (T("Job Title"), "job_title"),
+                           (current.messages.ORGANISATION, "organisation"),
+                           ]
+            current.s3db.configure("hrm_training",
+                                   list_fields=list_fields)
+        return True
+    s3.prep = prep
+
+    def postp(r, output):
+        if r.interactive and not r.component:
+            # Set the minimum end_date to the same as the start_date
+            s3.jquery_ready.append(
+'''S3.start_end_date('hrm_training_event_start_date','hrm_training_event_end_date')''')
+        return output
+    s3.postp = postp
+
+    output = current.rest_controller("hrm", "training_event",
+                                     rheader=hrm_rheader)
+    return output
+
+# =============================================================================
+def hrm_configure_pr_group_membership():
+    """
+        Configures the labels and CRUD Strings of pr_group_membership
+    """
+
+    T = current.T
+    s3db = current.s3db
+    settings = current.deployment_settings
+    request = current.request
+    function = request.function
+
+    table = s3db.pr_group_membership
+    if settings.get_hrm_teams() == "Team":
+        table.group_id.label = T("Team Name")
+        table.group_head.label = T("Team Leader")
+
+        if function == "group":
+            current.response.s3.crud_strings["pr_group_membership"] = Storage(
+                title_create = T("Add Member"),
+                title_display = T("Membership Details"),
+                title_list = T("Team Members"),
+                title_update = T("Edit Membership"),
+                title_search = T("Search Members"),
+                subtitle_create = T("Add New Team Member"),
+                label_list_button = T("List Members"),
+                label_create_button = T("Add Team Member"),
+                label_delete_button = T("Delete Membership"),
+                msg_record_created = T("Team Member added"),
+                msg_record_modified = T("Membership updated"),
+                msg_record_deleted = T("Membership deleted"),
+                msg_list_empty = T("No Members currently registered"))
+    else:
+        table.group_head.label = T("Group Leader")
+
+    phone_label = settings.get_ui_label_mobile_phone()
+    site_label = settings.get_org_site_label()
+    if function == "group":
+        db = current.db
+        ptable = db.pr_person
+        controller = request.controller
+        def hrm_person_represent(id, row=None):
+            if row:
+                id = row.id
+            elif id:
+                row = db(ptable.id == id).select(ptable.first_name,
+                                                 limitby=(0, 1)
+                                                 ).first()
+            else:
+                return current.messages["NONE"]
+
+            return A(row.first_name,
+                     _href=URL(c=controller, f="person", args=id))
+
+        table.person_id.represent = hrm_person_represent
+        list_fields = ["id",
+                       (T("First Name"), "person_id"),
+                       "person_id$middle_name",
+                       "person_id$last_name",
+                       "group_head",
+                       (T("Email"), "person_id$email.value"),
+                       (phone_label, "person_id$phone.value"),
+                       (current.messages.ORGANISATION,
+                        "person_id$human_resource.organisation_id"),
+                       (site_label, "person_id$human_resource.site_id"),
+                       ]
+        orderby = "pr_person.first_name"
+    else:
+        list_fields = ["id",
+                       "group_id",
+                       "group_head",
+                       "group_id$description",
+                       ]
+        orderby = table.group_id
+    s3db.configure("pr_group_membership",
+                   list_fields=list_fields,
+                   orderby=orderby)
 
 # END =========================================================================

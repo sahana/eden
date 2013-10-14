@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-    Alerts and Deployments
+    Deployments
 """
 
 module = request.controller
@@ -9,6 +9,8 @@ resourcename = request.function
 
 if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
+
+s3db.hrm_vars()
 
 # =============================================================================
 def index():
@@ -25,7 +27,29 @@ def deployment():
 
 # =============================================================================
 def human_resource():
+    """
+        'Members' RESTful CRUD Controller
+    """
 
-    return s3_rest_controller()
+    # Tweak settings for RDRT
+    settings.hrm.staff_experience = True
+    settings.hrm.use_skills = True
+    settings.search.filter_manager = True
 
+    return s3db.hrm_human_resource_controller()
+    
+# =============================================================================
+def person():
+    """
+        'Members' RESTful CRUD Controller
+    """
+
+    # Tweak settings for RDRT
+    settings.hrm.staff_experience = "experience"
+    settings.hrm.vol_experience = "experience"
+    settings.hrm.use_skills = True
+    settings.search.filter_manager = True
+
+    return s3db.hrm_person_controller()
+    
 # END =========================================================================

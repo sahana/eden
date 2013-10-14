@@ -209,6 +209,7 @@ Thank you
         #self.messages.logged_in = "Signed In"
         #self.messages.submit_button = "Signed In"
         #self.messages.logged_out = "Signed Out"
+        self.messages.password_reset_button='Request password reset'
         self.messages.profile_save_button = "Apply changes"
         self.messages.lock_keys = True
 

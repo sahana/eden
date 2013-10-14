@@ -1685,12 +1685,16 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # Persons
     def get_pr_request_dob(self):
-        """ Include Date of Birth in the AddPersonWidget """
+        """ Include Date of Birth in the AddPersonWidget[2] """
         return self.pr.get("request_dob", True)
 
     def get_pr_request_gender(self):
-        """ Include Gender in the AddPersonWidget """
+        """ Include Gender in the AddPersonWidget[2] """
         return self.pr.get("request_gender", True)
+
+    def get_pr_request_home_phone(self):
+        """ Include Home Phone in the AddPersonWidget2 """
+        return self.pr.get("request_home_phone", False)
 
     def get_pr_select_existing(self):
         """

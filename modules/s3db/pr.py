@@ -1286,6 +1286,7 @@ class S3PersonModel(S3Model):
         settings = current.deployment_settings
         request_dob = settings.get_pr_request_dob()
         request_gender = settings.get_pr_request_gender()
+        home_phone = settings.get_pr_request_home_phone()
 
         ptable = r.table
         ctable = s3db.pr_contact
@@ -1327,20 +1328,36 @@ class S3PersonModel(S3Model):
             gender = None
 
         # Lookup contacts separately as we can't limitby here
+        if home_phone:
+            contact_methods = ("SMS", "EMAIL", "HOME_PHONE")
+        else:
+            contact_methods = ("SMS", "EMAIL")
         query = (ctable.pe_id == row.pe_id) & \
-                (ctable.contact_method.belongs(("EMAIL", "SMS")))
+                (ctable.contact_method.belongs(contact_methods))
         rows = db(query).select(ctable.contact_method,
                                 ctable.value,
                                 orderby = ctable.priority,
                                 )
-        email = phone = None
-        for row in rows:
-            if not email and row.contact_method == "EMAIL":
-                email = row.value
-            elif not phone and row.contact_method == "SMS":
-                phone = row.value
-            if email and phone:
-                break
+        email = mobile_phone = None
+        if home_phone:
+            home_phone = None
+            for row in rows:
+                if not email and row.contact_method == "EMAIL":
+                    email = row.value
+                elif not mobile_phone and row.contact_method == "SMS":
+                    mobile_phone = row.value
+                elif not home_phone and row.contact_method == "HOME_PHONE":
+                    home_phone = row.value
+                if email and mobile_phone and home_phone:
+                    break
+        else:
+            for row in rows:
+                if not email and row.contact_method == "EMAIL":
+                    email = row.value
+                elif not mobile_phone and row.contact_method == "SMS":
+                    mobile_phone = row.value
+                if email and mobile_phone:
+                    break
 
         # Minimal flattened structure
         item = {}
@@ -1352,8 +1369,10 @@ class S3PersonModel(S3Model):
         #    item["last_name"] = last_name
         if email:
             item["email"] = email
-        if phone:
-            item["phone"] = phone
+        if mobile_phone:
+            item["mobile_phone"] = mobile_phone
+        if home_phone:
+            item["home_phone"] = home_phone
         if gender:
             item["gender"] = gender
         if date_of_birth:

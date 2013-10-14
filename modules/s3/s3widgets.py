@@ -624,15 +624,11 @@ class S3AddPersonWidget2(FormWidget):
     """
 
     def __init__(self,
-                 controller = None,
-                 select_existing = None):
+                 controller = None
+                 ):
 
         # Controller to retrieve the person or hrm record
         self.controller = controller
-        if select_existing is not None:
-            self.select_existing = select_existing
-        else:
-            self.select_existing = current.deployment_settings.get_pr_select_existing()
 
     def __call__(self, field, value, **attributes):
 
@@ -676,6 +672,8 @@ class S3AddPersonWidget2(FormWidget):
             gender = ptable.gender
         else:
             gender = None
+
+        req_home_phone = settings.get_pr_request_home_phone()
 
         if self.controller is None:
             controller = request.controller
@@ -740,23 +738,41 @@ class S3AddPersonWidget2(FormWidget):
                 values["gender"] = person.gender
             # Contacts as separate query as we can't easily limitby
             ctable = s3db.pr_contact
+            if req_home_phone:
+                contact_methods = ("SMS", "EMAIL", "HOME_PHONE")
+            else:
+                contact_methods = ("SMS", "EMAIL")
             query = (ctable.pe_id == person.pe_id) & \
                     (ctable.deleted == False) & \
-                    (ctable.contact_method.belongs(("SMS", "EMAIL")))
+                    (ctable.contact_method.belongs(contact_methods))
             contacts = db(query).select(ctable.contact_method,
                                         ctable.value,
                                         orderby=ctable.priority,
                                         )
             email = mobile_phone = ""
-            for contact in contacts:
-                if not email and contact.contact_method == "EMAIL":
-                    email = contact.value
-                elif not mobile_phone:
-                    mobile_phone = contact.value
-                if email and mobile_phone:
-                    break
+            if req_home_phone:
+                home_phone = ""
+                for contact in contacts:
+                    if not email and contact.contact_method == "EMAIL":
+                        email = contact.value
+                    elif not mobile_phone and contact.contact_method == "SMS":
+                        mobile_phone = contact.value
+                    elif not home_phone and contact.contact_method == "HOME_PHONE":
+                        home_phone = contact.value
+                    if email and mobile_phone and home_phone:
+                        break
+                values["home_phone"] = home_phone
+            else:
+                for contact in contacts:
+                    if not email and contact.contact_method == "EMAIL":
+                        email = contact.value
+                    elif not mobile_phone and contact.contact_method == "SMS":
+                        mobile_phone = contact.value
+                    if email and mobile_phone:
+                        break
             values["email"] = email
             values["mobile_phone"] = mobile_phone
+
         elif request.env.request_method == "POST":
             # Read the POST vars:
             values = request.post_vars
@@ -838,6 +854,9 @@ class S3AddPersonWidget2(FormWidget):
 
         fields.append(("mobile_phone", settings.get_ui_label_mobile_phone(), INPUT(), False))
         fields.append(("email", T("Email"), INPUT(), emailRequired))
+
+        if req_home_phone:
+            fields.append(("home_phone", T("Home Phone"), INPUT(), False))
 
         for f in fields:
             fname = f[0]

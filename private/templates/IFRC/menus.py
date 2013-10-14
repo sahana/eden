@@ -697,7 +697,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
         """ RDRT Alerting and Deployments """
 
         return M()(
-                )
+                   M("Members",
+                     c="deploy", f="human_resource", m="summary"
+                   ),
+                   M("Deployments",
+                     c="deploy", f="deployment",
+                   ),
+               )
 
 # END =========================================================================
 

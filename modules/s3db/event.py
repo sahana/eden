@@ -1037,6 +1037,7 @@ class S3EventCMSModel(S3Model):
 class S3EventHRModel(S3Model):
     """
         Link Human Resources to Incidents
+        @ToDo: Replace with Deployment module
     """
 
     names = ["event_human_resource"]
