@@ -21,6 +21,21 @@ def index():
     return dict(module_name=module_name)
     
 # =============================================================================
+def deployment():
+
+    return s3_rest_controller()
+
+# =============================================================================
+def human_resource_assignment():
+
+    return s3_rest_controller()
+    
+# =============================================================================
+def alert():
+
+    return s3_rest_controller()
+
+# =============================================================================
 def human_resource():
     """
         'Members' RESTful CRUD Controller
