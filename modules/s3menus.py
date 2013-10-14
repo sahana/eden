@@ -584,6 +584,30 @@ class S3OptionsMenu(object):
                 )
 
     # -------------------------------------------------------------------------
+    def cap(self):
+        """ CAP menu """
+
+        T = current.T
+
+        session = current.session
+        ADMIN = session.s3.system_roles.ADMIN
+
+        return M(c="cap")(
+                    M("Alerts", f="alert", vars={'alert.is_template': 'false'})(
+                        M("List alerts", f="alert", vars={'alert.is_template': 'false'}),
+                        M("Create alert", f="alert", m="create"),
+                        M("Search & Subscribe", m="search"),
+                    ),
+                    M("Templates", f="template", vars={'alert.is_template': 'true'})(
+                        M("List templates", f="template", vars={'alert.is_template': 'true'}),
+                        M("Create template", f="template", m="create"),
+                    ),
+                    #M("CAP Profile", f="profile")(
+                    #    M("Edit profile", f="profile")
+                    #)
+                )
+
+    # -------------------------------------------------------------------------
     def climate(self):
         """ CLIMATE Controller """
 
@@ -660,6 +684,15 @@ class S3OptionsMenu(object):
                         #M("Problems", f="problem"),
                     #)
                 )
+
+    # -------------------------------------------------------------------------
+    def deploy(self):
+        """ Deployments """
+
+        return M()(
+            M("Human Resources",
+              c="deploy", f="human_resource", m="summary"),
+              )
 
     # -------------------------------------------------------------------------
     def doc(self):
@@ -1252,30 +1285,6 @@ class S3OptionsMenu(object):
                     ),
                     M("Ushahidi Import", f="ireport", restrict=[ADMIN],
                       args="ushahidi")
-                )
-
-    # -------------------------------------------------------------------------
-    def cap(self):
-        """ CAP menu """
-
-        T = current.T
-
-        session = current.session
-        ADMIN = session.s3.system_roles.ADMIN
-
-        return M(c="cap")(
-                    M("Alerts", f="alert", vars={'alert.is_template': 'false'})(
-                        M("List alerts", f="alert", vars={'alert.is_template': 'false'}),
-                        M("Create alert", f="alert", m="create"),
-                        M("Search & Subscribe", m="search"),
-                    ),
-                    M("Templates", f="template", vars={'alert.is_template': 'true'})(
-                        M("List templates", f="template", vars={'alert.is_template': 'true'}),
-                        M("Create template", f="template", m="create"),
-                    ),
-                    #M("CAP Profile", f="profile")(
-                    #    M("Edit profile", f="profile")
-                    #)
                 )
 
     # -------------------------------------------------------------------------

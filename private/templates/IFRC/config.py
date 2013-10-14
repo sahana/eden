@@ -276,7 +276,7 @@ settings.hrm.organisation_label = "National Society / Branch"
 settings.org.regions = True
 # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
 settings.hrm.skill_types = True
-# RDRT will need these 3 changing within a limited context:
+# RDRT overrides these within controller:
 # Uncomment to disable Staff experience
 settings.hrm.staff_experience = False
 # Uncomment to disable the use of HR Skills
@@ -998,6 +998,12 @@ settings.modules = OrderedDict([
     ("member", Storage(
            name_nice = T("Members"),
            #description = "Membership Management System",
+           restricted = True,
+           module_type = 10,
+       )),
+    ("deploy", Storage(
+           name_nice = T("Regional Disaster Response Teams"),
+           #description = "Alerting and Deployment of Disaster Response Teams",
            restricted = True,
            module_type = 10,
        )),
