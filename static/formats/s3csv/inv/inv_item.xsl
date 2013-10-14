@@ -5,21 +5,6 @@
     <!-- **********************************************************************
          Inventory Warehouse - CSV Import Stylesheet
 
-         1st May 2011 / Graeme Foster <graeme AT acm DOT org>
-
-         - use for import to /inv/warehouse/create resource
-         - example raw URL usage:
-           Let URLpath be the URL to Sahana Eden appliation
-           Let Resource be inv/warehouse/create
-           Let Type be s3csv
-           Let CSVPath be the path on the server to the CSV file to be imported
-           Let XSLPath be the path on the server to the XSL transform file
-           Then in the browser type:
-
-           URLpath/Resource.Type?filename=CSVPath&transform=XSLPath
-
-           You can add a third argument &ignore_errors
-
          CSV fields:
          Warehouse..............inv_warehouse
          Warehouse Organisation.inv_warehouse.organisation_id

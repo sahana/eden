@@ -32,6 +32,7 @@ import parser
 import token
 
 from gluon import current
+from gluon.languages import read_dict, write_dict
 
 """
     List of classes with description :
@@ -806,29 +807,14 @@ class TranslateReadFiles:
                 return a list of translation string pairs
             """
 
-            f = open(fileName)
-            fileContent = f.read()
-            fileContent = "%s\n" % fileContent.replace("\r", "")
-            tmpstr = []
+            data = read_dict(fileName)
 
-            # Create a parse tree list
-            st = parser.suite(fileContent)
-            stList = parser.st2list(st, line_info=1)
-
-            f.close()
-
-            P = TranslateParseFiles()
-
-            parseList = P.parseList
-            for element in stList:
-                parseList(element, tmpstr)
-
+            # Convert to list of tuples
+            # @ToDo: Why?
             strings = []
             sappend = strings.append
-            # Store the strings as (original string, translated string) tuple
-            for i in range(0, len(tmpstr)):
-                if i%2 == 0:
-                    sappend((tmpstr[i][1:-1], tmpstr[i + 1][1:-1]))
+            for s in data:
+                sappend((s, data[s]))
             return strings
 
         # ---------------------------------------------------------------------
@@ -982,15 +968,15 @@ class TranslateReportStatus:
             # Set the update flag for all languages to indicate that the
             # previously stored percentages of translation may have changed
             # as the master file has been changed.
-            utable = current.s3db.translate_update
-            current.db(utable.id > 0).update(sbit=True)
+            ptable = current.s3db.translate_percentage
+            current.db(ptable.id > 0).update(dirty=True)
 
         # ---------------------------------------------------------------------
         @staticmethod
         def update_percentages(lang_code):
             """
-               Function to update the translation percentages for all modules
-               for a given language
+               Update the translation percentages for all modules for a given
+               language
             """
 
             try:
@@ -1003,13 +989,13 @@ class TranslateReportStatus:
             langfile = os.path.join(base_dir, "languages", langfile)
 
             # Read the language file
-            R = TranslateReadFiles()
-            lang_strings = R.read_w2pfile(langfile)
+            lang_strings = read_dict(langfile)
 
             # translated_strings contains those strings which are translated
             translated_strings = []
             tappend = translated_strings.append
-            for (s1, s2) in lang_strings:
+            for s1 in lang_strings:
+                s2 = lang_strings[s1]
                 if not s2.startswith("*** "):
                     if s1 != s2 or lang_code == "en-gb":
                         tappend(s1)
@@ -1036,7 +1022,9 @@ class TranslateReportStatus:
                 query = (ptable.code == lang_code) & \
                         (ptable.module == mod)
                 db(query).update(translated = count,
-                                 untranslated = len(string_dict[mod]) - count)
+                                 untranslated = len(string_dict[mod]) - count,
+                                 dirty=False,
+                                 )
 
         # ---------------------------------------------------------------------
         def get_translation_percentages(self, lang_code):
@@ -1049,35 +1037,16 @@ class TranslateReportStatus:
                 self.create_master_file()
 
             db = current.db
-            s3db = current.s3db
-            ptable = s3db.translate_percentage
-            utable = s3db.translate_update
+            ptable = current.s3db.translate_percentage
 
-            A = TranslateAPI()
-            modlist = A.get_modules()
-            modlist.append("core")
-
-            query = (utable.code == lang_code)
-            row = db(query).select(utable.sbit, limitby=(0, 1)).first()
-
-            # If the translation percentages for the given language hasn't been
-            # calculated earlier, add the row corresponding to that language
-            # in the table and call the update_percentages() method
-            if not row:
-                utable.insert(code = lang_code,
-                              sbit = False)
-                for mod in modlist:
-                    ptable.insert(code = lang_code,
-                                  module = mod,
-                                  translated = 0,
-                                  untranslated = 0)
+            rows = db(ptable.code == lang_code).select(ptable.dirty,
+                                                       ptable.translated,
+                                                       ptable.untranslated,
+                                                       ptable.module,
+                                                       )
+            if rows.first().dirty:
+                # Update the percentages
                 self.update_percentages(lang_code)
-            else:
-                # If the update bit for the language is set,
-                # then update the percentages
-                if row.sbit == True:
-                    self.update_percentages(lang_code)
-                    db(query).update(sbit = False)
 
             # Dictionary keyed on modules to store percentage for each module
             percent_dict = {}
@@ -1085,10 +1054,7 @@ class TranslateReportStatus:
             total_translated = 0
             # Total number of untranslated strings for the given language
             total_untranslated = 0
-            rows = db(ptable.code == lang_code).select(ptable.translated,
-                                                       ptable.untranslated,
-                                                       ptable.module,
-                                                       )
+
             # Display the translation percentage for each module
             # by fetching the data from the table
             for row in rows:
@@ -1386,76 +1352,39 @@ class CsvToWeb2py:
                 and then merge/overwrite the existing w2p language file
             """
 
-            from subprocess import call
-            from tempfile import NamedTemporaryFile
-
             w2pfilename = os.path.join(current.request.folder, "languages",
                                        w2pfilename)
 
-            # Dictionary to store (location,translated string)
+            # Dictionary to store translated strings
             # with untranslated string as the key
-            d = {}
+            data = {}
 
             errors = 0
             for f in csvfiles:
-                data = self.read_csvfile(f)
+                newdata = self.read_csvfile(f)
                 # Test: 2 cols or 3?
-                cols = len(data[0])
+                cols = len(newdata[0])
                 if cols == 1:
                     current.session.error = T("CSV file needs to have at least 2 columns!")
                     redirect(URL(c="admin", f="translate"))
                 elif cols == 2:
                     # 1st column is source, 2nd is target
-                    for row in data:
-                        if row[0] in d.keys():
-                            if d[row[0]][1] == "":
-                                d[row[0]] = ("", row[1])
-                        else:
-                            d[row[0]] = ("", row[1])
+                    for row in newdata:
+                        data[row[0]] = row[1]
                 else:
                     # 1st column is location, 2nd is source, 3rd is target
-                    for row in data:
-                        if row[1] in d.keys():
-                            if d[row[1]][1] == "":
-                                d[row[1]] = (row[0], row[2])
-                        else:
-                            d[row[1]] = (row[0], row[2])
+                    for row in newdata:
+                        data[row[1]] = row[2]
 
             if option == "m":
-                # Strings are to be merged with existing .py file
-                R = TranslateReadFiles()
-                data = R.read_w2pfile(w2pfilename)
-                for row in data:
-                    row = (row[0], row[1].decode("string-escape"))
-                    if row[0] not in d.keys():
-                        d[row[0]] = ("", row[1])
+                # Merge strings with existing .py file
+                keys = data.keys()
+                olddata = read_dict(w2pfilename)
+                for s in olddata:
+                    if s not in keys:
+                        data[s] = olddata[s]
 
-            # Created a list of sorted tuples
-            # (location, original string, translated string)
-            data = []
-            dappend = data.append
-            for k in sorted(d.keys()):
-                dappend([d[k][0], k, d[k][1]])
-
-            # Create intermediate csv file
-            f = NamedTemporaryFile(delete=False)
-            csvfilename = "%s.csv" % f.name
-            self.write_csvfile(csvfilename, data)
-
-            # Convert the csv file to intermediate po file
-            g = NamedTemporaryFile(delete=False)
-            pofilename = "%s.po" % g.name
-            # Shell needed for Win32
-            # @ToDo: Copy relevant parts of Translate Toolkit internally to avoid external dependencies
-            call(["csv2po", "-i", csvfilename, "-o", pofilename], shell=True)
-
-            # Convert the po file to w2p language file
-            # @ToDo: Catch errors, otherwise we lose output file!
-            call(["po2web2py", "-i", pofilename, "-o", w2pfilename], shell=True)
-
-            # Remove intermediate files
-            os.unlink(pofilename)
-            os.unlink(csvfilename)
+            write_dict(w2pfilename, data)
 
         # ---------------------------------------------------------------------
         @staticmethod
@@ -1473,10 +1402,12 @@ class CsvToWeb2py:
             f.close()
             return data
 
-
 # =============================================================================
 class Pootle:
-        """ Class to merge pootle with web2py """
+        """
+            Class to synchronise a Pootle server's translation with the local
+            one
+        """
 
         # ---------------------------------------------------------------------
         def upload_to_pootle(self, lang_code, filename):
@@ -1549,7 +1480,10 @@ class Pootle:
 
             import requests
             import zipfile
-            import StringIO
+            try:
+                from cStringIO import StringIO    # Faster, where available
+            except:
+                from StringIO import StringIO
             from subprocess import call
             from tempfile import NamedTemporaryFile
 
@@ -1623,7 +1557,6 @@ class Pootle:
                     i += 1
                     j += 1
 
-
             if preference:
                 return pystrings
 
@@ -1638,7 +1571,6 @@ class Pootle:
 
                 postrings.sort(key=lambda tup: tup[0])
                 return postrings
-
 
         # ---------------------------------------------------------------------
         def merge_pootle(self, preference, lang_code):
@@ -1676,7 +1608,7 @@ class Pootle:
                 os.unlink(csvfilename)
 
             else:
-                # Only pootle file has been changed
+                # Only Pootle file has been changed
                 for i in ret:
                     dappend(("", i[0], i[1].decode("string-escape")))
 
@@ -1685,7 +1617,9 @@ class Pootle:
                 temp_po = NamedTemporaryFile(delete=False)
                 pofilename = "%s.po" % temp_po.name
 
-                call(["csv2po", "-i", csvfilename, "-o", pofilename])
+                # Shell needed on Win32
+                # @ToDo: Copy relevant parts of Translate Toolkit internally to avoid external dependencies
+                call(["csv2po", "-i", csvfilename, "-o", pofilename], shell=True)
                 self.upload_to_pootle(lang_code, pofilename)
 
                 # Clean up extra created files

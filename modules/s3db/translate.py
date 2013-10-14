@@ -38,7 +38,6 @@ class S3TranslateModel(S3Model):
 
     names = ["translate_language",
              "translate_percentage",
-             "translate_update"
              ]
 
     def model(self):
@@ -80,16 +79,7 @@ class S3TranslateModel(S3Model):
                              Field("module", length=32, notnull=True),
                              Field("translated", "integer"),
                              Field("untranslated", "integer"),
-                             *s3_meta_fields())
-
-        #---------------------------------------------------------------------
-        # Update bit
-        #
-        tablename = "translate_update"
-        table = define_table(tablename,
-                             Field("code", length=10, notnull=True),
-                             Field("sbit", "boolean",
-                                   default = False),
+                             Field("dirty", "boolean", default=False),
                              *s3_meta_fields())
 
         #----------------------------------------------------------------------
@@ -99,7 +89,10 @@ class S3TranslateModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def translate_language_onaccept(form):
-        """ Receive the uploaded csv file """
+        """
+            Merge the uploaded CSV file with existing language file
+            & mark translation percentages as dirty
+        """
 
         import os
         from ..s3.s3translate import CsvToWeb2py
@@ -107,15 +100,16 @@ class S3TranslateModel(S3Model):
         vars = form.vars
         code = vars.code
 
+        # Merge the existing translations with the new translations
         csvfilename = os.path.join(current.request.folder, "uploads",
                                    vars.file)
         csvfilelist = [csvfilename]
         C = CsvToWeb2py()
-        # Merge the existing translations with the new translations
         C.convert_to_w2p(csvfilelist, "%s.py" % code, "m")
 
-        utable = current.s3db.translate_update
-        current.db(utable.code == code).update(sbit=True)
+        # Mark the percentages as dirty
+        ptable = current.s3db.translate_percentage
+        current.db(ptable.code == code).update(dirty=True)
 
         return
 

@@ -1313,7 +1313,7 @@ class S3ProjectActivityModel(S3Model):
             label_list_button = T("List Activity Types"),
             label_create_button = T("Add Activity Type to Activity"),
             msg_record_created = T("Activity Type added to Activity"),
-            msg_record_modified = T("Activity Type updated"),
+            msg_record_modified = T("Activity Type Updated"),
             msg_record_deleted = T("Activity Type removed from Activity"),
             msg_list_empty = T("No Activity Types found for this Activity")
         )
@@ -1525,7 +1525,7 @@ class S3ProjectActivityTypeModel(S3Model):
             label_list_button = T("List Activity Types"),
             label_create_button = T("Add Activity Type to Project Location"),
             msg_record_created = T("Activity Type added to Project Location"),
-            msg_record_modified = T("Activity Type updated"),
+            msg_record_modified = T("Activity Type Updated"),
             msg_record_deleted = T("Activity Type removed from Project Location"),
             msg_list_empty = T("No Activity Types found for this Project Location")
         )

@@ -779,13 +779,18 @@ def translate():
 
         Note : The above functionalities require a considerable amount of
                main memory to execute successfully.
+
+        @ToDo: Move opts 1, 3 & 4 outside the REST Controller
+               - only opt 2 makes use of this so it's unnecessary overhead!
     """
 
-    if not request.vars.opt:
+    opt = request.get_vars.get("opt", None)
+    if not opt:
+        # Show index page
         return dict()
 
-    from s3.s3translate import TranslateAPI, Strings, TranslateReportStatus, TranslateReadFiles
-    from math import ceil
+    # For the one which actually uses CRUD (opt 2)
+    s3.crud.submit_button = T("Upload")
 
     def postp(r, output):
         # Create a custom form
@@ -799,14 +804,14 @@ def translate():
         if response.error and not output["form"]["error"]:
             response.error = None
 
-        opt = request.vars.opt
         if opt == "1":
             # Select modules for Translation
+            from math import ceil
+            from s3.s3translate import TranslateAPI, Strings
             if form.accepts(request.vars, session):
-
                 modlist = []
                 # If only one module is selected
-                if type(form.request_vars.module_list)==str:
+                if type(form.request_vars.module_list) == str:
                     modlist.append(form.request_vars.module_list)
                 # If multiple modules are selected
                 else:
@@ -839,12 +844,12 @@ def translate():
                 output = X.export_file(code, modlist, [], filetype, all_template_flag)
                 return output
 
-            # Creating a form with checkboxes for list of modules
+            # Create a form with checkboxes for list of modules
             A = TranslateAPI()
-            # Retreiving list of active modules
+            # Retrieve list of active modules
             activemodlist = settings.modules.keys()
             modlist = activemodlist
-            # Hiding core modules
+            # Hide core modules
             hidden_modules = ["auth", "default", "error", "appadmin"]
             for module in hidden_modules:
                 if module in modlist:
@@ -858,10 +863,10 @@ def translate():
             table = TABLE(_class="translation_module_table")
             table.append(BR())
 
-            # Setting number of columns in the form
+            # Set number of columns in the form
             NO_OF_COLUMNS = 3
 
-            # Displaying "NO_OF_COLUMNS" modules per row so as to utilize the page completely
+            # Display "NO_OF_COLUMNS" modules per row so as to utilize the page completely
             num = 0
             max_rows = int(ceil(modcount / float(NO_OF_COLUMNS)))
             modules = settings.modules
@@ -879,7 +884,7 @@ def translate():
                     cmax_rows = num + (c * max_rows)
                     if cmax_rows < modcount:
                         mod_name = modules[modlist[cmax_rows]].name_nice
-                        mod_name = "%s (%s)" %(mod_name, modlist[cmax_rows])
+                        mod_name = "%s (%s)" % (mod_name, modlist[cmax_rows])
                         row.append(TD(cmax_rows + 1))
                         row.append(TD(INPUT(_type="checkbox",
                                             _name="module_list",
@@ -923,14 +928,13 @@ def translate():
             for lang in langlist:
                 lang_dropdown.append(lang)
 
-            row = TR(TD("%s :" % T("Select language code")),
+            row = TR(TD("%s:" % T("Select language code")),
                      TD(lang_dropdown),
-                     TD("%s :" % T("Or add a new language code")),
+                     TD("%s:" % T("Or add a new language code")),
                      TD(INPUT(_type="text", _name="new_code")),
                      )
             div.append(row)
             div.append(BR())
-
             div.append(BR())
             div.append(INPUT(_type="submit", _value=T("Submit")))
             form.append(div)
@@ -951,6 +955,8 @@ def translate():
             # View Translation Percentage
             if form.accepts(request.vars, session):
                 # Retrieve the translation percentage for each module
+                from math import ceil
+                from s3.s3translate import TranslateReportStatus
                 code = form.request_vars.code
                 S = TranslateReportStatus()
 
@@ -998,6 +1004,7 @@ def translate():
 
             else:
                 # Display the form to view translated percentage
+                from s3.s3translate import TranslateAPI
                 A = TranslateAPI()
                 langlist = A.get_langcodes()
                 langlist.sort()
@@ -1027,6 +1034,7 @@ def translate():
             # Add strings manually
             if form.accepts(request.vars, session):
                 # Retrieve strings from the uploaded file
+                from s3.s3translate import TranslateReadFiles
                 f = request.vars.upload.file
                 strings = []
                 R = TranslateReadFiles()
@@ -1039,7 +1047,7 @@ def translate():
             div = DIV(T("Upload a text file containing new-line separated strings:"),
                       INPUT(_type="file", _name="upload"),
                       BR(),
-                      INPUT(_type="submit", _value=T("Submit")),
+                      INPUT(_type="submit", _value=T("Upload")),
                       )
             form.append(div)
             output["form"] = form

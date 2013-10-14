@@ -259,7 +259,7 @@ def customize_org_organisation(**attr):
         else:
             result = True
 
-        if r.interactive or r.representation.lower() == "aadata":
+        if r.interactive or r.representation == "aadata":
             list_fields = ["id",
                            "name",
                            "acronym",
@@ -531,6 +531,62 @@ settings.pr.request_gender = False
 #settings.pr.select_existing = False
 
 # -----------------------------------------------------------------------------
+# Persons
+def customize_pr_person(**attr):
+    """
+        Customize pr_person controller
+    """
+
+    s3 = current.response.s3
+
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        if r.interactive and r.component_name == "membership":
+            current.s3db.pr_group_membership.group_head = T("Group Chairperson")
+
+        return result
+    s3.prep = custom_prep
+
+    return attr
+
+settings.ui.customize_pr_person = customize_pr_person
+
+# -----------------------------------------------------------------------------
+# Groups
+def customize_pr_group(**attr):
+    """
+        Customize pr_group controller
+    """
+
+    s3 = current.response.s3
+
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        if r.interactive and r.component_name == "membership":
+            current.s3db.pr_group_membership.group_head = T("Group Chairperson")
+
+        return result
+    s3.prep = custom_prep
+
+    return attr
+
+settings.ui.customize_pr_group = customize_pr_group
+
+# -----------------------------------------------------------------------------
 # Human Resource Management
 # Uncomment to chage the label for 'Staff'
 settings.hrm.staff_label = "Contacts"
@@ -574,22 +630,23 @@ def customize_hrm_human_resource(**attr):
             result = True
 
         if r.interactive or r.representation == "aadata":
-            s3db = current.s3db
-            table = r.table
-            table.department_id.readable = table.department_id.writable = False
-            table.end_date.readable = table.end_date.writable = False
-            list_fields = ["id",
-                           "person_id",
-                           "job_title_id",
-                           "organisation_id",
-                           (T("Groups"), "person_id$group_membership.group_id"),
-                           "site_id",
-                           #"site_contact",
-                           (T("Email"), "email.value"),
-                           (settings.get_ui_label_mobile_phone(), "phone.value"),
-                           ]
+            if not r.component:
+                s3db = current.s3db
+                table = r.table
+                table.department_id.readable = table.department_id.writable = False
+                table.end_date.readable = table.end_date.writable = False
+                list_fields = ["id",
+                               "person_id",
+                               "job_title_id",
+                               "organisation_id",
+                               (T("Groups"), "person_id$group_membership.group_id"),
+                               "site_id",
+                               #"site_contact",
+                               (T("Email"), "email.value"),
+                               (settings.get_ui_label_mobile_phone(), "phone.value"),
+                               ]
 
-            s3db.configure("hrm_human_resource", list_fields=list_fields)
+                s3db.configure("hrm_human_resource", list_fields=list_fields)
 
         return result
     s3.prep = custom_prep

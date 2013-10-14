@@ -30,7 +30,7 @@ def write_dict(filename, contents):
 
 existing = read_dict("fr.py")
 reader = unicode_csv_reader(open("fr.csv", "rb"))
-# web2py does not seem to be opening the file in unicode :|
+# web2py does not seem to be opening the file in unicode:
 #reader = csv.reader(open("fr.csv", "rb"))
 newinput = {}
 untranslated = {}
