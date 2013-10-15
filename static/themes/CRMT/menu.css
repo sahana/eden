@@ -25,6 +25,10 @@
     float: right;
 }
 
+.dropdown-menu.community-data-menu {
+    width: 284px;
+}
+
 /* Login Form */
 .dropdown-menu form {
     height: 90px;

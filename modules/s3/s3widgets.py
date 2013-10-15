@@ -61,6 +61,7 @@ __all__ = ["S3ACLWidget",
            "S3PersonAutocompleteWidget",
            "S3PentityAutocompleteWidget",
            "S3PriorityListWidget",
+           "S3SelectChosenWidget",
            "S3SiteAutocompleteWidget",
            "S3SiteAddressAutocompleteWidget",
            "S3SliderWidget",
@@ -4944,6 +4945,28 @@ $('#%s').removeClass('list').addClass('prioritylist').prioritylist()''' % \
         return TAG[""](INPUT(**attr),
                        requires = field.requires
                        )
+
+# =============================================================================
+class S3SelectChosenWidget(OptionsWidget):
+    """
+        Enhances Select dropdowns:
+        - single selects have an Autocomplete search box 
+        - multi-selects have tag-style selection
+        Uses http://harvesthq.github.io/chosen/
+    """
+
+    def __call__(self, field, value, **attributes):
+        s3 = current.response.s3
+        if s3.debug:
+            script = "chosen.jquery.js"
+        else:
+            script = "chosen.jquery.min.js"
+        s3.scripts.append("/%s/static/scripts/%s" % (current.request.application,
+                                                     script))
+        # @ToDo: Can we not determine a # selector? (faster)
+        script = """$('[name="%s"]').chosen();""" % field.name
+        s3.jquery_ready.append(script)
+        return OptionsWidget.widget(field, value, **attributes)
 
 # =============================================================================
 class S3SiteAutocompleteWidget(FormWidget):

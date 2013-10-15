@@ -124,11 +124,11 @@ class S3Config(Storage):
         return self.base.get("google_analytics_tracking_id", None)
 
     # -------------------------------------------------------------------------
-    def get_youtube_video_id(self):
+    def get_youtube_id(self):
         """
-            YouTube ID
+            List of YouTube IDs for the /default/video page
         """
-        return self.base.get("youtube_id", None)
+        return self.base.get("youtube_id", [])
 
     # -------------------------------------------------------------------------
     # Authentication settings

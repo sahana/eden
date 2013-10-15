@@ -578,6 +578,11 @@ settings.L10n.decimal_separator = "."
 # Maximum number of search results for an Autocomplete Widget
 #settings.search.max_results = 200
 
+# if you want to have videos appearing in /default/video
+#settings.base.youtube_id = [dict(id = "introduction",
+#                                 title = T("Introduction"),
+#                                 video_id = "HR-FtR2XkBU"),]
+
 # Comment/uncomment modules here to disable/enable them
 # @ToDo: Have the system automatically enable migrate if a module is enabled
 # Modules menu is defined in modules/eden/menu.py

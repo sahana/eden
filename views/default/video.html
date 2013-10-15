@@ -1,4 +1,9 @@
 {{extend "layout.html"}}
-<h2>{{=T("Introduction Video")}}</h2>
-<iframe width="960" height="720" src="//www.youtube.com/embed/{{=settings.get_youtube_video_id()}}" frameborder="0" allowfullscreen></iframe>
+<h2>{{=response.title}}</h2>
+{{youtube_id = settings.get_youtube_id()}}
+{{for video in youtube_id:}}
+ <h3 id = '{{=video["id"]}}'>{{=video["title"]}}</h3>
+ <iframe width="960" height="720" src="//www.youtube.com/embed/{{=video["video_id"]}}" frameborder="0" allowfullscreen></iframe>
+ <br/><br/>
+{{pass}}
 </div>
