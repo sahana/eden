@@ -1,7 +1,7 @@
 Module,Resource,Name,Body
-org,facility,Locations Summary Page Header,"Places in your community such as schools, hospitals, offices, parks, shops, shelters, places of worship, etc which contribute to its resilience  "
+org,facility,Locations Summary Page Header,"Find the places in your community such as schools, hospitals, offices, parks, shops and shelters which contribute to its resilience "
 org,organisation,Organizations Summary Page Header,"Community Based, Faith Based, Volunteer, Government, Business"
-project,activity,Activities Summary Page Header,Events which are planned within your community that can contribute to its resilience
-stats,people,People Summary Page Header,Different groups of people who need to be considered to make your community more resilient
-vulnerability,evac_route,Evacuation Routes Summary Page Header,Information such as roads and routes to get people to safety in case of certain emergencies
-vulnerability,risk,Risks Summary Page Header,Environmental factors or situations which make your community less resilient
+project,activity,Activities Summary Page Header,Track the events which are planned within your community that will help strengthen it in the face of disasters
+stats,people,People Summary Page Header,Identify the different groups of people who live in your community
+vulnerability,evac_route,Evacuation Routes Summary Page Header,Identify the roads and routes to get people to safety in case of certain emergencies. 
+vulnerability,risk,Risks Summary Page Header,View the environmental factors or situations which pose as dangers to your community

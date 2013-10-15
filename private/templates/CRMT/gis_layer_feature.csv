@@ -5,6 +5,7 @@ Meetings,,project,activity,CRMT,activity,,,name,,~.activity_type_id$name=Meeting
 Public Awareness Campaign,,project,activity,CRMT,activity,,,name,,~.activity_type_id$name=Public Awareness Campaign,,,,Activities,False,,30,,
 Community Events,,project,activity,CRMT,activity,,,name,,~.activity_type_id$name=Community Events,,,,Activities,False,,30,,
 Evacuation Routes,,vulnerability,evac_route,CRMT,evac_route,,,name,,,,,,Evacuation,False,,30,,
+All Places,,org,facility,CRMT,facility,Building,Place,"name,organisation_id",,,,,,Places,False,,30,,
 Arts and Recreation,,org,facility,CRMT,facility,Building,Place,"name,organisation_id",,facility_type.name=Arts and Recreation,,,,Places,False,,30,,
 Communications,,org,facility,CRMT,facility,Building,Place,"name,organisation_id",,facility_type.name=Communications,True,,,Places,False,,30,,
 Community Groups,,org,facility,CRMT,facility,Building,Place,"name,organisation_id",,facility_type.name=Community Groups,,,,Places,False,,30,,
