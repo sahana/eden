@@ -1704,7 +1704,7 @@ def customize_vulnerability_evac_route(**attr):
                     table.location_id.label = "" # Gets replaced by widget
                     table.location_id.requires = IS_LOCATION_SELECTOR2(levels=("L3",))
                     table.location_id.widget = S3LocationSelectorWidget2(levels=("L3",),
-                                                                         polygons=True,
+                                                                         lines=True,
                                                                          )
 
                     #table.hazard_id.comment = S3AddResourceLink(c="vulnerability",

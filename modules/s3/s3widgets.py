@@ -3733,6 +3733,7 @@ class S3LocationSelectorWidget2(FormWidget):
                  show_address = False,          # Whether to show a field for Street Address
                  show_postcode = False,         # Whether to show a field for Postcode
                  show_map = True,               # Whether to show a Map to select specific points
+                 lines = False,                 # Whether the Map uses a Line draw tool instead of Point
                  polygons = False,              # Whether the Map uses a Polygon draw tool instead of Point
                  ):
 
@@ -3742,6 +3743,7 @@ class S3LocationSelectorWidget2(FormWidget):
         self.show_address = show_address
         self.show_postcode = show_postcode
         self.show_map = show_map
+        self.lines = lines
         self.polygons = polygons
 
     def __call__(self, field, value, **attributes):
@@ -3751,7 +3753,8 @@ class S3LocationSelectorWidget2(FormWidget):
         show_address = self.show_address
         show_postcode = self.show_postcode
         show_map = self.show_map
-        polygons = self.polygons
+        lines = self.lines
+        polygons = self.polygons or lines
 
         T = current.T
         db = current.db
@@ -4465,8 +4468,10 @@ class S3LocationSelectorWidget2(FormWidget):
                                width = 480,
                                add_feature = not polygons,
                                add_feature_active = not polygons,
-                               add_polygon = polygons,
-                               add_polygon_active = polygons,
+                               add_line = lines,
+                               add_line_active = lines,
+                               add_polygon = polygons and not lines,
+                               add_polygon_active = polygons and not lines,
                                # Hide controls from toolbar
                                nav = False,
                                area = False,

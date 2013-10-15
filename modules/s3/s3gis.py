@@ -5470,6 +5470,8 @@ class GIS(object):
                  projection = None,
                  add_feature = False,
                  add_feature_active = False,
+                 add_line = False,
+                 add_line_active = False,
                  add_polygon = False,
                  add_polygon_active = False,
                  features = None,
@@ -5605,6 +5607,8 @@ class GIS(object):
                    projection = projection,
                    add_feature = add_feature,
                    add_feature_active = add_feature_active,
+                   add_line = add_line,
+                   add_line_active = add_line_active,
                    add_polygon = add_polygon,
                    add_polygon_active = add_polygon_active,
                    features = features,
@@ -5996,6 +6000,13 @@ class MAP(DIV):
                 options["draw_feature"] = "active"
             else:
                 options["draw_feature"] = "inactive"
+
+        if opts.get("add_line", False):
+            i18n["gis_draw_line"] = T("Add Line")
+            if opts.get("add_line_active", False):
+                options["draw_line"] = "active"
+            else:
+                options["draw_line"] = "inactive"
 
         if opts.get("add_polygon", False):
             i18n["gis_draw_polygon"] = T("Add Polygon")
