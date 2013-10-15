@@ -30,7 +30,12 @@ def deployment():
                 buttons["list_btn"] = buttons["summary_btn"]
         return output
     s3.postp = postp
-    return s3_rest_controller()
+
+    # @todo: follow global settings:
+    settings.ui.filter_auto_submit = 750
+    settings.ui.report_auto_submit = 750
+    
+    return s3_rest_controller(hide_filter=False)
             
 # =============================================================================
 def human_resource_assignment():

@@ -4798,8 +4798,11 @@ def hrm_human_resource_controller():
         if method in ("form", "lookup"):
             return True
         elif method == "summary":
+            
+            # @todo: follow global settings:
             settings.ui.filter_auto_submit = 750
             settings.ui.report_auto_submit = 750
+            
             s3.crud_strings["hrm_human_resource"]["title_list"] = T("Staff & Volunteers")
             filter_widgets = [
                 S3TextFilter(["person_id$first_name",

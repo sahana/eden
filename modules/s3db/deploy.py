@@ -77,7 +77,16 @@ class S3DeploymentModel(S3Model):
                              "widgets": [{"method": "map",
                                           "ajax_init": True}],
                             },
-                           ],
+                  ],
+                  filter_widgets = [
+                      S3TextFilter("title"),
+                      S3LocationFilter("location_id",
+                                       label = T("Location"),
+                                       widget="multiselect",
+                                       levels=["L0"],
+                                       hidden=True
+                                      ),
+                  ],
                   orderby="deploy_deployment.created_on desc",
                   delete_next=URL(c="deploy", f="deployment", args="summary"),
                  )
