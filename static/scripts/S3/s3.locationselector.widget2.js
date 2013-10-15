@@ -221,22 +221,28 @@
             }
             // Use default values as fallback if no value specified
             var d = h['d'];
-            var label = hi['1'] || d['1'];
-            $(selector + '_L1__row label').html(label + ':');
-            label = hi['2'] || d['2'];
-            $(selector + '_L2__row label').html(label + ':');
-            label = hi['3'] || d['3'];
-            $(selector + '_L3__row label').html(label + ':');
-            label = hi['4'] || d['4'];
-            $(selector + '_L4__row label').html(label + ':');
-            label = hi['5'] || d['5'];
-            $(selector + '_L5__row label').html(label + ':');
+            var i,
+                lev,
+                label,
+                label_row,
+                levels = ['1', '2', '3', '4', '5'];
+            for (i=0; i < 5; i++ ) {
+                lev = levels[i];
+                label = hi[lev] || d[lev];
+                label_row = $(selector + '_L' + lev + '__row label');
+                if (label_row.hasClass('required')) {
+                    label_row.html('<div>' + label + ':<span class="req"> *</span></div>');
+                } else {
+                    label_row.html(label + ':');
+                }
+            }
         }
         if (id) {
             // Hide all lower levels
             // & remove their values
+            var s;
             for (var lev=level + 1; lev < 6; lev++) {
-                var s = selector + '_L' + lev;
+                s = selector + '_L' + lev;
                 if (hide_lx) {
                     $(s + '__row').hide();
                 } else {

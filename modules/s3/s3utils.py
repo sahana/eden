@@ -148,6 +148,7 @@ def s3_dev_toolbar():
 def s3_mark_required(fields,
                      mark_required=[],
                      label_html=(lambda field_label:
+                                 # @ToDo: DRY this setting with s3.locationselector.widget2.js
                                  DIV("%s:" % field_label,
                                      SPAN(" *", _class="req"))),
                      map_names=None):

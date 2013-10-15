@@ -1938,9 +1938,9 @@ def customize_cms_post_fields():
     field.label = ""
     field.represent = s3db.gis_LocationRepresent(sep=" | ")
     field.requires = IS_NULL_OR(
-                        IS_LOCATION_SELECTOR2(levels=["L0", "L1", "L2", "L3"])
+                        IS_LOCATION_SELECTOR2(levels=("L0", "L1", "L2", "L3"))
                      )
-    field.widget = S3LocationSelectorWidget2(levels=["L0", "L1", "L2", "L3"])
+    field.widget = S3LocationSelectorWidget2(levels=("L0", "L1", "L2", "L3"))
 
     table.created_by.represent = s3_auth_user_represent_name
 
@@ -3022,8 +3022,8 @@ def customize_org_office(**attr):
                 # Don't add new Locations here
                 location_field.comment = None
                 # L1s only
-                location_field.requires = IS_LOCATION_SELECTOR2(levels=["L0", "L1"])
-                location_field.widget = S3LocationSelectorWidget2(levels=["L0", "L1"],
+                location_field.requires = IS_LOCATION_SELECTOR2(levels=("L0", "L1"))
+                location_field.widget = S3LocationSelectorWidget2(levels=("L0", "L1"),
                                                                   show_address=True,
                                                                   show_map=False)
             s3.cancel = True

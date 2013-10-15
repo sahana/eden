@@ -79,8 +79,8 @@
     <ul class='nav'>
      <li><a class='home' href='/{{=appname}}/default/index'><img src="/{{=appname}}/static/img/sahanalarge_14.png" alt="Sahana"/></a></li>
      <li><a class='map' href='/{{=appname}}/gis/index'><i class='icon-globe'></i> {{=T("Make a Map")}}</a></li>
-     <li class='dropdown'> <a href='#' class='dropdown-toggle top-level' id='community-data' data-toggle='dropdown'><i class='icon-folder-open-alt'></i> {{=T("Explore Community Data")}}<b class='caret'></b></a>
-      <ul class='dropdown-menu' role='menu' aria-labelledby='profiles'>
+     <li class='dropdown'> <a href='#' class='dropdown-toggle top-level community-data-menu' data-toggle='dropdown'><i class='icon-folder-open-alt'></i> {{=T("Explore Community Data")}}<b class='caret'></b></a>
+      <ul class='dropdown-menu community-data-menu' role='menu' aria-labelledby='profiles'>
        {{for opt in response.menu:}}
         <li role='menuitem'>
          <a href='{{=opt["url"]}}/summary' tabindex='-1' class='menu-item'> <i class='{{=opt["icon"]}}'></i> {{=opt["name"]}}</a>
@@ -114,6 +114,24 @@
       </ul>
      </li>
      {{pass}}{{pass}}
+     <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-comment-alt'></i><b class='caret'></b></a>
+      <ul class='dropdown-menu'>
+       {{vars=request.vars}}
+       {{language=response.s3.language}}
+       {{icon = {"en":"icon-check"}.get(language,"icon-check-empty")}}
+       {{vars["_language"] = "en"}} 
+       <li><a href='{{=URL(args=request.args, vars=vars)}}'><i class='{{=icon}}'></i> English</a></li>
+       {{icon = {"es":"icon-check"}.get(language,"icon-check-empty")}}
+       {{vars["_language"] = "es"}}
+       <li><a href='{{=URL(args=request.args, vars=vars)}}'><i class='{{=icon}}'></i> Español</a></li>
+      </ul>
+     </li>
+     <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-question-sign'></i><b class='caret'></b></a>
+      <ul class='dropdown-menu'>
+        <li><a href='/{{=appname}}/default/video'><i class='icon-youtube-play'></i> {{=T("Video Tutorials")}}</a></li>
+        <li><a href='/{{=appname}}/static/themes/CRMT/Sahana User Manual.pdf'><i class='icon-book'></i> {{=T("User Manual")}}</a></li>
+      </ul>
+     </li>
     </ul>
    </div>
   </div>

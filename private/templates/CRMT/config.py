@@ -136,6 +136,7 @@ settings.base.youtube_id = [dict(id = "introduction",
 # L10n (Localization) settings
 settings.L10n.languages = OrderedDict([
     ("en", "English"),
+    ("es", "Español"),
 ])
 # Default Language
 settings.L10n.default_language = "en"
@@ -744,8 +745,8 @@ def customize_project_activity(**attr):
                 if widgets:
                     field = table.location_id
                     field.label = "" # Gets replaced by widget
-                    field.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
-                    field.widget = S3LocationSelectorWidget2(levels=["L3"],
+                    field.requires = IS_LOCATION_SELECTOR2(levels=("L3",))
+                    field.widget = S3LocationSelectorWidget2(levels=("L3",),
                                                              hide_lx=False,
                                                              reverse_lx=True,
                                                              show_address=True,
@@ -1185,7 +1186,7 @@ def customize_org_facility(**attr):
         if method == "summary" or representation == "aadata":
             # Modify list_fields
             list_fields = ["name",
-                           (T("Type of Place"),"facility_type.name"),
+                           (T("Type of Place"), "facility_type.name"),
                            "organisation_id",
                            "site_org_group.group_id",
                            "location_id",
@@ -1288,8 +1289,8 @@ def customize_org_facility(**attr):
                 if widgets:
                     field = table.location_id
                     field.label = "" # Gets replaced by widget
-                    field.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
-                    field.widget = S3LocationSelectorWidget2(levels=["L3"],
+                    field.requires = IS_LOCATION_SELECTOR2(levels=("L3",))
+                    field.widget = S3LocationSelectorWidget2(levels=("L3",),
                                                              hide_lx=False,
                                                              reverse_lx=True,
                                                              show_address=True,
@@ -1517,8 +1518,8 @@ def customize_stats_people(**attr):
                 if widgets:
                     field = table.location_id
                     field.label = "" # Gets replaced by widget
-                    field.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
-                    field.widget = S3LocationSelectorWidget2(levels=["L3"],
+                    field.requires = IS_LOCATION_SELECTOR2(levels=("L3",))
+                    field.widget = S3LocationSelectorWidget2(levels=("L3",),
                                                              hide_lx=False,
                                                              reverse_lx=True,
                                                              show_postcode=True,
@@ -1701,8 +1702,8 @@ def customize_vulnerability_evac_route(**attr):
                     #from s3layouts import S3AddResourceLink
 
                     table.location_id.label = "" # Gets replaced by widget
-                    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
-                    table.location_id.widget = S3LocationSelectorWidget2(levels=["L3"],
+                    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=("L3",))
+                    table.location_id.widget = S3LocationSelectorWidget2(levels=("L3",),
                                                                          polygons=True,
                                                                          )
 
@@ -1887,8 +1888,8 @@ def customize_vulnerability_risk(**attr):
 
                     field = table.location_id
                     field.label = "" # Gets replaced by widget
-                    field.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
-                    field.widget = S3LocationSelectorWidget2(levels=["L3"],
+                    field.requires = IS_LOCATION_SELECTOR2(levels=("L3",))
+                    field.widget = S3LocationSelectorWidget2(levels=("L3",),
                                                              hide_lx=False,
                                                              reverse_lx=True,
                                                              polygons=True,

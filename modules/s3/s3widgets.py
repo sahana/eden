@@ -3727,7 +3727,7 @@ class S3LocationSelectorWidget2(FormWidget):
     """
 
     def __init__(self,
-                 levels = ["L1", "L2", "L3"],   # Which levels of the hierarchy to expose?
+                 levels = ("L1", "L2", "L3"),   # Which levels of the hierarchy to expose?
                  hide_lx = True,                # Whether to hide lower Lx fields until higher level selected
                  reverse_lx = False,            # Whether to show Lx fields in the order usually used by Street Addresses
                  show_address = False,          # Whether to show a field for Street Address
@@ -3777,20 +3777,29 @@ class S3LocationSelectorWidget2(FormWidget):
 
         # List of all levels up to the lowest we specify
         if "L5" in levels:
-            _levels = ["L0", "L1", "L2", "L3", "L4", "L5"]
+            _levels = ("L0", "L1", "L2", "L3", "L4", "L5")
         elif "L4" in levels:
-            _levels = ["L0", "L1", "L2", "L3", "L4"]
+            _levels = ("L0", "L1", "L2", "L3", "L4")
         elif "L3" in levels:
-            _levels = ["L0", "L1", "L2", "L3"]
+            _levels = ("L0", "L1", "L2", "L3")
         elif "L2" in levels:
-            _levels = ["L0", "L1", "L2"]
+            _levels = ("L0", "L1", "L2")
         elif "L1" in levels:
-            _levels = ["L0", "L1"]
+            _levels = ("L0", "L1")
 
         default = field.default
         if not default:
             # Check for a default location in the active gis_config
             default = config.default_location_id
+
+        requires = field.requires
+        if requires:
+            if hasattr(requires, "other"):
+                required = False
+            else:
+                required = True
+        else:
+            required = False
 
         gtable = s3db.gis_location
 
@@ -4255,6 +4264,11 @@ class S3LocationSelectorWidget2(FormWidget):
                 # -> Elements moved via JS after page load
                 label = LABEL("%s:" % label, _class="control-label",
                                              _for=id)
+                if required:
+                    label.add_class("required")
+                    # Only top-level required
+                    # @ToDo: More control
+                    required = False
                 widget.add_class("input-xlarge")
                 # Currently unused, so remove if this remains so
                 #from gluon.html import BUTTON
@@ -4266,7 +4280,16 @@ class S3LocationSelectorWidget2(FormWidget):
                 _controls = DIV(widget, throbber, _class="controls")
                 row = DIV(label, _controls, _class="control-group hide", _id="%s__row" % id)
             elif callable(formstyle):
-                # @ToDo
+                # @ToDo: Test
+                if required:
+                    # @ToDo: DRY this setting with s3_mark_required
+                    # @ToDo: How to patch row that coems out of formstyle?
+                    #        - this label will get wiped by the L0-specific labels
+                    label = DIV("%s:" % label,
+                                SPAN(" *", _class="req"))
+                    # Only top-level required
+                    # @ToDo: More control
+                    required = False
                 row = formstyle(id, label, widget, comment, hidden=hidden)
             else:
                 # Unsupported

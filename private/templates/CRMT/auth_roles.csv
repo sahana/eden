@@ -8,6 +8,7 @@ AUTHENTICATED,Authenticated,,"default","person","gis_location",,"READ|CREATE|UPD
 AUTHENTICATED,Authenticated,,"gis","config",,,"READ|CREATE","READ|CREATE|UPDATE",,,,
 AUTHENTICATED,Authenticated,,"gis","index",,,"READ|CREATE","READ|CREATE|UPDATE",,,,
 AUTHENTICATED,Authenticated,,"gis","geocode",,,"READ",,,,,
+AUTHENTICATED,Authenticated,,"gis","ldata",,,"READ",,,,,
 AUTHENTICATED,Authenticated,,"gis","location",,,"READ",,,,,
 AUTHENTICATED,Authenticated,,"pr","person",,,"READ|CREATE","READ|CREATE|UPDATE",,,,
 AUTHENTICATED,Authenticated,,"pr","contact",,,,"READ|CREATE|UPDATE",,,,
