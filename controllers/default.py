@@ -582,13 +582,15 @@ def person():
     """
 
     # Set to current user
-    user_person_id  = str(s3_logged_in_person())
+    user_person_id = str(s3_logged_in_person())
 
     # When request.args = [], set it as user_person_id.
     # When it is not an ajax request and the first argument is not user_person_id, set it.
     # If it is an json request, leave the arguments unmodified.
-    if not request.args or (request.args[0] != user_person_id
-                            and request.args[-1] != "options.s3json"):
+    if not request.args or (request.args[0] != user_person_id and \
+                            request.args[-1] != "options.s3json" and \
+                            request.args[-1] != "validate.json"
+                            ):
         request.args = [user_person_id]
 
     set_method = s3db.set_method
@@ -633,26 +635,26 @@ def person():
     #    s3db.add_component("asset_asset",
     #                       pr_person="assigned_to_id")
 
-    # Configure person table for personal mode
-    tablename = "pr_person"
-    table = s3db[tablename]
-
-    s3.crud_strings[tablename].update(
-        title_display = T("Personal Profile"),
-        title_update = T("Personal Profile"))
-
-    # Organisation-dependent Fields
-    set_org_dependent_field = settings.set_org_dependent_field
-    set_org_dependent_field("pr_person_details", "father_name")
-    set_org_dependent_field("pr_person_details", "mother_name")
-    set_org_dependent_field("pr_person_details", "affiliations")
-    set_org_dependent_field("pr_person_details", "company")
-
     # CRUD pre-process
     def prep(r):
-        if r.method == "options":
+        if r.method in ("options", "validate"):
             return True        
         if r.interactive and r.method != "import":
+            # Load default model to override CRUD Strings
+            tablename = "pr_person"
+            table = s3db[tablename]
+
+            s3.crud_strings[tablename].update(
+                title_display = T("Personal Profile"),
+                title_update = T("Personal Profile"))
+
+            # Organisation-dependent Fields
+            set_org_dependent_field = settings.set_org_dependent_field
+            set_org_dependent_field("pr_person_details", "father_name")
+            set_org_dependent_field("pr_person_details", "mother_name")
+            set_org_dependent_field("pr_person_details", "affiliations")
+            set_org_dependent_field("pr_person_details", "company")
+
             if r.component:
                 if r.component_name == "physical_description":
                     # Hide all but those details that we want
@@ -723,7 +725,6 @@ def person():
                                    list_fields = list_fields,
                                    )
             else:
-                table = r.table
                 table.pe_label.readable = False
                 table.pe_label.writable = False
                 table.missing.readable = False
@@ -1095,6 +1096,7 @@ def tos():
 # -----------------------------------------------------------------------------
 def video():
     """ Custom View """
+
     if settings.get_template() != "default":
         # Try a Custom View
         view = os.path.join(request.folder, "private", "templates",
@@ -1107,6 +1109,7 @@ def video():
                 from gluon.http import HTTP
                 raise HTTP("404", "Unable to open Custom View: %s" % view)
 
+    response.title = T("Video Tutorials")
     return dict()
 
 # -----------------------------------------------------------------------------

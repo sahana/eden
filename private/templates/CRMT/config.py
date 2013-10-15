@@ -366,22 +366,23 @@ def customize_pr_person(**attr):
                            )
 
         if r.interactive:
-            # CRUD Strings
-            ADD_CONTACT = T("Add New Contact")
-            s3.crud_strings[tablename] = Storage(
-                title_create = T("Add Contact"),
-                title_display = T("Contact Details"),
-                title_list = T("Contact Directory"),
-                title_update = T("Edit Contact Details"),
-                title_search = T("Search Contacts"),
-                subtitle_create = ADD_CONTACT,
-                label_list_button = T("List Contacts"),
-                label_create_button = ADD_CONTACT,
-                label_delete_button = T("Delete Contact"),
-                msg_record_created = T("Contact added"),
-                msg_record_modified = T("Contact details updated"),
-                msg_record_deleted = T("Contact deleted"),
-                msg_list_empty = T("No Contacts currently registered"))
+            if current.request.controller != "default":
+                # CRUD Strings
+                ADD_CONTACT = T("Add New Contact")
+                s3.crud_strings[tablename] = Storage(
+                    title_create = T("Add Contact"),
+                    title_display = T("Contact Details"),
+                    title_list = T("Contact Directory"),
+                    title_update = T("Edit Contact Details"),
+                    title_search = T("Search Contacts"),
+                    subtitle_create = ADD_CONTACT,
+                    label_list_button = T("List Contacts"),
+                    label_create_button = ADD_CONTACT,
+                    label_delete_button = T("Delete Contact"),
+                    msg_record_created = T("Contact added"),
+                    msg_record_modified = T("Contact details updated"),
+                    msg_record_deleted = T("Contact deleted"),
+                    msg_list_empty = T("No Contacts currently registered"))
 
             # Custom Form (Read/Create/Update)
             from s3.s3fields import S3Represent
@@ -1256,7 +1257,7 @@ def customize_org_facility(**attr):
                     widgets = False
 
                 if widgets:
-                    field = s3db.org_facility.location_id
+                    field = table.location_id
                     field.label = "" # Gets replaced by widget
                     field.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
                     field.widget = S3LocationSelectorWidget2(levels=["L3"],

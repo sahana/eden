@@ -5259,7 +5259,7 @@ def hrm_training_controller():
 
     def prep(r):
         if r.interactive or \
-           r.extension.lower() == "aadata":
+           r.extension == "aadata":
             # Suitable list_fields
             T = current.T
             list_fields = ["course_id",

@@ -219,7 +219,7 @@ class req():
                                             ),
                             dt_pagination="true",
                            )
-        elif request.extension.lower() == "aadata":
+        elif request.extension == "aadata":
             if "sEcho" in request.vars:
                 echo = int(request.vars.sEcho)
             else:

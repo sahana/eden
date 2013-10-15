@@ -273,7 +273,7 @@ def customize_org_organisation(**attr):
         else:
             result = True
 
-        if r.interactive or r.representation.lower() == "aadata":
+        if r.interactive or r.representation == "aadata":
             s3db = current.s3db
             list_fields = ["id",
                            "name",

@@ -3326,6 +3326,7 @@ def customize_pr_person(**attr):
     """
 
     s3db = current.s3db
+    request = current.request
     s3 = current.response.s3
 
     tablename = "pr_person"
@@ -3346,23 +3347,23 @@ def customize_pr_person(**attr):
             image_field.requires = None
 
         if r.interactive or r.representation == "aadata":
-            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-            # CRUD Strings
-            ADD_CONTACT = T("Add New Contact")
-            s3.crud_strings[tablename] = Storage(
-                title_create = T("Add Contact"),
-                title_display = T("Contact Details"),
-                title_list = T("Contact Directory"),
-                title_update = T("Edit Contact Details"),
-                title_search = T("Search Contacts"),
-                subtitle_create = ADD_CONTACT,
-                label_list_button = T("List Contacts"),
-                label_create_button = ADD_CONTACT,
-                label_delete_button = T("Delete Contact"),
-                msg_record_created = T("Contact added"),
-                msg_record_modified = T("Contact details updated"),
-                msg_record_deleted = T("Contact deleted"),
-                msg_list_empty = T("No Contacts currently registered"))
+            if request.controller != "default":
+                # CRUD Strings
+                ADD_CONTACT = T("Add New Contact")
+                s3.crud_strings[tablename] = Storage(
+                    title_create = T("Add Contact"),
+                    title_display = T("Contact Details"),
+                    title_list = T("Contact Directory"),
+                    title_update = T("Edit Contact Details"),
+                    title_search = T("Search Contacts"),
+                    subtitle_create = ADD_CONTACT,
+                    label_list_button = T("List Contacts"),
+                    label_create_button = ADD_CONTACT,
+                    label_delete_button = T("Delete Contact"),
+                    msg_record_created = T("Contact added"),
+                    msg_record_modified = T("Contact details updated"),
+                    msg_record_deleted = T("Contact deleted"),
+                    msg_list_empty = T("No Contacts currently registered"))
 
             MOBILE = settings.get_ui_label_mobile_phone()
             EMAIL = T("Email")
@@ -3395,13 +3396,14 @@ def customize_pr_person(**attr):
                          ]
             if r.method in ("create", "update"):
                 # Context from a Profile page?"
-                organisation_id = current.request.get_vars.get("(organisation)", None)
+                organisation_id = request.get_vars.get("(organisation)", None)
                 if organisation_id:
                     field = s3db.hrm_human_resource.organisation_id
                     field.default = organisation_id
                     field.readable = field.writable = False
                     hr_fields.remove("organisation_id")
 
+            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
             s3_sql_custom_fields = [
                     "first_name",
                     #"middle_name",
@@ -3481,7 +3483,7 @@ def customize_pr_person(**attr):
             #iappend('''i18n.job_title="%s"''' % T("Job Title"))
             #i18n = '''\n'''.join(i18n)
             #s3.js_global.append(i18n)
-            #s3.scripts.append('/%s/static/themes/DRMP/js/contacts.js' % current.request.application)
+            #s3.scripts.append('/%s/static/themes/DRMP/js/contacts.js' % request.application)
 
         return True
     s3.prep = custom_prep
