@@ -1630,7 +1630,7 @@ def customize_vulnerability_evac_route(**attr):
             # Modify list_fields
             list_fields = ["id",
                            "name",
-                           (T("Hazard Type"),"hazard_id"),
+                           #(T("Hazard Type"), "hazard_id"),
                            "evac_route_group.group_id",
                            "location_id",
                            "comments",
@@ -1645,8 +1645,6 @@ def customize_vulnerability_evac_route(**attr):
 
         if r.interactive or representation == "json" or representation == "plain":
             # CRUD Strings / Represent
-            table.location_id.label = T("Address")
-            table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
             s3db.vulnerability_evac_route_group.group_id.label = T("Coalition")
 
             if method in ("summary", "report2"):
@@ -1657,16 +1655,16 @@ def customize_vulnerability_evac_route(**attr):
                                                   widget="multiselect",
                                                   header=True,
                                                   ),
-                                  S3OptionsFilter("hazard_id",
-                                                  label=T("Hazard Type"),
-                                                  represent="%(name)s",
-                                                  widget="multiselect",
-                                                  header=True,
-                                                  ),
+                                  #S3OptionsFilter("hazard_id",
+                                  #                label=T("Hazard Type"),
+                                  #                represent="%(name)s",
+                                  #                widget="multiselect",
+                                  #                header=True,
+                                  #                ),
                                   ]
 
                 report_fields = [#"name",
-                                 (T("Hazard Type"),"hazard_id"),
+                                 #(T("Hazard Type"),"hazard_id"),
                                  "evac_route_group.group_id",
                                  "location_id$L3",
                                  ]
@@ -1675,8 +1673,8 @@ def customize_vulnerability_evac_route(**attr):
                     rows=report_fields,
                     cols=report_fields,
                     fact=[("count(name)", T("Number of Evacuation Routes"))],
-                    defaults=Storage(rows="evac_route.hazard_id",
-                                     #cols="evac_route_group.group_id",
+                    defaults=Storage(rows="evac_route_group.group_id",
+                                     #cols="evac_route.hazard_id",
                                      fact="count(name)",
                                      totals=True,
                                      chart = "barchart:rows",
@@ -1700,7 +1698,7 @@ def customize_vulnerability_evac_route(**attr):
                     # Custom Widgets/Validators
                     from s3.s3validators import IS_LOCATION_SELECTOR2
                     from s3.s3widgets import S3LocationSelectorWidget2
-                    from s3layouts import S3AddResourceLink
+                    #from s3layouts import S3AddResourceLink
 
                     table.location_id.label = "" # Gets replaced by widget
                     table.location_id.requires = IS_LOCATION_SELECTOR2(levels=["L3"])
@@ -1708,9 +1706,9 @@ def customize_vulnerability_evac_route(**attr):
                                                                          polygons=True,
                                                                          )
 
-                    table.hazard_id.comment = S3AddResourceLink(c="vulnerability",
-                                                                f="hazard",
-                                                                title=T("Add Hazard Type")),
+                    #table.hazard_id.comment = S3AddResourceLink(c="vulnerability",
+                    #                                            f="hazard",
+                    #                                            title=T("Add Hazard Type")),
 
                 # Hide Labels when just 1 column in inline form
                 s3db.doc_document.file.label = ""
@@ -1719,7 +1717,7 @@ def customize_vulnerability_evac_route(**attr):
                 # Custom Crud Form
                 crud_form = S3SQLCustomForm(
                     "name",
-                    "hazard_id",
+                    #"hazard_id",
                     S3SQLInlineComponent(
                         "evac_route_group",
                         label = T("Coalition"),
@@ -1795,7 +1793,7 @@ def customize_vulnerability_risk(**attr):
             # Modify list_fields
             list_fields = ["id",
                            "name",
-                           (T("Hazard Type"),"hazard_id"),
+                           #(T("Hazard Type"), "hazard_id"),
                            "risk_group.group_id",
                            "location_id",
                            "comments",
@@ -1843,16 +1841,16 @@ def customize_vulnerability_risk(**attr):
                                                   widget="multiselect",
                                                   header=True,
                                                   ),
-                                  S3OptionsFilter("hazard_id",
-                                                  label=T("Hazard Type"),
-                                                  represent="%(name)s",
-                                                  widget="multiselect",
-                                                  header=True,
-                                                  ),
+                                  #S3OptionsFilter("hazard_id",
+                                  #                label=T("Hazard Type"),
+                                  #                represent="%(name)s",
+                                  #                widget="multiselect",
+                                  #                header=True,
+                                  #                ),
                                   ]
 
                 report_fields = [#"name",
-                                 (T("Hazard Type"),"hazard_id"),
+                                 #(T("Hazard Type"),"hazard_id"),
                                  "risk_group.group_id",
                                  "location_id$L3",
                                  ]
@@ -1861,8 +1859,8 @@ def customize_vulnerability_risk(**attr):
                     rows=report_fields,
                     cols=report_fields,
                     fact=[("count(name)", T("Number of Risks"))],
-                    defaults=Storage(rows="risk.hazard_id",
-                                     #cols="risk_group.group_id",
+                    defaults=Storage(rows="risk_group.group_id",
+                                     #cols="risk.hazard_id",
                                      fact="count(name)",
                                      totals=True,
                                      chart = "barchart:rows",
@@ -1905,7 +1903,7 @@ def customize_vulnerability_risk(**attr):
                 # Custom Crud Form
                 crud_form = S3SQLCustomForm(
                     "name",
-                    "hazard_id",
+                    #"hazard_id",
                     S3SQLInlineComponent(
                         "risk_group",
                         label = T("Coalition"),
@@ -1927,7 +1925,7 @@ def customize_vulnerability_risk(**attr):
                 s3db.configure(tablename,
                                crud_form = crud_form,
                                )
-    
+
         # Not needed now that Risk data is moved to WMS
         #elif r.representation== "geojson":
         #    layer = current.request.get_vars.get("layer", None)
