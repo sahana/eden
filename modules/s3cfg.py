@@ -276,15 +276,31 @@ class S3Config(Storage):
 
     def get_auth_registration_pending(self):
         """ Message someone gets when they register & they need approving """
-        return self.auth.get("registration_pending",
-            "Registration is still pending approval from Approver (%s) - please wait until confirmation received." % \
-                self.get_mail_approver())
+        message = self.auth.get("registration_pending", None)
+        if message:
+            return current.T(message)
+
+        approver = self.get_mail_approver()
+        if "@" in approver:
+            m = "Registration is still pending approval from Approver (%s) - please wait until confirmation received." % \
+                approver
+        else:
+            m = "Registration is still pending approval from the system administrator - please wait until confirmation received."
+        return current.T(m)
 
     def get_auth_registration_pending_approval(self):
         """ Message someone gets when they register & they need approving """
-        return self.auth.get("registration_pending_approval",
-            "Thank you for validating your email. Your user account is still pending for approval by the system administator (%s). You will get a notification by email when your account is activated." % \
-                self.get_mail_approver())
+        message = self.auth.get("registration_pending_approval", None)
+        if message:
+            return current.T(message)
+
+        approver = self.get_mail_approver()
+        if "@" in approver:
+            m = "Thank you for validating your email. Your user account is still pending for approval by the system administrator (%s). You will get a notification by email when your account is activated." % \
+                approver
+        else:
+            m = "Thank you for validating your email. Your user account is still pending for approval by the system administrator. You will get a notification by email when your account is activated."
+        return current.T(m)
 
     def get_auth_registration_roles(self):
         """
