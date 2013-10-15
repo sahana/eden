@@ -420,20 +420,25 @@ class S3DataTable(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def listFormats(id, rfields=None, permalink=None):
+    def listFormats(id, rfields=None, permalink=None, base_url=None):
         """
             Calculate the export formats that can be added to the table
 
-            @param id: The unique dataTable ID
-            @param rfields: optional list of rfields
+            @param id: the unique dataTable ID
+            @param rfields: optional list of field selectors for exports
+            @param permalink: search result URL
+            @param base_url: the base URL of the datatable (without
+                             method or query vars) to construct format URLs
         """
 
         T = current.T
         s3 = current.response.s3
         request = current.request
 
+        if base_url is None:
+            base_url = request.url
+
         # @todo: this needs rework
-        #        - formatRequest must remove the "search" method
         #        - other data formats could have other list_fields,
         #          hence applying the datatable sorting/filters is
         #          not transparent
@@ -441,14 +446,13 @@ class S3DataTable(object):
             end = s3.datatable_ajax_source.find(".aadata")
             default_url = s3.datatable_ajax_source[:end] # strip '.aadata' extension
         else:
-            default_url = request.url
+            default_url = base_url
 
         # Keep any URL filters
-        vars = request.get_vars
-        if vars:
-            default_url = "%s?" % default_url
-            for var in vars:
-                default_url = "%s%s=%s&" % (default_url, var, vars[var])
+        get_vars = request.get_vars
+        if get_vars:
+            query = "&".join("%s=%s" % (k, v) for k, v in get_vars.items())
+            default_url = "%s?%s" % (default_url, query)
 
         div = DIV(_class='list_formats')
         if permalink is not None:
@@ -642,6 +646,8 @@ class S3DataTable(object):
                                      two types are supported, 'individulal' and 'accordion'
                    dt_group_types: The type of indicator for groups that can be 'shrunk'
                                    Permitted valies are: 'icon' (the default) 'text' and 'none'
+                   dt_base_url: base URL to construct export format URLs, resource
+                                default URL without any URL method or query part
             @global current.response.s3.actions used to get the RowActions
         """
 
@@ -721,8 +727,10 @@ class S3DataTable(object):
         form = FORM()
         if not s3.no_formats and len(html) > 0:
             permalink = attr.get("dt_permalink", None)
+            base_url = attr.get("dt_base_url", None)
             form.append(S3DataTable.listFormats(id, rfields,
-                                                permalink=permalink))
+                                                permalink=permalink,
+                                                base_url=base_url))
         form.append(html)
         # Add the configuration details for this dataTable
         form.append(INPUT(_type="hidden",

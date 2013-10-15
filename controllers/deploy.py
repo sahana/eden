@@ -23,8 +23,15 @@ def index():
 # =============================================================================
 def deployment():
 
+    def postp(r, output):
+        if isinstance(output, dict) and "buttons" in output:
+            buttons = output["buttons"]
+            if "list_btn" in buttons and "summary_btn" in buttons:
+                buttons["list_btn"] = buttons["summary_btn"]
+        return output
+    s3.postp = postp
     return s3_rest_controller()
-
+            
 # =============================================================================
 def human_resource_assignment():
 

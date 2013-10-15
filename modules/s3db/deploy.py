@@ -67,7 +67,20 @@ class S3DeploymentModel(S3Model):
 
         # Table configuration
         configure(tablename,
-                  super_entity="doc_entity")
+                  super_entity="doc_entity",
+                  summary=[{"name": "table",
+                            "label": "Table",
+                            "widgets": [{"method": "datatable"}]
+                            },
+                            {"name": "map",
+                             "label": "Map",
+                             "widgets": [{"method": "map",
+                                          "ajax_init": True}],
+                            },
+                           ],
+                  orderby="deploy_deployment.created_on desc",
+                  delete_next=URL(c="deploy", f="deployment", args="summary"),
+                 )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(

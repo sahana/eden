@@ -97,8 +97,8 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Incident Reports", c="irs", f="ireport"),
             ),
             homepage("deploy", name="RDRT")(
-                MM("Deployments", c="deploy", f="deployment"),
-                MM("Members", c="deploy", f="human_resource"),
+                MM("Deployments", c="deploy", f="deployment", m="summary"),
+                MM("Members", c="deploy", f="human_resource", m="summary"),
             ),
         ]
 
@@ -700,10 +700,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         return M()(
                    M("Deployments",
-                     c="deploy", f="deployment",
+                     c="deploy", f="deployment", m="summary",
                    ),
                    M("Members",
-                     c="deploy", f="human_resource", m="summary"
+                     c="deploy", f="human_resource", m="summary",
                    ),
                )
 

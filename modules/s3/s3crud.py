@@ -1245,6 +1245,7 @@ class S3CRUD(S3Method):
             else:
                 dtargs["dt_pagination"] = dt_pagination
                 dtargs["dt_displayLength"] = display_length
+                dtargs["dt_base_url"] = r.url(method="", vars={})
                 datatable = dt.html(totalrows,
                                     displayrows,
                                     id=listid,
@@ -2169,7 +2170,9 @@ class S3CRUD(S3Method):
         if "summary" in buttons:
             if not r.component or r.multiple:
                 summary_btn = self.crud_button(crud_string(tablename, "title_list"),
-                                               _href = url(method="summary", vars=remove_filters(r.get_vars)), 
+                                               _href = url(method="summary",
+                                                           id=0,
+                                                           vars=remove_filters(r.get_vars)), 
                                                _id="summary-btn")
                 output["summary_btn"] = summary_btn
 
