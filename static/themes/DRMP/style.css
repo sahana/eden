@@ -159,6 +159,8 @@ div.dl {
 }
 
 .alert.alert-error, 
+.alert.alert-info, 
+.alert.alert-warning, 
 .alert.alert-success {
     border: 1px solid #b2b2b2;
     width: 445px;
