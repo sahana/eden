@@ -2304,14 +2304,16 @@ class S3FacilityModel(S3Model):
                              super_link("site_id", "org_site"),
                              Field("name", notnull=True,
                                    length=64, # Mayon Compatibility
-                                   label=T("Name")),
+                                   label=T("Name"),
+                                   ),
                              Field("code", length=10, # Mayon compatibility
                                    # Deployments that don't wants office codes can hide them
                                    #readable=False, writable=False,
                                    # @ToDo: Deployment Setting to add validator to make these unique
                                    #notnull=True, unique=True,
                                    represent = lambda v: v or NONE,
-                                   label=T("Code")),
+                                   label=T("Code"),
+                                   ),
                              self.org_organisation_id(
                                 #widget=S3OrganisationAutocompleteWidget(
                                             #default_from_profile=True)

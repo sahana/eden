@@ -349,8 +349,8 @@ def customize_pr_person(**attr):
                            "first_name",
                            #"middle_name",
                            "last_name",
-                           (T("Job Title"), "human_resource.job_title_id"),
-                           (T("Office"), "human_resource.site_id"),
+                           #(T("Job Title"), "human_resource.job_title_id"),
+                           (T("Place"), "human_resource.site_id"),
                            ]
             is_logged_in = current.auth.is_logged_in()
             if is_logged_in:
@@ -406,9 +406,9 @@ def customize_pr_person(**attr):
                                                 orderby = "org_site.name")
                 site_field.comment = S3AddResourceLink(c="org", f="office",
                                                        vars={"child": "site_id"},
-                                                       label=T("Add New Office"),
-                                                       title=T("Office"),
-                                                       tooltip=T("If you don't see the Office in the list, you can add a new one by clicking link 'Add New Office'."))
+                                                       label=T("Add New Place"),
+                                                       title=T("Place"),
+                                                       tooltip=T("If you don't see the Place in the list, you can add a new one by clicking link 'Add New Place'."))
 
             # Hide Labels when just 1 column in inline form
             s3db.pr_contact.value.label = ""
@@ -422,7 +422,7 @@ def customize_pr_person(**attr):
             image_field.widget = None
 
             hr_fields = ["organisation_id",
-                         "job_title_id",
+                         #"job_title_id",
                          "site_id",
                          ]
             #if widgets:
@@ -517,7 +517,7 @@ def customize_pr_person(**attr):
             # Disabled as breaks submission of inline_component
             #i18n = []
             #iappend = i18n.append
-            #iappend('''i18n.office="%s"''' % T("Office"))
+            #iappend('''i18n.office="%s"''' % T("Place"))
             #iappend('''i18n.organisation="%s"''' % T("Organization"))
             #iappend('''i18n.job_title="%s"''' % T("Job Title"))
             #i18n = '''\n'''.join(i18n)
@@ -937,7 +937,7 @@ def customize_org_organisation(**attr):
                 hrtable.site_id.label = T("Place")
 
                 hr_fields = ["person_id",
-                             "job_title_id",
+                             #"job_title_id",
                              #"email",
                              #"phone",
                              ]
@@ -1164,6 +1164,9 @@ def customize_org_facility(**attr):
                            "organisation_id",
                            "site_org_group.group_id",
                            "location_id",
+                           "contact",
+                           "phone1",
+                           "email",
                            "comments",
                            ]
 
@@ -1176,6 +1179,7 @@ def customize_org_facility(**attr):
 
         if r.interactive or representation == "json":
             # CRUD Strings / Represent
+            table.phone1.label = T("Phone")
             table.location_id.label = T("Address")
             table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
             s3db.org_site_org_group.group_id.label = T("Coalition")
@@ -1218,7 +1222,7 @@ def customize_org_facility(**attr):
                                   ]
 
                 report_fields = [#"name",
-                                 (T("Type of Place"),"site_facility_type.facility_type_id"),
+                                 (T("Type of Place"), "site_facility_type.facility_type_id"),
                                  "site_org_group.group_id",
                                  "location_id$L3",
                                  "organisation_id",
@@ -1267,7 +1271,7 @@ def customize_org_facility(**attr):
                                                              show_postcode=True,
                                                              )
 
-                    s3db.hrm_human_resource.person_id.widget = None
+                    #s3db.hrm_human_resource.person_id.widget = None
 
                 # Hide Labels when just 1 column in inline form
                 s3db.doc_document.file.label = ""
@@ -1289,15 +1293,19 @@ def customize_org_facility(**attr):
                         multiple = False,
                     ),
                     "location_id",
-                    S3SQLInlineComponent(
-                        "human_resource",
-                        label = T("Place's Contacts"),
-                        fields = ["person_id",
-                                  "job_title_id",
-                                  #"email",
-                                  #"phone",
-                                  ],
-                    ),
+                    #S3SQLInlineComponent(
+                    #    "human_resource",
+                    #    label = T("Place's Contacts"),
+                    #    fields = ["person_id",
+                    #              #"job_title_id",
+                    #              #"email",
+                    #              #"phone",
+                    #              ],
+                    #),
+                    # Can't have Components of Components Inline, so just use simple fields
+                    "contact",
+                    "phone1",
+                    "email",
                     S3SQLInlineComponent(
                         "document",
                         name = "file",
