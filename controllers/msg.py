@@ -1245,7 +1245,26 @@ def tropo_channel():
                     listadd=False,
                     update_next = URL(args=[1, "update"]))
 
-    return s3_rest_controller()
+    from s3.s3filter import S3DateFilter,S3TextFilter
+
+    filter_widgets = [
+        S3DateFilter("created_on",
+                     label=T('Tweeted On'),
+                     hide_time=True,
+                     _class="date-filter-class",
+                     comment="Filter Tweets by the date they were tweeted on"),
+        S3TextFilter("from_address",
+                     label=T('Tweeted By'),
+                     _class="tweeter-filter-class",
+                     comment="Filter Tweets by who tweeted them")
+    ]
+
+    s3db.configure(tablename,
+                   filter_widgets=filter_widgets,
+                   listadd=False
+    )
+
+    return s3_rest_controller(hide_filter=False)
 
 # -----------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
