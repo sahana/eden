@@ -119,7 +119,7 @@
 
             <xsl:call-template name="ContactPersonReference"/>
 
-            <!-- Link to Benficiaries -->
+            <!-- Link to Beneficiaries -->
             <xsl:for-each select="col[starts-with(@field, 'Beneficiaries')]">
                 <xsl:call-template name="ActivityBeneficiaries"/>
             </xsl:for-each>
@@ -134,7 +134,7 @@
             <xsl:with-param name="arg">activity_type_res</xsl:with-param>
         </xsl:call-template>
 
-        <!-- Link to Benficiaries -->
+        <!-- Beneficiaries -->
         <xsl:for-each select="col[starts-with(@field, 'Beneficiaries')]">
             <xsl:call-template name="Beneficiaries"/>
         </xsl:for-each>

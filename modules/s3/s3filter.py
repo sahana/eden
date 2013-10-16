@@ -56,7 +56,7 @@ from s3rest import S3Method
 from s3resource import S3FieldSelector, S3ResourceField, S3URLQuery
 from s3utils import s3_unicode, S3TypeConverter
 from s3validators import *
-from s3widgets import S3DateWidget, S3DateTimeWidget, S3GroupedOptionsWidget, S3MultiSelectWidget, S3OrganisationHierarchyWidget, S3RadioOptionsWidget, s3_grouped_checkboxes_widget
+from s3widgets import S3DateWidget, S3DateTimeWidget, S3GroupedOptionsWidget, S3MultiSelectWidget, S3OrganisationHierarchyWidget, S3RadioOptionsWidget, s3_grouped_checkboxes_widget, S3SelectChosenWidget
 
 # =============================================================================
 class S3FilterWidget(object):
@@ -1143,6 +1143,9 @@ class S3OptionsFilter(S3FilterWidget):
                     filter = opts.get("filter", False),
                     header = opts.get("header", False),
                     selectedList = opts.get("selectedList", 3))
+        elif widget_type == "chosen":
+            widget_class = "chosen-filter-widget"
+            w = S3SelectChosenWidget()
         # Radio is just GroupedOpts with multiple=False
         #elif widget_type == "radio":
         #    widget_class = "radio-filter-widget"
