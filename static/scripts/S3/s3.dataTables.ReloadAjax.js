@@ -5,7 +5,7 @@
 //    dt.fnReloadAjax(<new URL>);
 //
 $.fn.dataTableExt.oApi.fnReloadAjax = function(oSettings, sNewSource) {
-    if ( typeof sNewSource != 'undefined' && sNewSource != null ) {
+    if ( sNewSource != 'undefined' && sNewSource != null ) {
         // sNewSource is a string containing the new Ajax-URL for
         // this instance, so override the previous setting
         oSettings.sAjaxSource = sNewSource;

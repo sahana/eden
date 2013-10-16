@@ -670,7 +670,7 @@ def customize_project_activity(**attr):
         elif method == "report2":
             s3db.project_activity_group.group_id.label = T("Coalition")
 
-        elif r.interactive or representation == "json" or representation == "plain":
+        if r.interactive or representation == "json" or representation == "plain":
             # CRUD Strings / Represent
             s3.crud_strings[tablename].title_update = T("Update Activities")
             table.location_id.label = T("Address")
@@ -735,10 +735,6 @@ def customize_project_activity(**attr):
                     widgets = True
                     from s3.s3validators import IS_ADD_PERSON_WIDGET2, IS_LOCATION_SELECTOR2
                     from s3.s3widgets import S3AddPersonWidget2, S3LocationSelectorWidget2, S3SelectChosenWidget
-                else:
-                    widgets = False
-
-                if widgets:
                     field = table.location_id
                     field.label = "" # Gets replaced by widget
                     field.requires = IS_LOCATION_SELECTOR2(levels=("L3",))
@@ -748,8 +744,9 @@ def customize_project_activity(**attr):
                                                              show_address=True,
                                                              show_postcode=True,
                                                              )
-
                     s3db.project_activity_organisation.organisation_id.widget = S3SelectChosenWidget()
+                else:
+                    widgets = False
 
                 field = table.person_id
                 field.comment = None

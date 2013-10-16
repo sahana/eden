@@ -454,7 +454,8 @@ class S3DataTable(object):
             query = "&".join("%s=%s" % (k, v) for k, v in get_vars.items())
             default_url = "%s?%s" % (default_url, query)
 
-        div = DIV(_class='list_formats')
+        div = DIV(_id = "%s_list_formats" % id, # Used by s3.filter.js to update URLs
+                  _class = "list_formats")
         if permalink is not None:
             link = A(T("Link to this result"),
                      _href=permalink,

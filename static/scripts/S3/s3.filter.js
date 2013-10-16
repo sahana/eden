@@ -840,7 +840,23 @@ S3.search = {};
             if (t.hasClass('dl')) {
                 dlAjaxReload(target_id, target_data['queries']);
             } else if (t.hasClass('dataTable')) {
-                t.dataTable().fnReloadAjax(target_data['ajaxurl']);
+                var dt = t.dataTable();
+                // Refresh Data
+                dt.fnReloadAjax(target_data['ajaxurl']);
+                // Update Export Formats
+                var $this,
+                    s,
+                    parts;
+                $('#' + dt[0].id + '_list_formats div').each(function() {
+                    $this = $(this);
+                    s = $this.attr('onclick');
+                    parts = s.split("','");
+                    url = parts[2].split("');")[0];
+                    url = filterURL(url, queries);
+                    parts[2] = url + "');";
+                    s = parts.join("','");
+                    $this.attr('onclick', s);
+                });
             } else if (t.hasClass('map_wrapper')) {
                 S3.gis.refreshLayer('search_results');
             } else if (t.hasClass('pt-container')) {
@@ -1351,7 +1367,22 @@ S3.search = {};
                 } else if (t.hasClass('dl')) {
                     dlAjaxReload(target_id, queries);
                 } else if (t.hasClass('dataTable')) {
-                    t.dataTable().fnReloadAjax(dt_ajaxurl[target_id]);
+                    var dt = t.dataTable();
+                    dt.fnReloadAjax(dt_ajaxurl[target_id]);
+                    // Update Export Formats
+                    var $this,
+                        s,
+                        parts;
+                    $('#' + dt[0].id + '_list_formats div').each(function() {
+                        $this = $(this);
+                        s = $this.attr('onclick');
+                        parts = s.split("','");
+                        url = parts[2].split("');")[0];
+                        url = filterURL(url, queries);
+                        parts[2] = url + "');";
+                        s = parts.join("','");
+                        $this.attr('onclick', s);
+                    });
                 } else if (t.hasClass('map_wrapper')) {
                     S3.gis.refreshLayer('search_results', queries);
                 } else if (t.hasClass('pt-container')) {
