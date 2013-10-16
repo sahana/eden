@@ -140,8 +140,8 @@
         <label>ADM0_NAME</label>
     </column>
 
-   <!-- For Campaign Response Summary (TERA) -->
-   <column name="Lat">
+    <!-- For Campaign Response Summary (TERA) -->
+    <column name="Lat">
         <!-- Special Element match for key generation -->
         <match>|Lat|lat|LAT|LATITUDE|</match>
         <label>Lat</label>
@@ -150,8 +150,8 @@
         <label>LATITUDE</label>
     </column>
 
-   <!-- For Campaign Response Summary (TERA) -->
-   <column name="Lon">
+    <!-- For Campaign Response Summary (TERA) -->
+    <column name="Lon">
         <!-- Special Element match for key generation -->
         <match>|Lon|Long|lon|long|LON|LONG|LONGITUDE|</match>
         <label>Lon</label>
@@ -163,7 +163,7 @@
         <label>LONGITUDE</label>
     </column>
 
-   <column name="Postcode">
+    <column name="Postcode">
         <!-- Special Element match for key generation -->
         <match>|Postcode|postcode|Zip|Zipcode|zipcode|</match>
         <label>Postcode</label>
@@ -173,7 +173,7 @@
         <label>zipcode</label>
     </column>
 
-   <column name="Organisation">
+    <column name="Organisation">
         <!-- Special Element match for key generation -->
         <match>|Organisation|Organization|organisation|organization|</match>
         <label>Organisation</label>
@@ -182,24 +182,41 @@
         <label>organization</label>
     </column>
 
-   <!-- For Campaign Response Summary (TERA) -->
-   <column name="Quantity">
+    <!-- For Inventory -->
+    <column name="Units">
+        <label>Units</label>
+        <label>Unit of Measure</label>
+    </column>
+
+    <column name="Expiry">
+        <label>Expiry Date</label>
+        <label>Expires</label>
+        <label>Expiry</label>
+    </column>
+
+    <column name="TrackingNumber">
+        <label>Tracking Number</label>
+        <label>Tracking #</label>
+    </column>
+
+    <!-- For Campaign Response Summary (TERA) -->
+    <column name="Quantity">
         <!-- Special Element match for key generation -->
         <match>|Quantity|QUANTITY|</match>
         <label>Quantity</label>
         <label>QUANTITY</label>
     </column>
 
-   <!-- For Campaign Response Summary (TERA) -->
-   <column name="Keyword">
+    <!-- For Campaign Response Summary (TERA) -->
+    <column name="Keyword">
         <!-- Special Element match for key generation -->
         <match>|Keyword|TEXT|</match>
         <label>Keyword</label>
         <label>TEXT</label>
     </column>
 
-   <!-- For Campaign Response Summary (TERA) -->
-   <column name="Date">
+    <!-- For Campaign Response Summary (TERA) -->
+    <column name="Date">
         <!-- Special Element match for key generation -->
         <match>|Date|DATETIME|</match>
         <label>Date</label>
