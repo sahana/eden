@@ -23,7 +23,9 @@ def index():
 # =============================================================================
 def deployment():
 
+
     def prep(r):
+        s3.cancel = r.url(method="summary", id=0)
         created_on = r.table.created_on
         created_on.readable = True
         created_on.represent = lambda d: \

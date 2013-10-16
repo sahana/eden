@@ -100,7 +100,13 @@ class S3DeploymentModel(S3Model):
                                  (T("Date"), "created_on"),
                                  (T("Country"), "location_id"),
                                  (T("Members"), "hrquantity")],
-                  summary=[{"name": "table",
+                  summary=[{"name": "rheader",
+                            "common": True,
+                            "widgets": [
+                                {"method": self.add_button}
+                            ]
+                           },
+                           {"name": "table",
                             "label": "Table",
                             "widgets": [{"method": "datatable"}]
                             },
@@ -139,7 +145,7 @@ class S3DeploymentModel(S3Model):
             title_upload = T("Import Deployments"),
             subtitle_create = T("Add New Deployment"),
             label_list_button = T("List Deployments"),
-            label_create_button = T("Add Deployment"),
+            label_create_button = T("New Deployment"),
             label_delete_button = T("Delete Deployment"),
             msg_record_created = T("Deployment added"),
             msg_record_modified = T("Deployment Details updated"),
@@ -211,6 +217,16 @@ class S3DeploymentModel(S3Model):
                                         readable=False, writable=False)
         return dict(deploy_deployment_id = deployment_id)
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def add_button(r, widget_id=None, visible=True, **attr):
+
+        return A(S3Method.crud_string(r.tablename,
+                                      "label_create_button"),
+                 _href=r.url(method="create", id=0, vars={}),
+                 _class="action-btn",
+                )
+                
 # =============================================================================
 class S3DeploymentAlertModel(S3Model):
 

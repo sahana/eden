@@ -846,9 +846,15 @@ class S3SQLCustomForm(S3SQLForm):
 
         # Cancel button
         if not readonly and s3.cancel:
-            buttons.append(A(current.T("Cancel"),
-                             _href=s3.cancel,
-                             _class="action-lnk"))
+            T = current.T
+            submit_button = INPUT(_type="submit",
+                                  _value=T(settings.submit_button or "Save"))
+            if settings.submit_style:
+                submit_button.add_class(settings.submit_style)
+            buttons = [submit_button,
+                       A(current.T("Cancel"),
+                         _href=s3.cancel,
+                         _class="action-lnk")]
 
         # Render the form
         tablename = self.tablename
