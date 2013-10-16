@@ -464,7 +464,7 @@ class S3DataTable(object):
 
         export_formats = current.deployment_settings.get_ui_export_formats()
         if export_formats:
-            div.append("%s:" % current.T("Export to"))
+            div.append("%s:" % current.T("Export as"))
             iconList = []
             formats = s3.formats
             EXPORT = T("Export in %(format)s format")

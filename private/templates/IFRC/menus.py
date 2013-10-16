@@ -700,7 +700,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         return M()(
                    M("Deployments",
-                     c="deploy", f="deployment", m="summary",
+                     c="deploy", f="deployment", m="summary")(
+                        M("New", m="create"),
+                        M("Summary", m="summary"),
                    ),
                    M("Members",
                      c="deploy", f="human_resource", m="summary",

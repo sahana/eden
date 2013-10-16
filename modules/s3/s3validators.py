@@ -985,7 +985,12 @@ class IS_LOCATION(Validator):
         level = self.level
         if level == "L0":
             # Use cached countries. This returns name if id is for a country.
-            ok = current.gis.get_country(value)
+            try:
+                location_id = int(value)
+            except ValueError:
+                ok = False
+            else:
+                ok = current.gis.get_country(location_id)
         else:
             db = current.db
             table = db.gis_location

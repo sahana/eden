@@ -23,6 +23,15 @@ def index():
 # =============================================================================
 def deployment():
 
+    def prep(r):
+        created_on = r.table.created_on
+        created_on.readable = True
+        created_on.represent = lambda d: \
+                               s3base.S3DateTime.date_represent(d, utc=True)
+        return True
+    s3.prep = prep
+
+    # Override standard "List" button
     def postp(r, output):
         if isinstance(output, dict) and "buttons" in output:
             buttons = output["buttons"]

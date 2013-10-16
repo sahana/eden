@@ -49,6 +49,7 @@ class S3DeploymentModel(S3Model):
         define_table = self.define_table
         configure = self.configure
         super_link = self.super_link
+        add_component = self.add_component
 
         s3 = current.response.s3
         crud_strings = s3.crud_strings
@@ -59,15 +60,46 @@ class S3DeploymentModel(S3Model):
         tablename = "deploy_deployment"
         table = define_table(tablename,
                              super_link("doc_id", "doc_entity"),
-                             Field("title"),
-                             self.gis_location_id(),
+                             Field("title",
+                                   #notnull=True,
+                                   requires=IS_NOT_EMPTY()),
+                             self.gis_location_id(
+                                label = T("Country"),
+                                widget = S3LocationAutocompleteWidget(level="L0"),
+                                requires = IS_EMPTY_OR(IS_LOCATION(level="L0")),
+                                represent = self.gis_LocationRepresent(sep=", "),
+                                comment = DIV(_class="tooltip",
+                                              _title="%s|%s" % (T("Country"),
+                                                                T("Enter some characters to bring up a list of possible matches"))),
+                             ),
                              Field("event_type"),        # @todo: replace by link
                              Field("status", "integer"), # @todo: lookup?
+                             s3_comments(),
                              *s3_meta_fields())
 
+        # Virtual field
+        # @todo: move to real field wirtten onaccept?
+        table.hrquantity = Field.Lazy(deploy_deployment_hrquantity)
+
+        crud_form = S3SQLCustomForm("title",
+                                    "location_id",
+                                    "event_type",
+                                    S3SQLInlineComponent("document",
+                                                         name = "file",
+                                                         label = T("Attachments"),
+                                                         fields = ["file", "comments"],
+                                    ),
+                                    "comments",
+                                    "created_on",
+                                   )
         # Table configuration
         configure(tablename,
                   super_entity="doc_entity",
+                  crud_form = crud_form,
+                  list_fields = ["title",
+                                 (T("Date"), "created_on"),
+                                 (T("Country"), "location_id"),
+                                 (T("Members"), "hrquantity")],
                   summary=[{"name": "table",
                             "label": "Table",
                             "widgets": [{"method": "datatable"}]
@@ -79,18 +111,24 @@ class S3DeploymentModel(S3Model):
                             },
                   ],
                   filter_widgets = [
-                      S3TextFilter("title"),
+                      S3TextFilter("title",
+                                   label=T("Search"),
+                                  ),
                       S3LocationFilter("location_id",
-                                       label = T("Location"),
+                                       label=T("Location"),
                                        widget="multiselect",
                                        levels=["L0"],
-                                       hidden=True
+                                       hidden=True,
                                       ),
                   ],
                   orderby="deploy_deployment.created_on desc",
                   delete_next=URL(c="deploy", f="deployment", args="summary"),
                  )
 
+        # Components
+        add_component("deploy_human_resource_assignment",
+                      deploy_deployment="deployment_id")
+        
         # CRUD Strings
         crud_strings[tablename] = Storage(
             title_create = T("New Deployment"),
@@ -249,5 +287,25 @@ class S3DeploymentAlertModel(S3Model):
             Safe defaults for model-global names in case module is disabled
         """
         return dict()
+
+# =============================================================================
+def deploy_deployment_hrquantity(row):
+    """ Number of human resources deployed """
+
+    if hasattr(row, "deploy_deployment"):
+        row = row.deploy_deployment
+    try:
+        deployment_id = row.id
+    except AttributeError:
+        return 0
+
+    db = current.db
+    table = db.deploy_human_resource_assignment
+    count = table.id.count()
+    row = db(table.deployment_id == deployment_id).select(count).first()
+    if row:
+        return row[count]
+    else:
+        return 0
 
 # END =========================================================================
