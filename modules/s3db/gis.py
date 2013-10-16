@@ -4757,8 +4757,13 @@ class gis_LocationRepresent(S3Represent):
                    (row.lon is not None):
                     represent = self.lat_lon_represent(row)
                 if row.parent:
+                    if row.path:
+                        path = row.path
+                    else:
+                        # Not yet been built, so do it now
+                        path = current.gis.update_location_tree(row)
                     # @ToDo: Assumes no missing levels in PATH
-                    path = row.path.split("/")
+                    path = path.split("/")
                     parent_level = "L%s" % (len(path) - 2)
                     parent_name = row[parent_level]
                     if parent_name:
