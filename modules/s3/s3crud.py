@@ -354,7 +354,8 @@ class S3CRUD(S3Method):
             else:
                 if r.http == "POST" and "interim_save" in r.post_vars:
                     next_vars = self._remove_filters(r.get_vars)
-                    create_next = r.url(target="[id]", method="update", vars=next_vars)
+                    create_next = r.url(target="[id]", method="update",
+                                        vars=next_vars)
                 elif session.s3.rapid_data_entry and not r.component:
                     create_next = r.url()
                 else:
@@ -565,7 +566,6 @@ class S3CRUD(S3Method):
                 # Title and subtitle
                 title = self.crud_string(r.tablename, "title_display")
                 output["title"] = title
-                output["title_list"] = crud_string(tablename, "title_list")
 
             else:
                 item = T("Record not found")
@@ -751,7 +751,8 @@ class S3CRUD(S3Method):
             # Redirection
             if r.http == "POST" and "interim_save" in r.post_vars:
                 next_vars = self._remove_filters(r.get_vars)
-                self.next = r.url(target="[id]", method="update", vars=next_vars)
+                self.next = r.url(target="[id]", method="update",
+                                  vars=next_vars)
             else:
                 update_next = _config("update_next")
                 if representation in ("popup", "iframe", "plain"):
@@ -761,7 +762,8 @@ class S3CRUD(S3Method):
                     if r.component:
                         self.next = r.url(method="", vars=next_vars)
                     else:
-                        self.next = r.url(id="[id]", method="read", vars=next_vars)
+                        self.next = r.url(id="[id]", method="read",
+                                          vars=next_vars)
                 else:
                     try:
                         self.next = update_next(self)
@@ -1262,7 +1264,8 @@ class S3CRUD(S3Method):
         elif representation == "aadata":
 
             # Apply datatable filters
-            searchq, orderby, left = resource.datatable_filter(list_fields, get_vars)
+            searchq, orderby, left = resource.datatable_filter(list_fields,
+                                                               get_vars)
             if searchq is not None:
                 totalrows = resource.count()
                 resource.add_filter(searchq)
@@ -1645,7 +1648,8 @@ class S3CRUD(S3Method):
                     get_vars.update(iSortingCols="1",
                                     iSortCol_0=scol,
                                     sSortDir_0="asc")
-                    q, orderby, left = resource.datatable_filter(list_fields, get_vars)
+                    q, orderby, left = resource.datatable_filter(list_fields,
+                                                                 get_vars)
                     del get_vars["iSortingCols"]
                     del get_vars["iSortCol_0"]
                     del get_vars["sSortDir_0"]
@@ -2641,13 +2645,13 @@ class S3CRUD(S3Method):
                     if update:
                         return str(URL(r=r, c=c, f=f,
                                        args=args + ["update"],
-                                       # When are these wanted?
+                                       # Don't forward all vars unconditionally
                                        #vars=r.get_vars
                                        ))
                     else:
                         return str(URL(r=r, c=c, f=f,
                                        args=args + ["read"],
-                                       # When are these wanted?
+                                       # Don't forward all vars unconditionally
                                        #vars=r.get_vars
                                        ))
                 else:
@@ -2655,13 +2659,13 @@ class S3CRUD(S3Method):
                     if update:
                         return str(URL(r=r, c=c, f=f,
                                        args=args + ["update"],
-                                       # When are these wanted?
+                                       # Don't forward all vars unconditionally
                                        #vars=r.get_vars
                                        ))
                     else:
                         return str(URL(r=r, c=c, f=f,
                                        args=args + ["read"],
-                                       # When are these wanted?
+                                       # Don't forward all vars unconditionally
                                        #vars=r.get_vars
                                        ))
         return list_linkto

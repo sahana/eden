@@ -62,6 +62,72 @@ settings.auth.registration_requires_approval = True
 
 settings.security.policy = 4 # Controller & Function ACLs
 
+# -----------------------------------------------------------------------------
+def hospital_marker_fn(record):
+    """
+        Function to decide which Marker to use for Hospital Map
+        @ToDo: Legend
+        @ToDo: Use Symbology
+    """
+
+    stable = db.hms_status
+    status = db(stable.hospital_id == record.id).select(stable.facility_status,
+                                                        limitby=(0, 1)
+                                                        ).first()
+    if record.facility_type == 31:
+        marker = "special_needs"
+    else:
+        marker = "hospital"
+    if status:
+        if status.facility_status == 1:
+            # Normal
+            marker = "%s_green" % marker
+        elif status.facility_status in (3, 4):
+            # Evacuating or Closed
+            marker = "%s_red" % marker
+        elif status.facility_status == 2:
+            # Compromised
+            marker = "%s_yellow" % marker
+
+    mtable = db.gis_marker
+    marker = db(mtable.name == marker).select(mtable.image,
+                                              mtable.height,
+                                              mtable.width,
+                                              cache=s3db.cache,
+                                              limitby=(0, 1)).first()
+    return marker
+
+def customize_hms_hospital(**attr):
+    """
+        Customize hms_hospital controller
+    """
+
+    # Custom PreP
+    s3 = current.response.s3
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+
+        if r.method == "map":
+            # Tell the client to request per-feature markers
+            current.s3db.configure("hms_hospital", marker_fn=hospital_marker_fn)
+
+        elif r.representation == "geojson":
+            # Load these models now as they'll be needed when we encode
+            s3db = current.s3db
+            mtable = s3db.gis_marker
+            stable = s3db.hms_status
+            s3db.configure("hms_hospital", marker_fn=hospital_marker_fn)
+
+        return True
+    s3.prep = custom_prep
+
+    return attr
+
+# -----------------------------------------------------------------------------
+settings.ui.customize_project_activity = customize_project_activity
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([
     # Core modules which shouldn't be disabled

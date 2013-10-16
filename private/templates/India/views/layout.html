@@ -86,6 +86,13 @@
     <ul class='nav'>
      <li><a href='/{{=appname}}/default/index/newsfeed'> <i class='icon-updates'></i> {{=T("News Feed")}}</a></li>
      <li><a href='/{{=appname}}/gis/index'><i class='icon-map'></i> {{=T("Map")}}</a></li>
+     <li class='dropdown'> <a href='#' class='dropdown-toggle disabled top-level' id='resources' data-toggle='dropdown'><i class='icon-project'></i> {{=T("Resources")}}<b class='caret'></b></a>
+      <ul class='dropdown-menu' role='menu' aria-labelledby='resources'>
+       <li role='menuitem'><a href='/{{=appname}}/hms/hospital/summary' tabindex='-1' class='menu-item'><i class='icon-h-sign'></i> {{=T("Health Facilities")}}</a></li>
+       <li role='menuitem'><a href='/{{=appname}}/org/resource' tabindex='-1' class='menu-item'><i class='icon-project'></i> {{=T("Resources")}}</a></li>
+       <li role='menuitem'><a href='/{{=appname}}/cr/shelter/summary' tabindex='-1' class='menu-item'><i class='icon-umbrella'></i> {{=T("Shelters")}}</a></li>
+      </ul>
+     </li>
      <li class='dropdown'> <a href='#' class='dropdown-toggle disabled top-level' id='projects' data-toggle='dropdown'><i class='icon-project'></i> {{=T("Projects")}}<b class='caret'></b></a>
       <ul class='dropdown-menu' role='menu' aria-labelledby='projects'>
        <li role='menuitem'><a href='/{{=appname}}/project/beneficiary/summary' tabindex='-1' class='menu-item'><i class='icon-tasks'></i> {{=T("Beneficiaries")}}</a></li>
@@ -102,11 +109,9 @@
      </li>
      <li class='dropdown'> <a href='#' class='dropdown-toggle disabled top-level' id='more' data-toggle='dropdown'><i class='icon-plus-sign'></i> {{=T("More")}}<b class='caret'></b></a>
       <ul class='dropdown-menu' role='menu' aria-labelledby='more'>
-       <li role='menuitem'><a href='/{{=appname}}/cr/shelter' tabindex='-1' class='menu-item'><i class='icon-umbrella'></i> {{=T("Camps")}}</a></li>
        <li role='menuitem'><a href='/{{=appname}}/pr/person' tabindex='-1' class='menu-item'><i class='icon-contact'></i> {{=T("Contact Directory")}}</a></li>
        <li role='menuitem'><a href='/{{=appname}}/stats/demographic' tabindex='-1' class='menu-item'><i class='icon-tasks'></i> {{=T("Demographics")}}</a></li>
        <li role='menuitem'><a href='/{{=appname}}/doc/document' tabindex='-1' class='menu-item'><i class='icon-file-alt'></i> {{=T("Documents")}}</a></li>
-       <li role='menuitem'><a href='/{{=appname}}/hms/hospital' tabindex='-1' class='menu-item'><i class='icon-h-sign'></i> {{=T("Health Facilities")}}</a></li>
       </ul>
      </li>
     </ul>

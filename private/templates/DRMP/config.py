@@ -3587,7 +3587,7 @@ def customize_org_resource_type(**attr):
 
     return attr
 
-settings.ui.customize_org_resource_type = customize_org_resource_type
+#settings.ui.customize_org_resource_type = customize_org_resource_type
 
 # -----------------------------------------------------------------------------
 def customize_pr_person(**attr):

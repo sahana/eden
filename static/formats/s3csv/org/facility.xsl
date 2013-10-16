@@ -44,15 +44,27 @@
     <!-- ****************************************************************** -->
     <!-- Lookup column names -->
 
-    <xsl:variable name="Postcode">
-        <xsl:call-template name="ResolveColumnHeader">
-            <xsl:with-param name="colname">Postcode</xsl:with-param>
-        </xsl:call-template>
-    </xsl:variable>
-
     <xsl:variable name="Organisation">
         <xsl:call-template name="ResolveColumnHeader">
             <xsl:with-param name="colname">Organisation</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:variable name="Lat">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">Lat</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:variable name="Lon">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">Lon</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:variable name="Postcode">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">Postcode</xsl:with-param>
         </xsl:call-template>
     </xsl:variable>
 
@@ -127,7 +139,8 @@
                 <resource name="org_site_org_group">
                     <reference field="group_id" resource="org_group">
                         <xsl:attribute name="tuid">
-                            <xsl:value-of select="concat('OrganisationGroup:', col[@field='Organisation Group'])"/>
+                            <xsl:value-of select="concat('OrganisationGroup:',
+                                                         col[@field='Organisation Group'])"/>
                         </xsl:attribute>
                     </reference>
                 </resource>
@@ -234,7 +247,8 @@
         <xsl:if test="$OrganisationGroup!=''">
             <resource name="org_group">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('OrganisationGroup:', $OrganisationGroup)"/>
+                    <xsl:value-of select="concat('OrganisationGroup:',
+                                                 $OrganisationGroup)"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="$OrganisationGroup"/></data>
             </resource>
@@ -251,7 +265,16 @@
         <xsl:variable name="l2" select="col[@field='L2']/text()"/>
         <xsl:variable name="l3" select="col[@field='L3']/text()"/>
         <xsl:variable name="l4" select="col[@field='L4']/text()"/>
-
+        <xsl:variable name="lat">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$Lat"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="lon">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$Lon"/>
+            </xsl:call-template>
+        </xsl:variable>
         <xsl:variable name="postcode">
             <xsl:call-template name="GetColumnValue">
                 <xsl:with-param name="colhdrs" select="$Postcode"/>
@@ -274,7 +297,9 @@
             </xsl:choose>
         </xsl:variable>
 
-        <xsl:variable name="country" select="concat('urn:iso:std:iso:3166:-1:code:', $countrycode)"/>
+        <xsl:variable name="country"
+                      select="concat('urn:iso:std:iso:3166:-1:code:',
+                                     $countrycode)"/>
 
         <!-- L1 Location -->
         <xsl:if test="$l1!=''">
@@ -446,11 +471,11 @@
             </xsl:choose>
             <data field="addr_street"><xsl:value-of select="col[@field='Address']"/></data>
             <data field="addr_postcode"><xsl:value-of select="$postcode"/></data>
-            <xsl:if test="col[@field='Lat']!=''">
-                <data field="lat"><xsl:value-of select="col[@field='Lat']"/></data>
+            <xsl:if test="$lat!=''">
+                <data field="lat"><xsl:value-of select="$lat"/></data>
             </xsl:if>
-            <xsl:if test="col[@field='Lon']!=''">
-                <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
+            <xsl:if test="$lon!=''">
+                <data field="lon"><xsl:value-of select="$lon"/></data>
             </xsl:if>
         </resource>
 

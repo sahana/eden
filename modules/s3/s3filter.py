@@ -907,7 +907,12 @@ class S3LocationFilter(S3FilterWidget):
             ids = set()
             for row in rows:
                 _row = getattr(row, "gis_location") if joined else row
-                path = _row.path.split("/")
+                path = _row.path
+                if path:
+                    path = path.split("/")
+                else:
+                    # Build it
+                    path = current.gis.update_location_tree(_row)
                 if path:
                     ids |= set(path)
             # Build lookup table for name_l10n
