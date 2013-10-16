@@ -6,6 +6,70 @@ body {
     padding-top: 60px;
 }
 
+/* Global CRUD Page Styles */
+h2 {
+    margin-bottom: 0px;
+    float: left;
+}
+
+h2 a {
+    cursor: pointer;
+}
+
+h2 i {
+    font-size: 20px;
+}
+
+.required {
+    float: left;
+    clear: left;
+}
+
+.required b {
+    position: static;
+    margin-bottom: 5px;
+}
+
+#markDuplicate {
+    float: right;
+    margin-right: 5px;
+    clear: left;
+}
+
+#last_update {
+    clear: none;
+}
+
+.item-container,
+.form-container {
+    clear: both;
+}
+
+
+.item-container form,
+.form-container form {
+    border: 1px solid #B2B2B2;
+    clear: both;
+}
+
+#edit-btn {
+    float: left;
+    margin: 5px 0 0 15px;
+    /*background: linear-gradient(to bottom, #3788B3 0%, #235482 100%) repeat scroll 0 0 rgba(0, 0, 0, 0);*/
+}
+
+.btn.cancel {
+    left: 625px;
+    position: relative;
+    top: -73px;
+}
+
+
+#org_facility_organisation_id__row .help-block div{
+    top: 0;
+    margin-bottom: 12px;
+}
+
 /* Main Map */
 .gis_fullscreen_map-btn {
     display: none;
@@ -29,7 +93,7 @@ h2.summary {
 }
 
 .btn.summary-create {
-    background: linear-gradient(to bottom, #3788B3 0%, #235482 100%) repeat scroll 0 0 transparent;
+    /* background: linear-gradient(to bottom, #3788B3 0%, #235482 100%) repeat scroll 0 0 transparent;*/
     margin: 15px;
     padding: 4px 6px;
     float: left;
@@ -96,11 +160,23 @@ h2.summary {
 
 #summary-tabs #table,
 #summary-tabs #charts {
-    padding: 82px 20px 20px 20px;
+    padding: 92px 20px 20px 20px;
 }
 
 #table select {
     width: auto;
+}
+
+.dataTables_wrapper {
+    clear: none;
+}
+
+.dataTables_info {
+    margin: 8px 30px 4px 30px;
+}
+
+.list_formats {
+    padding-top: 8px;
 }
 
 #summary-tabs #table #table-container th,
@@ -115,6 +191,16 @@ h2.summary {
 
 #summary-2_filter {
     margin-left: 10px;
+}
+
+select {
+    width: 200px;
+}
+
+/* Hide Date Filter Clear Buttons */
+[id$=date-filter-ge_clear],
+[id$=date-filter-le_clear] {
+    display: none;
 }
 
 /* Hide the colons for Location Selectors before JS can hide */
@@ -260,6 +346,16 @@ form#summary-filter-form
     /* Hide the colon */
     display: none;
 }
+
+/* Video Page */
+#video-table-of-contents {
+    clear: left;
+}
+
+.video-header {
+    padding-top: 50px;
+}
+
 /* Adjust Field Widths to match Titles/Data */
 #sub_human_resourcehuman_resource_human_resourcehuman_resource_i_organisation_id_edit_none,
 #sub_human_resourcehuman_resource_human_resourcehuman_resource_i_organisation_id_edit_0 {
@@ -283,6 +379,10 @@ form#summary-filter-form
 #sub_defaulthuman_resource_defaulthuman_resource_i_site_id_edit_none,
 #sub_defaultresource_defaultresource_i_value_edit_none {
     margin-top: -20px;
+}
+
+#sub_defaultresource_defaultresource_i_value_edit_none {
+    width: 50px;
 }
 
 /* Action Toolbar */

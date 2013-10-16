@@ -1268,6 +1268,10 @@ class S3ProjectActivityModel(S3Model):
                         autocomplete="name",
                         autodelete=False))
 
+        # Beneficiaries
+        add_component("project_beneficiary",
+                      project_location="activity_id")
+
         # Disabled until beneficiaries are updated to support both
         # communities and activities
         #add_component("project_beneficiary",
@@ -1732,6 +1736,7 @@ class S3ProjectBeneficiaryModel(S3Model):
                              self.project_project_id(readable=False,
                                                      writable=False),
                              self.project_location_id(comment=None),
+                             self.project_activity_id(),
                              # Instance
                              super_link("data_id", "stats_data"),
                              # This is a component, so needs to be a super_link
@@ -2858,7 +2863,7 @@ class S3ProjectLocationModel(S3Model):
 
         # Beneficiaries
         add_component("project_beneficiary",
-                      project_location="project_location_id")
+                      project_activity="project_location_id")
 
         # Contacts
         add_component("pr_person",

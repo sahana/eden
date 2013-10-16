@@ -236,6 +236,7 @@ class S3CRUD(S3Method):
                 else:
                     title = crud_string(tablename, "title_create")
                     output["title"] = title
+                output["title_list"] = crud_string(tablename, "title_list")
 
                 # Buttons
                 buttons = self.insert_buttons(r, "list")
@@ -483,6 +484,7 @@ class S3CRUD(S3Method):
             if r.component:
                 subtitle = crud_string(tablename, "title_display")
                 output["subtitle"] = subtitle
+            output["title_list"] = crud_string(tablename, "title_list")
 
             # Item
             if record_id:
@@ -563,6 +565,7 @@ class S3CRUD(S3Method):
                 # Title and subtitle
                 title = self.crud_string(r.tablename, "title_display")
                 output["title"] = title
+                output["title_list"] = crud_string(tablename, "title_list")
 
             else:
                 item = T("Record not found")
@@ -673,6 +676,7 @@ class S3CRUD(S3Method):
             else:
                 title = crud_string(self.tablename, "title_update")
                 output["title"] = title
+            output["title_list"] = crud_string(tablename, "title_list")
 
             # Component join
             link = None

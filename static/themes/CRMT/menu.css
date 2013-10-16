@@ -15,6 +15,10 @@
     height: 22px;
 }
 
+.dropdown-menu.community-data-menu {
+    width: 284px;
+}
+
 .dropdown-menu > li > a  {
     display: inline-block;
 }

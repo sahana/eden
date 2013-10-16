@@ -1,4 +1,11 @@
-{{try:}}{{=H2(title)}}{{except:}}{{pass}}
+{{try:}}
+  {{=H2( A(title_list,
+           href = URL(c=request.controller, f=request.function, args="summary")),
+           XML(" <i class='icon-chevron-right'></i>"),
+           T(" Details")
+        )}}
+{{except:}}
+{{pass}}
 <div id='rheader'>
 {{try:}}{{=rheader}}
  </div>
