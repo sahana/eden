@@ -737,7 +737,7 @@ def customize_project_activity(**attr):
                     # Custom Widgets/Validators
                     widgets = True
                     from s3.s3validators import IS_ADD_PERSON_WIDGET2, IS_LOCATION_SELECTOR2
-                    from s3.s3widgets import S3AddPersonWidget2, S3LocationSelectorWidget2
+                    from s3.s3widgets import S3AddPersonWidget2, S3LocationSelectorWidget2, S3SelectChosenWidget
                 else:
                     widgets = False
 
@@ -751,6 +751,9 @@ def customize_project_activity(**attr):
                                                              show_address=True,
                                                              show_postcode=True,
                                                              )
+
+                    s3db.project_activity_organisation.organisation_id.widget = S3SelectChosenWidget()
+
                 field = table.person_id
                 field.comment = None
                 if widgets:
@@ -813,6 +816,20 @@ def customize_project_activity(**attr):
 
 settings.ui.customize_project_activity = customize_project_activity
 
+def customize_project_activity_type(**attr):
+    """
+        Customize project_activity_type controller
+    """
+    from s3.s3forms import S3SQLCustomForm
+    s3db = current.s3db
+    s3db.configure("project_activity_type",
+                   crud_form = S3SQLCustomForm("name",
+                                               "comments")
+                   )
+
+    return attr
+
+settings.ui.customize_project_activity_type = customize_project_activity_type
 # -----------------------------------------------------------------------------
 # Organisations
 # -----------------------------------------------------------------------------
@@ -1457,15 +1474,15 @@ def customize_stats_people(**attr):
         table = s3db[tablename]
 
         # Disable name
-        table.name.readable = False
-        table.name.writable = False
+        table.name.label = T("Description") 
+        #table.name.writable = False
 
         method = r.method
         representation = r.representation
         if method == "summary" or representation == "aadata":
             # Modify list_fields
             list_fields = ["id",
-                           #"name",
+                           "name",
                            "parameter_id",
                            "value",
                            "people_group.group_id",
