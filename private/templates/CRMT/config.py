@@ -789,7 +789,8 @@ def customize_project_activity(**attr):
                     ),
                     S3SQLInlineComponent(
                         "beneficiary",
-                        label = T("Number of People"),
+                        label = T("Number of People Reached"),
+                        link = False,
                         multiple = False,
                         fields = ["value"],
                         filterby = dict(field = "parameter_id",

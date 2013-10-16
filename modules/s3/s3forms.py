@@ -500,11 +500,12 @@ class S3SQLDefaultForm(S3SQLForm):
 
         if request.env.request_method == "POST" and linked is not None:
             pkey = table._id.name
-            if not request.post_vars[pkey]:
+            post_vars = request.post_vars
+            if not post_vars[pkey]:
                 lkey = linked.lkey
                 rkey = linked.rkey
-                _lkey = request.post_vars[lkey]
-                _rkey = request.post_vars[rkey]
+                _lkey = post_vars[lkey]
+                _rkey = post_vars[rkey]
                 query = (table[lkey] == _lkey) & (table[rkey] == _rkey)
                 row = current.db(query).select(table._id, limitby=(0, 1)).first()
                 if row is not None:
@@ -513,8 +514,8 @@ class S3SQLDefaultForm(S3SQLForm):
                     formkey = session.get("_formkey[%s/None]" % tablename)
                     formname = "%s/%s" % (tablename, record_id)
                     session["_formkey[%s]" % formname] = formkey
-                    request.post_vars["_formname"] = formname
-                    request.post_vars[pkey] = record_id
+                    post_vars["_formname"] = formname
+                    post_vars[pkey] = record_id
 
         return record_id
 
@@ -1542,19 +1543,22 @@ class S3SQLInlineComponent(S3SQLSubForm):
         if component_name in resource.components:
 
             component = resource.components[component_name]
+            options = self.options
             
-            # For link-table components, embed the link
-            # table rather than the component
             if component.link:
-                component = component.link
+                link = options.get("link", True)
+                if link:
+                    # For link-table components, embed the link
+                    # table rather than the component
+                    component = component.link
 
             table = component.table
             tablename = component.tablename
 
             pkey = table._id.name
 
-            if "fields" in self.options:
-                fields = [f for f in self.options["fields"] if f in table.fields]
+            if "fields" in options:
+                fields = [f for f in options["fields"] if f in table.fields]
             else:
                 # Really?
                 fields = [f.name for f in table if f.readable or f.writable]
@@ -1563,13 +1567,13 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 fields.insert(0, pkey)
 
             # Support read-only Virtual Fields
-            if "virtual_fields" in self.options:
-                virtual_fields = self.options["virtual_fields"]
+            if "virtual_fields" in options:
+                virtual_fields = options["virtual_fields"]
             else:
                 virtual_fields = []
 
-            if "orderby" in self.options:
-                orderby = self.options["orderby"]
+            if "orderby" in options:
+                orderby = options["orderby"]
             else:
                 orderby = component.get_config("orderby")
 
@@ -1579,8 +1583,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 if f is not None:
                     component.build_query(filter=f)
 
-                if "extra_fields" in self.options:
-                    extra_fields = self.options["extra_fields"]
+                if "extra_fields" in options:
+                    extra_fields = options["extra_fields"]
                 else:
                     extra_fields = []
                 all_fields = fields + virtual_fields + extra_fields
@@ -1641,7 +1645,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
                 items.append(item)
 
-            validate = self.options.get("validate", None)
+            validate = options.get("validate", None)
             if not validate or \
                not isinstance(validate, tuple) or \
                not len(validate) == 2:
@@ -2009,8 +2013,11 @@ class S3SQLInlineComponent(S3SQLSubForm):
             else:
                 return
             if component.link:
-                # Use the link table
-                component = component.link
+                link = self.options.get("link", True)
+                if link:
+                    # For link-table components, embed the link
+                    # table rather than the component
+                    component = component.link
 
             # Table, tablename, prefix and name of the component
             prefix = component.prefix
