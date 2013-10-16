@@ -763,6 +763,13 @@ def customize_project_activity(**attr):
                 s3db.project_beneficiary.value.label = ""
 
                 # Custom Crud Form
+                bttable = s3db.project_beneficiary_type
+                total = current.db(bttable.name == "Total").select(bttable.parameter_id,
+                                                                   limitby=(0, 1)).first()
+                if total:
+                    parameter_id = total.parameter_id
+                else:
+                    parameter_id = None
                 crud_form = S3SQLCustomForm(
                     "date",
                     "name",
@@ -783,8 +790,11 @@ def customize_project_activity(**attr):
                     S3SQLInlineComponent(
                         "beneficiary",
                         label = T("Number of People"),
-                        fields = ["value"],
                         multiple = False,
+                        fields = ["value"],
+                        filterby = dict(field = "parameter_id",
+                                        options = parameter_id
+                                        ),
                     ),
                     S3SQLInlineComponent(
                         "document",
