@@ -112,6 +112,79 @@ settings.ui.hide_report_options = False
 settings.ui.update_label = "Update" 
 settings.ui.export_formats = ["xls", "xml"]
 
+# Set Map to fill the container
+settings.gis.map_width = 1170
+
+settings.base.youtube_id = [dict(id = "introduction",
+                                 title = T("Introduction"),
+                                 video_id = "HR-FtR2XkBU" ),
+                            dict(id = "expanding-your-coalition",
+                                 title = T("Expanding Your Coalition"),
+                                 video_id = "HR-FtR2XkBU" ),
+                            dict(id = "mapping-vulnerable-groups",
+                                 title = T("Mapping Vulnerable Groups"),
+                                 video_id = "HR-FtR2XkBU" ),
+                            dict(id = "mapping-hazards",
+                                 title = T("Mapping Hazards"),
+                                 video_id = "HR-FtR2XkBU" ),
+                            dict(id = "managing-trainings",
+                                 title = T("Managing Trainings"),
+                                 video_id = "HR-FtR2XkBU" ),
+                            dict(id = "tracking-outreach",
+                                 title = T("Tracking Outreach"),
+                                 video_id = "HR-FtR2XkBU" ),
+                            ]
+
+# -----------------------------------------------------------------------------
+# Menu
+current.response.menu = [
+    {"name": T("Organizations"),
+     "c":"org", 
+     "f":"organisation",
+     "icon": "icon-sitemap"
+     },
+    {"name": T("Places"),
+     "c":"org", 
+     "f":"facility",
+     "icon": "icon-home"
+     },
+    {"name": T("People"),
+     "c":"stats", 
+     "f":"people",
+     "icon": "icon-group"
+     },
+    #{"name": T("Incidents"),
+    # "url": URL(c="event", f="incident_report"),
+    # "icon": "icon-warning-sign"
+    # },
+    {"name": T("Hazards"),
+     "c":"vulnerability", 
+     "f":"risk",
+     "icon": "icon-bolt"
+     },
+    {"name": T("Activities"),
+     "c":"project", 
+     "f":"activity",
+     "icon": "icon-star-empty"
+     },
+    #{"name": T("Organizations"),
+    # "url": URL(c="org", f="organisation"),
+    # "icon": "icon-sitemap"
+    # },
+    #{"name": T("Trained People"),
+    # "url": URL(c="stats", f="trained"),
+    # "icon": "icon-user"
+    # },
+    {"name": T("Evacuation Routes"),
+     "c":"vulnerability", 
+     "f":"evac_route",
+     "icon": "icon-road"
+     },
+    ]
+
+for item in current.response.menu:
+    item["url"] = URL(item["c"], item["f"])
+
 # -----------------------------------------------------------------------------
 # Summary Pages
 settings.ui.summary = [{"common": True,
@@ -135,28 +208,17 @@ settings.ui.summary = [{"common": True,
 settings.ui.filter_auto_submit = 750
 settings.ui.report_auto_submit = 750
 
-#settings.gis.map_height = 600
-#settings.gis.map_width = 854
+settings.search.filter_manager = True
+settings.search.filter_manager_allow_delete = False
+settings.search.filter_manager_save = "Save"
+settings.search.filter_manager_update = "Update"
 
-settings.base.youtube_id = [dict(id = "introduction",
-                                 title = T("Introduction"),
-                                 video_id = "HR-FtR2XkBU" ),
-                            dict(id = "expanding-your-coalition",
-                                 title = T("Expanding Your Coalition"),
-                                 video_id = "HR-FtR2XkBU" ),
-                            dict(id = "mapping-vulnerable-groups",
-                                 title = T("Mapping Vulnerable Groups"),
-                                 video_id = "HR-FtR2XkBU" ),
-                            dict(id = "mapping-hazards",
-                                 title = T("Mapping Hazards"),
-                                 video_id = "HR-FtR2XkBU" ),
-                            dict(id = "managing-trainings",
-                                 title = T("Managing Trainings"),
-                                 video_id = "HR-FtR2XkBU" ),
-                            dict(id = "tracking-outreach",
-                                 title = T("Tracking Outreach"),
-                                 video_id = "HR-FtR2XkBU" ),
-                            ]
+# -----------------------------------------------------------------------------
+# Filter forms - style for Summary pages
+def filter_formstyle(row_id, label, widget, comment, hidden=False):
+    return DIV(label, widget, comment, 
+               _id=row_id,
+               _class="horiz_filter_form")
 
 # -----------------------------------------------------------------------------
 # L10n (Localization) settings
@@ -208,9 +270,6 @@ settings.gis.permalink = False
 # Uncomment to rename Overlays in Layer Tree
 #settings.gis.label_overlays = "Community Data"
 
-# Set Map to fill the container
-settings.gis.map_width = 1170
-
 # Don't simplify Polygons as much to retain their original shape
 settings.gis.simplify_tolerance = 0.0001
 
@@ -226,18 +285,6 @@ settings.pr.request_home_phone = True
 settings.fin.currencies = {
     "USD" : T("United States Dollars"),
 }
-
-settings.search.filter_manager = True
-settings.search.filter_manager_allow_delete = False
-settings.search.filter_manager_save = "Save"
-settings.search.filter_manager_update = "Update"
-
-# -----------------------------------------------------------------------------
-# Filter forms - style for Summary pages
-def filter_formstyle(row_id, label, widget, comment, hidden=False):
-    return DIV(label, widget, comment, 
-               _id=row_id,
-               _class="horiz_filter_form")
 
 # =============================================================================
 # Module Settings
@@ -260,56 +307,6 @@ settings.hrm.teams = False
 # Organisations
 # Disable the use of Organisation Branches
 settings.org.branches = False
-
-# -----------------------------------------------------------------------------
-# Menu
-current.response.menu = [
-    {"name": T("Organizations"),
-     "c":"org", 
-     "f":"organisation",
-     "icon": "icon-sitemap"
-     },
-    {"name": T("Places"),
-     "c":"org", 
-     "f":"facility",
-     "icon": "icon-home"
-     },
-    {"name": T("People"),
-     "c":"stats", 
-     "f":"people",
-     "icon": "icon-group"
-     },
-    #{"name": T("Incidents"),
-    # "url": URL(c="event", f="incident_report"),
-    # "icon": "icon-warning-sign"
-    # },
-    {"name": T("Hazards"),
-     "c":"vulnerability", 
-     "f":"risk",
-     "icon": "icon-bolt"
-     },
-    {"name": T("Activities"),
-     "c":"project", 
-     "f":"activity",
-     "icon": "icon-star-empty"
-     },
-    #{"name": T("Organizations"),
-    # "url": URL(c="org", f="organisation"),
-    # "icon": "icon-sitemap"
-    # },
-    #{"name": T("Trained People"),
-    # "url": URL(c="stats", f="trained"),
-    # "icon": "icon-user"
-    # },
-    {"name": T("Evacuation Routes"),
-     "c":"vulnerability", 
-     "f":"evac_route",
-     "icon": "icon-road"
-     },
-    ]
-
-for item in current.response.menu:
-    item["url"] = URL(item["c"], item["f"])
 
 # -----------------------------------------------------------------------------
 # Contacts
@@ -673,7 +670,7 @@ def customize_project_activity(**attr):
         elif method == "report2":
             s3db.project_activity_group.group_id.label = T("Coalition")
 
-        if r.interactive or representation == "json" or representation == "plain":
+        elif r.interactive or representation == "json" or representation == "plain":
             # CRUD Strings / Represent
             s3.crud_strings[tablename].title_update = T("Update Activities")
             table.location_id.label = T("Address")
@@ -1678,7 +1675,7 @@ def customize_vulnerability_evac_route(**attr):
                            "name",
                            #(T("Hazard Type"), "hazard_id"),
                            "evac_route_group.group_id",
-                           "location_id",
+                           #"location_id",
                            "comments",
                            ]
 
@@ -1692,9 +1689,8 @@ def customize_vulnerability_evac_route(**attr):
         if r.interactive or representation == "json" or representation == "plain":
             # CRUD Strings / Represent
             s3.crud_strings[tablename].title_update = T("Update Evacuation Route")
-            
-            table.location_id.label = T("Location")
-            table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
+
+            table.location_id.readable = False
             s3db.vulnerability_evac_route_group.group_id.label = T("Coalition")
 
             if method in ("summary", "report2"):

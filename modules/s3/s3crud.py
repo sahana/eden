@@ -2641,21 +2641,29 @@ class S3CRUD(S3Method):
                     if update:
                         return str(URL(r=r, c=c, f=f,
                                        args=args + ["update"],
-                                       vars=r.get_vars))
+                                       # When are these wanted?
+                                       #vars=r.get_vars
+                                       ))
                     else:
                         return str(URL(r=r, c=c, f=f,
                                        args=args + ["read"],
-                                       vars=r.get_vars))
+                                       # When are these wanted?
+                                       #vars=r.get_vars
+                                       ))
                 else:
                     args = [record_id]
                     if update:
                         return str(URL(r=r, c=c, f=f,
                                        args=args + ["update"],
-                                       vars=r.get_vars))
+                                       # When are these wanted?
+                                       #vars=r.get_vars
+                                       ))
                     else:
                         return str(URL(r=r, c=c, f=f,
                                        args=args + ["read"],
-                                       vars=r.get_vars))
+                                       # When are these wanted?
+                                       #vars=r.get_vars
+                                       ))
         return list_linkto
 
     # -------------------------------------------------------------------------

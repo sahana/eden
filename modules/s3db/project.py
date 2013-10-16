@@ -1260,32 +1260,31 @@ class S3ProjectActivityModel(S3Model):
 
         # Activity Types
         add_component("project_activity_type",
-                      project_activity=Storage(
-                        link="project_activity_activity_type",
-                        joinby="activity_id",
-                        key="activity_type_id",
-                        actuate="replace",
-                        autocomplete="name",
-                        autodelete=False))
+                      project_activity=dict(link="project_activity_activity_type",
+                                            joinby="activity_id",
+                                            key="activity_type_id",
+                                            actuate="replace",
+                                            autocomplete="name",
+                                            autodelete=False))
 
         # Beneficiaries
         add_component("project_beneficiary",
-                      project_location="activity_id")
-
-        # Disabled until beneficiaries are updated to support both
-        # communities and activities
-        #add_component("project_beneficiary",
-        #              project_activity="activity_id")
+                      project_activity=dict(link="project_beneficiary_activity",
+                                            joinby="activity_id",
+                                            key="beneficiary_id",
+                                            actuate="hide"))
+        # Format for InlineComponent/filter_widget
+        add_component("project_beneficiary_activity",
+                      project_activity="activity_id")
 
         # Tasks
         add_component("project_task",
-                      project_activity=Storage(
-                        link="project_task_activity",
-                        joinby="activity_id",
-                        key="task_id",
-                        actuate="replace",
-                        autocomplete="name",
-                        autodelete=False))
+                      project_activity=dict(link="project_task_activity",
+                                            joinby="activity_id",
+                                            key="task_id",
+                                            actuate="replace",
+                                            autocomplete="name",
+                                            autodelete=False))
 
         # Coalitions
         add_component("org_group",
@@ -1729,6 +1728,8 @@ class S3ProjectBeneficiaryModel(S3Model):
         # ---------------------------------------------------------------------
         # Project Beneficiary
         #
+        # @ToDo: Split project_id & project_location_id to separate Link Tables
+        #
         tablename = "project_beneficiary"
         table = define_table(tablename,
                              # Link Fields
@@ -1736,7 +1737,6 @@ class S3ProjectBeneficiaryModel(S3Model):
                              self.project_project_id(readable=False,
                                                      writable=False),
                              self.project_location_id(comment=None),
-                             self.project_activity_id(),
                              # Instance
                              super_link("data_id", "stats_data"),
                              # This is a component, so needs to be a super_link
@@ -1906,20 +1906,30 @@ class S3ProjectBeneficiaryModel(S3Model):
                   )
 
         # Reusable Field
-        #beneficiary_id = S3ReusableField("beneficiary_id", table,
-        #                                 sortby="name",
-        #                                 requires = IS_NULL_OR(
-        #                                                IS_ONE_OF(db, "project_beneficiary.id",
-        #                                                          self.project_beneficiary_represent,
-        #                                                          sort=True)),
-        #                                 represent = self.project_beneficiary_represent,
-        #                                 label = T("Beneficiaries"),
-        #                                 comment = S3AddResourceLink(c="project",
-        #                                                             f="beneficiary",
-        #                                                             title=ADD_BNF,
-        #                                                             tooltip=\
-        #                                    T("If you don't see the beneficiary in the list, you can add a new one by clicking link 'Add Beneficiary'.")),
-        #                                 ondelete = "SET NULL")
+        beneficiary_id = S3ReusableField("beneficiary_id", table,
+                                         sortby="name",
+                                         requires = IS_NULL_OR(
+                                                        IS_ONE_OF(db, "project_beneficiary.id",
+                                                                  self.project_beneficiary_represent,
+                                                                  sort=True)),
+                                         represent = self.project_beneficiary_represent,
+                                         label = T("Beneficiaries"),
+                                         comment = S3AddResourceLink(c="project",
+                                                                     f="beneficiary",
+                                                                     title=ADD_BNF,
+                                                                     tooltip=\
+                                            T("If you don't see the beneficiary in the list, you can add a new one by clicking link 'Add Beneficiary'.")),
+                                         ondelete = "SET NULL")
+
+        # ---------------------------------------------------------------------
+        # Beneficiary <> Activity Link Table
+        #
+        tablename = "project_beneficiary_activity"
+        table = define_table(tablename,
+                             self.project_activity_id(),
+                             beneficiary_id(),
+                             #s3_comments(),
+                             *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
         return dict()
@@ -1927,7 +1937,10 @@ class S3ProjectBeneficiaryModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def project_beneficiary_represent(id, row=None):
-        """ FK representation """
+        """
+            FK representation
+            @ToDo: Bulk
+        """
 
         if row:
             return row.type
@@ -1938,12 +1951,13 @@ class S3ProjectBeneficiaryModel(S3Model):
         table = db.project_beneficiary
         ttable = db.project_beneficiary_type
         query = (table.id == id) & \
-                (ttable,)
+                (table.parameter_id == ttable.id)
         r = db(query).select(table.value,
                              ttable.name,
                              limitby = (0, 1)).first()
         try:
-            return r.name
+            return "%s %s" % (r["project_beneficiary.value"],
+                              r["project_beneficiary_type.name"])
         except:
             return current.messages.UNKNOWN_OPT
 
@@ -2863,7 +2877,7 @@ class S3ProjectLocationModel(S3Model):
 
         # Beneficiaries
         add_component("project_beneficiary",
-                      project_activity="project_location_id")
+                      project_location="project_location_id")
 
         # Contacts
         add_component("pr_person",

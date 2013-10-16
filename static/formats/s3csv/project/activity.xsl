@@ -119,8 +119,9 @@
 
             <xsl:call-template name="ContactPersonReference"/>
 
+            <!-- Link to Benficiaries -->
             <xsl:for-each select="col[starts-with(@field, 'Beneficiaries')]">
-                <xsl:call-template name="Beneficiaries"/>
+                <xsl:call-template name="ActivityBeneficiaries"/>
             </xsl:for-each>
 
         </resource>
@@ -133,6 +134,12 @@
             <xsl:with-param name="arg">activity_type_res</xsl:with-param>
         </xsl:call-template>
 
+        <!-- Link to Benficiaries -->
+        <xsl:for-each select="col[starts-with(@field, 'Beneficiaries')]">
+            <xsl:call-template name="Beneficiaries"/>
+        </xsl:for-each>
+
+        <!-- Contacts -->
         <xsl:call-template name="ContactPerson"/>
 
         <!-- Locations -->
@@ -209,13 +216,45 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="ActivityBeneficiaries">
+
+        <xsl:variable name="BeneficiaryType" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="BeneficiaryNumber" select="text()"/>
+        <xsl:variable name="ProjectName" select="col[@field='Project']/text()"/>
+        <xsl:variable name="ActivityName" select="col[@field='Name']/text()"/>
+
+        <xsl:if test="$BeneficiaryNumber!=''">
+            <resource name="project_beneficiary_activity">
+                <reference field="beneficiary_id" resource="project_beneficiary">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('PBA:',$ProjectName,$ActivityName,$BeneficiaryType)"/>
+                    </xsl:attribute>
+                </reference>
+            </resource>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="Beneficiaries">
 
         <xsl:variable name="BeneficiaryType" select="normalize-space(substring-after(@field, ':'))"/>
         <xsl:variable name="BeneficiaryNumber" select="text()"/>
+        <xsl:variable name="ProjectName" select="col[@field='Project']/text()"/>
+        <xsl:variable name="ActivityName" select="col[@field='Name']/text()"/>
 
         <xsl:if test="$BeneficiaryNumber!=''">
             <resource name="project_beneficiary">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('PBA:',$ProjectName,$ActivityName,$BeneficiaryType)"/>
+                </xsl:attribute>
+                <xsl:if test="$ProjectName!=''">
+                    <reference field="project_id" resource="project_project">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('Project:', $ProjectName)"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:if>
                 <reference field="parameter_id" resource="project_beneficiary_type">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat('BNF:', $BeneficiaryType)"/>

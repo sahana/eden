@@ -1,5 +1,5 @@
 {{try:}}{{=H2(title, _class="summary")}}{{except:}}{{pass}}
-<a href='{{=URL(c=request.controller, f=request.function, args="create")}}' class="btn btn-primary summary-create" type="button">
+<a href='{{=URL(args="create")}}' class='btn btn-primary summary-create' type='button'>
   <i class='icon-plus'></i> {{=T("Add")}}
 </a>
 <div id='summary-common'>

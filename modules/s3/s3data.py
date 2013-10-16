@@ -584,7 +584,7 @@ class S3DataTable(object):
         if deletable and \
            has_permission("delete", table) and \
            not ownership_required("delete", table):
-            delete_url = URL(c=c, f=f, args = args + ["delete"])
+            delete_url = URL(c=c, f=f, args=args + ["delete"])
             S3CRUD.action_button(labels.DELETE, delete_url)
 
         # Append custom actions

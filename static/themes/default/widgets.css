@@ -1376,3 +1376,11 @@ div.fm-cancel {
 .datetimepicker.hide-time {
     width: 75px;
 }
+
+/* Videos Page */
+#video-toc {
+    clear: left;
+}
+.video-header {
+    padding-top: 50px;
+}

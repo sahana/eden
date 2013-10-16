@@ -4526,6 +4526,16 @@ class gis_LocationRepresent(S3Represent):
             self.multi_country = len(current.deployment_settings.get_gis_countries()) != 1
         elif address_only:
             fields = ["id",
+                      "name",
+                      "level",
+                      "parent",
+                      "path",
+                      "L0",
+                      "L1",
+                      "L2",
+                      "L3",
+                      "L4",
+                      "L5",
                       "addr_street",
                       ]
         else:
@@ -4619,14 +4629,6 @@ class gis_LocationRepresent(S3Represent):
 
             @param row: the gis_location Row
         """
-
-        if self.address_only:
-            if row.addr_street:
-                # Get the 1st line of the street address.
-                represent = row.addr_street.splitlines()[0]
-                return s3_unicode(represent)
-            else:
-                return current.messages["NONE"]
 
         sep = self.sep
         translate = self.translate
@@ -4749,6 +4751,7 @@ class gis_LocationRepresent(S3Represent):
                     # Get the 1st line of the street address.
                     represent = row.addr_street.splitlines()[0]
                 if (not represent) and \
+                   (not self.address_only) and \
                    (row.inherited == False) and \
                    (row.lat is not None) and \
                    (row.lon is not None):
