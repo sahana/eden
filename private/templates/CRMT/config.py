@@ -706,9 +706,10 @@ def customize_project_activity(**attr):
 
                 report_options = Storage(
                     rows=report_fields,
-                    cols=report_fields,
-                    fact=[("count(name)", T("Number of Activities")),
-                          ("sum(beneficiary.value)", T("Number of People"))],
+                    cols=[],
+                    fact=[(T("Number of Activities"), "count(name)"),
+                          (T("Number of People"), "sum(beneficiary.value)"),
+                          ],
                     defaults=Storage(rows="activity.activity_type_id",
                                      #cols="activity_group.group_id",
                                      fact="count(name)",
@@ -933,16 +934,17 @@ def customize_org_organisation(**attr):
                 s3.crud_strings.org_organisation.title_report = T("Organization Matrix")
 
                 # Custom Report Fields
-                report_fields = [#"name",
+                report_fields = [# Only 1 Axis so use singular name
+                                 #"name",
                                  (T("Coalition Member"), "group_membership.group_id"),
-                                 (T("Sectors"), "sector_organisation.sector_id"),
-                                 (T("Services"), "service_organisation.service_id"),
+                                 (T("Sector"), "sector_organisation.sector_id"),
+                                 (T("Service"), "service_organisation.service_id"),
                                  ]
 
                 report_options = Storage(
                     rows = report_fields,
-                    cols = report_fields,
-                    fact = [("count(name)", T("Number of Organizations"))],
+                    cols = [],
+                    fact = [(T("Number of Organizations"), "count(name)")],
                     defaults = Storage(rows = "sector_organisation.sector_id",
                                        #cols = "service_organisation.service_id",
                                        fact = "count(name)",
@@ -1317,8 +1319,8 @@ def customize_org_facility(**attr):
 
                 report_options = Storage(
                     rows=report_fields,
-                    cols=report_fields,
-                    fact=[("count(name)", T("Number of Places"))],
+                    cols=[],
+                    fact=[(T("Number of Places"), "count(name)")],
                     defaults=Storage(rows="site_facility_type.facility_type_id",
                                      #cols="site_org_group.group_id",
                                      fact="count(name)",
@@ -1549,10 +1551,13 @@ def customize_stats_people(**attr):
 
                 report_options = Storage(
                     rows=report_fields,
-                    cols=report_fields,
-                    fact=[("count(id)", T("Groups of People")),
-                          ("sum(value)", T("Number of People")),],
-                    defaults=Storage(rows="people.parameter_id",
+                    cols=[],
+                    fact=[(T("Groups of People"), "count(id)"),
+                          (T("Number of People"), "sum(value)"),
+                          ],
+                    defaults=Storage(# Only 1 Parameter currently!
+                                     #rows="people.parameter_id",
+                                     rows="people_group.group_id",
                                      #cols="people_group.group_id",
                                      fact="sum(value)",
                                      totals=True,
@@ -1742,8 +1747,8 @@ def customize_vulnerability_evac_route(**attr):
 
                 report_options = Storage(
                     rows=report_fields,
-                    cols=report_fields,
-                    fact=[("count(name)", T("Number of Evacuation Routes"))],
+                    cols=[],
+                    fact=[(T("Number of Evacuation Routes"), "count(name)")],
                     defaults=Storage(rows="evac_route_group.group_id",
                                      #cols="evac_route.hazard_id",
                                      fact="count(name)",
@@ -1929,8 +1934,8 @@ def customize_vulnerability_risk(**attr):
 
                 report_options = Storage(
                     rows=report_fields,
-                    cols=report_fields,
-                    fact=[("count(name)", T("Number of Risks"))],
+                    cols=[],
+                    fact=[(T("Number of Risks"), "count(name)")],
                     defaults=Storage(rows="risk_group.group_id",
                                      #cols="risk.hazard_id",
                                      fact="count(name)",

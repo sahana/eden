@@ -4091,7 +4091,7 @@ def customize_project_beneficiary(**attr):
         report_options = Storage(
             rows=report_fields,
             cols=report_fields,
-            fact=[("sum(value)", T("Number of Beneficiaries"))],
+            fact=[(T("Number of Beneficiaries"), "sum(value)")],
             defaults=Storage(rows="location_id$L1",
                              cols="parameter_id",
                              fact="sum(value)",

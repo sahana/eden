@@ -1930,7 +1930,7 @@ class S3PivotTable(object):
         report_options = resource.get_config("report_options", None)
 
         if report_options and "fact" in report_options:
-            
+
             # Custom layer title from report options?
             import re
             layer_pattern = re.compile("([a-zA-Z]+)\((.*)\)\Z")
@@ -1939,23 +1939,17 @@ class S3PivotTable(object):
             for item in report_options["fact"]:
                 if type(item) is tuple:
                     if isinstance(item[0], lazyT):
-                        opt = [item]
-                    else:
-                        opt = list(item)
-                else:
-                    opt = [item]
-                if isinstance(opt[-1], lazyT):
-                    s, m = opt[:2] if len(opt) > 2 else (opt[0], None)
-                    if isinstance(s, tuple):
-                        s = s[-1]
-                    match = layer_pattern.match(s)
-                    if match is not None:
-                        s, m = match.group(2), match.group(1)
-                    if not m:
-                        continue
-                    elif prefix(s) == selector and m == method:
-                        layer_title = s3_unicode(opt[-1])
-                        break
+                        label = item[0]
+                        s = item[1]
+                        match = layer_pattern.match(s)
+                        m = None
+                        if match is not None:
+                            s, m = match.group(2), match.group(1)
+                        if not m:
+                            continue
+                        elif prefix(s) == selector and m == method:
+                            layer_title = s3_unicode(label)
+                            break
                         
         if layer_title is None:
             # Construct label from field and method

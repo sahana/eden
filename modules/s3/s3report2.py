@@ -683,7 +683,7 @@ $("#%(widget_id)s").pivottable(%(opts)s);""" % {
             m = layer_pattern.match(selector)
             if m is not None:
                 selector, method = m.group(2), m.group(1)
-                opt = [selector, method] + list(opt[1:])
+                opt = [selector, method, label]
                 
             # Resolve the selector
             selector = prefix(selector)
@@ -736,9 +736,10 @@ $("#%(widget_id)s").pivottable(%(opts)s);""" % {
         mname = S3PivotTable._get_method_label
         for opt in opts:
             rfield, selector, method = opt[:3]
+            selector = prefix(selector)
             if method not in methods:
                 continue
-            if len(opt) == 4:
+            if len(opt) == 4 and opt[3]:
                 layer_label = opt[3]
             else:
                 mlabel = mname(method)
@@ -772,7 +773,7 @@ $("#%(widget_id)s").pivottable(%(opts)s);""" % {
         else:
             # Render Selector
             dummy_field = Storage(name="fact",
-                                requires=IS_IN_SET(layer_opts))
+                                  requires=IS_IN_SET(layer_opts))
             widget = OptionsWidget.widget(dummy_field,
                                           layer,
                                           _id=widget_id,
