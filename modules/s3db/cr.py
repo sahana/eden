@@ -310,52 +310,6 @@ class S3CampDataModel(S3Model):
                 name_nice = T("Shelter"),
                 name_nice_plural = T("Shelters"))
 
-        # Search method
-        cr_shelter_search = S3Search(
-            advanced=(S3SearchSimpleWidget(
-                        name="shelter_search_advanced",
-                        label=T("Name or Organization"),
-                        comment=T("To search for a shelter, enter any of the names of the shelter, or the organisation name or acronym, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all shelters."),
-                        field=["name",
-                               "code",
-                               #"aka1",
-                               #"aka2",
-                               #"gov_uuid",
-                               "organisation_id$name",
-                               "organisation_id$acronym"
-                               ]
-                      ),
-                      S3SearchOptionsWidget(
-                            name="shelter_search_type",
-                            label=T("Type"),
-                            field="shelter_type_id"
-                          ),
-                          S3SearchOptionsWidget(
-                            name="shelter_search_L1",
-                            field="location_id$L1",
-                            location_level="L1",
-                            cols = 3,
-                          ),
-                          S3SearchOptionsWidget(
-                            name="shelter_search_L2",
-                            field="location_id$L2",
-                            location_level="L2",
-                            cols = 3,
-                          ),
-                          S3SearchOptionsWidget(
-                            name="shelter_search_L3",
-                            field="location_id$L3",
-                            location_level="L3",
-                            cols = 3,
-                          ),
-                          S3SearchOptionsWidget(
-                            name="shelter_search_status",
-                            label=T("Status"),
-                            field="status",
-                            options = cr_shelter_opts,
-                          ),
-                    ))
-
         filter_widgets = [
                 S3TextFilter(["name",
                               "code",
@@ -411,49 +365,16 @@ class S3CampDataModel(S3Model):
         configure(tablename,
                   super_entity=("org_site", "doc_entity", "pr_pentity"),
                   onaccept=self.cr_shelter_onaccept,
-                  search_method=cr_shelter_search,
                   deduplicate = self.cr_shelter_duplicate,
                   filter_widgets = filter_widgets,
                   report_options = Storage(
-                        search=[
-                          S3SearchOptionsWidget(
-                            name="shelter_search_type",
-                            label=T("Type"),
-                            field="shelter_type_id"
-                          ),
-                          S3SearchOptionsWidget(
-                            name="shelter_search_L1",
-                            field="location_id$L1",
-                            location_level="L1",
-                            cols = 3,
-                          ),
-                          S3SearchOptionsWidget(
-                            name="shelter_search_L2",
-                            field="location_id$L2",
-                            location_level="L2",
-                            cols = 3,
-                          ),
-                          S3SearchOptionsWidget(
-                            name="shelter_search_L3",
-                            field="location_id$L3",
-                            location_level="L3",
-                            cols = 3,
-                          ),
-                          S3SearchOptionsWidget(
-                            name="shelter_search_status",
-                            label=T("Status"),
-                            field="status",
-                            options = cr_shelter_opts,
-                          ),
-                        ],
                         rows=report_fields,
                         cols=report_fields,
                         fact=report_fields,
-                        methods=["count", "list", "sum"],
                         defaults=Storage(rows="location_id$L2",
                                          cols="status",
-                                         fact="name",
-                                         aggregate="count")
+                                         fact="count(name)",
+                                         totals=True)
                    ),
                    list_fields=["id",
                                 "name",

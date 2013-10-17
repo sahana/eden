@@ -54,7 +54,9 @@ def index_alt():
 
 # -----------------------------------------------------------------------------
 def ltc():
-    """ Filtered REST Controller """
+    """
+        Filtered REST Controller for Sandy
+    """
 
     s3.filter = (s3db.hms_hospital.facility_type == 31)
     return hospital()

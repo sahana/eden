@@ -4485,13 +4485,11 @@ class S3Permission(object):
         "read": READ,
         "update": UPDATE,
         "delete": DELETE,
-
         "search": READ,
         "report": READ,
+        "report2": READ,
         "map": READ,
-
         "import": CREATE,
-
         "review": REVIEW,
         "approve": APPROVE,
         "reject": APPROVE,
