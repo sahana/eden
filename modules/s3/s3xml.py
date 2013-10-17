@@ -36,6 +36,7 @@ __all__ = ["S3XML"]
 
 import datetime
 import os
+import re
 import sys
 import urllib2
 
@@ -75,6 +76,7 @@ class S3XML(S3Codec):
     UID = "uuid"
     MCI = "mci"
     DELETED = "deleted"
+    REPLACEDBY = "deleted_rb"
     APPROVED = "approved"
     CTIME = "created_on"
     CUSER = "created_by"
@@ -183,6 +185,7 @@ class S3XML(S3Codec):
         tuid="tuid",
         label="label",
         comment="comment",
+        replaced_by="replaced_by"
         )
 
     ACTION = Storage(
@@ -249,9 +252,14 @@ class S3XML(S3Codec):
             _args = dict([(k, "'%s'" % args[k]) for k in args])
         else:
             _args = None
-        stylesheet = self.parse(stylesheet_path)
+            
+        if isinstance(stylesheet_path, (etree._ElementTree, etree._Element)):
+            # Pre-parsed stylesheet
+            stylesheet = stylesheet_path
+        else:
+            stylesheet = self.parse(stylesheet_path)
 
-        if stylesheet:
+        if stylesheet is not None:
             try:
                 ac = etree.XSLTAccessControl(read_file=True, read_network=True)
                 transformer = etree.XSLT(stylesheet, access_control=ac)
@@ -362,31 +370,31 @@ class S3XML(S3Codec):
             root = etree.Element(self.TAG.root)
         if elements is not None or len(root):
             success = True
-        set = root.set
-        set(ATTRIBUTE.success, json.dumps(success))
+        set_attribute = root.set
+        set_attribute(ATTRIBUTE.success, json.dumps(success))
         if start is not None:
-            set(ATTRIBUTE.start, str(start))
+            set_attribute(ATTRIBUTE.start, str(start))
         if limit is not None:
-            set(ATTRIBUTE.limit, str(limit))
+            set_attribute(ATTRIBUTE.limit, str(limit))
         if results is not None:
-            set(ATTRIBUTE.results, str(results))
+            set_attribute(ATTRIBUTE.results, str(results))
         if elements is not None:
             root.extend(elements)
         if domain:
-            set(ATTRIBUTE.domain, self.domain)
+            set_attribute(ATTRIBUTE.domain, self.domain)
         if url:
-            set(ATTRIBUTE.url, current.response.s3.base_url)
+            set_attribute(ATTRIBUTE.url, current.response.s3.base_url)
         if maxbounds:
             # @ToDo: This should be done based on the features, not just the config
             bounds = current.gis.get_bounds()
-            set(ATTRIBUTE.latmin,
-                str(bounds["min_lat"]))
-            set(ATTRIBUTE.latmax,
-                str(bounds["max_lat"]))
-            set(ATTRIBUTE.lonmin,
-                str(bounds["min_lon"]))
-            set(ATTRIBUTE.lonmax,
-                str(bounds["max_lon"]))
+            set_attribute(ATTRIBUTE.latmin,
+                          str(bounds["lat_min"]))
+            set_attribute(ATTRIBUTE.latmax,
+                          str(bounds["lat_max"]))
+            set_attribute(ATTRIBUTE.lonmin,
+                          str(bounds["lon_min"]))
+            set_attribute(ATTRIBUTE.lonmax,
+                          str(bounds["lon_max"]))
         return etree.ElementTree(root)
 
     # -------------------------------------------------------------------------
@@ -494,7 +502,17 @@ class S3XML(S3Codec):
 
         reference_map = []
 
-        fields = [f for f in fields if f in record and record[f]]
+        DELETED = self.DELETED
+        REPLACEDBY = self.REPLACEDBY
+
+        if DELETED in record and record[DELETED] and \
+           REPLACEDBY in record and record[REPLACEDBY]:
+            fields = [REPLACEDBY]
+            replace = True
+        else:
+            fields = [f for f in fields if f in record and record[f]]
+            replace = False
+            
         if not fields:
             return reference_map
 
@@ -503,7 +521,6 @@ class S3XML(S3Codec):
 
         UID = self.UID
         MCI = self.MCI
-        DELETED = self.DELETED
 
         export_uid = self.export_uid
         represent = self.represent
@@ -513,73 +530,112 @@ class S3XML(S3Codec):
         load_table = current.s3db.table
 
         for f in fields:
+
+            if f == REPLACEDBY:
+                val = ogetattr(record, f)
+                if not val:
+                    continue
+                row = db(table._id == val).select(table[UID],
+                                                  limitby=(0, 1)).first()
+                if not row:
+                    continue
+                else:
+                    uids = [export_uid(row[UID])]
+                entry = {"field": f,
+                         "table": tablename,
+                         "multiple": False,
+                         "id": [val],
+                         "uid": uids,
+                         "text": None,
+                         "lazy": False,
+                         "value": None}
+                reference_map.append(Storage(entry))
+                continue
+
             try:
                 dbfield = ogetattr(table, f)
             except:
                 continue
-            #if f not in record or not record[f]:
-                #continue
+
             ktablename, pkey, multiple = s3_get_foreign_key(dbfield)
             if not ktablename:
+                # Not a foreign key
                 continue
+            
             val = ids = ogetattr(record, f)
 
-            try:
-                ktable = db.get(ktablename) #db[ktablename]
-            except:
+            ktable = load_table(ktablename)
+            if not ktable:
+                # Referenced table doesn't exist
                 continue
 
             ktable_fields = ktable.fields
             k_id = ktable._id
 
-            if pkey is None:
-                pkey = k_id.name
-            if multiple:
-                query = k_id.belongs(ids)
-                limitby = None
-            else:
-                query = k_id == ids
-                limitby = (0, 1)
-
             uid = None
             uids = None
 
+            if pkey is None:
+                pkey = k_id.name
             if pkey != "id" and "instance_type" in ktable_fields:
 
+                # Super-link
                 if multiple:
-                    # @todo: can't currently resolve multi-references
-                    # to super-entities
+                    # @todo: Can't currently resolve multi-references to
+                    # super-entities
                     continue
+                else:
+                    query = (k_id == ids)
 
+                # Get the super-record
                 srecord = db(query).select(ogetattr(ktable, UID),
                                            ktable.instance_type,
                                            limitby=(0, 1)).first()
                 if not srecord:
                     continue
+                    
                 ktablename = srecord.instance_type
                 uid = ogetattr(srecord, UID)
+                
                 if ktablename == tablename and \
                    UID in record and ogetattr(record, UID) == uid and \
                    not show_ids:
+                    # Super key in the main instance record, never export
                     continue
+                
                 ktable = load_table(ktablename)
                 if not ktable:
                     continue
-                krecord = db(ktable[UID] == uid).select(ktable._id,
-                                                        limitby=(0, 1)).first()
+                    
+                # Make sure the referenced record is accessible:
+                query = current.auth.s3_accessible_query("read", ktable) & \
+                        (ktable[UID] == uid)
+                krecord = db(query).select(ktable._id, limitby=(0, 1)).first()
+                
                 if not krecord:
                     continue
+                    
                 ids = [krecord[ktable._id]]
                 uids = [export_uid(uid)]
 
             else:
+
+                # Make sure the referenced records are accessible:
+                query = current.auth.s3_accessible_query("read", ktable)
+                if multiple:
+                    query &= (k_id.belongs(ids))
+                    limitby = None
+                else:
+                    query &= (k_id == ids)
+                    limitby = (0, 1)
+                    
                 if DELETED in ktable_fields:
                     query = (ktable.deleted != True) & query
-
                 if filter_mci and MCI in ktable_fields:
                     query = (ktable.mci >= 0) & query
 
                 if UID in ktable_fields:
+                    
                     krecords = db(query).select(ogetattr(ktable, UID),
                                                 limitby=limitby)
                     if krecords:
@@ -589,6 +645,7 @@ class S3XML(S3Codec):
                     else:
                         continue
                 else:
+                    
                     krecord = db(query).select(k_id, limitby=(0, 1)).first()
                     if not krecord:
                         continue
@@ -607,6 +664,7 @@ class S3XML(S3Codec):
             else:
                 text = value
 
+            # Add the entry to the reference map
             entry = {"field":f,
                      "table":ktablename,
                      "multiple":multiple,
@@ -634,18 +692,28 @@ class S3XML(S3Codec):
         ATTRIBUTE = self.ATTRIBUTE
         RESOURCE = ATTRIBUTE.resource
         FIELD = ATTRIBUTE.field
-        UID = self.UID
-        ID = ATTRIBUTE.id
         VALUE = ATTRIBUTE.value
+        ID = ATTRIBUTE.id
+        RB = ATTRIBUTE.replaced_by
 
+        UID = self.UID
+        REPLACEDBY = self.REPLACEDBY
+        
         as_json = json.dumps
         SubElement = etree.SubElement
 
         for i in xrange(0, len(rmap)):
+
             r = rmap[i]
+            
+            f = r.field
+            if f == REPLACEDBY:
+                element.set(RB, r.uid[0])
+                continue
+
             reference = SubElement(element, REFERENCE)
             attr = reference.attrib
-            attr[FIELD] = r.field
+            attr[FIELD] = f
             attr[RESOURCE] = r.table
 
             if show_ids:
@@ -682,7 +750,6 @@ class S3XML(S3Codec):
                    record,
                    element,
                    rmap,
-                   marker=None,
                    locations=None,
                    master=True,
                    ):
@@ -693,8 +760,7 @@ class S3XML(S3Codec):
             @param record: the particular record
             @param element: the XML element
             @param rmap: list of references to encode
-            @param marker: marker dict
-            @param locations: locations dict
+            @param locations: dictionary of location data from gis.get_location_data()
             @param master: True if this is the master resource
         """
 
@@ -713,9 +779,7 @@ class S3XML(S3Codec):
 
         ATTRIBUTE = self.ATTRIBUTE
 
-        marker_url = None
-        symbol = None
-        # Retrieve data prepared earlier in gis.get_locations_and_popups()
+        # Retrieve data prepared earlier in gis.get_location_data()
         if locations:
             latlons = locations.get("latlons", None)
             geojsons = locations.get("geojsons", None)
@@ -732,27 +796,67 @@ class S3XML(S3Codec):
             markers = None
             tooltips = None
             attributes = None
-        if marker and format == "kml":
-            _marker = marker.get("image", None)
-            if _marker:
-                # Quicker to download Icons from Static
-                # also doesn't require authentication so KML files can work in
-                # Google Earth
-                download_url = "%s/%s/static/img/markers" % \
-                    (settings.get_base_public_url(),
-                     request.application)
-                marker_url = "%s/%s" % (download_url, _marker)
-        if format == "gpx":
-            if marker:
-                symbol = marker.get("gps_marker", gis.DEFAULT_SYMBOL)
-            else:
-                symbol = gis.DEFAULT_SYMBOL
 
         table = resource.table
         tablename = resource.tablename
         pkey = table._id
 
-        references = []
+        if len(tablename) > 19 and \
+           tablename.startswith("gis_layer_shapefile"):
+            # Shapefile data
+            attr = element.attrib
+            if format == "geojson":
+                # These have been looked-up in bulk
+                id = record.id
+                geojson = geojsons[tablename].get(id, None)
+                if geojson:
+                    geometry = etree.SubElement(element, "geometry")
+                    geometry.set("value", geojson)
+                    # Add Attributes
+                    _attr = ""
+                    attrs = attributes[tablename][id]
+                    for a in attrs:
+                        if _attr:
+                            _attr = "%s,[%s]=[%s]" % (_attr, a, attrs[a])
+                        else:
+                            _attr = "[%s]=[%s]" % (a, attrs[a])
+                    if _attr:
+                        attr[ATTRIBUTE.attributes] = _attr
+            else:
+                # Lookup record by record :/
+                query = (table._id == record.id)
+                fields = []
+                fappend = fields.append
+                for f in table.fields:
+                    if f not in ("id", "layer_id", "lat", "lon", "wkt"):
+                        fappend(f)
+                if settings.get_gis_spatialdb():
+                    # Do the Simplify direct from the DB
+                    fields.remove("the_geom")
+                    _fields = [table[f] for f in fields]
+                    row = db(query).select(table.the_geom.st_simplify(0.01).st_astext().with_alias("wkt"),
+                                           *_fields,
+                                           limitby=(0, 1)).first()
+                    if row:
+                        # Convert the WKT in XSLT
+                        attr[ATTRIBUTE.wkt] = row.wkt
+                        # Locate the attributes
+                        #row = row[tablename]
+                else:
+                    _fields = [table[f] for f in fields]
+                    row = db(query).select(table[WKTFIELD],
+                                           *_fields,
+                                           limitby=(0, 1)).first()
+                    if row:
+                        wkt = row[WKTFIELD]
+                        if wkt:
+                            # Simplify the polygon to reduce download size
+                            # & also to work around the recursion limit in libxslt
+                            # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
+                            wkt = gis.simplify(wkt)
+                            # Convert the WKT in XSLT
+                            attr[ATTRIBUTE.wkt] = wkt
+
         for r in rmap:
             if r.element is None:
                 continue
@@ -760,16 +864,16 @@ class S3XML(S3Codec):
             if ktable is None:
                 continue
             fields = ktable.fields
-            if LATFIELD not in fields or \
-               LONFIELD not in fields:
+            if (LATFIELD not in fields or \
+                LONFIELD not in fields) and\
+               WKTFIELD not in fields:
                 continue
-            relement = r.element
-            attr = relement.attrib
             if len(r.id) == 1:
                 r_id = r.id[0]
             else:
                 continue # Multi-reference
 
+            attr = r.element.attrib
             LatLon = None
             polygon = False
             # Use the value calculated earlier if we can
@@ -829,26 +933,26 @@ class S3XML(S3Codec):
                     if settings.get_gis_spatialdb():
                         if format == "geojson":
                             # Do the Simplify & GeoJSON direct from the DB
-                            geojson = db(query).select(ktable.the_geom.st_simplify(0.01).st_asgeojson(precision=4).with_alias("geojson"),
-                                                       limitby=(0, 1)).first().geojson
-                            if geojson:
+                            row = db(query).select(ktable.the_geom.st_simplify(0.01).st_asgeojson(precision=4).with_alias("geojson"),
+                                                   limitby=(0, 1)).first()
+                            if row:
                                 # Output the GeoJSON directly into the XML, so that XSLT can simply drop in
                                 geometry = etree.SubElement(element, "geometry")
-                                geometry.set("value", geojson)
+                                geometry.set("value", row.geojson)
                                 polygon = True
                         else:
                             # Do the Simplify direct from the DB
-                            wkt = db(query).select(ktable.the_geom.st_simplify(0.01).st_astext().with_alias("wkt"),
-                                                   limitby=(0, 1)).first().wkt
-                            if wkt:
+                            row = db(query).select(ktable.the_geom.st_simplify(0.01).st_astext().with_alias("wkt"),
+                                                   limitby=(0, 1)).first()
+                            if row:
                                 # Convert the WKT in XSLT
-                                attr[ATTRIBUTE.wkt] = wkt
+                                attr[ATTRIBUTE.wkt] = row.wkt
                                 polygon = True
                     else:
-                        wkt = db(query).select(ktable[WKTFIELD],
+                        row = db(query).select(ktable[WKTFIELD],
                                                limitby=(0, 1)).first()
-                        if wkt:
-                            wkt = wkt[WKTFIELD]
+                        if row:
+                            wkt = row[WKTFIELD]
                             if wkt:
                                 polygon = True
                                 if format == "geojson":
@@ -881,10 +985,34 @@ class S3XML(S3Codec):
                     continue
                 attr[ATTRIBUTE.lat] = "%.4f" % lat
                 attr[ATTRIBUTE.lon] = "%.4f" % lon
-                if marker_url:
-                    attr[ATTRIBUTE.marker] = marker_url
-                if symbol:
-                    attr[ATTRIBUTE.sym] = symbol
+
+                if markers and tablename in markers:
+                    _markers = markers[tablename]
+                    if _markers.get("image", None):
+                        # Single Marker here
+                        m = _markers
+                    else:
+                        # We have a separate Marker per-Feature
+                        m = _markers[id]
+                    if m:
+                        if format == "gpx":
+                            attr[ATTRIBUTE.sym] = m.get("gps_marker",
+                                                        gis.DEFAULT_SYMBOL)
+                        else:
+                            if format == "geojson":
+                                # Assume being used within the Sahana Mapping client
+                                # so use local URLs to keep filesize down
+                                download_url = "/%s/static/img/markers" % \
+                                    request.application
+                            else:
+                                # Assume being used outside the Sahana Mapping client
+                                # so use public URLs
+                                download_url = "%s/%s/static/img/markers" % \
+                                    (settings.get_base_public_url(), request.application)
+                            attr[ATTRIBUTE.marker_url] = "%s/%s" % (download_url,
+                                                                    m["image"])
+                            attr[ATTRIBUTE.marker_height] = str(m["height"])
+                            attr[ATTRIBUTE.marker_width] = str(m["width"])
 
             if LatLon or polygon:
                 # Build the URL for the onClick Popup contents => only for
@@ -905,23 +1033,16 @@ class S3XML(S3Codec):
                                            url, id)
                     attr[ATTRIBUTE.popup_url] = url
 
-                if markers and tablename in markers:
-                    marker = markers[tablename][id]
-                    attr[ATTRIBUTE.marker_url] = URL(c="static", f="img",
-                                                     args=["markers",
-                                                           marker["image"]])
-                    attr[ATTRIBUTE.marker_height] = str(marker["height"])
-                    attr[ATTRIBUTE.marker_width] = str(marker["width"])
-
                 if tooltips and tablename in tooltips:
                     # Feature Layer / Resource
                     # Retrieve the HTML for the onHover Tooltip
                     tooltip = tooltips[tablename][id]
-                    try:
-                        # encode suitable for use as XML attribute
-                        tooltip = tooltip.decode("utf-8")
-                    except:
-                        pass
+                    if type(tooltip) is not unicode:
+                        try:
+                            # encode suitable for use as XML attribute
+                            tooltip = tooltip.decode("utf-8")
+                        except:
+                            pass
                     else:
                         attr[ATTRIBUTE.popup] = tooltip
 
@@ -1011,7 +1132,7 @@ class S3XML(S3Codec):
             fields = [self.MTIME]
 
         # GIS marker
-        if table._tablename == "gis_location" and current.gis:
+        if tablename == "gis_location" and current.gis:
             marker = current.gis.get_marker() # Default Marker
             # Quicker to download Icons from Static
             # also doesn't require authentication so KML files can work in
@@ -1044,7 +1165,7 @@ class S3XML(S3Codec):
                     v = 0
                 attrib[MCI] = str(int(v) + 1)
                 continue
-
+            
             if v is None or not hasattr(table, f):
                 continue
 
@@ -1056,7 +1177,8 @@ class S3XML(S3Codec):
 
             if fieldtype == "datetime":
                 value = encode_iso_datetime(v).decode("utf-8")
-            elif fieldtype in ("date", "time"):
+            elif fieldtype in ("date", "time") or \
+                 fieldtype[:7] == "decimal":
                 value = str(formatter(v)).decode("utf-8")
 
             # Get the representation
@@ -1084,9 +1206,9 @@ class S3XML(S3Codec):
                         attrib[f] = s3_unicode(text)
 
             elif fieldtype == "upload":
-                fileurl = "%s/%s" % (download_url, v)
-                filename = v
-                if filename:
+                if v:
+                    fileurl = "%s/%s" % (download_url, v)
+                    filename = dbfield.retrieve_file_properties(v)["filename"]
                     data = SubElement(elem, DATA)
                     attr = data.attrib
                     attr[FIELD] = f
@@ -1229,9 +1351,10 @@ class S3XML(S3Codec):
                 record[UID] = uid
 
         # Attribute names
-        FIELD = cls.ATTRIBUTE["field"]
-        VALUE = cls.ATTRIBUTE["value"]
-        ERROR = cls.ATTRIBUTE["error"]
+        ATTRIBUTE = cls.ATTRIBUTE
+        FIELD = ATTRIBUTE["field"]
+        VALUE = ATTRIBUTE["value"]
+        ERROR = ATTRIBUTE["error"]
 
         DELETED = cls.DELETED
         APPROVED = cls.APPROVED
@@ -1242,13 +1365,18 @@ class S3XML(S3Codec):
         # Attributes
         deleted = False
         for f in cls.ATTRIBUTES_TO_FIELDS:
+            
             if f == DELETED:
                 if f in table and \
                    element.get(f, "false").lower() == "true":
                     record[f] = deleted = True
+                    replaced_by = element.get(ATTRIBUTE["replaced_by"], None)
+                    if replaced_by:
+                        record[cls.REPLACEDBY] = replaced_by
                     break
                 else:
                     continue
+                
             if f == APPROVED:
                 # Override default-approver:
                 if "approved_by" in table:
@@ -1258,8 +1386,10 @@ class S3XML(S3Codec):
                         if table["approved_by"].default == None:
                             auth.permission.set_default_approver(table)
                 continue
+            
             if f in IGNORE_FIELDS or f in skip:
                 continue
+            
             elif f in USER_FIELDS:
                 v = element.get(f, None)
                 if v and utable and "email" in utable:
@@ -1268,6 +1398,7 @@ class S3XML(S3Codec):
                     if user:
                         record[f] = user.id
                 continue
+            
             elif f == OGROUP:
                 v = element.get(f, None)
                 if v and gtable and "role" in gtable:
@@ -1276,7 +1407,8 @@ class S3XML(S3Codec):
                     if role:
                         record[f] = role.id
                 continue
-            if hasattr(table, f): #f in table.fields:
+            
+            if hasattr(table, f): # f in table.fields:
                 v = value = element.get(f, None)
                 if value is not None:
                     field_type = str(table[f].type)
@@ -1301,8 +1433,9 @@ class S3XML(S3Codec):
         # Fields
         xml_decode = cls.xml_decode
         for child in element.findall("data"):
+            error = None
             f = child.get(FIELD, None)
-            if not f or not hasattr(table, f): #f not in table.fields:
+            if not f or not hasattr(table, f): # f not in table.fields:
                 continue
             if f in IGNORE_FIELDS or f in skip:
                 continue
@@ -1310,8 +1443,8 @@ class S3XML(S3Codec):
             if field_type in ("id", "blob"):
                 continue
             elif field_type == "upload":
-                download_url = child.get(cls.ATTRIBUTE["url"], None)
-                filename = child.get(cls.ATTRIBUTE["filename"], None)
+                download_url = child.get(ATTRIBUTE["url"], None)
+                filename = child.get(ATTRIBUTE["filename"], None)
                 upload = None
                 if filename and filename in files:
                     # We already have the file cached
@@ -1349,21 +1482,24 @@ class S3XML(S3Codec):
             else:
                 value = child.get(VALUE, None)
 
-            error = None
             skip_validation = False
+            is_text = field_type in ("string", "text")
 
             if value is None:
+                decode_value = not is_text
                 if field_type == "password":
                     value = child.text
-                    # Do not encrypt the password if it already
+                    # Do not re-encrypt the password if it already
                     # comes encrypted:
                     skip_validation = True
                 else:
                     value = xml_decode(child.text)
+            else:
+                decode_value = True
 
-            if value is None and field_type in ("string", "text"):
+            if value is None and is_text:
                 value = ""
-            elif value == "" and not field_type in ("string", "text"):
+            elif value == "" and not is_text:
                 value = None
 
             if value is not None:
@@ -1372,14 +1508,18 @@ class S3XML(S3Codec):
                                                   field_type=field_type)
                     skip_validation = True
                     v = value
-                elif isinstance(value, basestring) and len(value):
+                elif field_type == "upload":
+                    pass
+                elif isinstance(value, basestring) \
+                     and len(value) \
+                     and decode_value:
                     try:
                         _value = json.loads(value)
                         if _value != float("inf"):
                             # e.g. an HTML_COLOUR of 98E600
                             value = _value
                     except:
-                        pass
+                        error = sys.exc_info()[1]
 
                 if validate is not None and not skip_validation:
                     if not isinstance(value, (basestring, list, tuple)):
@@ -1462,12 +1602,15 @@ class S3XML(S3Codec):
                     pass
 
         if options:
+            ATTRIBUTE = cls.ATTRIBUTE
+            TAG = cls.TAG
+            SubElement = etree.SubElement
             if parent is not None:
-                select = etree.SubElement(parent, cls.TAG.select)
+                select = SubElement(parent, TAG.select)
             else:
-                select = etree.Element(cls.TAG.select)
-            select.set(cls.ATTRIBUTE.name, fieldname)
-            select.set(cls.ATTRIBUTE.id,
+                select = etree.Element(TAG.select)
+            select.set(ATTRIBUTE.name, fieldname)
+            select.set(ATTRIBUTE.id,
                        "%s_%s" % (table._tablename, fieldname))
 
             uids = Storage()
@@ -1487,6 +1630,9 @@ class S3XML(S3Codec):
                             uids = Storage((str(r[ktable._id.name]), r[cls.UID])
                                         for r in rows)
 
+            _XML = etree.XML
+            OPTION = TAG.option
+            VALUE = ATTRIBUTE.value
             for (value, text) in options:
                 if show_uids and str(value) in uids:
                     uid = uids[str(value)]
@@ -1494,7 +1640,7 @@ class S3XML(S3Codec):
                     uid = None
                 value = s3_unicode(value)
                 try:
-                    markup = etree.XML(s3_unicode(text))
+                    markup = _XML(s3_unicode(text))
                     text = markup.xpath(".//text()")
                     if text:
                         text = " ".join(text)
@@ -1503,15 +1649,15 @@ class S3XML(S3Codec):
                 except:
                     pass
                 text = s3_unicode(text)
-                option = etree.SubElement(select, cls.TAG.option)
-                option.set(cls.ATTRIBUTE.value, value)
+                option = SubElement(select, OPTION)
+                option.set(VALUE, value)
                 if uid:
                     option.set(cls.UID, uid)
                 option.text = text
         elif parent is not None:
             return None
         else:
-            return etree.Element(cls.TAG.select)
+            return etree.Element(TAG.select)
 
         return select
 
@@ -1540,12 +1686,13 @@ class S3XML(S3Codec):
 
         if table:
             options.set(self.ATTRIBUTE.resource, tablename)
+            get_field_options = self.get_field_options
             for f in table.fields:
                 if fields and f not in fields:
                     continue
-                select = self.get_field_options(table, f,
-                                                parent=options,
-                                                show_uids=show_uids)
+                select = get_field_options(table, f,
+                                           parent=options,
+                                           show_uids=show_uids)
 
         return options
 
@@ -1575,8 +1722,9 @@ class S3XML(S3Codec):
         else:
             fields = etree.Element(self.TAG.fields)
         if table:
+            ATTRIBUTE = self.ATTRIBUTE
             if parent is None:
-                fields.set(self.ATTRIBUTE.resource, tablename)
+                fields.set(ATTRIBUTE.resource, tablename)
             for f in table.fields:
                 ftype = str(table[f].type)
                 # Skip own super links
@@ -1606,16 +1754,17 @@ class S3XML(S3Codec):
                 else:
                     p = None
                 opts = self.get_field_options(table, f, parent=p)
-                field.set(self.ATTRIBUTE.name, f)
-                field.set(self.ATTRIBUTE.type, ftype)
-                field.set(self.ATTRIBUTE.readable, str(readable))
-                field.set(self.ATTRIBUTE.writable, str(writable))
+                set_attribute = field.set
+                set_attribute(ATTRIBUTE.name, f)
+                set_attribute(ATTRIBUTE.type, ftype)
+                set_attribute(ATTRIBUTE.readable, str(readable))
+                set_attribute(ATTRIBUTE.writable, str(writable))
                 has_options = str(opts is not None and
                                   len(opts) and True or False)
-                field.set(self.ATTRIBUTE.has_options, has_options)
+                set_attribute(ATTRIBUTE.has_options, has_options)
                 if labels:
                     label = s3_unicode(table[f].label)
-                    field.set(self.ATTRIBUTE.label, label)
+                    set_attribute(ATTRIBUTE.label, label)
                     comment = table[f].comment
                     if comment:
                         comment = s3_unicode(comment)
@@ -1625,10 +1774,10 @@ class S3XML(S3Codec):
                             stripper.feed(comment)
                             comment = stripper.stripped()
                         except Exception, e:
-                            print e
-                            pass
+                            from s3utils import s3_debug
+                            s3_debug("S3XML.get_fields()", e)
                     if comment:
-                        field.set(self.ATTRIBUTE.comment, comment)
+                        set_attribute(ATTRIBUTE.comment, comment)
         return fields
 
     # -------------------------------------------------------------------------
@@ -1966,24 +2115,237 @@ class S3XML(S3Codec):
 
         elements = error_tree.xpath(".//*[@error]")
         for element in elements:
-            if element.tag in ("data", "reference"):
+            get = element.get
+            if element.tag == "data":
                 resource = element.getparent()
-                value = element.get("value")
+                value = get("value")
                 if not value:
                     value = element.text
                 error = "%s, %s: '%s' (value='%s')" % (
                             resource.get("name", None),
-                            element.get("field", None),
-                            element.get("error", None),
+                            get("field", None),
+                            get("error", None),
                             value)
+            if element.tag == "reference":
+                resource = element.getparent()
+                error = "%s, %s: '%s'" % (
+                            resource.get("name", None),
+                            get("field", None),
+                            get("error", None))
             elif element.tag == "resource":
-                error = "%s: %s" % (element.get("name", None),
-                                    element.get("error", None))
+                error = "%s: %s" % (get("name", None),
+                                    get("error", None))
             else:
-                error = "%s" % element.get("error", None)
+                error = "%s" % get("error", None)
             errors.append(error)
         return errors
 
+    # -------------------------------------------------------------------------
+    @classmethod
+    def xls2tree(cls, source,
+                 resourcename=None,
+                 extra_data=None,
+                 sheet=None,
+                 rows=None,
+                 cols=None,
+                 fields=None,
+                 header_row=True):
+        """
+            Convert a table in an XLS (MS Excel) sheet into an ElementTree,
+            consisting of <table name="format">, <row> and
+            <col field="fieldname"> elements (see: L{csv2tree}).
+
+            The returned ElementTree can be imported using S3CSV
+            stylesheets (through S3Resource.import_xml()).
+
+            @param source: the XLS source (stream, or XLRD book, or
+                           None if sheet is an open XLRD sheet)
+            @param resourcename: the resource name
+            @param extra_data: dict of extra cols to add to each row
+            @param sheet: sheet name or index, or an open XLRD sheet
+                          (open work sheet overrides source)
+            @param rows: Rows range, integer (length from 0) or
+                         tuple (start, length) - or a tuple (start,) to
+                         read all available rows after start
+            @param cols: Columns range, like "rows"
+            @param fields: Field map, a dict {index: fieldname} where
+                           index is the column index counted from the
+                           first column within the specified range,
+                           e.g. cols=(2,7), fields={1:"MyField"}
+                           means column 3 in the sheet is "MyField",
+                           the field map can be omitted to read the field
+                           names from the sheet (see "header_row")
+            @param header_row: the first row contains column headers
+                               (if fields is None, they will be used
+                               as field names in the output - otherwise
+                               they will be ignored)
+            @return: an etree.ElementTree representing the table
+        """
+
+        import xlrd
+        
+        # Shortcuts
+        ATTRIBUTE = cls.ATTRIBUTE
+        FIELD = ATTRIBUTE.field
+        TAG = cls.TAG
+        COL = TAG.col
+        SubElement = etree.SubElement
+
+        DEFAULT_SHEET_NAME = "SahanaData"
+
+        # Root element
+        root = etree.Element(TAG.table)
+        if resourcename is not None:
+            root.set(ATTRIBUTE.name, resourcename)
+
+        if isinstance(sheet, xlrd.sheet.Sheet):
+            # Open work sheet passed as argument => use this
+            s = sheet
+        else:
+            if hasattr(source, "read"):
+                # Source is a stream
+                if hasattr(source, "seek"):
+                    source.seek(0)
+                wb = xlrd.open_workbook(file_contents=source.read(),
+                                        on_demand=True)
+            elif isinstance(source, xlrd.book.Book):
+                # Source is an open work book
+                wb = source
+            else:
+                # Unsupported source type
+                raise RuntimeError("xls2tree: invalid source %s" %
+                                   type(source))
+
+            # Find the sheet
+            try:
+                if isinstance(sheet, (int, long)):
+                    s = wb.sheet_by_index(sheet)
+                elif isinstance(sheet, basestring):
+                    s = wb.sheet_by_name(sheet)
+                elif sheet is None:
+                    if DEFAULT_SHEET_NAME in wb.sheet_names():
+                        s = wb.sheet_by_name(DEFAULT_SHEET_NAME)
+                    else:
+                        s = wb.sheet_by_index(0)
+                else:
+                    raise SyntaxError("xls2tree: invalid sheet %s" % sheet)
+            except IndexError, xlrd.XLRDError:
+                s = None
+
+        def cell_range(cells, max_cells):
+            """
+                Helper method to calculate a cell range
+
+                @param cells: the specified range
+                @param max_cells: maximum number of cells
+            """
+            if not cells:
+                cells = (0, max_cells)
+            elif not isinstance(cells, (tuple, list)):
+                cells = (0, cells)
+            elif len(cells) == 1:
+                cells = (cells[0], max_cells)
+            else:
+                cells = (cells[0], cells[0] + cells[1])
+            return cells
+
+        if s:
+            # Calculate cell range
+            rows = cell_range(rows, s.nrows)
+            cols = cell_range(cols, s.ncols)
+
+            # Column headers
+            if fields:
+                headers = fields
+            elif not header_row:
+                headers = dict((i, "%s" % i)
+                               for i in range(cols[1]- cols[0]))
+            else:
+                # Use header row in the work sheet
+                headers = {}
+
+            # Lambda to decode XLS dates into an ISO datetime-string
+            decode_date = lambda v: datetime.datetime(
+                                    *xlrd.xldate_as_tuple(v, wb.datemode))
+                                    
+            encode_iso_datetime = cls.encode_iso_datetime
+            def decode(t, v):
+                """
+                    Helper method to decode the cell value by type
+
+                    @param t: the cell type
+                    @param v: the cell value
+                    @return: text representation of the cell value
+                """
+                text = ""
+                if v:
+                    if t is None:
+                        text = s3_unicode(v).strip()
+                    elif t == xlrd.XL_CELL_TEXT:
+                        text = v.strip()
+                    elif t == xlrd.XL_CELL_NUMBER:
+                        text = str(long(v)) if long(v) == v else str(v)
+                    elif t == xlrd.XL_CELL_DATE:
+                        text = encode_iso_datetime(decode_date(v))
+                    elif t == xlrd.XL_CELL_BOOLEAN:
+                        text = str(value).lower()
+                return text
+
+            def add_col(row, name, t, v):
+                """
+                    Helper method to add a column to an output row
+
+                    @param row: the output row (etree.Element)
+                    @param name: the column name
+                    @param t: the cell type
+                    @param v: the cell value
+                """
+                col = SubElement(row, COL)
+                col.set(FIELD, name)
+                col.text = decode(t, v)
+
+            # Process the rows
+            ROW = TAG.row
+            record_idx = 0
+            extra_fields = set(extra_data) if extra_data else None
+            check_headers = extra_fields is not None
+            for ridx in range(*rows):
+                # Read types and values
+                types = s.row_types(ridx, *cols)
+                values = s.row_values(ridx, *cols)
+                
+                if header_row and record_idx == 0:
+                    # Read column headers
+                    if not fields:
+                        for cidx, value in enumerate(values):
+                            header = decode(types[cidx], value)
+                            headers[cidx] = header
+                            if check_headers:
+                                extra_fields.discard(header)
+                        check_headers = False
+                else:
+                    # Add output row
+                    orow = SubElement(root, ROW)
+                    for cidx, name in headers.items():
+                        if check_headers:
+                            extra_fields.discard(name)
+                        try:
+                            t = types[cidx]
+                            v = values[cidx]
+                        except IndexError:
+                            pass
+                        else:
+                            add_col(orow, name, t, v)
+                    check_headers = False
+                            
+                    # Add extra data
+                    if extra_fields:
+                        for key in extra_fields:
+                            add_col(orow, key, None, extra_data[key])
+                record_idx += 1
+            
+        return  etree.ElementTree(root)
+        
     # -------------------------------------------------------------------------
     @classmethod
     def csv2tree(cls, source,
@@ -2006,16 +2368,23 @@ class S3XML(S3Codec):
 
         import csv
 
-        # Increase field sixe to ne able to import WKTs
+        # Increase field sixe to be able to import WKTs
         csv.field_size_limit(2**20 * 100)  # 100 megs
 
-        root = etree.Element(cls.TAG.table)
+        # Shortcuts
+        ATTRIBUTE = cls.ATTRIBUTE
+        FIELD = ATTRIBUTE.field
+        TAG = cls.TAG
+        COL = TAG.col
+        SubElement = etree.SubElement
+
+        root = etree.Element(TAG.table)
         if resourcename is not None:
-            root.set(cls.ATTRIBUTE.name, resourcename)
+            root.set(ATTRIBUTE.name, resourcename)
 
         def add_col(row, key, value):
-            col = etree.SubElement(row, cls.TAG.col)
-            col.set(cls.ATTRIBUTE.field, s3_unicode(key))
+            col = SubElement(row, COL)
+            col.set(FIELD, s3_unicode(key))
             if value:
                 text = s3_unicode(value).strip()
                 if text.lower() not in ("null", "<null>"):
@@ -2056,8 +2425,9 @@ class S3XML(S3Codec):
             reader = csv.DictReader(source,
                                     delimiter=delimiter,
                                     quotechar=quotechar)
+            ROW = TAG.row
             for r in reader:
-                row = etree.SubElement(root, cls.TAG.row)
+                row = SubElement(root, ROW)
                 for k in r:
                     add_col(row, k, r[k])
                 if extra_data:
@@ -2072,5 +2442,124 @@ class S3XML(S3Codec):
         #print >>sys.stderr, cls.tostring(root, pretty_print=True)
 
         return  etree.ElementTree(root)
+
+# =============================================================================
+class S3XMLFormat(object):
+    """ Helper class to store a pre-parsed stylesheet """
+
+    def __init__(self, stylesheet):
+        """
+            Constructor
+
+            @param stylesheet: the stylesheet (pathname or stream)
+        """
+
+        self.tree = current.xml.parse(stylesheet)
+        
+        self.select = None
+        self.skip = None
+
+    # -------------------------------------------------------------------------
+    def get_fields(self, tablename):
+        """
+            Get the fields to include/exclude for the specified table.
+
+            @param tablename: the tablename
+            @return: tuple of lists (include, exclude) of fields to
+                     include or exclude. None indicates "all fields",
+                     whereas an empty list indicates "no fields".
+        """
+
+        ANY = "ANY"
+        default = None
+
+        tree = self.tree
+        if not tree:
+            return default
+
+        if self.select is None:
+            self.__inspect()
+
+        def find_match(items, tablename, default):
+
+            if tablename in items:
+                match = items[tablename]
+            else:
+                match = False
+                maxlen = 0
+                for tn, fields in items.iteritems():
+                    if "*" in tn:
+                        m = re.match(tn.replace("*", ".*"), tablename)
+                        if not m:
+                            continue
+                        l = m.span()[-1]
+                        if l > maxlen:
+                            match = fields
+                if match is False:
+                    match = items.get(ANY, default)
+            return match
+
+        select = find_match(self.select, tablename, None)
+        skip = find_match(self.skip, tablename, set())
+        
+        if skip:
+            if select:
+                include = [fn for fn in select if fn not in skip]
+                exclude = [fn for fn in skip if fn not in select]
+            else:
+                include = None
+                exclude = list(skip)
+        else:
+            include = list(select) if select else None
+            exclude = []
+        return (include, exclude)
+
+    # -------------------------------------------------------------------------
+    def __inspect(self):
+        """ Check the fields configuration in the stylesheet (if any) """
+
+        ALL = "ALL"
+        ANY = "ANY"
+
+        tree = self.tree
+
+        ns = {"s3": "http://eden.sahanafoundation.org/wiki/S3"}
+        elements = tree.xpath("./s3:fields", namespaces=ns)
+
+        select = {}
+        skip = {}
+
+        for element in elements:
+            tables = element.get("tables", ANY).split(",")
+
+            fields = element.get("select", None)
+            if fields is not None and fields != ALL:
+                fields = set([f.strip() for f in fields.split(",")])
+                
+            exclude = element.get("exclude", None)
+            if exclude is not None:
+                exclude = set([f.strip() for f in exclude.split(",")])
+
+            for table in tables:
+                tablename = table.strip()
+                if fields:
+                    select[tablename] = None if fields == ALL else fields
+                if exclude:
+                    skip[tablename] = exclude
+                
+        self.select = select
+        self.skip = skip
+        return
+
+    # -------------------------------------------------------------------------
+    def transform(self, tree, **args):
+        """
+            Transform an element tree using this format
+
+            @param tree: the element tree
+            @param args: parameters for the stylesheet
+        """
+
+        return current.xml.transform(tree, self.tree, **args)
 
 # End =========================================================================

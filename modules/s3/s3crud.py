@@ -74,7 +74,7 @@ class S3CRUD(S3Method):
             @param r: the S3Request
             @param attr: dictionary of parameters for the method handler
 
-            @returns: output object to send to the view
+            @return: output object to send to the view
         """
 
         settings = current.deployment_settings
@@ -111,22 +111,21 @@ class S3CRUD(S3Method):
             output = self.update(r, **attr)
             
         # Standard list view: list-type and hide-filter set by controller
-        # (default: list_type="datatable", hide_filter=False)
+        # (default: list_type="datatable", hide_filter=True)
         elif method == "list":
-            #output = self.select(r, **attr)
-            output = self.select_filter(r, **attr)
+            output = self.select(r, **attr)
 
         # URL Methods to explicitly choose list-type and hide-filter in the URL
         elif method in ("datatable", "datatable_f"):
             _attr = Storage(attr)
             _attr["list_type"] = "datatable"
-            _attr["hide_filter"] = method == "datatable"
-            output = self.select_filter(r, **_attr)
+            self.hide_filter = method == "datatable"
+            output = self.select(r, **_attr)
         elif method in ("datalist", "datalist_f"):
             _attr = Storage(attr)
             _attr["list_type"] = "datalist"
-            _attr["hide_filter"] = method == "datalist"
-            output = self.select_filter(r, **_attr)
+            self.hide_filter = method == "datalist"
+            output = self.select(r, **_attr)
             
         elif method == "validate":
             output = self.validate(r, **attr)
@@ -139,6 +138,35 @@ class S3CRUD(S3Method):
             r.error(405, r.ERROR.BAD_METHOD)
 
         return output
+
+    # -------------------------------------------------------------------------
+    def widget(self, r, method=None, widget_id=None, visible=True, **attr):
+        """
+            Entry point for other method handlers to embed this
+            method as widget
+
+            @param r: the S3Request
+            @param method: the widget method
+            @param widget_id: the widget ID
+            @param visible: whether the widget is initially visible
+            @param attr: controller attributes
+        """
+
+        _attr = Storage(attr)
+        _attr["listid"] = widget_id
+
+        if method == "datatable":
+            output = self._datatable(r, **_attr)
+            if isinstance(output, dict):
+                output = DIV(output["items"], _id="table-container")
+            return output
+        elif method == "datalist":
+            output = self._datalist(r, **_attr)
+            if isinstance(output, dict) and "items" in output:
+                output = DIV(output["items"], _id="list-container")
+            return output
+        else:
+            return None
 
     # -------------------------------------------------------------------------
     def create(self, r, **attr):
@@ -208,6 +236,7 @@ class S3CRUD(S3Method):
                 else:
                     title = crud_string(tablename, "title_create")
                     output["title"] = title
+                output["title_list"] = crud_string(tablename, "title_list")
 
                 # Buttons
                 buttons = self.insert_buttons(r, "list")
@@ -325,7 +354,8 @@ class S3CRUD(S3Method):
             else:
                 if r.http == "POST" and "interim_save" in r.post_vars:
                     next_vars = self._remove_filters(r.get_vars)
-                    create_next = r.url(target="[id]", method="update", vars=next_vars)
+                    create_next = r.url(target="[id]", method="update",
+                                        vars=next_vars)
                 elif session.s3.rapid_data_entry and not r.component:
                     create_next = r.url()
                 else:
@@ -455,6 +485,7 @@ class S3CRUD(S3Method):
             if r.component:
                 subtitle = crud_string(tablename, "title_display")
                 output["subtitle"] = subtitle
+            output["title_list"] = crud_string(tablename, "title_list")
 
             # Item
             if record_id:
@@ -479,7 +510,7 @@ class S3CRUD(S3Method):
                 output["caller"] = caller
 
             # Buttons
-            buttons = self.insert_buttons(r, "edit", "delete", "list",
+            buttons = self.insert_buttons(r, "edit", "delete", "list", "summary",
                                           record_id=record_id)
             if buttons:
                 output["buttons"] = buttons
@@ -523,10 +554,10 @@ class S3CRUD(S3Method):
 
                 # Details Link
                 popup_url = _config("popup_url", None)
-                if not popup_url:
+                if popup_url is None:
                     popup_url = r.url(method="read", representation="html")
                 if popup_url:
-                    details_btn = A(T("Show Details"),
+                    details_btn = A(T("Open"),
                                     _href=popup_url,
                                     _id="details-btn",
                                     _target="_blank")
@@ -547,12 +578,18 @@ class S3CRUD(S3Method):
             return exporter(resource)
 
         #elif representation == "map":
-        #    exporter = S3MAP()
+        #    exporter = S3Map()
         #    return exporter(r, **attr)
 
         elif representation == "pdf":
             exporter = S3Exporter().pdf
             return exporter(resource, request=r, **attr)
+
+        elif representation == "svg":
+            exporter = S3Exporter().svg
+            return exporter(resource,
+                            list_fields=list_fields,
+                            **attr)
 
         elif representation == "xls":
             list_fields = _config("list_fields")
@@ -639,6 +676,7 @@ class S3CRUD(S3Method):
             else:
                 title = crud_string(self.tablename, "title_update")
                 output["title"] = title
+            output["title_list"] = crud_string(tablename, "title_list")
 
             # Component join
             link = None
@@ -713,7 +751,8 @@ class S3CRUD(S3Method):
             # Redirection
             if r.http == "POST" and "interim_save" in r.post_vars:
                 next_vars = self._remove_filters(r.get_vars)
-                self.next = r.url(target="[id]", method="update", vars=next_vars)
+                self.next = r.url(target="[id]", method="update",
+                                  vars=next_vars)
             else:
                 update_next = _config("update_next")
                 if representation in ("popup", "iframe", "plain"):
@@ -723,7 +762,8 @@ class S3CRUD(S3Method):
                     if r.component:
                         self.next = r.url(method="", vars=next_vars)
                     else:
-                        self.next = r.url(id="[id]", method="read", vars=next_vars)
+                        self.next = r.url(id="[id]", method="read",
+                                          vars=next_vars)
                 else:
                     try:
                         self.next = update_next(self)
@@ -772,18 +812,21 @@ class S3CRUD(S3Method):
         if not authorised:
             r.unauthorised()
 
-        elif r.interactive and r.http == "GET" and not record_id:
-            # Provide a confirmation form and a record list
-            form = FORM(TABLE(TR(
-                        TD(self.settings.confirm_delete,
-                           _style="color: red;"),
-                        TD(INPUT(_type="submit", _value=current.T("Delete"),
-                           _style="margin-left: 10px;")))))
-            items = self.select(r, **attr).get("items", None)
-            if isinstance(items, DIV):
-                output.update(form=form)
-            output.update(items=items)
-            current.response.view = self._view(r, "delete.html")
+        elif (r.interactive or r.representation == "aadata") and \
+             r.http == "GET" and not record_id:
+            output = self._datatable(r, **attr)
+            if isinstance(output, dict):
+                # Provide a confirmation form and a record list
+                form = FORM(TABLE(TR(TD(self.settings.confirm_delete,
+                                        _style="color: red;"),
+                                     TD(INPUT(_type="submit",
+                                              _value=current.T("Delete"),
+                                              _style="margin-left: 10px;")))))
+                output["form"] = form
+                current.response.view = self._view(r, "delete.html")
+            else:
+                # @todo: sorting not working yet
+                return output
 
         elif r.interactive and (r.http == "POST" or
                                 r.http == "GET" and record_id):
@@ -824,329 +867,6 @@ class S3CRUD(S3Method):
     # -------------------------------------------------------------------------
     def select(self, r, **attr):
         """
-            Get a list view of the requested resource
-
-            @param r: the S3Request
-            @param attr: dictionary of parameters for the method handler
-        """
-
-        from s3.s3data import S3DataTable
-        session = current.session
-        response = current.response
-        s3 = response.s3
-
-        resource = self.resource
-        table = self.table
-        tablename = self.tablename
-
-        representation = r.representation
-
-        output = dict()
-
-        # Get table-specific parameters
-        _config = self._config
-        orderby = _config("orderby", None)
-        sortby = _config("sortby", [[1, "asc"]])
-        linkto = _config("linkto", None)
-        insertable = _config("insertable", True)
-        listadd = _config("listadd", True)
-        addbtn = _config("addbtn", False)
-        list_fields = _config("list_fields")
-
-        report_groupby = _config("report_groupby")
-        report_hide_comments = _config("report_hide_comments")
-        report_filename = _config("report_filename")
-        report_formname = _config("report_formname")
-
-        listid = "datatable"
-        
-        # Check permission to read in this table
-        authorised = self._permitted()
-        if not authorised:
-            r.unauthorised()
-
-        # Pagination
-        vars = self.request.get_vars
-        if representation == "aadata":
-            start = vars.get("iDisplayStart", None)
-            limit = vars.get("iDisplayLength", None)
-        else:
-            start = vars.get("start", None)
-            limit = vars.get("limit", None)
-        if limit is not None:
-            try:
-                start = int(start)
-                limit = int(limit)
-            except ValueError:
-                start = None
-                limit = None # use default
-        else:
-            start = None # use default
-
-        # Linkto
-        if not linkto:
-            linkto = self._linkto(r)
-
-        # List fields
-        list_fields = resource.list_fields()
-        fields = []
-        append = fields.append
-        ogetattr = object.__getattribute__
-        for f in list_fields:
-            _f = f[1] if type(f) is tuple else f
-            if hasattr(table, _f):
-                append(ogetattr(table, _f))
-
-        # Truncate long texts
-        if r.interactive or r.representation == "aadata":
-            for f in self.table:
-                if str(f.type) == "text" and not f.represent:
-                    f.represent = self.truncate
-
-        # Filter
-        if s3.filter is not None:
-            resource.add_filter(s3.filter)
-
-        left = []
-        distinct = self.method == "search"
-
-        dtargs = attr.get("dtargs", {})
-
-        if r.interactive:
-
-            # View
-            response.view = self._view(r, "list.html")
-
-            # Page title
-            crud_string = self.crud_string
-            if r.component:
-                title = crud_string(r.tablename, "title_display")
-            else:
-                title = crud_string(self.tablename, "title_list")
-            output["title"] = title
-
-            # Add button and form
-            if insertable:
-                if listadd:
-                    # Add a hidden add-form and a button to activate it
-                    form = self.create(r, **attr).get("form", None)
-                    if form is not None:
-                        output["form"] = form
-                        addtitle = crud_string(tablename, "subtitle_create")
-                        output["addtitle"] = addtitle
-                        showadd_btn = self.crud_button(
-                                            None,
-                                            tablename=tablename,
-                                            name="label_create_button",
-                                            _id="show-add-btn")
-                        output["showadd_btn"] = showadd_btn
-                        # Switch to list_create view
-                        response.view = self._view(r, "list_create.html")
-
-                elif addbtn:
-                    # Add an action-button linked to the create view
-                    buttons = self.insert_buttons(r, "add")
-                    if buttons:
-                        output["buttons"] = buttons
-
-            # How many records per page?
-            if s3.dataTable_iDisplayLength:
-                display_length = s3.dataTable_iDisplayLength
-            else:
-                display_length = 25
-
-            # Server-side pagination?
-            if not s3.no_sspag:
-                dt_pagination = "true"
-                if limit is None:
-                    limit = 2 * display_length
-                session.s3.filter = vars
-                if orderby is None:
-                    dt_sorting = {
-                        "iSortingCols": "1",
-                        "sSortDir_0": "asc"
-                    }
-
-                    if len(list_fields) > 1:
-                        dt_sorting["bSortable_0"] = "false"
-                        dt_sorting["iSortCol_0"] = "1"
-                    else:
-                        dt_sorting["bSortable_0"] = "true"
-                        dt_sorting["iSortCol_0"] = "0"
-
-                    q, orderby, left = resource.datatable_filter(list_fields, dt_sorting)
-                if r.method == "search" and not orderby:
-                    orderby = fields[0]
-            else:
-                dt_pagination = "false"
-
-            # Get the data table
-            dt, totalrows, ids = resource.datatable(fields=list_fields,
-                                                    start=start,
-                                                    limit=limit,
-                                                    left=left,
-                                                    orderby=orderby,
-                                                    distinct=distinct)
-            displayrows = totalrows
-
-            # Empty table - or just no match?
-            if dt is None:
-
-                if "deleted" in table:
-                    available_records = current.db(table.deleted != True)
-                else:
-                    available_records = current.db(table._id > 0)
-                if available_records.select(table._id,
-                                            limitby=(0, 1)).first():
-                    datatable = DIV(crud_string(tablename, "msg_no_match"),
-                                    _class="empty")
-                else:
-                    datatable = DIV(crud_string(tablename, "msg_list_empty"),
-                                    _class="empty")
-
-                s3.no_formats = True
-
-                if r.component and "showadd_btn" in output:
-                    # Hide the list and show the form by default
-                    del output["showadd_btn"]
-                    datatable = ""
-            else:
-                dtargs["dt_pagination"] = dt_pagination
-                dtargs["dt_displayLength"] = display_length
-                datatable = dt.html(totalrows,
-                                    displayrows,
-                                    id=listid,
-                                    **dtargs)
-
-            # Add items to output
-            output["items"] = datatable
-
-        elif r.representation == "aadata":
-
-            # Get the master query for SSPag
-            # FixMe: don't use session to store filters; also causes resource
-            # filters to be discarded
-            if session.s3.filter is not None:
-                resource.build_query(filter=s3.filter,
-                                     vars=session.s3.filter)
-
-            # Apply datatable filters
-            searchq, orderby, left = resource.datatable_filter(list_fields, vars)
-            if searchq is not None:
-                totalrows = resource.count()
-                resource.add_filter(searchq)
-            else:
-                totalrows = None
-
-            # Orderby fallbacks
-            if r.method == "search" and not orderby:
-                orderby = fields[0]
-            if orderby is None:
-                orderby = _config("orderby", None)
-
-            # Get a data table
-            if totalrows != 0:
-                dt, displayrows, ids = resource.datatable(fields=list_fields,
-                                                          start=start,
-                                                          limit=limit,
-                                                          left=left,
-                                                          orderby=orderby,
-                                                          distinct=distinct,
-                                                          getids=False)
-            else:
-                dt, displayrows = None, 0
-            if totalrows is None:
-                totalrows = displayrows
-
-            # Echo
-            sEcho = int(vars.sEcho or 0)
-
-            # Representation
-            if dt is not None:
-                output = dt.json(totalrows,
-                                 displayrows,
-                                 listid,
-                                 sEcho,
-                                 **dtargs)
-            else:
-                output = '{"iTotalRecords": %s, ' \
-                         '"iTotalDisplayRecords": 0,' \
-                         '"dataTable_id": "%s", ' \
-                         '"sEcho": %s, ' \
-                         '"aaData": []}' % (totalrows, listid, sEcho)
-
-        elif representation == "plain":
-            if resource.count() == 1:
-                # Provide the record
-                # (used by Map's Layer Properties window)
-                resource.load()
-                r.record = resource.records().first()
-                if r.record:
-                    r.id = r.record.id
-                    self.record_id = self._record_id(r)
-                    if "update" in vars and \
-                       self._permitted(method="update"):
-                         items = self.update(r, **attr).get("form", None)
-                    else:
-                        items = self.sqlform(request=self.request,
-                                             resource=self.resource,
-                                             record_id=r.id,
-                                             readonly=True,
-                                             format=representation)
-                else:
-                    raise HTTP(404, body="Record not Found")
-            else:
-                rows = resource.select(list_fields)
-                if rows:
-                    items = rows.as_list()
-                else:
-                    items = []
-            response.view = "plain.html"
-            return dict(item=items)
-
-        elif representation == "csv":
-            exporter = S3Exporter().csv
-            return exporter(resource)
-
-        elif representation == "json":
-            exporter = S3Exporter().json
-            return exporter(resource,
-                            start=start,
-                            limit=limit,
-                            fields=fields,
-                            orderby=orderby)
-
-        elif representation == "pdf":
-            exporter = S3Exporter().pdf
-            return exporter(resource,
-                            request=r,
-                            list_fields=list_fields,
-                            report_hide_comments = report_hide_comments,
-                            report_filename = report_filename,
-                            report_formname = report_formname,
-                            **attr)
-
-        elif representation == "shp":
-            exporter = S3Exporter().shp
-            return exporter(resource,
-                            list_fields=list_fields,
-                            **attr)
-
-        elif representation == "xls":
-            exporter = S3Exporter().xls
-            return exporter(resource,
-                            list_fields=list_fields,
-                            report_groupby=report_groupby,
-                            **attr)
-
-        else:
-            r.error(501, r.ERROR.BAD_FORMAT)
-
-        return output
-
-    # -------------------------------------------------------------------------
-    def select_filter(self, r, **attr):
-        """
             Filtered datatable/datalist (a replacement for select())
         
             @param r: the S3Request
@@ -1161,7 +881,7 @@ class S3CRUD(S3Method):
         list_fields = get_config("list_fields", None)
 
         representation = r.representation
-        if representation in ("html", "iframe", "aadata", "dl"):
+        if representation in ("html", "iframe", "aadata", "dl", "popup"):
 
             # Data
             list_type = attr.get("list_type", "datatable")
@@ -1174,7 +894,7 @@ class S3CRUD(S3Method):
                 target = "datatable"
                 output = self._datatable(r, **attr)
 
-            if r.representation in ("aadata", "dl"):
+            if representation in ("aadata", "dl"):
                 return output
             else:
                 output["list_type"] = list_type
@@ -1188,36 +908,43 @@ class S3CRUD(S3Method):
             output["title"] = title
 
             # Filter-form
-            hide_filter = attr.get("hide_filter", False)
+            hide_filter = self.hide_filter
             filter_widgets = get_config("filter_widgets", None)
             if filter_widgets and not hide_filter:
 
                 # Where to retrieve filtered data from:
-                filter_submit_url = attr.get("filter_submit_url",
-                                             r.url(vars={}))
+                filter_submit_url = attr.get("filter_submit_url")
+                if not filter_submit_url:
+                    _vars = self._remove_filters(r.get_vars)
+                    filter_submit_url = r.url(vars=_vars)
+
                 # Where to retrieve updated filter options from:
                 filter_ajax_url = attr.get("filter_ajax_url",
                                            r.url(method="filter",
                                                  vars={},
-                                                 representation="json"))
+                                                 representation="options"))
 
                 from s3filter import S3FilterForm
+                filter_clear = get_config("filter_clear", True)
                 filter_formstyle = get_config("filter_formstyle", None)
                 filter_submit = get_config("filter_submit", True)
                 filter_form = S3FilterForm(filter_widgets,
+                                           clear=filter_clear,
                                            formstyle=filter_formstyle,
                                            submit=filter_submit,
                                            ajax=filter_ajax,
                                            url=filter_submit_url,
                                            ajaxurl=filter_ajax_url,
                                            _class="filter-form",
-                                           _id="%s-filter-form" % target)
+                                           _id="%s-filter-form" % target
+                                           )
                 fresource = current.s3db.resource(resource.tablename)
                 alias = resource.alias if r.component else None
                 output["list_filter_form"] = filter_form.html(fresource,
                                                               r.get_vars,
                                                               target=target,
-                                                              alias=alias)
+                                                              alias=alias
+                                                              )
             else:
                 # Render as empty string to avoid the exception in the view
                 output["list_filter_form"] = ""
@@ -1279,7 +1006,9 @@ class S3CRUD(S3Method):
                 else:
                     raise HTTP(404, body="Record not Found")
             else:
-                rows = resource.select(list_fields)
+                rows = resource.select(list_fields,
+                                       limit=None,
+                                       as_rows=True)
                 if rows:
                     items = rows.as_list()
                 else:
@@ -1297,25 +1026,22 @@ class S3CRUD(S3Method):
 
             get_vars = self.request.get_vars
             start = get_vars.get("start", None)
-            limit = get_vars.get("limit", None)
-            if limit is not None:
+            limit = get_vars.get("limit", 0)
+            if limit:
                 try:
                     start = int(start)
                     limit = int(limit)
                 except ValueError:
                     start = None
-                    limit = None # use default
+                    limit = 0 # use default
             else:
                 start = None
 
-            table = resource.table
-            if list_fields:
-                fields = [table[f] for f in list_fields if f in table.fields]
-                if table._id.name not in list_fields:
-                    fields.insert(0, table._id)
-            else:
-                fields = [f for f in table if f.type == "id" or f.readable]
-
+            fields = resource.list_fields(id_column=True)
+            rfields, j, l, d = resource.resolve_selectors(fields,
+                                                          extra_fields=False)
+            fields = [rfield.fname for rfield in rfields
+                                   if rfield.tname == tablename]
             orderby = get_config("orderby", None)
 
             exporter = S3Exporter().json
@@ -1341,22 +1067,32 @@ class S3CRUD(S3Method):
                             **attr)
 
         elif representation == "shp":
-
             exporter = S3Exporter().shp
             return exporter(resource,
                             list_fields=list_fields,
                             **attr)
 
+        elif representation == "svg":
+            exporter = S3Exporter().svg
+            return exporter(resource,
+                            list_fields=list_fields,
+                            **attr)
+
         elif representation == "xls":
-
             report_groupby = get_config("report_groupby", None)
-
             exporter = S3Exporter().xls
             return exporter(resource,
                             list_fields=list_fields,
                             report_groupby=report_groupby,
                             **attr)
 
+        elif representation == "msg":
+            if r.http == "POST":
+                from s3notify import S3Notifications
+                return S3Notifications.send(r, resource)
+            else:
+                r.error(405, r.ERROR.BAD_METHOD)
+            
         else:
             r.error(501, r.ERROR.BAD_FORMAT)
 
@@ -1381,7 +1117,8 @@ class S3CRUD(S3Method):
         sortby = get_config("sortby", [[1, "asc"]])
         linkto = get_config("linkto", None)
 
-        listid = "datatable"
+        # List ID
+        listid = attr.get("listid", "datatable")
         
         # List fields
         list_fields = resource.list_fields()
@@ -1403,19 +1140,23 @@ class S3CRUD(S3Method):
         get_vars = self.request.get_vars
         if representation == "aadata":
             start = get_vars.get("iDisplayStart", None)
-            limit = get_vars.get("iDisplayLength", None)
+            limit = get_vars.get("iDisplayLength", 0)
         else:
             start = get_vars.get("start", None)
-            limit = get_vars.get("limit", None)
-        if limit is not None:
-            try:
-                start = int(start)
-                limit = int(limit)
-            except ValueError:
-                start = None
-                limit = None # use default
+            limit = get_vars.get("limit", 0)
+        if limit:
+            if limit.lower() == "none":
+                limit = None
+            else:
+                try:
+                    start = int(start)
+                    limit = int(limit)
+                except ValueError:
+                    start = None
+                    limit = 0 # use default
         else:
-            start = None # use default
+            # Use defaults
+            start = None
 
         # Initialize output
         output = {}
@@ -1453,14 +1194,13 @@ class S3CRUD(S3Method):
             # Server-side pagination?
             if not s3.no_sspag:
                 dt_pagination = "true"
-                if limit is None:
+                if not limit:
                     limit = 2 * display_length
                 session.s3.filter = get_vars
                 if orderby is None:
-                    dt_sorting = {
-                        "iSortingCols": "1",
-                        "sSortDir_0": "asc"
-                    }
+                    dt_sorting = {"iSortingCols": "1",
+                                  "sSortDir_0": "asc"
+                                  }
 
                     if len(list_fields) > 1:
                         dt_sorting["bSortable_0"] = "false"
@@ -1511,6 +1251,7 @@ class S3CRUD(S3Method):
             else:
                 dtargs["dt_pagination"] = dt_pagination
                 dtargs["dt_displayLength"] = display_length
+                dtargs["dt_base_url"] = r.url(method="", vars={})
                 datatable = dt.html(totalrows,
                                     displayrows,
                                     id=listid,
@@ -1523,7 +1264,8 @@ class S3CRUD(S3Method):
         elif representation == "aadata":
 
             # Apply datatable filters
-            searchq, orderby, left = resource.datatable_filter(list_fields, get_vars)
+            searchq, orderby, left = resource.datatable_filter(list_fields,
+                                                               get_vars)
             if searchq is not None:
                 totalrows = resource.count()
                 resource.add_filter(searchq)
@@ -1575,7 +1317,7 @@ class S3CRUD(S3Method):
     # -------------------------------------------------------------------------
     def _datalist(self, r, **attr):
         """
-            Experimental: Get a data list
+            Get a data list
 
             @param r: the S3Request
             @param attr: parameters for the method handler
@@ -1593,6 +1335,9 @@ class S3CRUD(S3Method):
         sortby = get_config("sortby", [[1, "asc"]])
         linkto = get_config("linkto", None)
         layout = get_config("list_layout", None)
+
+        # List ID
+        listid = attr.get("listid", "datalist")
 
         # List fields
         list_fields = resource.list_fields()
@@ -1612,6 +1357,29 @@ class S3CRUD(S3Method):
             default_orderby = None
 
         # Pagination
+        response = current.response
+        s3 = response.s3
+
+        # Pagelength = number of items per page
+        if "dl_pagelength" in attr:
+            pagelength = attr["dl_pagelength"]
+        elif s3.dl_pagelength:
+            pagelength = s3.dl_pagelength
+        else:
+            pagelength = 10
+
+        # Rowsize = number of items per row
+        if "dl_rowsize" in attr:
+            rowsize = attr["dl_rowsize"]
+        elif s3.dl_rowsize:
+            rowsize = s3.dl_rowsize
+        else:
+            rowsize = 1
+
+        # Make sure that pagelength is a multiple of rowsize
+        if pagelength % rowsize:
+            pagelength = (int(pagelength / rowsize) + 1) * rowsize
+
         get_vars = self.request.get_vars
         record_id = get_vars.get("record", None)
         if record_id is not None:
@@ -1622,14 +1390,19 @@ class S3CRUD(S3Method):
             limit = 1
         else:
             start = get_vars.get("start", None)
-            limit = get_vars.get("limit", None)
-            if limit is not None:
-                try:
-                    start = int(start)
-                    limit = int(limit)
-                except ValueError:
-                    start = None
-                    limit = None # use default
+            limit = get_vars.get("limit", 0)
+            if limit:
+                if limit.lower() == "none":
+                    limit = None
+                else:
+                    try:
+                        limit = int(limit)
+                    except ValueError:
+                        limit = 0 # use default
+                    try:
+                        start = int(start)
+                    except ValueError:
+                        start = None
             else:
                 start = None
 
@@ -1637,8 +1410,6 @@ class S3CRUD(S3Method):
         output = {}
 
         # Filter
-        response = current.response
-        s3 = response.s3
         if s3.filter is not None:
             resource.add_filter(s3.filter)
 
@@ -1652,13 +1423,7 @@ class S3CRUD(S3Method):
             else:
                 r.error(405, r.ERROR.BAD_METHOD)
 
-        if representation in ("html", "dl"):
-
-            # How many records per page?
-            if s3.dl_pagelength:
-                pagelength = s3.dl_pagelength
-            else:
-                pagelength = 10
+        if representation in ("html", "dl", "popup"):
 
             # Retrieve the data
             if limit:
@@ -1675,7 +1440,7 @@ class S3CRUD(S3Method):
                                                        start=start,
                                                        limit=initial_limit,
                                                        orderby=orderby,
-                                                       listid="datalist",
+                                                       listid=listid,
                                                        layout=layout)
 
             if numrows == 0:
@@ -1719,6 +1484,7 @@ class S3CRUD(S3Method):
                         start = start if start else 0,
                         limit = limit if limit else numrows,
                         pagesize = pagelength,
+                        rowsize = rowsize,
                         ajaxurl = ajax_url
                      )
                 data = dl
@@ -1737,6 +1503,21 @@ class S3CRUD(S3Method):
             # View + data
             response.view = "plain.html"
             output["item"] = data
+
+        elif representation == "popup":
+
+            # View + data
+            response.view = "popup.html"
+            output["items"] = data
+            # Pagination Support (normally added by views/dataLists.html)
+            if s3.debug:
+                appname = current.request.application
+                sappend = s3.scripts.append
+                sappend("/%s/static/scripts/jquery.infinitescroll.js" % appname)
+                sappend("/%s/static/scripts/jquery.viewport.js" % appname)
+                sappend("/%s/static/scripts/S3/s3.dataLists.js" % appname)
+            else:
+                s3.scripts.append("/%s/static/scripts/S3/s3.dataLists.min.js" % current.request.application)
 
         return output
 
@@ -1785,23 +1566,27 @@ class S3CRUD(S3Method):
             r.unauthorised()
 
         # Pagination
-        vars = self.request.get_vars
+        get_vars = self.request.get_vars
         if representation == "aadata":
-            start = vars.get("iDisplayStart", None)
-            limit = vars.get("iDisplayLength", None)
+            start = get_vars.get("iDisplayStart", None)
+            limit = get_vars.get("iDisplayLength", 0)
         else:
-            start = vars.get("start", None)
-            limit = vars.get("limit", None)
-        if limit is not None:
-            try:
-                start = int(start)
-                limit = int(limit)
-            except ValueError:
-                start = None
-                limit = None # use default
+            start = get_vars.get("start", None)
+            limit = get_vars.get("limit", 0)
+        if limit:
+            if limit.lower() == "none":
+                limit = None
+            else:
+                try:
+                    start = int(start)
+                    limit = int(limit)
+                except ValueError:
+                    start = None
+                    limit = 0 # use default
         else:
-            start = None # use default
-
+            # Use defaults
+            start = None
+            
         # Linkto
         if not linkto:
             linkto = self._linkto(r)
@@ -1854,19 +1639,20 @@ class S3CRUD(S3Method):
             # Server-side pagination?
             if not s3.no_sspag:
                 dt_pagination = "true"
-                if limit is None:
+                if not limit:
                     limit = 2 * display_length
-                session.s3.filter = vars
+                session.s3.filter = get_vars
                 if orderby is None:
                     # Default initial sorting
                     scol = len(list_fields) > 1 and "1" or "0"
-                    vars.update(iSortingCols="1",
-                                iSortCol_0=scol,
-                                sSortDir_0="asc")
-                    q, orderby, left = resource.datatable_filter(list_fields, vars)
-                    del vars["iSortingCols"]
-                    del vars["iSortCol_0"]
-                    del vars["sSortDir_0"]
+                    get_vars.update(iSortingCols="1",
+                                    iSortCol_0=scol,
+                                    sSortDir_0="asc")
+                    q, orderby, left = resource.datatable_filter(list_fields,
+                                                                 get_vars)
+                    del get_vars["iSortingCols"]
+                    del get_vars["iSortCol_0"]
+                    del get_vars["sSortDir_0"]
                 if r.method == "search" and not orderby:
                     orderby = fields[0]
             else:
@@ -1903,7 +1689,7 @@ class S3CRUD(S3Method):
             resource.build_query(filter=s3.filter, vars=session.s3.filter)
 
             # Apply datatable filters
-            searchq, orderby, left = resource.datatable_filter(list_fields, vars)
+            searchq, orderby, left = resource.datatable_filter(list_fields, get_vars)
             if searchq is not None:
                 totalrows = resource.count()
                 resource.add_filter(searchq)
@@ -1930,7 +1716,7 @@ class S3CRUD(S3Method):
                 totalrows = displayrows
 
             # Echo
-            sEcho = int(vars.sEcho or 0)
+            sEcho = int(get_vars.sEcho or 0)
 
             # Representation
             if dt is not None:
@@ -2085,13 +1871,13 @@ class S3CRUD(S3Method):
         output = Storage()
         resource = self.resource
 
-        vars = r.get_vars
-        if "component" in vars:
-            alias = vars["component"]
+        get_vars = r.get_vars
+        if "component" in get_vars:
+            alias = get_vars["component"]
         else:
             alias = None
-        if "resource" in vars:
-            tablename = vars["resource"]
+        if "resource" in get_vars:
+            tablename = get_vars["resource"]
             components = [alias] if alias else None
             try:
                 resource = current.s3db.resource(tablename,
@@ -2350,8 +2136,8 @@ class S3CRUD(S3Method):
 
         record_id = attr.get("record_id", None)
 
-        remove_filters = lambda vars: dict([(k, vars[k])
-                                            for k in vars if "." not in k])
+        remove_filters = lambda get_vars: dict([(k, get_vars[k])
+                                            for k in get_vars if "." not in k])
 
         # Button labels
         crud_string = self.crud_string
@@ -2387,6 +2173,16 @@ class S3CRUD(S3Method):
                 list_btn = self.crud_button(LIST,
                                             _href=href_list, _id="list-btn")
                 output["list_btn"] = list_btn
+
+        # Summary button
+        if "summary" in buttons:
+            if not r.component or r.multiple:
+                summary_btn = self.crud_button(crud_string(tablename, "title_list"),
+                                               _href = url(method="summary",
+                                                           id=0,
+                                                           vars=remove_filters(r.get_vars)), 
+                                               _id="summary-btn")
+                output["summary_btn"] = summary_btn
 
         if not record_id:
             return output
@@ -2498,12 +2294,17 @@ class S3CRUD(S3Method):
             s3crud.action_button(labels.UPDATE, update_url,
                                  # To use modals
                                  #_class="action-btn s3_modal"
+                                 _class="action-btn edit"
                                  )
         else:
             if not read_url:
                 read_url = URL(args = args,
                                vars = get_vars)
-            s3crud.action_button(labels.READ, read_url)
+            s3crud.action_button(labels.READ, read_url,
+                                 # To use modals
+                                 #_class="action-btn s3_modal"
+                                 _class="action-btn read"
+                                 )
 
         # Delete-action
         if deletable and has_permission("delete", table):
@@ -2515,10 +2316,11 @@ class S3CRUD(S3Method):
                 query = auth.s3_accessible_query("delete", table)
                 rows = current.db(query).select(table._id)
                 restrict = []
+                rappend = restrict.append
                 for row in rows:
                     row_id = row.get("id", None)
                     if row_id:
-                        restrict.append(str(row_id))
+                        rappend(str(row_id))
                 s3crud.action_button(labels.DELETE, delete_url,
                                      _class="delete-btn", restrict=restrict)
             else:
@@ -2843,21 +2645,29 @@ class S3CRUD(S3Method):
                     if update:
                         return str(URL(r=r, c=c, f=f,
                                        args=args + ["update"],
-                                       vars=r.get_vars))
+                                       # Don't forward all vars unconditionally
+                                       #vars=r.get_vars
+                                       ))
                     else:
                         return str(URL(r=r, c=c, f=f,
                                        args=args + ["read"],
-                                       vars=r.get_vars))
+                                       # Don't forward all vars unconditionally
+                                       #vars=r.get_vars
+                                       ))
                 else:
                     args = [record_id]
                     if update:
                         return str(URL(r=r, c=c, f=f,
                                        args=args + ["update"],
-                                       vars=r.get_vars))
+                                       # Don't forward all vars unconditionally
+                                       #vars=r.get_vars
+                                       ))
                     else:
                         return str(URL(r=r, c=c, f=f,
                                        args=args + ["read"],
-                                       vars=r.get_vars))
+                                       # Don't forward all vars unconditionally
+                                       #vars=r.get_vars
+                                       ))
         return list_linkto
 
     # -------------------------------------------------------------------------
@@ -2918,7 +2728,10 @@ class S3CRUD(S3Method):
             # Delete it
             uid = None
             if UID in dresource.table:
-                rows = dresource.select([UID], start=0, limit=1)
+                rows = dresource.select([UID],
+                                        start=0,
+                                        limit=1,
+                                        as_rows=True)
                 if rows:
                     uid = rows[0][UID]
             numrows = dresource.delete(ondelete=ondelete,

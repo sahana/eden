@@ -46,23 +46,23 @@ class CreateVolunteerCertificate(SeleniumUnitTest):
                        "Advance First Aid ATest"
                        ),
                      ( "organisation_id",
-                       "Timor-Leste Red Cross Society (CVTL)",
-                       "option"
+                       "Timor-Leste Red Cross Society",
                        ),
                      ( "expiry",
                        "12"
                        ),
                      ]
                      )
-
+        # Check if add button is present on the page. Click it if found.
+        add_btn = self.browser.find_elements_by_id("show-add-btn")
+        if len(add_btn) > 0:
+            add_btn[0].click()
+        
         if current.deployment_settings.get_hrm_use_skills():
             self.create("hrm_certificate_skill",	 
                         [( "skill_id",
-                           "Hazmat",
-                           "option"
-                           ),
+                           "Hazmat"),
                          ( "competency_id",
-                           "Level 2",
-                           "option"),
+                           "Level 2"),
                          ]
                          )

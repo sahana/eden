@@ -340,7 +340,8 @@ class S3MembersModel(S3Model):
                                "location_id$L4",
                                ],
                   update_realm=True,
-                  create_next=URL(f="person", vars={"membership.id": "[id]"}),
+                  create_next=URL(f="person", args="address",
+                                  vars={"membership.id": "[id]"}),
                   extra_fields = ["start_date", "membership_paid"],
                  )
 
@@ -461,7 +462,8 @@ class S3MembersModel(S3Model):
         data = Storage()
 
         # Affiliation, record ownership and component ownership
-        s3db.pr_update_affiliations(mtable, record)
+        # @ToDo
+        #s3db.pr_update_affiliations(mtable, record)
 
         # realm_entity for the pr_person record
         person_id = record.person_id

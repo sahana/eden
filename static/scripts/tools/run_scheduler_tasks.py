@@ -29,13 +29,13 @@
 
 import os, sys, argparse
 
-if not 'WEB2PY_PATH' in os.environ:
-    os.environ['WEB2PY_PATH'] = os.getcwd()
+if not "WEB2PY_PATH" in os.environ:
+    os.environ["WEB2PY_PATH"] = os.getcwd()
 else:
-    os.chdir(os.environ['WEB2PY_PATH'])
-sys.path.append(os.environ['WEB2PY_PATH'])
+    os.chdir(os.environ["WEB2PY_PATH"])
+sys.path.append(os.environ["WEB2PY_PATH"])
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description = """
         Run Web2py scheduler tasks in Web2py application context, without the
@@ -60,18 +60,14 @@ if __name__ == '__main__':
     task = args["task"]
     allargs = args["allargs"]
 
-    adir = os.path.join('applications', app)
+    adir = os.path.join("applications", app)
     if not os.path.exists(adir):
         print >> sys.stderr, "Application not found: %s" % adir
         sys.exit(1)
 
     from gluon.custom_import import custom_import_install
-    try:
-        # Web2py post revision b8afce7 2012-10-11
-        custom_import_install()
-    except:
-        # Web2py pre revision b8afce7 2012-10-11
-        custom_import_install(os.environ['WEB2PY_PATH'])
+    custom_import_install()
+    
     from gluon.shell import env
     _env = env(app, c=None, import_models=True)
     globals().update(**_env)

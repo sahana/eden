@@ -2,7 +2,8 @@
 // chosen in the embed-component widget already has a host organisation
 // @todo: parametrize!
 $(function() {
-    hide_host_role =  function(component_id) {
+    // Called as post_process from modules/s3db/org.py
+    S3.hide_host_role =  function(component_id) {
         if (component_id !== '') {
             var json_url = S3.Ap.concat('/project/project/' + component_id + '/organisation.s3json?organisation.role=1');
             $.getJSONS3(json_url, function (data) {

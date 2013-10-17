@@ -8,8 +8,10 @@
          CSV column...........Format..........Content
 
          Name.................string..........Layer Name
-         Description..........string..........Layer Description
          URL..................string..........Layer URL
+         Description..........string..........Layer Description
+         Source Name..........string..........Layer Source Name
+         Source URL...........string..........Layer Source URL
          Layers...............string..........Layers
          Config...............string..........Configuration Name
          Enabled..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
@@ -23,7 +25,8 @@
          LegendURL............string..........Layer LegendURL
          Tiled................boolean.........Layer Tiled?
          Style................string..........Layer Style
-         Map..................string..........Layer Map (not usually required)
+         Map..................string..........Layer Map (not usually required unless using MapServer)
+         Metadata.............string..........Layer Metadata
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -51,6 +54,7 @@
 
         <xsl:variable name="Layer" select="col[@field='Name']/text()"/>
         <xsl:variable name="Config" select="col[@field='Config']/text()"/>
+        <xsl:variable name="Metadata" select="col[@field='Metadata']/text()"/>
 
         <resource name="gis_layer_wms">
             <xsl:attribute name="tuid">
@@ -58,6 +62,8 @@
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$Layer"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
+            <data field="source_name"><xsl:value-of select="col[@field='Source Name']"/></data>
+            <data field="source_url"><xsl:value-of select="col[@field='Source URL']"/></data>
             <data field="url"><xsl:value-of select="col[@field='URL']"/></data>
             <data field="layers"><xsl:value-of select="col[@field='Layers']"/></data>
             <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
@@ -69,7 +75,19 @@
             <data field="legend_url"><xsl:value-of select="col[@field='LegendURL']"/></data>
             <data field="tiled"><xsl:value-of select="col[@field='Tiled']"/></data>
             <data field="style"><xsl:value-of select="col[@field='Style']"/></data>
-            <data field="map"><xsl:value-of select="col[@field='Map']"/></data>
+            <xsl:if test="col[@field='Map']!=''">
+                <data field="map"><xsl:value-of select="col[@field='Map']"/></data>
+            </xsl:if>
+
+            <xsl:if test="$Metadata!=''">
+                <resource name="cms_post_layer">
+                    <reference field="post_id" resource="cms_post">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('Metadata:', $Layer)"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
         </resource>
 
         <resource name="gis_layer_config">
@@ -95,6 +113,16 @@
             <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
             <data field="visible"><xsl:value-of select="col[@field='Visible']"/></data>
         </resource>
+
+        <xsl:if test="$Metadata!=''">
+            <resource name="cms_post">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('Metadata:', $Layer)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="concat('Metadata for ', $Layer, ' Layer')"/></data>
+                <data field="body"><xsl:value-of select="$Metadata"/></data>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 

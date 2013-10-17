@@ -42,13 +42,9 @@ class CreateStaff(SeleniumUnitTest):
 
         self.create("hrm_human_resource", 
                     [( "organisation_id",
-                       "International Federation of Red Cross and Red Crescent Societies (IFRC)",
-                       "option",
-                       0),
+                       "International Federation of Red Cross and Red Crescent Societies"),
                      ( "site_id",
-                       "AP Zone (Office)",
-                       "option",
-                       3),
+                       "AP Zone (Office)"),
                      ( "first_name",
                        "Robert",
                        "pr_person"),
@@ -62,8 +58,7 @@ class CreateStaff(SeleniumUnitTest):
                        "rjltestdonotusetest99@romanian.com",
                        "pr_person"),
                      ( "job_title_id",
-                       "Warehouse Manager",
-                       "option"),
+                       "Warehouse Manager"),
                      ]
                      )
 
@@ -94,14 +89,11 @@ class CreateStaff(SeleniumUnitTest):
         self.create("hrm_human_resource", 
                     [
                      ( "person_id",
-                       "Yakobus Maia",
-                       "autocomplete"),
+                       "Yakobus Maia"),
                      ( "organisation_id",
-                       "International Federation of Red Cross and Red Crescent Societies (IFRC)",
-                       "option"),
+                       "International Federation of Red Cross and Red Crescent Societies"),
                      ( "site_id",
-                       "AP Zone (Office)",
-                       "option")
+                       "AP Zone (Office)")
                      ]
                      )
 

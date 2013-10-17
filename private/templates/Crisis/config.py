@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
 
+try:
+    # Python 2.7
+    from collections import OrderedDict
+except:
+    # Python 2.6
+    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+
 from gluon import current
 from gluon.storage import Storage
-from gluon.contrib.simplejson.ordered_dict import OrderedDict
+
 settings = current.deployment_settings
 T = current.T
 
@@ -195,15 +202,6 @@ settings.modules = OrderedDict([
             restricted = True,
             module_type = 10
         )),
-    ("dvi", Storage(
-           name_nice = T("Disaster Victim Identification"),
-           #description = "Disaster Victim Identification",
-           restricted = True,
-           module_type = 10,
-           #access = "|DVI|",      # Only users with the DVI role can see this module in the default menu & access the controller
-           #audit_read = True,     # Can enable Audit for just an individual module here
-           #audit_write = True
-       )),
     ("mpr", Storage(
            name_nice = T("Missing Person Registry"),
            #description = "Helps to report and search for missing persons",
@@ -228,30 +226,6 @@ settings.modules = OrderedDict([
     #        restricted = True,
     #        module_type = 10,
     #    )),
-    #("fire", Storage(
-    #       name_nice = T("Fire Stations"),
-    #       #description = "Fire Station Management",
-    #       restricted = True,
-    #       module_type = 1,
-    #   )),
-    #("flood", Storage(
-    #        name_nice = T("Flood Warnings"),
-    #        #description = "Flood Gauges show water levels in various parts of the country",
-    #        restricted = True,
-    #        module_type = 10
-    #    )),
-    #("member", Storage(
-    #       name_nice = T("Members"),
-    #       #description = "Membership Management System",
-    #       restricted = True,
-    #       module_type = 10,
-    #   )),
-    #("patient", Storage(
-    #        name_nice = T("Patient Tracking"),
-    #        #description = "Tracking of Patients",
-    #        restricted = True,
-    #        module_type = 10
-    #    )),
     ("security", Storage(
            name_nice = T("Security"),
            #description = "Security Management System",
@@ -259,13 +233,6 @@ settings.modules = OrderedDict([
            module_type = 10,
        )),
     # These are specialist modules
-    # Requires RPy2
-    #("climate", Storage(
-    #        name_nice = T("Climate"),
-    #        #description = "Climate data portal",
-    #        restricted = True,
-    #        module_type = 10,
-    #)),
     ("delphi", Storage(
             name_nice = T("Decision Maker"),
             #description = "Supports the decision making of large groups of Crisis Management Experts by helping the groups create ranked list.",

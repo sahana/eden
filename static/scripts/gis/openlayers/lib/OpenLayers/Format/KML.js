@@ -523,10 +523,10 @@ OpenLayers.Format.KML = OpenLayers.Class(OpenLayers.Format.XML, {
 
                 case "balloonstyle":
                     var balloonStyle = OpenLayers.Util.getXmlNodeValue(
-                                            styleTypeNode.getElementsByTagName("text")[0]);
+                                            styleTypeNode);
                     if (balloonStyle) {
                         style["balloonStyle"] = balloonStyle.replace(
-                                       this.regExes.straightBracket, "{$1}");
+                                       this.regExes.straightBracket, "${$1}");
                     }
                     break;
                 case "labelstyle":
@@ -1043,57 +1043,32 @@ OpenLayers.Format.KML = OpenLayers.Class(OpenLayers.Format.XML, {
             child = children[i];
             if(child.nodeType == 1) {
                 grandchildren = child.childNodes;
-                //if(grandchildren.length >= 1 && grandchildren.length <= 3) {
-                //    var grandchild;
-                var name = (child.prefix) ?
-                        child.nodeName.split(":")[1] :
-                        child.nodeName;
-                if(grandchildren.length >= 1) {
-                    var grandchild, value;
+                if(grandchildren.length >= 1 && grandchildren.length <= 3) {
+                    var grandchild;
                     switch (grandchildren.length) {
                         case 1:
                             grandchild = grandchildren[0];
-                            if(grandchild.nodeType == 3 || grandchild.nodeType == 4) {
-                                value = OpenLayers.Util.getXmlNodeValue(grandchild);
-                                if (value) {
-                                    value = value.replace(this.regExes.trimSpace, "");
-                                }
-                            }
                             break;
                         case 2:
                             var c1 = grandchildren[0];
                             var c2 = grandchildren[1];
                             grandchild = (c1.nodeType == 3 || c1.nodeType == 4) ?
                                 c1 : c2;
-                            if(grandchild.nodeType == 3 || grandchild.nodeType == 4) {
-                                value = OpenLayers.Util.getXmlNodeValue(grandchild);
-                                if (value) {
-                                    value = value.replace(this.regExes.trimSpace, "");
-                                }
-                            }
                             break;
-                        //case 3:
+                        case 3:
                         default:
-                            //grandchild = grandchildren[1];
-                            // Assume this is HTML - we want all nodes
-                            value = "";
-                            for(var j=0, len=grandchildren.length; j<len; ++j) {
-                                grandchild = grandchildren[j];
-                                value += OpenLayers.Util.getXmlNodeValue(grandchild); 
-                            }
+                            grandchild = grandchildren[1];
                             break;
                     }
-                    //if(grandchild.nodeType == 3 || grandchild.nodeType == 4) {
-                    //    var name = (child.prefix) ?
-                    //            child.nodeName.split(":")[1] :
-                    //            child.nodeName;
-                    //    var value = OpenLayers.Util.getXmlNodeValue(grandchild);
-                    //    if (value) {
-                    //        value = value.replace(this.regExes.trimSpace, "");
-                    //        attributes[name] = value;
-                    //    }
-                    if (value) {
-                        attributes[name] = value;
+                    if(grandchild.nodeType == 3 || grandchild.nodeType == 4) {
+                        var name = (child.prefix) ?
+                                child.nodeName.split(":")[1] :
+                                child.nodeName;
+                        var value = OpenLayers.Util.getXmlNodeValue(grandchild);
+                        if (value) {
+                            value = value.replace(this.regExes.trimSpace, "");
+                            attributes[name] = value;
+                        }
                     }
                 } 
             }

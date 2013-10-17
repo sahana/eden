@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
 
+try:
+    # Python 2.7
+    from collections import OrderedDict
+except:
+    # Python 2.6
+    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+
 from gluon import current, URL, TR, TD, DIV
 from gluon.storage import Storage
-from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
-settings = current.deployment_settings
 T = current.T
+settings = current.deployment_settings
 
 """
     Template settings for SSF
@@ -46,6 +52,9 @@ settings.auth.registration_organisation_default = "Sahana Software Foundation"
 # NB This requires Verification/Approval to be Off
 # @ToDo: Extend to all optional Profile settings: Homepage, Twitter, Facebook, Mobile Phone, Image
 #settings.auth.registration_volunteer = True
+# Terms of Service to be able to Register on the system
+# uses <template>/views/tos.html
+#settings.auth.terms_of_service = True
 # Uncomment this to allow users to Login using OpenID
 #settings.auth.openid = True
 # Uncomment this to allow users to Login using Gmail's SMTP
@@ -57,10 +66,6 @@ settings.auth.always_notify_approver = True
 # Base settings
 settings.base.system_name = T("The Sahana Sunflower: A Community Portal")
 settings.base.system_name_short = T("Sahana Sunflower")
-
-# Set this to True to use Content Delivery Networks to speed up Internet-facing sites
-settings.base.cdn = False
-
 
 # L10n settings
 settings.L10n.languages = OrderedDict([
@@ -92,19 +97,6 @@ settings.L10n.utc_offset = "UTC +0000"
 settings.L10n.utc_offset = "UTC +0000"
 # Uncomment these to use US-style dates in English (localisations can still convert to local format)
 #settings.L10n.date_format = T("%m-%d-%Y")
-# Religions used in Person Registry
-# @ToDo: find a better code
-# http://eden.sahanafoundation.org/ticket/594
-settings.L10n.religions = {
-    "none":T("none"),
-    "christian":T("Christian"),
-    "muslim":T("Muslim"),
-    "jewish":T("Jewish"),
-    "buddhist":T("Buddhist"),
-    "hindu":T("Hindu"),
-    "bahai":T("Bahai"),
-    "other":T("other")
-}
 # Make last name in person/user records mandatory
 #settings.L10n.mandatory_lastname = True
 
@@ -210,8 +202,6 @@ settings.security.archive_not_delete = True
 # restricted to MapAdmins.
 
 # Audit settings
-# We Audit if either the Global or Module asks us to
-# (ignore gracefully if module author hasn't implemented this)
 # NB Auditing (especially Reads) slows system down & consumes diskspace
 #settings.security.audit_write = False
 #settings.security.audit_read = False
@@ -316,15 +306,6 @@ settings.hrm.show_staff = False
 settings.project.mode_task = True
 # Uncomment this to use Activities for projects
 settings.project.activities = True
-
-# Save Search Widget
-#settings.save_search.widget = False
-
-# Terms of Service to be able to Register on the system
-#settings.options.terms_of_service = T("Terms of Service\n\nYou have to be eighteen or over to register as a volunteer.")
-# Should we use internal Support Requests?
-#settings.options.support_requests = True
-
 
 # Formstyle
 def formstyle_row(id, label, widget, comment, hidden=False):
@@ -586,8 +567,6 @@ settings.modules = OrderedDict([
     #       restricted = True,
     #       module_type = 10,
     #       #access = "|DVI|",      # Only users with the DVI role can see this module in the default menu & access the controller
-    #       #audit_read = True,     # Can enable Audit for just an individual module here
-    #       #audit_write = True
     #   )),
     #("mpr", Storage(
     #       name_nice = T("Missing Person Registry"),

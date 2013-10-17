@@ -5,29 +5,19 @@
     <!-- **********************************************************************
          Job Titles - CSV Import Stylesheet
 
-         - example raw URL usage:
-           Let URLpath be the URL to Sahana Eden appliation
-           Let Resource be hrm/skill/create
-           Let Type be s3csv
-           Let CSVPath be the path on the server to the CSV file to be imported
-           Let XSLPath be the path on the server to the XSL transform file
-           Then in the browser type:
-
-           URLpath/Resource.Type?filename=CSVPath&transform=XSLPath
-
-           You can add a third argument &ignore_errors
          CSV fields:
          Name............................hrm_job_title.name
          Organisation....................hrm_job_title.organisation_id
+         Type............................hrm_job_title.type
          Comments........................hrm_job_title.comments
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
+    <xsl:include href="../../xml/commons.xsl"/>
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
-    <xsl:key name="orgs"
-             match="row"
+    <xsl:key name="orgs" match="row"
              use="col[@field='Organisation']"/>
 
     <!-- ****************************************************************** -->
@@ -45,17 +35,34 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
-
+        <xsl:variable name="JobTitle" select="col[@field='Name']/text()"/>
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
+        <xsl:variable name="Type">
+            <xsl:call-template name="uppercase">
+                <xsl:with-param name="string" select="col[@field='Type']/text()"/>
+            </xsl:call-template>
+        </xsl:variable>
 
         <!-- HRM Job Title -->
-        <xsl:variable name="JobTitle" select="col[@field='Name']"/>
         <resource name="hrm_job_title">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$JobTitle"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$JobTitle"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+
+            <xsl:choose>
+                <xsl:when test="$Type='1' or $Type='STAFF'">
+                    <data field="type">1</data>
+                </xsl:when>
+                <xsl:when test="$Type='2' or $Type='VOLUNTEER' or $Type='VOL'">
+                    <data field="type">2</data>
+                </xsl:when>
+                <xsl:otherwise>
+                    <!-- Both -->
+                    <data field="type">3</data>
+                </xsl:otherwise>
+            </xsl:choose>
             
             <!-- Link to Organisation to filter lookup lists -->
             <xsl:if test="$OrgName!=''">

@@ -3,16 +3,29 @@
  * Strings are localised in views/l10n.js
  */
 
+ /**
+ * The startsWith string function is introduced in JS 1.8.6 -- it's not even
+ * accepted in ECMAScript yet, so don't expect all browsers to have it.
+ * Thx to http://www.moreofless.co.uk/javascript-string-startswith-endswith/
+ * for showing how to add it to string if not present.
+ */
+if (typeof String.prototype.startsWith != 'function') {
+    String.prototype.startsWith = function(str) {
+        return this.substring(0, str.length) === str;
+    };
+}
+
 // Global variable to store all of our variables inside
 var S3 = Object();
 S3.gis = Object();
+S3.gis.options = Object();
 S3.timeline = Object();
 S3.JSONRequest = Object(); // Used to store and abort JSON requests
 S3.TimeoutVar = Object(); // Used to store and abort JSON requests
 
-S3.uid = function () {
+S3.uid = function() {
     // Generate a random uid
-    // Used by GIS
+    // Used for Popups on Map & jQueryUI modals
     // http://jsperf.com/random-uuid/2
     return (((+(new Date())) / 1000 * 0x10000 + Math.random() * 0xffff) >> 0).toString(16);
 };
@@ -20,7 +33,7 @@ S3.uid = function () {
 S3.Utf8 = {
     // Used by dataTables
     // http://www.webtoolkit.info
-    encode: function (string) {
+    encode: function(string) {
         string = string.replace(/\r\n/g, '\n');
         var utftext = '';
         for (var n = 0; n < string.length; n++) {
@@ -38,7 +51,7 @@ S3.Utf8 = {
         }
         return utftext;
     },
-    decode: function (utftext) {
+    decode: function(utftext) {
         var string = '';
         var i = 0;
         var c1, c2;
@@ -62,24 +75,6 @@ S3.Utf8 = {
         return string;
     }
 };
-
-// Used by Scenario module currently, but may be deprecated as not great UI
-var popupWin = null;
-// function openPopup(url) {
-    // if ( !popupWin || popupWin.closed ) {
-        // popupWin = window.open(url, 'popupWin', 'width=640, height=480');
-    // } else popupWin.focus();
-// }
-function openPopup(url, center) {
-    if ( !popupWin || popupWin.closed ) {
-        var params = 'width=640, height=480';
-        if (center === true) {
-            params += ',left=' + (screen.width - 640)/2 +
-                ',top=' + (screen.height - 480)/2;
-        }
-        popupWin = window.open(url, 'popupWin', params);
-    } else popupWin.focus();
-}
 
 S3.addTooltips = function() {
     // Help Tooltips
@@ -111,10 +106,11 @@ S3.addTooltips = function() {
     });
 };
 
+// jQueryUI Modal Popups
 S3.addModals = function() {
-    // jQueryUI Modal Popups
     $('a.s3_add_resource_link').attr('href', function(index, attr) {
         // Add the caller to the URL vars so that the popup knows which field to refresh/set
+        // Default formstyle
         var caller = $(this).parents('tr').attr('id');
         if (!caller) {
             // DIV-based formstyle
@@ -122,28 +118,26 @@ S3.addModals = function() {
         }
         if (!caller) {
             // Bootstrap formstyle
-            caller = $(this).parent().parent().prev().attr('id');
+            caller = $(this).parents('.control-group').attr('id');
         }
-        caller = caller.replace(/__row_comment/, ''); // DRRPP formstyle
-        caller = caller.replace(/__row/, '');
-        // Avoid Duplicate callers
         var url_out = attr;
-        if (attr.indexOf('caller=') == -1) {
-            url_out = attr + '&caller=' + caller;
+        if (caller) {
+            caller = caller.replace(/__row_comment/, '') // DRRPP formstyle
+                           .replace(/__row/, '');
+            // Avoid Duplicate callers
+            if (attr.indexOf('caller=') == -1) {
+                url_out = attr + '&caller=' + caller;
+            }
         }
         return url_out;
     });
-    $('.s3_add_resource_link, .s3_modal').unbind('click');
-    $('.s3_add_resource_link, .s3_modal').click(function() {
+    $('.s3_add_resource_link, .s3_modal').unbind('click')
+                                         .click(function() {
         var title = this.title;
         var url = this.href;
-        S3.popup_loaded = function() {
-            // Resize the iframe to fit the Dialog
-            var width = $('.ui-dialog').width() - 10;
-            dialog.css({width: width});
-        }
+        var id = S3.uid();
         // Open a jQueryUI Dialog showing a spinner until iframe is loaded
-        var dialog = $('<iframe class="loading" src=' + url + ' marginWidth="0" marginHeight="0" frameBorder="0" scrolling="auto" onload="S3.popup_loaded()" style = "width:740px;"></iframe>')
+        var dialog = $('<iframe id="' + id + '" class="loading" src=' + url + ' marginWidth="0" marginHeight="0" frameBorder="0" scrolling="auto" onload="S3.popup_loaded(\'' + id + '\')" style = "width:740px;"></iframe>')
                       .appendTo('body');
         dialog.dialog({
             // add a close listener to prevent adding multiple divs to the document
@@ -153,26 +147,53 @@ S3.addModals = function() {
             },
             minHeight: 500,
             modal: true,
-            open: function(event, ui) {$('.ui-widget-overlay').bind('click', function(){ dialog.dialog('close'); });},
+            open: function(event, ui) {
+                $('.ui-widget-overlay').bind('click', function() {
+                    dialog.dialog('close');
+                });
+            },
             title: title,
             width: 750,
-            closeText: ""
+            closeText: ''
         });
         // Prevent browser from following link
         return false;
     })
 };
+S3.popup_loaded = function(id) {
+    // Resize the iframe to fit the Dialog
+    var width = $('.ui-dialog').width() - 10;
+    $('#' + id).css({width: width})
+               // Display the hidden form
+               .contents().find('#popup form').show();
+}
+function s3_popup_remove() {
+    // Close jQueryUI Dialog Modal Popup
+    $('iframe.ui-dialog-content').dialog('close');
+}
 
 $(document).ready(function() {
     // Web2Py Layer
     $('.error').hide().slideDown('slow');
-    $('.error').click(function() { $(this).fadeOut('slow'); return false; });
+    $('.error').click(function() {
+        $(this).fadeOut('slow');
+        return false;
+    });
     $('.warning').hide().slideDown('slow');
-    $('.warning').click(function() { $(this).fadeOut('slow'); return false; });
+    $('.warning').click(function() {
+        $(this).fadeOut('slow');
+        return false;
+    });
     $('.information').hide().slideDown('slow');
-    $('.information').click(function() { $(this).fadeOut('slow'); return false; });
+    $('.information').click(function() {
+        $(this).fadeOut('slow');
+        return false;
+    });
     $('.confirmation').hide().slideDown('slow');
-    $('.confirmation').click(function() { $(this).fadeOut('slow'); return false; });
+    $('.confirmation').click(function() {
+        $(this).fadeOut('slow');
+        return false;
+    });
     $("input[type='checkbox'].delete").click(function() {
         if ((this.checked) && (!confirm(i18n.delete_confirmation))) {
                 this.checked = false;
@@ -181,7 +202,7 @@ $(document).ready(function() {
 
     // If a form is submitted with errors, this will scroll
     // the window to the first form error message
-    inputErrorId = $('form .error[id]').eq(0).attr('id');
+    var inputErrorId = $('form .error[id]').eq(0).attr('id');
     if (inputErrorId != undefined) {
         inputName = inputErrorId.replace('__error', '');
         inputId = $('[name=' + inputName + ']').attr('id');
@@ -216,25 +237,36 @@ $(document).ready(function() {
     }
 
     // Accept comma as thousands separator
-    $('input.int_amount').keyup(function(){this.value=this.value.reverse().replace(/[^0-9\-,]|\-(?=.)/g,'').reverse();});
-    $('input.float_amount').keyup(function(){this.value=this.value.reverse().replace(/[^0-9\-\.,]|[\-](?=.)|[\.](?=[0-9]*[\.])/g,'').reverse();});
+    $('input.int_amount').keyup(function() {
+        this.value = this.value.reverse()
+                               .replace(/[^0-9\-,]|\-(?=.)/g, '')
+                               .reverse();
+    });
+    $('input.float_amount').keyup(function() {
+        this.value = this.value.reverse()
+                               .replace(/[^0-9\-\.,]|[\-](?=.)|[\.](?=[0-9]*[\.])/g, '')
+                               .reverse();
+    });
     // Auto-capitalize first names
-    $('input[name="first_name"]').focusout(function() {this.value = this.value.charAt(0).toLocaleUpperCase() + this.value.substring(1);});
+    $('input[name="first_name"]').focusout(function() {
+        this.value = this.value.charAt(0).toLocaleUpperCase() + this.value.substring(1);
+    });
 
     // Resizable textareas
     $('textarea.resizable:not(.textarea-processed)').each(function() {
+        var that = $(this);
         // Avoid non-processed teasers.
-        if ($(this).is(('textarea.teaser:not(.teaser-processed)'))) {
+        if (that.is(('textarea.teaser:not(.teaser-processed)'))) {
             return false;
         }
-        var textarea = $(this).addClass('textarea-processed');
+        var textarea = that.addClass('textarea-processed');
         var staticOffset = null;
         // When wrapping the text area, work around an IE margin bug. See:
         // http://jaspan.com/ie-inherited-margin-bug-form-elements-and-haslayout
-        $(this).wrap('<div class="resizable-textarea"><span></span></div>')
+        that.wrap('<div class="resizable-textarea"><span></span></div>')
         .parent().append($('<div class="grippie"></div>').mousedown(startDrag));
-        var grippie = $('div.grippie', $(this).parent())[0];
-        grippie.style.marginRight = (grippie.offsetWidth - $(this)[0].offsetWidth) + 'px';
+        var grippie = $('div.grippie', that.parent())[0];
+        grippie.style.marginRight = (grippie.offsetWidth - that[0].offsetWidth) + 'px';
         function startDrag(e) {
             staticOffset = textarea.height() - e.pageY;
             textarea.css('opacity', 0.25);
@@ -254,8 +286,12 @@ $(document).ready(function() {
 
     // IE6 non anchor hover hack
     $('#modulenav .hoverable').hover(
-        function() { $(this).addClass('hovered'); },
-        function() { $(this).removeClass('hovered'); }
+        function() {
+            $(this).addClass('hovered');
+        },
+        function() {
+            $(this).removeClass('hovered');
+        }
     );
 
     // Menu popups (works in IE6)
@@ -272,7 +308,9 @@ $(document).ready(function() {
                 }
                 $('ul', this).css('display', 'block');
             },
-        function() { $('ul', this).css('display', 'none');  }
+        function() {
+            $('ul', this).css('display', 'none');
+        }
     );
 
     // jQueryUI Dialog Modal Popups
@@ -303,11 +341,6 @@ $(document).ready(function() {
 
 });
 
-function s3_popup_remove() {
-    // Close jQueryUI Dialog Modal Popup
-    $('iframe.ui-dialog-content').dialog('close');
-}
-
 function s3_get_client_location(targetfield) {
    // Geolocation
    if (navigator.geolocation) {
@@ -328,11 +361,11 @@ S3.deduplication = function() {
                 type: 'POST',
                 url: url,
                 data: {},
+                dataType: 'JSON',
+                // gets moved to .done() inside .ajaxS3
                 success: function(data) {
                     $('.mark-deduplicate, .unmark-deduplicate, .deduplicate').toggleClass('hide');
-                    return;
-                },
-                dataType: 'JSON'
+                }
             });
         }
     });
@@ -343,11 +376,11 @@ S3.deduplication = function() {
                 type: 'POST',
                 url: url + '?remove=1',
                 data: {},
+                dataType: 'JSON',
+                // gets moved to .done() inside .ajaxS3
                 success: function(data) {
                     $('.mark-deduplicate, .unmark-deduplicate, .deduplicate').toggleClass('hide');
-                    return;
-                },
-                dataType: 'JSON'
+                }
             });
         }
     });
@@ -444,18 +477,33 @@ function S3EnableNavigateAwayConfirm() {
  */
 
 (function($) {
+    // Default AJAX settings
+    $.ajaxS3Settings = {
+        timeout : 10000,
+        msgTimeout: 2000,
+        retryLimit : 10,
+        dataType: 'json',
+        async: true,
+        type: 'GET'
+    };
+
+    // Wrapper for jQuery's .ajax to provide notifications on errors
     $.ajaxS3 = function(s) {
         var options = $.extend( {}, $.ajaxS3Settings, s );
         options.tryCount = 0;
+        options.error = null;   // prevent callback from being executed twice
+        options.success = null; // prevent callback from being executed twice
         if (s.message) {
             s3_showStatus(i18n.ajax_get + ' ' + (s.message ? s.message : i18n.ajax_fmd) + '...', this.ajaxS3Settings.msgTimeout);
         }
-        options.success = function(data, status) {
+        $.ajax(
+            options
+        ).done(function(data, status) {
             s3_hideStatus();
-            if (s.success)
+            if (s.success) {
                 s.success(data, status);
-        };
-        options.error = function(xhr, textStatus, errorThrown ) {
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
             if (textStatus == 'timeout') {
                 this.tryCount++;
                 if (this.tryCount <= this.retryLimit) {
@@ -467,27 +515,23 @@ function S3EnableNavigateAwayConfirm() {
                 }
                 s3_showStatus(i18n.ajax_wht + ' ' + (this.retryLimit + 1) + ' ' + i18n.ajax_gvn,
                     $.ajaxS3Settings.msgTimeout, false, true);
+                if (s.error) {
+                    s.error(jqXHR, textStatus, errorThrown);
+                }
                 return;
             }
-            if (xhr.status == 500) {
+            if (jqXHR.status == 500) {
                 s3_showStatus(i18n.ajax_500, $.ajaxS3Settings.msgTimeout, false, true);
             } else {
                 s3_showStatus(i18n.ajax_dwn, $.ajaxS3Settings.msgTimeout, false, true);
             }
-        };
-        $.ajax(options);
-    };
-
-    $.postS3 = function(url, data, callback, type) {
-        return $.ajaxS3({
-            type: "POST",
-            url: url,
-            data: data,
-            success: callback,
-            dataType: type
+            if (s.error) {
+                s.error(jqXHR, textStatus, errorThrown);
+            }
         });
     };
 
+    // Simplified wrappers for .ajaxS3
     $.getS3 = function(url, data, callback, type, message, sync) {
         // shift arguments if data argument was omitted
         if ( $.isFunction( data ) ) {
@@ -505,9 +549,10 @@ function S3EnableNavigateAwayConfirm() {
             url: url,
             async: async,
             data: data,
-            success: callback,
             dataType: type,
-            message: message
+            message: message,
+            // gets moved to .done() inside .ajaxS3
+            success: callback
         });
     };
 
@@ -523,19 +568,6 @@ function S3EnableNavigateAwayConfirm() {
             sync = false;
         }
         return $.getS3(url, data, callback, 'json', message, sync);
-    };
-
-    $.ajaxS3Settings = {
-        timeout : 10000,
-        msgTimeout: 2000,
-        retryLimit : 10,
-        dataType: 'json',
-        async: true,
-        type: 'GET'
-    };
-
-    $.ajaxS3Setup = function(settings) {
-        $.extend($.ajaxS3Settings, settings);
     };
 
 })($);
@@ -672,6 +704,17 @@ function s3_viewMapMulti(module, resource, instance, jresource) {
     $('#map').html(iframe);
     $('#map').append($("<div style='margin-bottom: 10px' />").append(closelink));
 }
+S3.popupWin = null;
+S3.openPopup = function(url, center) {
+    if ( !S3.popupWin || S3.popupWin.closed ) {
+        var params = 'width=640, height=480';
+        if (center === true) {
+            params += ',left=' + (screen.width - 640)/2 +
+                ',top=' + (screen.height - 480)/2;
+        }
+        S3.popupWin = window.open(url, 'popupWin', params);
+    } else S3.popupWin.focus();
+}
 function s3_showMap(feature_id) {
     // Display a Feature on a BaseMap within an iframe
     var url = S3.Ap.concat('/gis/display_feature/') + feature_id;
@@ -688,7 +731,7 @@ function s3_showMap(feature_id) {
 			// }
 		// }]
 	// }).show();
-    openPopup(url, true);
+    S3.openPopup(url, true);
 }
 
 // ============================================================================
@@ -918,95 +961,93 @@ function S3OptionsFilter(settings) {
             S3.JSONRequest[targetField.attr('id')] = $.ajax({
                 url: url,
                 dataType: 'json',
-                context: context,
-                success: function(data) {
+                context: context
+            }).done(function(data) {
+                // Pre-process the data
+                var fncPrep = this.fncPrep;
+                var prepResult;
+                try {
+                    prepResult = fncPrep(data);
+                } catch (e) {
+                    prepResult = null;
+                }
 
-                    // Pre-process the data
-                    var fncPrep = this.fncPrep;
-                    var prepResult;
-                    try {
-                        prepResult = fncPrep(data);
-                    } catch (e) {
-                        prepResult = null;
+                // Render options list
+                var fncRepresent = this.fncRepresent;
+                var FilterField = this.FilterField;
+                var FieldResource = this.FieldResource;
+                var triggerField = $('[name = "' + FilterField + '"]');
+                var options = '';
+                var currentValue;
+                if (data.length === 0) {
+                    // No options available
+                    if (this.showEmptyField) {
+                        currentValue = 0;
+                        options += '<option value="">' + this.msgNoRecords + '</options>';
                     }
-
-                    // Render options list
-                    var fncRepresent = this.fncRepresent;
-                    var FilterField = this.FilterField;
-                    var FieldResource = this.FieldResource;
-                    var triggerField = $('[name = "' + FilterField + '"]');
-                    var options = '';
-                    var currentValue;
-                    if (data.length === 0) {
-                        // No options available
-                        if (this.showEmptyField) {
-                            currentValue = 0;
-                            options += '<option value="">' + this.msgNoRecords + '</options>';
+                } else {
+                    // Render the options
+                    var lookupField = this.lookupField;
+                    for (var i = 0; i < data.length; i++) {
+                        if (i === 0) {
+                            currentValue = data[i][lookupField];
                         }
+                        options += '<option value="' + data[i][lookupField] + '">';
+                        options += fncRepresent(data[i], prepResult);
+                        options += '</option>';
+                    }
+                    if (this.optional) {
+                        currentValue = 0;
+                        options = '<option value=""></option>' + options;
+                    }
+                    if (this.currentValue) {
+                        currentValue = this.currentValue;
+                    }
+                }
+
+                var targetField = $('[name = "' + this.targetSelector + '"]');
+                // Convert IS_ONE_OF_EMPTY INPUT to a SELECT
+                var html = targetField.parent().html().replace('<input', '<select');
+                targetField.parent().html(html);
+                // reselect since it may have changed
+                targetField = $('[name = "' + this.targetSelector + '"]');
+                if (options !== '') {
+                    targetField.html(options)
+                               // Set the current field value
+                               .val(currentValue)
+                               .change()
+                               .prop('disabled', false)
+                               .show();
+                } else {
+                    // No options available => disable the target field
+                    targetField.prop('disabled', true)
+                               .show();
+                }
+
+                // Modify URL for Add-link and show the Add-link
+                var lookupResource = this.lookupResource;
+                var targetFieldAdd = $('#' + lookupResource + '_add');
+                if (targetFieldAdd.length !== 0) {
+                    var href = targetFieldAdd.attr('href');
+                    triggerField = $('[name = "' + this.triggerSelector + '"]');
+                    var triggerName = this.triggerName;
+                    if (href.indexOf(triggerName) == -1) {
+                        // Add to URL
+                        href += '&' + triggerName + '=' + triggerField.val();
                     } else {
-                        // Render the options
-                        var lookupField = this.lookupField;
-                        for (var i = 0; i < data.length; i++) {
-                            if (i === 0) {
-                                currentValue = data[i][lookupField];
-                            }
-                            options += '<option value="' + data[i][lookupField] + '">';
-                            options += fncRepresent(data[i], prepResult);
-                            options += '</option>';
-                        }
-                        if (this.optional) {
-                            currentValue = 0;
-                            options = '<option value=""></option>' + options;
-                        }
-                        if (this.currentValue) {
-                            currentValue = this.currentValue;
-                        }
+                        // Update URL
+                        var re = new RegExp(triggerName + '=.*', 'g');
+                        href = href.replace(re, triggerName + '=' + triggerField.val());
                     }
+                    targetFieldAdd.attr('href', href).show();
+                }
 
-                    var targetField = $('[name = "' + this.targetSelector + '"]');
-                    // Convert IS_ONE_OF_EMPTY INPUT to a SELECT
-                    var html = targetField.parent().html().replace('<input', '<select');
-                    targetField.parent().html(html);
-                    // reselect since it may have changed
-                    targetField = $('[name = "' + this.targetSelector + '"]');
-                    if (options !== '') {
-                        targetField.html(options)
-                                   // Set the current field value
-                                   .val(currentValue)
-                                   .change()
-                                   .prop('disabled', false)
-                                   .show();
-                    } else {
-                        // No options available => disable the target field
-                        targetField.prop('disabled', true)
-                                   .show();
-                    }
-
-                    // Modify URL for Add-link and show the Add-link
-                    var lookupResource = this.lookupResource;
-                    var targetFieldAdd = $('#' + lookupResource + '_add');
-                    if (targetFieldAdd.length !== 0) {
-                        var href = targetFieldAdd.attr('href');
-                        triggerField = $('[name = "' + this.triggerSelector + '"]');
-                        var triggerName = this.triggerName;
-                        if (href.indexOf(triggerName) == -1) {
-                            // Add to URL
-                            href += '&' + triggerName + '=' + triggerField.val();
-                        } else {
-                            // Update URL
-                            var re = new RegExp(triggerName + '=.*', 'g');
-                            href = href.replace(re, triggerName + '=' + triggerField.val());
-                        }
-                        targetFieldAdd.attr('href', href).show();
-                    }
-
-                    // Remove the throbber
-                    $('#' + lookupResource + '_ajax_throbber').remove();
-                    if (first) {
-                        // Don't include this change in the deliberate changes
-                        S3ClearNavigateAwayConfirm();
-                        first = false;
-                    }
+                // Remove the throbber
+                $('#' + lookupResource + '_ajax_throbber').remove();
+                if (first) {
+                    // Don't include this change in the deliberate changes
+                    S3ClearNavigateAwayConfirm();
+                    first = false;
                 }
             });
         } else {
@@ -1014,29 +1055,27 @@ function S3OptionsFilter(settings) {
             S3.JSONRequest[targetField.attr('id')] = $.ajax({
                 url: url,
                 dataType: 'html',
-                context: context,
-                success: function(data) {
-                    var targetWidget = $('[name = "' + this.targetWidget + '"]');
-                    if (data !== '') {
-                        // Replace the target field with the HTML returned
-                        targetWidget.html(data)
-                                    .change()
-                                    .prop('disabled', false)
-                                    .show();
-                    } else {
-                        // Disable the target field
-                        targetWidget.prop('disabled', true);
-                    }
-                    // Remove Throbber
-                    $('#' + this.lookupResource + '_ajax_throbber').remove();
-                    if (first) {
-                        // Don't include this change in the deliberate changes
-                        S3ClearNavigateAwayConfirm();
-                        first = false;
-                    }
+                context: context
+            }).done(function(data) {
+                var targetWidget = $('[name = "' + this.targetWidget + '"]');
+                if (data !== '') {
+                    // Replace the target field with the HTML returned
+                    targetWidget.html(data)
+                                .change()
+                                .prop('disabled', false)
+                                .show();
+                } else {
+                    // Disable the target field
+                    targetWidget.prop('disabled', true);
+                }
+                // Remove Throbber
+                $('#' + this.lookupResource + '_ajax_throbber').remove();
+                if (first) {
+                    // Don't include this change in the deliberate changes
+                    S3ClearNavigateAwayConfirm();
+                    first = false;
                 }
             });
-
         }
     });
 
@@ -1046,93 +1085,8 @@ function S3OptionsFilter(settings) {
 
 // ============================================================================
 /**
- * Add an Autocomplete to a field - used by S3AutocompleteWidget
- */
-
-S3.autocomplete = function(fieldname, module, resourcename, input, filter, link, postprocess, delay, min_length) {
-    var real_input = '#' + input;
-    var dummy = 'dummy_' + input;
-    var dummy_input = '#' + dummy;
-
-    if ($(dummy_input) == 'undefined') {
-        return;
-    }
-
-    var url = S3.Ap.concat('/', module, '/', resourcename, '/search.json?filter=~&field=', fieldname);
-    if (filter != 'undefined') {
-        url += '&' + filter;
-    }
-    if ((link != 'undefined') && (link !== '')) {
-        url += '&link=' + link;
-    }
-
-    // Optional args
-    if (postprocess == 'undefined') {
-        postprocess = '';
-    }
-    if (delay == 'undefined') {
-        delay = 450;
-    }
-    if (min_length == 'undefined') {
-        min_length = 2;
-    }
-    var data = {
-        val: $(dummy_input).val(),
-        accept: false
-    };
-    $(dummy_input).autocomplete({
-        source: url,
-        delay: delay,
-        minLength: min_length,
-        search: function(event, ui) {
-            $( '#' + dummy + '_throbber' ).removeClass('hide').show();
-            return true;
-        },
-        response: function(event, ui, content) {
-            $( '#' + dummy + '_throbber' ).hide();
-            return content;
-        },
-        focus: function( event, ui ) {
-            $( dummy_input ).val( ui.item[fieldname] );
-            return false;
-        },
-        select: function( event, ui ) {
-            $( dummy_input ).val( ui.item[fieldname] );
-            $( real_input ).val( ui.item.id );
-            $( real_input ).change();
-            if (postprocess) {
-                eval(postprocess);
-            }
-            data.accept = true;
-            return false;
-        }
-    })
-    .data( 'ui-autocomplete' )._renderItem = function( ul, item ) {
-        return $( '<li>' )
-            .data( 'item.autocomplete', item )
-            .append( '<a>' + item[fieldname] + '</a>' )
-            .appendTo( ul );
-    };
-    // @ToDo: Do this only if new_items=False
-    $(dummy_input).blur(function() {
-        if (!$(dummy_input).val()) {
-            $(real_input).val('');
-            data.accept = true;
-        }
-        if (!data.accept) {
-            $(dummy_input).val(data.val);
-        } else {
-            data.val = $(dummy_input).val();
-        }
-        data.accept = false;
-    });
-};
-
-// ============================================================================
-/**
  * Add a Slider to a field - used by S3SliderWidget
  */
-
 S3.slider = function(fieldname, minval, maxval, steprange, value) {
     $( '#' + fieldname ).slider({
         min: parseFloat(minval),
@@ -1152,7 +1106,7 @@ S3.slider = function(fieldname, minval, maxval, steprange, value) {
  * Sample usage: _onchange="S3reloadWithQueryStringVars({'_language': $(this).val()});")
  */
 
-function S3reloadWithQueryStringVars (queryStringVars) {
+function S3reloadWithQueryStringVars(queryStringVars) {
     var existingQueryVars = location.search ? location.search.substring(1).split("&") : [],
         currentUrl = location.search ? location.href.replace(location.search,"") : location.href,
         newQueryVars = {},

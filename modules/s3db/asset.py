@@ -127,11 +127,9 @@ class S3AssetModel(S3Model):
                            ASSET_TYPE_OTHER       : T("Other")
                            }
 
-        asset_item_represent = lambda id, row=None: \
-            self.supply_item_represent(id, row, show_um=False)
-
         ctable = self.supply_item_category
         itable = self.supply_item
+        supply_item_represent = self.supply_item_represent
 
         tablename = "asset_asset"
         table = define_table(tablename,
@@ -149,11 +147,11 @@ class S3AssetModel(S3Model):
                                    represent = lambda opt: \
                                        asset_type_opts.get(opt, UNKNOWN_OPT),
                                    label = T("Type")),
-                             self.supply_item_id(represent = asset_item_represent,
+                             self.supply_item_id(represent = supply_item_represent,
                                                  requires = IS_ONE_OF(db((ctable.can_be_asset == True) & \
                                                                          (itable.item_category_id == ctable.id)),
                                                                       "supply_item.id",
-                                                                      asset_item_represent,
+                                                                      supply_item_represent,
                                                                       sort=True,
                                                                       ),
                                                  widget = None,
@@ -181,12 +179,12 @@ S3OptionsFilter({
                                         writable = True,
                                         empty = False,
                                         ondelete = "RESTRICT",
+                                        represent = self.org_site_represent,
                                         # Comment these to use a Dropdown & not an Autocomplete
                                         #widget = S3SiteAutocompleteWidget(),
                                         #comment = DIV(_class="tooltip",
                                         #              _title="%s|%s" % (T("Warehouse"),
                                         #                                T("Enter some characters to bring up a list of possible matches"))),
-                                        represent = self.org_site_represent
                                         ),
                              Field("sn",
                                    label = T("Serial Number")),
@@ -298,8 +296,9 @@ S3OptionsFilter({
                                             label=T("Map"),
                                             )]
         
-        asset_search = S3Search(
+        search_method = S3Search(
             # Advanced Search only
+            simple=(),
             advanced = advanced_search
             )
 
@@ -321,7 +320,7 @@ S3OptionsFilter({
                   create_next = URL(c="asset", f="asset",
                                     args=["[id]"]),
                   onaccept=self.asset_onaccept,
-                  search_method=asset_search,
+                  search_method=search_method,
                   report_options=Storage(
                         search=report_search,
                         rows=report_fields,
@@ -856,14 +855,15 @@ def asset_rheader(r):
 
             # @ToDo: Check permissions before displaying buttons
 
-            asset_action_btns = [ A( T("Set Base Facility/Site"),
-                                     _href = URL(f=func,
-                                                 args = [record.id, "log", "create"],
-                                                 vars = dict(status = ASSET_LOG_SET_BASE)
-                                                ),
-                                     _class = "action-btn"
-                                     )
-                                ]
+            asset_action_btns = [
+                A(T("Set Base Facility/Site"),
+                  _href = URL(f=func,
+                              args = [record.id, "log", "create"],
+                              vars = dict(status = ASSET_LOG_SET_BASE)
+                              ),
+                  _class = "action-btn",
+                  )
+                ]
 
             current_log = asset_get_current_log(record.id)
             status = current_log.status
@@ -883,39 +883,41 @@ def asset_rheader(r):
             if status < ASSET_LOG_DONATED:
                 # @ToDo: deployment setting to prevent assigning assets before returning them
                 # The Asset is available for assignment (not disposed)
-                asset_action_btns += [ A( T("Assign to Person"),
-                                          _href = URL(f=func,
-                                                      args = [record.id, "log", "create"],
-                                                      vars = dict(status = ASSET_LOG_ASSIGN,
-                                                                  type = "person")
-                                                    ),
-                                          _class = "action-btn"
-                                        ),
-                                      A( T("Assign to Facility/Site"),
-                                          _href = URL(f=func,
-                                                      args = [record.id, "log", "create"],
-                                                      vars = dict(status = ASSET_LOG_ASSIGN,
-                                                                  type = "site")
-                                                    ),
-                                          _class = "action-btn"
-                                        ),
-                                      A( T("Assign to Organization"),
-                                         _href = URL(f=func,
-                                                     args = [record.id, "log", "create"],
-                                                     vars = dict(status = ASSET_LOG_ASSIGN,
-                                                                 type = "organisation")
-                                                    ),
-                                         _class = "action-btn"
-                                       ),
-                                    ]
-            asset_action_btns += [  A( T("Update Status"),
-                                       _href = URL(f=func,
-                                                   args = [record.id, "log", "create"],
-                                                   vars = None
-                                                ),
-                                       _class = "action-btn"
-                                     ),
-                                  ]
+                asset_action_btns += [
+                    A(T("Assign to Person"),
+                      _href = URL(f=func,
+                                  args = [record.id, "log", "create"],
+                                  vars = dict(status = ASSET_LOG_ASSIGN,
+                                              type = "person")
+                                  ),
+                      _class = "action-btn",
+                      ),
+                    A(T("Assign to Facility/Site"),
+                      _href = URL(f=func,
+                                  args = [record.id, "log", "create"],
+                                  vars = dict(status = ASSET_LOG_ASSIGN,
+                                              type = "site")
+                                  ),
+                      _class = "action-btn",
+                    ),
+                    A(T("Assign to Organization"),
+                      _href = URL(f=func,
+                                  args = [record.id, "log", "create"],
+                                  vars = dict(status = ASSET_LOG_ASSIGN,
+                                              type = "organisation")
+                                  ),
+                      _class = "action-btn",
+                      ),
+                    ]
+            asset_action_btns += [
+                A(T("Update Status"),
+                  _href = URL(f=func,
+                              args = [record.id, "log", "create"],
+                              vars = None
+                              ),
+                  _class = "action-btn",
+                  ),
+                ]
 
             table = r.table
             ltable = s3db.asset_log
@@ -935,7 +937,7 @@ def asset_rheader(r):
                                    ltable.site_id.represent(current_log.site_id),
                                    ),
                                 ),
-                          DIV(_style = "margin-top:5px;",
+                          DIV(_style = "margin-top:5px;", # @ToDo: Move to CSS
                               *asset_action_btns
                               ),
                           rheader_tabs)

@@ -32,4 +32,5 @@
 
 from pdf import *
 from shp import *
+from svg import *
 from xls import *

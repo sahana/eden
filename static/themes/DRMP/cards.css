@@ -26,6 +26,19 @@
     cursor: auto;
 }
 
+/* Show a border around active disasters */
+.thumbnail.disaster {
+    border: 3px solid #E67E22;
+    padding-right: 5px;
+    margin: -2px 6px 6px -2px;
+}
+
+.media-body a span.date-title {
+    border-left: none;
+    margin-left: 0;
+    padding-left: 1px;
+}
+
 .date-title {
     font: 400 10px "Helvetica Neue",Arial,sans-serif;
     list-style: none outside none;
@@ -33,6 +46,17 @@
     color: #999;
     border-left: 1px solid rgba(0, 0, 0, 0.1);
     margin-left: 10px;
+    padding-top: 10px;
+    padding-bottom: 9px;
+}
+
+.date-title.event {
+    font: 600 14px "Helvetica Neue",Arial,sans-serif;
+    list-style: none outside none;
+    padding-left: 10px;
+    color: #666;
+    border-left: none;
+    margin-left: 0;
     padding-top: 10px;
     padding-bottom: 9px;
 }
@@ -48,7 +72,7 @@
 }
 
 .location-title a {
-    font: 400 12px "Helvetica Neue", Arial,sans-serif;
+    font: 600 12px "Helvetica Neue", Arial,sans-serif;
     color: #777;
     padding: 0;
     text-shadow: 1px 1px 0 rgba(255,255,255,0.7);
@@ -62,9 +86,23 @@
 }
 
 img.media-object {
-    border-radius: 8px;
-    width: 48px;
-    height: 48px;
+    border-radius: 4px;
+    width: 44px;
+    height: 44px;
+    margin-top: 3px;
+    margin-left: 2px;
+    margin-bottom: 2px;
+}
+
+a h5.media-heading {
+    color: #656665;
+    padding-top: 8px;
+    padding-bottom: 0;
+    margin-bottom: -1px;
+}
+
+a h5.media-heading:hover {
+    color: #0187cc;
 }
 
 /* Edit Toolbar */
@@ -74,10 +112,6 @@ img.media-object {
     position: relative;
     top: 4px;
     float: right;
-}
-
-.icon.icon-edit {
-    padding-right: 3px;
 }
 
 .icon.icon-edit,
@@ -102,4 +136,26 @@ img.media-object {
     font: 13px/17px "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
     color: #333;
     word-spacing: -1px;
+}
+
+@media (max-width: 480px) {
+    .location-title {
+        padding-left: 5px;
+        width: 10px;
+    }
+    img.media-object {
+        width: 34px;
+        height: 34px;
+    }
+    .date-title {
+        font: 400 9px "Helvetica Neue",Arial,sans-serif;
+        word-spacing: -1px;
+    }
+    div.media-body div.media {
+        padding-left: 6px;
+        margin-top: -3px;
+    }	
+    div.media a.pull-left img.media-object {
+        float: left;
+    }
 }

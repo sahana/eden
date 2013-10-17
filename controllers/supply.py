@@ -9,7 +9,7 @@
 module = request.controller
 resourcename = request.function
 
-if not (settings.has_module("inv") or settings.has_module("asset")):
+if not settings.has_module("supply"):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # =============================================================================
@@ -36,6 +36,33 @@ def catalog():
 
 # -----------------------------------------------------------------------------
 def catalog_item():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def distribution():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller(hide_filter=False)
+
+# -----------------------------------------------------------------------------
+def distribution_report():
+    """
+        RESTful CRUD controller for Supply Distributions
+        - limited to just seeing aggregated data for differential permissions
+    """
+
+    def prep(r):
+        r.method = "report2"
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller("supply", "distribution",
+                              hide_filter=False)
+
+# -----------------------------------------------------------------------------
+def distribution_item():
     """ RESTful CRUD controller """
 
     return s3_rest_controller()

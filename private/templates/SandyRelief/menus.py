@@ -64,19 +64,22 @@ class S3MainMenu(default.S3MainMenu):
         return [
             homepage(),
             homepage("project"),
-            homepage("req", f="req_item", m="search")(
+            homepage("req", f="req", m="search")(
+                MM("Fulfill Requests", f="req", m="search"),
                 MM("Request Supplies", f="req", m="create", vars={"type": 1}),
                 MM("Request People", f="req", m="create", vars={"type": 3})
             ),
             MM("Locations", c="gis")(
                 MM("Facilities", c="org", f="facility", m="search"),
-                MM("Warehouses", c="inv", f="warehouse", m="search"),
+                #MM("Warehouses", c="inv", f="warehouse", m="search"),
                 MM("Create a Facility", c="org", f="facility", m="create")
             ),
             MM("Contacts", c="hrm", f="staff", m="search")(
+                MM("Staff", c="hrm", f="staff", m="search"),
                 MM("Groups", c="hrm", f="group"),
                 MM("Organizations", c="org", f="organisation", m="search"),
-                MM("People Registry", c="pr", f="index")
+                MM("Networks", c="org", f="group"),
+                #MM("People Registry", c="pr", f="index")
             ),                
             MM("Resources", url="http://occupysandy.net/resources/coordination/")(
                 MM("Assets", c="asset", f="asset", m="search"),
@@ -129,7 +132,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         #inv_recv_search = crud_strings.inv_recv.title_search
 
         return M()(
-                    M("Facilities", c="org", f="facility")(
+                    M("Facilities", c="inv", f="facility")(
                         M("New", m="create"),
                         M("List All"),
                         M("Map", m="map"),
@@ -195,8 +198,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
         is_org_admin = lambda i: s3.hrm.orgs and True or \
                                  ADMIN in s3.roles
         settings = current.deployment_settings
-        job_roles = lambda i: settings.get_hrm_job_roles()
-        use_teams = lambda i: settings.get_hrm_use_teams()
+        teams = settings.get_hrm_teams()
+        use_teams = lambda i: teams
 
         return M(c="hrm")(
                     M(settings.get_hrm_staff_label(), f="staff",
@@ -207,18 +210,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Import", f="person", m="import",
                           vars={"group":"staff"}, p="create"),
                     ),
-                    M("Teams", f="group",
+                    M(teams, f="group",
                       check=[manager_mode, use_teams])(
                         M("New", m="create"),
                         M("List All"),
                     ),
                     M("Department Catalog", f="department",
                       check=manager_mode)(
-                        M("New", m="create"),
-                        M("List All"),
-                    ),
-                    M("Job Role Catalog", f="job_role",
-                      check=[manager_mode, job_roles])(
                         M("New", m="create"),
                         M("List All"),
                     ),
@@ -287,12 +285,18 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Import", m="import")
                     ),
                     M("Organizations", f="organisation")(
-                        M("Add Organization", m="create"),
+                        M("New", m="create"),
                         M("List All"),
                         M("Search", m="search"),
                         M("Import", m="import")
                     ),
                     M("Facility Types", f="facility_type",
+                      #restrict=[ADMIN]
+                      )(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
+                    M("Networks", f="group",
                       #restrict=[ADMIN]
                       )(
                         M("New", m="create"),
@@ -321,7 +325,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Requests", f="req")(
                         M("Request Supplies", m="create", vars={"type": 1}),
                         M("Request People", m="create", vars={"type": 3}),
-                        M("Search Requests", m="search"),
+                        M("Fulfill Requests", m="search"),
                         #M("List All"),
                         M("List Recurring Requests", f="req_template"),
                         #M("Search", m="search"),

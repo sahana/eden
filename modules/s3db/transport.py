@@ -155,7 +155,8 @@ class S3TransportModel(S3Model):
             msg_list_empty=T("No Airports currently registered"))
 
         configure(tablename,
-                  super_entity="org_site"
+                  super_entity="org_site",
+                  onaccept = self.transport_airport_onaccept,
                   )
 
         # ---------------------------------------------------------------------
@@ -208,7 +209,8 @@ class S3TransportModel(S3Model):
             msg_list_empty=T("No Heliports currently registered"))
 
         configure(tablename,
-                  super_entity="org_site"
+                  super_entity="org_site",
+                  onaccept = self.transport_heliport_onaccept,
                   )
 
         # ---------------------------------------------------------------------
@@ -368,7 +370,8 @@ class S3TransportModel(S3Model):
             msg_list_empty=T("No Seaports currently registered"))
 
         configure(tablename,
-                  super_entity="org_site"
+                  super_entity="org_site",
+                  onaccept = self.transport_seaport_onaccept,
                   )
 
         # ---------------------------------------------------------------------
@@ -376,5 +379,32 @@ class S3TransportModel(S3Model):
         #
         return Storage(
                 )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def transport_airport_onaccept(form):
+        """
+            Update Affiliation, record ownership and component ownership
+        """
+
+        current.s3db.org_update_affiliations("transport_airport", form.vars)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def transport_heliport_onaccept(form):
+        """
+            Update Affiliation, record ownership and component ownership
+        """
+
+        current.s3db.org_update_affiliations("transport_heliport", form.vars)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def transport_seaport_onaccept(form):
+        """
+            Update Affiliation, record ownership and component ownership
+        """
+
+        current.s3db.org_update_affiliations("transport_seaport", form.vars)
 
 # END =========================================================================

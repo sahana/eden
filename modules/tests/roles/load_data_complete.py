@@ -65,7 +65,7 @@ def create_role_test_data(orgs, branches):
     s3db.configure( "auth_user",
                     onaccept = lambda form: auth.s3_link_user(form.vars))
     s3db.add_component("auth_membership", auth_user="user_id")
-    s3mgr.import_prep = auth.s3_membership_import_prep
+    s3mgr.import_prep = auth.s3_import_prep
 
     user_resource = s3db.resource("auth_user")
     hr_resource = s3db.resource("pr_person")

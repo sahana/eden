@@ -8,23 +8,46 @@
 if request.is_local:
     # This is a request made from the local server
 
-    search_subscription = request.get_vars.get("search_subscription", None)
-    if search_subscription:
-        # We're doing a request for a saved search
-        table = s3db.pr_saved_search
-        search = db(table.auth_token == search_subscription).select(table.pe_id,
-                                                                    limitby=(0, 1)
-                                                                    ).first()
-        if search:
-            # Impersonate user
-            user_id = auth.s3_get_user_id(pe_id=search.pe_id)
+    f = request.get_vars.get("format", None)
+    auth_token = request.get_vars.get("subscription", None)
+    if auth_token and f == "msg":
+        # Subscription lookup request
+        rtable = s3db.pr_subscription_resource
+        stable = s3db.pr_subscription
+        utable = s3db.pr_person_user
+        join = [stable.on(stable.id == rtable.subscription_id),
+                utable.on(utable.pe_id == stable.pe_id)]
 
-            if user_id:
-                # Impersonate the user who is subscribed to this saved search
-                auth.s3_impersonate(user_id)
-            else:
-                # Request is ANONYMOUS
-                auth.s3_impersonate(None)
+        user = db(rtable.auth_token == auth_token).select(utable.user_id,
+                                                          join=join,
+                                                          limitby=(0, 1)) \
+                                                  .first()
+        if user:
+            # Impersonate subscriber
+            auth.s3_impersonate(user.user_id)
+        else:
+            # Anonymous request
+            auth.s3_impersonate(None)
+    else:
+
+        # @todo: deprecate this:
+        search_subscription = request.get_vars.get("search_subscription", None)
+        if search_subscription:
+            # We're doing a request for a saved search
+            table = s3db.pr_saved_search
+            search = db(table.auth_token == search_subscription).select(table.pe_id,
+                                                                        limitby=(0, 1)
+                                                                        ).first()
+            if search:
+                # Impersonate user
+                user_id = auth.s3_get_user_id(pe_id=search.pe_id)
+
+                if user_id:
+                    # Impersonate the user who is subscribed to this saved search
+                    auth.s3_impersonate(user_id)
+                else:
+                    # Request is ANONYMOUS
+                    auth.s3_impersonate(None)
 
 # =============================================================================
 # Check Permissions & fail as early as we can
@@ -203,6 +226,17 @@ def s3_barchart(r, **attr):
     else:
         raise HTTP(501, body=BADFORMAT)
 
+
+# -----------------------------------------------------------------------------
+def s3_guided_tour(output):
+    """
+        Helper function to attach a guided tour (if required) to the output
+    """
+    if request.get_vars.tour:
+        output = s3db.tour_builder(output)
+
+    return output
+
 # -----------------------------------------------------------------------------
 def s3_rest_controller(prefix=None, resourcename=None, **attr):
     """
@@ -265,6 +299,8 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     # Configure standard method handlers
     set_handler = r.set_handler
     set_handler("barchart", s3_barchart)
+    from s3db.cms import S3CMS
+    set_handler("cms", S3CMS)
     set_handler("compose", s3base.S3Compose)
     # @ToDo: Make work in Component Tabs:
     set_handler("copy", lambda r, **attr: \
@@ -276,6 +312,9 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     set_handler("map", s3base.S3Map)
     set_handler("profile", s3base.S3Profile)
     set_handler("report", s3base.S3Report)
+    set_handler("report2", s3base.S3Report2) # temporary setting for testing
+    set_handler("search_ac", s3base.search_ac)
+    set_handler("summary", s3base.S3Summary)
     
     # Don't load S3PDF unless needed (very slow import with Reportlab)
     method = r.method
@@ -301,7 +340,13 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     output = r(**attr)
 
     if isinstance(output, dict) and \
-       (not method or method in ("report", "search", "datatable")):
+       method in (None,
+                  "report",
+                  "search",
+                  "datatable",
+                  "datatable_f",
+                  "summary"):
+                      
         if s3.actions is None:
 
             # Add default action buttons
@@ -354,8 +399,14 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                 add_btn = A(label, _href=url, _class="action-btn")
                 output.update(add_btn=add_btn)
 
-    elif method not in ("import", "review", "approve", "reject", "deduplicate"):
+    elif method not in ("import",
+                        "review",
+                        "approve",
+                        "reject",
+                        "deduplicate"):
         s3.actions = None
+
+    output = s3_guided_tour(output)
 
     return output
 

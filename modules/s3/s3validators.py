@@ -34,26 +34,27 @@ __all__ = ["single_phone_number_pattern",
            "multi_phone_number_pattern",
            "s3_single_phone_requires",
            "s3_phone_requires",
+           "IS_ACL",
+           "IS_ADD_PERSON_WIDGET",
+           "IS_ADD_PERSON_WIDGET2",
+           "IS_COMBO_BOX",
+           "IS_FLOAT_AMOUNT",
+           "IS_INT_AMOUNT",
+           "IS_IN_SET_LAZY",
+           "IS_HTML_COLOUR",
            "IS_LAT",
            "IS_LON",
-           "IS_INT_AMOUNT",
-           "IS_FLOAT_AMOUNT",
-           "IS_HTML_COLOUR",
-           "IS_UTC_OFFSET",
-           "IS_UTC_DATETIME",
+           "IS_LOCATION",
+           "IS_LOCATION_SELECTOR",
+           "IS_LOCATION_SELECTOR2",
            "IS_ONE_OF",
            "IS_ONE_OF_EMPTY",
            "IS_ONE_OF_EMPTY_SELECT",
            "IS_NOT_ONE_OF",
-           "IS_LOCATION",
-           "IS_LOCATION_SELECTOR",
-           "IS_LOCATION_SELECTOR2",
-           "IS_SITE_SELECTOR",
-           "IS_ACL",
-           "IS_ADD_PERSON_WIDGET",
-           "IS_COMBO_BOX",
-           "IS_IN_SET_LAZY",
            "IS_PROCESSED_IMAGE",
+           "IS_SITE_SELECTOR",
+           "IS_UTC_DATETIME",
+           "IS_UTC_OFFSET",
            "QUANTITY_INV_ITEM",
            ]
 
@@ -77,7 +78,7 @@ from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.validators import Validator
 
-from s3utils import S3DateTime, s3_unicode
+from s3utils import S3DateTime, s3_orderby_fields, s3_unicode
     
 def translate(text):
     if text is None:
@@ -122,10 +123,13 @@ class IS_LAT(object):
     """
     def __init__(self,
                  error_message = "Latitude/Northing should be between -90 & 90!"
-                ):
+                 ):
+
         self.minimum = -90
         self.maximum = 90
         self.error_message = error_message
+        # Tell s3_mark_required that this validator doesn't accept NULL values
+        self.mark_required = True
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
@@ -151,17 +155,17 @@ class IS_LAT(object):
                     except:
                         sep.append(count)
                         count += 1
-                sec = ''
+                sec = ""
                 posn = sep[1]
                 while posn != (count-1):
                     sec = sec + val[0][posn+1]#to join the numbers for seconds
                     posn += 1
                 posn2 = sep[0]
-                mins=''
+                mins = ""
                 while posn2 != (sep[1]-1):
                     mins = mins + val[0][posn2+1]# to join the numbers for minutes
                     posn2 += 1
-                deg = ''
+                deg = ""
                 posn3 = 0
                 while posn3 != (sep[0]):
                     deg = deg + val[0][posn3] # to join the numbers for degree
@@ -184,10 +188,13 @@ class IS_LON(object):
     """
     def __init__(self,
                  error_message = "Longitude/Easting should be between -180 & 180!"
-                ):
+                 ):
+
         self.minimum = -180
         self.maximum = 180
         self.error_message = error_message
+        # Tell s3_mark_required that this validator doesn't accept NULL values
+        self.mark_required = True
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
@@ -213,17 +220,17 @@ class IS_LON(object):
                     except:
                         sep.append(count)
                         count += 1
-                sec = ''
+                sec = ""
                 posn = sep[1]
                 while posn != (count-1):
                     sec = sec + val[0][posn+1]#to join the numbers for seconds
                     posn += 1
                 posn2 = sep[0]
-                mins=''
+                mins = ""
                 while posn2 != (sep[1]-1):
                     mins = mins + val[0][posn2+1]# to join the numbers for minutes
                     posn2 += 1
-                deg = ''
+                deg = ""
                 posn3 = 0
                 while posn3 != (sep[0]):
                     deg = deg + val[0][posn3] # to join the numbers for degree
@@ -236,6 +243,11 @@ class IS_LON(object):
 
 # =============================================================================
 class IS_NUMBER(object):
+    """
+        Used by s3data.py to wrap IS_INT_AMOUNT & IS_LOAT_AMOUNT
+    """
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def represent(number, precision=2):
         if number is None:
@@ -509,7 +521,7 @@ class IS_ONE_OF_EMPTY(Validator):
                 # Represent uses a custom lookup, so we only
                 # retrieve the keys here
                 fields = [kfield]
-                orderby = kfield
+                orderby = field
             else:
                 # Represent uses a standard field lookup, so
                 # we can do that right here
@@ -587,10 +599,13 @@ class IS_ONE_OF_EMPTY(Validator):
 
         dbset = self.dbset
         db = dbset._db
-        if self.ktable in db:
 
-            table = db[self.ktable]
-
+        ktablename = self.ktable
+        if ktablename not in db:
+            table = current.s3db.table(ktablename, db_only=True)
+        else:
+            table = db[ktablename]
+        if table:
             if self.fields == "all":
                 fields = [table[f] for f in table.fields if f not in ("wkt", "the_geom")]
             else:
@@ -646,7 +661,15 @@ class IS_ONE_OF_EMPTY(Validator):
                 if not_filterby and not_filterby in table:
                     not_filter_opts = self.not_filter_opts
                     if not_filter_opts:
-                        query &= (~(table[not_filterby].belongs(not_filter_opts)))
+                        if None in not_filter_opts:
+                            # Needs special handling (doesn't show up in 'belongs')
+                            _query = (table[not_filterby] == None)
+                            not_filter_opts = [f for f in not_filter_opts if f is not None]
+                            if not_filter_opts:
+                                _query = _query | (table[not_filterby].belongs(not_filter_opts))
+                            query &= (~_query)
+                        else:
+                            query &= (~(table[not_filterby].belongs(not_filter_opts)))
                     if not self.orderby:
                         filterby_field = table[not_filterby]
                         dd.update(orderby=filterby_field)
@@ -668,6 +691,15 @@ class IS_ONE_OF_EMPTY(Validator):
                         self.left = left
                 if self.left is not None:
                     dd.update(left=self.left)
+                    
+                # Make sure we have all ORDERBY fields in the query
+                # (otherwise postgresql will complain)
+                fieldnames = [str(f) for f in fields]
+                for f in s3_orderby_fields(table, dd.get("orderby")):
+                    if str(f) not in fieldnames:
+                        fields.append(f)
+                        fieldnames.append(str(f))
+
                 records = dbset(query).select(distinct=True, *fields, **dd)
             else:
                 # Note this does not support filtering.
@@ -742,7 +774,7 @@ class IS_ONE_OF_EMPTY(Validator):
             @param instance_types: list of instance tablenames, if table is
                                    a super-entity (required in this case!)
 
-            @returns: tuple (query, left) where query is the query and left joins
+            @return: tuple (query, left) where query is the query and left joins
                       is the list of left joins required for the query
 
             @note: for higher security policies and super-entities with many
@@ -874,7 +906,11 @@ class IS_ONE_OF(IS_ONE_OF_EMPTY):
     def options(self, zero=True):
 
         self.build_set()
-        items = zip(self.theset, self.labels)
+        theset, labels = self.theset, self.labels
+        if theset is None or labels is None:
+            items = []
+        else:
+            items = zip(theset, labels)
         if zero and self.zero is not None and not self.multiple:
             items.insert(0, ("", self.zero))
         return items
@@ -934,8 +970,14 @@ class IS_LOCATION(Validator):
                  level = None,
                  error_message = None
                  ):
+
         self.level = level # can be a List or a single element
         self.error_message = error_message
+        # Make it like IS_ONE_OF to support AddResourceLink
+        self.ktable = "gis_location"
+        self.kfield = "id"
+        # Tell s3_mark_required that this validator doesn't accept NULL values
+        self.mark_required = True
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
@@ -943,16 +985,30 @@ class IS_LOCATION(Validator):
         level = self.level
         if level == "L0":
             # Use cached countries. This returns name if id is for a country.
-            ok = current.gis.get_country(value)
+            try:
+                location_id = int(value)
+            except ValueError:
+                ok = False
+            else:
+                ok = current.gis.get_country(location_id)
         else:
             db = current.db
             table = db.gis_location
             query = (table.id == value) & (table.deleted == False)
             if level:
-                if isinstance(level, list):
-                    query = query & (table.level.belongs(level))
+                if not hasattr(level, "strip") and \
+                       (hasattr(level, "__getitem__") or \
+                        hasattr(level, "__iter__")):
+                    # List or Tuple
+                    if None in level:
+                        # None needs special handling
+                        level = [l for l in level if l is not None]
+                        query &= ((table.level.belongs(level)) | \
+                                  (table.level == None))
+                    else:
+                        query &= (table.level.belongs(level))
                 else:
-                    query = query & (table.level == level)
+                    query &= (table.level == level)
             ok = db(query).select(table.id, limitby=(0, 1))
         if ok:
             return (value, None)
@@ -972,12 +1028,20 @@ class IS_LOCATION_SELECTOR(Validator):
     def __init__(self,
                  error_message = None,
                  ):
+
         self.error_message = error_message
         self.errors = Storage()
         self.id = None
+        # Tell s3_mark_required that this validator doesn't accept NULL values
+        self.mark_required = True
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
+
+        if current.response.s3.bulk:
+            # Pointless in imports
+            return (value, None)
+
         db = current.db
         table = db.gis_location
 
@@ -1170,7 +1234,7 @@ class IS_LOCATION_SELECTOR(Validator):
                 # Test for duplicates
                 query = (table.name == L1) & (table.level == "L1")
                 if L0:
-                    query = query & (table.parent == L0)
+                    query &= (table.parent == L0)
                 location = db(query).select(table.id,
                                             limitby=(0, 1)).first()
                 if location:
@@ -1218,7 +1282,7 @@ class IS_LOCATION_SELECTOR(Validator):
                 # @ToDo: Also check for L2 parenting direct to L0
                 query = (table.name == L2) & (table.level == "L2")
                 if L1:
-                    query = query & (table.parent == L1)
+                    query &= (table.parent == L1)
                 location = db(query).select(table.id,
                                             limitby=(0, 1)).first()
                 if location:
@@ -1274,7 +1338,7 @@ class IS_LOCATION_SELECTOR(Validator):
                 # @ToDo: Also check for L3 parenting direct to L0/1
                 query = (table.name == L3) & (table.level == "L3")
                 if L2:
-                    query = query & (table.parent == L2)
+                    query &= (table.parent == L2)
                 location = db(query).select(table.id,
                                             limitby=(0, 1)).first()
                 if location:
@@ -1338,7 +1402,7 @@ class IS_LOCATION_SELECTOR(Validator):
                 # @ToDo: Also check for L4 parenting direct to L0/1/2
                 query = (table.name == L4) & (table.level == "L4")
                 if L3:
-                    query = query & (table.parent == L3)
+                    query &= (table.parent == L3)
                 location = db(query).select(table.id,
                                             limitby=(0, 1)).first()
                 if location:
@@ -1410,7 +1474,7 @@ class IS_LOCATION_SELECTOR(Validator):
                 # @ToDo: Also check for L5 parenting direct to L0/1/2/3
                 query = (table.name == L5) & (table.level == "L5")
                 if L4:
-                    query = query & (table.parent == L4)
+                    query &= (table.parent == L4)
                 location = db(query).select(table.id,
                                             limitby=(0, 1)).first()
                 if location:
@@ -1531,21 +1595,36 @@ class IS_LOCATION_SELECTOR2(Validator):
     """
 
     def __init__(self,
-                 levels=["L1", "L2", "L3"],
+                 levels=("L1", "L2", "L3"),
                  error_message = None,
                  ):
+
         self.levels = levels
         self.error_message = error_message
+        # Tell s3_mark_required that this validator doesn't accept NULL values
+        self.mark_required = True
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
 
+        if current.response.s3.bulk:
+            # Pointless in imports
+            return (value, None)
+
         vars = current.request.post_vars
+        address = vars.get("address", None)
+        postcode = vars.get("postcode", None)
         lat = vars.get("lat", None)
+        if lat == "":
+            lat = None
         lon = vars.get("lon", None)
+        if lon == "":
+            lon = None
+        wkt = vars.get("wkt", None)
+        if wkt == "":
+            wkt = None
         parent = vars.get("parent", None)
         # Rough check for valid Lat/Lon
-        # @ToDo: Detailed bounds-check later
         errors = Storage()
         if lat:
             try:
@@ -1557,22 +1636,34 @@ class IS_LOCATION_SELECTOR2(Validator):
                 lon = float(lon)
             except ValueError:
                 errors["lon"] = current.T("Longitude is Invalid!")
+        if wkt:
+            try:
+                from shapely.wkt import loads as wkt_loads
+                polygon = wkt_loads(wkt)
+            except:
+                errors["wkt"] = current.T("WKT is Invalid!")
         if errors:
             return (value, errors)
 
-        if lat and lon:
+        if parent or address or postcode or wkt is not None or \
+           (lat is not None and lon is not None):
             # Specific Location
             db = current.db
             table = db.gis_location
             if value == "dummy":
-                # Create form
+                # Create a new point
                 if not current.auth.s3_has_permission("create", table):
                     return (None, current.auth.messages.access_denied)
                 vars = Storage(lat=lat,
                                lon=lon,
+                               wkt=wkt,
+                               inherited=False,
+                               addr_street=address,
+                               addr_postcode=postcode,
                                parent=parent,
                                )
                 # onvalidation
+                # - includes detailed bounds check if deployment_setting doesn't disable it
                 form = Storage()
                 form.errors = errors
                 form.vars = vars
@@ -1582,34 +1673,83 @@ class IS_LOCATION_SELECTOR2(Validator):
                     error = ""
                     for e in errors:
                         error = "%s\n%s" % (error, errors[e]) if error else errors[e]
-                    return (None, error)
+                    return (parent, error)
                 id = table.insert(**vars)
                 vars.id = id
                 # onaccept
                 current.gis.update_location_tree(vars)
                 return (id, None)
             else:
-                # This must be an Update form
-                if not current.auth.s3_has_permission("update", table, record_id=value):
-                    return (value, current.auth.messages.access_denied)
+                # Update existing Point
                 # Check that this is a valid location_id
                 query = (table.id == value) & \
                         (table.deleted == False) & \
                         (table.level == None) # NB Specific Locations only
                 location = db(query).select(table.lat,
                                             table.lon,
+                                            table.wkt,
+                                            table.addr_street,
+                                            table.addr_postcode,
                                             table.parent,
                                             limitby=(0, 1)).first()
                 if location:
-                    # @ToDo: Allow amending the Parent
-                    if lat != location.lat or \
-                       lon != location.lon or \
-                       parent != location.parent:
-                        vars = Storage(lat=lat,
-                                       lon=lon,
+                    changed = False
+                    lparent = location.parent
+                    if parent and lparent:
+                        if int(parent) != int(lparent):
+                            changed = True
+                    elif parent or lparent:
+                        changed = True
+                    if not changed:
+                        addr_street = location.addr_street
+                        if address and addr_street:
+                            if address != addr_street:
+                                changed = True
+                        elif address or addr_street:
+                            changed = True
+                        if not changed:
+                            addr_postcode = location.addr_postcode
+                            if postcode and addr_postcode:
+                                if postcode != addr_postcode:
+                                    changed = True
+                            elif postcode or addr_postcode:
+                                changed = True
+                            if not changed:
+                                if wkt and wkt != location.wkt:
+                                    changed = True
+                                else:
+                                    # Float comparisons need care - just check the 1st 5 decimal points, as that's all we care about
+                                    llat = location.lat
+                                    if lat is not None and llat is not None:
+                                        if round(lat, 5) != round(llat, 5):
+                                            changed = True
+                                    elif lat is not None or llat is not None:
+                                        changed = True
+                                    if not changed:
+                                        llon = location.lon
+                                        if lon is not None and llon is not None:
+                                            if round(lon, 5) != round(llon, 5):
+                                                changed = True
+                                        elif lon is not None or llon is not None:
+                                            changed = True
+
+                    if changed:
+                        # Update the record
+                        if not current.auth.s3_has_permission("update", table, record_id=value):
+                            return (value, current.auth.messages.access_denied)
+                        vars = Storage(addr_street=address,
+                                       addr_postcode=postcode,
                                        parent=parent,
                                        )
+                        if lat is not None and lon is not None:
+                            vars.lat = lat
+                            vars.lon = lon
+                            vars.inherited = False
+                        elif wkt is not None:
+                            vars.wkt = wkt
+                            vars.inherited = False
                         # onvalidation
+                        # - includes detailed bounds check if deployment_setting doesn't disable it
                         form = Storage()
                         form.errors = errors
                         form.vars = vars
@@ -1619,7 +1759,7 @@ class IS_LOCATION_SELECTOR2(Validator):
                             error = ""
                             for e in errors:
                                 error = "%s\n%s" % (error, errors[e]) if error else errors[e]
-                            return (None, error)
+                            return (value, error)
                         # Update the record
                         db(table.id == value).update(**vars)
                         # Update location tree in case parent has changed
@@ -1628,11 +1768,43 @@ class IS_LOCATION_SELECTOR2(Validator):
                         current.gis.update_location_tree(vars)
                     return (value, None)
                 else:
-                    return (value, self.error_message or current.T("Invalid Location!"))
+                    return (value,
+                            self.error_message or current.T("Invalid Location!"))
         else:
-            # Lx
-            # - do a simple Location check
-            return IS_LOCATION(level=self.levels)(value)
+            # Lx or a specific location with blank Parent/Address/Lat/Lon
+            if value:
+                db = current.db
+                table = db.gis_location
+                query = (table.id == value) & \
+                        (table.deleted == False)
+                location = db(query).select(table.level,
+                                            table.lat,
+                                            table.lon,
+                                            table.addr_street,
+                                            table.addr_postcode,
+                                            table.parent,
+                                            limitby=(0, 1)).first()
+                if not location:
+                    return (value,
+                            self.error_message or current.T("Invalid Location!"))
+                if location.level:
+                    # Do a simple Location check
+                    return IS_LOCATION(level=self.levels)(value)
+                else:
+                    # Clear the Parent/Lat/Lon/Address
+                    vars = Storage(lat = None,
+                                   lon = None,
+                                   addr_street = None,
+                                   addr_postcode = None,
+                                   parent = None)
+                    db(table.id == value).update(**vars)
+                    # Update location tree in case parent has changed
+                    vars.id = value
+                    # onaccept
+                    current.gis.update_location_tree(vars)
+            else:
+                # Do a simple Location check
+                return IS_LOCATION(level=self.levels)(value)
 
 # =============================================================================
 class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
@@ -1652,14 +1824,22 @@ class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
     def __init__(self,
                  site_type = "project_site",
                  error_message = None,
-                ):
+                 ):
+
         self.error_message = error_message
         self.errors = Storage()
         self.id = None
         self.site_type = site_type
+        # Tell s3_mark_required that this validator doesn't accept NULL values
+        self.mark_required = True
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
+
+        if current.response.s3.bulk:
+            # Pointless in imports
+            return (value, None)
+
         db = current.db
         auth = current.auth
         gis = current.gis
@@ -1750,19 +1930,18 @@ class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
 class IS_ADD_PERSON_WIDGET(Validator):
 
     def __init__(self,
-                 error_message=None,
-                 mark_required=True):
+                 error_message=None):
 
         self.error_message = error_message
-        self.mark_required = mark_required
+        # Tell s3_mark_required that this validator doesn't accept NULL values
+        self.mark_required = True
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
 
-        T = current.T
-        db = current.db
-        s3db = current.s3db
-        request = current.request
+        if current.response.s3.bulk:
+            # Pointless in imports
+            return (value, None)
 
         person_id = None
         if value:
@@ -1771,50 +1950,55 @@ class IS_ADD_PERSON_WIDGET(Validator):
             except:
                 pass
 
-        ptable = db.pr_person
-        ctable = db.pr_contact
-
-        def email_validate(value, person_id):
-            """ Validate the email address """
-
-            error_message = T("Please enter a valid email address.")
-
-            if value is not None:
-                value = value.strip()
-
-            # No email?
-            if not value:
-                email_required = \
-                    current.deployment_settings.get_hrm_email_required()
-                if email_required:
-                    return (value, error_message)
-                return (value, None)
-
-            # Valid email?
-            value, error = IS_EMAIL()(value)
-            if error:
-                return value, error_message
-
-            # Unique email?
-            query = (ctable.deleted != True) & \
-                    (ctable.contact_method == "EMAIL") & \
-                    (ctable.value == value)
-            if person_id:
-                query = query & \
-                        (ctable.pe_id == ptable.pe_id) & \
-                        (ptable.id != person_id)
-            email = db(query).select(ctable.id, limitby=(0, 1)).first()
-            if email:
-                error_message = T("This email-address is already registered.")
-                return value, error_message
-
-            # Ok!
-            return value, None
-
+        request = current.request
         if request.env.request_method == "POST":
             if "import" in request.args:
                 # Widget Validator not appropriate for this context
                 return (person_id, None)
+
+            T = current.T
+            db = current.db
+            s3db = current.s3db
+
+            ptable = db.pr_person
+            ctable = db.pr_contact
+
+            def email_validate(value, person_id):
+                """ Validate the email address """
+
+                error_message = T("Please enter a valid email address")
+
+                if value is not None:
+                    value = value.strip()
+
+                # No email?
+                if not value:
+                    email_required = \
+                        current.deployment_settings.get_hrm_email_required()
+                    if email_required:
+                        return (value, error_message)
+                    return (value, None)
+
+                # Valid email?
+                value, error = IS_EMAIL()(value)
+                if error:
+                    return value, error_message
+
+                # Unique email?
+                query = (ctable.deleted != True) & \
+                        (ctable.contact_method == "EMAIL") & \
+                        (ctable.value == value)
+                if person_id:
+                    query &= (ctable.pe_id == ptable.pe_id) & \
+                             (ptable.id != person_id)
+                email = db(query).select(ctable.id, limitby=(0, 1)).first()
+                if email:
+                    error_message = T("This email-address is already registered.")
+                    return value, error_message
+
+                # Ok!
+                return value, None
+
             _vars = request.post_vars
             mobile = _vars["mobile_phone"]
             if mobile:
@@ -1826,16 +2010,23 @@ class IS_ADD_PERSON_WIDGET(Validator):
 
             validate = current.manager.validate
             if person_id:
+                # Filter out location_id (location selector form values
+                # being processed only after this widget has been validated)
+                _vars = Storage([(k, _vars[k])
+                                 for k in _vars if k != "location_id"])
+
                 # Validate and update the person record
                 query = (ptable.id == person_id)
                 data = Storage()
                 for f in ptable._filter_fields(_vars):
                     value, error = validate(ptable, None, f, _vars[f])
                     if error:
-                        return (None, None)
-                    elif f == "date_of_birth" and \
-                         value:
-                        data[f] = value.isoformat()
+                        return (person_id, error)
+                    if value:
+                        if f == "date_of_birth":
+                            data[f] = value.isoformat()
+                        else:
+                            data[f] = value
                 if data:
                     db(query).update(**data)
 
@@ -1900,7 +2091,287 @@ class IS_ADD_PERSON_WIDGET(Validator):
                 # Validate the email
                 email, error = email_validate(_vars.email, None)
                 if error:
+                    return (None, error)
+
+                # Validate and add the person record
+                for f in ptable._filter_fields(_vars):
+                    value, error = validate(ptable, None, f, _vars[f])
+                    if error:
+                        return (None, error)
+                    elif f == "date_of_birth" and \
+                        value:
+                        _vars[f] = value.isoformat()
+                person_id = ptable.insert(**ptable._filter_fields(_vars))
+
+                # Need to update post_vars here,
+                # for some reason this doesn't happen through validation alone
+                request.post_vars.update(person_id=str(person_id))
+
+                if person_id:
+                    # Update the super-entities
+                    s3db.update_super(ptable, dict(id=person_id))
+                    # Read the created pe_id
+                    query = (ptable.id == person_id)
+                    person = db(query).select(ptable.pe_id,
+                                              limitby=(0, 1)).first()
+
+                    # Add contact information as provided
+                    if _vars.email:
+                        ctable.insert(pe_id=person.pe_id,
+                                      contact_method="EMAIL",
+                                      value=_vars.email)
+                    if mobile:
+                        ctable.insert(pe_id=person.pe_id,
+                                      contact_method="SMS",
+                                      value=_vars.mobile_phone)
+                    if _vars.occupation:
+                        s3db.pr_person_details.insert(person_id = person_id,
+                                                      occupation = _vars.occupation)
+                else:
+                    # Something went wrong
+                    return (None, self.error_message or \
+                                    T("Could not add person record"))
+
+        return (person_id, None)
+
+# =============================================================================
+class IS_ADD_PERSON_WIDGET2(Validator):
+
+    def __init__(self,
+                 error_message=None):
+
+        self.error_message = error_message
+        # Tell s3_mark_required that this validator doesn't accept NULL values
+        self.mark_required = True
+
+    # -------------------------------------------------------------------------
+    def __call__(self, value):
+
+        if current.response.s3.bulk:
+            # Pointless in imports
+            return (value, None)
+
+        person_id = None
+        if value:
+            try:
+                person_id = int(value)
+            except:
+                pass
+
+        request = current.request
+        if request.env.request_method == "POST":
+            if "import" in request.args:
+                # Widget Validator not appropriate for this context
+                return (person_id, None)
+
+            T = current.T
+            db = current.db
+            s3db = current.s3db
+
+            ptable = db.pr_person
+            ctable = s3db.pr_contact
+
+            def name_split(name):
+                """
+                    Split a full name into First Middle Last
+
+                    NB This *will* cause issues as people often have multi-word firstnames and surnames
+                    http://stackoverflow.com/questions/259634/splitting-a-persons-name-into-forename-and-surname
+                    http://stackoverflow.com/questions/159567/how-can-i-parse-the-first-middle-and-last-name-from-a-full-name-field-in-sql
+                """
+
+                #names = name.split(" ")
+                # Remove prefixes & suffixes
+                #bad = ("mr", "mrs", "ms", "dr", "eng",
+                #       "jr", "sr", "esq", "junior", "senior",
+                #       "ii", "iii", "iv", "v",
+                #       "2nd", "3rd", "4th", "5th",
+                #       )
+                #names = filter(lambda x: x.lower() not in bad, names)
+
+                # Assume First Name is a single word
+                #first_name = names[0]
+                # Assume Last Name is a single word!
+                #if len(names) > 1:
+                #    last_name = names[-1]
+                #else:
+                #    last_name = None
+                # Assume all other names go into the Middle Name
+                #if len(names) > 2:
+                #    middle_name = " ".join(names[1:-1])
+                #else:
+                #    middle_name = None
+                #return first_name, middle_name, last_name
+
+                # https://code.google.com/p/python-nameparser/
+                from nameparser import HumanName
+                name = HumanName(name)
+
+                return name.first, name.middle, name.last
+
+            def email_validate(value, person_id):
+                """ Validate the email address """
+
+                error_message = T("Please enter a valid email address")
+
+                if value is not None:
+                    value = value.strip()
+
+                # No email?
+                if not value:
+                    email_required = \
+                        current.deployment_settings.get_hrm_email_required()
+                    if email_required:
+                        return (value, error_message)
+                    return (value, None)
+
+                # Valid email?
+                value, error = IS_EMAIL()(value)
+                if error:
+                    return value, error_message
+
+                # Unique email?
+                query = (ctable.deleted != True) & \
+                        (ctable.contact_method == "EMAIL") & \
+                        (ctable.value == value)
+                if person_id:
+                    query &= (ctable.pe_id == ptable.pe_id) & \
+                             (ptable.id != person_id)
+                email = db(query).select(ctable.id, limitby=(0, 1)).first()
+                if email:
+                    error_message = T("This email-address is already registered.")
+                    return value, error_message
+
+                # Ok!
+                return value, None
+
+            _vars = request.post_vars
+            mobile = _vars["mobile_phone"]
+            if mobile:
+                # Validate the phone number
+                regex = re.compile(single_phone_number_pattern)
+                if not regex.match(mobile):
+                    error = T("Invalid phone number")
                     return (person_id, error)
+
+            home_phone = _vars.get("home_phone", None)
+            if home_phone:
+                # Validate the phone number
+                regex = re.compile(single_phone_number_pattern)
+                if not regex.match(home_phone):
+                    error = T("Invalid phone number")
+                    return (person_id, error)
+
+            validate = current.manager.validate
+            if person_id:
+                # Filter out location_id (location selector form values
+                # being processed only after this widget has been validated)
+                _vars = Storage([(k, _vars[k])
+                                 for k in _vars if k != "location_id"])
+
+                # Separate the Name into components
+                first_name, middle_name, last_name = name_split(_vars["full_name"])
+                _vars["first_name"] = first_name
+                _vars["middle_name"] = middle_name
+                _vars["last_name"] = last_name
+
+                # Validate and update the person record
+                query = (ptable.id == person_id)
+                data = Storage()
+                for f in ptable._filter_fields(_vars):
+                    value, error = validate(ptable, None, f, _vars[f])
+                    if error:
+                        return (person_id, error)
+                    if value:
+                        if f == "date_of_birth":
+                            data[f] = value.isoformat()
+                        else:
+                            data[f] = value
+                if data:
+                    db(query).update(**data)
+
+                # Update the contact information & details
+                record = db(query).select(ptable.pe_id,
+                                          limitby=(0, 1)).first()
+                if record:
+                    pe_id = record.pe_id
+
+                    r = ctable(pe_id=pe_id, contact_method="EMAIL")
+                    email = _vars["email"]
+                    if email:
+                        query = (ctable.pe_id == pe_id) & \
+                                (ctable.contact_method == "EMAIL") &\
+                                (ctable.deleted != True)
+                        r = db(query).select(ctable.value,
+                                             limitby=(0, 1)).first()
+                        if r: # update
+                            if email != r.value:
+                                db(query).update(value=email)
+                        else: # insert
+                            ctable.insert(pe_id=pe_id,
+                                          contact_method="EMAIL",
+                                          value=email)
+
+                    if mobile:
+                        query = (ctable.pe_id == pe_id) & \
+                                (ctable.contact_method == "SMS") &\
+                                (ctable.deleted != True)
+                        r = db(query).select(ctable.value,
+                                             limitby=(0, 1)).first()
+                        if r: # update
+                            if mobile != r.value:
+                                db(query).update(value=mobile)
+                        else: # insert
+                            ctable.insert(pe_id=pe_id,
+                                          contact_method="SMS",
+                                          value=mobile)
+
+                    if home_phone:
+                        query = (ctable.pe_id == pe_id) & \
+                                (ctable.contact_method == "HOME_PHONE") &\
+                                (ctable.deleted != True)
+                        r = db(query).select(ctable.value,
+                                             limitby=(0, 1)).first()
+                        if r: # update
+                            if home_phone != r.value:
+                                db(query).update(value=home_phone)
+                        else: # insert
+                            ctable.insert(pe_id=pe_id,
+                                          contact_method="HOME_PHONE",
+                                          value=home_phone)
+
+                    occupation = _vars.get("occupation", None)
+                    if occupation:
+                        pdtable = s3db.pr_person_details
+                        query = (pdtable.person_id == person_id) & \
+                                (pdtable.deleted != True)
+                        r = db(query).select(pdtable.occupation,
+                                             limitby=(0, 1)).first()
+                        if r: # update
+                            if occupation != r.occupation:
+                                db(query).update(occupation=occupation)
+                        else: # insert
+                            pdtable.insert(person_id=person_id,
+                                           occupation=occupation)
+
+            else:
+                # Create a new person record
+
+                # Filter out location_id (location selector form values
+                # being processed only after this widget has been validated)
+                _vars = Storage([(k, _vars[k])
+                                 for k in _vars if k != "location_id"])
+
+                # Validate the email
+                email, error = email_validate(_vars.email, None)
+                if error:
+                    return (None, error)
+
+                # Separate the Name into components
+                first_name, middle_name, last_name = name_split(_vars["full_name"])
+                _vars["first_name"] = first_name
+                _vars["middle_name"] = middle_name
+                _vars["last_name"] = last_name
 
                 # Validate and add the person record
                 for f in ptable._filter_fields(_vars):
@@ -1933,6 +2404,10 @@ class IS_ADD_PERSON_WIDGET(Validator):
                         ctable.insert(pe_id=person.pe_id,
                                       contact_method="SMS",
                                       value=_vars.mobile_phone)
+                    if home_phone:
+                        ctable.insert(pe_id=person.pe_id,
+                                      contact_method="HOME_PHONE",
+                                      value=_vars.home_phone)
                     if _vars.occupation:
                         s3db.pr_person_details.insert(person_id = person_id,
                                                       occupation = _vars.occupation)
@@ -1965,7 +2440,9 @@ class IS_PROCESSED_IMAGE(Validator):
                  file_cb,
                  error_message="No image was specified!",
                  image_bounds=(300, 300),
-                 upload_path=None):
+                 upload_path=None,
+                 ):
+
         self.field_name = field_name
         self.file_cb = file_cb
         self.error_message = error_message
@@ -1976,20 +2453,20 @@ class IS_PROCESSED_IMAGE(Validator):
 
         if current.response.s3.bulk:
             # Pointless in imports
-            return value, None
-        
+            return (value, None)
+
         r = current.request
         vars = r.post_vars
 
         if r.env.request_method == "GET":
-            return value, None
+            return (value, None)
 
         # If there's a newly uploaded file, accept it. It'll be processed in
         # the update form.
         # NOTE: A FieldStorage with data evaluates as False (odd!)
         file = vars.get(self.field_name)
         if file not in ("", None):
-            return file, None
+            return (file, None)
 
         encoded_file = vars.get("imagecrop-data")
         file = self.file_cb()
@@ -2015,7 +2492,7 @@ class IS_PROCESSED_IMAGE(Validator):
 
             f.file = StringIO(base64.decodestring(encoded_file))
 
-            return f, None
+            return (f, None)
 
         # Crop the image, if we've got the crop points.
         points = vars.get("imagecrop-points")
@@ -2031,7 +2508,7 @@ class IS_PROCESSED_IMAGE(Validator):
             current.s3task.async("crop_image",
                 args=[path] + points + [self.image_bounds[0]])
 
-            return None, None
+        return (None, None)
 
 # =============================================================================
 class IS_UTC_OFFSET(Validator):

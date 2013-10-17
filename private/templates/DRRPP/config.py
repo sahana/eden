@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
 
+#try:
+#    # Python 2.7
+#    from collections import OrderedDict
+#except:
+#    # Python 2.6
+from gluon.contrib.simplejson.ordered_dict import OrderedDict
+
 from gluon import current, A, DIV, H3, TAG, SQLFORM, IS_NOT_EMPTY, IS_EMAIL
 from gluon.storage import Storage
-from gluon.contrib.simplejson.ordered_dict import OrderedDict
-from s3 import s3forms, s3search
 
-settings = current.deployment_settings
 T = current.T
+settings = current.deployment_settings
 
 """
     Template settings for DRRPP
@@ -69,10 +74,10 @@ settings.L10n.thousands_separator = ","
 settings.fin.currencies = {
     #"AUD" : T("Australian Dollars"),
     #"CAD" : T("Canadian Dollars"),
-    #"EUR" : T("Euros"),
+    "EUR" : T("Euros"),             # Needed for IFRC RMS interop
     #"GBP" : T("Great British Pounds"),
-    #"PHP" : T("Philippine Pesos"),
-    #"CHF" : T("Swiss Francs"),
+    "PHP" : T("Philippine Pesos"),  # Needed for IFRC RMS interop
+    "CHF" : T("Swiss Francs"),      # Needed for IFRC RMS interop
     "USD" : T("United States Dollars"),
     "NZD" : T("New Zealand Dollars"),
 }
@@ -81,7 +86,7 @@ settings.fin.currencies = {
 # GIS Deployment Settings
 # Theme
 settings.gis.map_height = 600
-settings.gis.map_width = 854
+settings.gis.map_width = 960 # container_12
 
 # Display Resources recorded to Admin-Level Locations on the map
 # @ToDo: Move into gis_config?
@@ -115,7 +120,8 @@ settings.project.organisation_roles = {
     2: T("Partner Organization"),
     3: T("Donor"),
     #4: T("Customer"), # T("Beneficiary")?
-    #5: T("Partner")
+    #5: T("Supplier"),
+    9: T("Partner Organization"), # Needed for IFRC RMS interop ("Partner National Society")
 }
 
 # =============================================================================
@@ -192,6 +198,18 @@ def customize_project_project(**attr):
                   project_project=Storage(joinby="project_id",
                                           multiple = False))
     add_component("project_output", project_project="project_id")
+    add_component("doc_document",
+                  project_project=dict(name="file",
+                                       joinby="doc_id",
+                                       filterby="url",
+                                       filterfor=["", None],
+                                       ))
+    add_component("doc_document",
+                  project_project=dict(name="url",
+                                       joinby="doc_id",
+                                       filterby="file",
+                                       filterfor=["", None],
+                                       ))
 
     # Custom CRUD Strings
     crud_strings = s3.crud_strings
@@ -215,8 +233,10 @@ def customize_project_project(**attr):
     table.file.widget = lambda field, value, download_url: \
         SQLFORM.widgets.upload.widget(field, value, download_url, _size = 15)
     table.comments.widget = SQLFORM.widgets.string.widget
+
     # If not logged in, contact person is required
-    if not current.auth.is_logged_in():
+    logged_in = current.auth.is_logged_in()
+    if not logged_in:
         table = s3db.project_drrpp
         table.focal_person.required = True
         table.email.required = True
@@ -232,7 +252,7 @@ def customize_project_project(**attr):
     attr["rheader"] = None
     
     # Only show 10 Project by default to improve load time
-    attr["dt_lengthMenu"] = [[ 10, 50, -1], [ 10, 50, current.T("All")]]
+    attr["dt_lengthMenu"] = [[ 10, 50, -1], [ 10, 50, T("All")]]
     s3.dataTable_iDisplayLength = 10
     
     # Custom PreP
@@ -287,6 +307,7 @@ def customize_project_project(**attr):
             list_fields = ["id",
                            "name",
                            "code",
+                           "description",
                            "status_id",
                            "start_date",
                            "end_date",
@@ -314,6 +335,12 @@ def customize_project_project(**attr):
                            "drrpp.parent_project",
                            "comments",
                            ]
+            if logged_in:
+                 list_fields.extend(["created_by",
+                                     "created_on",
+                                     "modified_by",
+                                     "modified_on",
+                                     ])
             s3db.configure(tablename,
                            list_fields = list_fields)
         return True
@@ -330,9 +357,7 @@ def customize_project_project(**attr):
                    ]
 
     # Custom Search Fields
-    S3SearchSimpleWidget = s3search.S3SearchSimpleWidget
-    S3SearchOptionsWidget = s3search.S3SearchOptionsWidget
-
+    from s3.s3search import S3Search, S3SearchSimpleWidget, S3SearchOptionsWidget
     simple = [
         S3SearchSimpleWidget(name = "project_search_text_simple",
                              label = T("Search Projects"),
@@ -463,8 +488,8 @@ def customize_project_project(**attr):
                              cols = 3,
                              )
      ]
-    search_method = s3search.S3Search(simple = simple,
-                                      advanced = advanced)
+    search_method = S3Search(simple = simple,
+                             advanced = advanced)
 
     # Custom Report Fields
     report_fields = ["name",
@@ -499,14 +524,16 @@ def customize_project_project(**attr):
                              )
 
     # Custom Crud Form
-    crud_form = s3forms.S3SQLCustomForm(
+    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
+    crud_form = S3SQLCustomForm(
         "name",
         "code",
+        "description",
         "status_id",
         "start_date",
         "end_date",
         "drrpp.duration",
-        s3forms.S3SQLInlineComponent(
+        S3SQLInlineComponent(
             "location",
             label = T("Countries"),
             fields = ["location_id"],
@@ -514,14 +541,14 @@ def customize_project_project(**attr):
             render_list = True
         ),
         "drrpp.L1",
-        s3forms.S3SQLInlineComponentCheckbox(
+        S3SQLInlineComponentCheckbox(
             "hazard",
             label = T("Hazards"),
             field = "hazard_id",
             option_help = "comments",
             cols = 4,
         ),
-        s3forms.S3SQLInlineComponentCheckbox(
+        S3SQLInlineComponentCheckbox(
             "theme",
             label = T("Themes"),
             field = "theme_id",
@@ -531,10 +558,9 @@ def customize_project_project(**attr):
         "objectives",
         "drrpp.activities",
         # Outputs
-        s3forms.S3SQLInlineComponent(
+        S3SQLInlineComponent(
             "output",
             label = T("Outputs"),
-            #comment = "Bob",
             fields = ["name", "status"],
         ),
         "drr.hfa",
@@ -543,7 +569,7 @@ def customize_project_project(**attr):
         "drrpp.jnap",
         "organisation_id",
         # Partner Orgs
-        s3forms.S3SQLInlineComponent(
+        S3SQLInlineComponent(
             "organisation",
             name = "partner",
             label = T("Partner Organizations"),
@@ -551,18 +577,21 @@ def customize_project_project(**attr):
                       "comments", # NB This is labelled 'Role' in DRRPP
                       ],
             filterby = dict(field = "role",
-                            options = "2"
-                            )
+                            options = [2, 9]),
+            default = {"role": 2}
         ),
         # Donors
-        s3forms.S3SQLInlineComponent(
+        S3SQLInlineComponent(
             "organisation",
             name = "donor",
             label = T("Donor(s)"),
-            fields = ["organisation_id", "amount", "currency"],
+            fields = ["organisation_id",
+                      "amount",
+                      "currency",
+                      ],
             filterby = dict(field = "role",
-                            options = "3"
-                            )
+                            options = [3]),
+            default = {"role": 3}
         ),
         "budget",
         "drrpp.local_budget",
@@ -571,7 +600,7 @@ def customize_project_project(**attr):
         "drrpp.organisation_id",
         "drrpp.email",
         # Files
-        s3forms.S3SQLInlineComponent(
+        S3SQLInlineComponent(
             "document",
             name = "file",
             label = T("Files"),
@@ -582,7 +611,7 @@ def customize_project_project(**attr):
                             )
         ),
         # Links
-        s3forms.S3SQLInlineComponent(
+        S3SQLInlineComponent(
             "document",
             name = "url",
             label = T("Links"),
@@ -668,106 +697,100 @@ def customize_project_location(**attr):
     table = s3db.project_location
 
     # Custom Components
-    add_component = s3db.add_component
-    add_component("project_drrpp",
-                  project_project=Storage(joinby="project_id",
-                                          multiple = False))
-    add_component("project_output", project_project="project_id")
+    s3db.add_component("project_drrpp",
+                       project_project=Storage(joinby="project_id",
+                                               multiple = False))
 
     # Custom CRUD Strings
-    s3.crud_strings.project_location.title_map = \
-        T("Project Map")
+    s3.crud_strings.project_location.title_map = T("Project Map")
 
-    # Custom Search Fields
-    S3SearchSimpleWidget = s3search.S3SearchSimpleWidget
-    S3SearchOptionsWidget = s3search.S3SearchOptionsWidget
-    simple = [
-        S3SearchSimpleWidget(name = "project_search_text_advanced",
-                             label = T("Search Projects"),
-                             comment = T("Search for a Project by name, code, or description."),
-                             field = ["project_id$name",
-                                      "project_id$code",
-                                      "project_id$description",
-                                      ]
-                             ),
-        S3SearchOptionsWidget(name = "project_search_status",
-                              label = T("Status"),
-                              field = "project_id$status_id",
-                              cols = 4,
-                              )
+    # Custom Search Filters
+    from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
+    filter_widgets = [
+        S3TextFilter(["project_id$name",
+                      "project_id$code",
+                      "project_id$description",
+                      #"location_id$name",
+                      #"project_id$organisation.name",
+                      #"project_id$organisation.acronym",
+                      ],
+                     label=T("Search Projects"),
+                     _class="filter-search",
+                     ),
+        S3OptionsFilter("project_id$status_id",
+                        label=T("Status"),
+                        represent="%(name)s",
+                        #widget="multiselect",
+                        cols=3,
+                        #hidden=True,
+                        ),
+        S3LocationFilter("location_id",
+                         label=T("Country"),
+                         levels=["L0"],
+                         #widget="multiselect",
+                         cols=3,
+                         hidden=True,
+                         ),
+        S3OptionsFilter("project_id$hazard_project.hazard_id",
+                        label=T("Hazard"),
+                        represent="%(name)s",
+                        #widget="multiselect",
+                        cols=4,
+                        hidden=True,
+                        ),
+        S3OptionsFilter("project_id$theme_project.theme_id",
+                        label=T("Theme"),
+                        represent="%(name)s",
+                        #widget="multiselect",
+                        cols=4,
+                        hidden=True,
+                        ),
+        S3OptionsFilter("project_id$drr.hfa",
+                        label=T("HFA"),
+                        #represent="%(name)s",
+                        #widget="multiselect",
+                        cols=5,
+                        hidden=True,
+                        ),
+        S3OptionsFilter("project_id$drrpp.rfa",
+                        label=T("RFA"),
+                        #represent="%(name)s",
+                        #widget="multiselect",
+                        cols=6,
+                        hidden=True,
+                        ),
+        S3OptionsFilter("project_id$organisation_id",
+                        label=T("Lead Organization"),
+                        represent="%(name)s",
+                        #widget="multiselect",
+                        cols=3,
+                        hidden=True,
+                        ),
+        S3OptionsFilter("project_id$partner.organisation_id",
+                        label=T("Partners"),
+                        represent="%(name)s",
+                        #widget="multiselect",
+                        cols=3,
+                        hidden=True,
+                        ),
+        S3OptionsFilter("project_id$donor.organisation_id",
+                        label=T("Donors"),
+                        represent="%(name)s",
+                        #widget="multiselect",
+                        cols=3,
+                        hidden=True,
+                        ),
         ]
-
-    project_hfa_opts = s3db.project_hfa_opts()
-    hfa_options = {}
-    #hfa_options = {None:NONE} To search NO HFA
-    for key in project_hfa_opts.keys():
-        hfa_options[key] = "HFA %s" % key
-    project_rfa_opts = s3db.project_rfa_opts()
-    rfa_options = {}
-    #rfa_options = {None:NONE} To search NO RFA
-    for key in project_rfa_opts.keys():
-        rfa_options[key] = "RFA %s" % key
-
-    advanced = [
-        S3SearchOptionsWidget(name = "project_search_location",
-                              label = T("Country"),
-                              field = "location_id",
-                              cols = 3
-                              ),
-        S3SearchOptionsWidget(name = "project_search_hazard",
-                              label = T("Hazard"),
-                              field = "project_id$hazard.name",
-                              options = s3db.project_hazard_opts,
-                              help_field="comments",
-                              cols = 4
-                              ),
-        S3SearchOptionsWidget(name = "project_search_theme",
-                              label = T("Theme"),
-                              field = "project_id$theme.name",
-                              options = s3db.project_theme_opts,
-                              help_field="comments",
-                              cols = 4
-                              ),
-        S3SearchOptionsWidget(name = "project_search_hfa",
-                              label = T("HFA"),
-                              field = "project_id$drr.hfa",
-                              options = hfa_options,
-                              help_field = project_hfa_opts,
-                              cols = 5
-                              ),
-       S3SearchOptionsWidget(name = "project_search_rfa",
-                             label = T("RFA"),
-                             field = "project_id$drrpp.rfa",
-                             options = rfa_options,
-                             help_field = project_rfa_opts,
-                             cols = 6
-                             ),
-       S3SearchOptionsWidget(name = "project_search_organisation_id",
-                             label = T("Lead Organisation"),
-                             field = "project_id$organisation_id",
-                             cols = 3
-                             ),
-       S3SearchOptionsWidget(name = "project_search_partners",
-                             field = "project_id$partner.organisation_id",
-                             label = T("Partners"),
-                             cols = 3,
-                             ),
-       S3SearchOptionsWidget(name = "project_search_donors",
-                             field = "project_id$donor.organisation_id",
-                             label = T("Donors"),
-                             cols = 3,
-                             )
-     ]
-    search_method = s3search.S3Search(simple = simple,
-                                      advanced = simple + advanced)
-
     s3db.configure("project_location",
-                   search_method = search_method,
+                   filter_widgets=filter_widgets,
+                   # Add CSS to default class better than patching
+                   #map_submit=(T("Search"), "search-button"),
+                   map_advanced=(T("Advanced Search"), T("Simple Search")),
                    )
     
     return attr
 
-settings.ui.customize_project_framework = customize_project_framework
+settings.ui.customize_project_location = customize_project_location
 
 # -----------------------------------------------------------------------------
 def customize_pr_person(**attr):

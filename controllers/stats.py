@@ -23,23 +23,10 @@ def data():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def aggregate():
+def source():
     """ REST Controller """
 
-    def prep(r):
-        if r.method == "clear":
-            if not s3_has_role(ADMIN):
-                auth.permission.fail()
-            s3db.stats_rebuild_aggregates()
-            redirect(URL(c="stats",
-                         f="aggregate",
-                         args="",
-                         ))
-        return True
-    s3.prep = prep
-
-    output = s3_rest_controller()
-    return output
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def demographic():
@@ -54,21 +41,47 @@ def demographic_data():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def group():
+def demographic_aggregate():
+    """ REST Controller """
+
+    def clear_aggregates(r, **attr):
+        if not s3_has_role(ADMIN):
+            auth.permission.fail()
+        s3db.stats_demographic_rebuild_all_aggregates()
+        redirect(URL(c="stats",
+                     f="demographic_aggregate",
+                     args="",
+                     ))
+        
+    s3db.set_method("stats", "demographic_aggregate",
+                    method="clear",
+                    action=clear_aggregates)
+
+    output = s3_rest_controller()
+    return output
+
+# -----------------------------------------------------------------------------
+def people_type():
     """ REST Controller """
 
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def group_type():
+def people():
+    """ REST Controller """
+
+    return s3_rest_controller()
+    
+# -----------------------------------------------------------------------------
+def trained_type():
     """ REST Controller """
 
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def source():
+def trained():
     """ REST Controller """
 
     return s3_rest_controller()
 
-# END =========================================================================
+ # END =========================================================================

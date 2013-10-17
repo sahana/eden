@@ -1,4 +1,5 @@
 
+import errno
 import os
 from os.path import join, exists
 from os import stat, makedirs
@@ -19,8 +20,6 @@ class TwoStageCache(object):
     
     def retrieve(self, file_name, generate_if_not_found):
         pass
-
-import os, errno
 
 def mkdir_p(path):
     try:

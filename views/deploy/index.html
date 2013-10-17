@@ -1,0 +1,10 @@
+{{extend "layout.html"}}
+<div id='home'>
+{{=H2(module_name)}}
+<p>{{=T("This module can be used to send alerts to regional disaster response teams and track their deployments.")}}</p>
+<ul>
+<li><b><a href='{{=URL(c="deploy", f="deployment", args="create")}}'>{{=T("Create New Deployment")}}</a></b></li>
+<li><b><a href='{{=URL(c="deploy", f="deployment", args="summary")}}'>{{=T("Manage Deployments")}}</a></b></li>
+<li><b><a href='{{=URL(c="deploy", f="human_resource", args="summary")}}'>{{=T("Manage Staff & Volutneers")}}</a></b></li>
+</ul>
+</div>

@@ -73,7 +73,6 @@ def project():
 
     # Pre-process
     def prep(r):
-        
         # Location Filter
         s3db.gis_location_filter(r)
         
@@ -98,6 +97,19 @@ def project():
             if not r.component:
                 set_theme_requires(sector_ids)
 
+                if r.method in ("create", "update"):
+                    # Context from a Profile page?"
+                    location_id = request.get_vars.get("(location)", None)
+                    if location_id:
+                        field = s3db.project_location.location_id
+                        field.default = location_id
+                        field.readable = field.writable = False
+                    organisation_id = request.get_vars.get("(organisation)", None)
+                    if organisation_id:
+                        field = r.table.organisation_id
+                        field.default = organisation_id
+                        field.readable = field.writable = False
+
                 if r.id:
                     r.table.human_resource_id.represent = lambda id: \
                         s3db.hrm_human_resource_represent(id, show_link=True)
@@ -116,18 +128,43 @@ def project():
             else:
                 if r.component_name == "organisation":
                     if r.method != "update":
-                        host_role = 1
-                        otable = s3db.project_organisation
-                        query = (otable.deleted != True) & \
-                                (otable.role == host_role) & \
-                                (otable.project_id == r.id)
-                        row = db(query).select(otable.id,
-                                               limitby=(0, 1)).first()
-                        if row:
+                        # @ToDo: Move this to template?
+                        if settings.get_template() == "DRRPP":
                             project_organisation_roles = settings.get_project_organisation_roles()
-                            del project_organisation_roles[host_role]
+                            roles_subset = {}
+                            exclude_roles = [9] # Partner NS should only come via sync from RMS
+                            lead_role = 1
+                            otable = s3db.project_organisation
+                            query = (otable.deleted != True) & \
+                                    (otable.role == lead_role) & \
+                                    (otable.project_id == r.id)
+                            row = db(query).select(otable.id,
+                                                   limitby=(0, 1)).first()
+                            if row:
+                                # We already have a Lead Org, so ensure we don't try to add a 2nd
+                                exclude_roles.append(lead_role)
+                            for role in project_organisation_roles:
+                                if role not in exclude_roles:
+                                    roles_subset[role] = project_organisation_roles[role]
                             otable.role.requires = \
-                                IS_NULL_OR(IS_IN_SET(project_organisation_roles))
+                                IS_NULL_OR(IS_IN_SET(roles_subset))
+                        else:
+                            lead_role = 1
+                            otable = s3db.project_organisation
+                            query = (otable.deleted != True) & \
+                                    (otable.role == lead_role) & \
+                                    (otable.project_id == r.id)
+                            row = db(query).select(otable.id,
+                                                   limitby=(0, 1)).first()
+                            if row:
+                                # We already have a Lead Org, so ensure we don't try to add a 2nd
+                                project_organisation_roles = settings.get_project_organisation_roles()
+                                roles_subset = {}
+                                for role in project_organisation_roles:
+                                    if role != lead_role:
+                                        roles_subset[role] = project_organisation_roles[role]
+                                otable.role.requires = \
+                                    IS_NULL_OR(IS_IN_SET(roles_subset))
 
                 elif r.component_name == "activity":
                     # Filter Activity Type based on Sector
@@ -343,6 +380,15 @@ def theme():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def theme_project():
+    """
+        RESTful CRUD controller
+        - not normally exposed to users via a menu
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def theme_sector():
     """ RESTful CRUD controller for options.s3json lookups """
 
@@ -373,6 +419,7 @@ def theme_sector_widget():
         label = T("Themes"),
         field = "theme_id",
         cols = 4,
+        translate = True,
         # Filter Theme by Sector
         filter = {"linktable": "project_theme_sector",
                   "lkey": "theme_id",
@@ -478,6 +525,22 @@ def activity_type_sector():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def activity_organisation():
+    """ RESTful CRUD controller for options.s3json lookups """
+
+    if auth.permission.format != "s3json":
+        return ""
+
+    # Pre-process
+    def prep(r):
+        if r.method != "options":
+            return False
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def activity():
     """ RESTful CRUD controller """
 
@@ -495,43 +558,16 @@ def activity():
             if r.component is not None:
                 if r.component_name == "document":
                     doc_table = s3db.doc_document
-                    doc_table.organisation_id.readable = False
-                    doc_table.person_id.readable = False
-                    doc_table.location_id.readable = False
-                    doc_table.organisation_id.writable = False
-                    doc_table.person_id.writable = False
-                    doc_table.location_id.writable = False
-
+                    doc_table.organisation_id.readable = doc_table.organisation_id.writable = False
+                    doc_table.person_id.readable = doc_table.person_id.writable = False
+                    doc_table.location_id.readable = doc_table.location_id.writable = False
         return True
     s3.prep = prep
 
-    # Pre-process
-    def postp(r, output):
-        if r.representation == "plain":
-            def represent(record, field):
-                if field.represent:
-                    return field.represent(record[field])
-                else:
-                    return record[field]
-            # Add VirtualFields to Map Popup
-            # Can't inject into SQLFORM, so need to simply replace
-            item = TABLE()
-            table.id.readable = False
-            table.location_id.readable = False
-            fields = [table[f] for f in table.fields if table[f].readable]
-            record = r.record
-            for field in fields:
-                item.append(TR(TD(field.label), TD(represent(record, field))))
-            hierarchy = gis.get_location_hierarchy()
-            item.append(TR(TD(hierarchy["L4"]), TD(record["name"])))
-            for field in ["L3", "L2", "L1"]:
-                item.append(TR(TD(hierarchy[field]), TD(record[field])))
-            output["item"] = item
-        return output
-    s3.postp = postp
-
     return s3_rest_controller(rheader=s3db.project_rheader,
-                              csv_template="activity")
+                              csv_template="activity",
+                              hide_filter=False,
+                              )
 
 # -----------------------------------------------------------------------------
 def location():
@@ -566,12 +602,6 @@ def location():
         if r.representation == "plain":
             # Replace the Map Popup contents with custom content
             item = TABLE()
-            def represent(record, field):
-                if field.represent:
-                    return field.represent(record[field])
-                else:
-                    return record[field]
-
             if settings.get_project_community():
                 # The Community is the primary resource
                 record = r.record
@@ -609,6 +639,10 @@ def location():
                 ptable.id.readable = False
                 fields = [ptable[f] for f in ptable.fields if ptable[f].readable]
                 for field in fields:
+                    if field == "currency":
+                        # Don't display Currency if no Budget
+                        if not project["budget"]:
+                            continue
                     data = project[field]
                     if data:
                         represent = field.represent
@@ -620,20 +654,27 @@ def location():
                 title = s3.crud_strings["project_project"].title_display
                 # Assume authorised to see details
                 popup_url = URL(f="project", args=[project_id])
-                details_btn = A(T("Show Details"), _href=popup_url,
+                details_btn = A(T("Open"), _href=popup_url,
                                 _id="details-btn", _target="_blank")
-                output = dict(
-                        item = item,
-                        title = title,
-                        details_btn = details_btn,
-                    )
-
+                output = dict(item = item,
+                              title = title,
+                              details_btn = details_btn,
+                              )
         return output
     s3.postp = postp
 
+    if "map" in request.args:
+        # S3Map has migrated
+        hide_filter = False
+    else:
+        # Not yet ready otherwise
+        hide_filter = True
+
     return s3_rest_controller(interactive_report=True,
                               rheader=s3db.project_rheader,
-                              csv_template="location")
+                              hide_filter=hide_filter,
+                              csv_template="location",
+                              )
 
 # -----------------------------------------------------------------------------
 def demographic():
@@ -671,7 +712,29 @@ def partners():
 
     # @ToDo: This could need to be a deployment setting
     request.get_vars["organisation.organisation_type_id$name"] = \
-        "Bilateral,Government,Intergovernmental,NGO,UN agency"
+        "Academic,Bilateral,Government,Intergovernmental,NGO,UN agency"
+
+    # Load model
+    table = s3db.org_organisation
+
+    # Modify CRUD Strings
+    ADD_PARTNER = T("Add Partner Organization")
+    s3.crud_strings.org_organisation = Storage(
+        title_create=ADD_PARTNER,
+        title_display=T("Partner Organization Details"),
+        title_list=T("Partner Organizations"),
+        title_update=T("Edit Partner Organization"),
+        title_search=T("Search Partner Organizations"),
+        title_upload=T("Import Partner Organizations"),
+        subtitle_create=ADD_PARTNER,
+        label_list_button=T("List Partner Organizations"),
+        label_create_button=ADD_PARTNER,
+        label_delete_button=T("Delete Partner Organization"),
+        msg_record_created=T("Partner Organization added"),
+        msg_record_modified=T("Partner Organization updated"),
+        msg_record_deleted=T("Partner Organization deleted"),
+        msg_list_empty=T("No Partner Organizations currently registered")
+        )
 
     return s3db.org_organisation_controller()
 
@@ -745,16 +808,30 @@ def milestone():
 def time():
     """ RESTful CRUD controller """
 
+    # Load model to get normal CRUD strings
     table = s3db.project_time
+    hide_filter = False
     vars = request.get_vars
     if "mine" in vars:
-        # Filter to just this User
+        # Display this user's Logged Hours in reverse-order
+        hide_filter = True
         s3.crud_strings["project_time"].title_list = T("My Logged Hours")
         person_id = auth.s3_logged_in_person()
         if person_id:
             # @ToDo: Use URL filter instead, but the Search page will have 
             # to populate it's widgets based on the URL filter  
             s3.filter = (table.person_id == person_id)
+            # Log time with just this user's open tasks visible
+            ttable = db.project_task
+            query = (ttable.pe_id == auth.user.pe_id) & \
+                    (ttable.deleted == False)
+            if "update" not in request.args:
+                # Only log time against Open Tasks
+                query &= (ttable.status.belongs(s3db.project_task_active_statuses))
+            dbset = db(query)
+            table.task_id.requires = IS_ONE_OF(dbset, "project_task.id",
+                                               s3db.project_task_represent_w_project
+                                               )
         list_fields = ["id",
                        "date",
                        "hours",
@@ -763,9 +840,12 @@ def time():
                        "task_id",
                        "comments",
                        ]
+        if settings.get_project_milestones():
+            # Use the field in this format to get the custom represent
+            list_fields.insert(5, (T("Milestone"), "task_id$task_milestone.milestone_id"))
+
         s3db.configure("project_time",
                        orderby="project_time.date desc",
-                       listadd=False,
                        list_fields=list_fields)
 
     elif "week" in vars:
@@ -784,7 +864,7 @@ def time():
         delta = month * months
         s3.filter = (table.date > (now - delta))
 
-    return s3_rest_controller()
+    return s3_rest_controller(hide_filter=hide_filter)
 
 # =============================================================================
 # Comments
@@ -872,6 +952,231 @@ def comments():
     field.writable = field.readable = False
 
     # Form to add a new Comment
+    # @ToDo: Rewrite using SQLFORM or S3SQLCustomForm
+    from gluon.tools import Crud
+    # =============================================================================
+    class CrudS3(Crud):
+        """
+            S3 extension of the gluon.tools.Crud class
+            - select() uses SQLTABLES3 (to allow different linkto construction)
+        """
+
+        def __init__(self):
+            """ Initialise parent class & make any necessary modifications """
+            Crud.__init__(self, current.db)
+
+
+        def select(
+            self,
+            table,
+            query=None,
+            fields=None,
+            orderby=None,
+            limitby=None,
+            headers={},
+            **attr):
+
+            db = current.db
+            request = current.request
+            if not (isinstance(table, db.Table) or table in db.tables):
+                raise HTTP(404)
+            if not self.has_permission("select", table):
+                redirect(current.auth.settings.on_failed_authorization)
+            #if record_id and not self.has_permission("select", table):
+            #    redirect(current.auth.settings.on_failed_authorization)
+            if not isinstance(table, db.Table):
+                table = db[table]
+            if not query:
+                query = table.id > 0
+            if not fields:
+                fields = [table.ALL]
+            rows = db(query).select(*fields, **dict(orderby=orderby,
+                limitby=limitby))
+            if not rows:
+                return None # Nicer than an empty table.
+            if not "linkto" in attr:
+                attr["linkto"] = self.url(args="read")
+            if not "upload" in attr:
+                attr["upload"] = self.url("download")
+            if request.extension != "html":
+                return rows.as_list()
+            return SQLTABLES3(rows, headers=headers, **attr)
+
+    # =============================================================================
+    class SQLTABLES3(SQLTABLE):
+        """
+            S3 custom version of gluon.sqlhtml.SQLTABLE
+
+            Given a SQLRows object, as returned by a db().select(), generates
+            an html table with the rows.
+
+                - we need a different linkto construction for our CRUD controller
+                - we need to specify a different ID field to direct to for the M2M controller
+                - used by S3Resource.sqltable
+
+            Optional arguments:
+
+            @keyword linkto: URL (or lambda to generate a URL) to edit individual records
+            @keyword upload: URL to download uploaded files
+            @keyword orderby: Add an orderby link to column headers.
+            @keyword headers: dictionary of headers to headers redefinions
+            @keyword truncate: length at which to truncate text in table cells.
+                Defaults to 16 characters.
+
+            Optional names attributes for passed to the <table> tag
+
+            Simple linkto example::
+
+                rows = db.select(db.sometable.ALL)
+                table = SQLTABLES3(rows, linkto="someurl")
+
+            This will link rows[id] to .../sometable/value_of_id
+
+            More advanced linkto example::
+
+                def mylink(field):
+                    return URL(args=[field])
+
+                rows = db.select(db.sometable.ALL)
+                table = SQLTABLES3(rows, linkto=mylink)
+
+            This will link rows[id] to::
+
+                current_app/current_controller/current_function/value_of_id
+        """
+
+        def __init__(self, sqlrows,
+                     linkto=None,
+                     upload=None,
+                     orderby=None,
+                     headers={},
+                     truncate=16,
+                     columns=None,
+                     th_link="",
+                     **attributes):
+
+            # reverted since it causes errors (admin/user & manual importing of req/req/import)
+            # super(SQLTABLES3, self).__init__(**attributes)
+            TABLE.__init__(self, **attributes)
+
+            self.components = []
+            self.attributes = attributes
+            self.sqlrows = sqlrows
+            (components, row) = (self.components, [])
+            if not columns:
+                columns = sqlrows.colnames
+            if headers=="fieldname:capitalize":
+                headers = {}
+                for c in columns:
+                    headers[c] = " ".join([w.capitalize() for w in c.split(".")[-1].split("_")])
+            elif headers=="labels":
+                headers = {}
+                for c in columns:
+                    (t, f) = c.split(".")
+                    field = sqlrows.db[t][f]
+                    headers[c] = field.label
+
+            if headers!=None:
+                for c in columns:
+                    if orderby:
+                        row.append(TH(A(headers.get(c, c),
+                                        _href=th_link+"?orderby=" + c)))
+                    else:
+                        row.append(TH(headers.get(c, c)))
+                components.append(THEAD(TR(*row)))
+
+            tbody = []
+            table_field = re.compile("[\w_]+\.[\w_]+")
+            for (rc, record) in enumerate(sqlrows):
+                row = []
+                if rc % 2 == 0:
+                    _class = "even"
+                else:
+                    _class = "odd"
+                for colname in columns:
+                    if not table_field.match(colname):
+                        if "_extra" in record and colname in record._extra:
+                            r = record._extra[colname]
+                            row.append(TD(r))
+                            continue
+                        else:
+                            raise KeyError("Column %s not found (SQLTABLE)" % colname)
+                    (tablename, fieldname) = colname.split(".")
+                    try:
+                        field = sqlrows.db[tablename][fieldname]
+                    except (KeyError, AttributeError):
+                        field = None
+                    if tablename in record \
+                            and isinstance(record, Row) \
+                            and isinstance(record[tablename], Row):
+                        r = record[tablename][fieldname]
+                    elif fieldname in record:
+                        r = record[fieldname]
+                    else:
+                        raise SyntaxError("something wrong in Rows object")
+                    r_old = r
+                    if not field:
+                        pass
+                    elif linkto and field.type == "id":
+                        #try:
+                            #href = linkto(r, "table", tablename)
+                        #except TypeError:
+                            #href = "%s/%s/%s" % (linkto, tablename, r_old)
+                        #r = A(r, _href=href)
+                        try:
+                            href = linkto(r)
+                        except TypeError:
+                            href = "%s/%s" % (linkto, r)
+                        r = A(r, _href=href)
+                    #elif linkto and field.type.startswith("reference"):
+                        #ref = field.type[10:]
+                        #try:
+                            #href = linkto(r, "reference", ref)
+                        #except TypeError:
+                            #href = "%s/%s/%s" % (linkto, ref, r_old)
+                            #if ref.find(".") >= 0:
+                                #tref,fref = ref.split(".")
+                                #if hasattr(sqlrows.db[tref],"_primarykey"):
+                                    #href = "%s/%s?%s" % (linkto, tref, urllib.urlencode({fref:r}))
+                        #r = A(str(r), _href=str(href))
+                    elif linkto \
+                         and hasattr(field._table, "_primarykey") \
+                         and fieldname in field._table._primarykey:
+                        # have to test this with multi-key tables
+                        key = urllib.urlencode(dict([ \
+                                    ((tablename in record \
+                                          and isinstance(record, Row) \
+                                          and isinstance(record[tablename], Row)) \
+                                          and (k, record[tablename][k])) \
+                                          or (k, record[k]) \
+                                        for k in field._table._primarykey]))
+                        r = A(r, _href="%s/%s?%s" % (linkto, tablename, key))
+                    elif field.type.startswith("list:"):
+                        r = field.represent(r or [])
+                    elif field.represent:
+                        r = field.represent(r)
+                    elif field.type.startswith("reference"):
+                        pass
+                    elif field.type == "blob" and r:
+                        r = "DATA"
+                    elif field.type == "upload":
+                        if upload and r:
+                            r = A("file", _href="%s/%s" % (upload, r))
+                        elif r:
+                            r = "file"
+                        else:
+                            r = ""
+                    elif field.type in ["string", "text"]:
+                        r = str(field.formatter(r))
+                        ur = unicode(r, "utf8")
+                        if truncate!=None and len(ur) > truncate:
+                            r = ur[:truncate - 3].encode("utf8") + "..."
+                    row.append(TD(r))
+                tbody.append(TR(_class=_class, *row))
+            components.append(TBODY(*tbody))
+
+    crud = CrudS3()
+    crud.messages.submit_button = T("Save")
     form = crud.create(table, formname="project_comment/%s" % task_id)
 
     # List of existing Comments

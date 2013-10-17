@@ -89,9 +89,13 @@ from s3filter import *
 
 # Reporting
 from s3report import *
+from s3report2 import *
 
 # Profiles
 from s3profile import *
+
+# Summary
+from s3summary import *
 
 # Synchronization
 from s3sync import *
@@ -115,6 +119,9 @@ from s3gis import *
 
 # Messaging
 from s3msg import *
+
+# Notifications
+from s3notify import *
 
 # GUI Navigation Framework
 from s3navigation import *

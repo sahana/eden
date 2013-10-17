@@ -1,5 +1,7 @@
 /**
  * Used by S3EmbedComponentWidget (modules/s3widgets.py)
+ *
+ * - can only have max 1 of these per Page
  */
 
 $(function() {
@@ -39,6 +41,7 @@ $(function() {
              $('#clear_form_link').removeClass('hide');
         }
     });
+    // Global scope as called onClick
     clear_component_form = function() {
         enable_embedded();
         $(real_input).val('');
@@ -48,11 +51,12 @@ $(function() {
         $('#clear_form_link').addClass('hide');
         $('#edit_selected_link').addClass('hide');
     };
+    // Global scope as called onClick
     edit_selected_form = function() {
         enable_embedded();
         $('#edit_selected_link').addClass('hide');
     };
-    // Called on post-process by the Autocomplete Widget
+    // Global scope as called on post-process by the Autocomplete Widget
     select_component = function(component_id) {
         $('#select_from_registry').addClass('hide');
         $('#clear_form_link').addClass('hide');

@@ -3,30 +3,27 @@
  {{s3.scripts.append("/%s/static/scripts/jquery.dataTables.fnSetFilteringDelay.js" % appname)}}
  {{s3.scripts.append("/%s/static/scripts/jquery.dataTables.sortFunctions.js" % appname)}}
  {{s3.scripts.append("/%s/static/scripts/FixedHeader.js" % appname)}}
+ {{s3.scripts.append("/%s/static/scripts/S3/s3.dataTables.ReloadAjax.js" % appname)}}
  {{s3.scripts.append("/%s/static/scripts/S3/s3.dataTables.js" % appname)}}
 {{else:}}{{s3.scripts.append("/%s/static/scripts/S3/s3.dataTables.min.js" % appname)}}{{pass}}
 <script type="text/javascript">
-i18n.all='{{=T("All")}}'
-S3.dataTables=new Array()
-{{if s3.dataTableID:}}S3.dataTables.id=[{{idlist=[s3.dataTableID] if not isinstance (s3.dataTableID, (tuple, list)) else s3.dataTableID
- for id in idlist:}}'{{=XML(id)}}',{{pass}}]
+{{=XML(s3base.S3DataTable.i18n())}}
+S3.dataTables={}
+{{if s3.dataTableID:}}{{idlist=[s3.dataTableID] if not isinstance(s3.dataTableID, (tuple, list)) else s3.dataTableID}}
+ S3.dataTables.id=[{{=XML(",".join(["'%s'" % id for id in idlist]))}}]
 {{pass}}
 {{if s3.actions:}}
  S3.dataTables.Actions={{=XML(s3.actions)}}
  {{if "_jqclick" in s3.actions[-1]:}}
  function S3ActionCallBack(event){
-  id=this.id
+  var id=this.id
   {{=XML(s3.actions[-1]["_jqclick"])}}
   event.stopPropagation()
   return false}
  {{pass}}
 {{pass}}
 {{if response.aadata is not None:}}
- S3.dataTables.oCache={
-  iCacheLower:{{=s3.start}},
-  iCacheUpper:{{=s3.limit}},
-  lastJson:{{=XML(response.aadata)}}
- }
+ S3.dataTables.oCache={iCacheLower:{{=s3.start}},iCacheUpper:{{=s3.limit}},lastJson:{{=XML(response.aadata)}}}
 {{pass}}
 </script>
 {{if s3.dataTableMap:}}{{=XML(s3.dataTableMap)}}{{pass}}

@@ -1,4 +1,10 @@
-{{try:}}{{=H2(title)}}{{except:}}{{pass}}
+{{try:}}{{=H2(A(title_list,
+          _href = URL(args="summary")),
+          " ",
+          I(_class="icon-chevron-right"),
+          " ",
+          T("Add")
+        )}}{{except:}}{{pass}}
 <div id='rheader'>
 {{try:}}{{=XML(rheader)}}
 </div>
@@ -10,5 +16,8 @@
  {{include "key.html"}}
  <div class='form-container form-horizontal'>
  {{try:}}{{=form}}{{except:}}{{pass}}
+ <a href='{{=URL(args="summary")}}' class='btn btn-danger cancel' type='button'>
+  {{=T("Cancel")}}
+ </a>
  </div>
 </div>

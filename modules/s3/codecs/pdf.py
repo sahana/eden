@@ -297,8 +297,6 @@ class S3RL_PDF(S3Codec):
             use the list of readable fields.
         """
 
-        from s3.s3data import S3DataTable
-
         fields = self.list_fields
         if fields:
             list_fields = [f for f in fields if f != "id"]
@@ -313,20 +311,19 @@ class S3RL_PDF(S3Codec):
         filter, orderby, left = resource.datatable_filter(list_fields, vars)
         resource.add_filter(filter)
 
-        result = resource.fast_select(list_fields,
-                                      left=left,
-                                      start=None,
-                                      limit=None,
-                                      count=True,
-                                      getids=True,
-                                      orderby=orderby,
-                                      represent=True,
-                                      show_links=False)
+        result = resource.select(list_fields,
+                                 left=left,
+                                 limit=None,
+                                 count=True,
+                                 getids=True,
+                                 orderby=orderby,
+                                 represent=True,
+                                 show_links=False)
 
         # Now generate the PDF table
         pdf_table = S3PDFTable(doc,
                                result["rfields"],
-                               result["data"],
+                               result["rows"],
                                groupby = self.pdf_groupby,
                                autogrow = self.table_autogrow,
                                body_height = doc.body_height,
@@ -363,8 +360,7 @@ class EdenDocTemplate(BaseDocTemplate):
         if paper_size:
             self.paper_size = paper_size
         else:
-            settings = current.deployment_settings
-            if settings.get_paper_size() == "Letter":
+            if current.deployment_settings.get_paper_size() == "Letter":
                 self.paper_size = LETTER
             else:
                 self.paper_size = A4
@@ -1197,7 +1193,7 @@ class S3html2pdf():
             Parses a DIV element and converts it into a format for ReportLab
 
             @param html: the DIV element  to convert
-            @returns: a list containing text that ReportLab can use
+            @return: a list containing text that ReportLab can use
         """
 
         content = []
@@ -1216,7 +1212,7 @@ class S3html2pdf():
             Parses an A element and converts it into a format for ReportLab
 
             @param html: the A element  to convert
-            @returns: a list containing text that ReportLab can use
+            @return: a list containing text that ReportLab can use
         """
 
         content = []
@@ -1237,7 +1233,7 @@ class S3html2pdf():
 
             @param html: the IMG element  to convert
             @param uploadfolder: an optional uploadfolder in which to find the file
-            @returns: a list containing an Image that ReportLab can use
+            @return: a list containing an Image that ReportLab can use
 
 
             @note: The `src` attribute of the image must either
@@ -1287,7 +1283,7 @@ class S3html2pdf():
             Parses a P element and converts it into a format for ReportLab
 
             @param html: the P element  to convert
-            @returns: a list containing text that ReportLab can use
+            @return: a list containing text that ReportLab can use
         """
 
         content = []
@@ -1306,7 +1302,7 @@ class S3html2pdf():
             Parses a TABLE element and converts it into a format for ReportLab
 
             @param html: the TABLE element  to convert
-            @returns: a list containing text that ReportLab can use
+            @return: a list containing text that ReportLab can use
         """
 
         style = [("FONTSIZE", (0, 0), (-1, -1), self.fontsize),
@@ -1344,7 +1340,7 @@ class S3html2pdf():
             Parses a TR element and converts it into a format for ReportLab
 
             @param html: the TR element  to convert
-            @returns: a list containing text that ReportLab can use
+            @return: a list containing text that ReportLab can use
         """
 
         row = []

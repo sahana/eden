@@ -1,0 +1,38 @@
+<html>
+<head>
+    <style>
+        body {
+                background-color: white;
+                font-family: sans-serif;
+                color: #4f565d;
+        }
+        table {
+                border-collapse: collapse;
+        }
+        thead {
+                background-color: #dfdfdf;
+        }
+        tbody {
+                background-color: #dfdfdf;
+        }
+        th, td {
+                border: 1px solid #cfcfcf;
+                padding: 2px;
+        }
+    </style>
+</head>
+<body>
+{{=H4("%s: %s %s" % (system, resource, current.T("Update Notification")))}}
+{{if filter_query:}}
+<b>Filter: </b>{{=filter_query}}
+{{pass}}
+{{if new is not None:}}
+<p>The following {{=new}} {{=resource}} have been added:</p>
+{{=new_records}}
+{{pass}}
+{{if upd is not None:}}
+<p>The following {{=upd}} {{=resource}} have been updated:</p>
+{{=upd_records}}
+{{pass}}
+</body>
+</html>

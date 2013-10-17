@@ -20,12 +20,12 @@ import s3db.climate
 import s3db.cms
 import s3db.cr
 import s3db.delphi
+import s3db.deploy
 import s3db.doc
 import s3db.dvi
 import s3db.dvr
 import s3db.event
 import s3db.fire
-import s3db.flood
 import s3db.gis
 import s3db.hms
 import s3db.hrm
@@ -48,11 +48,13 @@ import s3db.supply
 import s3db.support
 import s3db.survey
 import s3db.sync
+import s3db.tour
 import s3db.translate
 import s3db.transport
 import s3db.vehicle
 import s3db.vol
 import s3db.vulnerability
+import s3db.water
 
 current.s3db = s3db = S3Model()
 

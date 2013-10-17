@@ -1,9 +1,6 @@
 {{extend "layout.html"}}
-<div style='margin:10px 0 0 -16px;width:100%;max-width:980px;'>
-<div id='home'>
-  <a href='{{=URL(f="map_viewing_client")}}' style='font-weight:bold;padding-left:8px;' id='gis_fullscreen_map-btn'>
-   {{=T("View Fullscreen Map")}}
-  </a>
-  {{=XML(map)}}
-</div>
+<div class='map_home'>
+ <a href='{{=URL(f="map_viewing_client")}}' class='gis_fullscreen_map-btn'>{{=T("View Fullscreen Map")}}</a>
+ <a href='#' class='gis_print_map-btn'>{{="%s / %s" % (T("Print"), T("Share"))}}</a>
+ {{=XML(map)}}
 </div>

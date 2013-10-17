@@ -3,7 +3,7 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Project Tasks (Requirements) - CSV Import Stylesheet
+         Project Tasks - CSV Import Stylesheet
 
          CSV column...........Format..........Content
 
@@ -22,7 +22,7 @@
          Time Estimated.......integer.........Task time_estimated 
          Priority.............string..........Task priority
          Status...............string..........Task status
-         Comments.............string..........Task comment
+         Comments.............string..........Task comments
 
     *********************************************************************** -->
 

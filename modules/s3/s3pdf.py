@@ -308,7 +308,7 @@ class S3PDF(S3Method):
                       * report_groupby
                       * report_hide_comments
 
-            @returns: output object to send to the view
+            @return: output object to send to the view
         """
 
         # ---------------------------------------------------------------------
@@ -3157,10 +3157,10 @@ class S3PDFDataSource:
         headers = [f.label for f in lfields if f.show]
         if orderby != None:
             orderby = fields[0].field
-        self.records = resource.select(fields=list_fields,
-                                       start=None,
+        self.records = resource.select(list_fields,
                                        limit=None,
-                                       orderby=orderby)
+                                       orderby=orderby,
+                                       as_rows=True)
 
         # Pass to getLabels
         self.labels = headers

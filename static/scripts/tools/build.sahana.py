@@ -171,103 +171,155 @@ def dojs(dogis = False, warnings = True):
 
     # dataLists
     print "Compressing dataLists"
-    sourceDirectorydataLists = ".."
-    configFilenamedataLists = "sahana.js.dataLists.cfg"
-    outputFilenamedataLists = "s3.dataLists.min.js"
-    mergeddataLists = mergejs.run(sourceDirectorydataLists,
-                                   None,
-                                   configFilenamedataLists)
-    minimizeddataLists = minimize(mergeddataLists)
-    open(outputFilenamedataLists, "w").write(minimizeddataLists)
+    sourceDirectory = ".."
+    configFilename = "sahana.js.dataLists.cfg"
+    outputFilename = "s3.dataLists.min.js"
+    merged = mergejs.run(sourceDirectory,
+                         None,
+                         configFilename)
+    minimized = minimize(merged)
+    open(outputFilename, "w").write(minimized)
     try:
-        os.remove("../S3/%s" % outputFilenamedataLists)
+        os.remove("../S3/%s" % outputFilename)
     except:
         pass
-    shutil.move(outputFilenamedataLists, "../S3")
+    shutil.move(outputFilename, "../S3")
 
     # dataTables
     print "Compressing dataTables"
-    sourceDirectorydataTables = ".."
-    configFilenamedataTables = "sahana.js.dataTables.cfg"
-    outputFilenamedataTables = "s3.dataTables.min.js"
-    mergeddataTables = mergejs.run(sourceDirectorydataTables,
-                                   None,
-                                   configFilenamedataTables)
-    minimizeddataTables = minimize(mergeddataTables)
-    open(outputFilenamedataTables, "w").write(minimizeddataTables)
+    sourceDirectory = ".."
+    configFilename = "sahana.js.dataTables.cfg"
+    outputFilename = "s3.dataTables.min.js"
+    merged = mergejs.run(sourceDirectory,
+                         None,
+                         configFilename)
+    minimized = minimize(merged)
+    open(outputFilename, "w").write(minimized)
     try:
-        os.remove("../S3/%s" % outputFilenamedataTables)
+        os.remove("../S3/%s" % outputFilename)
     except:
         pass
-    shutil.move(outputFilenamedataTables, "../S3")
+    shutil.move(outputFilename, "../S3")
 
-    configFilenamedataTables = "sahana.js.dataTables_multi.cfg"
-    outputFilenamedataTables = "s3.dataTables.multi.min.js"
-    mergeddataTables = mergejs.run(sourceDirectorydataTables,
+    configFilename = "sahana.js.dataTables_multi.cfg"
+    outputFilename = "s3.dataTables.multi.min.js"
+    merged = mergejs.run(sourceDirectory,
                                    None,
-                                   configFilenamedataTables)
-    minimizeddataTables = minimize(mergeddataTables)
-    open(outputFilenamedataTables, "w").write(minimizeddataTables)
+                                   configFilename)
+    minimized = minimize(merged)
+    open(outputFilename, "w").write(minimized)
     try:
-        os.remove("../S3/%s" % outputFilenamedataTables)
+        os.remove("../S3/%s" % outputFilename)
     except:
         pass
-    shutil.move(outputFilenamedataTables, "../S3")
+    shutil.move(outputFilename, "../S3")
+
+    # pivotTables
+    print "Compressing pivotTables"
+    sourceDirectory = ".."
+    configFilename = "sahana.js.pivotTables.cfg"
+    outputFilename = "s3.pivotTables.min.js"
+    merged = mergejs.run(sourceDirectory,
+                         None,
+                         configFilename)
+    minimized = minimize(merged)
+    open(outputFilename, "w").write(minimized)
+    try:
+        os.remove("../S3/%s" % outputFilename)
+    except:
+        pass
+    shutil.move(outputFilename, "../S3")
+
+    # ImageCrop
+    print "Compressing ImageCrop"
+    sourceDirectory = ".."
+    configFilename = "sahana.js.imageCrop.cfg"
+    outputFilename = "s3.imagecrop.widget.min.js"
+    merged = mergejs.run(sourceDirectory,
+                         None,
+                         configFilename)
+    minimized = minimize(merged)
+    open(outputFilename, "w").write(minimized)
+    try:
+        os.remove("../S3/%s" % outputFilename)
+    except:
+        pass
+    shutil.move(outputFilename, "../S3")
 
     # Reports
     print "Compressing Reports"
-    sourceDirectoryReport = ".."
-    configFilenameReport = "sahana.js.report.cfg"
-    outputFilenameReport = "s3.report.min.js"
-    mergedReport = mergejs.run(sourceDirectoryReport,
-                               None,
-                               configFilenameReport)
-    minimizedReport = minimize(mergedReport)
-    open(outputFilenameReport, "w").write(minimizedReport)
+    sourceDirectory = ".."
+    configFilename = "sahana.js.report.cfg"
+    outputFilename = "s3.report.min.js"
+    merged = mergejs.run(sourceDirectory,
+                         None,
+                         configFilename)
+    minimized = minimize(merged)
+    open(outputFilename, "w").write(minimized)
     try:
-        os.remove("../S3/%s" % outputFilenameReport)
+        os.remove("../S3/%s" % outputFilename)
     except:
         pass
-    shutil.move(outputFilenameReport, "../S3")
+    shutil.move(outputFilename, "../S3")
+
+    # Guided Tour
+    print "Compressing Guided Tour"
+    sourceDirectory = ".."
+    configFilename = "sahana.js.guidedTour.cfg"
+    outputFilename = "s3.guidedtour.min.js"
+    merged = mergejs.run(sourceDirectory,
+                         None,
+                         configFilename)
+    minimized = minimize(merged)
+    open(outputFilename, "w").write(minimized)
+    try:
+        os.remove("../S3/%s" % outputFilename)
+    except:
+        pass
+    shutil.move(outputFilename, "../S3")
 
     # Vulnerability
     print "Compressing Vulnerability"
-    sourceDirectoryVulnerability = "../.."
-    configFilenameVulnerability = "sahana.js.vulnerability.cfg"
-    outputFilenameVulnerability = "s3.vulnerability.min.js"
-    mergedVulnerability = mergejs.run(sourceDirectoryVulnerability,
-                                      None,
-                                      configFilenameVulnerability)
-    minimizedVulnerability = minimize(mergedVulnerability)
-    open(outputFilenameVulnerability, "w").write(minimizedVulnerability)
+    sourceDirectory = "../.."
+    configFilename = "sahana.js.vulnerability.cfg"
+    outputFilename = "s3.vulnerability.min.js"
+    merged = mergejs.run(sourceDirectory,
+                         None,
+                         configFilename)
+    minimized = minimize(merged)
+    open(outputFilename, "w").write(minimized)
     try:
-        os.remove("../../themes/Vulnerability/js/%s" % outputFilenameVulnerability)
+        os.remove("../../themes/Vulnerability/js/%s" % outputFilename)
     except:
         pass
-    shutil.move(outputFilenameVulnerability, "../../themes/Vulnerability/js")
+    shutil.move(outputFilename, "../../themes/Vulnerability/js")
     print "Compressing Vulnerability GIS"
-    sourceDirectoryVulnerability = "../../themes/Vulnerability/js"
-    configFilenameVulnerability = "sahana.js.vulnerability_gis.cfg"
-    outputFilenameVulnerability = "OpenLayers.js"
-    mergedVulnerability = mergejs.run(sourceDirectoryVulnerability,
-                                      None,
-                                      configFilenameVulnerability)
-    minimizedVulnerability = minimize(mergedVulnerability)
-    open(outputFilenameVulnerability, "w").write(minimizedVulnerability)
+    sourceDirectory = "../../themes/Vulnerability/js"
+    configFilename = "sahana.js.vulnerability_gis.cfg"
+    outputFilename = "OpenLayers.js"
+    merged = mergejs.run(sourceDirectory,
+                         None,
+                         configFilename)
+    minimized = minimize(merged)
+    open(outputFilename, "w").write(minimized)
     try:
-        os.remove("../../themes/Vulnerability/js/%s" % outputFilenameVulnerability)
+        os.remove("../../themes/Vulnerability/js/%s" % outputFilename)
     except:
         pass
-    shutil.move(outputFilenameVulnerability, "../../themes/Vulnerability/js")
+    shutil.move(outputFilename, "../../themes/Vulnerability/js")
 
     # Single scripts
-    for filename in ["contacts",
+    for filename in ["add_person",
+                     "contacts",
                      "embed_component",
+                     "gis",
                      "gis.fullscreen",
                      "locationselector.widget",
                      "locationselector.widget2",
+                     "msg",
                      "popup",
                      "register_validation",
+                     "select_person",
                      "timeline",
                      ]:
         print "Compressing s3.%s.js" % filename
@@ -291,45 +343,28 @@ def dojs(dogis = False, warnings = True):
                 out.write(minimize(inp.read()))
         
     if dogis:
-        sourceDirectoryGIS = "../S3"
         sourceDirectoryOpenLayers = "../gis/openlayers/lib"
         sourceDirectoryOpenLayersExten = "../gis"
         sourceDirectoryMGRS = "../gis"
         sourceDirectoryGeoExt = "../gis/GeoExt/lib"
-        #sourceDirectoryGeoExtux = "../gis/GeoExt/ux"
         sourceDirectoryGxp = "../gis/gxp"
-        #sourceDirectoryGeoExplorer = "../gis/GeoExplorer"
-        configFilenameGIS = "sahana.js.gis.cfg"
         configFilenameOpenLayers = "sahana.js.ol.cfg"
-        #configFilenameOpenLayersExten = "sahana.js.ol_exten.cfg"
         configFilenameMGRS = "sahana.js.mgrs.cfg"
         configFilenameGeoExt = "sahana.js.geoext.cfg"
-        #configFilenameGeoExtux = "sahana.js.geoextux.cfg"
         configFilenameGxpMin = "sahana.js.gxp.cfg"
         configFilenameGxp2 = "sahana.js.gxp2.cfg"
         configFilenameGxpFull = "sahana.js.gxpfull.cfg"
-        #configFilenameGeoExplorer = "sahana.js.geoexplorer.cfg"
-        outputFilenameGIS = "s3.gis.min.js"
         outputFilenameOpenLayers = "OpenLayers.js"
         outputFilenameMGRS = "MGRS.min.js"
         outputFilenameGeoExt = "GeoExt.js"
         outputFilenameGxp = "gxp.js"
         outputFilenameGxp2 = "gxp_upload.js"
-        #outputFilenameGeoExplorer = "GeoExplorer.js"
 
         # Merge GIS JS Files
-        print "Merging GIS scripts."
-        mergedGIS = mergejs.run(sourceDirectoryGIS,
-                                None,
-                                configFilenameGIS)
-
         print "Merging OpenLayers libraries."
         mergedOpenLayers = mergejs.run(sourceDirectoryOpenLayers,
                                        None,
                                        configFilenameOpenLayers)
-        #mergedOpenLayersExten = mergejs.run(sourceDirectoryOpenLayersExten,
-        #                                    None,
-        #                                    configFilenameOpenLayersExten)
 
         print "Merging MGRS libraries."
         mergedMGRS = mergejs.run(sourceDirectoryMGRS,
@@ -340,9 +375,6 @@ def dojs(dogis = False, warnings = True):
         mergedGeoExt = mergejs.run(sourceDirectoryGeoExt,
                                    None,
                                    configFilenameGeoExt)
-        #mergedGeoExtux = mergejs.run(sourceDirectoryGeoExtux,
-        #                             None,
-        #                             configFilenameGeoExtux)
 
         print "Merging gxp libraries."
         mergedGxpMin = mergejs.run(sourceDirectoryGxp,
@@ -355,16 +387,7 @@ def dojs(dogis = False, warnings = True):
                                     None,
                                     configFilenameGxpFull)
 
-        #print "Merging GeoExplorer libraries."
-        #mergedGeoExplorer = mergejs.run(sourceDirectoryGeoExplorer,
-        #                                None,
-        #                                configFilenameGeoExplorer)
-
-        
         # Compress JS files
-        print "Compressing - GIS JS"
-        minimizedGIS = minimize(mergedGIS)
-
         print "Compressing - OpenLayers JS"
         if use_compressor == "closure_ws":
             # Limited to files < 1Mb!
@@ -442,16 +465,10 @@ def dojs(dogis = False, warnings = True):
                 pass
             shutil.move(outputFilename, "../gis/gxp/widgets")
 
-        #print "Compressing - GeoExplorer JS"
-        #minimizedGeoExplorer = minimize(mergedGeoExplorer)
-
         # Add license
         #minimizedGIS = open("license.gis.txt").read() + minimizedGIS
 
         # Print to output files
-        print "Writing to %s." % outputFilenameGIS
-        open(outputFilenameGIS, "w").write(minimizedGIS)
-
         print "Writing to %s." % outputFilenameOpenLayers
         open(outputFilenameOpenLayers, "w").write(minimizedOpenLayers)
 
@@ -467,18 +484,7 @@ def dojs(dogis = False, warnings = True):
         print "Writing to %s." % outputFilenameGxp2
         open(outputFilenameGxp2, "w").write(minimizedGxp2)
 
-        #print "Writing to %s." % outputFilenameGeoExplorer
-        #open(outputFilenameGeoExplorer, "w").write(minimizedGeoExplorer)
-
         # Move new JS files
-        print "Deleting %s." % outputFilenameGIS
-        try:
-            os.remove("../S3/%s" % outputFilenameGIS)
-        except:
-            pass
-        print "Moving new GIS JS files"
-        shutil.move(outputFilenameGIS, "../S3")
-
         print "Deleting %s." % outputFilenameOpenLayers
         try:
             os.remove("../gis/%s" % outputFilenameOpenLayers)
@@ -511,13 +517,13 @@ def dojs(dogis = False, warnings = True):
         print "Moving new gxp JS files"
         shutil.move(outputFilenameGxp, "../gis")
 
-        #print "Deleting %s." % outputFilenameGeoExplorer
-        #try:
-        #    os.remove("../gis/%s" % outputFilenameGeoExplorer)
-        #except:
-        #    pass
-        #print "Moving new GeoExplorer JS files"
-        #shutil.move(outputFilenameGeoExplorer, "../gis")
+        print "Deleting %s." % outputFilenameGxp2
+        try:
+            os.remove("../gis/%s" % outputFilenameGxp2)
+        except:
+            pass
+        print "Moving new gxp2 JS files"
+        shutil.move(outputFilenameGxp2, "../gis")
 
 def docss():
     """ Compresses the  CSS files """
@@ -554,20 +560,13 @@ def docss():
     print "Moving new %s." % outputFilenameCSS
     shutil.move(outputFilenameCSS, "../../themes/%s" % theme)
 
-    # Bootstrap
-    print "Bootstrap CSS"
-    listCSS = []
-    for file in ["bootstrap.css",
-                 "bootstrap-responsive.css",
-                 "font-awesome.css",
-                 #"bootstrap-multiselect.css",
-                 ]:
-        listCSS.append("../../styles/bootstrap/%s" % file)
 
-    outputFilenameCSS = "bootstrap-combined.min.css"
+    # Guided tour stylesheet
+    listCSS = ["../../styles/plugins/joyride.css"]
+    outputFilenameCSS = "guidedtour.min.css"
 
     # Merge CSS files
-    print "Merging Bootstrap styles."
+    print "Merging guided tour styles."
     mergedCSS = mergeCSS(listCSS, outputFilenameCSS)
 
     # Compress CSS files
@@ -577,11 +576,105 @@ def docss():
     # Move files to correct locations
     print "Deleting %s." % outputFilenameCSS
     try:
-        os.remove("../../styles/bootstrap/%s" % outputFilenameCSS)
+        os.remove("../../styles/plugins/%s" % outputFilenameCSS)
     except:
         pass
     print "Moving new %s." % outputFilenameCSS
-    shutil.move(outputFilenameCSS, "../../styles/bootstrap")
+    shutil.move(outputFilenameCSS, "../../styles/plugins")
+
+    # Bootstrap
+    # - enable as-needed
+    bootstrap = False
+    if bootstrap:
+        print "Bootstrap CSS"
+        listCSS = []
+        for file in ["bootstrap.css",
+                     "bootstrap-responsive.css",
+                     "font-awesome.css",
+                     #"bootstrap-multiselect.css",
+                     ]:
+            listCSS.append("../../styles/bootstrap/%s" % file)
+
+        outputFilenameCSS = "bootstrap-combined.min.css"
+
+        # Merge CSS files
+        print "Merging Bootstrap styles."
+        mergedCSS = mergeCSS(listCSS, outputFilenameCSS)
+
+        # Compress CSS files
+        print "Writing to %s." % outputFilenameCSS
+        compressCSS(mergedCSS, outputFilenameCSS)
+
+        # Move files to correct locations
+        print "Deleting %s." % outputFilenameCSS
+        try:
+            os.remove("../../styles/bootstrap/%s" % outputFilenameCSS)
+        except:
+            pass
+        print "Moving new %s." % outputFilenameCSS
+        shutil.move(outputFilenameCSS, "../../styles/bootstrap")
+
+    # Ext
+    # - enable as-needed
+    ext = False
+    if ext:
+        print "Ext Gray CSS"
+        listCSS = []
+        for file in ["ext-all-notheme.css",
+                     "xtheme-gray.css",
+                     ]:
+            listCSS.append("../ext/resources/css/%s" % file)
+
+        outputFilenameCSS = "ext-gray.min.css"
+
+        # Merge CSS files
+        print "Merging Ext styles."
+        mergedCSS = mergeCSS(listCSS, outputFilenameCSS)
+
+        # Compress CSS file
+        print "Writing to %s." % outputFilenameCSS
+        compressCSS(mergedCSS, outputFilenameCSS)
+
+        # Move files to correct locations
+        print "Deleting %s." % outputFilenameCSS
+        try:
+            os.remove("../ext/resources/css/%s" % outputFilenameCSS)
+        except:
+            pass
+        print "Moving new %s." % outputFilenameCSS
+        shutil.move(outputFilenameCSS, "../ext/resources/css")
+
+        print "Ext no-Theme CSS"
+        outputFilenameCSS = "ext-notheme.min.css"
+
+        # Compress CSS file
+        print "Writing to %s." % outputFilenameCSS
+        compressCSS("../ext/resources/css/ext-all-notheme.css", outputFilenameCSS)
+
+        # Move files to correct locations
+        print "Deleting %s." % outputFilenameCSS
+        try:
+            os.remove("../ext/resources/css/%s" % outputFilenameCSS)
+        except:
+            pass
+        print "Moving new %s." % outputFilenameCSS
+        shutil.move(outputFilenameCSS, "../ext/resources/css")
+
+        print "Ext Themes CSS"
+        outputFilenameCSS = "xtheme-ifrc.min.css"
+
+        # Compress CSS file
+        print "Writing to %s." % outputFilenameCSS
+        compressCSS("../../themes/IFRC/xtheme-ifrc.css", outputFilenameCSS)
+
+        # Move files to correct locations
+        print "Deleting %s." % outputFilenameCSS
+        try:
+            os.remove("../../themes/IFRC/%s" % outputFilenameCSS)
+        except:
+            pass
+        print "Moving new %s." % outputFilenameCSS
+        shutil.move(outputFilenameCSS, "../../themes/IFRC")
 
 def main(argv):
     try:

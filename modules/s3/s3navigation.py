@@ -579,7 +579,7 @@ class S3NavigationItem(object):
 
             @param request: the request object (defaults to current.request)
 
-            @returns: the match level (integer):
+            @return: the match level (integer):
                         0=no match
                         1=controller
                         2=controller+function
@@ -832,7 +832,7 @@ class S3NavigationItem(object):
             @param args: argument list
             @param ext: the format extension
 
-            @returns: tuple (f, args)
+            @return: tuple (f, args)
         """
 
         if not ext or ext == "html":
@@ -1305,6 +1305,8 @@ class S3ComponentTabs(object):
                [t.component for t in tabs if t.component == r.method] and True or False
 
         record_id = r.id
+        if not record_id and r.record:
+            record_id = r.record[r.table._id]
 
         for i in xrange(len(tabs)):
 
@@ -1337,9 +1339,13 @@ class S3ComponentTabs(object):
             if function == r.name or function == r.function:
                 here = r.method == component or not mtab
             if component:
-                if r.component and r.component.alias == component and vars_match:
+                if r.component and \
+                   r.component.alias == component and \
+                   vars_match:
                     here = True
-                elif r.custom_action and r.method == component:
+                elif not r.component and \
+                     r.custom_action and \
+                     r.method == component:
                     here = True
                 else:
                     here = False
@@ -1546,31 +1552,34 @@ class S3SearchTabs:
             else:
                 _class = "tab_other"
 
+            attr = {}
             here = False
             if method == "map":
                 # This is actioned in static/scripts/S3/s3.dataTables.js
                 # - the map features are already in-place from S3Search.search_interactive()
-                _id = "gis_datatables_map-btn"
-                _href = "#"
+                attr["_id"] = "gis_datatables_map-btn"
+                # If we need to support multiple maps
+                #attr["_map"] = "default"
+                attr["_href"] = "#"
             elif method == "compose":
-                _id = "gis_datatables_compose_tab"
+                attr["_id"] = "gis_datatables_compose_tab"
                 # @todo: do not use the session filter - use the search
                 # query serialize_url instead (pass to search_tabs from S3Search)
                 session = current.session
                 url_vars = Storage(r.get_vars)
                 if session.s3.filter:
                     url_vars.update(session.s3.filter)
-                _href = r.url(method="compose", vars=url_vars)
+                attr["_href"] = r.url(method="compose", vars=url_vars)
             else:
                 # List View, defaults to active
                 here = True
-                _id = "gis_datatables_list_tab"
-                _href = "#"
+                attr["_id"] = "gis_datatables_list_tab"
+                attr["_href"] = "#"
 
             if here:
                 _class = "tab_here"
 
-            search_tabs.append(SPAN(A(tab.title, _id=_id, _href=_href),
+            search_tabs.append(SPAN(A(tab.title, **attr),
                                     _class=_class))
 
         if search_tabs:
@@ -1700,7 +1709,7 @@ class S3ResourceHeader:
                         if isinstance(f, str):
                             fn = f
                             if "." in fn:
-                                tn, fn = col.split(".", 1)
+                                tn, fn = f.split(".", 1)
                                 if fn not in table.fields or \
                                    fn not in record:
                                     continue

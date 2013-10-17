@@ -63,7 +63,6 @@ def index():
         if isinstance(output, dict):
             # Add information for Dashboard
             pr_gender_opts = s3db.pr_gender_opts
-            pr_age_group_opts = s3db.pr_age_group_opts
             table = db.pr_person
             gender = []
             for g_opt in pr_gender_opts:
@@ -72,10 +71,13 @@ def index():
                 count = db(query).count()
                 gender.append([str(pr_gender_opts[g_opt]), int(count)])
 
+            pr_age_group_opts = s3db.pr_age_group_opts
+            dtable = db.pr_physical_description
             age = []
             for a_opt in pr_age_group_opts:
                 query = (table.deleted == False) & \
-                        (table.age_group == a_opt)
+                        (table.pe_id == dtable.pe_id) & \
+                        (dtable.age_group == a_opt)
                 count = db(query).count()
                 age.append([str(pr_age_group_opts[a_opt]), int(count)])
 
@@ -163,9 +165,6 @@ def person():
                             redirect(record.url)
                         else:
                             raise HTTP(404)
-
-            elif r.id:
-                r.table.volunteer.readable = r.table.volunteer.writable = True
 
         return True
     s3.prep = prep
@@ -315,12 +314,11 @@ def contact_emergency():
 def person_search():
     """
         Person REST controller
-        - limited to just search.json for use in Autocompletes
+        - limited to just search_ac for use in Autocompletes
         - allows differential access permissions
     """
 
-    s3.prep = lambda r: r.representation == "json" and \
-                        r.method == "search"
+    s3.prep = lambda r: r.method == "search_ac"
     return s3_rest_controller(module, "person")
 
 # -----------------------------------------------------------------------------
@@ -401,10 +399,10 @@ def presence():
 def pentity():
     """
         RESTful CRUD controller
-        - limited to just search.json for use in Autocompletes
+        - limited to just search_ac for use in Autocompletes
     """
 
-    s3.prep = lambda r: r.representation in ("s3json", "json", "xml")
+    s3.prep = lambda r: r.method == "search_ac"
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
@@ -434,5 +432,24 @@ def saved_search():
     """
 
     return s3_rest_controller()
+
+# =============================================================================
+def human_resource():
+    """
+        RESTful CRUD controller for options.s3json lookups
+        - needed for DRMP template where HRM fields are embedded inside pr_person form
+    """
+
+    if auth.permission.format != "s3json":
+        return ""
+
+    # Pre-process
+    def prep(r):
+        if r.method != "options":
+            return False
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller("hrm", "human_resource")
 
 # END =========================================================================

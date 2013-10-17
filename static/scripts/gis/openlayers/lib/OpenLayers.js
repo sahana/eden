@@ -144,8 +144,6 @@
                 "OpenLayers/Console.js",
                 "OpenLayers/Tween.js",
                 "OpenLayers/Kinetic.js",
-                //"Rico/Corner.js",
-                //"Rico/Color.js",
                 "OpenLayers/Events.js",
                 "OpenLayers/Events/buttonclick.js",
                 "OpenLayers/Request.js",
@@ -197,8 +195,6 @@
                 //"OpenLayers/Layer/Zoomify.js",
                 //"OpenLayers/Layer/ArcGISCache.js",
                 "OpenLayers/Popup/Anchored.js",
-                // Requires Rico
-                //"OpenLayers/Popup/AnchoredBubble.js",
                 "OpenLayers/Popup/Framed.js",
                 "OpenLayers/Popup/FramedCloud.js",
                 "OpenLayers/Feature.js",
@@ -242,6 +238,7 @@
                 "OpenLayers/Control/DrawFeature.js",
                 "OpenLayers/Control/DragFeature.js",
                 "OpenLayers/Control/ModifyFeature.js",
+                "OpenLayers/Control/ModifyFeature/BySegment.js",
                 "OpenLayers/Control/Panel.js",
                 "OpenLayers/Control/SelectFeature.js",
                 "OpenLayers/Control/NavigationHistory.js",
@@ -280,17 +277,19 @@
                 "OpenLayers/Strategy/Save.js",
                 "OpenLayers/Strategy/Refresh.js",
                 "OpenLayers/Filter.js",
-                "OpenLayers/Filter/FeatureId.js",
-                "OpenLayers/Filter/Logical.js",
+                //"OpenLayers/Filter/FeatureId.js",
+                //"OpenLayers/Filter/Logical.js",
                 "OpenLayers/Filter/Comparison.js",
+                // Used by GetFeature
                 "OpenLayers/Filter/Spatial.js",
-                "OpenLayers/Filter/Function.js",                
+                //"OpenLayers/Filter/Function.js",                
                 "OpenLayers/Protocol.js",
                 "OpenLayers/Protocol/HTTP.js",
                 "OpenLayers/Protocol/WFS.js",
                 "OpenLayers/Protocol/WFS/v1.js",
                 "OpenLayers/Protocol/WFS/v1_0_0.js",
                 "OpenLayers/Protocol/WFS/v1_1_0.js",
+                "OpenLayers/Protocol/WFS/v2_0_0.js",
                 //"OpenLayers/Protocol/CSW.js", 
                 //"OpenLayers/Protocol/CSW/v2_0_2.js",
                 "OpenLayers/Protocol/Script.js",
@@ -329,6 +328,7 @@
                 "OpenLayers/Format/WFSCapabilities/v1.js",
                 "OpenLayers/Format/WFSCapabilities/v1_0_0.js",
                 "OpenLayers/Format/WFSCapabilities/v1_1_0.js",
+                "OpenLayers/Format/WFSCapabilities/v2_0_0.js",
                 "OpenLayers/Format/WFSDescribeFeatureType.js",
                 "OpenLayers/Format/WMSDescribeLayer.js",
                 "OpenLayers/Format/WMSDescribeLayer/v1_1.js",
@@ -338,8 +338,10 @@
                 "OpenLayers/Format/GPX.js",
                 "OpenLayers/Format/Filter.js",
                 "OpenLayers/Format/Filter/v1.js",
+                "OpenLayers/Format/Filter/v2.js",
                 "OpenLayers/Format/Filter/v1_0_0.js",
                 "OpenLayers/Format/Filter/v1_1_0.js",
+                "OpenLayers/Format/Filter/v2_0_0.js",
                 "OpenLayers/Format/SLD.js",
                 "OpenLayers/Format/SLD/v1.js",
                 "OpenLayers/Format/SLD/v1_0_0.js",
@@ -352,10 +354,11 @@
                 //"OpenLayers/Format/CSWGetDomain/v2_0_2.js",
                 //"OpenLayers/Format/CSWGetRecords.js",
                 //"OpenLayers/Format/CSWGetRecords/v2_0_2.js",
-                //"OpenLayers/Format/WFST.js",
-                //"OpenLayers/Format/WFST/v1.js",
-                //"OpenLayers/Format/WFST/v1_0_0.js",
-                //"OpenLayers/Format/WFST/v1_1_0.js",
+                "OpenLayers/Format/WFST.js",
+                "OpenLayers/Format/WFST/v1.js",
+                "OpenLayers/Format/WFST/v1_0_0.js",
+                "OpenLayers/Format/WFST/v1_1_0.js",
+                "OpenLayers/Format/WFST/v2_0_0.js",
                 "OpenLayers/Format/Text.js",
                 "OpenLayers/Format/JSON.js",
                 "OpenLayers/Format/GeoJSON.js",
@@ -415,11 +418,11 @@
 
         // use "parser-inserted scripts" for guaranteed execution order
         // http://hsivonen.iki.fi/script-execution/
-        //var scriptTags = new Array(jsFiles.length);
-        if (undefined != 'S3.Ap') {
+        var scriptTags = new Array(jsFiles.length);
+        try {
             // Sahana loader, required when running in pr_contacts()
             var host = S3.Ap.concat('/static/scripts/gis/openlayers/lib/');
-        } else {
+        } catch(e) {
             // Revert to normal OpenLayers loader
             var host = OpenLayers._getScriptLocation() + "lib/";
         }

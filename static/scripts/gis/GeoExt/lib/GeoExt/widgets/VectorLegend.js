@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2008-2011 The Open Source Geospatial Foundation
+ * Copyright (c) 2008-2012 The Open Source Geospatial Foundation
  * 
  * Published under the BSD license.
  * See http://svn.geoext.org/core/trunk/geoext/license.txt for the full text
@@ -9,9 +9,9 @@
 /**
  * @include GeoExt/widgets/FeatureRenderer.js
  * @requires GeoExt/widgets/LayerLegend.js
- * @rquires OpenLayers/Style.js
- * @rquires OpenLayers/Rule.js
- * @rquires OpenLayers/Layer/Vector.js
+ * @require OpenLayers/Style.js
+ * @require OpenLayers/Rule.js
+ * @require OpenLayers/Layer/Vector.js
  */
 
 /** api: (define)
@@ -74,7 +74,8 @@ GeoExt.VectorLegend = Ext.extend(GeoExt.LayerLegend, {
      *  name.  Default is ``"Untitled "``.  Prefix will be appended with a
      *  number that corresponds to the index of the rule (1 for first rule).
      */
-    untitledPrefix: "Untitled ",
+    //untitledPrefix: "Untitled ",
+    untitledPrefix: '',
     
     /** api: config[clickableSymbol]
      *  ``Boolean``
@@ -159,7 +160,13 @@ GeoExt.VectorLegend = Ext.extend(GeoExt.LayerLegend, {
                 this.symbolType = this.symbolTypeFromFeature(this.feature);
             } else if (this.layer) {
                 if (this.layer.features.length > 0) {
-                    var feature = this.layer.features[0].clone();
+                    var feature;
+                    for (var i=0, ii=this.layer.features.length; i<ii; i++) {
+                        if (this.layer.features[i].geometry !== null) {
+                            feature = this.layer.features[i].clone();
+                            break;
+                        }
+                    }
                     feature.attributes = {};
                     this.feature = feature;
                     this.symbolType = this.symbolTypeFromFeature(this.feature);
@@ -275,19 +282,24 @@ GeoExt.VectorLegend = Ext.extend(GeoExt.LayerLegend, {
      *  Set as a one time listener for the ``featuresadded`` event on the layer
      *  if it was provided with no features originally.
      */
-    onFeaturesAdded: function() {
-        this.layer.events.un({
-            featuresadded: this.onFeaturesAdded,
-            scope: this
-        });
-        var feature = this.layer.features[0].clone();
-        feature.attributes = {};
-        this.feature = feature;
-        this.symbolType = this.symbolTypeFromFeature(this.feature);
-        if (!this.rules) {
-            this.setRules();
+    onFeaturesAdded: function(evt) {
+        for (var i=0, ii=evt.features.length; i<ii; ++i) {
+            if (evt.features[i].geometry !== null) {
+                this.layer.events.un({
+                    featuresadded: this.onFeaturesAdded,
+                    scope: this
+                });
+                var feature = evt.features[i].clone();
+                feature.attributes = {};
+                this.feature = feature;
+                this.symbolType = this.symbolTypeFromFeature(this.feature);
+                if (!this.rules) {
+                    this.setRules();
+                }
+                this.update();
+                break;
+            }
         }
-        this.update();
     },
     
     /** private: method[setRules]
@@ -446,12 +458,12 @@ GeoExt.VectorLegend = Ext.extend(GeoExt.LayerLegend, {
      */
     createRuleRenderer: function(rule) {
         var types = [this.symbolType, "Point", "Line", "Polygon"];
-        var type, haveType;
+        var type, haveType, i, len, ii;
         var symbolizers = rule.symbolizers;
         if (!symbolizers) {
             // TODO: remove this when OpenLayers.Symbolizer is used everywhere
             var symbolizer = rule.symbolizer;
-            for (var i=0, len=types.length; i<len; ++i) {
+            for (i=0, len=types.length; i<len; ++i) {
                 type = types[i];
                 if (symbolizer[type]) {
                     symbolizer = symbolizer[type];
@@ -459,10 +471,20 @@ GeoExt.VectorLegend = Ext.extend(GeoExt.LayerLegend, {
                     break;
                 }
             }
-            symbolizers = [symbolizer];
+            // Added by Fran
+            // Copy object so that we don't affect the map markers
+            var symbolizerCopy = OpenLayers.Util.extend({}, symbolizer);
+            // Remove attributes which break the Legend
+            delete symbolizerCopy['label'];
+            delete symbolizerCopy['graphicHeight'];
+            delete symbolizerCopy['graphicWidth'];
+            delete symbolizerCopy['graphicXOffset'];
+            delete symbolizerCopy['graphicYOffset'];
+            // end Add
+            symbolizers = [symbolizerCopy];
         } else {
             var Type;
-            outer: for (var i=0, ii=types.length; i<ii; ++i) {
+            outer: for (i=0, ii=types.length; i<ii; ++i) {
                 type = types[i];
                 Type = OpenLayers.Symbolizer[type];
                 if (Type) {
@@ -477,6 +499,7 @@ GeoExt.VectorLegend = Ext.extend(GeoExt.LayerLegend, {
         }
         return {
             xtype: "gx_renderer",
+            labelText: "Ab",
             symbolType: haveType ? type : this.symbolType,
             symbolizers: symbolizers,
             style: this.clickableSymbol ? {cursor: "pointer"} : undefined,
@@ -563,7 +586,7 @@ GeoExt.VectorLegend = Ext.extend(GeoExt.LayerLegend, {
                         sourceEl: sourceEl,
                         repairXY: Ext.fly(sourceEl).getXY(),
                         ddel: d
-                    }
+                    };
                 }
             }
         });
@@ -580,15 +603,16 @@ GeoExt.VectorLegend = Ext.extend(GeoExt.LayerLegend, {
      */
     update: function() {
         GeoExt.VectorLegend.superclass.update.apply(this, arguments);
+        var i, ii;
         if (this.symbolType && this.rules) {
             if (this.rulesContainer.items) {
                 var comp;
-                for (var i=this.rulesContainer.items.length-1; i>=0; --i) {
+                for (i=this.rulesContainer.items.length-1; i>=0; --i) {
                     comp = this.rulesContainer.getComponent(i);
                     this.rulesContainer.remove(comp, true);
                 }
             }
-            for (var i=0, ii=this.rules.length; i<ii; ++i) {
+            for (i=0, ii=this.rules.length; i<ii; ++i) {
                 this.addRuleEntry(this.rules[i], true);
             }
             this.doLayout();
@@ -677,7 +701,7 @@ GeoExt.VectorLegend = Ext.extend(GeoExt.LayerLegend, {
                     "zoomend": this.onMapZoom,
                     scope: this
                 });
-    }
+            }
         }
     },
 
@@ -699,7 +723,7 @@ GeoExt.VectorLegend = Ext.extend(GeoExt.LayerLegend, {
                     this.layer.map.events.on({
                         "zoomend": this.onMapZoom,
                         scope: this
-});
+                    });
                 }
             }
         }

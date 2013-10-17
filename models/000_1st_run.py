@@ -12,7 +12,7 @@
 
 # Increment this when new dependencies are added
 # This will be compared to the version in the 0000_update_check.py 'canary' file.
-CURRENT_UPDATE_CHECK_ID = 3
+CURRENT_UPDATE_CHECK_ID = 4
 update_check_needed = False
 try:
     if CANARY_UPDATE_CHECK_ID != CURRENT_UPDATE_CHECK_ID:
@@ -24,16 +24,15 @@ except NameError:
 appname = request.application
 
 if update_check_needed:
+    # @ToDo: Load deployment_settings so that we can configure the update_check
+    # - need to rework so that 000_config.py is parsed 1st
+    import s3cfg
+    settings = s3cfg.S3Config()
     # Run update checks
     from s3_update_check import update_check
     errors = []
     warnings = []
-    # Supply the current (Web2py) environment. Pick out only the items that are
-    # safe for the check functions to combine with their own environments, i.e.
-    # not anything of the form __x__.
-    #environment = dict((k, v) for (k, v) in globals().iteritems() if not k.startswith("__"))
-    #messages = update_check(environment)
-    messages = update_check()
+    messages = update_check(settings)
     errors.extend(messages.get("error_messages", []))
     warnings.extend(messages.get("warning_messages", []))
 
@@ -71,9 +70,15 @@ if update_check_needed:
 
 # -----------------------------------------------------------------------------
 import os
+try:
+    # Python 2.7
+    from collections import OrderedDict
+except:
+    # Python 2.6
+    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+
 from gluon import current
 from gluon.storage import Storage
-from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 # Keep all S3 framework-level elements stored in response.s3, so as to avoid
 # polluting global namespace & to make it clear which part of the framework is

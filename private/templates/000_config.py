@@ -52,6 +52,13 @@ settings.base.template = "default"
 # Set this to the Public URL of the instance
 #settings.base.public_url = "http://127.0.0.1:8000"
 
+# Uncomment to set pootle url
+# settings.L10n.pootle_url = "http://pootle.sahanafoundation.org/"
+
+# Uncomment to set pootle username and password
+# settings.L10n.pootle_username = "username"
+# settings.L10n.pootle_password = "*****"
+
 # Switch to "False" in Production for a Performance gain
 # (need to set to "True" again when Table definitions are changed)
 settings.base.migrate = True
@@ -67,6 +74,12 @@ settings.base.debug = False
 
 # Uncomment to use Content Delivery Networks to speed up Internet-facing sites
 #settings.base.cdn = True
+
+# Uncomment this and set the solr url to connect to solr server for Full-Text Search
+#settings.base.solr_url = "http://127.0.0.1:8983/solr/"
+
+# Uncomment to enable a guided tour
+#settings.base.guided_tour = True
 
 # This setting will be automatically changed _before_ registering the 1st user
 settings.auth.hmac_key = "akeytochange"
@@ -161,8 +174,7 @@ settings.frontpage.rss = [
 #settings.ui.update_label = "Edit"
 
 # Audit settings
-# We Audit if either the Global or Module asks us to
-# (ignore gracefully if module author hasn't implemented this)
+# - can be a callable for custom hooks (return True to also perform normal logging, or False otherwise)
 # NB Auditing (especially Reads) slows system down & consumes diskspace
 #settings.security.audit_write = False
 #settings.security.audit_read = False
@@ -180,7 +192,7 @@ if os.path.exists(path):
 #
 
 # e.g.
-#settings.base.prepopulate = ["IFRC_Train"]
+#settings.base.prepopulate = ["demo"]
 #settings.base.theme = "default"
 #settings.L10n.default_language = "en"
 #settings.security.policy = 7 # Organisation-ACLs

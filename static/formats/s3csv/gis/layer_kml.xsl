@@ -91,7 +91,6 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-
     <xsl:template name="Config">
 
         <xsl:variable name="Config" select="col[@field='Config']/text()"/>
@@ -105,7 +104,6 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-
     <xsl:template name="Layer">
 
         <xsl:variable name="Layer" select="col[@field='Name']/text()"/>
@@ -154,7 +152,6 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-
     <xsl:template name="Marker">
 
         <xsl:variable name="Marker" select="col[@field='Marker']/text()"/>
@@ -168,7 +165,6 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-
     <xsl:template name="Symbology">
 
         <xsl:variable name="Symbology" select="col[@field='Symbology']/text()"/>

@@ -84,8 +84,8 @@ s3.l10n_languages = settings.get_L10n_languages()
 # Default strings are in US English
 T.current_languages = ["en", "en-us"]
 # Check if user has selected a specific language
-if request.vars._language:
-    language = request.vars._language
+if request.get_vars._language:
+    language = request.get_vars._language
     session.s3.language = language
 elif session.s3.language:
     # Use the last-selected language
@@ -146,7 +146,7 @@ if settings.get_auth_openid():
                                                 signals=["oid", "janrain_nonce"])
         auth.settings.login_form = extended_login_form
     except ImportError:
-        session.warning = T("Library support not available for OpenID")
+        session.warning = "Library support not available for OpenID"
 
 # Allow use of LDAP accounts for login
 # NB Currently this means that change password should be disabled:
@@ -302,12 +302,6 @@ _crud.confirm_delete = T("Do you really want to delete these records?")
 _crud.archive_not_delete = settings.get_security_archive_not_delete()
 _crud.navigate_away_confirm = settings.get_ui_navigate_away_confirm()
 
-# Web2py Crud
-# Breaks refresh of List after Create: http://groups.google.com/group/web2py/browse_thread/thread/d5083ed08c685e34
-#crud.settings.keepvalues = True
-crud.messages.submit_button = submit_button
-crud.settings.formstyle = s3_formstyle
-
 s3mgr.crud = s3base.S3CRUD
 s3mgr.search = s3base.S3Search
 
@@ -341,6 +335,7 @@ s3.crud_strings = Storage(
     title_update = T("Edit Record"),
     title_search = T("Search Records"),
     title_map = T("Map"),
+    title_report = T("Report"),
     subtitle_create = T("Add New Record"),
     label_list_button = T("List Records"),
     label_create_button = ADD_RECORD,

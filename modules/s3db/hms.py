@@ -311,6 +311,56 @@ class HospitalDataModel(S3Model):
                       ),
                     ))
 
+        filter_widgets = [
+                S3TextFilter(["name",
+                              "code",
+                              "comments",
+                              "organisation_id$name",
+                              "organisation_id$acronym",
+                              "location_id$name",
+                              "location_id$L1",
+                              "location_id$L2",
+                              ],
+                             label=T("Name"),
+                             _class="filter-search",
+                             ),
+                S3OptionsFilter("facility_type",
+                                label=T("Type"),
+                                represent="%(name)s",
+                                widget="multiselect",
+                                #cols=3,
+                                #hidden=True,
+                                ),
+                S3LocationFilter("location_id",
+                                 label=T("Location"),
+                                 levels=["L0", "L1", "L2"],
+                                 widget="multiselect",
+                                 #cols=3,
+                                 #hidden=True,
+                                 ),
+                S3OptionsFilter("status.facility_status",
+                                label=T("Status"),
+                                options = hms_facility_status_opts,
+                                #represent="%(name)s",
+                                widget="multiselect",
+                                #cols=3,
+                                #hidden=True,
+                                ),
+                S3OptionsFilter("status.power_supply_type",
+                                label=T("Power"),
+                                options = hms_power_supply_type_opts,
+                                #represent="%(name)s",
+                                widget="multiselect",
+                                #cols=3,
+                                #hidden=True,
+                                ),
+                S3RangeFilter("total_beds",
+                              label=T("Total Beds"),
+                              #represent="%(name)s",
+                              #hidden=True,
+                              ),
+                ]
+
         report_fields = ["name",
                          "facility_type",
                          #"organisation_id",
@@ -326,9 +376,10 @@ class HospitalDataModel(S3Model):
         # Resource configuration
         configure(tablename,
                   super_entity=("org_site", "doc_entity", "pr_pentity"),
-                  search_method=hms_hospital_search,
-                  deduplicate = self.hms_hospital_duplicate,
                   onaccept = self.hms_hospital_onaccept,
+                  deduplicate = self.hms_hospital_duplicate,
+                  filter_widgets=filter_widgets,
+                  search_method=hms_hospital_search,
                   report_options = Storage(
                         search=[
                           S3SearchOptionsWidget(
@@ -970,8 +1021,7 @@ class HospitalDataModel(S3Model):
             Update Affiliation, record ownership and component ownership
         """
 
-        s3db = current.s3db
-        s3db.pr_update_affiliations(s3db.hms_hospital, form.vars)
+        current.s3db.org_update_affiliations("hms_hospital", form.vars)
 
     # -------------------------------------------------------------------------
     @staticmethod

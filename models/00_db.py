@@ -11,8 +11,8 @@ if settings.get_L10n_languages_readonly():
     T.is_writable = False
 
 # Are we running in debug mode?
-s3.debug = request.vars.get("debug", None) or \
-                    settings.get_base_debug()
+s3.debug = request.get_vars.get("debug", None) or \
+           settings.get_base_debug()
 
 if s3.debug:
     # Reload all modules every request
@@ -54,13 +54,14 @@ else:
     try:
         if db_string.find("mysql") != -1:
             # Use MySQLdb where available (pymysql has given broken pipes)
-            try:
-                import MySQLdb
-                from gluon.dal import MySQLAdapter
-                MySQLAdapter.driver = MySQLdb
-            except ImportError:
-                # Fallback to pymysql
-                pass
+            # - done automatically now, no need to add this manually
+            #try:
+            #    import MySQLdb
+            #    from gluon.dal import MySQLAdapter
+            #    MySQLAdapter.driver = MySQLdb
+            #except ImportError:
+            #    # Fallback to pymysql
+            #    pass
             if check_reserved:
                 check_reserved = ["postgres"]
             db = DAL(db_string, check_reserved=check_reserved,
@@ -115,11 +116,7 @@ if not session.s3:
     session.s3 = Storage()
 
 # AAA
-auth = s3base.AuthS3()
-current.auth = auth
-
-s3_audit = s3base.S3Audit(migrate=migrate, fake_migrate=fake_migrate)
-current.s3_audit = s3_audit
+current.auth = auth = s3base.AuthS3()
 
 # Use username instead of email address for logins
 # - would probably require further customisation
@@ -129,14 +126,14 @@ current.s3_audit = s3_audit
 auth.settings.hmac_key = settings.get_auth_hmac_key()
 auth.define_tables(migrate=migrate, fake_migrate=fake_migrate)
 
+current.audit = audit = s3base.S3Audit(migrate=migrate, fake_migrate=fake_migrate)
+
 # Shortcuts for models/controllers/views
 s3_has_role = auth.s3_has_role
 s3_has_permission = auth.s3_has_permission
 s3_logged_in_person = auth.s3_logged_in_person
 
 # CRUD
-crud = s3base.CrudS3()
-current.crud = crud
 s3.crud = Storage()
 
 # S3 Custom Validators and Widgets, imported here into the global

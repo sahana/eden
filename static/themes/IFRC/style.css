@@ -72,12 +72,14 @@ caption {
     background: #eee;
 }
 
-table td,table th {
+table td,
+table th {
     border-right: 1px #9C9C9C dashed;
     border-bottom: 2px #fff solid;
     line-height:1.25em;
 }
-table th, table th label {
+table th,
+table th label {
     vertical-align: bottom;
     padding-top: 20px;
     color: #590f12;
@@ -234,7 +236,13 @@ input.title {font-size:1.5em;}
 form.inline {line-height:3;}
 form.inline p {margin-bottom:0;}
 
-.submit-search{display:block;width:22px; height:21px;background:url(img/search_but.png) no-repeat;text-indent:-99999px;}
+.submit-search{
+    display: block;
+    width: 22px;
+    height: 21px;
+    background: url(img/search_but.png) no-repeat;
+    text-indent: -99999px;
+}
 
 hr {border-width:0px;border-bottom:1px #ccc dashed;color:#b5b5b5;clear:both;float:none;height:1px;margin:10px 0}
 hr.space {background:#fff;color:#fff;visibility:hidden;}
@@ -303,12 +311,13 @@ div.form-container form fieldset input.errorfield {
 .ajaxtip:hover {
     width: 20px;
 }
+
 /* Colours */
 /* Action Buttons */
 .action-btn,
 .delete-btn-ajax,
 .delete-btn {
-    color: #fff;
+    color: #fff !important;
     background-color: #590f12;
     border: #c6bea7;
     border-bottom: #164b8b;
@@ -319,6 +328,35 @@ div.form-container form fieldset input.errorfield {
 .delete-btn:hover {
     background-color: #dc032e;
 }
+/* Replace Text with Icons */
+table.dataTable .action-btn.edit,
+table.dataTable .action-btn.read,
+table.dataTable .action-btn.send,
+table.dataTable .action-btn.dispatch,
+table.dataTable .delete-btn {
+    font-size: 0;
+    line-height: 0;
+    margin: 0;
+    padding: 0;
+}
+table.dataTable .delete-btn:before {
+    content: url(img/trashbin.png);
+}
+table.dataTable .action-btn.edit:before,
+table.dataTable .action-btn.read:before {
+    content: url(img/pencil.png);
+}
+table.dataTable .action-btn.send:before {
+    content: url(img/envelope.png);
+}
+table.dataTable .action-btn.dispatch:before {
+    content: url(img/truck.png);
+}
+/*
+table.dataTable td.actions {
+    max-width: 55px;
+}*/
+
 /* Tabs */
 div.tabs {
     border-bottom: 1px solid #590f12;
@@ -346,4 +384,14 @@ span.tab_prev_active {
 }
 span.tab_next_active {
     color: #000000;
+}
+
+/* Ensure jQueryUI Dialog Modal Popup goes above header */
+.ui-front {
+    z-index: 999;
+}
+
+/* Default width 100px doesn't allow 'Enter keywords' to be visible */
+.ui-multiselect-filter input {
+    width: auto;
 }

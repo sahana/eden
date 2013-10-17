@@ -1,0 +1,206 @@
+@charset "UTF-8";
+
+/* Homepage */
+
+@font-face {
+font-family: NeoSans;
+src: url("../../fonts/NeoSans.otf") format("opentype");
+}
+
+p {
+    font-size: 16px;
+    font-weight: 200;
+    line-height: 25px;
+}
+
+.banner {
+    position: relative;
+    margin-top: -15px;
+}
+
+.title {
+    position: absolute;
+    width: 80%;
+    top: 0;
+    margin: 35px 0 0 60px;
+}
+.title > img.logo {
+    margin: 10px 0 0 10px;
+    width: 10%;
+    float: left;
+} 
+.title h1,
+.title h2 {
+    font-family: NeoSans;
+    /*font-size: 24pt;*/
+    font-weight: normal;
+    color: white;
+    margin: 0;
+    text-shadow: 2px 2px 1px black;
+}
+.title h1 {
+    font-size: 30pt;
+}
+.title h2 {
+    font-size: 24pt;
+    margin: 0;
+}
+
+.banner-btns {
+    width: 100%;
+    padding-left: 82%;
+    position: absolute;
+    top: 15px;
+}
+
+.banner .btn {
+    clear: left;
+    float: left;
+    margin: 0 15px 15px 0;
+}
+
+.intro { 
+    background-color: #3788B3;
+    color: white;
+    margin: 20px 0;
+    padding: 25px 40px;
+}
+.intro h3 {
+    font-size: 30px;
+    line-height: 36px;
+    margin-bottom: 5px;
+}
+.intro p {
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.updates,
+.community-data {
+    margin: 20px 0;
+    border: 1px solid #B2B2B2;
+    border-radius: 10px;
+    box-shadow: 1px 2px 2px #AAAAA7;
+    background-color: white;
+}
+
+.updates {
+    padding: 5px 0;
+}
+.updates .dl-item {
+    float: none;
+}
+
+.updates p {
+    font-size: 14px;
+    line-height: 16px;
+    margin: 0;
+}
+.updates h3 {
+    display: inline;
+    margin: 0 15px;
+}
+.updates h5 {
+    margin-bottom: 0;
+}
+.updates .empty {
+    margin-left: 15px;
+    margin-top: 10px;
+}
+#log-filter-form {
+    float: right;
+}
+#log-filter-form .s3-groupedopts-option {
+    /* Hide the Radios (we can click on labels) */
+    display: none;
+}
+#log-filter-form td {
+    padding-top: 0;
+}
+#log-filter-form td:first-child {
+    border-right: solid 1px;
+}
+
+#popup .form-container {
+    margin: 0;
+}
+#popup #table-container {
+    margin: 0;
+}
+.updates .media,
+#popup .media {
+    background: linear-gradient(to bottom, #EDEDED 0%, #F6F6F6 10%, #FFFFFF 50%) repeat scroll 0 0 transparent;
+    border-top: 1px solid #C8C8C8;
+    padding: 5px 10px;
+    margin: 0;
+    clear: both;
+}
+.updates .dl-1-cols {
+    width: 100%;
+}
+.updates .dl-col-0 {
+    margin-right: 0;
+}
+.updates .dl-row,
+.updates .dl-row .dl-item,
+#popup .dl-row,
+#popup .dl-row .dl-item {
+    /*background-color: transparent;*/
+    padding: 0;
+}
+.updates .dl-navigation {
+    border-top: 1px solid #C8C8C8;
+    padding-left: 5px;
+    margin: 0;
+}
+.updates form {
+    margin: 0;
+}
+#audit-auth_user_org_group_id-options-filter {
+    display: none;
+}
+label.inactive {
+    color: #0088CC;
+    text-decoration: underline;
+}
+
+.map-btn {
+    float: right;
+    position: relative;
+    margin: 15px;
+    z-index: 1;
+}
+
+div.map {
+    overflow: auto;
+    margin-top: -65px
+}
+
+.community-data {
+    padding: 0 20px 10px 20px;
+}
+.community-data .a {
+    font-size: 16px;
+    font-weight: 200;
+    line-height: 25px;
+}
+.community-data a.menu {
+    width: 67%;
+}
+.community-data a.create {
+    padding-left: 12px;
+    padding-right: 12px;
+}
+.community-data .btn {
+    background: linear-gradient(to bottom, #3788B3 0%, #235482 100%) repeat scroll 0 0 transparent;
+}
+.community-data .btn:hover {
+    box-shadow: 0 3px 7px rgba(0, 0, 0, 0.5) inset;
+}
+.community-data .cms_content {
+    margin: 5px 0 10px 0;
+    font-weight: 200;
+}
+.community-data h5 {
+    margin-bottom: 0;
+}

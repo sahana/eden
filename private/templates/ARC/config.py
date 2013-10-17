@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
 
+try:
+    # Python 2.7
+    from collections import OrderedDict
+except:
+    # Python 2.6
+    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+
 from gluon import current
 from gluon.storage import Storage
-from gluon.contrib.simplejson.ordered_dict import OrderedDict
+
 settings = current.deployment_settings
 T = current.T
 
@@ -52,7 +59,6 @@ def ifrc_realm_entity(table, row):
     # Do not apply realms for Master Data
     # @ToDo: Restore Realms and add a role/functionality support for Master Data  
     if tablename in ["hrm_department",
-                     "hrm_job_role",
                      "hrm_job_title",
                      "hrm_course",
                      "hrm_programme"]:
@@ -165,6 +171,7 @@ settings.base.system_name_short = T("RMS")
 # -----------------------------------------------------------------------------
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "ARC"
+settings.base.xtheme = "IFRC/xtheme-ifrc.css"
 settings.gis.map_height = 600
 settings.gis.map_width = 854
 # Display Resources recorded to Admin-Level Locations on the map
@@ -217,7 +224,7 @@ settings.fin.currencies = {
 
 # -----------------------------------------------------------------------------
 # Save Search Widget
-settings.save_search.widget = False
+settings.search.save_widget = False
 
 
 # =============================================================================
@@ -256,8 +263,6 @@ settings.hrm.use_credentials = False
 settings.hrm.use_education = False
 # Uncomment to disable the use of HR Skills
 settings.hrm.use_skills = True
-# Uncomment to disable the use of HR Teams
-#settings.hrm.use_teams = False
 # Custom label for Organisations in HR module
 #settings.hrm.organisation_label = "National Society / Branch"
 settings.hrm.organisation_label = "Organization"

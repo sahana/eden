@@ -9,7 +9,10 @@
 
          Name.................string..........Activity short description
          Project..............string..........Project Name
+         Activity Type........string..........activity_type_id
+         OR
          Activity Types.......comma-sep list..List of Activity Types
+         Organisation Group...................project_activity_group.group_id  
          Country..............string..........Country code/name (L0)
          State................string..........State/Province name (L1)
          District.............string..........District name (L2)
@@ -33,6 +36,8 @@
     <xsl:variable name="ActivityTypePrefix" select="'ActivityType: '"/>
 
     <xsl:key name="projects" match="row" use="col[@field='Project']"/>
+    <xsl:key name="organisation_group" match="row" use="col[@field='Organisation Group']"/>
+    <xsl:key name="activity_types" match="row" use="col[@field='Activity Type']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -43,6 +48,19 @@
                 <xsl:call-template name="Project"/>
             </xsl:for-each>
 
+            <!-- Organisation Groups -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation_group',
+                                                                       col[@field='Organisation Group'])[1])]">
+                <xsl:call-template name="OrganisationGroup"/>
+            </xsl:for-each>
+
+            <!-- Activity Types -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('activity_types',
+                                                                   col[@field='Activity Type'])[1])]">
+                <xsl:call-template name="ActivityType"/>
+            </xsl:for-each>
+
+            <!-- Beneficiary Types -->
             <xsl:for-each select="//row[1]/col[starts-with(@field, 'Beneficiaries')]">
                 <xsl:call-template name="BeneficiaryType"/>
             </xsl:for-each>
@@ -55,16 +73,42 @@
     <xsl:template match="row">
         <xsl:variable name="ProjectName" select="col[@field='Project']/text()"/>
         <xsl:variable name="Activity" select="col[@field='Name']/text()"/>
+        <xsl:variable name="ActivityType" select="col[@field='Activity Type']/text()"/>
 
         <resource name="project_activity">
             <data field="name"><xsl:value-of select="$Activity"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
             <!-- Link to Project -->
-            <reference field="project_id" resource="project_project">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('Project:', $ProjectName)"/>
-                </xsl:attribute>
-            </reference>
+            <xsl:if test="$ProjectName!=''">
+	            <reference field="project_id" resource="project_project">
+	                <xsl:attribute name="tuid">
+	                    <xsl:value-of select="concat('Project:',
+                                                     $ProjectName)"/>
+	                </xsl:attribute>
+	            </reference>
+            </xsl:if>
+
+            <!-- Link to Activity Type -->
+            <xsl:if test="$ActivityType">
+                <reference field="activity_type_id" resource="project_activity_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('ActivityType:',
+                                                     $ActivityType)"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
+
+            <!-- Organisation Group -->
+            <xsl:if test="col[@field='Organisation Group']!=''">
+                <resource name="project_activity_group">
+                    <reference field="group_id" resource="org_group">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('OrganisationGroup:',
+                                                         col[@field='Organisation Group'])"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
 
             <!-- Link to Location -->
             <xsl:call-template name="LocationReference"/>
@@ -78,12 +122,21 @@
 
             <xsl:call-template name="ContactPersonReference"/>
 
+            <!-- Link to Beneficiaries -->
             <xsl:for-each select="col[starts-with(@field, 'Beneficiaries')]">
-                <xsl:call-template name="Beneficiaries"/>
+                <xsl:call-template name="ActivityBeneficiaries">
+                    <xsl:with-param name="ProjectName">
+                        <xsl:value-of select="$ProjectName"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="ActivityName">
+                        <xsl:value-of select="$Activity"/>
+                    </xsl:with-param>
+                </xsl:call-template>
             </xsl:for-each>
 
         </resource>
-
+        
+        <!-- Activity Types -->
         <xsl:call-template name="splitList">
             <xsl:with-param name="list">
                 <xsl:value-of select="col[@field='Activity Types']"/>
@@ -91,6 +144,19 @@
             <xsl:with-param name="arg">activity_type_res</xsl:with-param>
         </xsl:call-template>
 
+        <!-- Beneficiaries -->
+        <xsl:for-each select="col[starts-with(@field, 'Beneficiaries')]">
+            <xsl:call-template name="Beneficiaries">
+                <xsl:with-param name="ProjectName">
+                    <xsl:value-of select="$ProjectName"/>
+                </xsl:with-param>
+                <xsl:with-param name="ActivityName">
+                    <xsl:value-of select="$Activity"/>
+                </xsl:with-param>
+            </xsl:call-template>
+        </xsl:for-each>
+
+        <!-- Contacts -->
         <xsl:call-template name="ContactPerson"/>
 
         <!-- Locations -->
@@ -101,13 +167,46 @@
     <xsl:template name="Project">
         <xsl:variable name="ProjectName" select="col[@field='Project']/text()"/>
 
-        <resource name="project_project">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="concat('Project:', $ProjectName)"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$ProjectName"/></data>
-        </resource>
+        <xsl:if test="$ProjectName!=''">
+            <resource name="project_project">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('Project:', $ProjectName)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$ProjectName"/></data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
 
+    <!-- ****************************************************************** -->
+    <xsl:template name="ActivityType">
+
+        <xsl:variable name="ActivityType" select="col[@field='Activity Type']"/>
+
+        <xsl:if test="$ActivityType!=''">
+            <resource name="project_activity_type">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('ActivityType:',
+                                                 $ActivityType)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$ActivityType"/></data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="OrganisationGroup">
+
+        <xsl:variable name="OrganisationGroup" select="col[@field='Organisation Group']"/>
+
+        <xsl:if test="$OrganisationGroup!=''">
+            <resource name="org_group">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('OrganisationGroup:',
+                                                 $OrganisationGroup)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$OrganisationGroup"/></data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -120,7 +219,8 @@
                 <resource name="project_activity_activity_type">
                     <reference field="activity_type_id" resource="project_activity_type">
                         <xsl:attribute name="tuid">
-                            <xsl:value-of select="concat($ActivityTypePrefix, $item)"/>
+                            <xsl:value-of select="concat($ActivityTypePrefix,
+                                                         $item)"/>
                         </xsl:attribute>
                     </reference>
                 </resource>
@@ -128,7 +228,8 @@
             <xsl:when test="$arg='activity_type_res'">
                 <resource name="project_activity_type">
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat($ActivityTypePrefix, $item)"/>
+                        <xsl:value-of select="concat($ActivityTypePrefix,
+                                                     $item)"/>
                     </xsl:attribute>
                     <data field="name"><xsl:value-of select="$item"/></data>
                 </resource>
@@ -137,19 +238,59 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="ActivityBeneficiaries">
+        <xsl:param name="ProjectName"/>
+        <xsl:param name="ActivityName"/>
+
+        <xsl:variable name="BeneficiaryType" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="BeneficiaryNumber" select="text()"/>
+
+        <xsl:if test="$BeneficiaryNumber!=''">
+            <resource name="project_beneficiary_activity">
+                <reference field="beneficiary_id" resource="project_beneficiary">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('Ben:',
+                                                     $ProjectName,'/',
+                                                     $ActivityName,'/',
+                                                     $BeneficiaryType)"/>
+                    </xsl:attribute>
+                </reference>
+            </resource>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="Beneficiaries">
+        <xsl:param name="ProjectName"/>
+        <xsl:param name="ActivityName"/>
 
         <xsl:variable name="BeneficiaryType" select="normalize-space(substring-after(@field, ':'))"/>
         <xsl:variable name="BeneficiaryNumber" select="text()"/>
 
         <xsl:if test="$BeneficiaryNumber!=''">
             <resource name="project_beneficiary">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('Ben:',
+                                                 $ProjectName,'/',
+                                                 $ActivityName,'/',
+                                                 $BeneficiaryType)"/>
+                </xsl:attribute>
+                <xsl:if test="$ProjectName!=''">
+                    <reference field="project_id" resource="project_project">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('Project:',
+                                                         $ProjectName)"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:if>
                 <reference field="parameter_id" resource="project_beneficiary_type">
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat('BNF:', $BeneficiaryType)"/>
+                        <xsl:value-of select="concat('BenType:',
+                                                     $BeneficiaryType)"/>
                     </xsl:attribute>
                 </reference>
-                <data field="number"><xsl:value-of select="$BeneficiaryNumber"/></data>
+                <data field="value"><xsl:value-of select="$BeneficiaryNumber"/></data>
             </resource>
         </xsl:if>
 
@@ -161,7 +302,7 @@
 
         <resource name="project_beneficiary_type">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="concat('BNF:', $BeneficiaryType)"/>
+                <xsl:value-of select="concat('BenType:', $BeneficiaryType)"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$BeneficiaryType"/></data>
         </resource>
@@ -199,7 +340,9 @@
             </xsl:choose>
         </xsl:variable>
 
-        <xsl:variable name="country" select="concat('urn:iso:std:iso:3166:-1:code:', $countrycode)"/>
+        <xsl:variable name="country"
+                      select="concat('urn:iso:std:iso:3166:-1:code:',
+                                     $countrycode)"/>
 
         <!-- L1 Location -->
         <xsl:if test="$l1!=''">
@@ -314,7 +457,8 @@
                         </reference>
                     </xsl:otherwise>
                 </xsl:choose>
-                <data field="name"><xsl:value-of select="concat($Project, ': ', $Activity)"/></data>
+                <data field="name"><xsl:value-of select="concat($Project, ': ',
+                                                                $Activity)"/></data>
                 <data field="lat"><xsl:value-of select="col[@field='Lat']"/></data>
                 <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
             </resource>
@@ -383,7 +527,9 @@
                         </xsl:otherwise>
                     </xsl:choose>
                 </xsl:variable>
-                <xsl:variable name="country" select="concat('urn:iso:std:iso:3166:-1:code:', $countrycode)"/>
+                <xsl:variable name="country"
+                              select="concat('urn:iso:std:iso:3166:-1:code:',
+                                             $countrycode)"/>
                 <reference field="location_id" resource="gis_location">
                     <xsl:attribute name="uuid">
                         <xsl:value-of select="$country"/>
@@ -494,4 +640,3 @@
 
     <!-- ****************************************************************** -->
 </xsl:stylesheet>
-

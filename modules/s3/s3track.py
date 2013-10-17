@@ -248,7 +248,7 @@ class S3Trackable(object):
             @param as_rows: return the result as Rows object
             @param exclude: interlocks to break at (avoids circular check-ins)
 
-            @returns: a location record, or a list of location records (if multiple)
+            @return: a location record, or a list of location records (if multiple)
         """
 
         db = current.db
@@ -321,7 +321,7 @@ class S3Trackable(object):
             @param location: the location (as Row or record ID)
             @param timestmp: the datetime of the presence (defaults to current time)
 
-            @returns: nothing
+            @return: nothing
         """
 
         ptable = current.s3db[PRESENCE]
@@ -366,7 +366,7 @@ class S3Trackable(object):
             @param record: record in the other resource (as Row or record ID)
             @param timestmp: datetime of the check-in
 
-            @returns: nothing
+            @return: nothing
         """
 
         db = current.db
@@ -509,7 +509,7 @@ class S3Trackable(object):
             @param _filter: filter for the locations
             @param as_rows: return the result as Rows object
 
-            @returns: the base location(s) of the current instance
+            @return: the base location(s) of the current instance
         """
 
         db = current.db
@@ -567,7 +567,7 @@ class S3Trackable(object):
 
             @param location: the location for the base location as Row or record ID
 
-            @returns: nothing
+            @return: nothing
 
             @note: instance tables without a location_id field will be ignored
         """
@@ -663,7 +663,7 @@ class S3Tracker(object):
             @param record: a Row object
             @param query: a Query object
 
-            @returns: a S3Trackable instance for the specified record(s)
+            @return: a S3Trackable instance for the specified record(s)
         """
 
         return S3Trackable(table=table,

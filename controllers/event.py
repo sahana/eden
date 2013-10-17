@@ -127,13 +127,21 @@ def incident():
                     if "msg" in settings.modules:
                         s3.crud.action_button(url = URL(f="compose",
                                                         vars = {"hrm_id": "[id]"}),
-                                              _class = "action-btn",
+                                              _class = "action-btn send",
                                               label = str(T("Send Notification")))
         return output
     s3.postp = postp
 
     output = s3_rest_controller(rheader=event_rheader)
     return output
+
+# -----------------------------------------------------------------------------
+def incident_report():
+    """
+        RESTful CRUD controller
+    """
+
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def event_rheader(r):

@@ -1,0 +1,15 @@
+{{try:}}{{=page_url}}{{except:}}{{pass}}
+{{if filter_query:}}
+{{=current.T("Notification")}}: {{=XML(filter_query)}}{{pass}}
+{{if new is not None:}}{{new_title=current.T("The following Post has been added") if new == 1 else current.T("The following %(number)s Posts have been added") % dict(number=new)}}
+{{=XML(new_title)}}:
+{{for record in new_records:}}
+{{=XML(" - ".join([str(v) for l, v in record[:3]]))}}
+{{=XML(record[3][1])}}
+{{pass}}{{pass}}
+{{if upd is not None:}}{{upd_title=current.T("The following Post has been updated") if upd == 1 else current.T("The following %(number)s Posts have been updated") % dict(number=upd)}}
+{{=XML(upd_title)}}:
+{{for record in upd_records:}}
+{{=XML(" - ".join([str(v) for l, v in record[:3]]))}}
+{{=XML(record[3][1])}}
+{{pass}}{{pass}}

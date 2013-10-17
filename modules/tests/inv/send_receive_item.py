@@ -32,7 +32,7 @@ class SendReceiveItem(InvTestFunctions):
             Inventory Test - Send-Receive Workflow (Send-Receive items)
             @Case: INV003
             @param items: This test Send-Receive a specific item to another party.
-        This test assume that regression/inv-mngt has been added to prepop
+        This test assume that test/inv-mngt has been added to prepop
         - e.g. via demo/IFRC_Train
         
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
@@ -46,23 +46,18 @@ class SendReceiveItem(InvTestFunctions):
         method = "search"
         send_data = [("site_id",
                  "Timor-Leste Red Cross Society (CVTL) National Warehouse (Warehouse)",
-                 "option",
                 ),
                  ("type",
                   "Internal Shipment",
-                  "option",
                  ),
                 ("to_site_id",
                  "Lospalos Warehouse (Warehouse)",
-                 "option",
                 ),
                 ("sender_id",
                  "Beatriz de Carvalho",
-                 "autocomplete",
                 ),
                 ("recipient_id",
                  "Liliana Otilia",
-                 "autocomplete",
                 )
                ]
         item_data = [
@@ -123,19 +118,15 @@ class SendReceiveItem(InvTestFunctions):
         method = "search"
         send_data = [("site_id",
                  "Timor-Leste Red Cross Society (CVTL) National Warehouse (Warehouse)",
-                 "option",
                 ),
                  ("type",
                   "Internal Shipment",
-                  "option",
                  ),
                 ("to_site_id",
                  "Lori (Facility)",
-                 "option",
                 ),
                 ("sender_id",
                  "Beatriz de Carvalho",
-                 "autocomplete",
                 ),
                ]
         item_data = [

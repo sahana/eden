@@ -9,8 +9,10 @@ $(document).ready(function() {
         changeYear: true,
         //showOtherMonths: true, selectOtherMonths: true,
         showOn: 'both',
-        buttonImage: S3.Ap.concat('/static/img/jquery-ui/calendar.gif'),
-        buttonImageOnly: true,
+        // We want to be able to select image in CSS
+        //buttonImage: S3.Ap.concat('/static/img/jquery-ui/calendar.gif'),
+        //buttonImageOnly: true,
+        buttonText: '',
         dateFormat: 'yy-mm-dd',
         isRTL: S3.rtl
     });

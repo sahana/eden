@@ -29,10 +29,31 @@
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
-
     <xsl:include href="../commons.xsl"/>
     <xsl:include href="../../xml/countries.xsl"/>
 
+    <!-- ****************************************************************** -->
+    <!-- Lookup column names -->
+
+    <xsl:variable name="Lat">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">Lat</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:variable name="Lon">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">Lon</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:variable name="Postcode">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">Postcode</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
     <!--<xsl:key name="warehouse_type" match="row" use="col[@field='Type']"/>-->
     <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
@@ -189,6 +210,21 @@
         <xsl:variable name="l2" select="col[@field='L2']/text()"/>
         <xsl:variable name="l3" select="col[@field='L3']/text()"/>
         <xsl:variable name="l4" select="col[@field='L4']/text()"/>
+        <xsl:variable name="lat">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$Lat"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="lon">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$Lon"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="postcode">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$Postcode"/>
+            </xsl:call-template>
+        </xsl:variable>
 
         <!-- Country Code = UUID of the L0 Location -->
         <xsl:variable name="countrycode">
@@ -206,7 +242,9 @@
             </xsl:choose>
         </xsl:variable>
 
-        <xsl:variable name="country" select="concat('urn:iso:std:iso:3166:-1:code:', $countrycode)"/>
+        <xsl:variable name="country"
+                      select="concat('urn:iso:std:iso:3166:-1:code:',
+                                     $countrycode)"/>
 
         <!-- L1 Location -->
         <xsl:if test="$l1!=''">
@@ -377,9 +415,9 @@
                 </xsl:otherwise>
             </xsl:choose>
             <data field="addr_street"><xsl:value-of select="col[@field='Address']"/></data>
-            <data field="addr_postcode"><xsl:value-of select="col[@field='Postcode']"/></data>
-            <data field="lat"><xsl:value-of select="col[@field='Lat']"/></data>
-            <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
+            <data field="addr_postcode"><xsl:value-of select="$postcode"/></data>
+            <data field="lat"><xsl:value-of select="$lat"/></data>
+            <data field="lon"><xsl:value-of select="$lon"/></data>
         </resource>
 
     </xsl:template>

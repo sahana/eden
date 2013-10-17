@@ -8,6 +8,7 @@
          CSV column...........Format..........Content
 
          Name.................string..........Type Name
+         Description..........string..........Type Description
 
     *********************************************************************** -->
     <xsl:output method="xml"/>

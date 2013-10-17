@@ -45,7 +45,7 @@ from gluon.storage import Storage
 from gluon.languages import lazyT
 
 from s3navigation import S3ScriptItem
-from s3utils import S3DateTime, s3_auth_user_represent, s3_auth_user_represent_name, s3_auth_group_represent, s3_unicode
+from s3utils import S3DateTime, s3_auth_user_represent, s3_auth_user_represent_name, s3_unicode
 from s3validators import IS_ONE_OF, IS_UTC_DATETIME
 from s3widgets import S3AutocompleteWidget, S3DateWidget, S3DateTimeWidget
 
@@ -218,7 +218,9 @@ class S3Represent(object):
                  show_link=False,
                  multiple=False,
                  default=None,
-                 none=None):
+                 none=None,
+                 field_sep=" "
+                 ):
         """
             Constructor
 
@@ -238,6 +240,7 @@ class S3Represent(object):
             @param show_link: whether to add a URL to representations
             @param default: default representation for unknown options
             @param none: representation for empty fields (None or empty list)
+            @param field_sep: separator to use to join fields
         """
 
         self.tablename = lookup
@@ -252,6 +255,7 @@ class S3Represent(object):
         self.show_link = show_link
         self.default = default
         self.none = none
+        self.field_sep = field_sep
         self.setup = False
         self.theset = None
         self.queries = 0
@@ -313,7 +317,8 @@ class S3Represent(object):
             # Default
             values = [row[f] for f in self.fields if row[f] not in (None, "")]
             if values:
-                v = " ".join([s3_unicode(v) for v in values])
+                sep = self.field_sep
+                v = sep.join([s3_unicode(v) for v in values])
             else:
                 v = self.none
         if self.translate and not type(v) is lazyT:
@@ -322,7 +327,7 @@ class S3Represent(object):
             return v
 
     # -------------------------------------------------------------------------
-    def link(self, k, v):
+    def link(self, k, v, rows=None):
         """
             Represent a (key, value) as hypertext link.
 
@@ -335,6 +340,8 @@ class S3Represent(object):
 
             @param k: the key
             @param v: the representation of the key
+            @param rows: the rows (unused in the base class but can be used in
+                                   custom links)
         """
 
         if self.linkto:
@@ -373,7 +380,7 @@ class S3Represent(object):
             rows = [row] if row is not None else None
             items = self._lookup([value], rows=rows)
             if value in items:
-                r = self.link(value, items[value]) \
+                r = self.link(value, items[value], rows) \
                     if show_link else items[value]
             else:
                 r = self.default
@@ -416,7 +423,7 @@ class S3Represent(object):
             items = self._lookup(values, rows=rows)
             if show_link:
                 link = self.link
-                labels = [[link(v, s3_unicode(items[v])), ", "]
+                labels = [[link(v, s3_unicode(items[v]), rows), ", "]
                           if v in items else [default, ", "]
                           for v in values]
                 if labels:
@@ -472,7 +479,7 @@ class S3Represent(object):
             labels = self._lookup(values, rows=rows)
             if show_link:
                 link = self.link
-                labels = dict([(v, link(v, r)) for v, r in labels.items()])
+                labels = dict([(v, link(v, r, rows)) for v, r in labels.items()])
             for v in values:
                 if v not in labels:
                     labels[v] = self.default
@@ -521,7 +528,7 @@ class S3Represent(object):
         if self.default is None:
             self.default = s3_unicode(messages.UNKNOWN_OPT)
         if self.none is None:
-            self.none = s3_unicode(messages["NONE"])
+            self.none = messages["NONE"]
 
         # Initialize theset
         if self.options is not None:
@@ -748,14 +755,14 @@ s3uuid = SQLCustomType(type = "string",
                                     else str(x.encode("utf-8"))),
                        decoder = lambda x: x)
 
-if db and current.db._adapter.represent("X", s3uuid) != "'X'":
-    # Old web2py DAL, must add quotes in encoder
-    s3uuid = SQLCustomType(type = "string",
-                           native = "VARCHAR(128)",
-                           encoder = (lambda x: "'%s'" % (uuid4().urn
-                                        if x == ""
-                                        else str(x.encode("utf-8")).replace("'", "''"))),
-                           decoder = (lambda x: x))
+#if db and current.db._adapter.represent("X", s3uuid) != "'X'":
+#    # Old web2py DAL, must add quotes in encoder
+#    s3uuid = SQLCustomType(type = "string",
+#                           native = "VARCHAR(128)",
+#                           encoder = (lambda x: "'%s'" % (uuid4().urn
+#                                        if x == ""
+#                                        else str(x.encode("utf-8")).replace("'", "''"))),
+#                           decoder = (lambda x: x))
 
 # Universally unique identifier for a record
 s3_meta_uuid = S3ReusableField("uuid", type=s3uuid,
@@ -893,18 +900,20 @@ def s3_ownerstamp():
                                              writable=False,
                                              requires=None,
                                              default=None,
-                                             represent=s3_auth_group_represent)
+                                             represent=S3Represent(lookup="auth_group",
+                                                                   fields=["role"])
+                                             )
 
     # Person Entity controlling access to this record
     s3_meta_realm_entity = S3ReusableField("realm_entity", "integer",
-                                              readable=False,
-                                              writable=False,
-                                              requires=None,
-                                              default=None,
-                                              # use a lambda here as we don't
-                                              # want the model to be loaded yet
-                                              represent=lambda val: \
-                                                current.s3db.pr_pentity_represent(val))
+                                           readable=False,
+                                           writable=False,
+                                           requires=None,
+                                           default=None,
+                                           # use a lambda here as we don't
+                                           # want the model to be loaded yet
+                                           represent=lambda val: \
+                                               current.s3db.pr_pentity_represent(val))
     return (s3_meta_owned_by_user(),
             s3_meta_owned_by_group(),
             s3_meta_realm_entity())
@@ -950,16 +959,17 @@ def s3_role_required():
 
     T = current.T
     gtable = current.auth.settings.table_group
+    represent = S3Represent(lookup="auth_group", fields=["role"])
     f = S3ReusableField("role_required", gtable,
             sortby="role",
             requires = IS_NULL_OR(
-                        IS_ONE_OF(db, "auth_group.id",
-                                  "%(role)s",
+                        IS_ONE_OF(current.db, "auth_group.id",
+                                  represent,
                                   zero=T("Public"))),
-            widget = S3AutocompleteWidget("admin",
-                                          "group",
-                                          fieldname="role"),
-            represent = s3_auth_group_represent,
+            #widget = S3AutocompleteWidget("admin",
+            #                              "group",
+            #                              fieldname="role"),
+            represent = represent,
             label = T("Role Required"),
             comment = DIV(_class="tooltip",
                           _title="%s|%s" % (T("Role Required"),
@@ -978,16 +988,17 @@ def s3_roles_permitted(name="roles_permitted", **attr):
     from s3validators import IS_ONE_OF
 
     T = current.T
+    represent = S3Represent(lookup="auth_group", fields=["role"])
     if "label" not in attr:
         attr["label"] = T("Roles Permitted")
     if "sortby" not in attr:
         attr["sortby"] = "role"
     if "represent" not in attr:
-        attr["represent"] = s3_auth_group_represent
+        attr["represent"] = represent
     if "requires" not in attr:
         attr["requires"] = IS_NULL_OR(IS_ONE_OF(current.db,
                                                 "auth_group.id",
-                                                "%(role)s",
+                                                represent,
                                                 multiple=True))
     if "comment" not in attr:
         attr["comment"] = DIV(_class="tooltip",

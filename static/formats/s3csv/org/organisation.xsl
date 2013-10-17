@@ -13,12 +13,14 @@
          all of the following are for the branch, unless the branch field is empty:
          Acronym.................org_organisation.acronym
          Type....................org_organisation$organisation_type_id
-         Sector..................org_organisation$sector_id
-         Region..................org_organisation.region
+         Sectors.................org_sector_organisation$sector_id
+         Services................org_service_organisation$service_id
+         Region..................org_organisation.region_id
          Country.................org_organisation.country (ISO Code)
          Website.................org_organisation.website
-         Twitter.................org_organisation.twitter
-         Donation Phone..........org_organisation.donation_phone
+         Phone...................org_organisation.phone
+         Phone2..................pr_contact.value
+         Twitter.................pr_contact.value
          Logo....................org_organisation.logo
          Comments................org_organisation.comments
          Approved................org_organisation.approved_by
@@ -32,6 +34,7 @@
     <!-- Indexes for faster processing -->
     <xsl:key name="organisation_type" match="row" use="col[@field='Type']"/>
     <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
+    <xsl:key name="region" match="row" use="col[@field='Region']"/>
 
     <!-- ****************************************************************** -->
 
@@ -41,6 +44,12 @@
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation_type',
                                                                        col[@field='Type'])[1])]">
                 <xsl:call-template name="OrganisationType" />
+            </xsl:for-each>
+
+            <!-- Regions -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('region',
+                                                                       col[@field='Region'])[1])]">
+                <xsl:call-template name="Region" />
             </xsl:for-each>
 
             <!-- Branches -->
@@ -81,11 +90,8 @@
         <xsl:param name="OrgName"/>
         <xsl:param name="BranchName"/>
 
-        <!-- Create the sectors -->
-        <xsl:variable name="sector" select="col[@field='Sector']"/>
-        <xsl:call-template name="splitList">
-            <xsl:with-param name="list" select="$sector"/>
-        </xsl:call-template>
+        <xsl:variable name="Sectors" select="col[@field='Sectors']/text()"/>
+        <xsl:variable name="Services" select="col[@field='Services']/text()"/>
 
         <!-- Create the Organisation/Branch -->
         <resource name="org_organisation">
@@ -145,32 +151,46 @@
                 </data>
             </xsl:if>
             <xsl:if test="col[@field='Region']!=''">
-                <data field="region"><xsl:value-of select="col[@field='Region']"/></data>
+                <reference field="region_id" resource="org_region">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('Region:', col[@field='Region'])"/>
+                    </xsl:attribute>
+                </reference>
             </xsl:if>
             <xsl:if test="col[@field='Website']!=''">
                 <data field="website"><xsl:value-of select="col[@field='Website']"/></data>
             </xsl:if>
-            <xsl:if test="col[@field='Twitter']!=''">
-                <data field="twitter"><xsl:value-of select="col[@field='Twitter']"/></data>
+            <xsl:if test="col[@field='Phone']!=''">
+                <data field="phone"><xsl:value-of select="col[@field='Phone']"/></data>
             </xsl:if>
-            <xsl:if test="col[@field='Donation Phone']!=''">
-                <data field="donation_phone"><xsl:value-of select="col[@field='Donation Phone']"/></data>
+            <xsl:if test="col[@field='Phone2']!=''">
+                <resource name="pr_contact">
+                    <data field="contact_method">WORK_PHONE</data>
+                    <data field="value"><xsl:value-of select="col[@field='Phone2']"/></data>
+                </resource>
+            </xsl:if>
+            <xsl:if test="col[@field='Twitter']!=''">
+                <resource name="pr_contact">
+                    <data field="contact_method">TWITTER</data>
+                    <data field="value"><xsl:value-of select="col[@field='Twitter']"/></data>
+                </resource>
             </xsl:if>
             <xsl:if test="col[@field='Comments']!=''">
                 <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
             </xsl:if>
 
-            <xsl:if test="$sector!=''">
-                <reference field="multi_sector_id" resource="org_sector">
-                    <xsl:variable name="qlist">
-                        <xsl:call-template name="quoteList">
-                            <xsl:with-param name="list" select="$sector"/>
-                        </xsl:call-template>
-                    </xsl:variable>
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat('[', $qlist, ']')"/>
-                    </xsl:attribute>
-                </reference>
+            <xsl:if test="$Sectors!=''">
+                <xsl:call-template name="splitList">
+                    <xsl:with-param name="list" select="$Sectors"/>
+                    <xsl:with-param name="arg">sector</xsl:with-param>
+                </xsl:call-template>
+            </xsl:if>
+
+            <xsl:if test="$Services!=''">
+                <xsl:call-template name="splitList">
+                    <xsl:with-param name="list" select="$Services"/>
+                    <xsl:with-param name="arg">service</xsl:with-param>
+                </xsl:call-template>
             </xsl:if>
 
             <!-- Logo -->
@@ -227,17 +247,45 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <!-- Template to create an org_sector resource from the value passed in -->
+    <xsl:template name="Region">
+        <xsl:if test="col[@field='Region']!=''">
+            <resource name="org_region">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('Region:', col[@field='Region'])"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="col[@field='Region']"/></data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="resource">
         <xsl:param name="item"/>
+        <xsl:param name="arg"/>
 
-        <resource name="org_sector">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$item"/>
-            </xsl:attribute>
-            <data field="abrv"><xsl:value-of select="$item"/></data>
-            <data field="name"><xsl:value-of select="$item"/></data>
-        </resource>
+        <xsl:choose>
+            <!-- Sectors -->
+            <xsl:when test="$arg='sector'">
+                <resource name="org_sector_organisation">
+                    <reference field="sector_id" resource="org_sector">
+                        <resource name="org_sector">
+                            <data field="abrv"><xsl:value-of select="$item"/></data>
+                            <data field="name"><xsl:value-of select="$item"/></data>
+                        </resource>
+                    </reference>
+                </resource>
+            </xsl:when>
+            <!-- Services -->
+            <xsl:when test="$arg='service'">
+                <resource name="org_service_organisation">
+                    <reference field="service_id" resource="org_service">
+                        <resource name="org_service">
+                            <data field="name"><xsl:value-of select="$item"/></data>
+                        </resource>
+                    </reference>
+                </resource>
+            </xsl:when>
+        </xsl:choose>
 
     </xsl:template>
 

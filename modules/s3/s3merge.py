@@ -61,7 +61,7 @@ class S3Merge(S3Method):
             @param r: the S3Request
             @param attr: dictionary of parameters for the method handler
 
-            @returns: output object to send to the view
+            @return: output object to send to the view
         """
 
         output = dict()
@@ -234,25 +234,25 @@ class S3Merge(S3Method):
         """
 
         s3 = current.session.s3
-        DEDUPLICATE = self.DEDUPLICATE
 
         resource = self.resource
         tablename = self.tablename
-        record_ids = []
-
-        representation = r.representation
-
-        if DEDUPLICATE in s3:
-            bookmarks = s3[DEDUPLICATE]
-            if tablename in bookmarks:
-                record_ids = bookmarks[tablename]
 
         if r.http == "POST":
             return self.merge(r, **attr)
 
         # Bookmarks
+        record_ids = []
+        DEDUPLICATE = self.DEDUPLICATE
+        if DEDUPLICATE in s3:
+            bookmarks = s3[DEDUPLICATE]
+            if tablename in bookmarks:
+                record_ids = bookmarks[tablename]
         query = S3FieldSelector(resource._id.name).belongs(record_ids)
         resource.add_filter(query)
+
+        # Representation
+        representation = r.representation
 
         # List fields
         list_fields = resource.list_fields()
@@ -283,41 +283,44 @@ class S3Merge(S3Method):
             limit = 2 * display_length
 
         # Datatable Filter
-        totalrows = displayrows = resource.count()
+        totalrows = None
         if representation == "aadata":
-            # Workaround for datatables with 2 action columns:
             searchq, orderby, left = resource.datatable_filter(list_fields,
                                                                vars)
             if searchq is not None:
+                totalrows = resource.count()
                 resource.add_filter(searchq)
-                displayrows = resource.count(left=left, distinct=True)
         else:
             orderby, left = None, None
 
-        # Retrieve the items
-        rows = resource.select(list_fields,
+        # Get the records
+        data = resource.select(list_fields,
                                start=start,
                                limit=limit,
                                orderby=orderby,
-                               left=left)
+                               left=left,
+                               count=True,
+                               represent=True)
 
-        # Extract the data
-        data = resource.extract(rows, list_fields, represent=True)
+        
+        displayrows = data["numrows"]
+        if totalrows is None:
+            totalrows = displayrows
 
         # Generate a datatable
-        rfields = resource.resolve_selectors(list_fields)[0]
-        dt = S3DataTable(rfields, data)
+        dt = S3DataTable(data["rfields"], data["rows"])
+        
         datatable_id = "s3merge_1"
         response = current.response
 
         if representation == "aadata":
-            
             output = dt.json(totalrows,
                              displayrows,
                              datatable_id,
                              sEcho,
                              dt_bulk_actions = [(current.T("Merge"),
                                                  "merge", "pair-action")])
+                                                 
         elif representation == "html":
             # Initial HTML response
             T = current.T
@@ -333,11 +336,11 @@ class S3Merge(S3Method):
                              datatable_id,
                              dt_ajax_url=url,
                              dt_displayLength=display_length,
-                             dt_bulk_actions = [(current.T("Merge"),
+                             dt_bulk_actions = [(T("Merge"),
                                                  "merge", "pair-action")])
 
             output["items"] = items
-            response.s3.actions = [{"label": str(current.T("View")),
+            response.s3.actions = [{"label": str(T("View")),
                                     "url": r.url(target="[id]", method="read"),
                                     "_class": "action-btn"}]
 
@@ -531,7 +534,7 @@ class S3Merge(S3Method):
                     ),
                     # Append mode and selected - required to get back here!
                     hidden = {
-                        "mode": mode,
+                        "mode": "Inclusive",
                         "selected": ",".join(ids),
                     }
                 )

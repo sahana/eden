@@ -32,7 +32,7 @@ class SendItem(InvTestFunctions):
             Inventory Test - Send Workflow (Send items)
             
             @param items: This test sends a specific item to another party.
-        This test assume that regression/inv-mngt has been added to prepop
+        This test assume that test/inv-mngt has been added to prepop
         - e.g. via demo/IFRC_Train
             @Case: INV001
             
@@ -48,23 +48,18 @@ class SendItem(InvTestFunctions):
         self.login(account="admin", nexturl="inv/send/create")
         send_data = [("site_id",
                  "Timor-Leste Red Cross Society (CVTL) National Warehouse (Warehouse)",
-                 "option",
                 ),
                  ("type",
                   "Internal Shipment",
-                  "option",
                  ),
                 ("to_site_id",
                  "Lospalos Warehouse (Warehouse)",
-                 "option",
                 ),
                 ("sender_id",
                  "Beatriz de Carvalho",
-                 "autocomplete",
                 ),
                 ("recipient_id",
                  "Liliana Otilia",
-                 "autocomplete",
                 )
                ]
         item_data = [

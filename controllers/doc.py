@@ -62,7 +62,7 @@ def document_tabs(r):
 
     tab_opts = [{"tablename": "assess_rat",
                  "resource": "rat",
-                 "one_title": T("1 Assessment"),
+                 "one_title": "1 Assessment",
                  "num_title": " Assessments",
                 },
                 {"tablename": "irs_ireport",

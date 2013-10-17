@@ -98,11 +98,13 @@
    <!-- Office-A Staff-A -->
    <resource name="pr_person" uuid="%(org)s Office-A Staff-A">
      <data field="first_name">"%(org)s Office-A Staff-A"</data>
+     <data field="last_name">"%(org)s Office-A Staff-A"</data>
    </resource>
 
    <!-- Office-A Vol-A -->
    <resource name="pr_person" uuid="%(org)s Office-A Vol-A">
      <data field="first_name">"%(org)s Office-A Vol-A"</data>
+     <data field="last_name">"%(org)s Office-A Vol-A"</data>
    </resource>
 
    <!-- Asset-A Item-A -->
@@ -126,6 +128,7 @@
    <!-- Member-A -->
    <resource name="pr_person" uuid="%(org)s Member-A">
      <data field="first_name">"%(org)s Member-A"</data>
+     <data field="last_name">"%(org)s Member-A"</data>
    </resource>
 
    <!-- Project-A -->

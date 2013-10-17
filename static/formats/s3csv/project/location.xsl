@@ -11,14 +11,18 @@
          Project Name.........string..........Project Name
          Project Comments.....string..........Project comments
          Status...............string..........Project status
-         Donor Organisations..
+         Lead Organisation....string..........Organisation name
+         Donor Organisations..comma-sep list..Organisation name
+         Partner Organisations.comma-sep list.Organisation name
          Start Date...........YYYY-MM-DD......Start date of the project
          End Date.............YYYY-MM-DD......End date of the project
+         Budget...............integer.........Project Budget
          Activity Types.......comma-sep list..List of Activity Types
+         Sectors..............;-sep list......List of Project Sectors (Allow Sector Names to include a Comma, such as "Water, Sanitation & Hygiene"
          Country..............string..........Country code/name (L0)
-         L1...................string..........L1 location name (State/Province)
-         L2...................string..........L1 location name (District)
-         L3...................string..........L3 location name (City)
+         L1...................string..........L1 location name (e.g. State/Province)
+         L2...................string..........L2 location name (e.g. District/County)
+         L3...................string..........L3 location name (e.g. City)
          L4...................string..........L4 location name
          L5...................string..........L5 location name
          Lat..................float...........Latitude of the most local location
@@ -29,6 +33,7 @@
                                               where first name and email as well as the
                                               three commas are mandatory
          Beneficiaries:XXX....integer.........Number of Beneficiaries of type XXX (multiple allowed)
+         Distribution:XXX.....integer.........Number of Items of type XXX Distributed(multiple allowed)
 
     *********************************************************************** -->
 
@@ -38,6 +43,7 @@
     <xsl:include href="../../xml/countries.xsl"/>
 
     <xsl:variable name="ActivityTypePrefix" select="'ActivityType: '"/>
+    <xsl:variable name="SectorPrefix" select="'Sector:'"/>
 
     <xsl:key name="orgs"
              match="row"
@@ -82,6 +88,11 @@
                 <xsl:call-template name="BeneficiaryType"/>
             </xsl:for-each>
 
+            <!-- Distribution Items -->
+            <xsl:for-each select="//row[1]/col[starts-with(@field, 'Distribution')]">
+                <xsl:call-template name="DistributionItem"/>
+            </xsl:for-each>
+
             <!-- Project Locations -->
             <xsl:apply-templates select="./table/row"/>
         </s3xml>
@@ -118,6 +129,9 @@
                 <xsl:call-template name="Beneficiaries"/>
             </xsl:for-each>
 
+            <xsl:for-each select="col[starts-with(@field, 'Distribution')]">
+                <xsl:call-template name="Distribution"/>
+            </xsl:for-each>
         </resource>
 
         <xsl:call-template name="splitList">
@@ -138,6 +152,7 @@
         <xsl:variable name="ProjectCode" select="col[@field='Project Code']/text()"/>
         <xsl:variable name="ProjectName" select="col[@field='Project Name']/text()"/>
         <xsl:variable name="OrgName" select="col[@field='Lead Organisation']/text()"/>
+        <xsl:variable name="Sectors" select="col[@field='Sectors']"/>
 
         <resource name="project_project">
             <xsl:attribute name="tuid">
@@ -152,6 +167,23 @@
             <xsl:if test="col[@field='Status']!=''">
                 <xsl:call-template name="Status"/>
             </xsl:if>
+            <xsl:if test="col[@field='Start Date']!=''">
+                <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='End Date']!=''">
+                <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Budget']!=''">
+                <data field="budget"><xsl:value-of select="col[@field='Budget']"/></data>
+            </xsl:if>
+            <!-- Project Sectors -->
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list">
+                    <xsl:value-of select="$Sectors"/>
+                </xsl:with-param>
+                <xsl:with-param name="listsep" select="';'"/>
+                <xsl:with-param name="arg">sector_ref</xsl:with-param>
+            </xsl:call-template>
             <!-- Project Organisations -->
             <xsl:if test="$OrgName!=''">
                 <!-- Embedded within record -->
@@ -189,7 +221,13 @@
             </xsl:if>
         </resource>
 
-         <xsl:if test="col[@field='Donor Organisations']!=''">
+        <xsl:call-template name="splitList">
+            <xsl:with-param name="list"><xsl:value-of select="$Sectors"/></xsl:with-param>
+            <xsl:with-param name="listsep" select="';'"/>
+            <xsl:with-param name="arg">sector_res</xsl:with-param>
+        </xsl:call-template>
+
+        <xsl:if test="col[@field='Donor Organisations']!=''">
             <xsl:call-template name="splitList">
                 <xsl:with-param name="list">
                     <xsl:value-of select="col[@field='Donor Organisations']"/>
@@ -214,6 +252,7 @@
         <xsl:param name="arg"/>
 
         <xsl:choose>
+            <!-- Activity Types -->
             <xsl:when test="$arg='activity_type_ref'">
                 <resource name="project_activity_activity_type">
                     <reference field="activity_type_id" resource="project_activity_type">
@@ -231,9 +270,27 @@
                     <data field="name"><xsl:value-of select="$item"/></data>
                 </resource>
             </xsl:when>
+            <!-- Sectors -->
+            <xsl:when test="$arg='sector_ref'">
+                <resource name="project_sector_project">
+                    <reference field="sector_id" resource="org_sector">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($SectorPrefix, $item)"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:when>
+            <xsl:when test="$arg='sector_res'">
+                <resource name="org_sector">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat($SectorPrefix, $item)"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$item"/></data>
+                </resource>
+            </xsl:when>
             <xsl:when test="$arg='org'">
                 <xsl:call-template name="Organisation">
-                    <xsl:with-param name="OrgName">$item</xsl:with-param>
+                    <xsl:with-param name="OrgName"><xsl:value-of select="$item"/></xsl:with-param>
                 </xsl:call-template>
             </xsl:when>
             <xsl:when test="$arg='donor'">
@@ -312,6 +369,49 @@
                 <xsl:value-of select="concat('BNF:', $BeneficiaryType)"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$BeneficiaryType"/></data>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Distribution">
+        <xsl:variable name="DistributionItem" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="ItemNumber" select="text()"/>
+
+        <xsl:if test="$ItemNumber!=''">
+            <resource name="supply_distribution">
+                <reference field="parameter_id" resource="supply_distribution_item">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('DITEM:', $DistributionItem)"/>
+                    </xsl:attribute>
+                </reference>
+                <data field="value"><xsl:value-of select="$ItemNumber"/></data>
+            </resource>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="DistributionItem">
+        <xsl:variable name="DistributionItem" select="normalize-space(substring-after(@field, ':'))"/>
+
+        <resource name="supply_item">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat('ITEM:', $DistributionItem)"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$DistributionItem"/></data>
+        </resource>
+
+        <resource name="supply_distribution_item">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat('DITEM:', $DistributionItem)"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$DistributionItem"/></data>
+            <reference field="item_id" resource="supply_item">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('ITEM:', $DistributionItem)"/>
+                </xsl:attribute>
+            </reference>
         </resource>
 
     </xsl:template>

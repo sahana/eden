@@ -1,13 +1,9 @@
 {{extend "layout.html"}}
 <div id='home'>
-{{try:}}
-<h2 align='center'>{{=title}}</h2>
-{{except:}}{{pass}}
+{{try:}}<h2 align='center'>{{=title}}</h2>{{except:}}{{pass}}
 {{=XML(item)}}
 <div id='menu_box_center'>
-{{try:}}
-{{=sit_dec_res_box}}
-{{except:}}{{pass}}
+{{try:}}{{=sit_dec_res_box}}{{except:}}{{pass}}
 {{=facility_box}}
 {{if AUTHENTICATED not in session.s3.roles:}}
  <div id='login_box' class='menu_box'>
@@ -46,5 +42,5 @@
  <span style="color:#676767;font-size:11px;margin:10px;padding:4px;">{{=T("Loading")}}...</span>
 </div>
 {{pass}}
-{{if org_box:}}
-{{include "dataTables.html"}}{{pass}}
+{{if settings.get_base_guided_tour() and request.get_vars.tour:}}{{=joyride_div}}{{pass}}
+{{if org_box:}}{{include "dataTables.html"}}{{pass}}

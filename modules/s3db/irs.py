@@ -749,7 +749,7 @@ class S3IRSModel(S3Model):
                     subject = T("Deployment Request"),
                     message = message,
                     url = url,
-                    formid = r.id
+                    #formid = r.id
                 )
             # Pre-populate the recipients list if we can
             # @ToDo: Check that we have valid contact details
@@ -1028,8 +1028,7 @@ class S3IRSResponseModel(S3Model):
 
         Currently this has code specific to Porto Firefighters
 
-        @ToDo: Move these to Events module?
-               - the response shouldn't live within the reporting system?
+        @ToDo: Replace with Deployment module
     """
 
     names = ["irs_ireport_human_resource",
@@ -1147,10 +1146,8 @@ class S3IRSResponseModel(S3Model):
                              s3_comments(),
                              *s3_meta_fields())
 
-        table.virtualfields.append(irs_ireport_vehicle_virtual_fields())
-        configure(tablename,
-                  extra_fields = ["datetime"]
-                 )
+        table.minutes = Field.Lazy(self.irs_ireport_vehicle_minutes)
+        configure(tablename, extra_fields = ["datetime"])
 
         # ---------------------------------------------------------------------
         # Which Staff are assigned to which Vehicle?
@@ -1221,6 +1218,17 @@ class S3IRSResponseModel(S3Model):
                                         sort=True))
         return requires
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def irs_ireport_vehicle_minutes(row):
+
+        if hasattr(row, "irs_ireport_vehicle"):
+            row = "irs_ireport_vehicle"
+        if hasattr(row, "datetime") and row.datetime:
+            return int((current.request.utcnow - row.datetime) / 60)
+        else:
+            return 0
+            
 # =============================================================================
 def irs_rheader(r, tabs=[]):
     """ Resource component page header """
@@ -1308,16 +1316,5 @@ def irs_rheader(r, tabs=[]):
 
     else:
         return None
-
-# =============================================================================
-class irs_ireport_vehicle_virtual_fields:
-
-    def minutes(self):
-        try:
-            delta = current.request.utcnow - self.irs_ireport_vehicle.datetime
-        except:
-            return 0
-
-        return int(delta.seconds / 60)
 
 # END =========================================================================

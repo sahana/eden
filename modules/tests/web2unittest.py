@@ -39,12 +39,28 @@ from selenium.webdriver.support.ui import Select, WebDriverWait
 
 from gluon import current
 
+from s3.s3resource import S3FieldSelector
+from s3.s3search import *
 from s3.s3utils import s3_unicode
 from s3.s3widgets import *
-from s3.s3search import *
-from s3.s3resource import S3FieldSelector
 
 from tests.core import *
+
+current.data = Storage()
+current.data["auth"] = {
+        "normal" : {
+                "email": "test@example.com",
+                "password": "eden",
+                "first_name": "Test",
+                "last_name": "User",
+            },
+        "admin" : {
+                "email": "admin@example.com",
+                "password": "testing",
+                "first_name": "Admin",
+                "last_name": "User",
+            },
+    }
 
 # =============================================================================
 class Web2UnitTest(unittest.TestCase):
@@ -119,9 +135,151 @@ class SeleniumUnitTest(Web2UnitTest):
     # -------------------------------------------------------------------------
     def login(self, account=None, nexturl=None):
 
-        if account == None:
+        if account is None:
             account = self.user
-        login(self.reporter, account, nexturl)
+        config = current.test_config
+        browser = config.browser
+        data = current.data["auth"]
+
+        if account in data:
+            email = data[account]["email"]
+            password = data[account]["password"]
+        elif isinstance(account, (tuple, list)):
+            email = account[0]
+            password = account[1]
+        else:
+            raise NotImplementedError
+
+        # If the user is already logged in no need to do anything so return
+        # We'd like to be able to access current.auth, however these are different threads
+        #user = current.auth.user
+        #if user and user.email == email:
+        #    # If the URL is different then move to the new URL
+        #    if not browser.current_url.endswith(nexturl):
+        #        url = "%s/%s" % (config.url, nexturl)
+        #        browser.get(url)
+        #    return
+        # auth_menu_email is used by the default template
+        # username fright is used by the IFRC template
+        if browser.page_source is not None and \
+           (browser.page_source.find("<a id=\"auth_menu_email\">%s</a>" % email) > 0 or
+            browser.page_source.find("<div class=\"username fright\">%s</div>" % email) > 0):
+            # If the URL is different then move to the new URL
+            if not browser.current_url.endswith(nexturl):
+                url = "%s/%s" % (config.url, nexturl)
+                browser.get(url)
+            return
+
+        if nexturl:
+            url = "%s/default/user/login?_next=/%s/%s" % \
+                (config.url, current.request.application, nexturl)
+        else:
+            url = "%s/default/user/login" % config.url
+        browser.get(url)
+
+        # Login
+        elem = browser.find_element_by_id("auth_user_email")
+        elem.send_keys(email)
+        elem = browser.find_element_by_id("auth_user_password")
+        elem.send_keys(password)
+        elem = browser.find_element_by_xpath("//input[contains(@value,'Login')]")
+        elem.click()
+
+        # Check the result
+        try:
+            elem = self.get_confirmation(3)
+        except NoSuchElementException:
+            self.reporter("Login failed.. so registering account")
+            # Try registering
+            self.register(account)
+        else:
+            self.reporter(elem.text)
+            return True
+
+    # -------------------------------------------------------------------------
+    def logout(self):
+        """ Logout """
+
+        config = current.test_config
+        browser = config.browser
+
+        url = "%s/default/user/login" % config.url
+        browser.get(url)
+
+        browser.find_element_by_id("auth_menu_email").click()
+
+        try:
+            elem = browser.find_element_by_id("auth_menu_logout")
+        except NoSuchElementException:
+            self.reporter("Logged-out already")
+            return True
+
+        elem.click()
+
+        # Check the result
+        try:
+            elem = self.get_confirmation(3)
+        except NoSuchElementException:
+            assert 0, "Logout unsuccesful"
+        else:
+            self.reporter(elem.text)
+            return True
+
+    # -----------------------------------------------------------------------------
+    def register(self, account="normal"):
+        """ Register on the system """
+
+        config = current.test_config
+        browser = config.browser
+        data = current.data["auth"]
+
+        if account in data:
+            email = data[account]["email"]
+            first_name = data[account]["first_name"]
+            last_name = data[account]["last_name"]
+            password = data[account]["password"]
+        else:
+            raise NotImplementedError
+
+        # Load homepage
+        homepage()
+
+        # Register user
+        elem = browser.find_element_by_id("auth_user_first_name")
+        elem.send_keys(first_name)
+        elem = browser.find_element_by_id("auth_user_last_name")
+        elem.send_keys(last_name)
+        elem = browser.find_element_by_id("auth_user_email")
+        elem.send_keys(email)
+        elem = browser.find_element_by_id("auth_user_password")
+        elem.send_keys(password)
+        elem = browser.find_element_by_id("auth_user_password_two")
+        elem.send_keys(password)
+        elem = browser.find_element_by_xpath("//input[contains(@value,'Register')]")
+        elem.click()
+
+        # Check the result
+        try:
+            elem = self.get_confirmation(3)
+        except NoSuchElementException:
+            assert 0, "Registration unsuccesful"
+        else:
+            self.reporter(elem.text)
+            return True
+
+    # -------------------------------------------------------------------------
+    def get_confirmation(self, wait_time):
+        """
+            @param wait_time: The time in seconds to wait for confirmation to appear.
+        """
+
+        if current.deployment_settings.get_ui_formstyle() == "bootstrap":
+            confirmation_class = "alert alert-success"
+        else:
+            confirmation_class = "confirmation"
+        return WebDriverWait(self.browser, wait_time).until(
+                    lambda driver:
+                                driver.find_element_by_xpath("//div[@class='%s']" % confirmation_class))
 
     # -------------------------------------------------------------------------
     def getRows (self, table, data, dbcallback):
@@ -191,7 +349,7 @@ class SeleniumUnitTest(Web2UnitTest):
         if isinstance(row_count, dict) and form_type == self.search.simple_form:
             key = row_count["key"]
             resource = current.s3db.resource(row_count["tablename"])
-            simpleSearch = resource.search.simple[0]
+            simpleSearch = resource.search_method().simple[0]
             if len(fields) == 0:
                 fields = ({"name":simpleSearch[0],"value":key},)
             searchFields = simpleSearch[1].field
@@ -237,7 +395,7 @@ class SeleniumUnitTest(Web2UnitTest):
 
         if isinstance(row_count, dict) and form_type == self.search.advanced_form:
             resource = current.s3db.resource(row_count["tablename"])
-            search_list = resource.search.advanced
+            search_list = resource.search_method().advanced
             for search in search_list:
                 widget = search[1]
                 if isinstance(widget, S3SearchOptionsWidget):
@@ -263,7 +421,7 @@ class SeleniumUnitTest(Web2UnitTest):
 
         time.sleep(1)
 
-        if results_expected == True:
+        if results_expected:
             self.assertFalse(
             browser.find_element_by_id("table-container").text
                     == "No Records Found",
@@ -311,8 +469,8 @@ class SeleniumUnitTest(Web2UnitTest):
     def create(self,
                tablename,
                data,
-               success = True,
-               dbcallback = None
+               success=True,
+               dbcallback=None
                ):
         """
             Generic method to create a record from the data passed in
@@ -336,9 +494,9 @@ class SeleniumUnitTest(Web2UnitTest):
         datetime_format = str(settings.get_L10n_datetime_format())
         # If a confirmation is shown then clear it so that it doesn't give a false positive later
         try:
-            elem = browser.find_element_by_xpath("//div[@class='confirmation']")
+            elem = self.get_confirmation(0.2)
             elem.click()
-            time.sleep(1) # Give it time to dissolve
+            time.sleep(1)  # Give it time to dissolve
         except:
             pass
 
@@ -350,58 +508,10 @@ class SeleniumUnitTest(Web2UnitTest):
                 time.sleep(details[3])
             if len(details) >= 3:
                 el_type = details[2]
-                if el_type == "automatic":
-                    try:
-                        browser.find_element_by_id("dummy_"+el_id)
-                        if len(details) >= 5:
-                            needle = details[4]
-                        else:
-                            needle = el_value
-                        raw_value = self.w_autocomplete(el_value,
-                                                        el_id,
-                                                        needle,
-                                                        )
-                    except NoSuchElementException:
-                        el = browser.find_element_by_id(el_id)
-                        raw_value = False
-                        for option in el.find_elements_by_tag_name("option"):
-                            if option.text == el_value:
-                                option.click()
-                                raw_value = option.get_attribute("value")
-                                try:
-                                    raw_value = int(raw_value)
-                                except:
-                                    pass
-                                break
-                        
-                elif el_type == "option":
-                    el = browser.find_element_by_id(el_id)
-                    raw_value = False
-                    for option in el.find_elements_by_tag_name("option"):
-                        if option.text == el_value:
-                            option.click()
-                            raw_value = option.get_attribute("value")
-                            try:
-                                raw_value = int(raw_value)
-                            except:
-                                pass
-                            break
-                    # Test that we have an id that can be used in the database
-                    if el_value and el_value != "-":
-                        self.assertTrue(raw_value, "%s option cannot be found in %s" % (el_value, el_id))
-                elif el_type == "checkbox":
+                if el_type == "checkbox":
                     for value in el_value:
                         self.browser.find_element_by_xpath("//label[contains(text(),'%s')]" % value).click()
                         # @ToDo: Add value to id_data to check for create function
-                elif el_type == "autocomplete":
-                    if len(details) >= 5:
-                        needle = details[4]
-                    else:
-                        needle = el_value
-                    raw_value = self.w_autocomplete(el_value,
-                                                    el_id,
-                                                    needle,
-                                                    )
                 elif el_type == "inv_widget":
                     raw_value = self.w_inv_item_select(el_value,
                                                        tablename,
@@ -420,40 +530,72 @@ class SeleniumUnitTest(Web2UnitTest):
                 elif el_type == "gis_location":
                     self.w_gis_location(el_value,
                                         details[0],
-                                       )
+                                        )
                     raw_value = None
-                else: # Embedded form fields
+                else:  # Embedded form fields
                     el_id = "%s_%s" % (el_type, details[0])
                     el = browser.find_element_by_id(el_id)
                     el.send_keys(el_value)
                     raw_value = None
 
             else:
-                # Normal Input field
-                el = browser.find_element_by_id(el_id)
-                if isinstance(table[details[0]].widget, S3DateWidget):
-                    el_value_date = datetime.datetime.strptime(el_value,"%Y-%m-%d")# %H:%M:%S")
+                # Look for autocomplete input field.
+                el = browser.find_elements_by_id("dummy_"+el_id)
+                if len(el) != 0:
+                    # Autocomplete input found.
+                    el = el[0]
+                else:
+                    el = browser.find_element_by_id(el_id)
+                class_name = el.get_attribute("class")
+                if "generic-widget" in class_name:
+                    # Dropdown option
+                    raw_value = False
+                    options_list = el.find_elements_by_tag_name("option")
+                    # Find the Longest Word Trimmed Match that matches with el_value
+                    option = self.find_max_match(options_list, el_value)
+                    if option is None:
+                        raise NoSuchElementException("%s option could not be found in %s" % (el_value, el_id))
+                    option.click()
+                    raw_value = option.get_attribute("value")
+                    try:
+                        raw_value = int(raw_value)
+                    except:
+                        pass
+
+                    # Test that we have an id that can be used in the database
+                    if el_value and el_value != "-":
+                        self.assertTrue(raw_value, "%s option cannot be found in %s" % (el_value, el_id))
+                elif "ui-autocomplete-input" in class_name:
+                    # Autocomplete field
+                    raw_value = self.w_autocomplete(el_value,
+                                                    el_id,
+                                                    el_value,
+                                                    )
+                elif isinstance(table[details[0]].widget, S3DateWidget):
+                    el_value_date = datetime.datetime.strptime(el_value, "%Y-%m-%d") # %H:%M:%S")
                     el_value = el_value_date.strftime(date_format)
+                    el.clear()
                     el.send_keys(el_value)
                     raw_value = el_value_date
                 elif isinstance(table[details[0]].widget, S3DateTimeWidget):
-                    el_value_datetime = datetime.datetime.strptime(el_value,"%Y-%m-%d %H:%M:%S")
+                    el_value_datetime = datetime.datetime.strptime(el_value, "%Y-%m-%d %H:%M:%S")
                     el_value = el_value_datetime.strftime(datetime_format)
+                    el.clear()
                     el.send_keys(el_value)
                     #raw_value = el_value_datetime
-                    raw_value = el_value
+                    raw_value = None
                     # @ToDo: Fix hack to stop checking datetime field. This is because the field does not support data entry by key press
                     # Use the raw value to check that the record was added succesfully
                 else:
+                    # Normal text input
                     el.clear()
                     el.send_keys(el_value)
                     raw_value = el_value
-
             if raw_value:
                 id_data.append([details[0], raw_value])
 
         result["before"] = self.getRows(table, id_data, dbcallback)
-        
+
         # Submit the Form
         submit_btn = browser.find_element_by_css_selector("input[type='submit']")
         submit_btn.click()
@@ -462,9 +604,7 @@ class SeleniumUnitTest(Web2UnitTest):
         # Check & Report the results
         confirm = True
         try:
-            elem = WebDriverWait(browser, 30).until(
-                        lambda driver: \
-                               driver.find_element_by_xpath("//div[@class='confirmation']"))
+            elem = self.get_confirmation(3)
             self.reporter(elem.text)
         except (NoSuchElementException, TimeoutException):
             confirm = False
@@ -479,13 +619,15 @@ class SeleniumUnitTest(Web2UnitTest):
             except NoSuchElementException:
                 pass
 
-        self.assertTrue(confirm == success,
-                        "Unexpected %s to create record" %
-                        (confirm and "success" or "failure"))
+        if success:
+            self.assertTrue(confirm, "Confirmation of record creation not received.\nRecord - %s" % data)
+        else:
+            self.assertFalse(confirm, "Unexpected confirmation of record creation received.\nRecord - %s" % data)
 
+        # Database Checks
         result["after"] = self.getRows(table, id_data, dbcallback)
-        successMsg = "Records added to database: %s" %id_data
-        failMsg = "Records not added to database %s" %id_data
+        successMsg = "Records added to database: %s" % id_data
+        failMsg = "Records not added to database %s" % id_data
         if success:
             self.assertTrue((len(result["after"]) - len(result["before"])) == 1,
                             failMsg)
@@ -495,6 +637,37 @@ class SeleniumUnitTest(Web2UnitTest):
                             successMsg)
             self.reporter(failMsg)
         return result
+
+    # -------------------------------------------------------------------------
+    def find_max_match(self, options_list, el_value):
+        """
+        Finds the Longest Word Trimmed Match for selecting text in options field.
+        @param options_list: The list of options in the options field.
+        @param el_value: The text to be matched in the options.
+        """
+        el_value_list = el_value.split()
+        # Remove all words of length = 1 such as hyphens.
+        el_value_list = filter(lambda x: len(x) > 1, el_value_list)
+        # Initialise max_len as 0 and matchec_option = None.
+        max_len = 0
+        matched_option = None
+
+        for option in options_list:
+            text = option.text
+            text_list = text.split()
+            # Remove all words of length = 1 such as hyphens.
+            text_list = filter(lambda x: len(x) > 1, text_list)
+            # Find intersection of el_value_list and text_list
+            matched_list = list(set(el_value_list).intersection(text_list))
+            # matched_len is number of matching words for the current option.
+            matched_len = len(matched_list)
+            # Save the maximum matched option in matched_option.
+            if matched_len > max_len:
+                matched_option = option
+                max_len = matched_len
+
+        # Return the maximum matched option.
+        return matched_option
 
     # -------------------------------------------------------------------------
     def select_option(self, select_elem, option_label):
@@ -523,31 +696,36 @@ class SeleniumUnitTest(Web2UnitTest):
 
         browser.find_element_by_xpath("//a[text()='Reset all filters']").click()
 
+        # Open the filter options fieldset, if not done so.
+        filter_options = browser.find_elements_by_css_selector("#filter_options button")
+        if filter_options[0].is_displayed():
+            # Click the 'Show' button
+            filter_options[0].click()
+
         if fields:
             self.fill_fields(fields)
 
-        # Open the report options fieldset:
+        # Open the report options fieldset, if not done so.
         report_options = browser.find_elements_by_css_selector("#report_options button")
         if report_options[0].is_displayed():
+            # Click the 'Show' button
             report_options[0].click()
-        else:
-            report_options[1].click()
 
         # Select the item to make a report of:
         rows_select = browser.find_element_by_id("report-rows")
         if not self.select_option(rows_select, report_of):
-            raise self.InvalidReportOrGroupException()
+            raise self.InvalidReportOrGroupException("%s not found in 'Report of' option" % report_of)
 
         # Select the value to group by:
         cols_select = browser.find_element_by_id("report-cols")
         if not self.select_option(cols_select, grouped_by):
-            raise self.InvalidReportOrGroupException()
+            raise self.InvalidReportOrGroupException("%s not found in 'Grouped By' option" % grouped_by)
 
         # Select the value to base the report on
         if report_fact:
             fact_select = browser.find_element_by_id("report-fact")
             if not self.select_option(fact_select, report_fact):
-                raise self.InvalidReportOrGroupException()
+                raise self.InvalidReportOrGroupException("%s not found in 'Value' option" % report_fact)
 
         submit_btn = browser.find_element_by_xpath("//input[@type='submit']")
         submit_btn.click()
@@ -558,31 +736,30 @@ class SeleniumUnitTest(Web2UnitTest):
         for check in args:
             row = self.dt_find(check[0])
             if not row:
-                raise self.InvalidReportOrGroupException()
+                raise self.InvalidReportOrGroupException("Row with %s could not be found in the datatable" % check[0])
             else:
                 row = row[0][0]
             col = 1
-            e = browser.find_element_by_xpath(".//*[@id='list']/thead/tr[2]/th[1]")
+            e = browser.find_element_by_xpath(".//*[@id='datatable']/thead/tr[2]/th[1]")
             while True:
-                if e.text.strip() == check[1]:
+                if e.text.strip().lower() == check[1].lower():
                     break
                 else:
                     col += 1
                     try:
                         e = browser.find_element_by_xpath(
-                            ".//*[@id='list']/thead/tr[2]/th[{0}]".format(col))
+                            ".//*[@id='datatable']/thead/tr[2]/th[{0}]".format(col))
                     except NoSuchElementException:
-                        raise self.InvalidReportOrGroupException()
+                        raise self.InvalidReportOrGroupException("Column with %s could not be found in the datatable." % check[1])
 
             import collections
             if isinstance(check[2], collections.Iterable):
                 td = browser.find_element_by_xpath(
-                    ".//*[@id='list']/tbody/tr[{0}]/td[{1}]".format(row,
+                    ".//*[@id='datatable']/tbody/tr[{0}]/td[{1}]".format(row,
                         col))
-                shown_items = [item.text for item in td.find_elements_by_tag_name("li")]
-
+                shown_items = [item.text.lower() for item in td.find_elements_by_tag_name("li")]
                 for item in check[2]:
-                    self.assertTrue(item in shown_items,
+                    self.assertTrue(item.lower() in shown_items,
                         u"Report check failed.")
             else:
                 self.assertTrue(str(dt_data_item(row, col)) == str(check[2]),
@@ -590,7 +767,7 @@ class SeleniumUnitTest(Web2UnitTest):
 
         if 'row_count' in kwargs:
             self.assertEqual(kwargs['row_count'], len(browser.find_elements_by_xpath(
-                "//table[@id='list']/tbody/tr")))
+                "//table[@id='datatable']/tbody/tr")), "Row Count given and calculated do not match.")
 
     # -------------------------------------------------------------------------
     def fill_fields(self, fields):
@@ -657,7 +834,7 @@ class SeleniumUnitTest(Web2UnitTest):
     def dt_data_item(self,
                      row = 1,
                      column = 1,
-                     tableID = "list",
+                     tableID = "datatable",
                      ):
         return dt_data_item(row, column, tableID)
 
@@ -667,7 +844,7 @@ class SeleniumUnitTest(Web2UnitTest):
                 row = None,
                 column = None,
                 cellList = None,
-                tableID = "list",
+                tableID = "datatable",
                 first = False,
                 ):
 
@@ -676,7 +853,7 @@ class SeleniumUnitTest(Web2UnitTest):
     # -------------------------------------------------------------------------
     def dt_links(self,
                  row = 1,
-                 tableID = "list",
+                 tableID = "datatable",
                  quiet = True
                  ):
 
@@ -755,11 +932,14 @@ class SeleniumUnitTest(Web2UnitTest):
         el_id = "%s_%s" % (tablename, field)
         el = browser.find_element_by_id(el_id)
         raw_value = None
-        for option in el.find_elements_by_tag_name("option"):
-            if option.text == item_repr:
-                option.click()
-                raw_value = int(option.get_attribute("value"))
-                break
+        options_list = el.find_elements_by_tag_name("option")
+        # Find the Longest Word Trimmed Match that matches with item_repr
+        option = self.find_max_match(options_list, item_repr)
+        if option is None:
+            raise NoSuchElementException("%s option could not be found in %s" % (item_repr, el_id))
+        option.click()
+        raw_value = int(option.get_attribute("value"))
+        
         # Now wait for the pack_item to be populated
         el_id = "%s_%s" % (tablename, "item_pack_id")
         _autocomple_finish(el_id, browser)
@@ -778,11 +958,13 @@ class SeleniumUnitTest(Web2UnitTest):
         if field == "L0":
             el_id = "gis_location_%s" % field
             el = browser.find_element_by_id(el_id)
-            for option in el.find_elements_by_tag_name("option"):
-                if option.text == item_repr:
-                    option.click()
-                    raw_value = int(option.get_attribute("value"))
-                    break
+            options_list = el.find_elements_by_tag_name("option")
+            # Find the Longest Word Trimmed Match that matches with item_repr
+            option = self.find_max_match(options_list, item_repr)
+            if option is None:
+                raise NoSuchElementException("%s option could not be found in %s" % (item_repr, el_id))
+            option.click()
+            raw_value = int(option.get_attribute("value"))
         elif field[0] == "L":
             # @todo make this a proper autocomplete widget (select or add)
             el_id = "gis_location_%s_ac" % field

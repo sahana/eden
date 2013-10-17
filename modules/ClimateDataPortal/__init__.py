@@ -13,6 +13,7 @@ from calendar import isleap
 from gluon import current
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
+# @ToDo: Nasty!
 db = current.db
 
 same = lambda x: x

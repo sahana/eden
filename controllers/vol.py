@@ -30,22 +30,132 @@ def index():
 def human_resource():
     """
         HR Controller
-        - combined (unused, except for Imports)
+        - combined
+        Used for Summary view, Imports, S3AddPersonWidget2 and the service record
     """
-
-    table = s3db.hrm_human_resource
-    _type = table.type
-    s3.filter = (_type == 2)
 
     # Custom method for Service Record
     s3db.set_method("hrm", "human_resource",
                     method="form",
-                    action=s3db.hrm_service_record
-                   )
+                    action=s3db.vol_service_record
+                    )
 
     def prep(r):
-        if r.method == "form":
+        if r.method in ("form", "lookup"):
             return True
+        elif r.method == "summary":
+            from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
+            settings.ui.filter_auto_submit = 750
+            settings.ui.report_auto_submit = 750
+            s3.crud_strings["hrm_human_resource"]["title_list"] = T("Staff & Volunteers")
+            filter_widgets = [
+                S3TextFilter(["person_id$first_name",
+                              "person_id$middle_name",
+                              "person_id$last_name",
+                              ],
+                             label=T("Name"),
+                             ),
+                S3OptionsFilter("type",
+                                label="",
+                                options=s3db.hrm_type_opts,
+                                hidden=True,
+                                ),
+                S3OptionsFilter("details.active",
+                                label="",
+                                options={True: T("Active"),
+                                         False: T("Inactive"),
+                                         },
+                                hidden=True,
+                                ),
+                S3OptionsFilter("organisation_id",
+                                widget="multiselect",
+                                filter=True,
+                                header="",
+                                hidden=True,
+                                ),
+                S3OptionsFilter("programme_hours.programme_id",
+                                widget="multiselect",
+                                hidden=True,
+                                ),
+                S3LocationFilter("location_id",
+                                 label = T("Location"),
+                                 widget="multiselect",
+                                 levels=["L0", "L1", "L2", "L3"],
+                                 hidden=True,
+                                 ),
+                S3OptionsFilter("training.course_id",
+                                label = T("Training"),
+                                widget="multiselect",
+                                hidden=True,
+                                ),
+                ]
+            if settings.get_hrm_teams():
+                filter_widgets.append(
+                    S3OptionsFilter("group_membership.group_id",
+                                    label = T("Team"),
+                                    widget="multiselect",
+                                    hidden=True,
+                                    ))
+
+            report_fields = ["organisation_id",
+                             "person_id",
+                             "person_id$gender",
+                             "job_title_id",
+                             (T("Training"), "training.course_id"),
+                             "location_id$L1",
+                             "location_id$L2",
+                             "person_id$age_group",
+                             "person_id$education.level",
+                             ]
+
+            report_options = Storage(
+                rows=report_fields,
+                cols=report_fields,
+                fact=report_fields,
+                defaults=Storage(rows="organisation_id",
+                                 cols="training.course_id",
+                                 fact="count(person_id)",
+                                 totals=True
+                                 )
+                )
+
+            s3db.configure("hrm_human_resource",
+                           # Match staff
+                           list_fields = ["id",
+                                          "person_id",
+                                          "job_title_id",
+                                          "organisation_id",
+                                          "department_id",
+                                          "site_id",
+                                          (T("Email"), "email.value"),
+                                          (settings.get_ui_label_mobile_phone(), "phone.value"),
+                                          ],
+                           summary=[{"name": "table",
+                                     "label": "Table",
+                                     "widgets": [{"method": "datatable"}]
+                                    },
+                                    {"name": "report",
+                                     "label": "Report",
+                                     "widgets": [{"method": "report2",
+                                                  "ajax_init": True}]
+                                    },
+                                    {"name": "map",
+                                     "label": "Map",
+                                     "widgets": [{"method": "map",
+                                                  "ajax_init": True}],
+                                    },
+                            ],
+                            filter_widgets = filter_widgets,
+                            report_options = report_options,
+                            # Needed for Age Group VirtualField to avoid extra DB calls
+                            report_fields = ["person_id$date_of_birth"],
+                            )
+            s3.filter = None
+        else:
+            # Default to Volunteers
+            type_filter = s3base.S3FieldSelector("type") == 2
+            r.resource.add_filter(type_filter)
+
         if r.interactive:
             if r.method == "create" and not r.component:
                 redirect(URL(f="volunteer",
@@ -56,8 +166,7 @@ def human_resource():
                 pass
             elif r.id:
                 # Redirect to person controller
-                vars = {
-                        "human_resource.id" : r.id,
+                vars = {"human_resource.id" : r.id,
                         "group" : "volunteer"
                         }
                 redirect(URL(f="person",
@@ -75,7 +184,7 @@ def human_resource():
                     s3.actions.append({
                         "url": URL(f="compose",
                                    vars = {"human_resource.id": "[id]"}),
-                        "_class": "action-btn",
+                        "_class": "action-btn send",
                         "label": str(T("Send Message"))})
         elif r.representation == "plain" and \
              r.method !="search":
@@ -84,7 +193,7 @@ def human_resource():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller("hrm", "human_resource")
+    output = s3_rest_controller("hrm", "human_resource", hide_filter=False)
     return output
 
 # -----------------------------------------------------------------------------
@@ -113,13 +222,11 @@ def volunteer():
     if settings.get_hrm_use_certificates():
         list_fields.append("person_id$certification.certificate_id")
     get_config = s3db.get_config
+    # Modify list_fields, search_method & report_options based on Settings
+    search_method = get_config(tablename,
+                               "search_method")
     report_options = get_config(tablename,
                                 "report_options")
-    # Remove inappropriate filters from the Search widget
-    human_resource_search = get_config(tablename,
-                                       "search_method")
-    # Remove Facility
-    human_resource_search.advanced.pop(8)
     if settings.get_hrm_vol_experience() == "programme":
         enable_active_field = settings.set_org_dependent_field("vol_details", "active",
                                                                enable_field = False)
@@ -136,25 +243,24 @@ def volunteer():
         report_options.cols = report_fields
         report_options.fact = report_fields
         # Remove deprecated Active/Obsolete
-        human_resource_search.advanced.pop(1)
+        search_method.advanced.pop(1)
         table.status.readable = table.status.writable = False
         # Add to the Search Filters
         if enable_active_field:
             YES = T("Yes")
             NO = T("No")
             widget = s3base.S3SearchOptionsWidget(
-                                name="human_resource_search_active",
-                                label=T("Active?"),
-                                field="details.active",
-                                cols = 2,
-                                # T on both sides here to match the output of the represent
-                                options = {
-                                        YES: YES,
-                                        NO: NO
-                                    }
-                              ),
+                        name="human_resource_search_active",
+                        label=T("Active?"),
+                        field="details.active",
+                        cols = 2,
+                        # T on both sides here to match the output of the represent
+                        options = {YES: YES,
+                                   NO: NO
+                                   }
+                        ),
             search_widget = ("human_resource_search_active", widget[0])
-            human_resource_search.advanced.insert(1, search_widget)
+            search_method.advanced.insert(1, search_widget)
 
         def hrm_programme_opts():
             """
@@ -184,14 +290,15 @@ def volunteer():
                             options = hrm_programme_opts
                           ),
         search_widget = ("human_resource_search_programme", widget[0])
-        human_resource_search.advanced.insert(3, search_widget)
+        search_method.advanced.insert(3, search_widget)
     else:
         list_fields.append("status")
     s3.crud_strings[tablename] = s3.crud_strings["hrm_volunteer"]
     s3db.configure(tablename,
                    list_fields = list_fields,
                    report_options = report_options,
-                   search_method = human_resource_search)
+                   search_method = search_method,
+                   )
 
     def prep(r):
         if r.interactive:
@@ -255,7 +362,7 @@ def volunteer():
                     s3.actions.append({
                             "url": URL(f="compose",
                                        vars = {"human_resource.id": "[id]"}),
-                            "_class": "action-btn",
+                            "_class": "action-btn send",
                             "label": str(T("Send Message"))
                         })
                 if settings.get_hrm_vol_experience() == "programme" and \
@@ -298,7 +405,7 @@ def volunteer():
 def person():
     """
         Person Controller
-        - used for Personal Profile & Imports
+        - used to see PR component tabs, for Personal Profile & Imports
         - includes components relevant to HRM
     """
 
@@ -327,22 +434,23 @@ def person():
                   editable = False,
                   deletable = False)
 
-    group = request.get_vars.get("group", "volunteer")
-    hr_id = request.get_vars.get("human_resource.id", None)
+    get_vars = request.get_vars
+    group = get_vars.get("group", "volunteer")
+    hr_id = get_vars.get("human_resource.id", None)
     if not str(hr_id).isdigit():
         hr_id = None
 
     # Configure human resource table
     table = s3db.hrm_human_resource
     table.type.default = 2
-    request.get_vars.update(xsltmode="volunteer")
+    get_vars["xsltmode"] = "volunteer"
     if hr_id:
         hr = db(table.id == hr_id).select(table.type,
                                           limitby=(0, 1)).first()
         if hr:
             group = hr.type == 2 and "volunteer" or "staff"
             # Also inform the back-end of this finding
-            request.get_vars["group"] = group
+            get_vars["group"] = group
 
     # Configure person table
     tablename = "pr_person"
@@ -392,7 +500,7 @@ def person():
                 title_display = T("Volunteer Details"),
                 title_update = T("Volunteer Details"),
                 title_upload = T("Import Volunteers"),
-            )
+                )
 
     # Upload for configuration (add replace option)
     s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
@@ -456,6 +564,7 @@ def person():
 
                 # Organisation Dependent Fields
                 set_org_dependent_field = settings.set_org_dependent_field
+                set_org_dependent_field("pr_person", "middle_name")
                 set_org_dependent_field("pr_person_details", "father_name")
                 set_org_dependent_field("pr_person_details", "mother_name")
                 set_org_dependent_field("pr_person_details", "affiliations")
@@ -471,8 +580,10 @@ def person():
                     table.site_id.writable = table.site_id.readable = False
                     table.site_contact.writable = table.site_contact.readable = False
                     org = session.s3.hrm.org
-                    if org is not None:
-                        field = table.organisation_id
+                    field = table.organisation_id
+                    if org is None:
+                        field.widget = None
+                    else:
                         field.default = org
                         field.readable = field.writable = False
 
@@ -510,25 +621,29 @@ def person():
             resource = r.resource
             if mode is not None:
                 r.resource.build_query(id=s3_logged_in_person())
-            else:
+            elif r.method not in ("deduplicate", "search_ac"):
                 if not r.id and not hr_id:
                     # pre-action redirect => must retain prior errors
                     if response.error:
                         session.error = response.error
                     redirect(URL(r=r, f="volunteer"))
-            if resource.count() == 1:
-                resource.load()
-                r.record = resource.records().first()
-                if r.record:
-                    r.id = r.record.id
-            if not r.record:
-                session.error = T("Record not found")
-                redirect(URL(f="volunteer",
-                             args=["search"]))
-            if hr_id and r.component_name == "human_resource":
-                r.component_id = hr_id
-            configure("hrm_human_resource",
-                      insertable = False)
+                if resource.count() == 1:
+                    resource.load()
+                    r.record = resource.records().first()
+                    if r.record:
+                        r.id = r.record.id
+                if not r.record:
+                    session.error = T("Record not found")
+                    redirect(URL(f="volunteer",
+                                 args=["search"]))
+                if hr_id and r.component_name == "human_resource":
+                    r.component_id = hr_id
+                configure("hrm_human_resource",
+                          insertable = False)
+
+        elif r.component_name == "group_membership" and r.representation == "aadata":
+            s3db.hrm_configure_pr_group_membership()
+
         return True
     s3.prep = prep
 
@@ -610,18 +725,14 @@ def person():
 def person_search():
     """
         Person REST controller
-        - limited to just search.json for use in Autocompletes
+        - limited to just search_ac for use in Autocompletes
         - allows differential access permissions
     """
 
+    # Filter
     s3.filter = (s3db.hrm_human_resource.type == 2)
 
-    s3db.configure("hrm_human_resource",
-                   # S3HRSearch
-                   search_method = s3db.hrm_autocomplete_search,
-                   )
-    s3.prep = lambda r: r.representation == "json" and \
-                        r.method == "search"
+    s3.prep = lambda r: r.method == "search_ac"
     return s3_rest_controller("hrm", "human_resource")
 
 # =============================================================================
@@ -696,26 +807,6 @@ def department():
     return output
 
 # -----------------------------------------------------------------------------
-def job_role():
-    """ Job Roles Controller """
-
-    mode = session.s3.hrm.mode
-    def prep(r):
-        if mode is not None:
-            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
-        return True
-    s3.prep = prep
-
-    if not auth.s3_has_role(ADMIN):
-        s3.filter = auth.filter_by_root_org(s3db.hrm_job_role)
-
-    output = s3_rest_controller("hrm", resourcename,
-                                csv_template=("hrm", "job_role"),
-                                csv_stylesheet=("hrm", "job_role.xsl"),
-                                )
-    return output
-
-# -----------------------------------------------------------------------------
 def job_title():
     """ Job Titles Controller """
 
@@ -726,8 +817,11 @@ def job_title():
         return True
     s3.prep = prep
 
+    table = s3db.hrm_job_title
+    s3.filter = (table.type.belongs([2, 3]))
+
     if not auth.s3_has_role(ADMIN):
-        s3.filter = auth.filter_by_root_org(s3db.hrm_job_title)
+        s3.filter &= auth.filter_by_root_org(table)
 
     output = s3_rest_controller("hrm", resourcename,
                                 csv_template=("hrm", "job_title"),
@@ -985,7 +1079,7 @@ def programme():
 def programme_hours():
     """
         Volunteer Programme Hours controller
-        - just meant for Imports
+        - used for Imports & Reports
     """
 
     mode = session.s3.hrm.mode
@@ -994,10 +1088,23 @@ def programme_hours():
         redirect(URL(f="index"))
 
     output = s3_rest_controller("hrm", resourcename,
+                                hide_filter = False,
                                 csv_stylesheet=("hrm", "programme_hours.xsl"),
                                 csv_template=("hrm", "programme_hours")
                                 )
     return output
+
+# =============================================================================
+def award():
+    """ Volunteer Awards controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def volunteer_award():
+    """ ONLY FOR RETURNING options to the S3AddResourceLink PopUp """
+
+    return s3_rest_controller()
 
 # =============================================================================
 def cluster_type():
@@ -1005,13 +1112,7 @@ def cluster_type():
 
     return s3_rest_controller()
 
-# =============================================================================
-def volunteer_cluster():
-    """ ONLY FOR RETURNING options to the S3AddResourceLink PopUp """
-
-    return s3_rest_controller()
-
-# =============================================================================
+# -----------------------------------------------------------------------------
 def cluster():
     """ Volunteer Clusters controller """
 
@@ -1020,6 +1121,12 @@ def cluster():
 # -----------------------------------------------------------------------------
 def cluster_position():
     """ Volunteer Group Positions controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def volunteer_cluster():
+    """ ONLY FOR RETURNING options to the S3AddResourceLink PopUp """
 
     return s3_rest_controller()
 

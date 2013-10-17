@@ -70,6 +70,7 @@ class S3Codec(object):
 
         # Import the codec classes
         from codecs import S3SHP
+        from codecs import S3SVG
         from codecs import S3XLS
         from codecs import S3RL_PDF
 
@@ -77,6 +78,7 @@ class S3Codec(object):
         CODECS = Storage(
             pdf = S3RL_PDF,
             shp = S3SHP,
+            svg = S3SVG,
             xls = S3XLS,
         )
 
@@ -97,7 +99,7 @@ class S3Codec(object):
             @param resource: the S3Resource
             @param source: the source
 
-            @returns: an S3XML ElementTree
+            @return: an S3XML ElementTree
         """
         raise NotImplementedError
 
@@ -108,7 +110,7 @@ class S3Codec(object):
 
             @param resource: the S3Resource
 
-            @returns: a handle to the output
+            @return: a handle to the output
         """
         raise NotImplementedError
 

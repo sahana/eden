@@ -1,0 +1,85 @@
+{{extend "layout.html"}}
+<style>body{background:none;}div.container.main-container{width:100%!important;padding-left:0;}
+@media(min-width:1200px){div.container.main-container{width:1200px!important;}}</style>
+<div id='myCarousel' class='carousel slide'>
+ <ol class='carousel-indicators'>
+  <li data-target='#myCarousel' data-slide-to='0' class='active'></li>
+  <!--<li data-target='#myCarousel' data-slide-to='1'></li>
+  <li data-target='#myCarousel' data-slide-to='2'></li>-->
+ </ol>
+ <div class='carousel-inner'>
+  <div class='active item'><img src='/{{=appname}}/static/themes/{{=response.s3.theme}}/img/phailin.jpg' alt='' /></div>
+  <!--<div class='item'><img src='/{{=appname}}/static/themes/{{=response.s3.theme}}/img/482470-car.jpg' alt='' /></div>
+  <div class='item'><img src='/{{=appname}}/static/themes/{{=response.s3.theme}}/img/442014.jpg' alt='' /></div>-->
+ </div>
+ <div class='carousel-caption'>
+  <h1>{{=T("India Disaster Information System")}}<br></h1>
+  <p>{{=T("Improving disaster prevention, preparedness and response in India.")}}</p>
+  {{if not auth.is_logged_in():}}
+  <p><a href='/{{=appname}}/default/user/login?_next=/{{=appname}}/default/index/newsfeed' class='btn btn-custom btn-login'><i class='icon-signin'></i> {{=T("LOGIN")}} </a>
+  <a href='/{{=appname}}/default/user/register' class='btn btn-register'><i class='icon-pencil'></i> {{=T("REGISTER")}} </a></p>{{pass}}
+ </div>
+</div>
+<section id='homepage-about'>
+ <div class='container'>
+  <div class='row'>
+   <div class='span4 first_stl'>
+    <div>
+     <img src='/{{=appname}}/static/themes/{{=response.s3.theme}}/img/413751-circle1.png' class='img-circle home-circle-img'>
+    </div>
+    <h2>{{=T("Prevent")}}</h2>
+    <p class='quote mb4'>{{=T("Prevent disasters through better coordination and collaboration between stakeholders and sharing of information about current events.")}}</p>
+   </div>
+   <div class='span4 stl'>
+    <div>
+     <img src='/{{=appname}}/static/themes/{{=response.s3.theme}}/img/482470-circle1.png' class='img-circle home-circle-img'>
+    </div>
+    <h2>{{=T("Prepare")}}</h2>
+    <p class='quote mb4'>{{=T("Share information about your organisation, projects and resources with other Disaster Management Stakeholders in India.")}}</p>		
+   </div>			
+   <div class='span4 stl'>
+    <div>
+     <img src='/{{=appname}}/static/themes/{{=response.s3.theme}}/img/442014-circle1.png' class='img-circle home-circle-img'>
+    </div>
+    <h2>{{=T("Respond")}}</h2>
+    <p class='quote mb4'>{{=T("Receive alerts, share incident updates and assessments about current disasters and coordinate your response activities.")}}</p>
+   </div>
+  </div>
+ </div>	
+</section>
+<section id='what-they-do' class='st'>
+ <div class='container'>
+  <div class='row'>
+   <div class='span6'>
+    <h2><i class='icon-bookmark-empty'></i> {{=T("What we do")}}</h2>
+    <p>{{=T("All Stakeholders engaged in disaster risk management work in India can use the Disaster Risk Management Information System (DRMIS) to share information to better plan and coordinate their activities.")}}</p>
+    <!--<p>{{=T("DRMIS is administrated by the National Disaster Operation Centre (NDOC) who are part of the National Disaster Management Directorate (NDMD) of the Ministry Social and Solidarity (MSS).")}}</p>-->
+    <!--<p>The NDMD is responsible for receiving, analysing, integrating, interpreting, distributing and coordinating national hazard, vulnerability and risk monitoring data and NDOC is responsible for issuing disaster alerts.</p>-->
+    <!--<p>{{=T("DRMIS was developed with the support of the United Nations Development Programme (UNDP) as part of their Strengthening Capacities for Disaster Risk Management in Timor-Leste Project.")}}</p>-->
+   </div>
+   <div class='span6'>
+    <br /> <!--this is just temporary until we decide what actually goes here-->
+    <br />
+    <img src='/{{=appname}}/static/themes/{{=response.s3.theme}}/img/map_tl.png'>
+   </div>
+  </div>
+ </div>
+</section>
+<section id='homepage-layer' class='st'>
+ <div class='container'>   
+  <div class='row'>
+   <div class='span6'>
+    <a href='/{{=appname}}/default/index/newsfeed?~.series_id$name=Event'>
+     <h2><i class='icon-calendar'></i> {{=T("Latest Events")}}</h2>
+    </a>
+    {{=events}}
+   </div>
+   <div class='span6'>
+    <a href='/{{=appname}}/default/index/newsfeed?~.series_id$name=Incident'>
+     <h2><i class='icon-bullhorn'></i> {{=T("Latest Incidents")}}</h2>
+    </a>
+    {{=alerts}}
+   </div>
+  </div>  
+ </div>
+</section>

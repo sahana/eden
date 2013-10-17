@@ -27,7 +27,7 @@
     A3: Complete Question
     A4: Date Question
     A5: Time Question
-    A6: Location Question
+    A6: Location Detail
     A7: Priority Question
 
     The questions in cells A3:A7 are the unique questions codes which are given
@@ -195,8 +195,8 @@ def processMetadata(metadataList, qstn_type, qstn_code, qstn_posn, firstQstnInSe
             if value == "metadata":
                 metadata += processMetadata(metadataList[posn:],None,None,0,None)
                 break
-            metadata[posn] = str(value)
-        metadata["Length"] = posn
+            metadata[str(posn)] = str(value)
+        metadata["Length"] = str(posn)
     elif qstn_type == "Grid":
         colCnt = 0
         rowCnt = 0
@@ -394,7 +394,13 @@ def loadSpreadsheet(name):
     sheetL = workbook.sheet_by_name("Layout")
     templateDetails = []
     for row in xrange(0, sheetT.nrows):
-        templateDetails.append(sheetT.cell_value(row, 0))
+        value = str(sheetT.cell_value(row, 0))
+        if sheetT.ncols > 1 and sheetT.cell_value(row, 1):
+            value = [value]
+            for col in xrange(1, sheetT.ncols):
+                if sheetT.cell_value(row, col):
+                    value .append(str(sheetT.cell_value(row, col)))
+        templateDetails.append(value)
     sections = []
     for row in xrange(0, sheetS.nrows):
         sections.append(sheetS.cell_value(row, 0))
@@ -414,11 +420,10 @@ def loadSpreadsheet(name):
 
 def generateQuestionnaireCSV(name, questionnaire):
     csvName = "%s.Question.csv" % name
-    headings = ["Template","Template Description","Complete Question","Date Question","Time Question","Location Question","Priority Question","Section","Section Position","Question","Question Type","Question Notes","Question Position","Question Code","Meta Data"]
+    headings = ["Template","Template Description","Complete Question","Date Question","Time Question","Location Detail","Priority Question","Section","Section Position","Question","Question Type","Question Notes","Question Position","Question Code","Meta Data"]
     writer = csv.writer(open(csvName, "w"))
     writer.writerows([headings])
     writer.writerows(questionnaire)
-    pass
 
 def generateLayoutCSV(name, layout):
     csvName = "%s.Layout.csv" % name

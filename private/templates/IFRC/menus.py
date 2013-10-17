@@ -58,6 +58,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Volunteers", c="vol", f="volunteer"),
                 MM("Teams", c="vol", f="group"),
                 MM("Volunteer Roles", c="vol", f="job_title"),
+                MM("Programmes", c="vol", f="programme"),
                 #MM("Skill List", c="vol", f="skill"),
                 MM("Training Events", c="vol", f="training_event"),
                 MM("Training Courses", c="vol", f="course"),
@@ -71,7 +72,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Received Shipments", c="inv", f="recv"),
                 MM("Sent Shipments", c="inv", f="send"),
                 MM("Items", c="supply", f="item"),
-                MM("Item Catalogues", c="supply", f="catalog"),
+                MM("Item Catalogs", c="supply", f="catalog"),
                 MM("Item Categories", c="supply", f="item_category"),
                 M("Requests", c="req", f="req")(),
                 #M("Commitments", f="commit")(),
@@ -94,6 +95,10 @@ class S3MainMenu(default.S3MainMenu):
             homepage("event", "irs")(
                 MM("Events", c="event", f="event"),
                 MM("Incident Reports", c="irs", f="ireport"),
+            ),
+            homepage("deploy", name="RDRT")(
+                MM("Deployments", c="deploy", f="deployment", m="summary"),
+                MM("Members", c="deploy", f="human_resource", m="summary"),
             ),
         ]
 
@@ -226,10 +231,13 @@ class S3MainMenu(default.S3MainMenu):
             )
         else:
             s3_has_role = auth.s3_has_role
-            ADMIN = auth.get_system_roles().ADMIN
+            is_org_admin = lambda i: s3_has_role("ORG_ADMIN") and \
+                                     not s3_has_role("ADMIN")
             menu_personal = MP()(
                         MP("Administration", c="admin", f="index",
-                           check=s3_has_role(ADMIN)),
+                           check=s3_has_role("ADMIN")),
+                        MP("Administration", c="admin", f="user",
+                           check=is_org_admin),
                         MP("Profile", c="default", f="person"),
                         MP("Change Password", c="default", f="user",
                            m="change_password"),
@@ -248,19 +256,22 @@ class S3OptionsMenu(default.S3OptionsMenu):
         """ HRM Human Resource Management """
 
         session = current.session
+        s3 = current.session.s3
+        ADMIN = s3.system_roles.ADMIN
 
-        if "hrm" not in session.s3:
+        if "hrm" not in s3:
             current.s3db.hrm_vars()
-        hrm_vars = session.s3.hrm
+        hrm_vars = s3.hrm
 
-        ADMIN = current.auth.get_system_roles().ADMIN
         SECTORS = "Clusters" if current.deployment_settings.get_ui_label_cluster() \
                              else "Sectors"
 
         manager_mode = lambda i: hrm_vars.mode is None
         personal_mode = lambda i: hrm_vars.mode is not None
         is_org_admin = lambda i: hrm_vars.orgs and True or \
-                                 ADMIN in session.s3.roles
+                                 ADMIN in s3.roles
+        is_super_editor = lambda i: current.auth.s3_has_role("staff_super") or \
+                                    current.auth.s3_has_role("vol_super")
 
         staff = {"group": "staff"}
 
@@ -273,6 +284,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Import", f="person", m="import",
                           vars=staff, p="create"),
                     ),
+                    M("Staff & Volunteers (Combined)",
+                      c="hrm", f="human_resource", m="summary",
+                      check=[manager_mode, is_super_editor]),
                     M("Teams", c="hrm", f="group",
                       check=manager_mode)(
                         M("New", m="create"),
@@ -395,22 +409,19 @@ class S3OptionsMenu(default.S3OptionsMenu):
         personal_mode = lambda i: s3.hrm.mode is not None
         is_org_admin = lambda i: s3.hrm.orgs and True or \
                                  ADMIN in s3.roles
+        is_super_editor = lambda i: current.auth.s3_has_role("vol_super") or \
+                                    current.auth.s3_has_role("staff_super")
 
         settings = current.deployment_settings
-        #job_roles = lambda i: settings.get_hrm_job_roles()
         show_programmes = lambda i: settings.get_hrm_vol_experience() == "programme"
         show_tasks = lambda i: settings.has_module("project") and \
                                settings.get_project_mode_task()
-        use_teams = lambda i: settings.get_hrm_use_teams()
+        teams = settings.get_hrm_teams()
+        use_teams = lambda i: teams
 
         check_org_dependent_field = lambda tablename, fieldname: \
             settings.set_org_dependent_field(tablename, fieldname,
                                              enable_field = False)
-
-        #if job_roles(""):
-        #    jt_catalog_label = "Job Title Catalog"
-        #else:
-        jt_catalog_label = "Volunteer Role Catalog"
 
         return M(c="vol")(
                     M("Volunteers", f="volunteer",
@@ -421,7 +432,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Import", f="person", m="import",
                           vars={"group":"volunteer"}, p="create"),
                     ),
-                    M("Teams", f="group",
+                    M("Staff & Volunteers (Combined)",
+                      c="vol", f="human_resource", m="summary",
+                      check=[manager_mode, is_super_editor]),
+                    M(teams, f="group",
                       check=[manager_mode, use_teams])(
                         M("New", m="create"),
                         M("List All"),
@@ -433,12 +447,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("New", m="create"),
                         M("List All"),
                     ),
-                    #M("Job Role Catalog", f="job_role",
-                    #  check=[manager_mode, job_roles])(
-                    #    M("New", m="create"),
-                    #    M("List All"),
-                    #),
-                    M(jt_catalog_label, f="job_title",
+                    M("Volunteer Role Catalog", f="job_title",
                       check=manager_mode)(
                         M("New", m="create"),
                         M("List All"),
@@ -477,6 +486,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("List All"),
                         M("Import Hours", f="programme_hours", m="import"),
                     ),
+                    M("Awards", f="award",
+                      check=[manager_mode, is_org_admin])(
+                        M("New", m="create"),
+                        M("List All"),
+                    ),
                     M("Volunteer Cluster Type", f="cluster_type",
                       check = check_org_dependent_field("vol_volunteer_cluster",
                                                         "vol_cluster_type_id"))(
@@ -498,6 +512,16 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Reports", f="volunteer", m="report",
                       check=manager_mode)(
                         M("Volunteer Report", m="report"),
+                        M("Hours by Role Report", f="programme_hours", m="report2",
+                          vars=Storage(rows="job_title_id",
+                                       cols="month",
+                                       fact="sum(hours)"),
+                          check=show_programmes),
+                        M("Hours by Programme Report", f="programme_hours", m="report2",
+                          vars=Storage(rows="programme_id",
+                                       cols="month",
+                                       fact="sum(hours)"),
+                          check=show_programmes),
                         M("Training Report", f="training", m="report"),
                     ),
                     #M("My Profile", f="person",
@@ -669,7 +693,21 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         # Same as IRS
         return self.irs()
-    
+
+    # -------------------------------------------------------------------------
+    def deploy(self):
+        """ RDRT Alerting and Deployments """
+
+        return M()(
+                   M("Deployments",
+                     c="deploy", f="deployment", m="summary")(
+                        M("New", m="create"),
+                        M("Summary", m="summary"),
+                   ),
+                   M("Members",
+                     c="deploy", f="human_resource", m="summary",
+                   ),
+               )
 
 # END =========================================================================
 

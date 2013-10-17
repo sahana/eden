@@ -4,7 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 {{# Always force latest IE rendering engine (even in intranet) & Chrome Frame }}
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-<title>{{try:}}{{=title}}{{except:}}{{=response.title or settings.get_system_name_short()}}{{pass}}</title>
+<title>Sahana - {{try:}}{{=title}}{{except:}}{{=response.title or settings.get_system_name_short()}}{{pass}}</title>
 {{if response.refresh:}}{{=XML(response.refresh)}}{{pass}}
 {{# http://dev.w3.org/html5/markup/meta.name.html }}
 <meta name="application-name" content="{{=appname}}" />
@@ -33,6 +33,12 @@
  body{direction:ltr;}
 {{pass}}
 </style>
+{{for sheet in s3.external_stylesheets:}}
+ <link href="{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+{{pass}}
+{{for sheet in s3.stylesheets:}}
+ <link href="/{{=appname}}/static/styles/{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+{{pass}}
 {{include "bootstrap_css.html"}}
 {{if s3.debug:}}
  {{=s3base.s3_include_debug_css()}}
@@ -40,12 +46,9 @@
  {{# Built by /static/scripts/tools/build.sahana.py }}
  <link href="/{{=appname}}/static/themes/{{=response.s3.theme}}/eden.min.css" rel="stylesheet" type="text/css" />
 {{pass}}
-{{for sheet in s3.external_stylesheets:}}
- <link href="{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
-{{pass}}
-{{for sheet in s3.stylesheets:}}
- <link href="/{{=appname}}/static/styles/{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
-{{pass}}
+<!--[if IE]>
+ <link rel="stylesheet" type="text/css" href="/{{=appname}}/static/themes/{{=response.s3.theme}}/ie.css"></link>
+<![endif]-->
 {{include "scripts_top.html"}}
 </head>
 {{try:}}
@@ -72,29 +75,64 @@
     <span class='icon-bar'></span>
     <span class='icon-bar'></span>
    </button>
-   <a class='brand' href='/{{=appname}}/default/index'><img src="/{{=appname}}/static/img/S3menu_logo.png" style="width:55px;margin:-15px 0 -50px 0" alt=""/></a>
    <div class='nav-collapse collapse'>
     <ul class='nav'>
-     <li><a href='/{{=appname}}/pr/group'> <i class='icon-home'></i> {{=T("Residents")}}</a></li>
-     <li><a href='/{{=appname}}/'> <i class='icon-home'></i> {{=T("Risks")}}</a></li>
-     <li><a href='/{{=appname}}/project/activity'> <i class='icon-home'></i> {{=T("Activities")}}</a></li>
-     <li><a href='/{{=appname}}/org/organisation'> <i class='icon-home'></i> {{=T("Organizations")}}</a></li>
-     <li><a href='/{{=appname}}/hrm/human_resource'> <i class='icon-user'></i> {{=T("Trained People")}}</a></li>
-     <li><a href='/{{=appname}}/org/facility'> <i class='icon-map-marker'></i> {{=T("Locations")}}</a></li>
-     <li><a href='/{{=appname}}/'> <i class='icon-home'></i> {{=T("Evacuation Routes")}}</a></li>
-    {{if auth.is_logged_in():}}
-    <div class='pull-right'>
-     <ul class='nav pull-right'>
-      <li class='dropdown'><a href='#' class='dropdown-toggle disabled' data-toggle='dropdown'><i class='icon-cog'></i><b class='caret'></b></a>
-       <ul class='dropdown-menu'>
-        <li><a href='/{{=appname}}/default/person'><i class='icon-cog'></i> {{=T("Preferences")}}</a></li>
-        <li class='divider'></li>
-        <li><a href='/{{=appname}}/default/user/logout'><i class='icon-off'></i> {{=T("Logout")}}</a></li>
-       </ul>
-      </li>
-     </ul>
-    </div>
-    {{pass}}
+     <li><a class='home' href='/{{=appname}}/default/index'><img src="/{{=appname}}/static/img/sahanalarge_14.png" alt="Sahana"/></a></li>
+     <li><a class='map' href='/{{=appname}}/gis/index'><i class='icon-globe'></i> {{=T("Make a Map")}}</a></li>
+     <li class='dropdown'> <a href='#' class='dropdown-toggle top-level community-data-menu' data-toggle='dropdown'><i class='icon-folder-open-alt'></i> {{=T("Explore Community Data")}}<b class='caret'></b></a>
+      <ul class='dropdown-menu community-data-menu' role='menu' aria-labelledby='profiles'>
+       {{for opt in response.menu:}}
+        <li role='menuitem'>
+         <a href='{{=opt["url"]}}/summary' tabindex='-1' class='menu-item'> <i class='{{=opt["icon"]}}'></i> {{=opt["name"]}}</a>
+         <a href='{{=opt["url"]}}/create' tabindex='-1' class='menu-item create'> <i class='icon-plus'></i></a>
+        </li>
+       {{pass}}
+      </ul>
+     </li>
+    </ul>
+    <ul class='nav pull-right'>
+     {{if auth.is_logged_in():}}
+     <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-cog'></i><b class='caret'></b></a>
+      <ul class='dropdown-menu'>
+       {{if auth.s3_has_role("ADMIN"):}}
+       <li><a href='/{{=appname}}/admin/user'><i class='icon-cogs'></i> {{=T("Admin")}}</a></li>
+       {{pass}}
+       <li><a href='/{{=appname}}/pr/person'><i class='icon-list'></i> {{=T("Contact People")}}</a></li>
+       <li class='divider'></li>
+       <li><a href='/{{=appname}}/default/person'><i class='icon-user'></i> {{=auth.user.email}}</a></li>
+       <li><a href='/{{=appname}}/default/index/filters'><i class='icon-filter'></i> {{=T("Saved Filters")}}</a></li>
+       <li><a href='/{{=appname}}/gis/config'><i class='icon-globe'></i> {{=T("Saved Maps")}}</a></li>
+       <li><a href='/{{=appname}}/default/user/change_password'><i class='icon-lock'></i> {{=T("Change Password")}}</a></li>
+       <li><a href='/{{=appname}}/default/user/logout'><i class='icon-off'></i> {{=T("Logout")}}</a></li>
+       <!--<li><a href='/{{=appname}}/default/user/register'><i class='icon-check'></i> {{=T("Register")}}</a></li>-->
+      </ul>
+     </li>
+     {{else:}}{{if request.controller == "default" and request.function == "user" and "login" in request.args:}} {{else:}}
+     <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-signin'></i><b class='caret'></b></a>
+      <ul class='dropdown-menu'>
+      {{=auth.login()}}
+      </ul>
+     </li>
+     {{pass}}{{pass}}
+     <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-comment-alt'></i><b class='caret'></b></a>
+      <ul class='dropdown-menu'>
+       {{vars=request.vars}}
+       {{language=response.s3.language}}
+       {{icon = {"en":"icon-check"}.get(language,"icon-check-empty")}}
+       {{vars["_language"] = "en"}} 
+       <li><a href='{{=URL(args=request.args, vars=vars)}}'><i class='{{=icon}}'></i> English</a></li>
+       {{icon = {"es":"icon-check"}.get(language,"icon-check-empty")}}
+       {{vars["_language"] = "es"}}
+       <li><a href='{{=URL(args=request.args, vars=vars)}}'><i class='{{=icon}}'></i> Español</a></li>
+      </ul>
+     </li>
+     <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-question-sign'></i><b class='caret'></b></a>
+      <ul class='dropdown-menu'>
+        <li><a href='/{{=appname}}/default/video'><i class='icon-youtube-play'></i> {{=T("Video Tutorials")}}</a></li>
+        <li><a href='/{{=appname}}/static/themes/CRMT/SahanaUserManual.pdf'><i class='icon-book'></i> {{=T("User Manual")}}</a></li>
+      </ul>
+     </li>
+    </ul>
    </div>
   </div>
  </div>
@@ -109,10 +147,10 @@
  </div>
  {{include}}
 </div>
- <div id='footer'>
-  {{include "../private/templates/%s/views/footer.html" % response.s3.theme}}
-  {{if s3.debug:}}{{=s3.toolbar()}}{{pass}}
- </div>
+<div id='footer'>
+ {{include "../private/templates/%s/views/footer.html" % response.s3.theme}}
+ {{if s3.debug:}}{{=s3.toolbar()}}{{pass}}
+</div>
 {{pass}}
 {{include "bootstrap_js.html"}}
 {{include "scripts.html"}}

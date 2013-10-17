@@ -19,12 +19,15 @@
 
     <xsl:output method="xml"/>
 
-    <!-- Project Organisation Roles, see modules/s3/s3cfg.py or private/templates/IFRC/config.py,
-         project_organisation_types -->
+    <!-- Project Organisation Roles
+         see modules/s3/s3cfg.py,
+             private/templates/DRRPP/config.py,
+             private/templates/IFRC/config.py,
+    -->
     <project:organisation-role code="1">Host National Society</project:organisation-role>
-    <project:organisation-role code="2">Partner National Society</project:organisation-role>
+    <project:organisation-role code="2">Partner</project:organisation-role>
     <project:organisation-role code="3">Donor</project:organisation-role>
-    <project:organisation-role code="5">Partner</project:organisation-role>
+    <project:organisation-role code="9">Partner National Society</project:organisation-role>
 
     <xsl:key name="organisations" match="row" use="col[@field='Organisation']"/>
     <xsl:key name="org_types" match="row" use="col[@field='Organisation Type']"/>

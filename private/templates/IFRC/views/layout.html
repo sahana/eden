@@ -15,17 +15,17 @@
  body{direction:ltr;}
 {{pass}}
 </style>
-{{if s3.debug:}}
- {{=s3base.s3_include_debug_css()}}
-{{else:}}
- {{# Built by /static/scripts/tools/build.sahana.py }}
- <link href="/{{=appname}}/static/themes/{{=response.s3.theme}}/eden.min.css" rel="stylesheet" type="text/css" />
-{{pass}}
 {{for sheet in s3.external_stylesheets:}}
  <link href="{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
 {{for sheet in s3.stylesheets:}}
  <link href="/{{=appname}}/static/styles/{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+{{pass}}
+{{if s3.debug:}}
+ {{=s3base.s3_include_debug_css()}}
+{{else:}}
+ {{# Built by /static/scripts/tools/build.sahana.py }}
+ <link href="/{{=appname}}/static/themes/{{=response.s3.theme}}/eden.min.css" rel="stylesheet" type="text/css" />
 {{pass}}
 {{include "scripts_top.html"}}
 </head>
@@ -50,12 +50,12 @@
    <div id='society-icon'><img src='/{{=appname}}/static/themes/IFRC/img/dummy_flag.png' alt='Red Cross/Red Crescent'></div>
    <div id='logo'>
     <h1><a href='/{{=appname}}/default/index' title='Return to Home Page'>Resource Mapping System</a></h1>
-    <div id='region' class='big'>Asia<br>Pacific</div>
+    <div id='region' class='big'><!--Asia--><br><!--Pacific--></div>
    </div>
    <div id='personal-menu'>
     {{if auth.is_logged_in():}}<div class="username fright">{{=auth.user.email}}</div>{{pass}}
     {{=current.menu.personal}}
-    <p>Managing material and human resources together to better prepare for future hazards and vulnerabilities.</p>
+    <p>{{=T("Managing material and human resources together to better prepare for future hazards and vulnerabilities.")}}</p>
    </div>
    <a href='#main-content' class='skipnavigation'>Skip to Content</a>
    {{=current.menu.main}}

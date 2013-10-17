@@ -32,7 +32,7 @@ class ReceiveItem(InvTestFunctions):
             Inventory Test - Receive Workflow (Receive items)
             @Case: INV002
             @param items: This test receives a specific item from another party.
-        This test assume that regression/inv-mngt has been added to prepop
+        This test assume that test/inv-mngt has been added to prepop
         - e.g. via demo/IFRC_Train
         
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
@@ -52,15 +52,12 @@ class ReceiveItem(InvTestFunctions):
                      ),
                      ("site_id",
                       "Same Warehouse (Warehouse)",
-                      "option",
                      ),
                      ("type",
                       "Internal Shipment",
-                      "option",
                      ),
                      ("from_site_id",
                       "Ainaro Warehouse (Warehouse)",
-                      "option",
                      ),
                     ]
 
@@ -72,7 +69,6 @@ class ReceiveItem(InvTestFunctions):
                       ),
                       ("item_pack_id",
                        "Piece",
-                       "option",
                       ),
                       ("quantity",
                        "3",
@@ -105,15 +101,12 @@ class ReceiveItem(InvTestFunctions):
                      ),
                      ("site_id",
                       "Same Warehouse (Warehouse)",
-                      "option",
                      ),
                      ("type",
                       "Internal Shipment",
-                      "option",
                      ),
                      ("from_site_id",
                       "Timor-Leste Red Cross Society (CVTL) National Warehouse (Warehouse)",
-                      "option",
                      ),
                     ]
 
@@ -125,7 +118,6 @@ class ReceiveItem(InvTestFunctions):
                       ),
                       ("item_pack_id",
                        "Piece",
-                       "option",
                       ),
                       ("quantity",
                        "3",

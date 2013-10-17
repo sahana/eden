@@ -376,7 +376,7 @@ class SyncDataModel(S3Model):
                                             T("Under which conditions local records shall be updated")))
         table.conflict_policy.comment = DIV(_class="tooltip",
                                             _title="%s|%s" % (
-                                                T("Conflict policy"),
+                                                T("Conflict Policy"),
                                                 T("Under which condition a local record shall be updated if it also has been modified locally since the last synchronization")))
 
         # CRUD Strings
@@ -425,12 +425,15 @@ class SyncDataModel(S3Model):
                                    requires = IS_NOT_EMPTY()),
                              *s3_meta_fields())
 
+        onaccept = self.sync_resource_filter_onaccept
         configure(tablename,
                   list_fields = ["id",
                                  "task_id$repository_id",
                                  "task_id$resource_name",
                                  "tablename",
-                                 "filter_string"])
+                                 "filter_string"],
+                  onaccept = onaccept,
+                  ondelete = onaccept)
                              
         # -------------------------------------------------------------------------
         # Job
@@ -453,7 +456,7 @@ class SyncDataModel(S3Model):
             label_list_button = T("List Jobs"),
             label_create_button = ADD_JOB,
             msg_record_created = T("Job added"),
-            msg_record_modified = T("Job updated updated"),
+            msg_record_modified = T("Job updated"),
             msg_record_deleted = T("Job deleted"),
             msg_list_empty = T("No jobs configured yet"),
             msg_no_match = T("No jobs configured"))
@@ -678,6 +681,49 @@ class SyncDataModel(S3Model):
             if row:
                 form.errors.resource_name = \
                 T("This resource is already configured for this repository")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def sync_resource_filter_onaccept(form):
+        """
+            Reset last_push when adding/changing a filter
+        """
+
+        db = current.db
+        s3db = current.s3db
+        
+        ttable = s3db.sync_task
+        ftable = s3db.sync_resource_filter
+
+        if isinstance(form, Row):
+            filter_id = form.id
+        else:
+            try:
+                filter_id = form.vars.id
+            except:
+                return
+
+        row = db(ftable.id == filter_id).select(ftable.id,
+                                                ftable.deleted,
+                                                ftable.task_id,
+                                                ftable.deleted_fk,
+                                                limitby=(0, 1)).first()
+
+        if row:
+            task_id = None
+            if row.deleted:
+                try:
+                    deleted_fk = json.loads(row.deleted_fk)
+                except:
+                    return
+                if "task_id" in deleted_fk:
+                    task_id = deleted_fk["task_id"]
+            else:
+                task_id = row.task_id
+            if task_id:
+                db(ttable.id == task_id).update(last_push=None)
+                
+        return
 
 # =============================================================================
 def sync_rheader(r, tabs=[]):

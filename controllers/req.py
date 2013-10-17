@@ -38,9 +38,9 @@ def is_affiliated():
         return True
     else:
         table = auth.settings.table_user
-        query = (table.id == auth.user.id)
-        auth_user = db(query).select(table.organisation_id,
-                                     limitby=(0, 1)).first()
+        auth_user = db(table.id == auth.user.id).select(table.organisation_id,
+                                                        limitby=(0, 1)
+                                                        ).first()
         if auth_user and auth_user.organisation_id:
             return True
         else:
@@ -225,8 +225,8 @@ def req_controller():
                 # @ToDo: Check Permissions & Avoid DB updates in GETs
                 db(s3db.req_req_item.id == request.vars.req_item_id).update(site_id = site_id)
                 response.confirmation = T("%(item)s requested from %(site)s") % \
-                    {"item": s3db.supply_item_represent(item_id, show_link=False),
-                     "site": s3db.org_site_represent(site_id, show_link=False)
+                    {"item": s3db.supply_ItemRepresent()(item_id),
+                     "site": s3db.org_SiteRepresent()(site_id)
                      }
             elif "req.site_id" in r.get_vars:
                 # Called from 'Make new request' button on [siteinstance]/req page
@@ -427,8 +427,8 @@ S3OptionsFilter({
  'lookupKey':'req_item_id',
  'lookupField':'id',
  'msgNoRecords':i18n.no_packs,
- 'fncPrep':fncPrepItem,
- 'fncRepresent':fncRepresentItem
+ 'fncPrep':S3.supply.fncPrepItem,
+ 'fncRepresent':S3.supply.fncRepresentItem
 })''')
                     # Custom Form
                     s3forms = s3base.s3forms
@@ -580,7 +580,7 @@ S3OptionsFilter({
                 s3.actions.append(
                         dict(url = URL(c="req", f="req",
                                        args=["[id]", "commit_all", "send"]),
-                             _class = "action-btn send-btn",
+                             _class = "action-btn send-btn dispatch",
                              label = str(T("Send"))
                             )
                         )
@@ -1078,8 +1078,8 @@ S3OptionsFilter({
 'lookupKey':'req_item_id',
 'lookupField':'id',
 'msgNoRecords':i18n.no_packs,
-'fncPrep':fncPrepItem,
-'fncRepresent':fncRepresentItem
+'fncPrep':S3.supply.fncPrepItem,
+'fncRepresent':S3.supply.fncRepresentItem
 })''')
                     # Custom Form
                     s3forms = s3base.s3forms
@@ -1603,8 +1603,7 @@ def send_req():
                 dict(site=site_name)
 
     # Redirect to view the list of items in the Send
-    redirect(URL(c = "inv",
-                 f = "send",
+    redirect(URL(c = "inv", f = "send",
                  args = [send_id, "track_item"])
              )
 

@@ -70,6 +70,18 @@ class Distance(object):
     
     def measure(self, a, b):
         raise NotImplementedError
+
+    def __repr__(self):
+        return 'Distance(%s)' % self.kilometers
+    
+    def __str__(self):
+        return '%s km' % self.__kilometers
+    
+    def __cmp__(self, other):
+        if isinstance(other, Distance):
+            return cmp(self.kilometers, other.kilometers)
+        else:
+            return cmp(self.kilometers, other)
     
     @property
     def kilometers(self):
@@ -129,6 +141,7 @@ class GreatCircleDistance(Distance):
     
     def measure(self, a, b):
         a, b = Point(a), Point(b)
+
         lat1, lng1 = radians(degrees=a.latitude), radians(degrees=a.longitude)
         lat2, lng2 = radians(degrees=b.latitude), radians(degrees=b.longitude)
         
@@ -138,8 +151,10 @@ class GreatCircleDistance(Distance):
         delta_lng = lng2 - lng1
         cos_delta_lng, sin_delta_lng = cos(delta_lng), sin(delta_lng)
         
-        central_angle = acos(sin_lat1 * sin_lat2 +
-                             cos_lat1 * cos_lat2 * cos_delta_lng)
+        central_angle = acos(
+            # We're correcting from floating point rounding errors on very-near and exact points here
+            min(1.0, sin_lat1 * sin_lat2 +
+                     cos_lat1 * cos_lat2 * cos_delta_lng))
         
         # From http://en.wikipedia.org/wiki/Great_circle_distance:
         #   Historically, the use of this formula was simplified by the

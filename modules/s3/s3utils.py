@@ -30,12 +30,12 @@
 """
 
 import collections
+import copy
 import datetime
 import os
 import re
 import sys
 import time
-import urllib
 import HTMLParser
 
 try:
@@ -46,14 +46,17 @@ except ImportError:
     except:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
-from gluon import *
-from gluon.dal import Row
-from gluon.sqlhtml import SQLTABLE
-from gluon.storage import Storage
-from gluon.tools import Crud
-from gluon.languages import lazyT
+try:
+    # Python 2.7
+    from collections import OrderedDict
+except:
+    # Python 2.6
+    from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
-from gluon.contrib.simplejson.ordered_dict import OrderedDict
+from gluon import *
+from gluon.dal import Expression, Field, Row
+from gluon.storage import Storage
+from gluon.languages import lazyT
 
 DEBUG = False
 if DEBUG:
@@ -91,41 +94,61 @@ def s3_dev_toolbar():
         Shows useful stuff at the bottom of the page in Debug mode
     """
 
-    try:
-        # New web2py
-        from gluon.dal import THREAD_LOCAL
-    except:
-        # Old web2py
-        from gluon.dal import thread as THREAD_LOCAL
+    from gluon.dal import DAL
     from gluon.utils import web2py_uuid
 
+    #admin = URL("admin", "default", "design", extension="html",
+    #            args=current.request.application)
     BUTTON = TAG.button
 
-    if hasattr(THREAD_LOCAL, "instances"):
-        dbstats = [TABLE(*[TR(PRE(row[0]),
-                           "%.2fms" % (row[1]*1000)) \
-                           for row in i.db._timings]) \
-                         for i in THREAD_LOCAL.instances]
-    else:
-        dbstats = [] # if no db or on GAE
+    dbstats = []
+    dbtables = {}
+    infos = DAL.get_instances()
+    for k, v in infos.iteritems():
+        dbstats.append(TABLE(*[TR(PRE(row[0]), "%.2fms" %
+                                      (row[1] * 1000))
+                                       for row in v["dbstats"]]))
+        dbtables[k] = dict(defined=v["dbtables"]["defined"] or "[no defined tables]",
+                           lazy=v["dbtables"]["lazy"] or "[no lazy tables]")
+
     u = web2py_uuid()
+    backtotop = A("Back to top", _href="#totop-%s" % u)
+    # Convert lazy request.vars from property to Storage so they
+    # will be displayed in the toolbar.
+    request = copy.copy(current.request)
+    request.update(vars=current.request.vars,
+                   get_vars=current.request.get_vars,
+                   post_vars=current.request.post_vars)
     return DIV(
-        BUTTON("request", _onclick="$('#request-%s').slideToggle()" % u),
-        DIV(BEAUTIFY(current.request), _class="dbg_hidden", _id="request-%s" % u),
-        BUTTON("session", _onclick="$('#session-%s').slideToggle()" % u),
-        DIV(BEAUTIFY(current.session), _class="dbg_hidden", _id="session-%s" % u),
-        # Disabled response as it breaks S3SearchLocationWidget
-        #BUTTON("response", _onclick="$('#response-%s').slideToggle()" % u),
-        #DIV(BEAUTIFY(current.response), _class="dbg_hidden", _id="response-%s" % u),
-        BUTTON("db stats", _onclick="$('#db-stats-%s').slideToggle()" % u),
-        DIV(BEAUTIFY(dbstats), _class="dbg_hidden", _id="db-stats-%s" % u),
-        SCRIPT("$('.dbg_hidden').hide()")
-        )
+        #BUTTON("design", _onclick="document.location='%s'" % admin),
+        BUTTON("request",
+               _onclick="$('#request-%s').slideToggle().removeClass('hide')" % u),
+        #BUTTON("response",
+        #       _onclick="$('#response-%s').slideToggle().removeClass('hide')" % u),
+        BUTTON("session",
+               _onclick="$('#session-%s').slideToggle().removeClass('hide')" % u),
+        BUTTON("db tables",
+               _onclick="$('#db-tables-%s').slideToggle().removeClass('hide')" % u),
+        BUTTON("db stats",
+               _onclick="$('#db-stats-%s').slideToggle().removeClass('hide')" % u),
+        DIV(BEAUTIFY(request), backtotop,
+            _class="hide", _id="request-%s" % u),
+        #DIV(BEAUTIFY(current.response), backtotop,
+        #    _class="hide", _id="response-%s" % u),
+        DIV(BEAUTIFY(current.session), backtotop,
+            _class="hide", _id="session-%s" % u),
+        DIV(BEAUTIFY(dbtables), backtotop,
+            _class="hide", _id="db-tables-%s" % u),
+        DIV(BEAUTIFY(dbstats), backtotop,
+            _class="hide", _id="db-stats-%s" % u),
+        _id="totop-%s" % u
+    )
 
 # =============================================================================
 def s3_mark_required(fields,
                      mark_required=[],
                      label_html=(lambda field_label:
+                                 # @ToDo: DRY this setting with s3.locationselector.widget2.js
                                  DIV("%s:" % field_label,
                                      SPAN(" *", _class="req"))),
                      map_names=None):
@@ -135,7 +158,7 @@ def s3_mark_required(fields,
         @param fields: list of fields (or a table)
         @param mark_required: list of field names which are always required
 
-        @returns: dict of labels
+        @return: dict of labels
 
         @todo: complete parameter description?
     """
@@ -192,10 +215,11 @@ def s3_mark_required(fields,
         else:
             labels[fname] = "%s:" % flabel
 
-    if labels:
-        return (labels, _required)
-    else:
-        return None
+    # Callers expect an iterable
+    #if labels:
+    return (labels, _required)
+    #else:
+    #    return None
 
 # =============================================================================
 def s3_truncate(text, length=48, nice=True):
@@ -315,11 +339,11 @@ def s3_fullname(person=None, pe_id=None, truncate=True):
     record = None
     query = None
     if isinstance(person, (int, long)) or str(person).isdigit():
-        query = (ptable.id == person) & (ptable.deleted != True)
+        query = (ptable.id == person)# & (ptable.deleted != True)
     elif person is not None:
         record = person
     elif pe_id is not None:
-        query = (ptable.pe_id == pe_id) & (ptable.deleted != True)
+        query = (ptable.pe_id == pe_id)# & (ptable.deleted != True)
 
     if not record and query is not None:
         record = db(query).select(ptable.first_name,
@@ -373,75 +397,6 @@ def s3_fullname_bulk(record_ids=[], truncate=True):
     return represents
 
 # =============================================================================
-def s3_represent_facilities(db, site_ids, link=True):
-    """
-        Bulk lookup for Facility Representations
-        - used by Home page
-    """
-
-    table = db.org_site
-    sites = db(table._id.belongs(site_ids)).select(table._id,
-                                                   table.instance_type)
-    if not sites:
-        return []
-
-    instance_ids = Storage()
-    instance_types = []
-    for site in sites:
-        site_id = site[table._id.name]
-        instance_type = site.instance_type
-        if instance_type not in instance_types:
-            instance_types.append(instance_type)
-            instance_ids[instance_type] = [site_id]
-        else:
-            instance_ids[instance_type].append(site_id)
-
-    results = []
-    represent = db.org_site.instance_type.represent
-    for instance_type in instance_types:
-        site_ids = instance_ids[instance_type]
-        table = db[instance_type]
-        c, f = instance_type.split("_")
-        query = table.site_id.belongs(site_ids)
-        if instance_type == "org_facility":
-            instance_type_nice = represent(instance_type)
-            records = db(query).select(table.id,
-                                       table.facility_type_id,
-                                       table.site_id,
-                                       table.name)
-            type_represent = table.facility_type_id.represent
-            for record in records:
-                if record.facility_type_id:
-                    facility_type = type_represent(record.facility_type_id[:1])
-                    site_str = "%s (%s)" % (record.name, facility_type)
-                else:
-                    site_str = "%s (%s)" % (record.name, instance_type_nice)
-                if link:
-                    site_str = A(site_str, _href=URL(c=c,
-                                                     f=f,
-                                                     args=[record.id],
-                                                     extension=""))
-
-                results.append((record.site_id, site_str))
-
-        else:
-            instance_type_nice = represent(instance_type)
-            records = db(query).select(table.id,
-                                       table.site_id,
-                                       table.name)
-            for record in records:
-                site_str = "%s (%s)" % (record.name, instance_type_nice)
-                if link:
-                    site_str = A(site_str, _href=URL(c=c,
-                                                     f=f,
-                                                     args=[record.id],
-                                                     extension=""))
-
-                results.append((record.site_id, site_str))
-
-    return results
-
-# =============================================================================
 def s3_comments_represent(text, show_link=True):
     """
         Represent Comments Fields
@@ -477,7 +432,7 @@ def s3_url_represent(url):
     return A(url, _href=url, _target="blank")
 
 # =============================================================================
-def s3_avatar_represent(id, tablename="auth_user", **attr):
+def s3_avatar_represent(id, tablename="auth_user", gravatar=False, **attr):
     """
         Represent a User as their profile picture or Gravatar
 
@@ -537,13 +492,16 @@ def s3_avatar_represent(id, tablename="auth_user", **attr):
         size = s3db.pr_image_size(image, size)
         url = URL(c="default", f="download",
                   args=image)
-    elif email:
-        # If no Image uploaded, try Gravatar, which also provides a nice fallback identicon
-        import hashlib
-        hash = hashlib.md5(email).hexdigest()
-        url = "http://www.gravatar.com/avatar/%s?s=50&d=identicon" % hash
+    elif gravatar:
+        if email:
+            # If no Image uploaded, try Gravatar, which also provides a nice fallback identicon
+            import hashlib
+            hash = hashlib.md5(email).hexdigest()
+            url = "http://www.gravatar.com/avatar/%s?s=50&d=identicon" % hash
+        else:
+            url = "http://www.gravatar.com/avatar/00000000000000000000000000000000?d=mm"
     else:
-        url = "http://www.gravatar.com/avatar/00000000000000000000000000000000?d=mm"
+        url = URL(c="static", f="img", args="blank-user.gif")
 
     if "_class" not in attr:
         attr["_class"] = "avatar"
@@ -594,36 +552,6 @@ def s3_auth_user_represent_name(id, row=None):
                                   row.last_name.strip())
     except:
         return current.messages.UNKNOWN_OPT
-
-# =============================================================================
-def s3_auth_group_represent(opt):
-    """
-        Represent user groups by their role names
-    """
-
-    if not opt:
-        return current.messages["NONE"]
-
-    auth = current.auth
-    s3db = current.s3db
-
-    table = auth.settings.table_group
-    groups = current.db(table.id > 0).select(table.id,
-                                             table.role,
-                                             cache=s3db.cache).as_dict()
-    if not isinstance(opt, (list, tuple)):
-        opt = [opt]
-    roles = []
-    for o in opt:
-        try:
-            key = int(o)
-        except ValueError:
-            continue
-        if key in groups:
-            roles.append(groups[key]["role"])
-    if not roles:
-        return current.messages["NONE"]
-    return ", ".join(roles)
 
 # =============================================================================
 def s3_yes_no_represent(value):
@@ -692,6 +620,65 @@ def s3_include_debug_js():
             % (include, appname, file)
 
     return XML(include)
+
+# =============================================================================
+def s3_include_ext():
+    """
+        Add ExtJS CSS & JS into a page for a Map
+        - since this is normally run from MAP.xml() it is too late to insert into
+          s3.[external_]stylesheets, so must inject sheets into correct order
+    """
+
+    s3 = current.response.s3
+    if s3.ext_included:
+        # Ext already included
+        return
+    appname = current.request.application
+
+    xtheme = current.deployment_settings.get_base_xtheme()
+    if xtheme:
+        xtheme = "%smin.css" % xtheme[:-3]
+        xtheme = \
+    "<link href='/%s/static/themes/%s' rel='stylesheet' type='text/css' media='screen' charset='utf-8' />" % \
+        (appname, xtheme)
+
+    if s3.cdn:
+        # For Sites Hosted on the Public Internet, using a CDN may provide better performance
+        PATH = "http://cdn.sencha.com/ext/gpl/3.4.1.1"
+    else:
+        PATH = "/%s/static/scripts/ext" % appname
+        
+    if s3.debug:
+        # Provide debug versions of CSS / JS
+        adapter = "%s/adapter/jquery/ext-jquery-adapter-debug.js" % PATH
+        main_js = "%s/ext-all-debug.js" % PATH
+        main_css = \
+    "<link href='%s/resources/css/ext-all-notheme.css' rel='stylesheet' type='text/css' media='screen' charset='utf-8' />" % PATH
+        if not xtheme:
+            xtheme = \
+    "<link href='%s/resources/css/xtheme-gray.css' rel='stylesheet' type='text/css' media='screen' charset='utf-8' />" % PATH
+    else:
+        adapter = "%s/adapter/jquery/ext-jquery-adapter.js" % PATH
+        main_js = "%s/ext-all.js" % PATH
+        if xtheme:
+            main_css = \
+    "<link href='/%s/static/scripts/ext/resources/css/ext-notheme.min.css' rel='stylesheet' type='text/css' media='screen' charset='utf-8' />" % appname
+        else:
+            main_css = \
+    "<link href='/%s/static/scripts/ext/resources/css/ext-gray.min.css' rel='stylesheet' type='text/css' media='screen' charset='utf-8' />" % appname
+    locale = "%s/src/locale/ext-lang-%s.js" % (PATH, s3.language)
+
+    scripts = s3.scripts
+    scripts_append = scripts.append
+    scripts_append(adapter)
+    scripts_append(main_js)
+    scripts_append(locale)
+
+    if xtheme:
+        s3.jquery_ready.append('''$('style:first').after("%s").after("%s")''' % (xtheme, main_css))
+    else:
+        s3.jquery_ready.append('''$('style:first').after("%s")''' % main_css)
+    s3.ext_included = True
 
 # =============================================================================
 def s3_is_mobile_client(request):
@@ -798,82 +785,6 @@ def s3_populate_browser_compatibility(request):
     return browser
 
 # =============================================================================
-def s3_register_validation():
-    """
-        JavaScript client-side validation for Register form
-        - needed to check for passwords being same, etc
-    """
-
-    T = current.T
-    request = current.request
-    settings = current.deployment_settings
-    s3 = current.response.s3
-    appname = current.request.application
-    auth = current.auth
-
-    # Static Scripts
-    scripts_append = s3.scripts.append
-    if s3.debug:
-        scripts_append("/%s/static/scripts/jquery.validate.js" % appname)
-        scripts_append("/%s/static/scripts/jquery.pstrength.2.1.0.js" % appname)
-        scripts_append("/%s/static/scripts/S3/s3.register_validation.js" % appname)
-    else:
-        scripts_append("/%s/static/scripts/jquery.validate.min.js" % appname)
-        scripts_append("/%s/static/scripts/jquery.pstrength.2.1.0.min.js" % appname)
-        scripts_append("/%s/static/scripts/S3/s3.register_validation.min.js" % appname)
-
-    # Configuration
-    js_global = []
-    js_append = js_global.append
-    if request.cookies.has_key("registered"):
-        # .password:first
-        js_append('''S3.password_position=1''')
-    else:
-        # .password:last
-        js_append('''S3.password_position=2''')
-
-    if settings.get_auth_registration_mobile_phone_mandatory():
-        js_append('''S3.auth_registration_mobile_phone_mandatory=1''')
-
-    if settings.get_auth_registration_organisation_required():
-        js_append('''S3.get_auth_registration_organisation_required=1''')
-        js_append('''i18n.enter_your_organisation="%s"''' % T("Enter your organization"))
-
-    if request.controller != "admin":
-        if settings.get_auth_registration_organisation_hidden():
-            js_append('''S3.get_auth_registration_hide_organisation=1''')
-
-        # Check for Whitelists
-        table = current.s3db.auth_organisation
-        query = (table.organisation_id != None) & \
-                (table.domain != None)
-        whitelists = current.db(query).select(table.organisation_id,
-                                              table.domain)
-        if whitelists:
-            domains = []
-            domains_append = domains.append
-            for whitelist in whitelists:
-                domains_append("'%s':%s" % (whitelist.domain,
-                                            whitelist.organisation_id))
-            domains = ''','''.join(domains)
-            domains = '''S3.whitelists={%s}''' % domains
-            js_append(domains)
-
-    js_append('''i18n.enter_first_name="%s"''' % T("Enter your first name"))
-    js_append('''i18n.provide_password="%s"''' % T("Provide a password"))
-    js_append('''i18n.repeat_your_password="%s"''' % T("Repeat your password"))
-    js_append('''i18n.enter_same_password="%s"''' % T("Enter the same password as above"))
-    js_append('''i18n.please_enter_valid_email="%s"''' % T("Please enter a valid email address"))
-
-    js_append('''S3.password_min_length=%i''' % settings.get_auth_password_min_length())
-
-    script = '''\n'''.join(js_global)
-    s3.js_global.append(script)
-
-    # Call script after Global config done
-    s3.jquery_ready.append('''s3_register_validation()''')
-
-# =============================================================================
 def s3_filename(filename):
     """
         Convert a string into a valid filename on all OS
@@ -926,7 +837,7 @@ def s3_get_foreign_key(field, m2m=True):
         @param field: the field (Field instance)
         @param m2m: also detect many-to-many references
 
-        @returns: tuple (tablename, key, multiple), where tablename is
+        @return: tuple (tablename, key, multiple), where tablename is
                   the name of the referenced table (or None if this field
                   has no foreign key constraint), key is the field name of
                   the referenced key, and multiple indicates whether this is
@@ -1001,6 +912,64 @@ def s3_flatlist(nested):
             yield item
 
 # =============================================================================
+def s3_orderby_fields(table, orderby, expr=False):
+    """
+        Introspect and yield all fields involved in a DAL orderby
+        expression.
+
+        @param table: the Table
+        @param orderby: the orderby expression
+        @param expr: True to yield asc/desc expressions as they are,
+                     False to yield only Fields
+    """
+
+    if not orderby:
+        return
+
+    db = current.db
+    COMMA = db._adapter.COMMA
+    INVERT = db._adapter.INVERT
+    
+    if isinstance(orderby, str):
+        items = orderby.split(",")
+    elif type(orderby) is Expression:
+        def expand(e):
+            if isinstance(e, Field):
+                return [e]
+            if e.op == COMMA:
+                return expand(e.first) + expand(e.second)
+            elif e.op == INVERT:
+                return [e] if expr else [e.first]
+            return []
+        items = expand(orderby)
+    elif not isinstance(orderby, (list, tuple)):
+        items = [orderby]
+    else:
+        items = orderby
+
+    s3db = current.s3db
+    tablename = table._tablename if table else None
+    for item in items:
+        if type(item) is Expression:
+            if not isinstance(item.first, Field):
+                continue
+            f = item if expr else item.first
+        elif isinstance(item, Field):
+            f = item
+        elif isinstance(item, str):
+            fn, direction = (item.strip().split() + ["asc"])[:2]
+            tn, fn = ([tablename] + fn.split(".", 1))[-2:]
+            try:
+                f = s3db.table(tn)[fn]
+            except (AttributeError, KeyError):
+                continue
+            if expr and direction[:3] == "des":
+                f = ~f
+        else:
+            continue
+        yield f
+
+# =============================================================================
 def search_vars_represent(search_vars):
     """
         Unpickle and convert saved search form variables into
@@ -1008,7 +977,7 @@ def search_vars_represent(search_vars):
 
         @param search_vars: the (c)pickled search form variables
 
-        @returns: HTML as string
+        @return: HTML as string
     """
 
     import cPickle
@@ -1267,229 +1236,6 @@ def sort_dict_by_values(adict):
     return OrderedDict(sorted(adict.items(), key = lambda item: item[1]))
 
 # =============================================================================
-class CrudS3(Crud):
-    """
-        S3 extension of the gluon.tools.Crud class
-        - select() uses SQLTABLES3 (to allow different linkto construction)
-
-        @todo: is this still used anywhere?
-    """
-
-    def __init__(self):
-        """ Initialise parent class & make any necessary modifications """
-        Crud.__init__(self, current.db)
-
-
-    def select(
-        self,
-        table,
-        query=None,
-        fields=None,
-        orderby=None,
-        limitby=None,
-        headers={},
-        **attr):
-
-        db = current.db
-        request = current.request
-        if not (isinstance(table, db.Table) or table in db.tables):
-            raise HTTP(404)
-        if not self.has_permission("select", table):
-            redirect(current.auth.settings.on_failed_authorization)
-        #if record_id and not self.has_permission("select", table):
-        #    redirect(current.auth.settings.on_failed_authorization)
-        if not isinstance(table, db.Table):
-            table = db[table]
-        if not query:
-            query = table.id > 0
-        if not fields:
-            fields = [table.ALL]
-        rows = db(query).select(*fields, **dict(orderby=orderby,
-            limitby=limitby))
-        if not rows:
-            return None # Nicer than an empty table.
-        if not "linkto" in attr:
-            attr["linkto"] = self.url(args="read")
-        if not "upload" in attr:
-            attr["upload"] = self.url("download")
-        if request.extension != "html":
-            return rows.as_list()
-        return SQLTABLES3(rows, headers=headers, **attr)
-
-# =============================================================================
-class SQLTABLES3(SQLTABLE):
-    """
-        S3 custom version of gluon.sqlhtml.SQLTABLE
-
-        Given a SQLRows object, as returned by a db().select(), generates
-        an html table with the rows.
-
-            - we need a different linkto construction for our CRUD controller
-            - we need to specify a different ID field to direct to for the M2M controller
-            - used by S3Resource.sqltable
-
-        Optional arguments:
-
-        @keyword linkto: URL (or lambda to generate a URL) to edit individual records
-        @keyword upload: URL to download uploaded files
-        @keyword orderby: Add an orderby link to column headers.
-        @keyword headers: dictionary of headers to headers redefinions
-        @keyword truncate: length at which to truncate text in table cells.
-            Defaults to 16 characters.
-
-        Optional names attributes for passed to the <table> tag
-
-        Simple linkto example::
-
-            rows = db.select(db.sometable.ALL)
-            table = SQLTABLES3(rows, linkto="someurl")
-
-        This will link rows[id] to .../sometable/value_of_id
-
-        More advanced linkto example::
-
-            def mylink(field):
-                return URL(args=[field])
-
-            rows = db.select(db.sometable.ALL)
-            table = SQLTABLES3(rows, linkto=mylink)
-
-        This will link rows[id] to::
-
-            current_app/current_controller/current_function/value_of_id
-    """
-
-    def __init__(self, sqlrows,
-                 linkto=None,
-                 upload=None,
-                 orderby=None,
-                 headers={},
-                 truncate=16,
-                 columns=None,
-                 th_link="",
-                 **attributes):
-
-        # reverted since it causes errors (admin/user & manual importing of req/req/import)
-        # super(SQLTABLES3, self).__init__(**attributes)
-        TABLE.__init__(self, **attributes)
-
-        self.components = []
-        self.attributes = attributes
-        self.sqlrows = sqlrows
-        (components, row) = (self.components, [])
-        if not columns:
-            columns = sqlrows.colnames
-        if headers=="fieldname:capitalize":
-            headers = {}
-            for c in columns:
-                headers[c] = " ".join([w.capitalize() for w in c.split(".")[-1].split("_")])
-        elif headers=="labels":
-            headers = {}
-            for c in columns:
-                (t, f) = c.split(".")
-                field = sqlrows.db[t][f]
-                headers[c] = field.label
-
-        if headers!=None:
-            for c in columns:
-                if orderby:
-                    row.append(TH(A(headers.get(c, c),
-                                    _href=th_link+"?orderby=" + c)))
-                else:
-                    row.append(TH(headers.get(c, c)))
-            components.append(THEAD(TR(*row)))
-
-        tbody = []
-        table_field = re.compile("[\w_]+\.[\w_]+")
-        for (rc, record) in enumerate(sqlrows):
-            row = []
-            if rc % 2 == 0:
-                _class = "even"
-            else:
-                _class = "odd"
-            for colname in columns:
-                if not table_field.match(colname):
-                    if "_extra" in record and colname in record._extra:
-                        r = record._extra[colname]
-                        row.append(TD(r))
-                        continue
-                    else:
-                        raise KeyError("Column %s not found (SQLTABLE)" % colname)
-                (tablename, fieldname) = colname.split(".")
-                try:
-                    field = sqlrows.db[tablename][fieldname]
-                except (KeyError, AttributeError):
-                    field = None
-                if tablename in record \
-                        and isinstance(record, Row) \
-                        and isinstance(record[tablename], Row):
-                    r = record[tablename][fieldname]
-                elif fieldname in record:
-                    r = record[fieldname]
-                else:
-                    raise SyntaxError("something wrong in Rows object")
-                r_old = r
-                if not field:
-                    pass
-                elif linkto and field.type == "id":
-                    #try:
-                        #href = linkto(r, "table", tablename)
-                    #except TypeError:
-                        #href = "%s/%s/%s" % (linkto, tablename, r_old)
-                    #r = A(r, _href=href)
-                    try:
-                        href = linkto(r)
-                    except TypeError:
-                        href = "%s/%s" % (linkto, r)
-                    r = A(r, _href=href)
-                #elif linkto and field.type.startswith("reference"):
-                    #ref = field.type[10:]
-                    #try:
-                        #href = linkto(r, "reference", ref)
-                    #except TypeError:
-                        #href = "%s/%s/%s" % (linkto, ref, r_old)
-                        #if ref.find(".") >= 0:
-                            #tref,fref = ref.split(".")
-                            #if hasattr(sqlrows.db[tref],"_primarykey"):
-                                #href = "%s/%s?%s" % (linkto, tref, urllib.urlencode({fref:r}))
-                    #r = A(str(r), _href=str(href))
-                elif linkto \
-                     and hasattr(field._table, "_primarykey") \
-                     and fieldname in field._table._primarykey:
-                    # have to test this with multi-key tables
-                    key = urllib.urlencode(dict([ \
-                                ((tablename in record \
-                                      and isinstance(record, Row) \
-                                      and isinstance(record[tablename], Row)) \
-                                      and (k, record[tablename][k])) \
-                                      or (k, record[k]) \
-                                    for k in field._table._primarykey]))
-                    r = A(r, _href="%s/%s?%s" % (linkto, tablename, key))
-                elif field.type.startswith("list:"):
-                    r = field.represent(r or [])
-                elif field.represent:
-                    r = field.represent(r)
-                elif field.type.startswith("reference"):
-                    pass
-                elif field.type == "blob" and r:
-                    r = "DATA"
-                elif field.type == "upload":
-                    if upload and r:
-                        r = A("file", _href="%s/%s" % (upload, r))
-                    elif r:
-                        r = "file"
-                    else:
-                        r = ""
-                elif field.type in ["string", "text"]:
-                    r = str(field.formatter(r))
-                    ur = unicode(r, "utf8")
-                    if truncate!=None and len(ur) > truncate:
-                        r = ur[:truncate - 3].encode("utf8") + "..."
-                row.append(TD(r))
-            tbody.append(TR(_class=_class, *row))
-        components.append(TBODY(*tbody))
-
-# =============================================================================
 class Traceback(object):
     """ Generate the traceback for viewing error Tickets """
 
@@ -1592,6 +1338,22 @@ def URL2(a=None, c=None, r=None):
     return url
 
 # =============================================================================
+class S3CustomController(object):
+
+    @classmethod
+    def _view(cls, theme, name):
+
+        view = os.path.join(current.request.folder,
+                            "private", "templates", theme, "views", name)
+        try:
+            # Pass view as file not str to work in compiled mode
+            current.response.view = open(view, "rb")
+        except IOError:
+            from gluon.http import HTTP
+            raise HTTP("404", "Unable to open Custom View: %s" % view)
+        return
+
+# =============================================================================
 class S3DateTime(object):
     """
         Toolkit for date+time parsing/representation
@@ -1599,21 +1361,20 @@ class S3DateTime(object):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def date_represent(cls, date, utc=False):
+    def date_represent(cls, date, format=None, utc=False):
         """
             Represent the date according to deployment settings &/or T()
 
             @param date: the date
+            @param format: the format if wishing to override deployment_settings
             @param utc: the date is given in UTC
         """
 
-        session = current.session
-        settings = current.deployment_settings
-
-        format = settings.get_L10n_date_format()
+        if not format:
+            format = current.deployment_settings.get_L10n_date_format()
 
         if date and isinstance(date, datetime.datetime) and utc:
-            offset = cls.get_offset_value(session.s3.utc_offset)
+            offset = cls.get_offset_value(current.session.s3.utc_offset)
             if offset:
                 date = date + datetime.timedelta(seconds=offset)
 
@@ -2337,7 +2098,7 @@ class S3MultiPath:
                 Find a sequence of node IDs in this path
 
                 @param sequence: sequence of node IDs (or path)
-                @returns: position of the sequence (index+1), 0 if the path
+                @return: position of the sequence (index+1), 0 if the path
                           is empty, -1 if the sequence wasn't found
             """
             path = S3MultiPath.Path(sequence)

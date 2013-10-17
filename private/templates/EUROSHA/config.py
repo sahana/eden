@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 
+try:
+    # Python 2.7
+    from collections import OrderedDict
+except:
+    # Python 2.6
+    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+
 from gluon import current
 from gluon.storage import Storage
 
-from gluon.contrib.simplejson.ordered_dict import OrderedDict
-
-from s3 import s3forms
+from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
 
 settings = current.deployment_settings
 T = current.T
@@ -88,7 +93,6 @@ def eurosha_realm_entity(table, row):
     # @ToDo: Restore Realms and add a role/functionality support for Master Data  
     if tablename in [#"hrm_certificate",
                      "hrm_department",
-                     "hrm_job_role",
                      "hrm_job_title",
                      "hrm_course",
                      "hrm_programme",
@@ -216,8 +220,8 @@ settings.frontpage.rss = [
 settings.org.summary = True
 
 # HRM
-# Uncomment to allow HRs to have multiple Job Roles in addition to their Job Title
-settings.hrm.job_roles = True
+# Uncomment to allow HRs to have multiple Job Titles
+settings.hrm.multiple_job_titles = True
 # Uncomment to disable Staff experience
 settings.hrm.staff_experience = False
 # Uncomment to disable Volunteer experience
@@ -255,7 +259,63 @@ settings.project.multiple_organisations = True
 #    5: T("Partner")
 #}
 
-settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
+# -----------------------------------------------------------------------------
+def customize_org_organisation(**attr):
+
+    s3 = current.response.s3
+
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        if r.interactive or r.representation == "aadata":
+            s3db = current.s3db
+            list_fields = ["id",
+                           "name",
+                           "acronym",
+                           "organisation_type_id",
+                           (T("Clusters"), "sector.name"),
+                           "country",
+                           "website"
+                           ]
+            
+            s3db.configure("org_organisation", list_fields=list_fields)
+        
+        if r.interactive:
+            crud_form = S3SQLCustomForm(
+                "name",
+                "acronym",
+                "organisation_type_id",
+                "region_id",
+                "country",
+                S3SQLInlineComponentCheckbox(
+                    "sector",
+                    label = T("Clusters"),
+                    field = "sector_id",
+                    cols = 3,
+                ),
+                "phone",
+                "website",
+                "year",
+                "logo",
+                "comments",
+            )
+            s3db.configure("org_organisation", crud_form=crud_form)
+            
+        return result
+    s3.prep = custom_prep
+
+    return attr
+
+settings.ui.customize_org_organisation = customize_org_organisation
+
+# -----------------------------------------------------------------------------
+settings.ui.crud_form_project_project = S3SQLCustomForm(
         "organisation_id",
         "name",
         "code",
@@ -263,24 +323,24 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
         "status_id",
         "start_date",
         "end_date",
-        #s3forms.S3SQLInlineComponentCheckbox(
+        #S3SQLInlineComponentCheckbox(
         #    "hazard",
         #    label = T("Hazards"),
         #    field = "hazard_id",
         #    cols = 4,
         #),
-        s3forms.S3SQLInlineComponentCheckbox(
+        S3SQLInlineComponentCheckbox(
             "sector",
             label = T("Sectors"),
             field = "sector_id",
             cols = 4,
         ),
-        #s3forms.S3SQLInlineComponent(
+        #S3SQLInlineComponent(
         #    "location",
         #    label = T("Locations"),
         #    fields = ["location_id"],
         #),
-        s3forms.S3SQLInlineComponentCheckbox(
+        S3SQLInlineComponentCheckbox(
             "theme",
             label = T("Themes"),
             field = "theme_id",
@@ -305,7 +365,7 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
         "objectives",
         "human_resource_id",
         # Partner Orgs
-        #s3forms.S3SQLInlineComponent(
+        #S3SQLInlineComponent(
         #    "organisation",
         #    name = "partner",
         #    label = T("Partner Organizations"),
@@ -317,7 +377,7 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
         #                    )
         #),
         # Donors
-        #s3forms.S3SQLInlineComponent(
+        #S3SQLInlineComponent(
         #    "organisation",
         #    name = "donor",
         #    label = T("Donor(s)"),
@@ -333,11 +393,11 @@ settings.ui.crud_form_project_project = s3forms.S3SQLCustomForm(
         "comments",
     )
 
-settings.ui.crud_form_project_location = s3forms.S3SQLCustomForm(
+settings.ui.crud_form_project_location = S3SQLCustomForm(
         "project_id",
         "location_id",
         # @ToDo: Grouped Checkboxes
-        s3forms.S3SQLInlineComponentCheckbox(
+        S3SQLInlineComponentCheckbox(
             "activity_type",
             label = T("Activity Types"),
             field = "activity_type_id",

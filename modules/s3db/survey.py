@@ -490,12 +490,6 @@ class S3SurveyTemplateModel(S3Model):
             template = "template_id" in data and data.template_id
             query = (table.name == name) & \
                     (table.template_id == template)
-            posn = "posn" in data and data.posn
-            query = query & (table.posn == 0)
-            record = current.db(query).select(table.posn,
-                                              limitby=(0, 1)).first()
-            if not record:
-                query = query & (table.posn == posn)
             return duplicator(job, query)
 
 # =============================================================================
@@ -531,7 +525,6 @@ def survey_template_rheader(r, tabs=[]):
 
             T = current.T
             s3db = current.s3db
-            request = current.request
 
             # Tabs
             tabs = [(T("Basic Details"), "read"),
@@ -544,10 +537,11 @@ def survey_template_rheader(r, tabs=[]):
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
-            sectionTable = s3db["survey_section"]
-            qlistTable = s3db["survey_question_list"]
-            if "vars" in request and "viewing" in request.vars:
-                dummy, template_id = request.vars.viewing.split(".")
+            sectionTable = s3db.survey_section
+            qlistTable = s3db.survey_question_list
+            viewing = current.request.get_vars.get("viewing", None)
+            if viewing:
+                dummy, template_id = viewing.split(".")
             else:
                 template_id = r.id
 
@@ -1792,12 +1786,13 @@ class S3SurveySeriesModel(S3Model):
             output["help"] = ""
         else:
             crud_strings = s3.crud_strings["survey_series"]
-            if "viewing" in request.vars:
-                dummy, series_id = request.vars.viewing.split(".")
-            elif "series" in request.vars:
-                series_id = request.vars.series
+            viewing = request.get_vars.get("viewing", None)
+            if viewing:
+                dummy, series_id = viewing.split(".")
             else:
-                series_id = r.id
+                series_id = request.get_vars.get("series", None)
+                if not series_id:
+                    series_id = r.id
             form = buildSeriesSummary(series_id, posn_offset)
             output["items"] = form
             output["sortby"] = [[0, "asc"]]
@@ -1958,7 +1953,7 @@ class S3SurveySeriesModel(S3Model):
         table = TABLE()
 
         labelQstn = SELECT(lblQstns, _name="labelQuestion", value=labelQuestion)
-        table.append(TR(TH(T("Select Label Question:")), _class="survey_question"))
+        table.append(TR(TH("%s:" % T("Select Label Question")), _class="survey_question"))
         table.append(labelQstn)
 
         table.append(TR(TH(T("Select Numeric Questions (one or more):")), _class="survey_question"))
@@ -2094,12 +2089,13 @@ $('#chart_btn').click(function(){
         else:
             output = dict()
         crud_strings = s3.crud_strings["survey_series"]
-        if "viewing" in request.vars:
-            dummy, series_id = request.vars.viewing.split(".")
-        elif "series" in request.vars:
-            series_id = request.vars.series
+        viewing = request.get_vars.get("viewing", None)
+        if viewing:
+            dummy, series_id = viewing.split(".")
         else:
-            series_id = r.id
+            series_id = request.get_vars.get("series", None)
+            if not series_id:
+                series_id = r.id
         if series_id == None:
             seriesList = []
             append = seriesList.append
@@ -2108,11 +2104,8 @@ $('#chart_btn').click(function(){
                 append(row.id)
         else:
             seriesList = [series_id]
-        pqstn_name = None
         pqstn = {}
-        if "post_vars" in request and \
-           "pqstn_name" in request.post_vars:
-            pqstn_name = request.post_vars.pqstn_name
+        pqstn_name = request.post_vars.get("pqstn_name", None)
         if pqstn_name is None:
             pqstn = survey_getPriorityQuestionForSeries(series_id)
             if "name" in pqstn:
@@ -2234,7 +2227,7 @@ $('#chart_btn').click(function(){
                            bbox = bounds,
                            #collapsed = True,
                            catalogue_layers = True,
-                          )
+                           )
         series = INPUT(_type="hidden",
                        _id="selectSeriesID",
                        _name="series",
@@ -2276,17 +2269,16 @@ $('#chart_btn').click(function(){
 # =============================================================================
 def survey_serieslist_dataTable_post(r):
     """
+        Replace the Action Buttons
     """
 
-    S3CRUD.action_buttons(r)
-    url = URL(c="survey",
-              f="series",
-              args=["[id]", "summary"]
-              )
+    #S3CRUD.action_buttons(r)
     current.response.s3.actions = [
                    dict(label=current.messages.UPDATE,
-                        _class="action-btn",
-                        url=url
+                        _class="action-btn edit",
+                        url=URL(c="survey", f="series",
+                                args=["[id]", "summary"]
+                                )
                        ),
                   ]
 
@@ -2714,16 +2706,17 @@ class S3SurveyCompleteModel(S3Model):
         """
         """
 
+        T = current.T
         vars = form.vars
         if "series_id" not in vars or vars.series_id == None:
-            form.errors.series_id = T("Series details missing.")
+            form.errors.series_id = T("Series details missing")
             return False
         if "answer_list" not in vars or vars.answer_list == None:
-            form.errors.answer_list = T("The answers are missing.")
+            form.errors.answer_list = T("The answers are missing")
             return False
         series_id = vars.series_id
         answer_list = vars.answer_list
-        qstn_list = getAllQuestionsForSeries(series_id)
+        qstn_list = survey_getAllQuestionsForSeries(series_id)
         qstns = []
         for qstn in qstn_list:
             qstns.append(qstn["code"])
@@ -2957,14 +2950,14 @@ def survey_answerlist_dataTable_pre():
 # =============================================================================
 def survey_answerlist_dataTable_post(r):
     """
+        Replace Action Buttons
     """
 
-    S3CRUD.action_buttons(r)
+    #S3CRUD.action_buttons(r)
     current.response.s3.actions = [
                    dict(label=current.messages["UPDATE"],
-                        _class="action-btn",
-                        url=URL(c="survey",
-                                f="series",
+                        _class="action-btn edit",
+                        url=URL(c="survey", f="series",
                                 args=[r.id, "complete", "[id]", "update"])
                        ),
                   ]
@@ -3230,16 +3223,17 @@ def getLocationList(series_id):
         else:
             # The lat & lon were not added to the Survey so try and get one
             locWidget = get_default_location(row.id)
-            complete_id = locWidget.question["complete_id"]
-            if "answer" not in locWidget.question:
-                continue
-            answer = locWidget.question["answer"]
-            if locWidget != None:
-                record = locWidget.getLocationRecord(complete_id, answer)
-                if len(record.records) == 1:
-                    location = record.records[0].gis_location
-                    location.complete_id = complete_id
-                    rappend(location)
+            if locWidget:
+                complete_id = locWidget.question["complete_id"]
+                if "answer" not in locWidget.question:
+                    continue
+                answer = locWidget.question["answer"]
+                if locWidget != None:
+                    record = locWidget.getLocationRecord(complete_id, answer)
+                    if len(record.records) == 1:
+                        location = record.records[0].gis_location
+                        location.complete_id = complete_id
+                        rappend(location)
 
     return response_locations
 

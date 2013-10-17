@@ -29,6 +29,7 @@
 
 import datetime
 import os
+import re
 import sys
 import time
 import types
@@ -64,6 +65,8 @@ from gluon.tools import callback
 
 from s3resource import S3Resource
 from s3utils import S3MarkupStripper, s3_unicode
+
+REGEX_FILTER = re.compile(".+\..+|.*\(.+\).*")
 
 DEBUG = False
 if DEBUG:
@@ -138,10 +141,6 @@ class S3RequestManager(object):
         # Errors
         self.error = None
 
-        # Toolkits
-        self.audit = current.s3_audit
-        self.auth = auth = current.auth
-
         # Register
         current.manager = self
 
@@ -153,7 +152,7 @@ class S3RequestManager(object):
         self.search = S3Method()
 
         # Hooks
-        self.permit = auth.s3_has_permission
+        self.permit = current.auth.s3_has_permission
         self.messages = None
         self.import_prep = None
         self.log = None
@@ -267,12 +266,17 @@ class S3RequestManager(object):
                         if hasattr(r, "other") and \
                             hasattr(r.other, "set_self_id"):
                             r.other.set_self_id(self_id)
-            try:
-                value, error = field.validate(value)
-            except:
-                return (None, None)
+
+            if not hasattr(field, "validate"):
+                # Virtual Field
+                return (value, None)
             else:
-                return (value, error)
+                try:
+                    value, error = field.validate(value)
+                except:
+                    return (None, None)
+                else:
+                    return (value, error)
 
     # -------------------------------------------------------------------------
     def represent(self, field,
@@ -479,7 +483,7 @@ class S3Request(object):
 
         # Attached files
         self.files = Storage()
-
+        
         # Allow override of controller/function
         self.controller = c or self.controller
         self.function = f or self.function
@@ -487,14 +491,14 @@ class S3Request(object):
             self.function, ext = self.function.split(".", 1)
             if extension is None:
                 extension = ext
-        auth = manager.auth
         if c or f:
+            auth = current.auth
             if not auth.permission.has_permission("read",
                                                   c=self.controller,
                                                   f=self.function):
                 auth.permission.fail()
 
-        # Allow override of request attributes
+        # Allow override of request args/vars
         if args is not None:
             if isinstance(args, (list, tuple)):
                 self.args = args
@@ -515,7 +519,8 @@ class S3Request(object):
         if get_vars is None and post_vars is None and vars is not None:
             self.vars = vars
             self.get_vars = vars
-            self.post_vars = dict()
+            self.post_vars = Storage()
+            
         self.extension = extension or current.request.extension
         self.http = http or current.request.env.request_method
 
@@ -538,7 +543,7 @@ class S3Request(object):
 
         # Show information on deleted records?
         include_deleted = False
-        if self.representation=="xml" and "include_deleted" in vars:
+        if self.representation == "xml" and "include_deleted" in vars:
             include_deleted = True
         if "components" in vars:
             cnames = vars["components"]
@@ -727,7 +732,7 @@ class S3Request(object):
             Get a method handler for this request
 
             @param method: the method name
-            @returns: the handler function
+            @return: the handler function
         """
 
         http = self.http
@@ -764,6 +769,67 @@ class S3Request(object):
                 return handler()
             else:
                 return handler
+
+    # -------------------------------------------------------------------------
+    def get_widget_handler(self, method):
+        """
+            Get the widget handler for a method
+
+            @param r: the S3Request
+            @param method: the widget method
+        """
+
+        if self.component:
+            resource = self.component
+            if resource.link:
+                resource = resource.link
+        else:
+            resource = self.resource
+        prefix, name = self.prefix, self.name
+        component_name = self.component_name
+                
+        custom_action = current.s3db.get_method(prefix,
+                                                name,
+                                                component_name=component_name,
+                                                method=method)
+
+        http = self.http
+        handler = None
+
+        if method and custom_action:
+            handler = custom_action
+            
+        if http == "GET":
+            if not method:
+                if resource.count() == 1:
+                    method = "read"
+                else:
+                    method = "list"
+            transform = self.transformable()
+            handler = self.get_handler(method, transform=transform)
+            
+        elif http == "PUT":
+            transform = self.transformable(method="import")
+            handler = self.get_handler(method, transform=transform)
+            
+        elif http == "POST":
+            transform = self.transformable(method="import")
+            return self.get_handler(method, transform=transform)
+                
+        elif http == "DELETE":
+            if method:
+                return self.get_handler(method)
+            else:
+                return self.get_handler("delete")
+                
+        else:
+            return None
+
+        if handler is None:
+            handler = resource.crud
+        if isinstance(handler, (type, types.ClassType)):
+            handler = handler()
+        return handler
 
     # -------------------------------------------------------------------------
     # Request Parser
@@ -865,7 +931,7 @@ class S3Request(object):
                     self.resource.load()
                     self.record = self.resource._rows[0]
                 else:
-                    if hasattr(self.resource.search, "search_interactive"):
+                    if hasattr(self.resource.search_method(), "search_interactive"):
                         redirect(URL(r=self, f=self.name, args="search",
                                      vars={"_next": self.url(id="[id]")}))
                     else:
@@ -930,7 +996,7 @@ class S3Request(object):
             if handler is not None:
                 output = handler(self, **attr)
             elif self.method == "search":
-                output = self.resource.search(self, **attr)
+                output = self.resource.search_method()(self, **attr)
             else:
                 # Fall back to CRUD
                 output = self.resource.crud(self, **attr)
@@ -966,7 +1032,7 @@ class S3Request(object):
         return output
 
     # -------------------------------------------------------------------------
-    def __GET(self):
+    def __GET(self, resource=None):
         """
             Get the GET method handler
         """
@@ -1021,7 +1087,7 @@ class S3Request(object):
             else:
                 request_vars = {}
             if self.representation == "html" and \
-               self.resource.search.search_interactive:
+               self.resource.search_method().search_interactive:
                 self.next = URL(r=self,
                                 f=self.name,
                                 args="search",
@@ -1483,25 +1549,23 @@ class S3Request(object):
         return s3_request(r=self, **args)
 
     # -------------------------------------------------------------------------
-    def __getattr__(self, name):
+    def __getattr__(self, key):
         """
-            Called upon r.<name>:
-                - returns the value of the attribute
-                - falls back to current.request if the attribute is not
-                  defined here.
-                This allows to seamlessly replace web2py's request object
-                with this instance, and to override certain attributes of it.
-
-            @param name: the attribute name
+            Called upon S3Request.<key> - looks up the value for the <key>
+            attribute. Falls back to current.request if the attribute is
+            not defined in this S3Request.
+            
+            @param key: the key to lookup
         """
 
-        request = current.request
-        if name in self.__dict__:
-            return self.__dict__[name]
-        elif name in (request or {}):
-            return request[name]
-        else:
+        if key in self.__dict__:
+            return self.__dict__[key]
+            
+        sentinel = object()
+        value = getattr(current.request, key, sentinel)
+        if value is sentinel:
             raise AttributeError
+        return value
 
     # -------------------------------------------------------------------------
     def transformable(self, method=None):
@@ -1589,7 +1653,7 @@ class S3Request(object):
             print >> sys.stderr, "ERROR: %s" % message
             raise HTTP(status,
                        body=current.xml.json_message(success=False,
-                                                     status_code=status,
+                                                     statuscode=status,
                                                      message=message,
                                                      tree=tree),
                        web2py_header=message,
@@ -1727,7 +1791,7 @@ class S3Request(object):
         """
             Get the target table of the current request
 
-            @returns: a tuple of (prefix, name, table, tablename) of the target
+            @return: a tuple of (prefix, name, table, tablename) of the target
                 resource of this request
 
             @todo: update for link table support
@@ -1849,15 +1913,16 @@ class S3Method(object):
     """
 
     # -------------------------------------------------------------------------
-    def __call__(self, r, method=None, **attr):
+    def __call__(self, r, method=None, widget_id=None, **attr):
         """
             Entry point for the REST interface
 
             @param r: the S3Request
             @param method: the method established by the REST interface
+            @param as_widget: render as widget (to embed in another method)
             @param attr: dict of parameters for the method handler
 
-            @returns: output object to send to the view
+            @return: output object to send to the view
         """
 
         # Environment of the request
@@ -1923,37 +1988,102 @@ class S3Method(object):
         if self.method == "_init":
             return None
 
+        if r.interactive:
+            hide_filter = attr.get("hide_filter", None)
+            if isinstance(hide_filter, dict):
+                hide_filter = hide_filter.get(r.component_name,
+                              hide_filter.get("_default", None))
+            if hide_filter is None:
+                # Hide by default until fully migrated:
+                hide_filter = True
+                #hide_filter = r.component is not None
+            self.hide_filter = hide_filter
+        else:
+            self.hide_filter = True
+                          
         # Apply method
-        output = self.apply_method(r, **attr)
+        if widget_id and hasattr(self, "widget"):
+            output = self.widget(r,
+                                 method=self.method,
+                                 widget_id=widget_id,
+                                 **attr)
+        else:
+            output = self.apply_method(r, **attr)
 
-        # Redirection
-        if self.next and resource.lastid:
-            self.next = str(self.next)
-            placeholder = "%5Bid%5D"
-            self.next = self.next.replace(placeholder, resource.lastid)
-            placeholder = "[id]"
-            self.next = self.next.replace(placeholder, resource.lastid)
-        if not response.error:
-            r.next = self.next
+            # Redirection
+            if self.next and resource.lastid:
+                self.next = str(self.next)
+                placeholder = "%5Bid%5D"
+                self.next = self.next.replace(placeholder, resource.lastid)
+                placeholder = "[id]"
+                self.next = self.next.replace(placeholder, resource.lastid)
+            if not response.error:
+                r.next = self.next
 
-        # Add additional view variables (e.g. rheader)
-        self._extend_view(output, r, **attr)
+            # Add additional view variables (e.g. rheader)
+            self._extend_view(output, r, **attr)
 
         return output
 
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
-            Stub for apply_method, to be implemented in subclass
+            Stub, to be implemented in subclass. This method is used
+            to get the results as a standalone page.
 
             @param r: the S3Request
             @param attr: dictionary of parameters for the method handler
 
-            @returns: output object to send to the view
+            @return: output object to send to the view
         """
 
         output = dict()
         return output
+
+    # -------------------------------------------------------------------------
+    def widget(self, r, method=None, widget_id=None, visible=True, **attr):
+        """
+            Stub, to be implemented in subclass. This method is used
+            by other method handlers to embed this method as widget.
+            
+            @note:
+            
+                For "html" format, the widget method must return an XML
+                component that can be embedded in a DIV. If a dict is
+                returned, it will be rendered against the view template
+                of the calling method - the view template selected by
+                the widget method will be ignored.
+
+                For other formats, the data returned by the widget method
+                will be rendered against the view template selected by
+                the widget method. If no view template is set, the data
+                will be returned as-is.
+
+                The widget must use the widget_id as HTML id for the element
+                providing the Ajax-update hook and this element must be
+                visible together with the widget.
+
+                The widget must include the widget_id as ?w=<widget_id> in
+                the URL query of the Ajax-update call, and Ajax-calls should
+                not use "html" format.
+
+                If visible==False, then the widget will initially be hidden,
+                so it can be rendered empty and Ajax-load its data layer
+                upon a separate refresh call. Otherwise, the widget should
+                receive its data layer immediately. Widgets can ignore this
+                parameter if delayed loading of the data layer is not
+                all([possible, useful, supported]).
+
+            @param r: the S3Request
+            @param method: the URL method
+            @param widget_id: the widget ID
+            @param visible: whether the widget is initially visible
+            @param attr: dictionary of parameters for the method handler
+
+            @return: output
+        """
+
+        return None
 
     # -------------------------------------------------------------------------
     # Utility functions
@@ -2127,7 +2257,8 @@ class S3Method(object):
             @param vars: the URL vars as dict
         """
 
-        return dict([(k, v) for k, v in vars.items() if "." not in k])
+        return Storage((k, v) for k, v in vars.iteritems()
+                              if not REGEX_FILTER.match(k))
 
     # -------------------------------------------------------------------------
     @staticmethod

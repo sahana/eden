@@ -1,0 +1,454 @@
+/* Override DRMP */
+#alert-space {
+    margin-top: 10px;
+}
+body {
+    padding-top: 60px;
+}
+
+/* Global CRUD Page Styles */
+/* Migrate to DRMP */
+h2 {
+    margin-bottom: 0;
+    /* breaks Login/Register */
+    /*float: left;*/
+}
+
+h2 a {
+    cursor: pointer;
+}
+
+h2 i {
+    font-size: 20px;
+}
+
+.required {
+    float: left;
+    clear: left;
+}
+
+.required b {
+    position: static;
+    margin-bottom: 5px;
+}
+
+#markDuplicate {
+    float: right;
+    margin-right: 5px;
+    clear: left;
+}
+
+#last_update {
+    clear: none;
+    margin-right: 5px;
+}
+
+.item-container,
+.form-container {
+    clear: both;
+}
+
+.item-container form,
+.form-container form {
+    border: 1px solid #B2B2B2;
+    clear: both;
+    margin: 0;
+}
+
+#edit-btn {
+    clear: left;
+    float: left;
+    /* bring inline with lastUpdated without removing the clear left which is needed for users without edit access */
+    margin-bottom: -16px;
+    /*margin: 5px 0 0 15px;*/
+    /*background: linear-gradient(to bottom, #3788B3 0%, #235482 100%) repeat scroll 0 0 rgba(0, 0, 0, 0);*/
+}
+
+.btn.cancel {
+    left: 625px;
+    position: relative;
+    top: -53px;
+}
+
+#org_facility_organisation_id__row .help-block div{
+    top: 0;
+    margin-bottom: 12px;
+}
+
+/* Main Map */
+.gis_fullscreen_map-btn {
+    display: none;
+}
+/* Hide the large legend for the Floods layer */
+.map_legend_div {
+    max-width: 400px;
+}
+
+/* Saved Maps */
+#config-gis_config_pe_id-options-filter__row .s3-groupedopts-widget td {
+    padding-right: 10px;
+}
+#config-gis_config_pe_id-options-filter__row .s3-groupedopts-widget td:last-child {
+    border-left: solid 1px;
+}
+
+/* Summary Page */
+h2.summary {
+    float: left;
+}
+
+.btn.summary-create {
+    /* background: linear-gradient(to bottom, #3788B3 0%, #235482 100%) repeat scroll 0 0 transparent;*/
+    margin: 15px;
+    padding: 4px 6px;
+    float: left;
+    /* Push above alert-space */
+    position: relative;
+    z-index: 1000;
+}
+
+.ui-tabs {
+    clear: left;
+}
+.ui-tabs .ui-tabs-nav li {
+    float: right;
+}
+.ui-tabs .ui-tabs-nav li a,
+.ui-tabs .ui-tabs-nav li.ui-tabs-active a {
+    border-color: #B2B2B2 #B2B2B2 white #B2B2B2
+}
+
+#summary-common { 
+    float: left;
+    margin-top: 10px;
+    width: 50%;
+    line-height: 18px;
+}
+
+#summary-sections {
+    background-color: white;
+    border: 1px solid #b2b2b2;
+    box-shadow: none;
+    border-radius: 5px;
+    box-shadow: none;
+    min-height: 200px;
+}
+#summary-sections .map_loader { 
+    margin-top: 125px;
+}
+
+#summary-tab-headers li {
+    z-index: 1000; /* Push above alert-space */
+}
+
+#summary-tabs .ui-tabs-nav {
+    border: none;
+    margin: 0 10px 0 0;
+}
+#summary-tabs.ui-widget-content {
+    width: 100%;
+    background: none;
+    float: left;
+    margin: -33px;
+    border: none;
+}
+#summary-tabs .x-panel-body {
+    border: none;
+}
+#summary-tabs #filter-form {
+    margin: 0 20px 0 50px;
+    position: absolute;
+    top: 45px;
+    width: auto;
+    z-index: 1;
+}
+
+#summary-tabs #table,
+#summary-tabs #charts {
+    padding: 92px 20px 20px 20px;
+}
+
+#table select {
+    width: auto;
+}
+
+/* Breaks list_formats (hidden on Contacts page, unclickable on Smmary page)
+.dataTables_wrapper {
+    clear: none;
+} */
+
+.dataTables_info {
+    margin: 8px 30px 4px 30px;
+}
+
+.list_formats {
+    padding-top: 8px;
+}
+
+#summary-tabs #table #table-container th,
+#summary-tabs #table #table-container tr td {
+    border-left: 1px solid #d9d8d8;
+}
+
+#summary-tabs #map {
+    border-radius: 5px;
+    margin: 0;
+}
+
+#summary-2_filter {
+    margin-left: 10px;
+}
+
+select {
+    width: 200px;
+}
+
+/* Hide Date Filter Clear Buttons */
+[id$=date-filter-ge_clear],
+[id$=date-filter-le_clear] {
+    display: none;
+}
+
+/* Hide the colons for Location Selectors before JS can hide */
+.form-container #org_facility_location_id__label,
+.form-container #project_activity_location_id__label,
+.form-container #stats_people_location_id__label,
+.form-container #vulnerability_evac_route_location_id__label,
+.form-container #vulnerability_risk_location_id__label {
+    display: none;
+}
+/* But show in Map Popups */
+#plain #org_facility_location_id__label {
+    display: block;
+}
+
+[id$=map_icon__row] div.controls{
+    float: left;
+}
+
+.form-horizontal div.geocode {
+    /* Same height as throbber */
+    height: 32px;
+    margin-left: 10px;
+}
+
+/* Filter Forms */
+#filter-form td {
+    border: none;
+}
+
+input.filter-search {
+    text-align: center;
+}
+
+input.btn.btn-primary.filter-submit {
+    width: 90%;
+    padding-right: 5px;
+    padding-left: 5px;
+}
+
+input.btn.btn-primary.filter-submit.filter-ajax {
+    margin-top: 15px;
+    margin-bottom: -15px;
+}
+
+button.ui-multiselect.ui-state-default.ui-corner-all {
+    display: inline-block;
+    *display: inline;
+    margin-bottom: 0;
+    *margin-left: .3em;
+    font-size: 12px;
+    padding: 2px 5px 2px 12px;
+    line-height: 20px;
+    color: #333333;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
+    vertical-align: middle;
+    cursor: pointer;
+    background-color: #f5f5f5;
+    *background-color: #e6e6e6;
+    background-image: -moz-linear-gradient(top, #ffffff, #e6e6e6);
+    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ffffff), to(#e6e6e6));
+    background-image: -webkit-linear-gradient(top, #ffffff, #e6e6e6);
+    background-image: -o-linear-gradient(top, #ffffff, #e6e6e6);
+    background-image: linear-gradient(to bottom, #ffffff, #e6e6e6);
+    background-repeat: repeat-x;
+    border: 1px solid #cccccc;
+    *border: 0;
+    border-color: #e6e6e6 #e6e6e6 #bfbfbf;
+    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+    border-bottom-color: #b3b3b3;
+    -webkit-border-radius: 4px;
+       -moz-border-radius: 4px;
+            border-radius: 4px;
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffffff', endColorstr='#ffe6e6e6', GradientType=0);
+    filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+    *zoom: 1;
+    -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+       -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+button.ui-multiselect.ui-state-default.ui-corner-all:hover {
+    color: #333333;
+    background: #e6e6e6;
+    *background: #d9d9d9;
+}
+
+button.ui-multiselect.ui-state-default.ui-corner-all {
+    margin-bottom: 10px;
+}
+
+/* Filter Form */
+form.filter-form,
+form#summary-filter-form
+ {
+    float: left;
+    background-color: rgba(255,255,255,0.8);
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+.horiz_filter_form {
+    float: left;
+    margin-right: 20px;
+}
+
+.horiz_filter_form .filter-controls,
+.horiz_filter_form .filter-submit {
+    margin: 30px 0 12px 0;
+}
+
+.horiz_filter_form div.filter-controls {
+    margin-right: 20px;
+}
+
+.horiz_filter_form.filter-manager-row {
+    margin: 23px 0 0 0;
+}
+
+.fm-accept {
+    background: url(../../img/filter/save.png) no-repeat scroll 0 0 transparent !important;
+}
+
+.ui-multiselect-all span,
+.ui-multiselect-none span,
+.filter-clear.action-lnk {
+    text-decoration: underline;
+    color: #0088CC;
+}
+
+/* Register screen */
+#auth_user_org_group_id {
+    margin-left: 10px;
+}
+
+/* Contacts Page */
+.form-container #pr_person_sub_human_resourcehuman_resource__label {
+    /* Hide the colon */
+    display: none;
+}
+
+/* Adjust Field Widths to match Titles/Data */
+#sub_human_resourcehuman_resource_human_resourcehuman_resource_i_organisation_id_edit_none,
+#sub_human_resourcehuman_resource_human_resourcehuman_resource_i_organisation_id_edit_0 {
+    width: 250px;
+}
+#sub_human_resourcehuman_resource_human_resourcehuman_resource_i_job_title_id_edit_none,
+#sub_human_resourcehuman_resource_human_resourcehuman_resource_i_job_title_id_edit_0,
+#sub_human_resourcehuman_resource_human_resourcehuman_resource_i_site_id_edit_none,
+#sub_human_resourcehuman_resource_human_resourcehuman_resource_i_site_id_edit_0 {
+    width: 120px;
+}
+#sub_phonecontact_phonecontact_i_value_edit_none,
+#sub_phonecontact_phonecontact_i_value_edit_0,
+#sub_emailcontact_emailcontact_i_value_edit_none,
+#sub_emailcontact_emailcontact_i_value_edit_0 {
+    width: 240px;
+}
+
+/* Organisations/Places Forms */
+#sub_defaulthuman_resource_defaulthuman_resource_i_person_id_edit_none,
+#sub_defaulthuman_resource_defaulthuman_resource_i_site_id_edit_none,
+#sub_defaultresource_defaultresource_i_value_edit_none {
+    margin-top: -20px;
+}
+
+#sub_defaultresource_defaultresource_i_value_edit_none {
+    width: 50px;
+}
+
+/* Action Toolbar */
+.action-bar.fleft {
+    color: #8a8989;
+    font-size: 14px;
+    position: relative;
+    top: 4px;
+    float: left;
+    margin-right: 8px;
+}
+
+/* Saved Filters Page - Inline Editor for Filter Titles */
+form.jeditable-input input {
+    max-width: 400px !important;
+}
+
+.pt-form legend {
+    font-size: 14px;
+    margin-bottom: 0;
+    border: 0 !important;
+}
+button.toggle-text {
+    font-size: 10px !important;
+    margin-left: 12px !important;
+}
+
+/* Map Borders*/
+div.map_save_button,
+div.map_save_panel,
+div.map_legend_tab,
+div.map_legend_panel,
+div.x-panel-body {
+    border: 1px solid #B2B2B2;
+}
+
+div.map_legend_tab {
+    border-right: none;
+    margin-right: -1px;
+}
+
+div.map_legend_panel {
+    margin-bottom: 30px;
+}
+
+/* Report */
+#charts .pt-form,
+#charts .pt-form fieldset {
+    border: none;
+    background-color: transparent;
+    margin-top: 0;
+    padding-top: 0;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.pt-chart-title {
+    text-align: center;
+    width: 100%;
+}
+
+.pt-chart-contents {
+    background-color: white;
+    border: 1px solid #b2b2b2;
+    border-radius: 5px;
+}
+
+#charts legend,
+.pt-fact-single-option,
+#charts tr td:nth-child(3),
+#summary-2-cols,
+.pt-show-totals-option,
+.pt-chart-controls,
+.pt-hide-chart,
+.pt-toggle-table {
+    display: none;
+}

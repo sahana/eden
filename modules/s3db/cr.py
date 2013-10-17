@@ -28,7 +28,8 @@
 """
 
 __all__ = ["S3CampDataModel",
-           "cr_shelter_rheader"]
+           "cr_shelter_rheader",
+           ]
 
 from gluon import *
 from gluon.storage import Storage
@@ -355,6 +356,48 @@ class S3CampDataModel(S3Model):
                           ),
                     ))
 
+        filter_widgets = [
+                S3TextFilter(["name",
+                              "code",
+                              "comments",
+                              "organisation_id$name",
+                              "organisation_id$acronym",
+                              "location_id$name",
+                              "location_id$L1",
+                              "location_id$L2",
+                              ],
+                             label=T("Name"),
+                             _class="filter-search",
+                             ),
+                S3OptionsFilter("shelter_type_id",
+                                label=T("Type"),
+                                represent="%(name)s",
+                                widget="multiselect",
+                                #cols=3,
+                                #hidden=True,
+                                ),
+                S3LocationFilter("location_id",
+                                 label=T("Location"),
+                                 levels=["L0", "L1", "L2"],
+                                 widget="multiselect",
+                                 #cols=3,
+                                 #hidden=True,
+                                 ),
+                S3OptionsFilter("status",
+                                label=T("Status"),
+                                options = cr_shelter_opts,
+                                #represent="%(name)s",
+                                widget="multiselect",
+                                #cols=3,
+                                #hidden=True,
+                                ),
+                S3RangeFilter("capacity_night",
+                              label=T("Capacity (Night)"),
+                              #represent="%(name)s",
+                              #hidden=True,
+                              ),
+                ]
+
         report_fields = ["name",
                          "shelter_type_id",
                          #"organisation_id",
@@ -367,8 +410,10 @@ class S3CampDataModel(S3Model):
 
         configure(tablename,
                   super_entity=("org_site", "doc_entity", "pr_pentity"),
+                  onaccept=self.cr_shelter_onaccept,
                   search_method=cr_shelter_search,
                   deduplicate = self.cr_shelter_duplicate,
+                  filter_widgets = filter_widgets,
                   report_options = Storage(
                         search=[
                           S3SearchOptionsWidget(
@@ -535,7 +580,9 @@ class S3CampDataModel(S3Model):
 
         # @ToDo: Update/Create a cr_shelter_status record
         # Status & Population
-        pass
+
+        # Update Affiliation, record ownership and component ownership
+        current.s3db.org_update_affiliations("cr_shelter", form.vars)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -667,7 +714,7 @@ def cr_shelter_rheader(r, tabs=[]):
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             if r.name == "shelter":
-                location = s3db.gis_location_represent(record.location_id)
+                location = r.table.location_id.represent(record.location_id)
 
                 rheader = DIV(TABLE(
                                     TR(

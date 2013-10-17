@@ -67,26 +67,28 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
 
-        <xsl:variable name="Layer" select="col[@field='Name']/text()"/>
+        <xsl:variable name="Symbology" select="col[@field='Symbology']/text()"/>
 
-        <resource name="gis_layer_symbology">
-            <reference field="layer_id" resource="gis_layer_georss">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$Layer"/>
-                </xsl:attribute>
-            </reference>
-            <reference field="symbology_id" resource="gis_symbology">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="col[@field='Symbology']"/>
-                </xsl:attribute>
-            </reference>
-            <reference field="marker_id" resource="gis_marker">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="col[@field='Marker']"/>
-                </xsl:attribute>
-            </reference>
-            <data field="gps_marker"><xsl:value-of select="col[@field='GPS Marker']"/></data>
-        </resource>
+        <xsl:if test="$Symbology!=''">
+            <resource name="gis_layer_symbology">
+                <reference field="layer_id" resource="gis_layer_georss">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="col[@field='Name']"/>
+                    </xsl:attribute>
+                </reference>
+                <reference field="symbology_id" resource="gis_symbology">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$Symbology"/>
+                    </xsl:attribute>
+                </reference>
+                <reference field="marker_id" resource="gis_marker">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="col[@field='Marker']"/>
+                    </xsl:attribute>
+                </reference>
+                <data field="gps_marker"><xsl:value-of select="col[@field='GPS Marker']"/></data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -95,12 +97,14 @@
 
         <xsl:variable name="Config" select="col[@field='Config']/text()"/>
     
-        <resource name="gis_config">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$Config"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$Config"/></data>
-        </resource>
+        <xsl:if test="$Config!=''">
+            <resource name="gis_config">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$Config"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$Config"/></data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -153,12 +157,14 @@
 
         <xsl:variable name="Marker" select="col[@field='Marker']/text()"/>
     
-        <resource name="gis_marker">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$Marker"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$Marker"/></data>
-        </resource>
+        <xsl:if test="$Marker!=''">
+            <resource name="gis_marker">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$Marker"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$Marker"/></data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -167,12 +173,14 @@
 
         <xsl:variable name="Symbology" select="col[@field='Symbology']/text()"/>
     
-        <resource name="gis_symbology">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$Symbology"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$Symbology"/></data>
-        </resource>
+        <xsl:if test="$Symbology!=''">
+            <resource name="gis_symbology">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$Symbology"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$Symbology"/></data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->

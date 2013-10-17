@@ -1,16 +1,17 @@
 /* JS code to modify req/create forms
    - inserted into page in req_create_form_mods()
 */
-function idescape(input) {
-    // Create a valid ID
-    var output = input.replace(/ /g, 'SPACE')
-                      .replace(/&/g, 'AMP');
-    return output;
-}
 
 $(document).ready(function() {
     
     var span = '<span class="req"> *</span>';
+
+    function idescape(input) {
+        // Create a valid ID
+        var output = input.replace(/ /g, 'SPACE')
+                          .replace(/&/g, 'AMP');
+        return output;
+    }
 
     function type_9() {
         // Other

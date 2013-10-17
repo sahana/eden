@@ -77,7 +77,7 @@ class S3Exporter(object):
             response.headers["Content-Type"] = contenttype(".csv")
             response.headers["Content-disposition"] = "attachment; filename=%s" % filename
 
-        rows = resource._load()
+        rows = resource.select(None, as_rows=True)
         return str(rows)
 
     # -------------------------------------------------------------------------
@@ -89,30 +89,23 @@ class S3Exporter(object):
         """
             Export a resource as JSON
 
-            @note: export does not include components!
-
-            @ToDo: Deprecate (after modifying s3search json functions)
-
-            @param resource: the resource to export
-            @param start: index of the first record to export (for slicing)
-            @param limit: maximum number of records to export (for slicing)
-            @param fields: fields to include in the export (None for all fields)
+            @param resource: the resource to export from
+            @param start: index of the first record to export
+            @param limit: maximum number of records to export
+            @param fields: list of field selectors for fields to include in
+                           the export (None for all fields)
+            @param orderby: ORDERBY expression
         """
 
         if fields is None:
-            fields = [f for f in resource.table if f.readable]
-
-        attributes = dict()
-
-        if orderby is not None:
-            attributes["orderby"] = orderby
-
-        limitby = resource.limitby(start=start, limit=limit)
-        if limitby is not None:
-            attributes["limitby"] = limitby
+            fields = [f.name for f in resource.table if f.readable]
 
         # Get the rows and return as json
-        rows = resource._load(*fields, **attributes)
+        rows = resource.select(fields,
+                               start=start,
+                               limit=limit,
+                               orderby=orderby,
+                               as_rows=True)
 
         response = current.response
         if response:
@@ -130,6 +123,12 @@ class S3Exporter(object):
     def shp(self, *args, **kwargs):
 
         codec = S3Codec.get_codec("shp").encode
+        return codec(*args, **kwargs)
+
+    # -------------------------------------------------------------------------
+    def svg(self, *args, **kwargs):
+
+        codec = S3Codec.get_codec("svg").encode
         return codec(*args, **kwargs)
 
     # -------------------------------------------------------------------------

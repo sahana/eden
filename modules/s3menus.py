@@ -151,6 +151,39 @@ class S3MainMenu(object):
             MM("Contact us", f="contact"),
             MM("About", f="about")
         )
+
+        # -------------------------------------------------------------------
+        # Now add the available guided tours to the help menu
+
+        # check that a guided_tour is enabled
+        if current.deployment_settings.get_base_guided_tour():
+            # load the guided tour configuration from the database
+            table = current.s3db.tour_config
+            logged_in = current.auth.is_logged_in()
+            if logged_in:
+                query = (table.deleted == False) &\
+                        (table.role != "")
+            else:
+                query = (table.deleted == False) &\
+                        (table.role == "")
+            tours = current.db(query).select(table.id,
+                                             table.name,
+                                             table.controller,
+                                             table.function,
+                                             table.role,
+                                             )
+            if len(tours) > 0:
+                menu_help.append(SEP())
+            for row in tours:
+                menu_help.append(MM(row.name,
+                                    c=row.controller,
+                                    f=row.function,
+                                    vars={"tour":row.id},
+                                    restrict=row.role
+                                    )
+                                 )
+        # -------------------------------------------------------------------
+
         return menu_help
 
     # -------------------------------------------------------------------------
@@ -551,6 +584,30 @@ class S3OptionsMenu(object):
                 )
 
     # -------------------------------------------------------------------------
+    def cap(self):
+        """ CAP menu """
+
+        T = current.T
+
+        session = current.session
+        ADMIN = session.s3.system_roles.ADMIN
+
+        return M(c="cap")(
+                    M("Alerts", f="alert", vars={'alert.is_template': 'false'})(
+                        M("List alerts", f="alert", vars={'alert.is_template': 'false'}),
+                        M("Create alert", f="alert", m="create"),
+                        M("Search & Subscribe", m="search"),
+                    ),
+                    M("Templates", f="template", vars={'alert.is_template': 'true'})(
+                        M("List templates", f="template", vars={'alert.is_template': 'true'}),
+                        M("Create template", f="template", m="create"),
+                    ),
+                    #M("CAP Profile", f="profile")(
+                    #    M("Edit profile", f="profile")
+                    #)
+                )
+
+    # -------------------------------------------------------------------------
     def climate(self):
         """ CLIMATE Controller """
 
@@ -627,6 +684,15 @@ class S3OptionsMenu(object):
                         #M("Problems", f="problem"),
                     #)
                 )
+
+    # -------------------------------------------------------------------------
+    def deploy(self):
+        """ Deployments """
+
+        return M()(
+            M("Human Resources",
+              c="deploy", f="human_resource", m="summary"),
+              )
 
     # -------------------------------------------------------------------------
     def doc(self):
@@ -831,7 +897,6 @@ class S3OptionsMenu(object):
                         M("Add Location", m="create"),
                         #M("Add Location Group", m="create", vars={"group": 1}),
                         M("List All"),
-                        M("Search", m="search"),
                         M("Import from CSV", m="import", restrict=[MAP_ADMIN]),
                         M("Import from OpenStreetMap", m="import_poi",
                           restrict=[MAP_ADMIN]),
@@ -890,8 +955,9 @@ class S3OptionsMenu(object):
         is_org_admin = lambda i: s3.hrm.orgs and True or \
                                  ADMIN in s3.roles
         settings = current.deployment_settings
-        job_roles = lambda i: settings.get_hrm_job_roles()
-        use_teams = lambda i: settings.get_hrm_use_teams()
+        teams = settings.get_hrm_teams()
+        use_teams = lambda i: teams
+        vol_enabled = lambda i: settings.has_module("vol")
 
         return M(c="hrm")(
                     M(settings.get_hrm_staff_label(), f="staff",
@@ -903,7 +969,10 @@ class S3OptionsMenu(object):
                         M("Import", f="person", m="import",
                           vars={"group":"staff"}, p="create"),
                     ),
-                    M("Teams", f="group",
+                    M("Staff & Volunteers (Combined)",
+                      c="hrm", f="human_resource", m="summary",
+                      check=[manager_mode, vol_enabled]),
+                    M(teams, f="group",
                       check=[manager_mode, use_teams])(
                         M("New", m="create"),
                         M("List All"),
@@ -912,11 +981,6 @@ class S3OptionsMenu(object):
                     ),
                     M("Department Catalog", f="department",
                       check=manager_mode)(
-                        M("New", m="create"),
-                        M("List All"),
-                    ),
-                    M("Job Role Catalog", f="job_role",
-                      check=[manager_mode, job_roles])(
                         M("New", m="create"),
                         M("List All"),
                     ),
@@ -984,16 +1048,12 @@ class S3OptionsMenu(object):
                                  ADMIN in s3.roles
 
         settings = current.deployment_settings
-        job_roles = lambda i: settings.get_hrm_job_roles()
         show_programmes = lambda i: settings.get_hrm_vol_experience() == "programme"
         show_tasks = lambda i: settings.has_module("project") and \
                                settings.get_project_mode_task()
-        use_teams = lambda i: settings.get_hrm_use_teams()
-
-        if job_roles(""):
-            jt_catalog_label = "Job Title Catalog"
-        else:
-            jt_catalog_label = "Volunteer Role Catalog"
+        teams = settings.get_hrm_teams()
+        use_teams = lambda i: teams
+        show_staff = lambda i: settings.get_hrm_show_staff()
 
         return M(c="vol")(
                     M("Volunteers", f="volunteer",
@@ -1005,7 +1065,10 @@ class S3OptionsMenu(object):
                         M("Import", f="person", m="import",
                           vars={"group":"volunteer"}, p="create"),
                     ),
-                    M("Teams", f="group",
+                    M("Staff & Volunteers (Combined)",
+                      c="vol", f="human_resource", m="summary",
+                      check=[manager_mode, show_staff]),
+                    M(teams, f="group",
                       check=[manager_mode, use_teams])(
                         M("New", m="create"),
                         M("List All"),
@@ -1017,12 +1080,7 @@ class S3OptionsMenu(object):
                         M("New", m="create"),
                         M("List All"),
                     ),
-                    M("Job Role Catalog", f="job_role",
-                      check=[manager_mode, job_roles])(
-                        M("New", m="create"),
-                        M("List All"),
-                    ),
-                    M(jt_catalog_label, f="job_title",
+                    M("Volunteer Role Catalog", f="job_title",
                       check=manager_mode)(
                         M("New", m="create"),
                         M("List All"),
@@ -1063,6 +1121,16 @@ class S3OptionsMenu(object):
                     M("Reports", f="volunteer", m="report",
                       check=manager_mode)(
                         M("Volunteer Report", m="report"),
+                        M("Hours by Role Report", f="programme_hours", m="report2",
+                          vars=Storage(rows="job_title_id",
+                                       cols="month",
+                                       fact="sum(hours)"),
+                          check=show_programmes),
+                        M("Hours by Programme Report", f="programme_hours", m="report2",
+                          vars=Storage(rows="programme_id",
+                                       cols="month",
+                                       fact="sum(hours)"),
+                          check=show_programmes),
                         M("Training Report", f="training", m="report"),
                     ),
                     M("My Profile", f="person",
@@ -1220,30 +1288,6 @@ class S3OptionsMenu(object):
                 )
 
     # -------------------------------------------------------------------------
-    def cap(self):
-        """ CAP menu """
-
-        T = current.T
-
-        session = current.session
-        ADMIN = session.s3.system_roles.ADMIN
-
-        return M(c="cap")(
-                    M("Alerts", f="alert", vars={'alert.is_template': 'false'})(
-                        M("List alerts", f="alert", vars={'alert.is_template': 'false'}),
-                        M("Create alert", f="alert", m="create"),
-                        M("Search & Subscribe", m="search"),
-                    ),
-                    M("Templates", f="template", vars={'alert.is_template': 'true'})(
-                        M("List templates", f="template", vars={'alert.is_template': 'true'}),
-                        M("Create template", f="template", m="create"),
-                    ),
-                    #M("CAP Profile", f="profile")(
-                    #    M("Edit profile", f="profile")
-                    #)
-                )
-
-    # -------------------------------------------------------------------------
     def security(self):
         """ Security Management System """
 
@@ -1346,7 +1390,7 @@ class S3OptionsMenu(object):
                         M("Add Disaster Assessments", m="create"),
                         M("List All"),
                     ),
-                    M("Administration", f="complete", restrict=[ADMIN])(
+                    M("Administration", f="admin", restrict=[ADMIN])(
                         #M("New", m="create"),
                         #M("List All"),
                         M("Import Templates", f="question_list",
@@ -1409,22 +1453,28 @@ class S3OptionsMenu(object):
 
         return M(c="msg")(
                     M("Compose", f="compose"),
+                    M("InBox", f="inbox")(
+                        M("Email", f="email_inbox"),
+                        M("RSS", f="rss_inbox"),
+                        M("Twilio SMS", f="twilio_inbox"),
+                        M("Twitter", f="twitter_inbox"),
+                    ),
+                    M("Outbox", f="outbox")(
+                       M("Email", f="email_outbox"),
+                       M("SMS", f="sms_outbox"),
+                       M("Twitter", f="twitter_outbox"),
+                    ),
+                    M("Message Log", f="message"),
                     M("Distribution groups", f="group")(
                         M("List/Add", f="group"),
                         M("Group Memberships", f="group_membership"),
                     ),
-                    M("InBox", f="inbox"),
-                    M("Email InBox", f="email_inbox"),
-                    M("Twilio SMS InBox", f="twilio_inbox"),
-                    M("Log", f="log"),
-                    M("Outbox", f="outbox"),
-                    M("Search Twitter Tags", f="twitter_search")(
-                       M("Keywords", f="keyword"),
-                       M("Senders", f="sender"),
-                       M("Queries", f="twitter_search"),
-                       M("Results", f="twitter_search_results")
+                    M("Twitter Search", f="twitter_result")(
+                       M("Twitter Settings", f="twitter_search_channel"),
+                       M("Twitter Queries", f="twitter_search_query"),
+                       M("Results", f="twitter_result"),
+                       # @ToDo KeyGraph Results
                     ),
-                    M("CAP", translate=False, f="tbc"),
                     M("Administration", restrict=[ADMIN])(settings_messaging)
                 )
 
@@ -1531,8 +1581,6 @@ class S3OptionsMenu(object):
     def project(self):
         """ PROJECT / Project Tracking & Management """
 
-        ADMIN = current.session.s3.system_roles.ADMIN
-
         settings = current.deployment_settings
         #activities = settings.get_project_activities()
         community = settings.get_project_community()
@@ -1578,7 +1626,7 @@ class S3OptionsMenu(object):
                     M("Beneficiaries", f="beneficiary", m="report",
                       check = stats,
                       ),
-                    M("Funding", f="organisation", args="report"),
+                    M("Funding", f="organisation", m="report"),
                  ),
                  M("Import", f="project", m="import", p="create")(
                     M("Import Projects", m="import", p="create"),
@@ -1638,11 +1686,11 @@ class S3OptionsMenu(object):
                  ),
                  M("Tasks", f="task")(
                     M("New", m="create"),
-                    #M("List All Tasks"),
-                    M("Search", m="search"),
+                    M("Search"),
                  ),
                 )
             if current.auth.s3_has_role("STAFF"):
+                ADMIN = current.session.s3.system_roles.ADMIN
                 menu(
                      M("Daily Work", f="time")(
                         M("My Logged Hours", vars={"mine":1}),
@@ -1653,20 +1701,18 @@ class S3OptionsMenu(object):
                         M("Import Tasks", f="task", m="import", p="create"),
                      ),
                      M("Reports", f="report")(
-                        M("Activity Report", f="activity", m="report"),
-                        M("Last Week's Work", f="time", m="report",
+                        M("Activity Report", f="activity", m="report2"),
+                        M("Last Week's Work", f="time", m="report2",
                           vars=Storage(rows="person_id",
                                        cols="day",
-                                       fact="hours",
-                                       aggregate="sum",
+                                       fact="sum(hours)",
                                        week=1)),
-                        M("Last Month's Work", f="time", m="report",
+                        M("Last Month's Work", f="time", m="report2",
                           vars=Storage(rows="person_id",
                                        cols="week",
-                                       fact="hours",
-                                       aggregate="sum",
+                                       fact="sum(hours)",
                                        month=1)),
-                        M("Project Time Report", f="time", m="report"),
+                        M("Project Time Report", f="time", m="report2"),
                      ),
                     )
         else:
@@ -1760,6 +1806,22 @@ class S3OptionsMenu(object):
         return self.admin()
 
     # -------------------------------------------------------------------------
+    def tour(self):
+        """ Guided Tour """
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+
+        return M(c="tour")(
+                    M("Configuration", f="config", restrict=[ADMIN])(
+                        M("List All"),
+                        M("Import", m="import", restrict=[ADMIN]),
+                        ),
+                    M("Detail", f="details", restrict=[ADMIN]),
+                    M("User", f="user", restrict=[ADMIN]),
+                )
+
+
+    # -------------------------------------------------------------------------
     def transport(self):
         """ TRANSPORT """
 
@@ -1832,6 +1894,7 @@ class S3OptionsMenu(object):
         return [
             M("Email Settings", c="msg", f="email_inbound_channel"),
             M("Parsing Settings", c="msg", f="workflow"),
+            M("RSS Settings", c="msg", f="rss_channel"),
             M("SMS Gateway Settings", c="msg", f="sms_outbound_gateway",
                 args=[1], m="update"),
             M("Mobile Commons SMS Settings", c="msg", f="mcommons_channel"),

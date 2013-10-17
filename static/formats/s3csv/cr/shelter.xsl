@@ -31,11 +31,33 @@
 
     <xsl:param name="mode"/>
 
+    <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
     <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
     <xsl:key name="branch" match="row"
              use="concat(col[@field='Organisation'], '/', col[@field='Branch'])"/>
     <xsl:key name="type" match="row" use="col[@field='Type']"/>
+
+    <!-- ****************************************************************** -->
+    <!-- Lookup column names -->
+
+    <xsl:variable name="Lat">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">Lat</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:variable name="Lon">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">Lon</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:variable name="Postcode">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">Postcode</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -79,6 +101,12 @@
         <xsl:variable name="BranchName" select="col[@field='Branch']/text()"/>
         <xsl:variable name="Type" select="col[@field='Type']/text()"/>
         <xsl:variable name="Status" select="col[@field='Status']/text()"/>
+
+        <xsl:variable name="postcode">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$Postcode"/>
+            </xsl:call-template>
+        </xsl:variable>
 
         <resource name="cr_shelter">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
@@ -124,7 +152,7 @@
                 <xsl:value-of select="col[@field='Address']"/>
             </data>
             <data field="postcode">
-                <xsl:value-of select="col[@field='Postcode']"/>
+                <xsl:value-of select="$postcode"/>
             </data>
             <data field="L0">
                 <xsl:value-of select="col[@field='Country']"/>
@@ -303,6 +331,21 @@
         <xsl:variable name="l3id" select="concat('Location L3: ', $l3)"/>
         <xsl:variable name="l4id" select="concat('Location L4: ', $l4)"/>
         <xsl:variable name="l5id" select="concat('Location: ', $Address)"/>
+        <xsl:variable name="lat">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$Lat"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="lon">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$Lon"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="postcode">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$Postcode"/>
+            </xsl:call-template>
+        </xsl:variable>
 
         <!-- Country Code = UUID of the L0 Location -->
         <xsl:variable name="countrycode">
@@ -489,9 +532,9 @@
                 </xsl:choose>
                 <data field="name"><xsl:value-of select="$Address"/></data>
                 <data field="addr_street"><xsl:value-of select="$Address"/></data>
-                <data field="addr_postcode"><xsl:value-of select="col[@field='Postcode']"/></data>
-                <data field="lat"><xsl:value-of select="col[@field='Lat']"/></data>
-                <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
+                <data field="addr_postcode"><xsl:value-of select="$postcode"/></data>
+                <data field="lat"><xsl:value-of select="$lat"/></data>
+                <data field="lon"><xsl:value-of select="$lon"/></data>
             </resource>
         </xsl:if>
 

@@ -1,0 +1,28 @@
+{{try:}}{{=H2(A(title_list,
+                _href = URL(args="summary")),
+              " ",
+              I(_class="icon-chevron-right"),
+              " ",
+              T("Details")
+              )}}{{except:}}{{pass}}
+<div id='rheader'>
+{{try:}}{{=rheader}}
+</div>
+<div id='component'>
+{{except:}}
+</div>
+<div>
+{{pass}}
+ {{try:}}{{=H3(subtitle)}}{{except:}}{{pass}}
+ {{try:}}{{=buttons["edit_btn"]}}{{except:}}{{pass}}
+ {{try:}}{{=deduplicate}}{{except:}}{{pass}}
+ {{include "last_update.html"}}
+ {{try:}}{{include}}
+ {{except:}}{{pass}}
+ <div id='map'></div>
+ <div class='item-container'>
+  {{try:}}{{=item}}{{except:}}{{pass}}
+ </div>
+ {{try:}}{{=buttons["delete_btn"]}}{{except:}}{{pass}}
+</div>
+{{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}

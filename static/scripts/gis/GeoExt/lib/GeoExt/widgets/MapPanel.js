@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2008-2011 The Open Source Geospatial Foundation
+ * Copyright (c) 2008-2012 The Open Source Geospatial Foundation
  * 
  * Published under the BSD license.
  * See http://svn.geoext.org/core/trunk/geoext/license.txt for the full text
@@ -127,7 +127,7 @@ GeoExt.MapPanel = Ext.extend(Ext.Panel, {
     initComponent: function(){
         if(!(this.map instanceof OpenLayers.Map)) {
             this.map = new OpenLayers.Map(
-                Ext.applyIf(this.map || {}, {allOverlays: true})
+                Ext.applyIf(this.map || {}, {allOverlays: true, fallThrough: true})
             );
         }
         var layers = this.layers;
@@ -194,6 +194,17 @@ GeoExt.MapPanel = Ext.extend(Ext.Panel, {
             "removelayer": this.onRemovelayer,
             scope: this
         });
+        //TODO This should be handled by a LayoutManager
+        this.on("afterlayout", function() {
+            //TODO remove function check when we require OpenLayers > 2.11
+            if (typeof this.map.getViewport === "function") {
+                this.items.each(function(cmp) {
+                    if (typeof cmp.addToMapPanel === "function") {
+                        cmp.getEl().appendTo(this.map.getViewport());
+                    }
+                }, this);
+            }
+        }, this);
     },
 
     /** private: method[onMoveend]

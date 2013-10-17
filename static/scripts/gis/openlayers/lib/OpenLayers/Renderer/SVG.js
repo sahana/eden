@@ -348,6 +348,8 @@ OpenLayers.Renderer.SVG = OpenLayers.Class(OpenLayers.Renderer.Elements, {
         }
         
         if (options.isFilled) {
+            // @ToDo: Extra option so that we don't default sloppy KML Icons in Styles as Fill
+            // => act like GoogleEarth does
             if (style.externalGraphic) {
 				var pid = this.createImagePattern(style);
 				node.setAttributeNS(null, "fill", "url(#" + pid + ")");
@@ -730,6 +732,9 @@ OpenLayers.Renderer.SVG = OpenLayers.Class(OpenLayers.Renderer.Elements, {
             outlineStyle.fontColor = outlineStyle.labelOutlineColor;
             outlineStyle.fontStrokeColor = outlineStyle.labelOutlineColor;
             outlineStyle.fontStrokeWidth = style.labelOutlineWidth;
+            if (style.labelOutlineOpacity) {
+                outlineStyle.fontOpacity = style.labelOutlineOpacity;
+            }
             delete outlineStyle.labelOutlineWidth;
             this.drawText(featureId, outlineStyle, location);
         }

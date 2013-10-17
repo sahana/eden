@@ -1,3 +1,4 @@
+from sys import version_info
 import re
 import logging
 import htmlentitydefs
@@ -15,7 +16,8 @@ class NullHandler(logging.Handler):
     def emit(self, record):
         pass
 
-NULL_HANDLER = NullHandler()
+logger = logging.getLogger('geopy')
+logger.addHandler(NullHandler())
 
 def pairwise(seq):
     for i in range(0, len(seq) - 1):
@@ -25,11 +27,13 @@ def join_filter(sep, seq, pred=bool):
     return sep.join([unicode(i) for i in seq if pred(i)])
  
 def get_encoding(page, contents=None):
-    plist = page.headers.getplist()
-    if plist:
-        key, value = plist[-1].split('=')
-        if key.lower() == 'charset':
-            return value
+    # TODO: clean up Py3k support
+    if version_info < (3, 0):
+        charset = page.headers.getparam("charset") or None
+    else:
+        charset = page.headers.get_param("charset") or None
+    if charset:
+        return charset
 
     if contents:
         try:
@@ -39,8 +43,13 @@ def get_encoding(page, contents=None):
 
 def decode_page(page):
     contents = page.read()
-    encoding = get_encoding(page, contents) or sys.getdefaultencoding()
-    return unicode(contents, encoding=encoding).encode('utf-8')
+    # HTTP 1.1 defines iso-8859-1 as the 'implied' encoding if none is given
+    encoding = get_encoding(page, contents) or 'iso-8859-1'
+    # TODO: clean up Py3k support
+    if version_info < (3, 0):
+        return unicode(contents, encoding=encoding).encode('utf-8')
+    else:
+        return str(contents, encoding=encoding)
 
 def get_first_text(node, tag_names, strip=None):
     if isinstance(tag_names, basestring):

@@ -70,37 +70,34 @@ class S3SHP(S3Codec):
 
         title = self.crud_string(resource.tablename, "title_list")
 
-        rfields = resource.resolve_selectors(list_fields)[0]
+        get_vars = Storage(current.request.get_vars)
+        get_vars["iColumns"] = len(list_fields)
+        query, orderby, left = resource.datatable_filter(list_fields, get_vars)
+        resource.add_filter(query)
 
+        data = resource.select(list_fields,
+                               left=left,
+                               limit=None,
+                               orderby=orderby,
+                               represent=True,
+                               show_links=False)
+
+        rfields = data["rfields"]
         types = []
-        lfields = []
+        colnames = []
         heading = {}
         for rfield in rfields:
             if rfield.show:
-                lfields.append(rfield.colname)
+                colnames.append(rfield.colname)
                 heading[rfield.colname] = rfield.label
-                if rfield.ftype == "virtual":
+                if rfield.virtual:
                     types.append("string")
                 else:
                     types.append(rfield.ftype)
 
-        vars = Storage(current.request.vars)
-        vars["iColumns"] = len(rfields)
-        filter, orderby, left = resource.datatable_filter(list_fields, vars)
-        resource.add_filter(filter)
+        items = data["rows"]
 
-        rows, count, ids = resource.select(list_fields,
-                                           left=left,
-                                           start=None,
-                                           limit=None,
-                                           count=True,
-                                           getids=True,
-                                           orderby=orderby)
-
-        items = resource.extract(rows, list_fields,
-                                 represent=True, show_links=False)
-
-        return (title, types, lfields, heading, items)
+        return (title, types, colnames, heading, items)
 
     # -------------------------------------------------------------------------
     def encode(self, data_source, **attr):
@@ -204,7 +201,7 @@ class S3SHP(S3Codec):
         # Zip up
         import zipfile
         request = current.request
-        filename = "%s_%s.zip" % (current.request.env.server_name, str(title))
+        filename = "%s_%s.zip" % (request.env.server_name, str(title))
         fzip = zipfile.ZipFile(filename, "w")
         for item in ["point", "line", "polygon"]:
             for exten in ["shp", "shx", "prj", "dbf"]:
@@ -224,5 +221,90 @@ class S3SHP(S3Codec):
         stream = open(os.path.join(TEMP, filename))
         return response.stream(stream, chunk_size=DEFAULT_CHUNK_SIZE,
                                request=request)
+
+    # -------------------------------------------------------------------------
+    def decode(self, resource, source, **attr):
+        """
+            Import data from a Shapefile
+
+            @param resource: the S3Resource
+            @param source: the source
+
+            @return: an S3XML ElementTree
+
+            @ToDo: Handle encodings within Shapefiles other than UTF-8
+        """
+
+        # @ToDo: Complete this!
+        # Sample code coming from this working script:
+        # http://eden.sahanafoundation.org/wiki/BluePrint/GIS/ShapefileLayers#ImportintonativeTables
+        # We also have sample code to read SHP from GDAL in:
+        # gis_layer_shapefile_onaccept() & import_admin_areas() [GADM]
+        raise NotImplementedError
+
+        try:
+            from lxml import etree
+        except ImportError:
+            import sys
+            print >> sys.stderr, "ERROR: lxml module needed for XML handling"
+            raise
+
+        try:
+            from osgeo import ogr
+        except ImportError:
+            import sys
+            print >> sys.stderr, "ERROR: GDAL module needed for Shapefile handling"
+            raise
+
+        # @ToDo: Check how this would happen
+        shapefilename = source
+
+        layername = os.path.splitext(os.path.basename(shapefilename))[0]
+
+        # Create the datasource
+        ds = ogr.Open(shapefilename)
+
+        # Open the shapefile
+        if ds is None:
+            # @ToDo: Bail gracefully
+            raise
+
+        # Get the layer and iterate through the features
+        lyr = ds.GetLayer(0)
+
+        root = etree.Element("shapefile", name=layername)
+
+        OFTInteger = ogr.OFTInteger
+        OFTReal = ogr.OFTReal
+        OFTString = ogr.OFTString
+        for feat in lyr:
+            featurenode = etree.SubElement(root, "feature")
+            feat_defn = lyr.GetLayerDefn()
+            GetFieldDefn = feat_defn.GetFieldDefn
+            for i in range(feat_defn.GetFieldCount()):
+                field_defn = GetFieldDefn(i)
+                fieldnode = etree.SubElement(featurenode, field_defn.GetName())
+                if field_defn.GetType() == OFTInteger:
+                    fieldnode.text = str(feat.GetFieldAsInteger(i))
+                elif field_defn.GetType() == OFTReal:
+                    fieldnode.text = str(feat.GetFieldAsDouble(i))
+                elif field_defn.GetType() == OFTString:
+                    FieldString = str(feat.GetFieldAsString(i))
+                    # @ToDo: Don't assume UTF-8
+                    fieldnode.text = FieldString.decode(encoding="UTF-8",
+                                                        errors="strict")
+
+            wktnode = etree.SubElement(featurenode, "wkt")
+            geom = feat.GetGeometryRef()	
+            wktnode.text = geom.ExportToWkt()    
+
+        # @ToDo: Convert using XSLT
+
+        # Debug: Write out the etree
+        #xmlString = etree.tostring(root, pretty_print=True)
+        #f = open("test.xml","w")
+        #f.write(xmlString)
+
+        return root
 
 # End =========================================================================

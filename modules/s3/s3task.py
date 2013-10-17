@@ -6,6 +6,7 @@
     Worker nodes won't run on Win32 yet.
 
     To run a worker node: python web2py.py -K eden
+    or use UWSGI's 'Mule'
 
     NB
         Need WEB2PY_PATH environment variable to be defined (e.g. /etc/profile)
@@ -108,16 +109,11 @@ class S3Task(object):
         tablename = self.TASK_TABLENAME
         table = current.db[tablename]
 
-        field = table.uuid
-        field.readable = False
-        field.writable = False
+        table.uuid.readable = table.uuid.writable = False
 
-        field = table.sync_output
-        field.readable = False
-        field.writable = False
+        table.sync_output.readable = table.sync_output.writable = False
 
-        field = table.times_failed
-        field.readable = False
+        table.times_failed.readable = False
 
         field = table.start_time
         field.represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
@@ -212,12 +208,12 @@ class S3Task(object):
                 title_display = T("Scheduled Jobs"),
                 title_list = T("Job Schedule"),
                 title_update = T("Edit Job"),
-                title_search = T("Search for Job"),
+                #title_search = T("Search for Job"),
                 subtitle_create = T("Add Job"),
                 label_list_button = T("List Jobs"),
                 label_create_button = T("Add Job"),
                 msg_record_created = T("Job added"),
-                msg_record_modified = T("Job updated updated"),
+                msg_record_modified = T("Job updated"),
                 msg_record_deleted = T("Job deleted"),
                 msg_list_empty = T("No jobs configured yet"),
                 msg_no_match = T("No jobs configured"))
@@ -254,16 +250,19 @@ class S3Task(object):
             for arg in args:
                 if isinstance(arg, (int, long, float)):
                     _args.append(str(arg))
-                elif isinstance(arg, str):
+                elif isinstance(arg, basestring):
                     _args.append("%s" % str(json.dumps(arg)))
                 else:
                     raise HTTP(501, "Unhandled arg type")
-            args = " ,".join(_args)
-            _vars = ""
-            for var in vars:
-                _vars += ", %s=%s" % (str(var),
-                                      str(vars[var]))
-            statement = "tasks['%s'](%s%s)" % (task, args, _vars)
+            args = ",".join(_args)
+            _vars = ",".join(["%s=%s" % (str(var),
+                                         str(vars[var])) for var in vars])
+            if args:
+                statement = "tasks['%s'](%s,%s)" % (task, args, _vars)
+            else:
+                statement = "tasks['%s'](%s)" % (task, _vars)
+            # Handle JSON
+            null = None
             exec(statement)
             return None
 

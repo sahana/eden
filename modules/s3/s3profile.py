@@ -44,8 +44,9 @@ class S3Profile(S3CRUD):
         Configure widgets using s3db.configure(tablename, profile_widgets=[])
 
         @ToDo: Make more configurable:
-               * Currently assumes a max of 2 widgets per row
-               * Currently uses Bootstrap classes
+           * Currently assumes a max of 2 widgets per row
+           * Currently uses Bootstrap classes
+           * Currently uses internal widgets rather than S3Method widgets
     """
 
     # -------------------------------------------------------------------------
@@ -77,12 +78,26 @@ class S3Profile(S3CRUD):
         """
 
         tablename = self.tablename
+        get_config = current.s3db.get_config
 
-        # Initialise Output
-        output = dict()
+        # Page Title
+        title = get_config(tablename, "profile_title")
+        if not title:
+            try:
+                title = r.record.name
+            except:
+                title = current.T("Profile Page")
+
+        # Page Header
+        header = get_config(tablename, "profile_header")
+        if not header:
+            header = H2(title, _class="profile_header")
+
+        output = dict(title=title,
+                      header=header)
 
         # Get the page widgets
-        widgets = current.s3db.get_config(tablename, "profile_widgets")
+        widgets = get_config(tablename, "profile_widgets")
 
         # Index the widgets by their position in the config
         for index, widget in enumerate(widgets):
@@ -98,6 +113,7 @@ class S3Profile(S3CRUD):
                 except ValueError:
                     datalist = ""
                 else:
+                    # @ToDo: Check permissions to the Resource & do something different if no permission
                     datalist = self._datalist(r, widgets[index], **attr)
             output["item"] = datalist
         else:
@@ -136,13 +152,41 @@ class S3Profile(S3CRUD):
                 r.error(405, r.ERROR.BAD_METHOD)
 
             output["rows"] = rows
-            try:
-                output["title"] = r.record.name
-            except:
-                output["title"] = current.T("Profile Page")
+
             current.response.view = self._view(r, "profile.html")
 
         return output
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _resolve_context(context, id):
+        """
+            Resolve a context filter
+
+            @param context: the context (as a string)
+            @param id: the record_id
+        """
+
+        if context == "location":
+            # Show records linked to this Location & all it's Child Locations
+            s = "(location)$path"
+            # This version doesn't serialize_url
+            #m = ("%(id)s/*,*/%(id)s/*" % dict(id=id)).split(",")
+            #filter = (S3FieldSelector(s).like(m)) | (S3FieldSelector(s) == id)
+            m = ("%(id)s,%(id)s/*,*/%(id)s/*,*/%(id)s" % dict(id=id)).split(",")
+            m = [f.replace("*", "%") for f in m]
+            filter = S3FieldSelector(s).like(m)
+        # @ToDo:
+        #elif context == "organisation":
+        #    # Show records linked to this Organisation and all it's Branches
+        #    s = "(%s)" % context
+        #    filter = S3FieldSelector(s) == id
+        else:
+            # Normal: show just records linked directly to this master resource
+            s = "(%s)" % context
+            filter = S3FieldSelector(s) == id
+
+        return filter
 
     # -------------------------------------------------------------------------
     def _comments(self, r, widget, **attr):
@@ -183,13 +227,15 @@ class S3Profile(S3CRUD):
         """
 
         T = current.T
+        s3db = current.s3db
+        id = r.id
         context = widget.get("context", None)
         if context:
-            context = "(%s)" % context
-            current.s3db.context = S3FieldSelector(context) == r.id
+            context = self._resolve_context(context, id)
+        s3db.context = context
 
         tablename = widget.get("tablename", None)
-        resource = current.s3db.resource(tablename, context=True)
+        resource = s3db.resource(tablename, context=True)
         table = resource.table
 
         # Config Options:
@@ -212,31 +258,6 @@ class S3Profile(S3CRUD):
         # Use the widget-index to create a unique ID
         listid = "profile-list-%s-%s" % (tablename, widget["index"])
 
-        c, f = tablename.split("_", 1)
-
-        # Permission to create new items?
-        # @ToDo: Special check for creating resources on Organisation profile
-        if current.auth.s3_has_permission("create", table):
-            if filter:
-                vars = filter.serialize_url(filter)
-            else:
-                vars = Storage()
-            vars.refresh = listid
-            if context:
-                vars[context] = r.id
-            title_create = widget.get("title_create", None)
-            if title_create:
-                title_create = T(title_create)
-            else:
-                title_create = S3CRUD.crud_string(tablename, "title_create")
-            create = A(I(_class="icon icon-plus-sign small-add"),
-                       _href=URL(c=c, f=f, args=["create.popup"], vars=vars),
-                       _class="s3_modal",
-                       _title=title_create,
-                       )
-        else:
-            create = "" 
-
         # Page size
         pagesize = 4
         representation = r.representation
@@ -257,12 +278,12 @@ class S3Profile(S3CRUD):
                         start = int(start)
                         limit = int(limit)
                     except ValueError:
-                        start, limit = 0, 4
+                        start, limit = 0, pagesize
                 else:
                     start = None
         else:
             # Page-load
-            start, limit = 0, 4
+            start, limit = 0, pagesize
 
         # Ajax-delete items?
         if representation == "dl" and r.http in ("DELETE", "POST"):
@@ -281,7 +302,9 @@ class S3Profile(S3CRUD):
         # Render the list
         ajaxurl = r.url(vars={"update": widget["index"]},
                         representation="dl")
-        data = datalist.html(ajaxurl=ajaxurl, pagesize=pagesize)
+        data = datalist.html(ajaxurl=ajaxurl,
+                             pagesize=pagesize
+                             )
         if numrows == 0:
             msg = P(I(_class="icon-folder-open-alt"),
                     BR(),
@@ -295,6 +318,7 @@ class S3Profile(S3CRUD):
             current.response.view = "plain.html"
             return data
 
+        # Interactive only below here
         label = widget.get("label", "")
         if label:
             label = T(label)
@@ -302,12 +326,74 @@ class S3Profile(S3CRUD):
         if icon:
             icon = TAG[""](I(_class=icon), " ")
 
+        # Permission to create new items?
+        insert = widget.get("insert", True)
+        if insert and current.auth.s3_has_permission("create", table):
+            #if r.tablename = "org_organisation":
+                # @ToDo: Special check for creating resources on Organisation profile
+            if filter:
+                vars = filter.serialize_url(filter)
+            else:
+                vars = Storage()
+            vars.refresh = listid
+            if context:
+                filters = context.serialize_url(resource)
+                for f in filters:
+                    vars[f] = filters[f]
+            default = widget.get("default", None)
+            if default:
+                k, v = default.split("=", 1)
+                vars[k] = v
+            title_create = widget.get("title_create", None)
+            if title_create:
+                title_create = T(title_create)
+            else:
+                title_create = S3CRUD.crud_string(tablename, "title_create")
+            c, f = tablename.split("_", 1)
+            c = widget.get("create_controller", c)
+            f = widget.get("create_function", f)
+            create = A(I(_class="icon icon-plus-sign small-add"),
+                       _href=URL(c=c, f=f, args=["create.popup"], vars=vars),
+                       _class="s3_modal",
+                       _title=title_create,
+                       )
+        else:
+            create = ""
+
+        if numrows > pagesize:
+            # Button to display the rest of the records in a Modal
+            more = numrows - pagesize
+            vars = {}
+            if context:
+                filters = context.serialize_url(resource)
+                for f in filters:
+                    vars[f] = filters[f]
+            if filter:
+                filters = filter.serialize_url(resource)
+                for f in filters:
+                    vars[f] = filters[f]
+            c, f = tablename.split("_", 1)
+            url = URL(c=c, f=f, args=["datalist.popup"],
+                      vars=vars)
+            more = DIV(A(BUTTON("%s (%s)" % (T("see more"), more),
+                                _class="btn btn-mini",
+                                _type="button",
+                                ),
+                         _class="s3_modal",
+                         _href=url,
+                         _title=label,
+                         ),
+                       _class="more_profile")
+        else:
+            more = ""
+
         # Render the widget
         output = DIV(create,
                      H4(icon,
                         label,
                         _class="profile-sub-header"),
                      DIV(data,
+                         more,
                          _class="card-holder"),
                      _class="span6")
 
@@ -323,6 +409,8 @@ class S3Profile(S3CRUD):
             @param attr: controller attributes for the request
         """
 
+        from s3gis import Marker
+
         T = current.T
         db = current.db
         s3db = current.s3db
@@ -335,67 +423,119 @@ class S3Profile(S3CRUD):
             icon = TAG[""](I(_class=icon), " ")
         context = widget.get("context", None)
         if context:
-            context = "(%s)=%s" % (context, r.id)
+            context = self._resolve_context(context, r.id)
+            cserialize_url = context.serialize_url
+
+        height = widget.get("height", 383)
+        width = widget.get("width", 568) # span6 * 99.7%
+        bbox = widget.get("bbox", {})
 
         # Default to showing all the resources in datalist widgets as separate layers
+        ftable = s3db.gis_layer_feature
+        mtable = s3db.gis_marker
         feature_resources = []
         fappend = feature_resources.append
         widgets = s3db.get_config(r.tablename, "profile_widgets")
         s3dbresource = s3db.resource
-        mtable = s3db.gis_marker
         for widget in widgets:
             if widget["type"] != "datalist":
                 continue
             show_on_map = widget.get("show_on_map", True)
             if not show_on_map:
                 continue
+            # @ToDo: Check permission to access layer (both controller/function & also within Map Config)
             tablename = widget["tablename"]
-            resource = s3dbresource(tablename)
+            listid = "profile-list-%s-%s" % (tablename, widget["index"])
+            layer = dict(name = T(widget["label"]),
+                         id = listid,
+                         active = True,
+                         )
             filter = widget.get("filter", None)
-            map_url = widget.get("map_url", None)
-            if not map_url:
-                # Build one
-                c, f = tablename.split("_", 1)
-                map_url = URL(c=c, f=f, extension="geojson")
-                if filter:
-                    map_url = "%s?" % map_url
-                    filter_url = filter.serialize_url(resource)
-                    for f in filter_url:
-                        map_url = "%s%s=%s" % (map_url, f, filter_url[f])
-                    if context:
-                        map_url = "%s&%s" % (map_url, context)
-                elif context:
-                    map_url = "%s?%s" % (map_url, context)
-
             marker = widget.get("marker", None)
             if marker:
                 marker = db(mtable.name == marker).select(mtable.image,
                                                           mtable.height,
                                                           mtable.width,
                                                           limitby=(0, 1)).first()
+            layer_id = None
+            layer_name = widget.get("layer", None)
+            if layer_name:
+                row = db(ftable.name == layer_name).select(ftable.layer_id,
+                                                           limitby=(0, 1)).first()
+                if row:
+                    layer_id = row.layer_id
+            if layer_id:
+                layer["layer_id"] = layer_id
+                resource = s3dbresource(tablename)
+                filter_url = ""
+                first = True
+                if context:
+                    filters = cserialize_url(resource)
+                    for f in filters:
+                        sep = "" if first else "&"
+                        filter_url = "%s%s%s=%s" % (filter_url, sep, f, filters[f])
+                        first = False
+                if filter:
+                    filters = filter.serialize_url(resource)
+                    for f in filters:
+                        sep = "" if first else "&"
+                        filter_url = "%s%s%s=%s" % (filter_url, sep, f, filters[f])
+                        first = False
+                if filter_url:
+                    layer["filter"] = filter_url
+            else:
+                layer["tablename"] = tablename
+                map_url = widget.get("map_url", None)
+                if not map_url:
+                    # Build one
+                    c, f = tablename.split("_", 1)
+                    map_url = URL(c=c, f=f, extension="geojson")
+                    resource = s3dbresource(tablename)
+                    first = True
+                    if context:
+                        filters = cserialize_url(resource)
+                        for f in filters:
+                            sep = "?" if first else "&"
+                            map_url = "%s%s%s=%s" % (map_url, sep, f, filters[f])
+                            first = False
+                    if filter:
+                        filters = filter.serialize_url(resource)
+                        for f in filters:
+                            sep = "?" if first else "&"
+                            map_url = "%s%s%s=%s" % (map_url, sep, f, filters[f])
+                            first = False
+                layer["url"] = map_url
 
-            listid = "profile-list-%s-%s" % (tablename, widget["index"])
-            fappend({"name"      : T(widget["label"]),
-                     "id"        : listid,
-                     "tablename" : tablename,
-                     "url"       : map_url,
-                     "active"    : True,          # Is the feed displayed upon load or needs ticking to load afterwards?
-                     "marker"    : marker,        # Optional: A per-Layer marker dict for the icon used to display the feature
-                     #"opacity"   : 1,            # Optional
-                     "cluster_distance" : 150,
-                     #"cluster_threshold"         # Optional
-                     })
+            if marker:
+                layer["marker"] = marker
 
-        height = widget.get("height", 383)
-        width = widget.get("width", 568) # span6 * 99.7%
+            fappend(layer)
+
         map = current.gis.show_map(height=height,
                                    width=width,
+                                   bbox=bbox,
                                    collapsed=True,
                                    feature_resources=feature_resources,
                                    )
 
+        # Button to go full-screen
+        fullscreen = A(I(_class="icon icon-fullscreen"),
+                       _href=URL(c="gis", f="map_viewing_client"),
+                       _class="gis_fullscreen_map-btn",
+                       # If we need to support multiple maps on a page
+                       #_map="default",
+                       _title=T("View full screen"),
+                       )
+        s3 = current.response.s3
+        if s3.debug:
+            script = "/%s/static/scripts/S3/s3.gis.fullscreen.js" % current.request.application
+        else:
+            script = "/%s/static/scripts/S3/s3.gis.fullscreen.min.js" % current.request.application
+        s3.scripts.append(script)
+
         # Render the widget
-        output = DIV(H4(icon,
+        output = DIV(fullscreen,
+                     H4(icon,
                         label,
                         _class="profile-sub-header"),
                      DIV(map,

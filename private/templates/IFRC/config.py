@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
 
-from gluon import current, IS_EMPTY_OR
-from gluon.storage import Storage
+#try:
+#    # Python 2.7
+#    from collections import OrderedDict
+#except:
+#    # Python 2.6
 from gluon.contrib.simplejson.ordered_dict import OrderedDict
-from s3 import IS_ONE_OF, s3forms
+
+from gluon import current
+from gluon.storage import Storage
+
+from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponentCheckbox
 
 T = current.T
 settings = current.deployment_settings
@@ -14,6 +21,10 @@ settings = current.deployment_settings
 # =============================================================================
 # System Settings
 # -----------------------------------------------------------------------------
+# Security Policy
+settings.security.policy = 8 # Delegations
+settings.security.map = True
+
 # Authorization Settings
 settings.auth.registration_requires_approval = True
 settings.auth.registration_requires_verification = True
@@ -28,14 +39,10 @@ settings.auth.registration_link_user_to = {"staff": T("Staff"),
 
 settings.auth.record_approval = True
 
+# @ToDo: Should we fallback to organisation_id if site_id is None?
 settings.auth.registration_roles = {"site_id": ["reader",
                                                 ],
                                     }
-
-# -----------------------------------------------------------------------------
-# Security Policy
-settings.security.policy = 8 # Delegations
-settings.security.map = True
 
 # Owner Entity
 settings.auth.person_realm_human_resource_site_then_org = True
@@ -52,10 +59,11 @@ def ifrc_realm_entity(table, row):
     # @ToDo: Restore Realms and add a role/functionality support for Master Data  
     if tablename in ["hrm_certificate",
                      "hrm_department",
-                     "hrm_job_role",
                      "hrm_job_title",
                      "hrm_course",
                      "hrm_programme",
+                     "member_membership_type",
+                     "vol_award",
                      ]:
         return None
 
@@ -71,6 +79,7 @@ def ifrc_realm_entity(table, row):
 
     # Owner Entity Foreign Key
     realm_entity_fks = dict(pr_contact = EID,
+                            pr_contact_emergency = EID,
                             pr_physical_description = EID,
                             pr_address = EID,
                             pr_image = EID,
@@ -136,11 +145,12 @@ def ifrc_realm_entity(table, row):
     # Suppliers & Partners are owned by the user's organisation
     if realm_entity == 0 and tablename == "org_organisation":
         ott = s3db.org_organisation_type
-        row = table[row.id]
-        row = db(table.organisation_type_id == ott.id).select(ott.name,
-                                                              limitby=(0, 1)
-                                                              ).first()
-        
+        query = (table.id == row.id) & \
+                (table.organisation_type_id == ott.id)
+        row = db(query).select(ott.name,
+                               limitby=(0, 1)
+                               ).first()
+
         if row and row.name != "Red Cross / Red Crescent":
             use_user_organisation = True
 
@@ -155,11 +165,12 @@ def ifrc_realm_entity(table, row):
                                          user.organisation_id)
 
     return realm_entity
+
 settings.auth.realm_entity = ifrc_realm_entity
 
 # -----------------------------------------------------------------------------
 # Pre-Populate
-settings.base.prepopulate = ["IFRC_Train"]
+settings.base.prepopulate = ["IFRC", "IFRC_Train"]
 
 settings.base.system_name = T("Resource Management System")
 settings.base.system_name_short = T("RMS")
@@ -167,6 +178,7 @@ settings.base.system_name_short = T("RMS")
 # -----------------------------------------------------------------------------
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "IFRC"
+settings.base.xtheme = "IFRC/xtheme-ifrc.css"
 settings.gis.map_height = 600
 settings.gis.map_width = 854
 # Display Resources recorded to Admin-Level Locations on the map
@@ -179,6 +191,7 @@ settings.L10n.languages = OrderedDict([
     ("en-gb", "English"),
     ("es", "Español"),
     ("vi", "Tiếng Việt"),
+    ("zh-cn", "中文 (简体)"),
 ])
 # Default Language
 settings.L10n.default_language = "en-gb"
@@ -214,8 +227,10 @@ settings.ui.camp = True
 
 # -----------------------------------------------------------------------------
 # Save Search Widget
-settings.save_search.widget = False
-
+# New S3Filter
+settings.search.filter_manager = False
+# Old S3Search
+settings.search.save_widget = False
 
 # =============================================================================
 # Module Settings
@@ -228,11 +243,12 @@ settings.org.site_code_len = 3
 settings.org.site_label = "Office/Warehouse/Facility"
 # Enable certain fields just for specific Organisations
 settings.org.dependent_fields = \
-    {"pr_person_details.mother_name"             : ["Bangladesh Red Crescent Society"],
+    {"pr_person.middle_name"                     : ["Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)", "Viet Nam Red Cross"],
+     "pr_person_details.mother_name"             : ["Bangladesh Red Crescent Society"],
      "pr_person_details.father_name"             : ["Bangladesh Red Crescent Society"],
      "pr_person_details.company"                 : ["Philippine Red Cross"],
      "pr_person_details.affiliations"            : ["Philippine Red Cross"],
-     "vol_details.active"                        : ["Timor-Leste Red Cross Society"],
+     "vol_details.active"                        : ["Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)"],
      "vol_volunteer_cluster.vol_cluster_type_id"     : ["Philippine Red Cross"],
      "vol_volunteer_cluster.vol_cluster_id"          : ["Philippine Red Cross"],
      "vol_volunteer_cluster.vol_cluster_position_id" : ["Philippine Red Cross"],
@@ -246,21 +262,28 @@ settings.hrm.email_required = False
 settings.hrm.filter_certificates = True
 # Uncomment to show the Organisation name in HR represents
 settings.hrm.show_organisation = True
-# Uncomment to disable Staff experience
-settings.hrm.staff_experience = False
+# Uncomment to allow HRs to have multiple Job Titles
+settings.hrm.multiple_job_titles = True
 # Uncomment to disable the use of HR Credentials
 settings.hrm.use_credentials = False
 # Uncomment to enable the use of HR Education
 settings.hrm.use_education = True
-# Uncomment to disable the use of HR Skills
-settings.hrm.use_skills = False
-# Uncomment to disable the use of HR Teams
-#settings.hrm.use_teams = False
 # Custom label for Organisations in HR module
 settings.hrm.organisation_label = "National Society / Branch"
 
+# RDRT
+# Enable the use of Organisation Regions
+settings.org.regions = True
+# Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
+settings.hrm.skill_types = True
+# RDRT overrides these within controller:
+# Uncomment to disable Staff experience
+settings.hrm.staff_experience = False
+# Uncomment to disable the use of HR Skills
+settings.hrm.use_skills = False
+
 # -----------------------------------------------------------------------------
-def ns_only(f, required=True, branches=True):
+def ns_only(f, required=True, branches=True, updateable=True):
     """
         Function to configure an organisation_id field to be restricted to just NS/Branch
     """
@@ -286,16 +309,18 @@ def ns_only(f, required=True, branches=True):
         not_filterby = "id"
         not_filter_opts = branches
 
+    from s3.s3validators import IS_ONE_OF
     requires = IS_ONE_OF(db, "org_organisation.id",
                          current.s3db.org_OrganisationRepresent(),
                          filterby="organisation_type_id",
                          filter_opts=[type_id],
                          not_filterby=not_filterby,
                          not_filter_opts=not_filter_opts,
-                         updateable = True,
+                         updateable = updateable,
                          orderby = "org_organisation.name",
                          sort = True)
     if not required:
+        from gluon import IS_EMPTY_OR
         requires = IS_EMPTY_OR(requires)
     f.requires = requires
     # Dropdown not Autocomplete
@@ -306,14 +331,23 @@ def ns_only(f, required=True, branches=True):
        s3_has_role("ORG_ADMIN"):
         # Need to do import after setting Theme
         from s3layouts import S3AddResourceLink
-        f.comment = S3AddResourceLink(c="org",
-                                      f="organisation",
-                                      vars={"organisation.organisation_type_id$name":"Red Cross / Red Crescent"},
-                                      label=T("Add National Society"),
-                                      title=T("National Society"),
-                                      )
+        from s3.s3navigation import S3ScriptItem
+        add_link = S3AddResourceLink(c="org",
+                                     f="organisation",
+                                     vars={"organisation.organisation_type_id$name":"Red Cross / Red Crescent"},
+                                     label=T("Add National Society"),
+                                     title=T("National Society"),
+                                     )
+        comment = f.comment
+        if not comment or isinstance(comment, S3AddResourceLink):
+            f.comment = add_link
+        elif isinstance(comment[1], S3ScriptItem):
+            # Don't overwrite scripts
+            f.comment[0] = add_link
+        else:
+            f.comment = add_link
     else:
-        # Not allowed to add NS
+        # Not allowed to add NS/Branch
         f.comment = ""
 
 # -----------------------------------------------------------------------------
@@ -331,6 +365,24 @@ def customize_asset_asset(**attr):
     return attr
 
 settings.ui.customize_asset_asset = customize_asset_asset
+
+# -----------------------------------------------------------------------------
+def customize_auth_user(**attr):
+    """
+        Customize admin/user() and default/user() controllers
+    """
+
+    if "arg" in attr and attr["arg"] == "register":
+        # Organisation needs to be an NS/Branch
+        ns_only(current.db.auth_user.organisation_id,
+                required=True,
+                branches=True,
+                updateable=False, # Need to see all Orgs in Registration screens
+                )
+
+    return attr
+
+settings.ui.customize_auth_user = customize_auth_user
 
 # -----------------------------------------------------------------------------
 def customize_hrm_certificate(**attr):
@@ -477,6 +529,96 @@ def customize_org_office(**attr):
 settings.ui.customize_org_office = customize_org_office
 
 # -----------------------------------------------------------------------------
+def customize_org_organisation(**attr):
+
+    s3 = current.response.s3
+
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        if not r.component or r.component.name == "branch":
+            if r.interactive or r.representation == "aadata":
+                s3db = current.s3db
+                list_fields = ["id",
+                               "name",
+                               "acronym",
+                               "organisation_type_id",
+                               #(T("Sectors"), "sector.name"),
+                               "country",
+                               "website"
+                               ]
+                
+                type_filter = current.request.get_vars.get("organisation.organisation_type_id$name",
+                                                           None)
+                if type_filter:
+                    type_names = type_filter.split(",")
+                    if len(type_names) == 1:
+                        # Strip Type from list_fields
+                        list_fields.remove("organisation_type_id")
+
+                    if type_filter == "Red Cross / Red Crescent":
+                        # Modify CRUD Strings
+                        ADD_NS = T("Add National Society")
+                        s3.crud_strings.org_organisation = Storage(
+                            title_create=ADD_NS,
+                            title_display=T("National Society Details"),
+                            title_list=T("Red Cross & Red Crescent National Societies"),
+                            title_update=T("Edit National Society"),
+                            title_search=T("Search Red Cross & Red Crescent National Societies"),
+                            title_upload=T("Import Red Cross & Red Crescent National Societies"),
+                            subtitle_create=ADD_NS,
+                            label_list_button=T("List Red Cross & Red Crescent National Societies"),
+                            label_create_button=ADD_NS,
+                            label_delete_button=T("Delete National Society"),
+                            msg_record_created=T("National Society added"),
+                            msg_record_modified=T("National Society updated"),
+                            msg_record_deleted=T("National Society deleted"),
+                            msg_list_empty=T("No Red Cross & Red Crescent National Societies currently registered")
+                            )
+                        # Add Region to list_fields
+                        list_fields.insert(-1, "region_id")
+                        # Region is required
+                        r.table.region_id.requires = r.table.region_id.requires.other
+                    else:
+                        r.table.region_id.readable = r.table.region_id.writable = False
+
+                s3db.configure("org_organisation", list_fields=list_fields)
+
+                if r.interactive:
+                    r.table.country.label = T("Country")
+                    crud_form = S3SQLCustomForm(
+                        "name",
+                        "acronym",
+                        "organisation_type_id",
+                        "region_id",
+                        "country",
+                        #S3SQLInlineComponentCheckbox(
+                        #    "sector",
+                        #    label = T("Sectors"),
+                        #    field = "sector_id",
+                        #    cols = 3,
+                        #),
+                        "phone",
+                        "website",
+                        "logo",
+                        "comments",
+                        )
+                    s3db.configure("org_organisation", crud_form=crud_form)
+
+        return result
+    s3.prep = custom_prep
+
+    return attr
+
+settings.ui.customize_org_organisation = customize_org_organisation
+
+# -----------------------------------------------------------------------------
 def customize_survey_series(**attr):
     """
         Customize survey_series controller
@@ -498,6 +640,8 @@ settings.ui.customize_survey_series = customize_survey_series
 settings.project.mode_3w = True
 # Uncomment this to use DRR (Disaster Risk Reduction) extensions
 settings.project.mode_drr = True
+# Uncomment this to use Codes for projects
+settings.project.codes = True
 # Uncomment this to call project locations 'Communities'
 settings.project.community = True
 # Uncomment this to use multiple Budgets per project
@@ -508,10 +652,11 @@ settings.project.multiple_organisations = True
 # Links to Filtered Components for Donors & Partners
 settings.project.organisation_roles = {
     1: T("Host National Society"),
-    2: T("Partner National Society"),
+    2: T("Partner"),
     3: T("Donor"),
     #4: T("Customer"), # T("Beneficiary")?
-    5: T("Partner")
+    #5: T("Supplier"),
+    9: T("Partner National Society"),
 }
 
 # -----------------------------------------------------------------------------
@@ -525,6 +670,24 @@ def customize_project_project(**attr):
     # Load normal model
     table = s3db[tablename]
 
+    # @ToDo: S3SQLInlineComponent for Project orgs
+    # Get IDs for PartnerNS/Partner-Donor
+    # db = current.db
+    # ttable = db.org_organisation_type
+    # rows = db(ttable.deleted != True).select(ttable.id,
+                                             # ttable.name,
+                                             # )
+    # rc = []
+    # not_rc = []
+    # nappend = not_rc.append
+    # for row in rows:
+        # if row.name == "Red Cross / Red Crescent":
+            # rc.append(row.id)
+        # elif row.name == "Supplier":
+            # pass
+        # else:
+            # nappend(row.id)
+
     # Custom Fields
     # Organisation needs to be an NS (not a branch)
     f = table.organisation_id
@@ -535,36 +698,47 @@ def customize_project_project(**attr):
     f.label = T("Host National Society")
 
     # Custom Crud Form
-    crud_form = s3forms.S3SQLCustomForm(
+    from s3.s3forms import S3SQLInlineComponent
+    crud_form = S3SQLCustomForm(
         "organisation_id",
         "name",
-        #"code",
+        "code",
         "description",
         "status_id",
         "start_date",
         "end_date",
-        #s3forms.S3SQLInlineComponent(
+        #S3SQLInlineComponent(
         #    "location",
         #    label = T("Countries"),
         #    fields = ["location_id"],
         #),
-        s3forms.S3SQLInlineComponentCheckbox(
+        # Outputs
+        S3SQLInlineComponent(
+            "output",
+            label = T("Outputs"),
+            #comment = "Bob",
+            fields = ["name", "status"],
+        ),
+        S3SQLInlineComponentCheckbox(
             "hazard",
             label = T("Hazards"),
             field = "hazard_id",
             cols = 4,
+            translate = True,
         ),
-        s3forms.S3SQLInlineComponentCheckbox(
+        S3SQLInlineComponentCheckbox(
             "sector",
             label = T("Sectors"),
             field = "sector_id",
             cols = 4,
+            translate = True,
         ),
-        s3forms.S3SQLInlineComponentCheckbox(
+        S3SQLInlineComponentCheckbox(
             "theme",
             label = T("Themes"),
             field = "theme_id",
             cols = 4,
+            translate = True,
             # Filter Theme by Sector
             filter = {"linktable": "project_theme_sector",
                       "lkey": "theme_id",
@@ -584,30 +758,53 @@ S3OptionsFilter({
         "drr.hfa",
         "objectives",
         "human_resource_id",
+        # Disabled since we need organisation_id filtering to either organisation_type_id == RC or NOT
+        # & also hiding Branches from RCs
+        # Partner NS
+        # S3SQLInlineComponent(
+            # "organisation",
+            # name = "partnerns",
+            # label = T("Partner National Societies"),
+            # fields = ["organisation_id",
+                      # "comments",
+                      # ],
+            # Filter Organisation by Type
+            # filter = ["organisation_id": {"filterby": "organisation_type_id",
+                                          # "filterfor": rc,
+                                          # }],
+            # filterby = dict(field = "role",
+                            # options = [9])
+        # ),
         # Partner Orgs
-        #s3forms.S3SQLInlineComponent(
-        #    "organisation",
-        #    name = "partner",
-        #    label = T("Partner Organizations"),
-        #    fields = ["organisation_id",
-        #              "comments",
-        #              ],
-        #    filterby = dict(field = "role",
-        #                    options = "2"
-        #                    )
-        #),
+        # S3SQLInlineComponent(
+            # "organisation",
+            # name = "partner",
+            # label = T("Partner Organizations"),
+            # fields = ["organisation_id",
+                      # "comments",
+                      # ],
+            # Filter Organisation by Type
+            # filter = ["organisation_id": {"filterby": "organisation_type_id",
+                                          # "filterfor": not_rc,
+                                          # }],
+            # filterby = dict(field = "role",
+                            # options = [2])
+        # ),
         # Donors
-        #s3forms.S3SQLInlineComponent(
-        #    "organisation",
-        #    name = "donor",
-        #    label = T("Donor(s)"),
-        #    fields = ["organisation_id",
-        #              "amount",
-        #              "currency"],
-        #    filterby = dict(field = "role",
-        #                    options = "3"
-        #                    )
-        #),
+        # S3SQLInlineComponent(
+            # "organisation",
+            # name = "donor",
+            # label = T("Donor(s)"),
+            # fields = ["organisation_id",
+                      # "amount",
+                      # "currency"],
+            # Filter Organisation by Type
+            # filter = ["organisation_id": {"filterby": "organisation_type_id",
+                                          # "filterfor": not_rc,
+                                          # }],
+            # filterby = dict(field = "role",
+                            # options = [3])
+        # ),
         #"budget",
         #"currency",
         "comments",
@@ -620,24 +817,25 @@ S3OptionsFilter({
 
 settings.ui.customize_project_project = customize_project_project
 
-settings.ui.crud_form_project_location = s3forms.S3SQLCustomForm(
-        "project_id",
-        "location_id",
-        # @ToDo: Grouped Checkboxes
-        s3forms.S3SQLInlineComponentCheckbox(
-            "activity_type",
-            label = T("Activity Types"),
-            field = "activity_type_id",
-            cols = 3,
-            # Filter Activity Type by Sector
-            filter = {"linktable": "project_activity_type_sector",
-                      "lkey": "activity_type_id",
-                      "rkey": "sector_id",
-                      "lookuptable": "project_project",
-                      "lookupkey": "project_id",
-                      },
-        ),
-        "comments",
+settings.ui.crud_form_project_location = S3SQLCustomForm(
+    "project_id",
+    "location_id",
+    # @ToDo: Grouped Checkboxes
+    S3SQLInlineComponentCheckbox(
+        "activity_type",
+        label = T("Activity Types"),
+        field = "activity_type_id",
+        cols = 3,
+        # Filter Activity Type by Sector
+        filter = {"linktable": "project_activity_type_sector",
+                  "lkey": "activity_type_id",
+                  "rkey": "sector_id",
+                  "lookuptable": "project_project",
+                  "lookupkey": "project_id",
+                  },
+        translate = True,
+    ),
+    "comments",
     )
 
 # -----------------------------------------------------------------------------
@@ -800,6 +998,12 @@ settings.modules = OrderedDict([
     ("member", Storage(
            name_nice = T("Members"),
            #description = "Membership Management System",
+           restricted = True,
+           module_type = 10,
+       )),
+    ("deploy", Storage(
+           name_nice = T("Regional Disaster Response Teams"),
+           #description = "Alerting and Deployment of Disaster Response Teams",
            restricted = True,
            module_type = 10,
        )),

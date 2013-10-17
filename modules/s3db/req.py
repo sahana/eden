@@ -41,7 +41,6 @@ __all__ = ["S3RequestModel",
            "req_update_status",
            "req_rheader",
            "req_match",
-           "req_site_virtualfields",
            "req_add_from_template",
            ]
 
@@ -167,6 +166,7 @@ class S3RequestModel(S3Model):
         tablename = "req_req"
         table = self.define_table(tablename,
                                   super_link("doc_id", "doc_entity"),
+                                  # @ToDo: Replace with Link Table
                                   self.event_event_id(
                                         default=session.s3.event,
                                         readable = False,
@@ -317,8 +317,8 @@ class S3RequestModel(S3Model):
                                   *s3_meta_fields())
 
         # Virtual Fields
-        #table.details = Field.Lazy(req_details_field)
-        table.virtualfields.append(ReqVirtualFields())
+        table.details = Field.Lazy(req_req_details)
+        table.drivers = Field.Lazy(req_req_drivers)
 
         if len(req_type_opts) == 1:
             k, v = req_type_opts.items()[0]
@@ -555,19 +555,18 @@ class S3RequestModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                req_create_form_mods = self.req_create_form_mods,
-                req_hide_quantities = self.req_hide_quantities,
-                req_inline_form = self.req_inline_form,
-                req_prep = self.req_prep,
-                req_priority_opts = req_priority_opts,
-                req_priority_represent = self.req_priority_represent,
-                req_req_id = req_id,
-                req_req_ref = req_ref,
-                req_status_opts = req_status_opts,
-                req_type_opts = req_type_opts,
-                req_tabs = self.req_tabs,
-            )
+        return dict(req_create_form_mods = self.req_create_form_mods,
+                    req_hide_quantities = self.req_hide_quantities,
+                    req_inline_form = self.req_inline_form,
+                    req_prep = self.req_prep,
+                    req_priority_opts = req_priority_opts,
+                    req_priority_represent = self.req_priority_represent,
+                    req_req_id = req_id,
+                    req_req_ref = req_ref,
+                    req_status_opts = req_status_opts,
+                    req_type_opts = req_type_opts,
+                    req_tabs = self.req_tabs,
+                    )
 
     # -------------------------------------------------------------------------
     def defaults(self):
@@ -577,9 +576,8 @@ class S3RequestModel(S3Model):
 
         req_ref = S3ReusableField("req_ref", "string",
                                   readable=False, writable=False)
-        return Storage(
-                req_req_ref = req_ref
-            )
+        return dict(req_req_ref = req_ref
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -687,8 +685,8 @@ S3OptionsFilter({
  'lookupPrefix':'supply',
  'lookupResource':'item_pack',
  'msgNoRecords':i18n.no_packs,
- 'fncPrep':fncPrepItem,
- 'fncRepresent':fncRepresentItem
+ 'fncPrep':S3.supply.fncPrepItem,
+ 'fncRepresent':S3.supply.fncRepresentItem
 })''')
             # Custom Form
             settings = current.deployment_settings
@@ -1171,9 +1169,9 @@ S3OptionsFilter({
         for item in inv_items:
             item_id = item.item_id
             if item_id in inv_items_dict:
-                inv_items_dict[item_id] += item.quantity * item.pack_quantity
+                inv_items_dict[item_id] += item.quantity * item.pack_quantity()
             else:
-                inv_items_dict[item_id] = item.quantity * item.pack_quantity
+                inv_items_dict[item_id] = item.quantity * item.pack_quantity()
 
         if len(req_items):
             row = TR(TH(table.item_id.label),
@@ -1185,7 +1183,7 @@ S3OptionsFilter({
                      TH(T("Match?"))
                      )
             if use_commit:
-                row.insert(TH(3, table.quantity_commit.label))
+                row.insert(3, TH(table.quantity_commit.label))
             items = TABLE(THEAD(row),
                           _id = "list",
                           _class = "dataTable display")
@@ -1197,7 +1195,7 @@ S3OptionsFilter({
                 # Convert inv item quantity to req item quantity
                 item_id = req_item.item_id
                 if item_id in inv_items_dict:
-                    inv_quantity = inv_items_dict[item_id] / req_item.pack_quantity
+                    inv_quantity = inv_items_dict[item_id] / req_item.pack_quantity()
                 else:
                     inv_quantity = NONE
 
@@ -1456,7 +1454,7 @@ class S3RequestItemModel(S3Model):
         table.site_id.label = T("Requested From")
 
         # pack_quantity virtual field
-        table.virtualfields.append(self.supply_item_pack_virtualfields(tablename=tablename))
+        table.pack_quantity = Field.Lazy(self.supply_item_pack_quantity(tablename=tablename))
 
         # CRUD strings
         ADD_REQUEST_ITEM = T("Add New Item to Request")
@@ -1497,8 +1495,8 @@ S3OptionsFilter({
  'lookupPrefix':'supply',
  'lookupURL':S3.Ap.concat('/req/req_item_packs/'),
  'msgNoRecords':i18n.no_packs,
- 'fncPrep':fncPrepItem,
- 'fncRepresent':fncRepresentItem
+ 'fncPrep':S3.supply.fncPrepItem,
+ 'fncRepresent':S3.supply.fncRepresentItem
 })''')
 
         if settings.get_req_prompt_match():
@@ -1532,6 +1530,7 @@ S3OptionsFilter({
                        deletable = settings.get_req_multiple_req_items(),
                        deduplicate = self.req_item_duplicate,
                        list_fields = list_fields,
+                       extra_fields = ["item_pack_id"],
                        )
 
         # ---------------------------------------------------------------------
@@ -1551,10 +1550,9 @@ S3OptionsFilter({
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                req_item_id = req_item_id,
-                req_item_represent = self.req_item_represent,
-            )
+        return dict(req_item_id = req_item_id,
+                    req_item_represent = self.req_item_represent,
+                    )
 
     # -------------------------------------------------------------------------
     def defaults(self):
@@ -1563,9 +1561,8 @@ S3OptionsFilter({
         """
         req_item_id = S3ReusableField("req_item_id", "integer",
                                       readable=False, writable=False)
-        return Storage(
-                req_item_id = req_item_id
-            )
+        return dict(req_item_id = req_item_id
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1821,9 +1818,8 @@ class S3RequestSkillModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                req_skill_represent = self.req_skill_represent,
-            )
+        return dict(req_skill_represent = self.req_skill_represent,
+                    )
 
     # -----------------------------------------------------------------
     @staticmethod
@@ -1883,7 +1879,7 @@ class S3RequestRecurringModel(S3Model):
             label_list_button = T("List Jobs"),
             label_create_button = ADD_JOB,
             msg_record_created = T("Job added"),
-            msg_record_modified = T("Job updated updated"),
+            msg_record_modified = T("Job updated"),
             msg_record_deleted = T("Job deleted"),
             msg_list_empty = T("No jobs configured yet"),
             msg_no_match = T("No jobs configured"))
@@ -1903,8 +1899,7 @@ class S3RequestRecurringModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-            )
+        return dict()
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1962,8 +1957,7 @@ class S3RequestSummaryModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-            )
+        return dict()
 
 # =============================================================================
 class S3RequestTaskModel(S3Model):
@@ -1992,8 +1986,7 @@ class S3RequestTaskModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-            )
+        return dict()
 
 # =============================================================================
 class S3CommitModel(S3Model):
@@ -2168,9 +2161,8 @@ class S3CommitModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                    req_commit_id = commit_id,
-                )
+        return dict(req_commit_id = commit_id,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2267,15 +2259,15 @@ class S3CommitModel(S3Model):
             for item in citems:
                 item_pack_id = item.item_pack_id
                 if item_pack_id in commit_qty:
-                    commit_qty[item_pack_id] += (item.quantity * item.pack_quantity)
+                    commit_qty[item_pack_id] += (item.quantity * item.pack_quantity())
                 else:
-                    commit_qty[item_pack_id] = (item.quantity * item.pack_quantity)
+                    commit_qty[item_pack_id] = (item.quantity * item.pack_quantity())
             complete = False
             for item in ritems:
                 if item.item_pack_id in commit_qty:
                     quantity_commit = commit_qty[item.item_pack_id]
                     db(ritable.id == item.id).update(quantity_commit=quantity_commit)
-                    req_quantity = item.quantity * item.pack_quantity
+                    req_quantity = item.quantity * item.pack_quantity()
                     if quantity_commit >= req_quantity:
                         complete = True
                     else:
@@ -2404,15 +2396,15 @@ class S3CommitModel(S3Model):
             for item in citems:
                 item_pack_id = item.item_pack_id
                 if item_pack_id in commit_qty:
-                    commit_qty[item_pack_id] += (item.quantity * item.pack_quantity)
+                    commit_qty[item_pack_id] += (item.quantity * item.pack_quantity())
                 else:
-                    commit_qty[item_pack_id] = (item.quantity * item.pack_quantity)
+                    commit_qty[item_pack_id] = (item.quantity * item.pack_quantity())
             complete = False
             for item in ritems:
                 if item.item_pack_id in commit_qty:
                     quantity_commit = commit_qty[item.item_pack_id]
                     db(ritable.id == item.id).update(quantity_commit=quantity_commit)
-                    req_quantity = item.quantity * item.pack_quantity
+                    req_quantity = item.quantity * item.pack_quantity()
                     if quantity_commit >= req_quantity:
                         complete = True
                     else:
@@ -2521,7 +2513,7 @@ class S3CommitItemModel(S3Model):
                                   *s3_meta_fields())
 
         # pack_quantity virtual field
-        table.virtualfields.append(self.supply_item_pack_virtualfields(tablename=tablename))
+        table.pack_quantity = Field.Lazy(self.supply_item_pack_quantity(tablename=tablename))
 
         # CRUD strings
         ADD_COMMIT_ITEM = T("Add Item to Commitment")
@@ -2541,16 +2533,16 @@ class S3CommitItemModel(S3Model):
             msg_list_empty = T("No Commitment Items currently registered"))
 
         self.configure(tablename,
-                       onaccept = self.commit_item_onaccept)
+                       onaccept = self.commit_item_onaccept,
+                       extra_fields = ["item_pack_id"])
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                # Used by commit_req() controller
-                req_commit_item_onaccept = self.commit_item_onaccept,
-                req_send_commit = self.req_send_commit,
-            )
+        return dict(# Used by commit_req() controller
+                    req_commit_item_onaccept = self.commit_item_onaccept,
+                    req_send_commit = self.req_send_commit,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2596,15 +2588,15 @@ class S3CommitItemModel(S3Model):
         for item in citems:
             item_pack_id = item.item_pack_id
             if item_pack_id in commit_qty:
-                commit_qty[item_pack_id] += (item.quantity * item.pack_quantity)
+                commit_qty[item_pack_id] += (item.quantity * item.pack_quantity())
             else:
-                commit_qty[item_pack_id] = (item.quantity * item.pack_quantity)
+                commit_qty[item_pack_id] = (item.quantity * item.pack_quantity())
         complete = False
         for item in ritems:
             if item.item_pack_id in commit_qty:
                 quantity_commit = commit_qty[item.item_pack_id]
                 db(ritable.id == item.id).update(quantity_commit=quantity_commit)
-                req_quantity = item.quantity * item.pack_quantity
+                req_quantity = item.quantity * item.pack_quantity()
                 if quantity_commit >= req_quantity:
                     complete = True
                 else:
@@ -2766,7 +2758,7 @@ class S3CommitPersonModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage()
+        return dict()
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2851,7 +2843,7 @@ class S3CommitSkillModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage()
+        return dict()
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3127,149 +3119,77 @@ def req_skill_onaccept(form):
                          req_id = req_id)
 
 # =============================================================================
-def req_details_field(row):
-    """
-        Lazy VirtualField
-    """
+def req_req_details(row):
+    """ Show the requested items/skills """
 
-    type = row.type
+    if hasattr(row, "req_req"):
+        row = row.req_req
+    try:
+        id = row.id
+        type = row.type
+    except AttributeError:
+        return None
+
     if type == 1:
         s3db = current.s3db
         itable = s3db.supply_item
         ltable = s3db.req_req_item
         query = (ltable.deleted != True) & \
-                (ltable.req_id == row.id) & \
-                (ltable.item_id == itable.name)
-        items = current.db(query).select(itable.name)
+                (ltable.req_id == id) & \
+                (ltable.item_id == itable.id)
+        items = current.db(query).select(itable.name,
+                                         ltable.quantity)
         if items:
-            return ",".join([item.name for item in items])
+            items = ["%s %s" % (int(item.req_req_item.quantity),
+                                item.supply_item.name)
+                     for item in items]
+            return ",".join(items)
 
     elif type == 3:
         s3db = current.s3db
         ltable = s3db.req_req_skill
         query = (ltable.deleted != True) & \
-                (ltable.req_id == row.id)
-        skills = current.db(query).select(ltable.skill_id)
+                (ltable.req_id == id)
+        skills = current.db(query).select(ltable.skill_id,
+                                          ltable.quantity)
         if skills:
-            represent = s3db.hrm_skill_multirepresent
-            return ",".join([represent(skill.skill_id) for skill in skills])
+            represent = S3Represent(lookup="hrm_skill",
+                                    multiple=True)
+            skills = ["%s %s" % (skill.quantity,
+                                 represent(skill.skill_id)) \
+                      for skill in skills]
+            return ",".join(skills)
 
     return current.messages["NONE"]
 
 # =============================================================================
-class ReqVirtualFields:
-    """
-        Virtual fields for Requests to show Item Details & Driver
-    """
+def req_req_drivers(row):
+    """ Show the driver(s) details """
 
-    def details(self):
-        """
-            Show the requested items/skills
-        """
+    if hasattr(row, "req_req"):
+        row = row.req_req
+    try:
+        req_ref = row.req_ref
+        type = row.type
+    except AttributeError:
+        return None
 
-        try:
-            id = self.req_req.id
-            type = self.req_req.type
-        except AttributeError:
-            return None
-
-        if type == 1:
-            s3db = current.s3db
-            itable = s3db.supply_item
-            ltable = s3db.req_req_item
-            query = (ltable.deleted != True) & \
-                    (ltable.req_id == id) & \
-                    (ltable.item_id == itable.id)
-            items = current.db(query).select(itable.name,
-                                             ltable.quantity)
-            if items:
-                items = ["%s %s" % (int(item.req_req_item.quantity), item.supply_item.name) for item in items]
-                return ",".join(items)
-
-        elif type == 3:
-            s3db = current.s3db
-            ltable = s3db.req_req_skill
-            query = (ltable.deleted != True) & \
-                    (ltable.req_id == id)
-            skills = current.db(query).select(ltable.skill_id,
-                                              ltable.quantity)
-            if skills:
-                represent = S3Represent(lookup="hrm_skill",
-                                        multiple=True)
-                skills = ["%s %s" % (skill.quantity,
-                                     represent(skill.skill_id)) \
-                          for skill in skills]
-                return ",".join(skills)
-
-        return current.messages["NONE"]
-
-    # -------------------------------------------------------------------------
-    def drivers(self):
-        """
-            Show the driver(s) details
-        """
-
-        try:
-            req_ref = self.req_req.req_ref
-            type = self.req_req.type
-        except AttributeError:
-            return None
-
-        if type == 1:
-            s3db = current.s3db
-            stable = s3db.inv_send
-            query = (stable.deleted != True) & \
-                    (stable.req_ref == req_ref)
-            drivers = current.db(query).select(stable.driver_name,
-                                               stable.driver_phone,
-                                               stable.vehicle_plate_no)
-            if drivers:
-                drivers = ["%s %s %s" % (driver.driver_name or "",
-                                         driver.driver_phone or "",
-                                         driver.vehicle_plate_no or "") \
-                           for driver in drivers]
-                return ",".join(drivers)
-
-        return current.messages["NONE"]
-
-# =============================================================================
-class req_site_virtualfields:
-    """
-        Virtual fields for the org_site table which reflect their Requests status
-    """
-
-    def __init__(self, tablename):
-        self.tablename = tablename
-
-    # -------------------------------------------------------------------------
-    def reqs(self):
-        """
-            Highest priority open requests for site
-        """
-
-        tablename = self.tablename
-        try:
-            id = self.__dict__[tablename].id
-        except AttributeError:
-            return None
-
+    if type == 1:
         s3db = current.s3db
-        rtable = s3db.req_req
-        stable = s3db[tablename]
-        query = (rtable.deleted != True) & \
-                (stable.id == id) & \
-                (rtable.site_id == stable.site_id) & \
-                (rtable.fulfil_status != REQ_STATUS_COMPLETE) & \
-                (rtable.is_template == False)
-        req = current.db(query).select(rtable.id,
-                                       rtable.priority,
-                                       orderby=~rtable.priority,
-                                       limitby=(0, 1)).first()
-        if req:
-            #return rtable.priority.represent(req.priority)
-            return req.priority
-        else:
-            return None
+        stable = s3db.inv_send
+        query = (stable.deleted != True) & \
+                (stable.req_ref == req_ref)
+        drivers = current.db(query).select(stable.driver_name,
+                                           stable.driver_phone,
+                                           stable.vehicle_plate_no)
+        if drivers:
+            drivers = ["%s %s %s" % (driver.driver_name or "",
+                                     driver.driver_phone or "",
+                                     driver.vehicle_plate_no or "") \
+                       for driver in drivers]
+            return ",".join(drivers)
+
+    return current.messages["NONE"]
 
 # =============================================================================
 def req_rheader(r, check_page=False):
@@ -3445,10 +3365,9 @@ def req_match():
 
     output = dict()
 
-    if "viewing" not in request.vars:
+    viewing = request.get_vars.get("viewing", None)
+    if not viewing:
         return output
-    else:
-        viewing = request.vars.viewing
     if "." in viewing:
         tablename, id = viewing.split(".", 1)
     else:
@@ -3485,7 +3404,7 @@ def req_match():
                            args = ["[id]"],
                            vars = {"site_id": site_id}
                            ),
-                 _class = "action-btn",
+                 _class = "action-btn dispatch",
                  label = str(T("Send")),
                 )
         )

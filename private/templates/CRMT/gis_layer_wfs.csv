@@ -1,0 +1,2 @@
+Name,Description,Source Name,Source URL,URL,Projection,Symbology,Marker,Feature Type,Title,Geometry Name,Folder,Config,Enabled,Visible,Cluster Threshold,Cluster Distance,Refresh
+"Hazardous Sites","Facilities or sites subject to environmental regulation",Environmental Protection Agency,"http://www.epa.gov/enviro/geo_data.html","http://lacrmt.sahanafoundation.org:8080/geoserver/lacrmt/wfs",4326,CRMT,risk,epa,fac_name,geom,Hazards,,True,False,,40,0

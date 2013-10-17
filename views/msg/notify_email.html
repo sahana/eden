@@ -1,0 +1,17 @@
+{{title="%s: %s %s" % (systemname_short, resource, current.T("Update Notification"))}}
+{{=XML(title)}}
+{{="=" * len(title)}}
+{{try:}}{{=page_url}}{{except:}}{{pass}}
+{{if filter_query:}}
+{{=current.T("Filter")}}: {{=XML(filter_query)}}{{pass}}
+{{if new is not None:}}{{new_title=current.T("The following %(new)s %(resource)s have been added") % dict(new=new, resource=resource)}}
+{{=XML(new_title)}}:
+{{for record in new_records:}}
+{{for label, value in record:}}
+  {{=XML(label)}}: {{=XML(value)}}{{pass}}{{pass}}{{pass}}
+{{if upd is not None:}}
+{{upd_title=current.T("The following %(upd)s %(resource)s have been updated") % dict(upd=upd, resource=resource)}}
+{{=XML(upd_title)}}:
+{{for record in upd_records:}}
+{{for label, value in record:}}
+  {{=XML(label)}}: {{=XML(value)}}{{pass}}{{pass}}{{pass}}

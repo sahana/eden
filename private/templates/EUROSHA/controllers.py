@@ -99,35 +99,33 @@ class index():
             permit.controller = "org"
             permit.function = "site"
             permitted_facilities = auth.permitted_facilities(redirect_on_error=False)
-            manage_facility_box = ""
             if permitted_facilities:
-                facility_list = s3_represent_facilities(db, permitted_facilities,
-                                                        link=False)
+                facilities = s3db.org_SiteRepresent().bulk(permitted_facilities)
+                facility_list = [(fac, facilities[fac]) for fac in facilities]
                 facility_list = sorted(facility_list, key=lambda fac: fac[1])
-                facility_opts = [OPTION(opt[1], _value = opt[0])
-                                 for opt in facility_list]
-                if facility_list:
-                    manage_facility_box = DIV(H3(T("Manage Your Facilities")),
-                                              SELECT(_id = "manage_facility_select",
-                                                     _style = "max-width:400px;",
-                                                     *facility_opts
-                                                     ),
-                                              A(T("Go"),
-                                                _href = URL(c="default", f="site",
-                                                            args=[facility_list[0][0]]),
-                                                #_disabled = "disabled",
-                                                _id = "manage_facility_btn",
-                                                _class = "action-btn"
-                                                ),
-                                              _id = "manage_facility_box",
-                                              _class = "menu_box fleft"
-                                              )
-                    s3.jquery_ready.append(
+                facility_opts = [OPTION(fac[1], _value=fac[0])
+                                 for fac in facility_list]
+                manage_facility_box = DIV(H3(T("Manage Your Facilities")),
+                                          SELECT(_id = "manage_facility_select",
+                                                 _style = "max-width:400px;",
+                                                 *facility_opts
+                                                 ),
+                                          A(T("Go"),
+                                            _href = URL(c="default", f="site",
+                                                        args=[facility_list[0][0]]),
+                                            #_disabled = "disabled",
+                                            _id = "manage_facility_btn",
+                                            _class = "action-btn"
+                                            ),
+                                          _id = "manage_facility_box",
+                                          _class = "menu_box fleft"
+                                          )
+                s3.jquery_ready.append(
 '''$('#manage_facility_select').change(function(){
  $('#manage_facility_btn').attr('href',S3.Ap.concat('/default/site/',$('#manage_facility_select').val()))
 })''')
-                else:
-                    manage_facility_box = DIV()
+            else:
+                manage_facility_box = ""
 
             if has_permission("create", table):
                 create = A(T("Add Organization"),
@@ -163,13 +161,10 @@ class index():
 
             if self_registration:
                 # Provide a Registration box on front page
-                register_form = auth.register()
+                register_form = auth.s3_registration_form()
                 register_div = DIV(H3(T("Register")),
                                    P(XML(T("If you would like to help, then please %(sign_up_now)s") % \
                                             dict(sign_up_now=B(T("sign-up now"))))))
-
-                 # Add client-side validation
-                s3_register_validation()
 
                 if request.env.request_method == "POST":
                     post_script = \
@@ -264,54 +259,60 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
         """
 
         request = current.request
+        get_vars = request.get_vars
+
         resource = current.s3db.resource("org_organisation")
         totalrows = resource.count()
-        table = resource.table
-
+        if "iDisplayLength" in get_vars:
+            display_length = int(request.get_vars["iDisplayLength"])
+        else:
+            display_length = 10
+        limit = 4 * display_length
+        
         list_fields = ["id", "name"]
-        limit = int(request.get_vars["iDisplayLength"]) if request.extension == "aadata" else 1
-        rfields = resource.resolve_selectors(list_fields)[0]
-        (orderby, filter) = S3DataTable.getControlData(rfields, request.vars)
+        filter, orderby, left = resource.datatable_filter(list_fields,
+                                                          get_vars)
         resource.add_filter(filter)
-        filteredrows = resource.count()
-        if isinstance(orderby, bool):
-            orderby = table.name
-        rows = resource.select(list_fields,
-                               orderby=orderby,
+        
+        data = resource.select(list_fields,
                                start=0,
                                limit=limit,
-                               )
-        data = resource.extract(rows,
-                                list_fields,
-                                represent=True,
-                                )
-        dt = S3DataTable(rfields, data)
+                               orderby=orderby,
+                               left=left,
+                               count=True,
+                               represent=True)
+        filteredrows = data["numrows"]
+        rfields = data["rfields"]
+        rows = data["rows"]
+                                    
+        dt = S3DataTable(rfields, rows)
         dt.defaultActionButtons(resource)
         current.response.s3.no_formats = True
+        
         if request.extension == "html":
             items = dt.html(totalrows,
-                            filteredrows,
-                            "org_list_1",
-                            dt_displayLength=10,
+                            totalrows,
+                            "org_dt",
+                            dt_displayLength=display_length,
                             dt_ajax_url=URL(c="default",
                                             f="organisation",
                                             extension="aadata",
-                                            vars={"id": "org_list_1"},
+                                            vars={"id": "org_dt"},
                                             ),
+                            dt_pagination="true",
                            )
-        elif request.extension.lower() == "aadata":
-            limit = resource.count()
+        elif request.extension == "aadata":
             if "sEcho" in request.vars:
                 echo = int(request.vars.sEcho)
             else:
                 echo = None
             items = dt.json(totalrows,
                             filteredrows,
-                            "org_list_1",
+                            "org_dt",
                             echo)
         else:
             from gluon.http import HTTP
-            raise HTTP(501, current.manager.ERROR.BAD_FORMAT)
+            raise HTTP(501, resource.ERROR.BAD_FORMAT)
         return items
 
 # END =========================================================================

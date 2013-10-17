@@ -73,14 +73,14 @@ class Warehouse Stock Report(SeleniumUnitTest):
 					   "Lospalos Warehouse",
 					   "unchecked"),
 					 ( "select_owner_org_id",
-					   "Timor-Leste Red Cross Society",
+					   "Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)",
 					   "checked")]
 					 )
 
 		# Report by Donating Organisation
 		self.create( "inv_item_search",
 					[( "select_owner_org_id",
-					   "Timor-Leste Red Cross Society",
+					   "Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)",
 					   "unchecked"),
 					 ( "select_supply_org_id",
 					   "Australian Red Cross",
@@ -107,14 +107,14 @@ class Warehouse Stock Report(SeleniumUnitTest):
 					[( "text",
 					   "kitchen"),
 					 ( "select_owner_org_id",
-					   "Timor-Leste Red Cross Society",
+					   "Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)",
 					   "checked")]
 					 )
 
 		# Report by Facility and Donating Organisation
 		self.create( "inv_item_search",
 					[( "select_owner_org_id",
-					   "Timor-Leste Red Cross Society",
+					   "Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)",
 					   "unchecked"),
 					 ( "select_site_id",
 					   "Lospalos Warehouse",

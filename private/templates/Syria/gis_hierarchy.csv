@@ -1,0 +1,7 @@
+UUID,Country,L1,L2,L3,L4,L5,Edit L1
+SITE_DEFAULT,,"Governorate","District","Subdistrict","Qarya",,
+,SY,"Governorate","District","Subdistrict","Qarya",,False
+,JO,"Governorate","District","Subdistrict",,,False
+,IQ,"Governorate","District",,,,False
+,LB,"Governorate","District",,,,False
+,TR,"Province","District",,,,False

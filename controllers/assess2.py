@@ -485,7 +485,7 @@ def rat_tables():
 
         if row:
             date = row.date and str(row.date) or ""
-            location = row.location_id and gis_location_represent(row.location_id) or ""
+            location = row.location_id and s3db.gis_LocationRepresent()(row.location_id) or ""
 
             table = db.org_staff
             org = ["", ""]
@@ -2108,10 +2108,10 @@ def rat_rheader(r, tabs=[]):
                 rheader_tabs = s3_rheader_tabs(r, tabs, paging=True)
                 location = report.location_id
                 if location:
-                    location = gis_location_represent(location)
+                    location = r.table.location_id.represent(location)
                 staff = report.staff_id
                 if staff:
-                    organisation_represent = s3db.org_organisation_represent
+                    organisation_represent = htable.organisation_id.represent
                     query = (htable.id == staff)
                     organisation_id = db(query).select(htable.organisation_id,
                                                        limitby=(0, 1)).first().organisation_id
@@ -2163,7 +2163,7 @@ def assess_rheader(r, tabs=[]):
                                    TH("%s: " % T("Date & Time")),
                                    table.datetime.represent(assess.datetime),
                                    TH("%s: " % T("Location")),
-                                   gis_location_represent(assess.location_id),
+                                   table.location_id.represent(assess.location_id),
                                    TH("%s: " % T("Assessor")),
                                    table.assessor_person_id.represent(assess.assessor_person_id),
                                   ),
@@ -2269,7 +2269,7 @@ def basic_assess():
                                                 limitby=(0, 1)).first()
         if row:
             irs_location_id = row.location_id
-            location = gis_location_represent(irs_location_id)
+            location = table.location_id.represent(irs_location_id)
         else:
             irs_location_id = None
             location = None

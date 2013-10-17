@@ -1,0 +1,20 @@
+{{extend "layout.html"}}
+<h2 id='title'>{{=T("Video Tutorials")}}</h2>
+{{youtube_id = settings.get_youtube_id()}}
+{{if len(youtube_id) == 1:}}
+ <iframe width='960' height='720' src='//www.youtube.com/embed/{{=youtube_id[0]}}' frameborder='0' allowfullscreen></iframe>
+{{else:}}
+ <ul id='video-toc'>
+ {{for video in youtube_id:}}
+  <li><a href='#{{=video["id"]}}'>{{=video["title"]}}</a></li>
+ {{pass}}
+ </ul>
+ {{for video in youtube_id:}}
+ <h3 id='{{=video["id"]}}' class='video-header'>{{=video["title"]}}</h3>
+  <iframe width='960' height='720' src='//www.youtube.com/embed/{{=video["video_id"]}}' frameborder='0' allowfullscreen></iframe>
+  <br/>
+  <a href='#title'>{{=T("Back to Top")}}</a>
+  <br/>
+ {{pass}}
+{{pass}}
+</div>

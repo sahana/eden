@@ -1,117 +1,52 @@
 @charset "UTF-8";
 
 /* Landing Page */
+h1#main-title {
+    margin-top: -15px;
+    margin-bottom: -1px;
+    margin-left: 70px;
+    font-size: 25px;
+    text-shadow: 2px 0 4px #464343;
+}
 
 #myCarousel {
     margin-bottom: 0px;
-    margin-top: -50px; /* Temporary until the container issue fixed */
+    margin-top: -40px;
 }
 
 div.carousel-caption {
     width: 410px;
     margin-left: 17px;
     background: none;
-    top: 56px;
+    top: 27px;
 }
 
 div.carousel-caption h1 {
     padding-left: 40px;
-    font: 48px/47px Merriweather,Georgia,'Times new roman',serif;
+    font: 300 50px/47px Merriweather,Georgia,'Times new roman',serif;
     color: #fff;
-    text-shadow: 0px 1px 0px rgba(0, 0, 0, 0.12);
+    text-shadow: -2px 1px 2px rgba(0, 0, 0, 0.47);
     margin-bottom: 7px;
-    font-weight: 300;
     letter-spacing: -2px;
 }
 
 div.carousel-caption p {
     padding-left: 40px;
     padding-top: 8px;
-    font: normal 18px/20px 'Open Sans','Helvetica Neue',Helvetica,Arial,sans-serif;
+    font: normal 300 18px/20px 'Open Sans','Helvetica Neue',Helvetica,Arial,sans-serif;
     color: #fff;
     text-shadow: 0px 1px 0px rgba(0, 0, 0, 0.12);
-    font-weight: 300;
 } 
 
-@media screen and (min-width: 768px) and (max-width: 1000px) {
-  div.carousel-caption {
-    width: 379px;
-    margin-left: -7px;
-    top: 19px;
-  }
-  div.carousel-caption h1 {
-    font: 300 40px/37px Merriweather,Georgia,'Times new roman',serif;
-  }
-  div.carousel-caption p{
-    padding-top: 0px;
-    font: normal 16px/20px 'Open Sans','Helvetica Neue',Helvetica,Arial,sans-serif;
-  }
-}
-
-@media screen and (max-width: 767px) {
-  div.carousel-caption {
-    width: 280px;
-    margin-left: -2px;
-    top: 22px;
-  }
-  div.carousel-caption h1 {
-    font: 30px/29px Merriweather,Georgia,'Times new roman',serif;
-  }
-  div.carousel-caption p{
-    padding-top: 1px;
-    font: normal 300 14px/15px 'Open Sans','Helvetica Neue',Helvetica,Arial,sans-serif;
-    margin-top: -3px;
-  } 
-}
-
-@media (max-width: 480px) {
-  div.carousel-caption {
-    width: 100%;
-    margin-left: -14px;
-    position: relative;
-    margin-top: -36px;
-    margin-bottom: 27px;
-  }
-  div.carousel-caption h1 {
-    color: #393434;
-    margin-bottom: 7px;
-    text-align: center;
-    padding-right: 8px;
-    padding-left: 8px;
-  }
-  div.carousel-caption p{
-    padding-left: 12px;
-    color: #726c6c;
-    text-shadow: none;
-    text-align: center;
-    padding-right: 12px;
-  }
+a.btn.btn-register {
+    margin-left: 10px;
+    padding: 10px 30px;
+    margin-top: 19px;
 }
 
 a.btn.btn-custom.btn-login {
-	margin-top: 20px;
-	padding: 10px 20px;
-	margin-left: 39px;
-	
-}
-
-@media screen and (max-width: 767px) {
-  a.btn.btn-custom.btn-login {
-    margin-top: 10px;
-    margin-left: 39px;
-    padding: 5px;
-    font-size: 12px;
-  }
-}
-
-@media (max-width: 480px) {
-  a.btn.btn-custom.btn-login {
-    margin-top: 16px;
-    margin-left: 30px;
-    font-size: 15px;
-    width: 80%;
-    padding: 6px 0;
-  }
+    margin-top: 20px;
+    padding: 10px 40px;
 }
 
 .btn-custom {
@@ -161,58 +96,6 @@ p.quote.mb4 {
     margin-top: -2px;
 }
 
-@media screen and (max-width: 767px) {
-  .home-circle-img {
-    width: 80px;
-    margin: 0px auto 16px;
-    height: 80px;
-    float: left;
-    padding-right: 9px;
-  }
-  #homepage-about h2 {
-    font-size: 18px;
-    text-align: left;
-    top: 2px;
-    margin-bottom: 12px;
-  }
-  p.quote.mb4 {
-    font-size: 13px;
-    line-height: 18px;
-    text-align: left;
-    margin-top: 0;
-  }
-}
-
-@media (max-width: 480px) { 
-  .home-circle-img {
-    width: 80px;
-    margin: 0px auto 24px -25px;
-    padding-right: 7px;
-  }
-  #homepage-about h2 {
-    font-size: 18px;
-    top: -2px;
-    margin-bottom: 5px;;
-  }
-  p.quote.mb4 {
-    font-size: 13px;
-    line-height: 17px;
-    text-align: justify;
-    padding-right: 15px;
-    padding-left: 15px;
-  }
-}
-
-@media screen and (max-width: 767px) {
-  #homepage-about .span4 {
-    padding-left: 23px;
-    position: relative;
-    border-top: 1px solid rgba(0, 0, 0, 0.11);
-    padding-top: 15px;
-    padding-bottom: 17.5px;
-  }
-}
-
 #homepage-about {
     background-image: -webkit-gradient(radial, 50% 0%, 0, 50% 0%, 100, color-stop(0%, rgba(0, 0, 0, 0.15)), color-stop(100%, rgba(0, 0, 0, 0))), -webkit-gradient(radial, 50% 0%, 0, 50% 0%, 100, color-stop(0%, rgba(0, 0, 0, 0.08)), color-stop(100%, rgba(0, 0, 0, 0)));
     background-image: -webkit-radial-gradient(top center, ellipse farthest-side, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0) 100%), -webkit-radial-gradient(top center, ellipse farthest-side, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0) 100%);
@@ -233,7 +116,11 @@ p.quote.mb4 {
     padding-top: 20px;
     padding-bottom: 20px;
 }
- 
+
+#homepage-layer a:hover {
+    text-decoration: none;
+}
+
 #homepage-layer h2{
     font-size: 28px;
     font-weight: bold;
@@ -259,19 +146,19 @@ p.quote.mb4 {
     color: #4e4e4d;
 }
 
-.icon-calendar,
+#homepage-layer .icon-calendar,
 .icon-bullhorn,
 .icon-bookmark-empty {
     font-size: 34px;
-    color: #1c94d4;
 }
-
 .icon-bullhorn{
     color: #bd382e;	
 }
-
-.icon-calendar{
+#homepage-layer .icon-calendar{
     color: #1ebaa6;	
+}
+.icon-bookmark-empty {
+    color: #1c94d4;
 }
 
 .st {
@@ -303,13 +190,141 @@ p.quote.mb4 {
     padding-bottom: 31px;
 }
 
-div.span4.first_stl {
+.span4.first_stl {
     padding-bottom: 31px;
 }
 
-@media screen and (max-width: 767px) {
-  .stl,
-  .st {
-    background-image: none;
-  }
+@media screen and (min-width: 768px) and (max-width: 1000px) {
+    #myCarousel {
+        margin-bottom: 0px;
+        margin-top: -30px;
+    }
+    div.carousel-caption {
+        width: 379px;
+        margin-left: -7px;
+        top: 40px;
+    }
+    div.carousel-caption h1 {
+        font: 300 40px/37px Merriweather,Georgia,'Times new roman',serif;
+    }
+    div.carousel-caption p{
+        padding-top: 0px;
+        font: normal 16px/20px 'Open Sans','Helvetica Neue',Helvetica,Arial,sans-serif;
+    }
 }
+
+@media screen and (max-width: 767px) {
+    #myCarousel {
+        margin-top: 0px; 
+    }
+    div.carousel-caption {
+        width: 280px;
+        margin-left: -2px;
+        top: 22px;
+    }
+    div.carousel-caption h1 {
+        font: 30px/29px Merriweather,Georgia,'Times new roman',serif;
+    }
+    div.carousel-caption p{
+        padding-top: 1px;
+        font: normal 300 14px/15px 'Open Sans','Helvetica Neue',Helvetica,Arial,sans-serif;
+        margin-top: -3px;
+    }
+    .stl,
+    .st {
+        background-image: none;
+    }
+}
+
+@media screen and (max-width: 767px) {
+    #homepage-about .span4 {
+        padding-left: 23px;
+        position: relative;
+        border-top: 1px solid rgba(0, 0, 0, 0.11);
+        padding-top: 15px;
+        padding-bottom: 17.5px;
+    }
+    #homepage-about h2 {
+        font-size: 18px;
+        text-align: left;
+        top: 2px;
+        margin-bottom: 12px;
+    }
+    .home-circle-img {
+        width: 80px;
+        margin: 0px auto 16px;
+        height: 80px;
+        float: left;
+        padding-right: 9px;
+    }
+    p.quote.mb4 {
+        font-size: 13px;
+        line-height: 18px;
+        text-align: left;
+        margin-top: 0;
+    }
+    a.btn.btn-register,
+    a.btn.btn-custom.btn-login {
+        margin-top: 15px;
+        padding: 5px 15px;
+        font-size: 12px;
+    }
+    a.btn.btn-register {
+        margin-left: 6px;
+    }
+}
+
+@media (max-width: 480px) { 
+    #myCarousel {
+        margin-bottom: 0px;
+        margin-top: 0px;   
+    }
+    div.carousel-caption {
+        width: 100%;
+        margin-left: -14px;
+        position: relative;
+        margin-top: -36px;
+        margin-bottom: 27px;
+    }
+    div.carousel-caption h1 {
+        color: #393434;
+        margin-bottom: 7px;
+        text-align: center;
+        padding-right: 8px;
+        padding-left: 8px;
+        text-shadow: none;
+    }
+    div.carousel-caption p{
+        padding-left: 12px;
+        color: #726c6c;
+        text-shadow: none;
+        text-align: center;
+        padding-right: 12px;
+    }
+    .home-circle-img {
+        width: 80px;
+        margin: 0px auto 24px -25px;
+        padding-right: 7px;
+    }
+    #homepage-about h2 {
+        font-size: 18px;
+        top: -2px;
+        margin-bottom: 5px;;
+    }
+    p.quote.mb4 {
+        font-size: 13px;
+        line-height: 17px;
+        text-align: justify;
+        padding-right: 15px;
+        padding-left: 15px;
+    }
+    a.btn.btn-register,
+    a.btn.btn-custom.btn-login {
+        margin-top: 16px;
+        margin-left: 30px;
+        font-size: 15px;
+        width: 80%;
+        padding: 6px 0;
+    }
+}
+

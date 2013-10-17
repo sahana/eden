@@ -73,6 +73,8 @@ $('#contact-add').click(function() {
         $('#popup').find('form').attr('action', url2);
         // Hide the spinner
         $('#contact-add_throbber').hide();
+        // Show the form
+        $('#popup form').show();
     });
 });
 
@@ -164,6 +166,8 @@ $('#emergency-add').click(function() {
         $('#popup').find('form').attr('action', url2);
         // Hide the spinner
         $('#emergency-add_throbber').hide();
+        // Show the form
+        $('#popup form').show();
     });
 });
 
@@ -197,6 +201,8 @@ $('.emergency').each(function() {
             $('#popup').find('form').attr('action', url2);
             // Hide the spinner
             $('#emergency-add_throbber').hide();
+            // Show the form
+            $('#popup form').show();
         });
     });
 });

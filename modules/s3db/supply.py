@@ -28,11 +28,18 @@
 """
 
 __all__ = ["S3SupplyModel",
+           "S3SupplyDistributionModel",
            "supply_item_rheader",
-           "SupplyItemPackVirtualFields",
            "supply_item_controller",
            "supply_item_entity_controller",
            "supply_catalog_rheader",
+           "supply_item_entity_category",
+           "supply_item_entity_country",
+           "supply_item_entity_organisation",
+           "supply_item_entity_contacts",
+           "supply_item_entity_status",
+           "supply_ItemRepresent",
+           #"supply_ItemCategoryRepresent",
            ]
 
 import re
@@ -79,7 +86,7 @@ class S3SupplyModel(S3Model):
              "supply_item_represent",
              "supply_item_category_represent",
              "supply_item_add",
-             "supply_item_pack_virtualfields",
+             "supply_item_pack_quantity",
              ]
 
     def model(self):
@@ -100,6 +107,13 @@ class S3SupplyModel(S3Model):
 
         NONE = current.messages["NONE"]
 
+        if current.auth.permission.format == "html":
+            i18n = {"in_inv": T("in Stock"),
+                    "no_packs": T("No Packs for Item"),
+                    }
+            s3.js_global.append('''i18n.in_inv="%s"''' % i18n["in_inv"])
+            s3.js_global.append('''i18n.no_packs="%s"''' % i18n["no_packs"])
+            
         # =====================================================================
         # Brand
         #
@@ -205,6 +219,9 @@ class S3SupplyModel(S3Model):
         asset = settings.has_module("asset")
         vehicle = settings.has_module("vehicle")
 
+        item_category_represent = supply_ItemCategoryRepresent()
+        item_category_represent_nocodes = supply_ItemCategoryRepresent(use_code=False)
+
         tablename = "supply_item_category"
         table = define_table(tablename,
                              catalog_id(),
@@ -212,7 +229,7 @@ class S3SupplyModel(S3Model):
                              Field("parent_item_category_id",
                                    "reference supply_item_category",
                                    label = T("Parent"),
-                                   represent = self.item_category_represent,
+                                   represent = item_category_represent,
                                    ondelete = "RESTRICT",
                                    ),
                              Field("code", length=16,
@@ -256,10 +273,9 @@ class S3SupplyModel(S3Model):
         # Reusable Field
         item_category_requires = IS_NULL_OR(
                                     IS_ONE_OF(db, "supply_item_category.id",
-                                              lambda id, row: \
-                                                self.item_category_represent(id, row,
-                                                                             use_code=False),
-                                              sort=True))
+                                              item_category_represent_nocodes,
+                                              sort=True)
+                                    )
 
         item_category_comment = S3AddResourceLink(c="supply",
                                                   f="item_category",
@@ -273,7 +289,7 @@ class S3SupplyModel(S3Model):
         item_category_id = S3ReusableField("item_category_id", table,
                                            sortby="name",
                                            requires=item_category_requires,
-                                           represent=self.item_category_represent,
+                                           represent=item_category_represent,
                                            label = T("Category"),
                                            comment = item_category_comment,
                                            ondelete = "RESTRICT"
@@ -398,23 +414,16 @@ S3OptionsFilter({
             msg_no_match = T("No Matching Items")
             )
 
+        supply_item_represent = supply_ItemRepresent(show_link=True)
+
         # Reusable Field
         supply_item_id = S3ReusableField("item_id", table, sortby="name", # 'item_id' for backwards-compatibility
                     requires = IS_ONE_OF(db, "supply_item.id",
-                                         self.supply_item_represent,
+                                         supply_item_represent,
                                          sort=True),
-                    represent = self.supply_item_represent,
+                    represent = supply_item_represent,
                     label = T("Item"),
                     widget = S3AutocompleteWidget("supply", "item"),
-                    #widget = S3SearchAutocompleteWidget(
-                    #                get_fieldname = "item_id",
-                    #                tablename = "supply_catalog_item",
-                    #                represent = lambda id: \
-                    #                    self.supply_item_represent(id,
-                    #                                               show_link=False,
-                    #                                               # @ToDo: this doesn't work
-                    #                                               show_um=False),
-                    #                ),
                     comment=S3AddResourceLink(c="supply",
                                               f="item",
                                               label=ADD_ITEM,
@@ -425,47 +434,49 @@ S3OptionsFilter({
         # ---------------------------------------------------------------------
         # Item Search Method
         #
+        search_widgets = [
+            S3SearchSimpleWidget(
+                name="item_search_text",
+                label=T("Search"),
+                comment=T("Search for an item by its code, name, model and/or comment."),
+                field=["code",
+                       "name",
+                       "model",
+                       #"item_category_id$name",
+                       "comments" ]
+              ),
+            S3SearchOptionsWidget(
+                name="item_search_brand",
+                label=T("Brand"),
+                comment=T("Search for an item by brand."),
+                field="brand_id",
+                represent ="%(name)s",
+                cols = 3
+            ),
+            S3SearchOptionsWidget(
+                name="item_search_year",
+                label=T("Year"),
+                comment=T("Search for an item by Year of Manufacture."),
+                field="year",
+                cols = 1
+            ),
+            ]
         report_options = Storage(
-            search=[S3SearchSimpleWidget(
-                        name="item_search_text",
-                        label=T("Search"),
-                        comment=T("Search for an item by its code, name, model and/or comment."),
-                        field=["code",
-                               "name",
-                               "model",
-                               #"item_category_id$name",
-                               "comments" ]
-                      ),
-                      S3SearchOptionsWidget(
-                        name="item_search_brand",
-                        label=T("Brand"),
-                        comment=T("Search for an item by brand."),
-                        field="brand_id",
-                        represent ="%(name)s",
-                        cols = 3
-                      ),
-                      S3SearchOptionsWidget(
-                        name="item_search_year",
-                        label=T("Year"),
-                        comment=T("Search for an item by Year of Manufacture."),
-                        field="year",
-                        cols = 1
-                      ),
-                   ],
-
+            search=search_widgets,
             defaults=Storage(rows="item.name",
                              cols="item.item_category_id",
                              fact="count:item.brand_id",
                              ),
             hide_comments=True,
         )
-        item_search = S3Search(advanced=report_options.get("search"))
+        search_method = S3Search(simple=(),
+                                 advanced=search_widgets)
 
         configure(tablename,
                   deduplicate = self.supply_item_duplicate,
                   onaccept = self.supply_item_onaccept,
                   orderby = table.name,
-                  search_method = item_search,
+                  search_method = search_method,
                   report_options = report_options,
                   )
 
@@ -555,7 +566,7 @@ S3OptionsFilter({
                        ],
                 )
 
-        catalog_item_search = S3Search(
+        search_method = S3Search(
             simple=(catalog_item_search_simple_widget("simple")),
             advanced=(catalog_item_search_simple_widget("advanced"),
                       S3SearchOptionsWidget(
@@ -571,8 +582,7 @@ S3OptionsFilter({
                          label=T("Category"),
                          comment=T("Search for an item by category."),
                          field="item_category_id",
-                         represent = lambda id: \
-                            self.item_category_represent(id, use_code=False),
+                         represent = item_category_represent_nocodes,
                          cols = 3
                        ),
                        S3SearchOptionsWidget(
@@ -588,7 +598,7 @@ S3OptionsFilter({
 
         configure(tablename,
                   deduplicate = self.supply_catalog_item_duplicate,
-                  search_method = catalog_item_search,
+                  search_method = search_method,
                   )
 
         # =====================================================================
@@ -659,8 +669,8 @@ S3OptionsFilter({
  'lookupPrefix':'supply',
  'lookupResource':'item_pack',
  'msgNoRecords':i18n.no_packs,
- 'fncPrep':fncPrepItem,
- 'fncRepresent':fncRepresentItem
+ 'fncPrep':S3.supply.fncPrepItem,
+ 'fncRepresent':S3.supply.fncRepresentItem
 })''',
                     ondelete = "RESTRICT")
 
@@ -734,38 +744,6 @@ S3OptionsFilter({
             msg_record_deleted = T("Alternative Item deleted"),
             msg_list_empty = T("No Alternative Items currently registered"))
 
-        #def item_alt_represent(id, row=None):
-        #    try:
-        #        return supply_item_represent(db.supply_item_alt[id].item_id)
-        #    except:
-        #        return NONE
-
-        # Reusable Field - probably not needed
-        #item_alt_id = S3ReusableField("item_alt_id", table,
-        #            sortby="name",
-        #            requires = IS_NULL_OR(IS_ONE_OF(db,
-        #                                            "supply_item_alt.id",
-        #                                            item_alt_represent,
-        #                                            sort=True)),
-        #            represent = item_alt_represent,
-        #            label = T("Alternative Item"),
-        #            comment = DIV(DIV( _class="tooltip",
-        #                               _title="%s|%s" % (T("Alternative Item"),
-        #                                                 T("An item which can be used in place of another item"))),
-        #                          A( ADD_ALT_ITEM,
-        #                             _class="s3_add_resource_link",
-        #                             _href=URL(#                                       c="supply",
-        #                                       f="item_alt",
-        #                                       args="create",
-        #                                       vars=dict(format="popup")
-        #                                       ),
-        #                             _target="top",
-        #                             _id = "item_alt_add",
-        #                             _style = "display: none",
-        #                             ),
-        #                          ),
-        #            ondelete = "RESTRICT")
-
         # =====================================================================
         # Item Super-Entity
         #
@@ -783,12 +761,7 @@ S3OptionsFilter({
                                   # @ToDo: Make Items Trackable?
                                   #super_link("track_id", "sit_trackable"),
                                   #location_id(),
-                                  supply_item_id(
-                                    represent = lambda id: \
-                                        self.supply_item_represent(id,
-                                                                   show_um=False,
-                                                                   show_link=True)
-                                    ),
+                                  supply_item_id(),
                                   item_pack_id(),
                                   Field("quantity", "double", notnull=True,
                                         label = T("Quantity"),
@@ -813,8 +786,9 @@ S3OptionsFilter({
         # ---------------------------------------------------------------------
         # Item Search Method
         #
-        item_entity_search = S3Search(
+        search_method = S3Search(
             # Advanced Search only
+            simple=(),
             advanced=(S3SearchSimpleWidget(
                         name="item_entity_search_text",
                         label=T("Search"),
@@ -844,7 +818,7 @@ S3OptionsFilter({
 
         # ---------------------------------------------------------------------
         configure(tablename,
-                  search_method = item_entity_search)
+                  search_method = search_method)
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -854,9 +828,9 @@ S3OptionsFilter({
                 supply_item_entity_id = item_id,
                 supply_item_category_id = item_category_id,
                 supply_item_pack_id = item_pack_id,
-                supply_item_represent = self.supply_item_represent,
-                supply_item_category_represent = self.item_category_represent,
-                supply_item_pack_virtualfields = SupplyItemPackVirtualFields,
+                supply_item_represent = supply_item_represent,
+                supply_item_category_represent = item_category_represent,
+                supply_item_pack_quantity = SupplyItemPackQuantity,
                 supply_item_add = self.supply_item_add,
                 supply_item_pack_represent = self.item_pack_represent,
                 )
@@ -880,7 +854,7 @@ S3OptionsFilter({
                 supply_item_id = supply_item_id,
                 supply_item_entity_id = item_id,
                 supply_item_pack_id = item_pack_id,
-                supply_item_pack_virtualfields = None,
+                supply_item_pack_quantity = lambda tablename: lambda row: 0,
                 )
 
     # -------------------------------------------------------------------------
@@ -906,65 +880,11 @@ S3OptionsFilter({
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def item_category_represent(id, row=None, use_code=True):
-        """
-            Represent an Item Category via it's hierarchy
-        """
-
-        if row:
-            # @ToDo: Optimise so we don't need to do the first query
-            item_category_id = row.id
-        elif not id:
-            return current.messages["NONE"]
-        else:
-            item_category_id = id
-
-        db = current.db
-        table = db.supply_item_category
-        represent = ""
-        while item_category_id:
-            query = (table.id == item_category_id)
-            r = db(query).select(table.catalog_id,
-                                 table.code,
-                                 table.name,
-                                 table.parent_item_category_id,
-                                 # left = table.on(table.id == table.parent_item_category_id), Doesn't work
-                                 limitby=(0, 1)).first()
-
-            if (r.code and use_code) or (not r.name and r.code):
-                represent_append = r.code
-                represent_join = "-"
-            else:
-                represent_append = r.name
-                represent_join = " - "
-
-            if represent:
-                represent = represent_join.join([represent_append,
-                                                 represent])
-            else:
-                represent = represent_append
-
-            # Feed the loop
-            item_category_id = r.parent_item_category_id
-
-        if r.catalog_id:
-            table = db.supply_catalog
-            catalog = db(table.id == r.catalog_id).select(table.name,
-                                                          limitby=(0, 1)
-                                                          ).first()
-            try:
-                return "%s > %s" % (catalog.name, represent)
-            except:
-                return represent
-        else:
-            return represent
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def item_represent(id):
         """
             Represent an item entity in option fields or list views
             - unused, we use VirtualField instead
+            @ToDo: Migrate to S3Represent
         """
 
         if not id:
@@ -1002,61 +922,12 @@ S3OptionsFilter({
 
         return item_str
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def supply_item_represent(id, row=None,
-                              # Needed for S3SearchAutocompleteWidget
-                              show_um = False,
-                              show_link = True):
-        """
-            Representation of a supply_item
-        """
-
-        if row:
-            # @ToDo: Optimised query where we don't need to do the join
-            id = row.id
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.supply_item
-        btable = db.supply_brand
-        r = db(table.id == id).select(table.name,
-                                      table.model,
-                                      table.um,
-                                      btable.name,
-                                      left = btable.on(table.brand_id == btable.id),
-                                      limitby=(0, 1)).first()
-        try:
-            represent = [r.supply_item.name,
-                         r.supply_brand.name,
-                         r.supply_item.model]
-        except:
-            return current.messages.UNKNOWN_OPT
-        represent = [rep for rep in represent if rep]
-        represent = " - ".join(represent)
-
-        if show_um and r.supply_item.um:
-            represent = "%s (%s)" % (represent, r.supply_item.um)
-
-        local_request = current.request
-        local_request.extension = "html"
-        if show_link:
-            return A(represent,
-                     _href = URL(r = local_request,
-                                 c = "supply",
-                                 f = "item",
-                                 args = [id]
-                                 )
-                     )
-        else:
-            return represent
-
     # ---------------------------------------------------------------------
     @staticmethod
     def item_pack_represent(id, row=None):
         """
             Represent an Item Pack
+            @ToDo: Migrate to S3Represent
         """
 
         if row:
@@ -1279,6 +1150,615 @@ S3OptionsFilter({
                                    )
 
 # =============================================================================
+class S3SupplyDistributionModel(S3Model):
+    """
+        Supply Distribution Model
+        - depends on Stats module
+    """
+
+    names = ["supply_distribution_item",
+             "supply_distribution",
+             ]
+
+    def model(self):
+
+        if not current.deployment_settings.has_module("stats"):
+            # Distribution Model needs Stats module enabling
+            return dict()
+
+        T = current.T
+        db = current.db
+
+        configure = self.configure
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+        super_link = self.super_link
+
+        # ---------------------------------------------------------------------
+        # Distribution Item
+        #
+        tablename = "supply_distribution_item"
+        table = define_table(tablename,
+                             super_link("parameter_id", "stats_parameter"),
+                             self.supply_item_entity_id,
+                             self.supply_item_id(ondelete = "RESTRICT",
+                                                 required = True),
+                             Field("name", length=128, unique=True,
+                                   requires = IS_NOT_IN_DB(db,
+                                                           "supply_distribution_item.name")),
+                             *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_ITEM = T("Add Distribution Item")
+        crud_strings[tablename] = Storage(
+            title_create = ADD_ITEM,
+            title_display = T("Distribution Item"),
+            title_list = T("Distribution Items"),
+            title_update = T("Edit Distribution Item"),
+            title_search = T("Search Distribution Items"),
+            subtitle_create = T("Add New Distribution Item"),
+            label_list_button = T("List Distribution Items"),
+            label_create_button = ADD_ITEM,
+            msg_record_created = T("Distribution Item Added"),
+            msg_record_modified = T("Distribution Item Updated"),
+            msg_record_deleted = T("Distribution Item Deleted"),
+            msg_list_empty = T("No Distribution Items Found")
+        )
+
+        # Resource Configuration
+        configure(tablename,
+                  super_entity = ("stats_parameter", "supply_item_entity"),
+                  onaccept=self.supply_distribution_item_onaccept,
+                  )
+
+        # ---------------------------------------------------------------------
+        # Distribution
+        #
+        tablename = "supply_distribution"
+        table = define_table(tablename,
+                             # Link Fields
+                             # populated automatically
+                             self.project_project_id(readable=False,
+                                                     writable=False),
+                             self.project_location_id(comment=None),
+                             # Instance
+                             super_link("data_id", "stats_data"),
+                             # This is a component, so needs to be a super_link
+                             # - can't override field name, ondelete or requires
+                             super_link("parameter_id", "stats_parameter",
+                                        label = T("Item"),
+                                        instance_types = ["supply_distribution_item"],
+                                        represent = S3Represent(lookup="stats_parameter"),
+                                        readable = True,
+                                        writable = True,
+                                        empty = False,
+                                        comment = S3AddResourceLink(c="supply",
+                                                                    f="distribution_item",
+                                                                    vars = dict(child = "parameter_id"),
+                                                                    title=ADD_ITEM),
+                                        ),
+                             # Populated automatically from project_location
+                             self.gis_location_id(readable = False,
+                                                  writable = False),
+                             Field("value", "double",
+                                   label = T("Quantity"),
+                                   requires = IS_INT_IN_RANGE(0, 99999999),
+                                   represent = lambda v: \
+                                    IS_INT_AMOUNT.represent(v)),
+                             s3_date("date",
+                                     label = T("Start Date"),
+                                     #empty = False,
+                                     ),
+                             s3_date("end_date",
+                                     label = T("End Date"),
+                                     #empty = False,
+                                     ),
+                             #self.stats_source_id(),
+                             s3_comments(),
+                             *s3_meta_fields())
+
+        # Virtual fields
+        table.year = Field.Lazy(self.supply_distribution_year)
+
+        # CRUD Strings
+        ADD_DIST = T("Add Distribution")
+        crud_strings[tablename] = Storage(
+            title_create = ADD_DIST,
+            title_display = T("Distribution Details"),
+            title_list = T("Distributions"),
+            title_update = T("Edit Distribution"),
+            title_search = T("Search Distributions"),
+            title_report = T("Distribution Report"),
+            subtitle_create = T("Add New Distribution"),
+            label_list_button = T("List Distributions"),
+            label_create_button = ADD_DIST,
+            msg_record_created = T("Distribution Added"),
+            msg_record_modified = T("Distribution Updated"),
+            msg_record_deleted = T("Distribution Deleted"),
+            msg_list_empty = T("No Distributions Found")
+        )
+
+        # Resource Configuration
+        # ---------------------------------------------------------------------
+        def year_options():
+            """
+                returns a dict of the options for the year virtual field
+                used by the search widget
+
+                orderby needed for postgres
+            """
+
+            ptable = db.project_project
+            pbtable = db.supply_distribution
+            pquery = (ptable.deleted == False)
+            pbquery = (pbtable.deleted == False)
+            pmin = ptable.start_date.min()
+            pbmin = pbtable.date.min()
+            p_start_date_min = db(pquery).select(pmin,
+                                                 orderby=pmin,
+                                                 limitby=(0, 1)).first()[pmin]
+            pb_date_min = db(pbquery).select(pbmin,
+                                             orderby=pbmin,
+                                             limitby=(0, 1)).first()[pbmin]
+            if p_start_date_min and pb_date_min:
+                start_year = min(p_start_date_min,
+                                 pb_date_min).year
+            else:
+                start_year = (p_start_date_min and p_start_date_min.year) or \
+                             (pb_date_min and pb_date_min.year)
+
+            pmax = ptable.end_date.max()
+            pbmax = pbtable.end_date.max()
+            p_end_date_max = db(pquery).select(pmax,
+                                               orderby=pmax,
+                                               limitby=(0, 1)).first()[pmax]
+            pb_end_date_max = db(pbquery).select(pbmax,
+                                                 orderby=pbmax,
+                                                 limitby=(0, 1)).first()[pbmax]
+            if p_end_date_max and pb_end_date_max:
+                end_year = max(p_end_date_max,
+                               pb_end_date_max).year
+            else:
+                end_year = (p_end_date_max and p_end_date_max.year) or \
+                           (pb_end_date_max and pb_end_date_max.year)
+
+            if not start_year or not end_year:
+                return {start_year:start_year} or {end_year:end_year}
+            years = {}
+            for year in xrange(start_year, end_year + 1):
+                years[year] = year
+            return years
+
+        filter_widgets = [
+            #S3TextFilter([#"item_id$name",
+            #              "project_id$name",
+            #              "project_id$code",
+            #              "location_id",
+            #              "comments"
+            #              ],
+            #             label = T("Search Distributions"),
+            #             ),
+            S3LocationFilter("location_id",
+                             levels=["L0", "L1", "L2", "L3"],
+                             widget="multiselect"
+                             ),
+            S3OptionsFilter("project_id$sector_project.sector_id",
+                            label = T("Sector"),
+                            widget="multiselect"
+                            ),
+            S3OptionsFilter("parameter_id",
+                            label = T("Item"),
+                            widget="multiselect"
+                            ),
+            # @ToDo: Range Slider using start_date & end_date
+            #S3DateFilter("date",
+            #             )
+            #S3OptionsFilter("project_id",
+            #                label = T("Project"),
+            #                cols = 3,
+            #                widget="multiselect"
+            #                ),
+            #S3OptionsFilter("project_id$organisation_id",
+            #                label = T("Lead Organisation"),
+            #                widget="multiselect"
+            #                ),
+            #S3OptionsFilter("year",
+            #                label = T("Year"),
+            #                cols = 3,
+            #                widget="multiselect",
+            #                options = year_options
+            #                ),
+            #S3OptionsFilter("project_id$partner.organisation_id",
+            #                label = T("Partners"),
+            #                widget="multiselect"),
+            #S3OptionsFilter("project_id$donor.organisation_id",
+            #                label = T("Donors"),
+            #                location_level="L1",
+            #                widget="multiselect")
+            ]
+
+        report_fields = ["project_location_id",
+                         "project_id$sector_project.sector_id",
+                         (T("Item"), "parameter_id"),
+                         #"project_id",
+                         (T("Year"), "year"),
+                         #"project_id$hazard.name",
+                         #"project_id$theme.name",
+                         (current.messages.COUNTRY, "location_id$L0"),
+                         "location_id$L1",
+                         "location_id$L2",
+                         "location_id$L3",
+                         #"location_id$L4",
+                         ]
+
+        configure(tablename,
+                  super_entity = "stats_data",
+                  onaccept = self.supply_distribution_onaccept,
+                  deduplicate = self.supply_distribution_deduplicate,
+                  context = {"location": "location_id",
+                             "organisation": "project_id$organisation_id",
+                             },
+                  filter_widgets = filter_widgets,
+                  report_options=Storage(
+                    rows=report_fields,
+                    cols=report_fields,
+                    fact=report_fields + ["value"],
+                    defaults=Storage(rows="location_id$L1",
+                                     cols="parameter_id",
+                                     # T("Projects")
+                                     fact="sum(value)",
+                                     totals=True
+                                     ),
+                    extra_fields = ["project_id",
+                                    #"date",
+                                    #"end_date"
+                                    ]
+                    )
+                 )
+
+        # Pass names back to global scope (s3.*)
+        return dict()
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def supply_distribution_item_onaccept(form):
+        """
+            Update supply_distribution_item name from supply_item_id
+        """
+
+        db = current.db
+        dtable = db.supply_distribution_item
+        ltable = db.supply_item
+
+        record_id = form.vars.id
+        query = (dtable.id == record_id) & \
+                (ltable.id == dtable.item_id)
+        item = db(query).select(ltable.name,
+                                limitby=(0, 1)).first()
+        if item:
+            db(dtable.id == record_id).update(name = item.name)
+        return
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def supply_distribution_onaccept(form):
+        """
+            Update supply_distribution project & location from project_location_id
+        """
+
+        db = current.db
+        dtable = db.supply_distribution
+        ltable = db.project_location
+
+        record_id = form.vars.id
+        query = (dtable.id == record_id) & \
+                (ltable.id == dtable.project_location_id)
+        project_location = db(query).select(ltable.project_id,
+                                            ltable.location_id,
+                                            limitby=(0, 1)).first()
+        if project_location:
+            db(dtable.id == record_id).update(
+                    project_id = project_location.project_id,
+                    location_id = project_location.location_id
+                )
+        return
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def supply_distribution_deduplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename != "supply_distribution":
+            return
+
+        data = item.data
+        if "parameter_id" in data and \
+           "project_location_id" in data:
+            # Match distribution by item and project_location
+            table = item.table
+            parameter_id = data.parameter_id
+            project_location_id = data.project_location_id
+            query = (table.parameter_id == parameter_id) & \
+                    (table.project_location_id == project_location_id)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def supply_distribution_year(row):
+        """ Virtual field for the supply_distribution table """
+
+        if hasattr(row, "supply_distribution"):
+            row = row.supply_distribution
+
+        try:
+            project_id = row.project_id
+        except AttributeError:
+            return []
+        try:
+            date = row.date
+        except AttributeError:
+            date = None
+        try:
+            end_date = row.end_date
+        except AttributeError:
+            end_date = None
+
+        if not date or not end_date:
+            table = current.s3db.project_project
+            project = current.db(table.id == project_id) \
+                             .select(table.start_date,
+                                     table.end_date,
+                                     limitby=(0, 1)).first()
+            if project:
+                if not date:
+                    date = project.start_date
+                if not end_date:
+                    end_date = project.end_date
+
+        if not date and not end_date:
+            return []
+        elif not end_date:
+            return [date.year]
+        elif not date:
+            return [end_date.year]
+        else:
+            return list(xrange(date.year, end_date.year + 1))
+
+# =============================================================================
+class supply_ItemRepresent(S3Represent):
+    """ Representation of Supply Items """
+
+    def __init__(self,
+                 translate=False,
+                 show_link=False,
+                 show_um=False,
+                 multiple=False):
+
+        self.show_um = show_um
+
+        # Need a custom lookup to join with Brand
+        self.lookup_rows = self.custom_lookup_rows
+        fields = ["supply_item.id",
+                  "supply_item.name",
+                  "supply_item.model",
+                  "supply_brand.name",
+                  ]
+        if show_um:
+            fields.append("supply_item.um")
+
+        super(supply_ItemRepresent,
+              self).__init__(lookup="supply_item",
+                             fields=fields,
+                             show_link=show_link,
+                             translate=translate,
+                             multiple=multiple)
+
+    # -------------------------------------------------------------------------
+    def custom_lookup_rows(self, key, values, fields=[]):
+        """
+            Custom lookup method for item rows, does a
+            left join with the brand. Parameters
+            key and fields are not used, but are kept for API
+            compatibility reasons.
+
+            @param values: the organisation IDs
+        """
+
+        db = current.db
+        itable = current.s3db.supply_item
+        btable = db.supply_brand
+
+        left = btable.on(btable.id == itable.brand_id)
+
+        qty = len(values)
+        if qty == 1:
+            query = (itable.id == values[0])
+            limitby = (0, 1)
+        else:
+            query = (itable.id.belongs(values))
+            limitby = (0, qty)
+
+        rows = db(query).select(*self.fields,
+                                left=left,
+                                limitby=limitby)
+        self.queries += 1
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a single Row
+
+            @param row: the supply_item Row
+        """
+
+        name = row["supply_item.name"]
+        model = row["supply_item.model"]
+        brand = row["supply_brand.name"]
+
+        fields = []
+        if name:
+            fields.append(name)
+        if model:
+            fields.append(model)
+        if brand:
+            fields.append(brand)
+        name = " - ".join(fields)
+
+        if self.show_um:
+            um = row["supply_item.um"]
+            if um:
+                name = "%s (%s)" % (name, um)
+        return s3_unicode(name)
+
+# =============================================================================
+class supply_ItemCategoryRepresent(S3Represent):
+    """ Representation of Supply Item Categories """
+
+    def __init__(self,
+                 translate=False,
+                 show_link=False,
+                 use_code=True,
+                 multiple=False):
+
+        self.use_code = use_code
+
+        # Need a custom lookup to join with Parent/Catalog
+        self.lookup_rows = self.custom_lookup_rows
+        fields = ["supply_item_category.id",
+                  "supply_item_category.name",
+                  # Always-included since used as fallback if no name
+                  "supply_item_category.code",
+                  "supply_catalog.name",
+                  "supply_parent_item_category.name",
+                  "supply_grandparent_item_category.name",
+                  "supply_grandparent_item_category.parent_item_category_id",
+                  ]
+
+        super(supply_ItemCategoryRepresent,
+              self).__init__(lookup="supply_item_category",
+                             fields=fields,
+                             show_link=show_link,
+                             translate=translate,
+                             multiple=multiple)
+
+    # -------------------------------------------------------------------------
+    def custom_lookup_rows(self, key, values, fields=[]):
+        """
+            Custom lookup method for item category rows, does a
+            left join with the parent category. Parameters
+            key and fields are not used, but are kept for API
+            compatibility reasons.
+
+            @param values: the organisation IDs
+        """
+
+        db = current.db
+        table = current.s3db.supply_item_category
+        ctable = db.supply_catalog
+        ptable = db.supply_item_category.with_alias("supply_parent_item_category")
+        gtable = db.supply_item_category.with_alias("supply_grandparent_item_category")
+
+        left = [ctable.on(ctable.id == table.catalog_id),
+                ptable.on(ptable.id == table.parent_item_category_id),
+                gtable.on(gtable.id == ptable.parent_item_category_id),
+                ]
+
+        qty = len(values)
+        if qty == 1:
+            query = (table.id == values[0])
+            limitby = (0, 1)
+        else:
+            query = (table.id.belongs(values))
+            limitby = (0, qty)
+
+        rows = db(query).select(*self.fields,
+                                left=left,
+                                limitby=limitby)
+        self.queries += 1
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a single Row
+
+            @param row: the supply_item_category Row
+        """
+
+        use_code = self.use_code
+
+        name = row["supply_item_category.name"]
+        code = row["supply_item_category.code"]
+        catalog = row["supply_catalog.name"]
+        parent = row["supply_parent_item_category.name"]
+
+        if use_code:
+            name = code
+        elif not name:
+            name = code
+
+        if parent:
+            if use_code:
+                # Compact format
+                joiner = "-"
+            else:
+                joiner = " - "
+            name = "%s%s%s" % (name, joiner, parent)
+            grandparent = row["supply_grandparent_item_category.name"]
+            if grandparent:
+                name = "%s%s%s" % (name, joiner, grandparent)
+                # Check for Great-grandparent
+                # Trade-off "all in 1 row" vs "too many joins"
+                greatgrandparent = row["supply_grandparent_item_category.parent_item_category_id"]
+                if greatgrandparent:
+                    # Assume no more than 6 levels of interest
+                    db = current.db
+                    table = current.s3db.supply_item_category
+                    ptable = db.supply_item_category.with_alias("supply_parent_item_category")
+                    gtable = db.supply_item_category.with_alias("supply_grandparent_item_category")
+                    left = [ptable.on(ptable.id == table.parent_item_category_id),
+                            gtable.on(gtable.id == ptable.parent_item_category_id),
+                            ]
+                    query = (table.id == greatgrandparent)
+                    fields = [table.name,
+                              table.code,
+                              ptable.name,
+                              ptable.code,
+                              gtable.name,
+                              gtable.code,
+                              ]
+                    row = db(query).select(*fields,
+                                           left=left,
+                                           limitby=(0, 1)).first()
+                    if row:
+                        if use_code:
+                            greatgrandparent = row["supply_item_category.code"]
+                            greatgreatgrandparent = row["supply_parent_item_category.code"]
+                        else:
+                            greatgrandparent = row["supply_item_category.name"] or row["supply_item_category.code"]
+                            greatgreatgrandparent = row["supply_parent_item_category.name"] or row["supply_parent_item_category.code"]
+                        name = "%s%s%s" % (name, joiner, greatgrandparent)
+                        if greatgreatgrandparent:
+                            name = "%s%s%s" % (name, joiner, greatgreatgrandparent)
+                            if use_code:
+                                greatgreatgreatgrandparent = row["supply_grandparent_item_category.code"]
+                            else:
+                                greatgreatgreatgrandparent = row["supply_grandparent_item_category.name"] or row["supply_grandparent_item_category.code"]
+                            if greatgreatgreatgrandparent:
+                                name = "%s%s%s" % (name, joiner, greatgreatgreatgrandparent)
+
+        if catalog:
+            name = "%s > %s" % (catalog, name)
+
+        return s3_unicode(name)
+
+# =============================================================================
 def item_um_from_name(name):
     """
         Retrieve the Unit of Measure from a name
@@ -1363,297 +1843,339 @@ def supply_item_rheader(r):
     return None
 
 # =============================================================================
-class SupplyItemPackVirtualFields(dict, object):
+class SupplyItemPackQuantity(object):
     """ Virtual Field for pack_quantity """
 
     def __init__(self, tablename):
         self.tablename = tablename
 
-    def pack_quantity(self):
+    def __call__(self, row):
+
+        default = 0
+
         tablename = self.tablename
+        if hasattr(row, tablename):
+            row = object.__getattribute__(row, tablename)
         try:
-            if tablename == "inv_inv_item":
-                item_pack = self.inv_inv_item.item_pack_id
-            elif tablename == "req_req_item":
-                item_pack = self.req_req_item.item_pack_id
-            elif tablename == "req_commit_item":
-                item_pack = self.req_commit_item.item_pack_id
-            elif tablename == "inv_track_item":
-                item_pack = self.inv_track_item.item_pack_id
-            else:
-                item_pack = None
+            item_pack_id = row.item_pack_id
         except AttributeError:
-            item_pack = None
-        if item_pack:
-            return item_pack.quantity
+            return default
+            
+        if item_pack_id:
+            return item_pack_id.quantity
         else:
-            return None
+            return default
 
 # =============================================================================
-# Virtual Fields for category, country, organisation & status
-class item_entity_virtualfields:
+def supply_item_entity_category(row):
+    """ Virtual field: category """
+
+    if hasattr(row, "supply_item_entity"):
+        row = row.supply_item_entity
+    else:
+        return None
+    try:
+        item_id = row.item_id
+    except AttributeError:
+        return None
+
+    table = current.s3db.supply_item
+    query = (table.id == item_id)
     
-    def category(self):
-        table = current.s3db.supply_item
-        try:
-            query = (table.id == self.supply_item_entity.item_id)
-        except:
-            # We are being instantiated inside one of the other methods
-            return None
-        record = current.db(query).select(table.item_category_id,
-                                          limitby=(0, 1)).first()
-        if record:
-            return table.item_category_id.represent(record.item_category_id)
-        else:
-            return current.messages["NONE"]
-
-    # -------------------------------------------------------------------------
-    def country(self):
-        country = None
-        s3db = current.s3db
-        etable = s3db.supply_item_entity
-        instance_type = self.supply_item_entity.instance_type
-        if instance_type == "inv_inv_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            otable = s3db.org_office
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
-                        (otable.site_id == itable.site_id)
-            except:
-                 # We are being instantiated inside one of the other methods
-                return None
-            record = current.db(query).select(otable.L0,
-                                              limitby=(0, 1)).first()
-            if record:
-                country = record.L0 or current.T("Unknown")
-        elif instance_type == "inv_track_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            rtable = s3db.inv_recv
-            otable = s3db.org_office
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
-                        (rtable.id == itable.recv_id) & \
-                        (otable.site_id == rtable.site_id)
-            except:
-                 # We are being instantiated inside one of the other methods
-                return None
-            record = current.db(query).select(otable.L0,
-                                              limitby=(0, 1)).first()
-            if record:
-                country = record.L0 or current.T("Unknown")
-        elif instance_type == "proc_plan_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            ptable = s3db.proc_plan
-            otable = s3db.org_office
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
-                        (ptable.id == itable.plan_id) & \
-                        (otable.site_id == ptable.site_id)
-            except:
-                 # We are being instantiated inside one of the other methods
-                return None
-            record = current.db(query).select(otable.L0,
-                                              limitby=(0, 1)).first()
-            if record:
-                country = record.L0 or current.T("Unknown")
-        else:
-            # @ToDo: Assets and req_items
-            return current.messages["NONE"]
-        return country or current.messages["NONE"]
-
-    # -------------------------------------------------------------------------
-    def organisation(self):
-        organisation = None
-        s3db = current.s3db
-        etable = s3db.supply_item_entity
-        instance_type = self.supply_item_entity.instance_type
-        if instance_type == "inv_inv_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            otable = s3db.org_office
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
-                        (otable.site_id == itable.site_id)
-            except:
-                 # We are being instantiated inside one of the other methods
-                return None
-            record = current.db(query).select(otable.organisation_id,
-                                              limitby=(0, 1)).first()
-            if record:
-                organisation = s3db.org_OrganisationRepresent(acronym=False)\
-                                                             (record.organisation_id)
-        elif instance_type == "proc_plan_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            rtable = s3db.proc_plan
-            otable = s3db.org_office
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
-                        (rtable.id == itable.plan_id) & \
-                        (otable.site_id == rtable.site_id)
-            except:
-                 # We are being instantiated inside one of the other methods
-                return None
-            record = current.db(query).select(otable.organisation_id,
-                                              limitby=(0, 1)).first()
-            if record:
-                organisation = organisation_represent(record.organisation_id,
-                                                      acronym=False)
-        elif instance_type == "inv_track_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            rtable = s3db.inv_recv
-            otable = s3db.org_office
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
-                        (rtable.id == itable.recv_id) & \
-                        (otable.site_id == rtable.site_id)
-            except:
-                 # We are being instantiated inside one of the other methods
-                return None
-            record = current.db(query).select(otable.organisation_id,
-                                              limitby=(0, 1)).first()
-            if record:
-                organisation = organisation_represent(record.organisation_id,
-                                                      acronym=False)
-        else:
-            # @ToDo: Assets and req_items
-            return current.messages["NONE"]
-        return organisation or current.messages["NONE"]
-
-    # -------------------------------------------------------------------------
-    #def site(self):
-    def contacts(self):
-        #site = current.messages["NONE"]
-        s3db = current.s3db
-        etable = s3db.supply_item_entity
-        instance_type = self.supply_item_entity.instance_type
-        if instance_type == "inv_inv_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name])
-            except:
-                 # We are being instantiated inside one of the other methods
-                return None
-            record = current.db(query).select(itable.site_id,
-                                              limitby=(0, 1)).first()
-        elif instance_type == "inv_track_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            rtable = s3db.inv_recv
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
-                        (rtable.id == itable.recv_id)
-            except:
-                 # We are being instantiated inside one of the other methods
-                return None
-            record = db(query).select(rtable.site_id,
+    record = current.db(query).select(table.item_category_id,
                                       limitby=(0, 1)).first()
-        elif instance_type == "proc_plan_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            ptable = s3db.proc_plan
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
-                        (ptable.id == itable.plan_id)
-            except:
-                 # We are being instantiated inside one of the other methods
-                return None
-            record = db(query).select(ptable.site_id,
-                                      limitby=(0, 1)).first()
-        else:
-            # @ToDo: Assets and req_items
-            return current.messages["NONE"]
+    if record:
+        return table.item_category_id.represent(record.item_category_id)
+    else:
+        return current.messages["NONE"]
 
-        #site = s3db.org_site_represent(record.site_id)
-        #return site
-        otable = s3db.org_office
-        query = (otable.site_id == record.site_id)
-        record = current.db(query).select(otable.id,
-                                          otable.comments,
+# -------------------------------------------------------------------------
+def supply_item_entity_country(row):
+    """ Virtual field: country """
+    
+    if hasattr(row, "supply_item_entity"):
+        row = row.supply_item_entity
+    else:
+        return None
+        
+    s3db = current.s3db
+    etable = s3db.supply_item_entity
+
+    ekey = etable._id.name
+    
+    try:
+        instance_type = row.instance_type
+    except AttributeError:
+        return None
+    try:
+        entity_id = row[ekey]
+    except AttributeError:
+        return None
+    
+    itable = s3db[instance_type]
+    ltable = s3db.gis_location
+    
+    if instance_type == "inv_inv_item":
+        
+        stable = s3db.org_site
+        query = (itable[ekey] == entity_id) & \
+                (stable.site_id == itable.site_id) & \
+                (ltable.id == stable.location_id)
+        record = current.db(query).select(ltable.L0,
                                           limitby=(0, 1)).first()
-        extension = current.request.extension
-        if extension == "xls" or \
-           extension == "pdf":
-            if record.comments:
-                return record.comments
+            
+    elif instance_type == "inv_track_item":
+        
+        rtable = s3db.inv_recv
+        stable = s3db.org_site
+        query = (itable[ekey] == entity_id) & \
+                (rtable.id == itable.recv_id) & \
+                (stable.site_id == rtable.site_id) & \
+                (ltable.id == stable.location_id)
+        record = current.db(query).select(ltable.L0,
+                                          limitby=(0, 1)).first()
+            
+    elif instance_type == "proc_plan_item":
+        
+        ptable = s3db.proc_plan
+        stable = s3db.org_site
+        query = (itable[ekey] == entity_id) & \
+                (ptable.id == itable.plan_id) & \
+                (stable.site_id == ptable.site_id) & \
+                (ltable.id == stable.location_id)
+        record = current.db(query).select(ltable.L0,
+                                          limitby=(0, 1)).first()
+           
+    else:
+        # @ToDo: Assets and req_items
+        record = None
+
+    if record:
+        return record.L0 or current.T("Unknown")
+    else:
+        return current.messages["NONE"]
+
+# -------------------------------------------------------------------------
+def supply_item_entity_organisation(row):
+    """ Virtual field: organisation """
+
+    if hasattr(row, "supply_item_entity"):
+        row = row.supply_item_entity
+    else:
+        return None
+
+    s3db = current.s3db
+    etable = s3db.supply_item_entity
+
+    ekey = etable._id.name
+
+    try:
+        instance_type = row.instance_type
+    except AttributeError:
+        return None
+    try:
+        entity_id = row[ekey]
+    except AttributeError:
+        return None
+
+    organisation_represent = s3db.org_OrganisationRepresent(acronym=False)
+    itable = s3db[instance_type]
+    
+    if instance_type == "inv_inv_item":
+
+        stable = s3db.org_site
+        query = (itable[ekey] == entity_id) & \
+                (stable.site_id == itable.site_id)
+        record = current.db(query).select(stable.organisation_id,
+                                          limitby=(0, 1)).first()
+                                          
+    elif instance_type == "proc_plan_item":
+        
+        rtable = s3db.proc_plan
+        stable = s3db.org_site
+        query = (itable[ekey] == entity_id) & \
+                (rtable.id == itable.plan_id) & \
+                (stable.site_id == rtable.site_id)
+        record = current.db(query).select(stable.organisation_id,
+                                          limitby=(0, 1)).first()
+                                          
+    elif instance_type == "inv_track_item":
+        
+        rtable = s3db.inv_recv
+        stable = s3db.org_site
+        query = (itable[ekey] == entity_id) & \
+                (rtable.id == itable.recv_id) & \
+                (stable.site_id == rtable.site_id)
+        record = current.db(query).select(stable.organisation_id,
+                                          limitby=(0, 1)).first()
+                                          
+    else:
+        # @ToDo: Assets and req_items
+        record = None
+
+    if record:
+        return organisation_represent(record.organisation_id)
+    else:
+        return current.messages["NONE"]
+
+# -------------------------------------------------------------------------
+def supply_item_entity_contacts(row):
+    """ Virtual field: contacts (site_id) """
+    
+    if hasattr(row, "supply_item_entity"):
+        row = row.supply_item_entity
+    else:
+        return None
+
+    db = current.db
+    s3db = current.s3db
+    etable = s3db.supply_item_entity
+
+    ekey = etable._id.name
+
+    try:
+        instance_type = row.instance_type
+    except AttributeError:
+        return None
+    try:
+        entity_id = row[ekey]
+    except AttributeError:
+        return None
+
+    itable = s3db[instance_type]
+
+    if instance_type == "inv_inv_item":
+
+        query = (itable[ekey] == entity_id)
+        record = db(query).select(itable.site_id,
+                                  limitby=(0, 1)).first()
+                                          
+    elif instance_type == "inv_track_item":
+        
+        rtable = s3db.inv_recv
+        query = (itable[ekey] == entity_id) & \
+                (rtable.id == itable.recv_id)
+        record = db(query).select(rtable.site_id,
+                                  limitby=(0, 1)).first()
+                                  
+    elif instance_type == "proc_plan_item":
+        
+        ptable = s3db.proc_plan
+        query = (itable[ekey] == entity_id) & \
+                (ptable.id == itable.plan_id)
+        record = db(query).select(ptable.site_id,
+                                  limitby=(0, 1)).first()
+    else:
+        # @ToDo: Assets and req_items
+        record = None
+
+    default = current.messages["NONE"]
+
+    if not record:
+        return default
+
+    otable = s3db.org_office
+    query = (otable.site_id == record.site_id)
+    office = db(query).select(otable.id,
+                              otable.comments,
+                              limitby=(0, 1)).first()
+
+    if office:
+
+        if current.request.extension in ("xls", "pdf"):
+            if office.comments:
+                return office.comments
             else:
-                return current.messages["NONE"]
-        elif record.comments:
-            comments = s3_comments_represent(record.comments,
+                return default
+                
+        elif office.comments:
+            comments = s3_comments_represent(office.comments,
                                              show_link=False)
         else:
-            comments = current.messages["NONE"]
+            comments = default
+            
         return A(comments,
-                 _href = URL(f="office",
-                             args = [record.id]))
+                 _href = URL(f="office", args = [office.id]))
+                 
+    else:
+        return default
+                                      
 
-    # -------------------------------------------------------------------------
-    def status(self):
-        status = None
-        s3db = current.s3db
-        etable = s3db.supply_item_entity
-        instance_type = self.supply_item_entity.instance_type
-        if instance_type == "inv_inv_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name])
-            except:
-                # We are being instantiated inside one of the other methods
-                return None
-            record = current.db(query).select(itable.expiry_date,
-                                              limitby=(0, 1)).first()
-            if record:
-                T = current.T
-                if record.expiry_date:
-                    status = T("Stock Expires %(date)s") % dict(date=record.expiry_date)
-                else:
-                   status = T("In Stock")
-        elif instance_type == "proc_plan_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            rtable = s3db.proc_plan
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
-                        (rtable.id == itable.plan_id)
-            except:
-                # We are being instantiated inside one of the other methods
-                return None
-            record = current.db(query).select(rtable.eta,
-                                              limitby=(0, 1)).first()
-            if record:
-                T = current.T
-                if record.eta:
-                    status = T("Planned %(date)s") % dict(date=record.eta)
-                else:
-                   status = T("Planned Procurement")
-        elif instance_type == "inv_track_item":
-            tablename = instance_type
-            itable = s3db[instance_type]
-            rtable = s3db.inv_recv
-            try:
-                query = (itable.item_entity_id == self.supply_item_entity[etable._id.name]) & \
-                        (rtable.id == itable.send_inv_item_id)
-            except:
-                # We are being instantiated inside one of the other methods
-                return None
-            record = current.db(query).select(rtable.eta,
-                                              limitby=(0, 1)).first()
-            if record:
-                T = current.T
-                if record.eta:
-                    status = T("Order Due %(date)s") % dict(date=record.eta)
-                else:
-                    status = T("On Order")
-        else:
-            # @ToDo: Assets and req_items
-            return current.messages["NONE"]
-        return status or current.messages["NONE"]
+# -------------------------------------------------------------------------
+def supply_item_entity_status(row):
+    """ Virtual field: status """
+    
+    if hasattr(row, "supply_item_entity"):
+        row = row.supply_item_entity
+    else:
+        return None
+
+    db = current.db
+    s3db = current.s3db
+    etable = s3db.supply_item_entity
+
+    ekey = etable._id.name
+
+    try:
+        instance_type = row.instance_type
+    except AttributeError:
+        return None
+    try:
+        entity_id = row[ekey]
+    except AttributeError:
+        return None
+
+    itable = s3db[instance_type]
+
+    status = None
+    
+    if instance_type == "inv_inv_item":
+        
+        query = (itable[ekey] == entity_id)
+        record = current.db(query).select(itable.expiry_date,
+                                          limitby=(0, 1)).first()
+        if record:
+            T = current.T
+            if record.expiry_date:
+                status = T("Stock Expires %(date)s") % \
+                          dict(date=record.expiry_date)
+            else:
+                status = T("In Stock")
+                
+    elif instance_type == "proc_plan_item":
+
+
+        rtable = s3db.proc_plan
+        query = (itable[ekey] == entity_id) & \
+                (rtable.id == itable.plan_id)
+        record = current.db(query).select(rtable.eta,
+                                          limitby=(0, 1)).first()
+        if record:
+            T = current.T
+            if record.eta:
+                status = T("Planned %(date)s") % dict(date=record.eta)
+            else:
+                status = T("Planned Procurement")
+                
+    elif instance_type == "inv_track_item":
+        
+        rtable = s3db.inv_recv
+        query = (itable[ekey] == entity_id) & \
+                (rtable.id == itable.send_inv_item_id)
+        record = current.db(query).select(rtable.eta,
+                                          limitby=(0, 1)).first()
+        if record:
+            T = current.T
+            if record.eta:
+                status = T("Order Due %(date)s") % dict(date=record.eta)
+            else:
+                status = T("On Order")
+                
+    else:
+        # @ToDo: Assets and req_items
+        return current.messages["NONE"]
+
+    return status or current.messages["NONE"]
 
 # =============================================================================
 def supply_item_controller():
@@ -1732,7 +2254,11 @@ def supply_item_entity_controller():
         name_nice = T("Item"),
         name_nice_plural = T("Items"))
 
-    table.virtualfields.append(item_entity_virtualfields())
+    table.category = Field.Lazy(supply_item_entity_category)
+    table.country = Field.Lazy(supply_item_entity_country)
+    table.organisation = Field.Lazy(supply_item_entity_organisation)
+    table.contacts = Field.Lazy(supply_item_entity_contacts)
+    table.status = Field.Lazy(supply_item_entity_status)
 
     # Allow VirtualFields to be sortable/searchable
     s3.no_sspag = True
@@ -1796,11 +2322,13 @@ def supply_item_entity_controller():
             # @ToDo: Other Site types (how to do this as a big Join?)
             table = s3db.org_office
             otable = s3db.org_organisation
-            fields = [table.L0,
+            ltable = s3db.gis_location
+            fields = [ltable.L0,
                       #table.name,
                       otable.name]
             query = (table.deleted == False) & \
-                    (table.organisation_id == otable.id)
+                    (table.organisation_id == otable.id) & \
+                    (ltable.id == table.location_id)
             isites = []
             rsites = []
             psites = []
