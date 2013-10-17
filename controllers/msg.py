@@ -1241,30 +1241,12 @@ def tropo_channel():
     )
 
     s3db.configure(tablename,
-                    deletable=False,
-                    listadd=False,
-                    update_next = URL(args=[1, "update"]))
+                   deletable = False,
+                   listadd = False,
+                   update_next = URL(args=[1, "update"]),
+                   )
 
-    from s3.s3filter import S3DateFilter,S3TextFilter
-
-    filter_widgets = [
-        S3DateFilter("created_on",
-                     label=T('Tweeted On'),
-                     hide_time=True,
-                     _class="date-filter-class",
-                     comment="Filter Tweets by the date they were tweeted on"),
-        S3TextFilter("from_address",
-                     label=T('Tweeted By'),
-                     _class="tweeter-filter-class",
-                     comment="Filter Tweets by who tweeted them")
-    ]
-
-    s3db.configure(tablename,
-                   filter_widgets=filter_widgets,
-                   listadd=False
-    )
-
-    return s3_rest_controller(hide_filter=False)
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
@@ -1495,8 +1477,29 @@ def twitter_result():
         msg_list_empty = T("No Tweets Available."),
         )
 
-    s3db.configure(tablename, listadd=False)
-    return s3_rest_controller()
+    from s3.s3filter import S3DateFilter, S3TextFilter
+
+    filter_widgets = [
+        S3DateFilter("created_on",
+                     label=T("Tweeted On"),
+                     hide_time=True,
+                     _class="date-filter-class",
+                     comment=T("Filter Tweets by the date they were tweeted on"),
+                     ),
+        S3TextFilter("from_address",
+                     label=T("Tweeted By"),
+                     _class="tweeter-filter-class",
+                     comment=T("Filter Tweets by who tweeted them"),
+                     )
+        ]
+
+    s3db.configure(tablename,
+                   deletable = False,
+                   listadd = False,
+                   filter_widgets = filter_widgets,
+                   )
+
+    return s3_rest_controller(hide_filter=False)
 
 # -----------------------------------------------------------------------------
 def process_keygraph():
