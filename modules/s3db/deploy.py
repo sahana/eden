@@ -31,6 +31,17 @@ __all__ = ["S3DeploymentModel",
            "S3DeploymentAlertModel",
            ]
 
+try:
+    # try stdlib (Python 2.6)
+    import json
+except ImportError:
+    try:
+        # try external module
+        import simplejson as json
+    except:
+        # fallback to pure-Python module
+        import gluon.contrib.simplejson as json
+
 from gluon import *
 
 from ..s3 import *
@@ -448,9 +459,16 @@ def deploy_deployment_profile_header(r):
                              _class="profile-header-value"))
             return items
         title = "%s: %s" % (title, record.title)
+        
+        crud_button = r.resource.crud.crud_button
+        edit_btn = crud_button(current.T("Edit"), _href=r.url(method="update"))
+
+        data = render("location_id", "created_on", "status")
+        data.append(edit_btn)
         header = DIV(H2(title),
-                     render("location_id", "created_on", "status"),
+                     data,
                      _class="profile-header")
+
         return header
     else:
         return H2(title)
