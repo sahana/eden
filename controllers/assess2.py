@@ -2545,7 +2545,6 @@ def custom_assess(custom_assess_fields, location_id=None):
         #msg.send_by_pe_id(    3,
         #                      subject="",
         #                      message=message,
-        #                      sender_pe_id = None,
         #                      pr_message_method = 2,
         #                      sender="",
         #                      fromaddress="")

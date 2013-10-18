@@ -418,7 +418,6 @@ class S3Msg(object):
     def send_by_pe_id(pe_id,
                       subject="",
                       message="",
-                      sender_pe_id = None,
                       pr_message_method = "EMAIL",
                       sender="",
                       fromaddress="",
@@ -500,7 +499,7 @@ class S3Msg(object):
         current.s3task.async("msg_process_outbox",
                              args=[pr_message_method])
 
-        return True
+        return message_id
 
     # -------------------------------------------------------------------------
     def process_outbox(self, contact_method="EMAIL"):
@@ -584,7 +583,8 @@ class S3Msg(object):
                   outbox.message_id,
                   outbox.pe_id,
                   outbox.retries,
-                  petable.instance_type]
+                  petable.instance_type,
+                  ]
 
         query = (outbox.pr_message_method == contact_method) & \
                 (outbox.status == 1) & \
@@ -623,13 +623,26 @@ class S3Msg(object):
                            (mtable.person_id != None) &
                            (mtable.deleted != True)),
                  ptable.on((ptable.id == mtable.person_id) &
-                           (ptable.deleted != True))]
+                           (ptable.deleted != True))
+                 ]
 
         oleft = [htable.on((htable.organisation_id == otable.id) &
                            (htable.person_id != None) &
                            (htable.deleted != True)),
                  ptable.on((ptable.id == htable.person_id) &
-                           (ptable.deleted != True))]
+                           (ptable.deleted != True))
+                 ]
+
+        atable = s3db.table("deploy_alert", None)
+        if atable:
+            ltable = db.deploy_alert_recipient
+            aleft = [ltable.on(ltable.alert_id == atable.id),
+                     htable.on((htable.id == ltable.human_resource_id) &
+                               (htable.person_id != None) &
+                               (htable.deleted != True)),
+                     ptable.on((ptable.id == htable.person_id) &
+                               (ptable.deleted != True))
+                     ]
 
         # chainrun: used to fire process_outbox again,
         # when messages are sent to groups or organisations
@@ -664,8 +677,23 @@ class S3Msg(object):
 
             if entity_type == "pr_group":
                 # Re-queue the message for each member in the group
-                gquery = (gtable.pe_id == pe_id) & (gtable.deleted != True)
+                gquery = (gtable.pe_id == pe_id)
                 recipients = db(gquery).select(ptable.pe_id, left=gleft)
+                pe_ids = set(r.pe_id for r in recipients)
+                pe_ids.discard(None)
+                if pe_ids:
+                    for pe_id in pe_ids:
+                        outbox.insert(message_id=message_id,
+                                      pe_id=pe_id,
+                                      pr_message_method=contact_method,
+                                      system_generated=True)
+                    chainrun = True
+                status = True
+
+            elif entity_type == "deploy_alert":
+                # Re-queue the message for each HR in the group
+                aquery = (atable.pe_id == pe_id)
+                recipients = db(aquery).select(ptable.pe_id, left=aleft)
                 pe_ids = set(r.pe_id for r in recipients)
                 pe_ids.discard(None)
                 if pe_ids:
@@ -679,7 +707,7 @@ class S3Msg(object):
 
             elif entity_type == "org_organisation":
                 # Re-queue the message for each HR in the organisation
-                oquery = (otable.pe_id == pe_id) & (otable.deleted != True)
+                oquery = (otable.pe_id == pe_id)
                 recipients = db(oquery).select(ptable.pe_id, left=oleft)
                 pe_ids = set(r.pe_id for r in recipients)
                 pe_ids.discard(None)
@@ -785,7 +813,6 @@ class S3Msg(object):
                             pe_id,
                             subject="",
                             message="",
-                            sender_pe_id=None,  # s3_logged_in_person() is useful here
                             sender="",
                             fromaddress="",
                             system_generated=False):
@@ -796,7 +823,6 @@ class S3Msg(object):
         return self.send_by_pe_id(pe_id,
                                   subject,
                                   message,
-                                  sender_pe_id,
                                   "EMAIL",
                                   sender,
                                   fromaddress,
@@ -1044,7 +1070,6 @@ class S3Msg(object):
     def send_sms_by_pe_id(self,
                           pe_id,
                           message="",
-                          sender_pe_id=None,  # s3_logged_in_person() is useful here
                           sender="",
                           fromaddress="",
                           system_generated=False):
@@ -1054,13 +1079,12 @@ class S3Msg(object):
 
         return self.send_by_pe_id(pe_id,
                                   message,
-                                  sender_pe_id,
                                   "SMS",
                                   sender,
                                   fromaddress,
                                   system_generated,
                                   subject=""
-                                 )
+                                  )
 
     # -------------------------------------------------------------------------
     # Twitter
@@ -1967,12 +1991,6 @@ class S3Compose(S3CRUD):
             Route the message
         """
 
-        auth = current.auth
-        if auth.user:
-            sender_pe_id = auth.user.pe_id
-        else:
-            return
-
         vars = current.request.post_vars
 
         recipients = self.recipients
@@ -1986,7 +2004,6 @@ class S3Compose(S3CRUD):
         if current.msg.send_by_pe_id(recipients,
                                      vars.subject,
                                      vars.body,
-                                     sender_pe_id,
                                      vars.pr_message_method):
             current.session.confirmation = current.T("Check outbox for the message status")
             redirect(self.url)

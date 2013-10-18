@@ -4904,7 +4904,14 @@ def hrm_human_resource_controller():
 
         if r.interactive:
             if method == "create" and not r.component:
-                redirect(URL(f="volunteer",
+                request = current.request
+                if request.controller == "vol":
+                    c = "vol"
+                    f = "volunteer"
+                else:
+                    c = "hrm"
+                    f = "staff"
+                redirect(URL(c=c, f=f,
                              args=request.args,
                              vars=request.vars))
             elif method == "delete":
@@ -4914,7 +4921,7 @@ def hrm_human_resource_controller():
                 # Don't use AddPersonWidget here
                 from gluon.sqlhtml import OptionsWidget
                 field = r.table.person_id
-                field.requires = IS_ONE_OF(db, "pr_person.id",
+                field.requires = IS_ONE_OF(current.db, "pr_person.id",
                                            label = field.represent)
                 field.widget = OptionsWidget.widget
             elif r.id:

@@ -534,13 +534,15 @@ class S3EmailModel(S3ChannelModel):
 
         configure = self.configure
         define_table = self.define_table
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Email Inbound Channels
         #
         tablename = "msg_email_inbound_channel"
         table = define_table(tablename,
-                             self.super_link("channel_id", "msg_channel"),
+                             # Instance
+                             super_link("channel_id", "msg_channel"),
                              Field("name"),
                              Field("description"),
                              Field("server"),
@@ -569,7 +571,8 @@ class S3EmailModel(S3ChannelModel):
 
         tablename = "msg_email"
         table = define_table(tablename,
-                             self.super_link("message_id", "msg_message"),
+                             # Instance
+                             super_link("message_id", "msg_message"),
                              Field("subject", length=78,    # RFC 2822
                                    label = T("Subject")),
                              Field("body", "text",

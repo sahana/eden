@@ -66,9 +66,12 @@ class S3DeploymentModel(S3Model):
         tablename = "deploy_deployment"
         table = define_table(tablename,
                              super_link("doc_id", "doc_entity"),
-                             Field("title",
-                                   #notnull=True,
-                                   requires=IS_NOT_EMPTY()),
+                             Field("name",
+                                   # Why should field label be 'Title'?
+                                   # 'Name' seems more intuitive/consistent
+                                   label = T("Title"),
+                                   requires=IS_NOT_EMPTY(),
+                                   ),
                              self.gis_location_id(
                                 label = T("Country"),
                                 widget = S3LocationAutocompleteWidget(level="L0"),
@@ -78,11 +81,14 @@ class S3DeploymentModel(S3Model):
                                               _title="%s|%s" % (T("Country"),
                                                                 T("Enter some characters to bring up a list of possible matches"))),
                              ),
-                             Field("event_type"),        # @todo: replace by link
+                             Field("event_type", # @todo: replace by link
+                                   label = T("Event Type"),
+                                   ),        
                              Field("status", "integer",
                                    requires = IS_IN_SET(deployment_status_opts),
                                    represent = lambda opt: \
-                                        deployment_status_opts.get(opt, UNKNOWN_OPT),
+                                    deployment_status_opts.get(opt,
+                                                               UNKNOWN_OPT),
                                    default = 2,
                                    label = T("Status"),
                              ),
@@ -94,14 +100,16 @@ class S3DeploymentModel(S3Model):
         table.hrquantity = Field.Lazy(deploy_deployment_hrquantity)
 
         # CRUD Form
-        crud_form = S3SQLCustomForm("title",
+        crud_form = S3SQLCustomForm("name",
                                     "location_id",
                                     "status",
                                     "event_type",
                                     S3SQLInlineComponent("document",
                                                          name = "file",
                                                          label = T("Attachments"),
-                                                         fields = ["file", "comments"],
+                                                         fields = ["file",
+                                                                   "comments",
+                                                                   ],
                                     ),
                                     "comments",
                                     "created_on",
@@ -132,7 +140,7 @@ class S3DeploymentModel(S3Model):
                   crud_form = crud_form,
                   create_next = profile,
                   update_next = profile,
-                  list_fields = ["title",
+                  list_fields = ["name",
                                  (T("Date"), "created_on"),
                                  (T("Country"), "location_id"),
                                  (T("Members"), "hrquantity"),
@@ -158,7 +166,7 @@ class S3DeploymentModel(S3Model):
                             },
                   ],
                   filter_widgets = [
-                      S3TextFilter("title",
+                      S3TextFilter("name",
                                    label=T("Search"),
                                   ),
                       S3LocationFilter("location_id",
@@ -194,7 +202,7 @@ class S3DeploymentModel(S3Model):
             msg_list_empty = T("No Deployments currently registered"))
                 
         # Reusable field
-        represent = S3Represent(lookup=tablename, fields=["title"])
+        represent = S3Represent(lookup=tablename)
         deployment_id = S3ReusableField("deployment_id", table,
                                         requires = IS_ONE_OF(db,
                                                              "deploy_deployment.id",
@@ -252,7 +260,8 @@ class S3DeploymentModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(deploy_deployment_id = deployment_id)
+        return dict(deploy_deployment_id = deployment_id,
+                    )
 
     # -------------------------------------------------------------------------
     def defaults(self):
@@ -296,7 +305,22 @@ class S3DeploymentAlertModel(S3Model):
         tablename = "deploy_alert"
         table = define_table(tablename,
                              super_link("pe_id", "pr_pentity"),
-                             self.deploy_deployment_id(),
+                             self.deploy_deployment_id(
+                                requires = IS_ONE_OF(current.db,
+                                    "deploy_deployment.id",
+                                    S3Represent(lookup="deploy_deployment"),
+                                    filterby="status",
+                                    filter_opts=(2,),
+                                    )),
+                             Field("subject", length=78,    # RFC 2822
+                                   label = T("Subject"),
+                                   requires = IS_NOT_EMPTY(),
+                                   ),
+                             Field("body", "text",
+                                   label = T("Message"),
+                                   represent = lambda v: \
+                                    v or current.messages["NONE"],
+                                   ),
                              *s3_meta_fields())
 
         # CRUD Strings
@@ -316,14 +340,10 @@ class S3DeploymentAlertModel(S3Model):
             msg_record_deleted = T("Alert deleted"),
             msg_list_empty = T("No Alerts currently registered"))
 
+        # CRUD Form
         crud_form = S3SQLCustomForm("deployment_id",
-                                    S3SQLInlineComponent("message",
-                                                         name = "message",
-                                                         label = T("Message"),
-                                                         fields = ["body"],
-                                                         link = False,
-                                                         multiple = False,
-                                    ),
+                                    "subject",
+                                    "body",
                                     S3SQLInlineComponent("alert_recipient",
                                                          name = "recipient",
                                                          label = T("Recipients"),
@@ -331,24 +351,22 @@ class S3DeploymentAlertModel(S3Model):
                                     ),
                                     "created_on",
                                     )
+
         # Table Configuration
         configure(tablename,
                   super_entity = "pr_pentity",
                   context = {"deployment": "deployment_id"},
+                  onaccept = self.deploy_alert_onaccept,
                   crud_form = crud_form,
                   list_fields = ["deployment_id",
-                                 "alert_message.message_id",
+                                 "subject",
+                                 "body",
                                  "alert_recipient.human_resource_id",
                                  ],
                   )
 
         # Components
         add_component("deploy_alert_message", deploy_alert="alert_id")
-        add_component("msg_message",
-                      deploy_alert=dict(link="deploy_alert_message",
-                                        joinby="alert_id",
-                                        key="message_id",
-                                        actuate="hide"))
 
         add_component("deploy_alert_recipient", deploy_alert="alert_id")
 
@@ -364,6 +382,8 @@ class S3DeploymentAlertModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Alert Message
+        # - keep track of which messages are related to alerts
+        # - @ToDo: is this really needed?
         #
         tablename = "deploy_alert_message"
         table = define_table(tablename,
@@ -403,6 +423,38 @@ class S3DeploymentAlertModel(S3Model):
             Safe defaults for model-global names in case module is disabled
         """
         return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def deploy_alert_onaccept(form):
+        """
+            After an Alert has been generated, send out the message
+        """
+
+        s3db = current.s3db
+        form_vars = form.vars
+        alert_id = form_vars.id
+
+        # Retrive the pe_id
+        table = s3db.deploy_alert
+        record = current.db(table.id == alert_id).select(table.pe_id,
+                                                         limitby=(0, 1)
+                                                         ).first()
+
+        # Send Message
+        # @ToDo: Embed the alert_id to parse replies
+        # @ToDo: Support alternate channels, like SMS
+        # if body is None, body == subject
+        message_id = current.msg.send_by_pe_id(record.pe_id,
+                                               subject=form_vars.subject,
+                                               message=form_vars.body,
+                                               )
+
+        # Keep a record of the link between Alert & Message
+        # - for parsing replies
+        s3db.deploy_alert_message.insert(alert_id=alert_id,
+                                         message_id=message_id,
+                                         )
 
 # =============================================================================
 def deploy_deployment_hrquantity(row):
@@ -447,7 +499,7 @@ def deploy_deployment_profile_header(r):
                             _id=item_id,
                              _class="profile-header-value"))
             return items
-        title = "%s: %s" % (title, record.title)
+        title = "%s: %s" % (title, record.name)
         header = DIV(H2(title),
                      render("location_id", "created_on", "status"),
                      _class="profile-header")

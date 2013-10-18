@@ -148,6 +148,7 @@ class S3PersonEntity(S3Model):
         else:
             SHELTER = T("Shelter")
         pe_types = Storage(cr_shelter = SHELTER,
+                           deploy_alert = T("Deployment Alert"),
                            dvi_body = T("Body"),
                            dvi_morgue = T("Morgue"),
                            # If we want these, then pe_id needs adding to their

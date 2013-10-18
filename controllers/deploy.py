@@ -72,8 +72,16 @@ def human_resource_assignment():
 def alert():
     """ RESTful CRUD Controller """
 
-    # Hide label since single field in Inline Component
-    s3db.msg_message.body.label = ""
+    def prep(r):
+        # Hide label for single field in InlineComponent
+        s3db.deploy_alert_recipient.human_resource_id.label = ""
+        created_on = r.table.created_on
+        created_on.readable = True
+        created_on.label = T("Date Created")
+        created_on.represent = lambda d: \
+                               s3base.S3DateTime.date_represent(d, utc=True)
+        return True
+    s3.prep = prep
 
     return s3_rest_controller()
 
