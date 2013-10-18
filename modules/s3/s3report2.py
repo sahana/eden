@@ -658,43 +658,35 @@ $("#%(widget_id)s").pivottable(%(opts)s);""" % {
         if not methods:
             methods = all_methods
 
-        # Resolve layers
+        # Resolve layer options
+        T = current.T
+        RECORDS = T("Records")
+        mname = S3PivotTable._get_method_label
         prefix = resource.prefix_selector
-        opts = []
+        
+        layer_opts = []
         for layer in layers:
 
-            # Extract layer option
+            # Parse option
             if type(layer) is tuple:
-                if isinstance(layer[0], lazyT):
-                    opt = [layer]
-                else:
-                    opt = list(layer)
+                label, s = layer
             else:
-                opt = [layer]
-
-            # Get field label and selector
-            s = opt[0]
-            if isinstance(s, tuple):
-                label, selector = s
+                label, s = None, layer
+            match = layer_pattern.match(s)
+            if match is not None:
+                s, m = match.group(2), match.group(1)
             else:
-                label, selector = None, s
-
-            # Function-style layer
-            m = layer_pattern.match(selector)
-            if m is not None:
-                selector, method = m.group(2), m.group(1)
-                opt = [selector, method, label]
+                m = None
                 
             # Resolve the selector
-            selector = prefix(selector)
+            selector = prefix(s)
             rfield = resource.resolve_selector(selector)
             if not rfield.field and not rfield.virtual:
                 continue
-            if label is not None:
+            if m is None and label:
                 rfield.label = label
 
-            # Autodetect methods?
-            if len(opt) == 1:
+            if m is None:
                 # Only field given -> auto-detect aggregation methods
                 is_amount = None
                 ftype = rfield.ftype
@@ -722,30 +714,15 @@ $("#%(widget_id)s").pivottable(%(opts)s);""" % {
                     mopts = ["sum", "min", "max", "avg"]
                 else:
                     mopts = ["count", "list"]
-                opts.extend([(rfield, selector, m)
-                             for m in mopts if m in methods])
+                for method in mopts:
+                    if method in methods:
+                        mlabel = mname(method)
+                        flabel = rfield.label if rfield.label != "Id" else RECORDS
+                        label = T("%s (%s)") % (flabel, mlabel)
+                        layer_opts.append(("%s(%s)" % (method, selector), label))
             else:
                 # Explicit method specified
-                opt.insert(0, rfield)
-                opts.append(opt)
-
-        # Construct default labels
-        T = current.T
-        RECORDS = T("Records")
-        layer_opts = []
-        mname = S3PivotTable._get_method_label
-        for opt in opts:
-            rfield, selector, method = opt[:3]
-            selector = prefix(selector)
-            if method not in methods:
-                continue
-            if len(opt) == 4 and opt[3]:
-                layer_label = opt[3]
-            else:
-                mlabel = mname(method)
-                flabel = rfield.label if rfield.label != "Id" else RECORDS
-                layer_label = T("%s (%s)") % (flabel, mlabel)
-            layer_opts.append(("%s(%s)" % (method, selector), layer_label))
+                layer_opts.append(("%s(%s)" % (m, selector), label))
 
         # Get current value
         if get_vars and "fact" in get_vars:
@@ -753,11 +730,11 @@ $("#%(widget_id)s").pivottable(%(opts)s);""" % {
         else:
             layer = ""
         if layer:
-            m = layer_pattern.match(layer)
-            if m is None:
+            match = layer_pattern.match(layer)
+            if match is None:
                 layer = ""
             else:
-                selector, method = m.group(2), m.group(1)
+                selector, method = match.group(2), match.group(1)
                 selector = prefix(selector)
                 layer = "%s(%s)" % (method, selector)
 

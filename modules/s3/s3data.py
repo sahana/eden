@@ -1925,38 +1925,46 @@ class S3PivotTable(object):
                   "breakdown": str(T("Breakdown")),
                  }
 
-        # Layer title
-        layer_title = None
+        # Layer label
+        layer_label = None
+        field_label = None
+        
         report_options = resource.get_config("report_options", None)
-
         if report_options and "fact" in report_options:
-
-            # Custom layer title from report options?
+            # Custom label from report options?
+            
             import re
             layer_pattern = re.compile("([a-zA-Z]+)\((.*)\)\Z")
+            
             prefix = resource.prefix_selector
             selector = prefix(field)
+            
             for item in report_options["fact"]:
                 if type(item) is tuple:
-                    if isinstance(item[0], lazyT):
-                        label = item[0]
-                        s = item[1]
-                        match = layer_pattern.match(s)
+                    label, s = item
+                    match = layer_pattern.match(s)
+                    
+                    if match is not None:
+                        s, m = match.group(2), match.group(1)
+                    else:
                         m = None
-                        if match is not None:
-                            s, m = match.group(2), match.group(1)
-                        if not m:
-                            continue
-                        elif prefix(s) == selector and m == method:
-                            layer_title = s3_unicode(label)
+                    if prefix(s) == selector:
+                        if m == method:
+                            # Specific layer label
+                            layer_label = s3_unicode(label)
                             break
+                        else:
+                            # Field label
+                            field_label = label
                         
-        if layer_title is None:
+        if layer_label is None:
             # Construct label from field and method
-            fname = get_label(rfields, field, resource, "fact")
-            mname = get_mname(method)
-            layer_title = "%s (%s)" % (fname, mname)
-        labels["layer"] = layer_title
+            if field_label is None:
+                field_label = get_label(rfields, field, resource, "fact")
+            method_label = get_mname(method)
+            layer_label = "%s (%s)" % (field_label, method_label)
+            
+        labels["layer"] = layer_label
 
         # Rows title
         if rows_dim:
