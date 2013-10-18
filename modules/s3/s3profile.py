@@ -87,39 +87,42 @@ class S3Profile(S3CRUD):
                 title = r.record.name
             except:
                 title = current.T("Profile Page")
+        elif callable(title):
+            title = title(r)
 
         # Page Header
         header = get_config(tablename, "profile_header")
         if not header:
             header = H2(title, _class="profile_header")
+        elif callable(header):
+            header = header(r)
 
-        output = dict(title=title,
-                      header=header)
+        output = dict(title=title, header=header)
 
         # Get the page widgets
         widgets = get_config(tablename, "profile_widgets")
+        if widgets:
 
-        # Index the widgets by their position in the config
-        for index, widget in enumerate(widgets):
-            widget["index"] = index
-            
-        if r.representation == "dl":
-            # Ajax-update of one datalist
-            get_vars = r.get_vars
-            index = r.get_vars.get("update", None)
-            if index:
-                try:
-                    index = int(index)
-                except ValueError:
-                    datalist = ""
-                else:
-                    # @ToDo: Check permissions to the Resource & do something different if no permission
-                    datalist = self._datalist(r, widgets[index], **attr)
-            output["item"] = datalist
-        else:
-            # Default page-load
-            rows = []
-            if widgets:
+            # Index the widgets by their position in the config
+            for index, widget in enumerate(widgets):
+                widget["index"] = index
+
+            if r.representation == "dl":
+                # Ajax-update of one datalist
+                get_vars = r.get_vars
+                index = r.get_vars.get("update", None)
+                if index:
+                    try:
+                        index = int(index)
+                    except ValueError:
+                        datalist = ""
+                    else:
+                        # @ToDo: Check permissions to the Resource & do something different if no permission
+                        datalist = self._datalist(r, widgets[index], **attr)
+                output["item"] = datalist
+            else:
+                # Default page-load
+                rows = []
                 append = rows.append
                 odd = True
                 for widget in widgets:
@@ -131,14 +134,20 @@ class S3Profile(S3CRUD):
                         row.append(self._map(r, widget, **attr))
                         if colspan == 2:
                             append(row)
+                            odd = True
+                            continue
                     elif w_type == "comments":
                         row.append(self._comments(r, widget, **attr))
                         if colspan == 2:
                             append(row)
+                            odd = True
+                            continue
                     elif w_type == "datalist":
                         row.append(self._datalist(r, widget, **attr))
                         if colspan == 2:
                             append(row)
+                            odd = True
+                            continue
                     else:
                         raise
                     if odd:
@@ -146,14 +155,12 @@ class S3Profile(S3CRUD):
                     else:
                         odd = True
                         append(row)
-            else:
-                # Method not supported for this resource
-                # @ToDo Some kind of 'Page not Configured'?
-                r.error(405, r.ERROR.BAD_METHOD)
 
-            output["rows"] = rows
+                output["rows"] = rows
+                current.response.view = self._view(r, "profile.html")
 
-            current.response.view = self._view(r, "profile.html")
+        else:
+            output["rows"] = []
 
         return output
 
@@ -259,7 +266,7 @@ class S3Profile(S3CRUD):
         listid = "profile-list-%s-%s" % (tablename, widget["index"])
 
         # Page size
-        pagesize = 4
+        pagesize = widget.get("pagesize", 4)
         representation = r.representation
         if representation == "dl":
             # Ajax-update
@@ -360,7 +367,7 @@ class S3Profile(S3CRUD):
         else:
             create = ""
 
-        if numrows > pagesize:
+        if pagesize and numrows > pagesize:
             # Button to display the rest of the records in a Modal
             more = numrows - pagesize
             vars = {}

@@ -1,0 +1,160 @@
+@charset "UTF-8";
+
+/* Profile Page */
+
+.profile-header {
+    padding-bottom: 20px;
+}
+
+.profile-header-label{
+    padding-right: 4px;
+}
+
+.profile-header-value {
+    font-weight: bold;
+    margin-right: 40px;
+}
+
+h4.profile-sub-header {
+    font-size: 16px;
+    color: #666;
+    text-align: left;
+    font-weight: bold;
+    font-style: normal;	
+    padding: 6px 6px 6px 9px;
+    border-radius: 5px 5px 0 0;
+    background: rgba(255,255,255,1);
+    background: -moz-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: -webkit-gradient(left top, left bottom, color-stop(0%, rgba(255,255,255,1)), color-stop(47%, rgba(246,246,246,1)), color-stop(100%, rgba(237,237,237,1)));
+    background: -webkit-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: -o-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: -ms-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ededed', GradientType=0 );	
+    -moz-box-shadow: 0 -1px 3px #d7d7d6;
+    -webkit-box-shadow: 0 -1px 3px #d7d7d6;
+    box-shadow: 0 -1px 3px #d7d7d6;
+    border: 1px solid #9e9b9b;
+    margin-bottom: -1px;
+}
+
+.row.profile {
+    margin-top: 5px;
+}
+
+.empty_card-holder {
+    text-align: center;
+    font: 13px "Helvetica Neue", Arial, sans-serif;
+    opacity: 0.67;
+}
+
+.card-holder {
+    display: inline-block;
+    width: 99.7%;
+    border: 1px solid #b2b2b2;
+    background-color: #f0f0ef;
+    margin-bottom: 10px;
+}
+
+.card-holder .edit-bar.fright {
+    color: #8A8989;
+    font-size: 14px;
+}
+
+.card-holder .person-title {
+    font: 14px "Helvetica Neue", Arial, sans-serif;
+    font-weight: bold;
+    color: #626261;
+    border-left: 0;
+    margin-left: 0;
+    padding-left: 0px;
+}
+
+.card-holder .organisation-title {
+    font: 12px "Helvetica Neue", Arial, sans-serif;
+    list-style: none outside none;
+    text-decoration: none;
+    text-transform: none;
+    color: #999;
+    border-left-style: none;
+}
+
+.card-holder .dl-header {
+    display: none;
+}
+
+.dl-item {
+    width: 98.7%;
+    background-color: #faf6ea !important;
+}
+
+img.media-object {
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+div.media a.pull-left img.media-object {
+    float: left;
+    margin-right: 10px;
+}
+
+.media-heading {
+    margin-bottom: 8px;
+}
+.media-body {
+    margin-bottom: 8px;
+}
+.profile-data-label{
+    font: 11px "Helvetica Neue", Arial, sans-serif;
+    color: #999;
+    padding-right: 4px;
+}
+
+.profile-data-value {
+    font: 13px "Helvetica Neue", Arial, sans-serif;
+    color: #626261;
+    font-weight: bold;
+    margin-right: 30px;
+}
+
+.edit-bar.fright {
+    color: #8a8989;
+    font-size: 14px;
+    position: relative;
+    top: 4px;
+    float: right;
+}
+
+.icon {
+    display: inline-block;
+    width: 14px;
+    height: 16px;
+    margin-top: 1px;
+    *margin-right: .3em;
+    line-height: 14px;
+    vertical-align: text-top;
+}
+
+.icon.icon-edit,
+.icon.icon-remove-sign {
+    color: #999;
+    padding-left: 2px;
+    margin-right: 4px;
+}
+
+.icon.icon-edit {
+    background: url(img/pencil.png) no-repeat;
+}
+
+.icon.icon-remove-sign {
+    background: url(img/trashbin.png) no-repeat;
+}
+
+.icon.icon-edit:hover {
+    color: #0095fe;
+    text-decoration: none;
+}
+
+.icon.icon-remove-sign:hover {
+    color: #E74C3C;
+}
