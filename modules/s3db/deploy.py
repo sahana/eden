@@ -78,9 +78,7 @@ class S3DeploymentModel(S3Model):
         table = define_table(tablename,
                              super_link("doc_id", "doc_entity"),
                              Field("name",
-                                   # Why should field label be 'Title'?
-                                   # 'Name' seems more intuitive/consistent
-                                   label = T("Title"),
+                                   label = T("Name"),
                                    requires=IS_NOT_EMPTY(),
                                    ),
                              self.gis_location_id(
@@ -107,7 +105,7 @@ class S3DeploymentModel(S3Model):
                              *s3_meta_fields())
 
         # Virtual field
-        # @todo: move to real field wirtten onaccept?
+        # @todo: move to real field written onaccept?
         table.hrquantity = Field.Lazy(deploy_deployment_hrquantity)
 
         # CRUD Form
