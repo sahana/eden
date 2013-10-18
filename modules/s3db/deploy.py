@@ -91,10 +91,10 @@ class S3DeploymentModel(S3Model):
                                     ),
                                     "comments",
                                     "created_on",
-                                   )
+                                    )
         # Table configuration
         configure(tablename,
-                  super_entity="doc_entity",
+                  super_entity = "doc_entity",
                   crud_form = crud_form,
                   list_fields = ["title",
                                  (T("Date"), "created_on"),
@@ -129,7 +129,7 @@ class S3DeploymentModel(S3Model):
                   ],
                   orderby="deploy_deployment.created_on desc",
                   delete_next=URL(c="deploy", f="deployment", args="summary"),
-                 )
+                  )
 
         # Components
         add_component("deploy_human_resource_assignment",
@@ -179,7 +179,8 @@ class S3DeploymentModel(S3Model):
 
         # Table configuration
         configure(tablename,
-                  super_entity="doc_entity")
+                  super_entity="doc_entity",
+                  )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -238,6 +239,7 @@ class S3DeploymentAlertModel(S3Model):
 
         T = current.T
 
+        crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         super_link = self.super_link
         configure = self.configure
@@ -248,18 +250,61 @@ class S3DeploymentAlertModel(S3Model):
         #
         tablename = "deploy_alert"
         table = define_table(tablename,
-                             self.deploy_deployment_id(),
                              super_link("pe_id", "pr_pentity"),
-                             # @todo: link to alert message
+                             self.deploy_deployment_id(),
                              *s3_meta_fields())
 
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            title_create = T("New Alert"),
+            title_display = T("Alert Details"),
+            title_list = T("Alerts"),
+            title_update = T("Edit Alert Details"),
+            title_search = T("Search Alerts"),
+            title_upload = T("Import Alerts"),
+            subtitle_create = T("Add New Alert"),
+            label_list_button = T("List Alerts"),
+            label_create_button = T("Add Alert"),
+            label_delete_button = T("Delete Alert"),
+            msg_record_created = T("Alert added"),
+            msg_record_modified = T("Alert Details updated"),
+            msg_record_deleted = T("Alert deleted"),
+            msg_list_empty = T("No Alerts currently registered"))
+
+        crud_form = S3SQLCustomForm("deployment_id",
+                                    S3SQLInlineComponent("message",
+                                                         name = "message",
+                                                         label = T("Message"),
+                                                         fields = ["body"],
+                                                         link = False,
+                                                         multiple = False,
+                                    ),
+                                    S3SQLInlineComponent("alert_recipient",
+                                                         name = "recipient",
+                                                         label = T("Recipients"),
+                                                         fields = ["human_resource_id"],
+                                    ),
+                                    "created_on",
+                                    )
         # Table Configuration
         configure(tablename,
-                  super_entity="pr_pentity")
+                  super_entity = "pr_pentity",
+                  crud_form = crud_form,
+                  list_fields = ["deployment_id",
+                                 "alert_message.message_id",
+                                 "alert_recipient.human_resource_id",
+                                 ],
+                  )
 
         # Components
-        add_component("deploy_alert_recipient",
-                      deploy_alert="alert_id")
+        add_component("deploy_alert_message", deploy_alert="alert_id")
+        add_component("msg_message",
+                      deploy_alert=dict(link="deploy_alert_message",
+                                        joinby="alert_id",
+                                        key="message_id",
+                                        actuate="hide"))
+
+        add_component("deploy_alert_recipient", deploy_alert="alert_id")
 
         # Reusable field
         represent = S3Represent(lookup=tablename)
@@ -270,6 +315,15 @@ class S3DeploymentAlertModel(S3Model):
                                    represent = represent,
                                    label = T("Alert"),
                                    ondelete = "CASCADE")
+
+        # ---------------------------------------------------------------------
+        # Alert Message
+        #
+        tablename = "deploy_alert_message"
+        table = define_table(tablename,
+                             alert_id(),
+                             self.msg_message_id(),
+                             *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Recipient of the Alert

@@ -325,7 +325,7 @@ def email_inbox():
         session.error = T("Requires Login!")
         redirect(URL(c="default", f="user", args="login"))
 
-    tablename = "msg_message"
+    tablename = "msg_email"
     table = s3db.msg_email
     s3.filter = (table.inbound == True)
     table.inbound.readable = False

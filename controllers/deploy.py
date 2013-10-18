@@ -22,7 +22,7 @@ def index():
     
 # =============================================================================
 def deployment():
-
+    """ RESTful CRUD Controller """
 
     def prep(r):
         s3.cancel = r.url(method="summary", id=0)
@@ -50,11 +50,16 @@ def deployment():
             
 # =============================================================================
 def human_resource_assignment():
+    """ RESTful CRUD Controller """
 
     return s3_rest_controller()
     
 # =============================================================================
 def alert():
+    """ RESTful CRUD Controller """
+
+    # Hide label since single field in Inline Component
+    s3db.msg_message.body.label = ""
 
     return s3_rest_controller()
 
@@ -85,4 +90,44 @@ def person():
 
     return s3db.hrm_person_controller()
     
+# -----------------------------------------------------------------------------
+def email_inbox():
+    """
+        RESTful CRUD controller for the Email Inbox
+        - all Inbound Email Messages are visible here
+
+        @ToDo: Filter to those which have been unable to be automatically
+               processed as being responses to Alerts
+        @ToDo: Filter to those coming into the specific account used for
+               Deployments
+        @ToDo: Provide a mechanism (Action button?) to link a mail manually to
+               an Alert
+    """
+
+    if not auth.s3_logged_in():
+        session.error = T("Requires Login!")
+        redirect(URL(c="default", f="user", args="login"))
+
+    tablename = "msg_email"
+    table = s3db.msg_email
+    s3.filter = (table.inbound == True)
+    table.inbound.readable = False
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_list = T("View InBox"),
+        title_update = T("Edit Message"),
+        label_list_button = T("View InBox"),
+        label_delete_button = T("Delete Message"),
+        msg_record_modified = T("Message updated"),
+        msg_record_deleted = T("Message deleted"),
+        msg_list_empty = T("No Messages currently in InBox")
+    )
+
+    s3db.configure(tablename,
+                   insertable=False,
+                   editable=False)
+
+    return s3_rest_controller("msg", "email")
+
 # END =========================================================================

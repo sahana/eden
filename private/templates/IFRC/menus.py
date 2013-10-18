@@ -704,6 +704,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("New", m="create"),
                         M("Summary", m="summary"),
                    ),
+                   M("Alerts",
+                     c="deploy", f="alert")(
+                        M("New", m="create"),
+                        M("InBox",
+                          c="deploy", f="email_inbox",
+                        ),
+                   ),
                    M("Members",
                      c="deploy", f="human_resource", m="summary",
                    ),
