@@ -539,7 +539,7 @@ S3.search = {};
         // Fire optionChanged event
         form.trigger('optionChanged');
     };
-
+    // Pass to gloabl scope to be called from Filter Manager
     S3.search.setCurrentFilters = setCurrentFilters;
 
     /**
@@ -912,9 +912,13 @@ S3.search = {};
         // widgets with ajax-init option is provided by the page
         // renderer (S3Summary.summary()).
         if (pending) {
-            var q = getCurrentFilters($('#' + form));
-            var targets = pending.split(',');
-            for (i=0, len=targets.length; i < len; i++) {
+            var ajaxurl,
+                config,
+                q = getCurrentFilters($('#' + form)),
+                t,
+                target_id,
+                targets = pending.split(',');
+            for (var i=0, len=targets.length; i < len; i++) {
                 target_id = targets[i];
                 if (!pendingTargets.hasOwnProperty(form)) {
                     pendingTargets[form] = {};
@@ -1396,7 +1400,6 @@ S3.search = {};
         }
     }
 
-        
     /**
      * document-ready script
      */

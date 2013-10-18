@@ -165,7 +165,7 @@ settings.ui.camp = True
 
 # -----------------------------------------------------------------------------
 # Uncomment to restrict the export formats available
-settings.ui.export_formats = ["xls"]
+#settings.ui.export_formats = ["xls"]
 
 settings.ui.update_label = "Edit"
 

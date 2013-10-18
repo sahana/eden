@@ -1427,6 +1427,9 @@ class S3FilterForm(object):
             form_id = "filter-form"
         attr["_id"] = form_id
 
+        # Prevent issues with Webkit-based browsers & Back buttons
+        attr["_autocomplete"] = "off"
+
         opts = self.opts
 
         # Form style

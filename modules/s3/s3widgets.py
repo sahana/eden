@@ -4580,8 +4580,9 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
             header = '''header:false'''
         else:
             header = '''header:"%s"''' % self.header
-        script = '''$('#%s').multiselect({selectedText:'%s',%s,height:300,minWidth:0,selectedList:%s,noneSelectedText:'%s'})''' % \
+        script = '''$('#%s').multiselect({allSelectedText:'%s',selectedText:'%s',%s,height:300,minWidth:0,selectedList:%s,noneSelectedText:'%s'})''' % \
             (selector,
+             T("All selected"),
              T("# selected"),
              header,
              self.selectedList,
