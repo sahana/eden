@@ -677,7 +677,7 @@ class S3NavigationItem(object):
                 if args:
                     largs = [a for a in request.args if not a.isdigit()]
                     if len(args) == len(largs) and \
-                    all([args[i] == largs[i] for i in xrange(len(args))]):
+                       all([args[i] == largs[i] for i in xrange(len(args))]):
                         level = 5
                     else:
                         return 0
