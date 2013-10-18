@@ -53,10 +53,16 @@ class S3DeploymentModel(S3Model):
 
         s3 = current.response.s3
         crud_strings = s3.crud_strings
+
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
         
         # ---------------------------------------------------------------------
         # Deployment
         #
+        deployment_status_opts = {
+            1 : T("Closed"),
+            2 : T("Open")
+        }
         tablename = "deploy_deployment"
         table = define_table(tablename,
                              super_link("doc_id", "doc_entity"),
@@ -73,7 +79,13 @@ class S3DeploymentModel(S3Model):
                                                                 T("Enter some characters to bring up a list of possible matches"))),
                              ),
                              Field("event_type"),        # @todo: replace by link
-                             Field("status", "integer"), # @todo: lookup?
+                             Field("status", "integer",
+                                   requires = IS_IN_SET(deployment_status_opts),
+                                   represent = lambda opt: \
+                                        deployment_status_opts.get(opt, UNKNOWN_OPT),
+                                   default = 2,
+                                   label = T("Status"),
+                             ),
                              s3_comments(),
                              *s3_meta_fields())
 
@@ -81,8 +93,10 @@ class S3DeploymentModel(S3Model):
         # @todo: move to real field wirtten onaccept?
         table.hrquantity = Field.Lazy(deploy_deployment_hrquantity)
 
+        # CRUD Form
         crud_form = S3SQLCustomForm("title",
                                     "location_id",
+                                    "status",
                                     "event_type",
                                     S3SQLInlineComponent("document",
                                                          name = "file",
@@ -92,14 +106,41 @@ class S3DeploymentModel(S3Model):
                                     "comments",
                                     "created_on",
                                     )
+
+        # Profile
+        assignment_widget = dict(label="Members Assigned",
+                                 title_create="Add Member",
+                                 type="datalist",
+                                 list_fields = [
+                                     "human_resource_id$person_id",
+                                     "human_resource_id$organisation_id",
+                                     "start_date",
+                                     "end_date",
+                                     "rating",
+                                 ],
+                                 tablename = "deploy_human_resource_assignment",
+                                 context = "deployment",
+                                 colspan = 2,
+                                 list_layout = deploy_render_human_resource_assignment,
+                                 pagesize = None, # all records
+                                )
+
         # Table configuration
+        profile = URL(c="deploy", f="deployment", args=["[id]", "profile"])
         configure(tablename,
                   super_entity = "doc_entity",
                   crud_form = crud_form,
+                  create_next = profile,
+                  update_next = profile,
                   list_fields = ["title",
                                  (T("Date"), "created_on"),
                                  (T("Country"), "location_id"),
-                                 (T("Members"), "hrquantity")],
+                                 (T("Members"), "hrquantity"),
+                                 "status",
+                                 ],
+                  profile_header = deploy_deployment_profile_header,
+                  profile_widgets = [assignment_widget,
+                                    ],
                   summary=[{"name": "rheader",
                             "common": True,
                             "widgets": [
@@ -138,7 +179,7 @@ class S3DeploymentModel(S3Model):
         # CRUD Strings
         crud_strings[tablename] = Storage(
             title_create = T("New Deployment"),
-            title_display = T("Deployment Details"),
+            title_display = T("Deployment"),
             title_list = T("Deployments"),
             title_update = T("Edit Deployment Details"),
             title_search = T("Search Deployments"),
@@ -175,11 +216,15 @@ class S3DeploymentModel(S3Model):
                                      label = T("Start Date")),
                              s3_date("end_date",
                                      label = T("End Date")),
+                             Field("rating", "double",
+                                   label=T("Rating"),
+                                   default=0.0),
                              *s3_meta_fields())
 
         # Table configuration
         configure(tablename,
                   super_entity="doc_entity",
+                  context = {"deployment": "deployment_id"},
                   )
 
         # CRUD Strings
@@ -289,6 +334,7 @@ class S3DeploymentAlertModel(S3Model):
         # Table Configuration
         configure(tablename,
                   super_entity = "pr_pentity",
+                  context = {"deployment": "deployment_id"},
                   crud_form = crud_form,
                   list_fields = ["deployment_id",
                                  "alert_message.message_id",
@@ -377,5 +423,140 @@ def deploy_deployment_hrquantity(row):
         return row[count]
     else:
         return 0
+
+# =============================================================================
+def deploy_deployment_profile_header(r):
+    """ Header for deployment profile page """
+
+    table = r.table
+    record = r.record
+    title = S3Method.crud_string(r.tablename, "title_display")
+    if record:
+        def render(*fnames):
+            items = DIV()
+            append = items.append
+            for fname in fnames:
+                field = table[fname]
+                label = "%s:" % field.label
+                value = field.represent(record[fname])
+                item_id = "profile-header-%s" % fname
+                append(LABEL(label,
+                             _for=item_id,
+                             _class="profile-header-label"))
+                append(SPAN(value,
+                            _id=item_id,
+                             _class="profile-header-value"))
+            return items
+        title = "%s: %s" % (title, record.title)
+        header = DIV(H2(title),
+                     render("location_id", "created_on", "status"),
+                     _class="profile-header")
+        return header
+    else:
+        return H2(title)
+        
+# =============================================================================
+def deploy_render_human_resource_assignment(listid,
+                                            resource,
+                                            rfields,
+                                            record,
+                                            **attr):
+    """
+        Item renderer for data list of assigned human resources
+
+        @param listid: the list ID
+        @param resource: the S3Resource
+        @param rfields: the list fields resolved as S3ResourceFields
+        @param record: the record
+        @param attr: additional attributes
+    """
+
+    pkey = "deploy_human_resource_assignment.id"
+
+    # Construct the item ID
+    if pkey in record:
+        record_id = record[pkey]
+        item_id = "%s-%s" % (listid, record_id)
+    else:
+        # template
+        record_id = None
+        item_id = "%s-[id]" % listid
+
+    item_class = "thumbnail"
+
+    person = record["hrm_human_resource.person_id"]
+    organisation = record["hrm_human_resource.organisation_id"]
+
+    fields = dict((rfield.colname, rfield) for rfield in rfields)
+    def render(*colnames):
+        items = DIV()
+        append = items.append
+        for colname in colnames:
+            rfield = fields[colname]
+            label = "%s:" % rfield.label
+            value = record[colname]
+            item_id = "profile-data-%s-%s" % (rfield.fname, record_id)
+            append(LABEL(label,
+                            _for=item_id,
+                            _class="profile-data-label"))
+            append(SPAN(value,
+                        _id=item_id,
+                            _class="profile-data-value"))
+        return items
+
+    # Edit bar
+    permit = current.auth.s3_has_permission
+    table = resource.table
+    tablename = "deploy_human_resource_assignment"
+    if permit("update", table, record_id=record_id):
+        edit_btn = A(I(" ", _class="icon icon-edit"),
+                     _href=URL(c="deploy", f="human_resource_assignment",
+                               args=[record_id, "update.popup"],
+                               vars={"refresh": listid,
+                                     "record": record_id}),
+                     _class="s3_modal",
+                     _title=current.response.s3.crud_strings[tablename].title_update,
+                    )
+    else:
+        edit_btn = ""
+    if permit("delete", table, record_id=record_id):
+        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+                       _class="dl-item-delete",
+                       _title=current.response.s3.crud_strings[tablename].label_delete_button,
+                      )
+    else:
+        delete_btn = ""
+    edit_bar = DIV(edit_btn,
+                   delete_btn,
+                   _class="edit-bar fright")
+
+    # Render the item
+    item = DIV(DIV(A(IMG(_class="media-object",
+                         _src=URL(c="static",
+                                  f="themes",
+                                  args=["IFRC", "img", "member.png"]),
+                         ),
+                         _class="pull-left",
+                         _href="#",
+                   ),
+                   edit_bar,
+                   DIV(DIV(DIV(person,
+                               _class="person-title"),
+                           DIV(organisation,
+                               _class="organisation-title"),
+                           _class="media-heading"),
+                       render("deploy_human_resource_assignment.start_date",
+                              "deploy_human_resource_assignment.end_date",
+                              "deploy_human_resource_assignment.rating",
+                       ),
+                       _class="media-body",
+                   ),
+                   _class="media",
+               ),
+               _class=item_class,
+               _id=item_id,
+           )
+
+    return item
 
 # END =========================================================================

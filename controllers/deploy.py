@@ -28,14 +28,22 @@ def deployment():
         s3.cancel = r.url(method="summary", id=0)
         created_on = r.table.created_on
         created_on.readable = True
+        created_on.label = T("Date Created")
         created_on.represent = lambda d: \
                                s3base.S3DateTime.date_represent(d, utc=True)
         return True
     s3.prep = prep
 
-    # Override standard "List" button
     def postp(r, output):
+        s3_action_buttons(r,
+                          editable=True,
+                          deletable=True,
+                          read_url=r.url(method="profile", id="[id]"),
+                          update_url=r.url(method="profile", id="[id]"),
+                          delete_url=r.url(method="delete", id="[id]"),
+                         )
         if isinstance(output, dict) and "buttons" in output:
+            # Override standard "List" button
             buttons = output["buttons"]
             if "list_btn" in buttons and "summary_btn" in buttons:
                 buttons["list_btn"] = buttons["summary_btn"]
@@ -51,6 +59,12 @@ def deployment():
 # =============================================================================
 def human_resource_assignment():
     """ RESTful CRUD Controller """
+
+    def prep(r):
+        if r.representation == "popup":
+            r.resource.configure(insertable=False)
+        return True
+    s3.prep = prep
 
     return s3_rest_controller()
     
