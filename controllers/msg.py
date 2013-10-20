@@ -1411,7 +1411,15 @@ def action_after_save(form):
         Decides action for search query depending on flag
     """
     if request.vars.get("search_after_save"):
-        redirect(URL(f="search_tweet_query", args=[form.vars.id]))
+        s3task.async("msg_process_twitter_search", args=[form.vars.id])
+        session.information = "The query has been scheduled and will search shortly"
+# -----------------------------------------------------------------------------
+def url_after_save():
+    """
+        Decides action for search query depending on flag
+    """
+    if request.vars.get("search_after_save"):
+        return URL(f="twitter_result")
 # -----------------------------------------------------------------------------
 def twitter_search_query():
     """
@@ -1450,7 +1458,9 @@ def twitter_search_query():
     s3db.configure(tablename,
                    listadd=True,
                    deletable=True,
-                   create_onaccept=action_after_save)
+                   create_onaccept=action_after_save,
+                   create_next=url_after_save()
+                   )
 
     def prep(r):
 
