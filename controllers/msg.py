@@ -1408,7 +1408,8 @@ def inject_search_after_save(output):
 # -----------------------------------------------------------------------------
 def action_after_save(form):
     """
-        Decides action for search query depending on flag
+        Schedules Twitter query search immediately after save
+        depending on flag
     """
     if request.vars.get("search_after_save"):
         s3task.async("msg_process_twitter_search", args=[form.vars.id])
@@ -1416,7 +1417,8 @@ def action_after_save(form):
 # -----------------------------------------------------------------------------
 def url_after_save():
     """
-        Decides action for search query depending on flag
+        Decides url to direct to after query save
+         depending on flag
     """
     if request.vars.get("search_after_save"):
         return URL(f="twitter_result")
