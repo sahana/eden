@@ -359,9 +359,7 @@ class S3DeploymentAlertModel(S3Model):
                                                          fields = ["human_resource_id"],
                                     ),
                                     "created_on",
-                                    # Cannot just use onaccept of primary resource
-                                    # since we need components linked already
-                                    onaccept = self.deploy_alert_onaccept,
+                                    postprocess = self.deploy_alert_postprocess,
                                     )
 
         # Table Configuration
@@ -437,13 +435,15 @@ class S3DeploymentAlertModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def deploy_alert_onaccept(form):
+    def deploy_alert_postprocess(form):
         """
             After an Alert has been generated, send out the message
         """
 
         s3db = current.s3db
         form_vars = form.vars
+
+        # @todo: check whether the alert had already been sent
 
         # Send Message
         # @ToDo: Embed the alert_id to parse replies
