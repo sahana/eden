@@ -83,7 +83,7 @@
   </div>
  </div>
  <div id='footer'>
-  {{include "../private/templates/%s/views/footer.html" % theme}}
+  {{include "../private/templates/%s/views/footer.html" % response.s3.theme}}
   {{if s3.debug:}}{{=s3.toolbar()}}{{pass}}
  </div>
 {{pass}}
