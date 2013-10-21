@@ -1413,7 +1413,7 @@ def action_after_save(form):
     """
     if request.vars.get("search_after_save"):
         s3task.async("msg_process_twitter_search", args=[form.vars.id])
-        session.information = T("The query has been scheduled and will search shortly")
+        session.information = T("The search results should appear shortly - refresh to see them")
 # -----------------------------------------------------------------------------
 def twitter_search_query():
     """
@@ -1452,7 +1452,7 @@ def twitter_search_query():
     if request.vars.get("search_after_save"):
         url_after_save = URL(f="twitter_result")
     else:
-        url_after_save = URL(f="twitter_search_query",args=["[id]","read"])
+        url_after_save = None
 
     s3db.configure(tablename,
                    listadd=True,
