@@ -51,12 +51,10 @@ from ..s3 import *
 # =============================================================================
 class S3MessagingModel(S3Model):
     """
-        Messaging Framework
-        - core models defined here
+        Messages
     """
 
-    names = ["msg_limit",
-             "msg_message",
+    names = ["msg_message",
              "msg_message_id",
              "msg_outbox",
              ]
@@ -196,17 +194,6 @@ class S3MessagingModel(S3Model):
                                ])
 
         # ---------------------------------------------------------------------
-        # Message Limit
-        #  Used to limit the number of emails sent from the system
-        #  - works by simply recording an entry for the timestamp to be checked against
-        #
-        # @ToDo: have separate limits for each Outbound Channel
-        #
-        tablename = "msg_limit"
-        table = define_table(tablename,
-                             *s3_timestamp())
-
-        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         return dict(msg_message_id = message_id,
                     )
@@ -253,7 +240,9 @@ class S3ChannelModel(S3Model):
         Outbound messages (campaign_message, deployment notificstions, etc)
     """
 
-    names = ["msg_channel"]
+    names = ["msg_channel",
+             "msg_limit",
+             ]
 
     def model(self):
 
@@ -280,9 +269,15 @@ class S3ChannelModel(S3Model):
         table = self.super_entity(tablename, "channel_id",
                                   channel_types,
                                   Field("name",
-                                        label = T("Name")),
+                                        #label = T("Name")
+                                        ),
                                   Field("description",
-                                        label = T("Description")),
+                                        #label = T("Description")
+                                        ),
+                                  Field("enabled", "boolean",
+                                        #label = T("Enabled?")
+                                        #represent = s3_yes_no_represent,
+                                        ),
                                   # @ToDo: Indicate whether channel can be used for Inbound or Outbound
                                   #Field("inbound", "boolean",
                                   #      label = T("Inbound?")),
@@ -293,13 +288,26 @@ class S3ChannelModel(S3Model):
         table.instance_type.readable = True
 
         # ---------------------------------------------------------------------
+        # Message Limit
+        #  Used to limit the number of emails sent from the system
+        #  - works by simply recording an entry for the timestamp to be checked against
+        #
+        # @ToDo: have separate limits for each Outbound Channel
+        #
+        tablename = "msg_limit"
+        table = define_table(tablename,
+                             *s3_timestamp())
+
+        # ---------------------------------------------------------------------
         return dict()
 
     # -----------------------------------------------------------------------------
     @staticmethod
-    def schedule(s3task):
+    def schedule():
         """
-            Master Schedule method for various channels.
+            Master Schedule method for various channels
+
+            @ToDo: rewrite as S3Method
         """
 
         T = current.T
@@ -322,7 +330,8 @@ class S3ChannelModel(S3Model):
               redirect(URL(f=f))
 
           record = db(table.id == id).select(table["username"],
-                                      table["server"], limitby=(0, 1)).first()
+                                             table["server"],
+                                             limitby=(0, 1)).first()
           accountID.append(str(record["username"]))
           accountID.append(str(record["server"]))
         elif function == "schedule_twilio_sms":
@@ -336,7 +345,6 @@ class S3ChannelModel(S3Model):
           account_id = "campaign_id"
           task = "msg_mcommons_poll"
 
-
         if not accountID:
 
           try:
@@ -346,19 +354,19 @@ class S3ChannelModel(S3Model):
               redirect(URL(f=f))
 
           record = db(table.id == id).select(table[account_id],
-                                           limitby=(0, 1)).first()
+                                             limitby=(0, 1)).first()
 
           accountID.append(str(record[account_id]))
 
         # A list "accountID" is passed as the variable to identify
         # the individual channel setting. A list is used so that
         # multiple paramters (e.g. username & server) can be passed
-        s3task.schedule_task(task,
-                             vars={"account_id": accountID},
-                             period=300,  # seconds
-                             timeout=300, # seconds
-                             repeats=0    # unlimited
-                             )
+        current.s3task.schedule_task(task,
+                                     vars={"account_id": accountID},
+                                     period=300,  # seconds
+                                     timeout=300, # seconds
+                                     repeats=0    # unlimited
+                                     )
 
         redirect(URL(f=f))
 
@@ -366,7 +374,9 @@ class S3ChannelModel(S3Model):
     @staticmethod
     def enable():
         """
-            Master enable method for various channels.
+            Master enable method for various channels
+
+            @ToDo: rewrite as S3Method
         """
 
         T = current.T
@@ -442,7 +452,9 @@ class S3ChannelModel(S3Model):
     @staticmethod
     def disable():
         """
-            Master disable method for various channels.
+            Master disable method for various channels
+
+            @ToDo: rewrite as S3Method
         """
 
         T = current.T
@@ -545,6 +557,10 @@ class S3EmailModel(S3ChannelModel):
                              super_link("channel_id", "msg_channel"),
                              Field("name"),
                              Field("description"),
+                             Field("enabled", "boolean",
+                                   label = T("Enabled?"),
+                                   represent = s3_yes_no_represent,
+                                   ),
                              Field("server"),
                              Field("protocol",
                                    requires = IS_IN_SET(["imap", "pop3"],
@@ -565,6 +581,18 @@ class S3EmailModel(S3ChannelModel):
                   )
 
         # ---------------------------------------------------------------------
+        # Status
+        # - store latest error received when polling for email
+        # - used by msg.fetch_inbound_email()
+        # @ToDo: This should be separate per-channel
+        # @ToDo: Maintain History, not just storing latest error
+        tablename = "msg_email_inbound_status"
+        table = define_table(tablename,
+                             #Field("channel_id", table),
+                             Field("status"),
+                             *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
         # Email Log: InBox & Outbox
         #
         sender = current.deployment_settings.get_mail_sender()
@@ -574,34 +602,32 @@ class S3EmailModel(S3ChannelModel):
                              # Instance
                              super_link("message_id", "msg_message"),
                              Field("subject", length=78,    # RFC 2822
-                                   label = T("Subject")),
+                                   label = T("Subject")
+                                   ),
                              Field("body", "text",
-                                   label = T("Message")),
+                                   label = T("Message")
+                                   ),
                              Field("from_address", #notnull=True,
                                    default = sender,
                                    label = T("Sender"),
-                                   requires = IS_EMAIL()),
+                                   requires = IS_EMAIL()
+                                   ),
                              Field("to_address",
                                    label = T("To"),
-                                   requires = IS_EMAIL()),
+                                   requires = IS_EMAIL()
+                                   ),
                              Field("inbound", "boolean",
                                    default = False,
                                    represent = lambda direction: \
                                        (direction and [T("In")] or \
                                                       [T("Out")])[0],
-                                   label = T("Direction")),
+                                   label = T("Direction")
+                                   ),
                              *s3_meta_fields())
 
         configure(tablename,
                   super_entity = "msg_message",
                   )
-
-        # ---------------------------------------------------------------------
-        # Status
-        # - record whether email sent ok or not
-        tablename = "msg_email_inbound_status"
-        table = define_table(tablename,
-                             Field("status"))
 
         # ---------------------------------------------------------------------
         return dict()
@@ -665,6 +691,7 @@ class S3ParsingModel(S3Model):
              "msg_session",
              "msg_keyword",
              "msg_sender",
+             "msg_schedule_parser",
              ]
 
     def model(self):
@@ -747,7 +774,8 @@ class S3ParsingModel(S3Model):
                              *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        return dict()
+        return dict(msg_schedule_parser = self.schedule_parser,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -773,7 +801,7 @@ class S3ParsingModel(S3Model):
             return repr
     # -----------------------------------------------------------------------------
     @staticmethod
-    def schedule_parser(s3task):
+    def schedule_parser():
         """
             Schedule a Parsing Workflow
         """
@@ -794,13 +822,13 @@ class S3ParsingModel(S3Model):
         record = db(table.id == id).select(table.workflow_task_id,
                                            table.source_task_id,
                                            limitby=(0, 1)).first()
-        s3task.schedule_task("msg_parse_workflow",
-                             vars={"workflow": record.workflow_task_id,
-                                   "source": record.source_task_id},
-                             period=300,  # seconds
-                             timeout=300, # seconds
-                             repeats=0    # unlimited
-                             )
+        current.s3task.schedule_task("msg_parse_workflow",
+                                     vars={"workflow": record.workflow_task_id,
+                                           "source": record.source_task_id},
+                                     period=300,  # seconds
+                                     timeout=300, # seconds
+                                     repeats=0    # unlimited
+                                     )
 
         redirect(URL(f="workflow"))
 
@@ -914,7 +942,8 @@ class S3RSSModel(S3ChannelModel):
                                    unique = True),
                              Field("description"),
                              Field("url"),
-                             Field("subscribed", "boolean", default = True,
+                             Field("subscribed", "boolean",
+                                   default = True,
                                    represent = s3_yes_no_represent,
                                    label = T("Subscription Status")),
                              *s3_meta_fields())
@@ -1040,8 +1069,12 @@ class S3SMSOutboundModel(S3Model):
                              # Nametag to remember account - To be used later
                              #Field("account_name"),
                              Field("modem_port"),
-                             Field("modem_baud", "integer", default = 115200),
-                             Field("enabled", "boolean", default = True),
+                             Field("modem_baud", "integer",
+                                   default = 115200,
+                                   ),
+                             Field("enabled", "boolean",
+                                   default = True,
+                                   ),
                              # To be used later
                              #Field("preference", "integer", default = 5),
                              *s3_meta_fields())

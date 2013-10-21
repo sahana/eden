@@ -442,7 +442,6 @@ class S3DeploymentAlertModel(S3Model):
             After an Alert has been generated, send out the message
         """
 
-        s3db = current.s3db
         form_vars = form.vars
 
         # Send Message
@@ -457,9 +456,9 @@ class S3DeploymentAlertModel(S3Model):
         # Keep a record of the link between Alert & Message
         # - for parsing replies
         # @ToDo: is this really needed?
-        s3db.deploy_alert_message.insert(alert_id=form_vars.id,
-                                         message_id=message_id,
-                                         )
+        current.s3db.deploy_alert_message.insert(alert_id=form_vars.id,
+                                                 message_id=message_id,
+                                                 )
 
 # =============================================================================
 def deploy_deployment_hrquantity(row):
