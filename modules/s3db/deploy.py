@@ -359,13 +359,15 @@ class S3DeploymentAlertModel(S3Model):
                                                          fields = ["human_resource_id"],
                                     ),
                                     "created_on",
+                                    # Cannot just use onaccept of primary resource
+                                    # since we need components linked already
+                                    onaccept = self.deploy_alert_onaccept,
                                     )
 
         # Table Configuration
         configure(tablename,
                   super_entity = "pr_pentity",
                   context = {"deployment": "deployment_id"},
-                  onaccept = self.deploy_alert_onaccept,
                   crud_form = crud_form,
                   list_fields = ["deployment_id",
                                  "subject",
@@ -442,20 +444,12 @@ class S3DeploymentAlertModel(S3Model):
 
         s3db = current.s3db
         form_vars = form.vars
-        alert_id = form_vars.id
-
-        # Retrieve the pe_id
-        table = s3db.deploy_alert
-        record = current.db(table.id == alert_id).select(table.pe_id,
-                                                         limitby=(0, 1)
-                                                         ).first()
 
         # Send Message
         # @ToDo: Embed the alert_id to parse replies
         # @ToDo: Support alternate channels, like SMS
         # if not body: body = subject
-        # !!PROBLEM!! Recipients table not yet populated, so can't lookup the HRs yet!
-        message_id = current.msg.send_by_pe_id(record.pe_id,
+        message_id = current.msg.send_by_pe_id(form_vars.pe_id,
                                                subject=form_vars.subject,
                                                message=form_vars.body,
                                                )
@@ -463,7 +457,7 @@ class S3DeploymentAlertModel(S3Model):
         # Keep a record of the link between Alert & Message
         # - for parsing replies
         # @ToDo: is this really needed?
-        s3db.deploy_alert_message.insert(alert_id=alert_id,
+        s3db.deploy_alert_message.insert(alert_id=form_vars.id,
                                          message_id=message_id,
                                          )
 
