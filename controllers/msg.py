@@ -1413,15 +1413,7 @@ def action_after_save(form):
     """
     if request.vars.get("search_after_save"):
         s3task.async("msg_process_twitter_search", args=[form.vars.id])
-        session.information = "The query has been scheduled and will search shortly"
-# -----------------------------------------------------------------------------
-def url_after_save():
-    """
-        Decides url to direct to after query save
-         depending on flag
-    """
-    if request.vars.get("search_after_save"):
-        return URL(f="twitter_result")
+        session.information = T("The query has been scheduled and will search shortly")
 # -----------------------------------------------------------------------------
 def twitter_search_query():
     """
@@ -1457,11 +1449,16 @@ def twitter_search_query():
         msg_record_modified = T("Query updated")
         )
 
+    if request.vars.get("search_after_save"):
+        url_after_save = URL(f="twitter_result")
+    else:
+        url_after_save = URL(f="twitter_search_query",args=["[id]","read"])
+
     s3db.configure(tablename,
                    listadd=True,
                    deletable=True,
                    create_onaccept=action_after_save,
-                   create_next=url_after_save()
+                   create_next=url_after_save
                    )
 
     def prep(r):
