@@ -26,7 +26,7 @@
 
         var throbber = $('#' + dummy + '_throbber');
 
-        var url = S3.Ap.concat('/', module, '/', resourcename, '/search_ac?filter=~&field=', fieldname);
+        var url = S3.Ap.concat('/', module, '/', resourcename, '/search_ac.json?filter=~&field=', fieldname);
         if (filter) {
             url += '&' + filter;
         }
@@ -270,7 +270,7 @@
 
         var throbber = $('#' + dummy + '_throbber');
 
-        var url = S3.Ap.concat('/', controller, '/', fn, '/search_ac');
+        var url = S3.Ap.concat('/', controller, '/', fn, '/search_ac.json');
 
         // Optional args
         if (delay == 'undefined') {
@@ -381,7 +381,7 @@
 
         var throbber = $('#' + dummy + '_throbber');
 
-        var url = S3.Ap.concat('/', controller, '/', fn, '/search_ac');
+        var url = S3.Ap.concat('/', controller, '/', fn, '/search_ac.json');
 
         // Optional args
         if (delay == 'undefined') {
@@ -525,13 +525,13 @@
 
         if (group == 'staff') {
             // Search Staff using S3HRSearch
-            var url = S3.Ap.concat('/hrm/person_search/search_ac?group=staff');
+            var url = S3.Ap.concat('/hrm/person_search/search_ac.json?group=staff');
         } else if (group == 'volunteer') {
             // Search Volunteers using S3HRSearch
-            var url = S3.Ap.concat('/vol/person_search/search_ac');
+            var url = S3.Ap.concat('/vol/person_search/search_ac.json');
         } else {
             // Search all HRs using S3HRSearch
-            var url = S3.Ap.concat('/hrm/person_search/search_ac');
+            var url = S3.Ap.concat('/hrm/person_search/search_ac.json');
         }
 
         // Optional args
@@ -644,7 +644,7 @@
 
         var throbber = $('#' + dummy + '_throbber');
 
-        var url = S3.Ap.concat('/org/site/search_ac?field=name&filter=~');
+        var url = S3.Ap.concat('/org/site/search_ac.json?field=name&filter=~');
 
         // Optional args
         if (delay == 'undefined') {
