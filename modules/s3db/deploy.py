@@ -105,7 +105,7 @@ class S3DeploymentModel(S3Model):
                              *s3_meta_fields())
 
         # Virtual field
-        # @todo: move to real field wirtten onaccept?
+        # @todo: move to real field written onaccept?
         table.hrquantity = Field.Lazy(deploy_deployment_hrquantity)
 
         # CRUD Form

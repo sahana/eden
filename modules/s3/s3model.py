@@ -838,7 +838,7 @@ class S3Model(object):
 
         db = current.db
         if db._dbname == "postgres":
-            sequence_name = "%s_%s_Seq" % (tablename, key)
+            sequence_name = "%s_%s_seq" % (tablename, key)
         else:
             sequence_name = None
 
