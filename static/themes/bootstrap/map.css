@@ -1,0 +1,85 @@
+/* Map */
+
+/* Over-ride Bootstrap: Tile images */
+.gis-map-window img,
+.map_wrapper img {
+    max-width: none;
+}
+/* Over-ride jQuery UI Bootstrap */
+#gis_print_help_popup a {
+    color: #0088CC;
+}
+
+.map_loader {
+    height: 48px;
+    width: 48px;
+}
+
+/* West Panel */
+.x-panel-body {
+    background-color: #f5f6f5;
+}
+
+/* Section headers */
+.x-panel-header {
+    text-indent: 4px;
+    padding: 5px;
+    font: bold 12px/21px 'Open Sans', sans-serif;
+    text-transform: uppercase;
+    color: #656665;
+    background-image: -webkit-gradient(linear,0 0,0 100%,from(#f9f9f9),to(#f2f2f2));
+    background-image: -moz-linear-gradient(center top,#f9f9f9,#f2f2f2);
+    border: none;
+    border-bottom: 1px solid #dedede;
+}
+
+/* Collapse arrow in section headers */
+.x-tool {
+    margin-top: 2px;
+}
+
+/* Popups */
+.olPopupCloseBox {
+  background: url(../../img/bootstrap/close.gif) no-repeat;
+}
+.olFramedCloudPopupContent {
+    font-size: 12px;
+    /* Needed if using Attachments button
+    overflow: visible;*/
+}
+/* Attachments button
+.olFramedCloudPopupContent .btn-group > .dropdown-toggle {
+    margin-top: -25px;
+    font-size: 12px;
+}*/
+
+.olFramedCloudPopupContent ul {
+    display: block;
+    list-style-type: disc;
+    padding: 0 5px 5px 20px;
+}
+
+.olFramedCloudPopupContent .throbber {
+    background-image: url(../../img/bootstrap/img/ajax-loader.gif);
+    height: 48px;
+    width: 48px;
+}
+
+#activetooltip_GroupDiv {
+    background-color: #fff;
+    border: 1px solid #aaa7a7;
+    border-radius: 4px;
+    font-size: 12px;
+    padding: 0 3px 0 0;
+}
+
+/* Toolbar */
+.x-form-text.x-form-field {
+    margin-bottom: -2px;
+    margin-top: 2px;
+    margin-left: 5px;
+}
+.layer_throbber {
+    /* Must match above */
+    margin-left: 5px;
+}

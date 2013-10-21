@@ -30,7 +30,7 @@ form .map_loader {
 .map_home {
     margin: 0 0 0 -12px;
 }
-.gis_fullscreen_map-btn {
+.map_home .gis_fullscreen_map-btn {
     font-weight: bold;
     padding-left: 8px;
 }

@@ -1,65 +1,53 @@
 {{extend "layout.html"}}
-<div class="home">
-{{try:}}
-
-	<div class="home-title">
-		<h1>{{=title}}</h1>		
-	</div>
-    {{except:}}{{pass}}
-    {{=XML(item)}}
-
-    {{if AUTHENTICATED not in session.s3.roles:}}
-    <div class="home-register">
-     <div class="login-box">
-      {{if not self_registration or registered:}}
-        <div id='login_form'>
-        {{=login_div}}
-        {{include "auth/_login.html"}}
-       </div>
-      {{pass}}
-      {{if self_registration:}}
-       <div id='register_form' {{if registered:}}class='hide'{{pass}}>
-        {{=register_div}}
-        {{include "auth/_register.html"}}
-       </div>
-      {{pass}}
-      {{if self_registration and not registered:}}
-       <div id='login_form' class='hide'>
-        {{=login_div}}
-        {{include "auth/_login.html"}}
-       </div>
-      {{pass}}
-     </div>
-    </div>
-    {{else:}}
-
-	<div class="home-content">
-	
-		<div class="welcome">
-			<h2>Welcome!</h2>		
-			<ol class="welcome-steps">
-				<!--<li>Please read our <a href="">How-to Guide</a> for lots of tips from other organizers.</li>-->
-				<li>If you need help, see if anyone is in the <a id="sandychat" href='http://sandyrelief.sahanafoundation.org:9090?nick={{="%s_%s_SR" % (s3_fullname(auth.user).replace(" ", "_"), s3db.org_site_represent(auth.user.site_id, show_link=False).replace(" ", "_"))}}&channels=SandyRelief' target='_blank'>#SandyRelief</a> chat room, or <a href="/{{=appname}}/default/contact">email us.</a></li>
-				<li>Thank you for donating your time!</li>
-			</ol>	
-		</div>
-		
-		<div class="comms">
-			<h2><i class="icon-comms"></i>Comms</h2>		
-			<a href="/{{=appname}}/req/req/create?type=1" class="button">Request supplies</a>
-			<a href="/{{=appname}}/req/req/create?type=3" class="button">Request people</a>
-		</div>
-
-		<div class="dispatch">
-			<h2><i class="icon-dispatch"></i>Dispatch</h2>		
-			<a href="/{{=appname}}/req/req/search" class="button">Fulfill requests</a>
-		</div>
-
-    </div>
-
-    {{pass}}
-    
-        
-	
-
+<div class='home'>
+{{try:}}{{=title}}
+ <div class='home-title'>
+  <h1>{{=title}}</h1>
+ </div>
+{{except:}}{{pass}}
+{{=XML(item)}}
+{{if AUTHENTICATED not in session.s3.roles:}}
+ <div class='home-register'>
+  <div class='login-box'>
+  {{if not self_registration or registered:}}
+   <div id='login_form'>
+    {{=login_div}}
+    {{include "auth/_login.html"}}
+   </div>
+  {{pass}}
+  {{if self_registration:}}
+   <div id='register_form' {{if registered:}}class='hide'{{pass}}>
+    {{=register_div}}
+    {{include "auth/_register.html"}}
+   </div>
+  {{pass}}
+  {{if self_registration and not registered:}}
+   <div id='login_form' class='hide'>
+    {{=login_div}}
+    {{include "auth/_login.html"}}
+   </div>
+  {{pass}}
+  </div>
+ </div>
+{{else:}}
+ <div class='home-content'>
+  <div class='welcome'>
+   <h2>Welcome!</h2>		
+   <ol class='welcome-steps'>
+    <!--<li>Please read our <a href="">How-to Guide</a> for lots of tips from other organizers.</li>-->
+    <li>If you need help, see if anyone is in the <a id='sandychat' href='http://sandyrelief.sahanafoundation.org:9090?nick={{="%s_%s_SR" % (s3_fullname(auth.user).replace(" ", "_"), s3db.org_site_represent(auth.user.site_id, show_link=False).replace(" ", "_"))}}&channels=SandyRelief' target='_blank'>#SandyRelief</a> chat room, or <a href="/{{=appname}}/default/contact">email us.</a></li>
+    <li>Thank you for donating your time!</li>
+   </ol>	
+  </div>
+  <div class='comms'>
+   <h2><i class='icon-comms'></i>Comms</h2>		
+   <a href='/{{=appname}}/req/req/create?type=1' class='button'>Request supplies</a>
+   <a href='/{{=appname}}/req/req/create?type=3' class='button'>Request people</a>
+  </div>
+  <div class='dispatch'>
+   <h2><i class='icon-dispatch'></i>Dispatch</h2>		
+   <a href='/{{=appname}}/req/req/search' class='button'>Fulfill requests</a>
+  </div>
+ </div>
+{{pass}}
 </div>

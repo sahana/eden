@@ -3776,7 +3776,7 @@ class S3LocationSelectorWidget2(FormWidget):
         config = gis.get_config()
 
         # Should we use a Geocoder?
-        geocoder = config.geocoder
+        geocoder = config.geocoder and show_address
 
         # List of all levels up to the lowest we specify
         if "L5" in levels:

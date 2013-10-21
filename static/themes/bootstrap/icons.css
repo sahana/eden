@@ -1,0 +1,235 @@
+@font-face {
+    font-family: 'DRMP';
+    src:url('../../fonts/DRMP.eot');
+    src:url('../../fonts/DRMP.eot?#iefix') format('embedded-opentype'),
+        url('../../fonts/DRMP.woff') format('woff'),
+        url('../../fonts/DRMP.ttf') format('truetype'),
+        url('../../fonts/DRMP.svg#DRMP') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Use the following CSS code if you want to use data attributes for inserting your icons
+[data-icon]:before {
+    font-family: 'DRMP';
+    content: attr(data-icon);
+    speak: none;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+} */
+
+/* Use the following CSS code if you want to have a class per icon */
+/*
+Instead of a list of all class selectors,
+you can use the generic selector below, but it's slower:
+[class*="icon-"] {
+*/
+/*
+.icon-cyclone,
+.icon-drought,
+.icon-earthquake,
+.icon-fire,
+.icon-flood,
+.icon-industrial-accident,
+.icon-landslide,
+.icon-rain-wind,
+.icon-transport-accident,
+.icon-tsunami,
+*/
+/*
+.icon-activity1-dark,
+.icon-activity2-dark,
+.icon-activity3-dark,
+.icon-activity4-dark,
+.icon-activity5-dark,
+.icon-alert-dark,
+.icon-assessment-dark,
+.icon-event-dark,
+.icon-incident-dark,
+.icon-map-dark,
+.icon-plan-dark,
+.icon-project-dark,
+.icon-report-dark,
+.icon-training-material-dark,
+.icon-updates-dark,
+.icon-activity1,
+.icon-activity2,
+.icon-activity3,
+.icon-activity4,
+.icon-activity5,
+*/
+.icon-activity,
+.icon-alert,
+.icon-assessment,
+.icon-event,
+.icon-incident,
+.icon-map,
+.icon-plan,
+.icon-project,
+.icon-report,
+.icon-training_material,
+.icon-updates {
+    font-family: 'DRMP';
+    speak: none;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+}
+/*
+.icon-cyclone:before {
+    content: "\30";
+}
+.icon-drought:before {
+    content: "\39";
+}
+.icon-earthquake:before {
+    content: "\38";
+}
+.icon-fire:before {
+    content: "\37";
+}
+.icon-flood:before {
+    content: "\36";
+}
+.icon-industrial-accident:before {
+    content: "\35";
+}
+.icon-landslide:before {
+    content: "\34";
+}
+.icon-rain-wind:before {
+    content: "\33";
+}
+.icon-transport-accident:before {
+    content: "\32";
+}
+.icon-tsunami:before {
+    content: "\31";
+}
+*/
+/*.icon-activity1:before {
+    content: "\3d";
+}/*
+.icon-activity2:before {
+    content: "\2d";
+}
+.icon-activity3:before {
+    content: "\5c";
+}
+.icon-activity4:before {
+    content: "\5d";
+}
+*/
+.icon-activity5:before,
+.icon-activity:before {
+    content: "\5b";
+}
+.icon-alert:before {
+    content: "\70";
+}
+.icon-assessment:before {
+    content: "\6f";
+}
+.icon-event:before {
+    content: "\69";
+}
+.icon-incident:before {
+    content: "\75";
+}
+.icon-map:before {
+    content: "\79";
+}
+.icon-plan:before {
+    content: "\74";
+}
+.icon-project:before {
+    content: "\72";
+}
+.icon-report:before {
+    content: "\65";
+}
+.icon-training_material:before {
+    content: "\77";
+}
+.icon-updates:before {
+    content: "\71";
+}
+/*
+.icon-alert-dark:before {
+    content: "\50";
+}
+.icon-activity1-dark:before {
+    content: "\2b";
+}
+.icon-activity2-dark:before {
+    content: "\5f";
+}
+.icon-activity3-dark:before {
+    content: "\7c";
+}
+.icon-activity4-dark:before {
+    content: "\7d";
+}
+.icon-activity5-dark:before {
+    content: "\7b";
+}
+.icon-assessment-dark:before {
+    content: "\4f";
+}
+.icon-event-dark:before {
+    content: "\49";
+}
+.icon-incident-dark:before {
+    content: "\55";
+}
+.icon-map-dark:before {
+    content: "\59";
+}
+.icon-plan-dark:before {
+    content: "\54";
+}
+.icon-project-dark:before {
+    content: "\52";
+}
+.icon-report-dark:before {
+    content: "\45";
+}
+.icon-training_material-dark:before {
+    content: "\57";
+}
+.icon-updates-dark:before {
+    content: "\51";
+}
+*/
+
+/* Update Cards */
+.card-header .icon-activity,
+.card-header .icon-alert,
+.card-header .icon-assessment,
+.card-header .icon-incident, 
+.card-header .icon-plan,
+.card-header .icon-report,
+.card-header .icon-training_material {
+    font-size: 14px;
+    display: inline-block;
+    color: #413b3b;
+    padding-left: 1px;
+    width: 16px;
+}
+
+/* Icons still coming from font-awesome */
+
+/* Contact */
+.icon-contact:before {
+    content: "\f0c0";
+}
+/* Resource */
+.icon-resource:before {
+    content: "\f0d1";
+}

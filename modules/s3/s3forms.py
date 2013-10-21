@@ -78,14 +78,14 @@ class S3SQLForm(object):
             else:
                 raise SyntaxError("Invalid form element: %s" % str(element))
 
-        opts = []
-        attr = []
+        opts = {}
+        attr = {}
         for k in attributes:
             value = attributes[k]
             if k[:1] == "_":
-                self.attr[k] = value
+                attr[k] = value
             else:
-                self.opts[k] = value
+                opts[k] = value
 
         self.attr = attr
         self.opts = opts
@@ -895,6 +895,12 @@ class S3SQLCustomForm(S3SQLForm):
 
             link = options.get("link", None)
             self.accept(form, format=format, link=link)
+            # Overall form onaccept
+            # - cannot just use onaccept of primary resource
+            #   if we need components linked already
+            onaccept = self.opts.get("onaccept", None)
+            if onaccept:
+                callback(onaccept, form, tablename=tablename)
             response.confirmation = message
 
         if form.errors:
@@ -978,10 +984,10 @@ class S3SQLCustomForm(S3SQLForm):
 
         # Create/update the main record
         main_data = self._extract(form)
-        master_id = self._accept(self.record_id,
-                                 main_data,
-                                 format=format,
-                                 link=link)
+        master_id, master_form_vars = self._accept(self.record_id,
+                                                   main_data,
+                                                   format=format,
+                                                   link=link)
         if not master_id:
             return
         else:
@@ -1030,6 +1036,14 @@ class S3SQLCustomForm(S3SQLForm):
                             master_id=master_id,
                             format=format)
 
+        # Update form with master form_vars
+        form_vars = form.vars
+        # ID
+        form_vars[table._id.name] = master_id
+        # Super entities (& anything added manually in table's onaccept)
+        for var in master_form_vars:
+            if var not in form_vars:
+                form_vars[var] = master_form_vars[var]
         return
 
     # -------------------------------------------------------------------------
@@ -1104,7 +1118,6 @@ class S3SQLCustomForm(S3SQLForm):
         data[table._id.name] = accept_id
         prefix, name = tablename.split("_", 1)
         form = Storage(vars=Storage(data), record=oldrecord)
-        #form = Storage(vars=data, record=oldrecord)
 
         # Audit
         if record_id is None:
@@ -1143,7 +1156,11 @@ class S3SQLCustomForm(S3SQLForm):
             # Execute onaccept
             callback(onaccept, form, tablename=tablename)
 
-        return accept_id
+        if alias is None:
+            # Return master_form_vars
+            return accept_id, form.vars
+        else:
+            return accept_id
 
 # =============================================================================
 class S3SQLFormElement(object):

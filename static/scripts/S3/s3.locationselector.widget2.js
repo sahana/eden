@@ -226,7 +226,7 @@
                 label,
                 label_row,
                 levels = ['1', '2', '3', '4', '5'];
-            for (i=0; i < 5; i++ ) {
+            for (i=0; i < 5; i++) {
                 lev = levels[i];
                 label = hi[lev] || d[lev];
                 label_row = $(selector + '_L' + lev + '__row label');
@@ -295,9 +295,12 @@
                     option = '<option value="' + _id + '"' + selected + '>' + location['n'] + '</option>';
                     select.append(option);
                 }
-            //} else {
+            } else {
                 // We're at the top of the hierarchy
-                // - nothing to do
+                var geocode_button = $(selector + '_geocode button');
+                if (geocode_button.length) {
+                    geocodeDecision(fieldname);
+                }
             }
         } else {
             // Dropdown has been de-selected
@@ -464,28 +467,55 @@
 
         var geocode_button = $(selector + '_geocode button');
         if (geocode_button.length) {
-            // Listen for changes
-            $(selector + '_address').change(function() {
-                var real_input = $(selector);
-                var manually_geocoded = real_input.data('manually_geocoded');
-                if (manually_geocoded) {
-                    // Show a button to allow the user to do a new automatic Geocode
-                    $(selector + '_geocode .geocode_success').hide();
-                    $(selector + '_geocode .geocode_fail').hide();
-                    geocode_button.removeClass('hide')
-                                  .show()
-                                  .click(function() {
-                        $(this).hide();
-                        geocode(fieldname);
-                        resetHidden(fieldname);
-                    });
-                } else {
-                    // Do an Automatic Geocode
-                    geocode(fieldname);
-                }
-                resetHidden(fieldname);
+            // Geocoder enabled: Listen for changes
+            $(selector + '_address,' + selector + '_postcode').change(function() {
+                geocodeDecision(fieldname);
             });
         }
+    }
+
+    /**
+     * Event handler to decide whether to Geocode
+     * Address: Mandatory
+     * Postcode: optional
+     * Lx: Mandatory to lowest-level
+     */
+    var geocodeDecision = function(fieldname) {
+        var selector = '#' + fieldname;
+
+        if (!$(selector + '_address').val()) {
+            return;
+        }
+        var i,
+            lev,
+            levels = ['1', '2', '3', '4', '5'],
+            s;
+        for (i=0; i < 5; i++) {
+            lev = levels[i];
+            s = $(selector + '_L' + lev);
+            if ((s.length) && (!s.val())) {
+                return;
+            }
+        }
+
+        var real_input = $(selector);
+        var manually_geocoded = real_input.data('manually_geocoded');
+        if (manually_geocoded) {
+            // Show a button to allow the user to do a new automatic Geocode
+            $(selector + '_geocode .geocode_success').hide();
+            $(selector + '_geocode .geocode_fail').hide();
+            $(selector + '_geocode button').removeClass('hide')
+                                           .show()
+                                           .click(function() {
+                $(this).hide();
+                geocode(fieldname);
+                resetHidden(fieldname);
+            });
+        } else {
+            // Do an Automatic Geocode
+            geocode(fieldname);
+        }
+        resetHidden(fieldname);
     }
 
     /**

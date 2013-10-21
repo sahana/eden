@@ -473,8 +473,8 @@ def render_events(listid, resource, rfields, record, **attr):
     # Render the item
     item = DIV(DIV(A(IMG(_class="media-object",
                          _src=URL(c="static",
-                                  f="themes",
-                                  args=["DRMP", "img", "%s.png" % event_type]),
+                                  f="img",
+                                  args=["event", "%s.png" % event_type]),
                          ),
                      _class="pull-left",
                      _href=event_url,
@@ -2300,7 +2300,8 @@ def customize_cms_post(**attr):
                 )
                 def create_onaccept(form):
                     table = current.s3db.event_event_post
-                    table.insert(event_id=event_id, post_id=form.vars.id)
+                    table.insert(event_id=event_id,
+                                 post_id=form.vars.id)
 
                 s3db.configure("cms_post",
                                create_onaccept = create_onaccept, 
@@ -2579,8 +2580,8 @@ def customize_event_event(**attr):
                                                             record.name),
                                profile_header = DIV(A(IMG(_class="media-object",
                                                           _src=URL(c="static",
-                                                                   f="themes",
-                                                                   args=["DRMP", "img",
+                                                                   f="img",
+                                                                   args=["event",
                                                                          "%s.png" % event_type]),
                                                           ),
                                                       _class="pull-left",

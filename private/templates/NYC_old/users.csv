@@ -1,0 +1,11 @@
+First Name,Last Name,Email,Password,Role,Organisation
+William,Ware,william.ware@salvationarmy.org,eden,"ADMIN,inv_editor,project_editor,staff_editor,vol_editor,staff_editor,member_editor",Salvation Army
+Torri,Hess,torri.hess@nyredcross.org,eden,"ADMIN,inv_editor,project_editor,staff_editor,vol_editor,staff_editor,member_editor",American Red Cross
+Sari,Meza,sari.meza@goodwill.org,eden,"ADMIN,inv_editor,project_editor,staff_editor,vol_editor,staff_editor,member_editor",Goodwill Industries
+Deandre,Griffin,deandre.griffin@foodbanknyc.org,eden,"ADMIN,inv_editor,project_editor,staff_editor,vol_editor,staff_editor,member_editor",Food Bank for New York City
+Vonda,George,vonda.george@us.tzuchi.org,eden,"ADMIN,inv_editor,project_editor,staff_editor,vol_editor,staff_editor,member_editor",Buddist Tzu Chi Foundation
+Eufemia,Hodges,eufemia.hodges@teamrubiconusa.org,eden,"ADMIN,inv_editor,project_editor,staff_editor,vol_editor,staff_editor,member_editor",Team Rubicon
+Edda,Barker,edda.barker@safehorizon.org,eden,"ADMIN,inv_editor,project_editor,staff_editor,vol_editor,staff_editor,member_editor",Safe Horizon
+Wendolyn,Conway,wendolyn.conway@newyorkcares.org,eden,"ADMIN,inv_editor,project_editor,staff_editor,vol_editor,staff_editor,member_editor",New York Cares
+Octavio,Salinas,octavio.salinas@worldcares.org,eden,"ADMIN,inv_editor,project_editor,staff_editor,vol_editor,staff_editor,member_editor",World Cares Center
+Derek,Gordon,derek.gordon@worldvision.org,eden,"ADMIN,inv_editor,project_editor,staff_editor,vol_editor,staff_editor,member_editor",World Vision

@@ -1,0 +1,64 @@
+Type,Name,Comments
+General Labor,Driving,General Driving expertise
+General Labor,Braille,Expertise in Braille
+General Labor,Climb stairs,Can climb stairs without any help
+General Labor,Legal Aid For Individuals,Licensed Attorney
+General Labor,Opinion Poll Survey,Design Polls
+General Labor,Physically lift at least 10 Lbs,Physical Skill
+General Labor,Physically lift at least 25 Lbs,Intermediate Physical Skill
+General Labor,Physically lift at least 50 Lbs,Advanced Physical Skill
+General Labor,Research,Use various sources to obtain information
+General Labor,Sign Language Support,To support hearing impaired
+General Labor,Sit for 2 hours,Physical Skill
+General Labor,Stand for 1 Hour,Physical Skill
+General Labor,Stand for 2 Hours,Physical Skill
+General Labor,Stand for 3 Hours,Physical Skill
+General Labor,Sweeper,Physical Skill
+General Labor,Volunteers Management,Expertise in Managing Volunteers
+Professional,Accounting,Accounts administration
+Professional,Administrative Assistant,Office Clerical Work
+Professional,Art & Design,Artist & Designer Skills
+Professional,Benefits Administration,Administering Benefits for the HR department
+Professional,Building Architect,Expertise in Buildings
+Professional,Bus Driving,Professional Bus driver
+Professional,Cashier,Handling Cash Registers
+Professional,Civil Engineer/Field Engineer,Engineering Skills
+Professional,Computer repair,Installation & Troubleshooting
+Professional,Construction,Expertise in construction work
+Professional,Cooking,Help in Meal preparation
+Professional,Crafts/Sewing,Professional tailoring
+Professional,Data Entry,Computers and related equipments
+Professional,Debris Removal,Expertise in removing contruction materials
+Professional,Electrician & Electrical Technician,Expertise as an Electrician
+Professional,Event Planning,Coordinating events
+Professional,Facility Maintenance,Knowledge of Facility Maintence
+Professional,Food Service,Food Service worker
+Professional,Fundraising,Expertise in professional fundraising
+Professional,Gardening / Landscaping,Working experience in gardens & plants
+Professional,GIS Analyst,Expertise with mapping and GIS
+Professional,Infrastructure Architect,Expertise in Infrastructure
+Professional,Inventory Management,Expertise in Warehouses
+Professional,Lawyer,Licensed Attorney
+Professional,Marketing,Promotional/Public Relations
+Professional,Office Administration,Office Management/Clerical Work
+Professional,Other Professions,None of the above
+Professional,Photography,Taking Pictures
+Professional,Pilot,Licensed Pilot
+Professional,Plumber,Licensed Plumber
+Professional,Public Relations,Expertise with Media and Public Information
+Professional,Receptionist,Handling Reception Desk
+Professional,Security Guard,Licensed/State Certified Security License
+Professional,Teaching,Professional Teacher
+Professional,Telephone Work,Ability to follow a script 
+Professional,Tour Guide,Familiarity with Locations for the purposes of tourism
+Professional,Truck Driving,Professional Truck driver
+Professional,Veterinary Services,Ability to care for Animals
+Professional,Warehouse Support,Experienced in Warehouse Operations
+Translator,Translator - English,Speaking and Writing skills
+Translator,Translator - Chinese,Speaking and Writing skills
+Translator,Translator - Japanese,Speaking and Writing skills
+Translator,Translator - Korean,Speaking and Writing skills
+Translator,Translator - Spanish,Speaking and Writing skills
+Translator,Translator - Tagalog,Speaking and Writing skills
+Translator,Translator - Vietnamese,Speaking and Writing skills
+Other,Other,To be entered by Volunteer

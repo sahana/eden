@@ -57,10 +57,10 @@
 }
 
 .aside {
-    float:left;
-    width:200px;
+    float: left;
+    width: 200px;
     /*margin-left: 100%;*/
 }
 .rightside {
-    margin-left:200px;
+    margin-left: 200px;
 }

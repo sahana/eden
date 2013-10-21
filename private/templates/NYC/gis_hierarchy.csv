@@ -1,4 +1,3 @@
-UUID,Country,L1,L2,L3,L4,Edit L1
-SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Village / Suburb",
-,TL,"District","SubDistrict","Suco","Aldeia",
-,US,"State","County","City",,False
+UUID,Country,L1,L2,L3,L4,L5,Edit L1
+SITE_DEFAULT,,"State","County","City/Borough","Neighborhood",,False
+,US,"State","County","City/Borough","Neighborhood",,False
