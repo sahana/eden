@@ -126,12 +126,12 @@ class S3MainMenu(object):
     def menu_lang(cls, **attr):
         """ Language menu """
 
-        languages = current.response.s3.l10n_languages
-        request = current.request
-
         settings = current.deployment_settings
         if not settings.get_L10n_display_toolbar():
             return None
+
+        languages = current.response.s3.l10n_languages
+        request = current.request
 
         menu_lang = MM("Language", **attr)
         for language in languages:
@@ -182,7 +182,6 @@ class S3MainMenu(object):
                                     restrict=row.role
                                     )
                                  )
-        # -------------------------------------------------------------------
 
         return menu_help
 
@@ -347,22 +346,6 @@ class S3MainMenu(object):
                     )
                 )
         return gis_menu
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def menu_climate(cls, **attr):
-        """ Climate module menu """
-
-        name_nice = current.deployment_settings.modules["climate"].name_nice
-        ADMIN = current.session.s3.system_roles.ADMIN
-
-        menu_climate = MM(name_nice, c="climate", **attr)(
-                MM("Station Parameters", f="station_parameter"),
-                #MM("Saved Queries", f="save_query"),
-                MM("Purchase Data", f="purchase"),
-                MM("DataSet Prices", f="prices", restrict=[ADMIN]),
-            )
-        return menu_climate
 
 # =============================================================================
 class S3OptionsMenu(object):
@@ -607,16 +590,6 @@ class S3OptionsMenu(object):
                     #)
                 )
 
-    # -------------------------------------------------------------------------
-    def climate(self):
-        """ CLIMATE Controller """
-
-        return M(c="climate")(
-                    M("Home", f="index"),
-                    M("Station Parameters", f="station_parameter"),
-                    M("Saved Queries", f="save_query"),
-                    M("Purchase Data", f="purchase"),
-                )
     # -------------------------------------------------------------------------
     def cr(self):
         """ CR / Shelter Registry """

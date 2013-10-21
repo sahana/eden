@@ -124,7 +124,6 @@
     },
 
     refresh: function(init) {
-        s3_debug('refresh')
       var el = this.element;
       var o = this.options;
       var menu = this.menu;

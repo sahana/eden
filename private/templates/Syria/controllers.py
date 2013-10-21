@@ -397,8 +397,8 @@ def render_events(listid, resource, rfields, record, **attr):
     # Render the item
     item = DIV(DIV(A(IMG(_class="media-object",
                          _src=URL(c="static",
-                                  f="themes",
-                                  args=["DRMP", "img", "%s.png" % event_type]),
+                                  f="img",
+                                  args=["event", "%s.png" % event_type]),
                          ),
                      _class="pull-left",
                      _href="#",
@@ -462,7 +462,7 @@ def render_cms_events(listid, resource, rfields, record, **attr):
     # @ToDo: Optimise by not doing DB lookups (especially duplicate) within render, but doing these in the bulk query
     avatar = s3_avatar_represent(author_id,
                                  _class="media-object",
-                                 _style="width:50px;padding:5px;padding-top:0px;")
+                                 _style="width:50px;padding:5px;padding-top:0;")
     db = current.db
     ltable = current.s3db.pr_person_user
     ptable = db.pr_person

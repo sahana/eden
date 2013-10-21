@@ -1,18 +1,13 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="{{=T.accepted_language or "en"}}">{{# class="no-js" needed for modernizr }}
-<head>
+<head>{{theme=response.s3.theme}}
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 {{# Always force latest IE rendering engine (even in intranet) & Chrome Frame }}
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 <title>
-{{try:}}
- {{title #Test Title}}
- {{=settings.get_system_name_short()}}
- : 
- {{=title}}
-{{except:}}
- {{=settings.get_system_name()}}
-{{pass}}
+{{try:}}{{title #Test Title}}
+ {{=settings.get_system_name_short()}}: {{=title}}
+{{except:}}{{=settings.get_system_name()}}{{pass}}
 </title>
 {{if response.refresh:}}{{=XML(response.refresh)}}{{pass}}
 {{# http://dev.w3.org/html5/markup/meta.name.html }}
@@ -49,11 +44,9 @@
  <link href="/{{=appname}}/static/styles/{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
 {{include "bootstrap_css.html"}}
-{{if s3.debug:}}
- {{=s3base.s3_include_debug_css()}}
-{{else:}}
+{{if s3.debug:}}{{=s3base.s3_include_debug_css()}}{{else:}}
  {{# Built by /static/scripts/tools/build.sahana.py }}
- <link href="/{{=appname}}/static/themes/{{=response.s3.theme}}/eden.min.css" rel="stylesheet" type="text/css" />
+ <link href="/{{=appname}}/static/themes/{{=theme}}/eden.min.css" rel="stylesheet" type="text/css" />
 {{pass}}
 {{include "scripts_top.html"}}
 </head>
@@ -81,7 +74,7 @@
     <span class='icon-bar'></span>
     <span class='icon-bar'></span>
    </button>
-   <a class='brand' href='/{{=appname}}/default/index'><img src="/{{=appname}}/static/themes/{{=response.s3.theme}}/img/logo.png" style="width:55px;margin:0 0 -50px 0" alt=""/><h1 id="main-title">{{=settings.get_system_name_short()}}</h1></a>
+   <a class='brand' href='/{{=appname}}/default/index'><img src="/{{=appname}}/static/themes/{{=theme}}/img/logo.png" style="width:55px;margin:0 0 -50px 0" alt=""/><h1 id="main-title">{{=settings.get_system_name_short()}}</h1></a>
    <div class='nav-collapse collapse'>
     <ul class='nav'>
      <li><a href='/{{=appname}}/default/index/newsfeed'> <i class='icon-updates'></i> {{=T("News Feed")}}</a></li>
@@ -144,7 +137,7 @@
  {{include}}
 </div>
  <div id='footer'>
-  {{include "../private/templates/%s/views/footer.html" % response.s3.theme}}
+  {{include "../private/templates/%s/views/footer.html" % theme}}
   {{if s3.debug:}}{{=s3.toolbar()}}{{pass}}
  </div>
 {{pass}}

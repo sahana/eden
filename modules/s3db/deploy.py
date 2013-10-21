@@ -78,9 +78,7 @@ class S3DeploymentModel(S3Model):
         table = define_table(tablename,
                              super_link("doc_id", "doc_entity"),
                              Field("name",
-                                   # Why should field label be 'Title'?
-                                   # 'Name' seems more intuitive/consistent
-                                   label = T("Title"),
+                                   label = T("Name"),
                                    requires=IS_NOT_EMPTY(),
                                    ),
                              self.gis_location_id(
@@ -446,7 +444,7 @@ class S3DeploymentAlertModel(S3Model):
         form_vars = form.vars
         alert_id = form_vars.id
 
-        # Retrive the pe_id
+        # Retrieve the pe_id
         table = s3db.deploy_alert
         record = current.db(table.id == alert_id).select(table.pe_id,
                                                          limitby=(0, 1)
@@ -455,7 +453,8 @@ class S3DeploymentAlertModel(S3Model):
         # Send Message
         # @ToDo: Embed the alert_id to parse replies
         # @ToDo: Support alternate channels, like SMS
-        # if body is None, body == subject
+        # if not body: body = subject
+        # !!PROBLEM!! Recipients table not yet populated, so can't lookup the HRs yet!
         message_id = current.msg.send_by_pe_id(record.pe_id,
                                                subject=form_vars.subject,
                                                message=form_vars.body,
@@ -463,6 +462,7 @@ class S3DeploymentAlertModel(S3Model):
 
         # Keep a record of the link between Alert & Message
         # - for parsing replies
+        # @ToDo: is this really needed?
         s3db.deploy_alert_message.insert(alert_id=alert_id,
                                          message_id=message_id,
                                          )

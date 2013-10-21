@@ -672,7 +672,6 @@ class S3Msg(object):
 
             row = row["msg_outbox"]
             pe_id = row.pe_id
-            outbox_id = row.id
             message_id = row.message_id
 
             if entity_type == "pr_group":
@@ -726,7 +725,7 @@ class S3Msg(object):
                     status = dispatch_to_pe_id(pe_id,
                                                subject,
                                                message,
-                                               outbox_id,
+                                               row.id,
                                                message_id)
                 except:
                     status = False

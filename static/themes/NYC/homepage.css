@@ -1,0 +1,200 @@
+/* Homepage, etc */
+.home {
+    background: url('img/520clinton.jpg') no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    width: 100%;
+    min-height: 600px;
+    float: none;
+    zoom: 1;
+    padding-bottom: 100px;
+}
+.home:before {
+    content: "\0020";
+    display: block;
+    height: 0;
+    overflow: hidden;
+}
+.home:after {
+    content: "\0020";
+    display: block;
+    height: 0;
+    overflow: hidden;
+    clear: both;
+}
+.home-title {
+    width: 360px;
+    float: left;
+    padding: 0 20px;
+}
+.home-title h1 {
+    color: #ffffff;
+    font-size: 72px;
+    line-height: 1em;
+    margin: 20px 0;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    behavior: url(../js/PIE.htc);
+}
+.home-register,
+.home-content {
+    width: auto;
+    margin-left: 100px;
+    margin-right: 100px;
+    padding: 20px 0 0;
+}
+.home-register h2,
+.home-content h2 {
+    font-family: 'LeagueGothicRegular','Arial Narrow','Lucida Grande','Lucida Sans',Arial,sans-serif;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 36px;
+    margin: 0 0 15px;
+    line-height: 1em;
+}
+.home-register {
+    width: 480px;
+}
+.login-box {
+    width: 100%;
+    background: #ffffff;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 30px;
+}
+.login-box h2,
+.login-box h3 {
+    font-family: 'LeagueGothicRegular','Arial Narrow','Lucida Grande','Lucida Sans',Arial,sans-serif;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 36px;
+    line-height: 1em;
+    margin: 0;
+}
+.login-box h2+.form-container {
+    margin-top: 20px;
+}
+.login-box .w2p_fl {
+    padding-right: 10px;
+}
+#login_form #register-btn {
+    padding: 0;
+}
+#login_form .w2p_fl label {
+    width: 100px;
+}
+#auth_user_remember__row label {
+    font-size: 12px;
+    line-height: 1.2em;
+}
+#submit_record__row input {
+    margin-top: 20px;
+    margin-right: 30px;
+}
+.home .w2p_fl label {
+    white-space: nowrap;
+}
+.home .w2p_fw select {
+    max-width: 300px;
+}
+.home-content .welcome,
+.home-content .comms,
+.home-content .dispatch,
+.home-content .contact-us,
+.home-content .help {
+    background: #ffffff;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 30px;
+    margin-bottom: 20px;
+}
+.home-content .welcome-steps {
+    margin: 0 30px;
+    padding: 0;
+}
+.home-content .welcome-steps li {
+    font-size: 18px;
+    margin-bottom: .75em;
+}
+.home-content .comms {
+    width: 45%;
+    float: left;
+    margin-bottom: 100px;
+}
+.home-content .comms .button {
+    margin-right: 10px;
+    margin-top: 10px;
+    padding: 10px 30px;
+}
+.home-content .dispatch {
+    width: 45%;
+    float: right;
+}
+.home-content .dispatch .button {
+    margin-right: 10px;
+    margin-top: 10px;
+    padding: 10px 30px;
+}
+.home-content .contact-us h1 {
+    margin: 0 0 15px;
+    line-height: 1em;
+}
+.home-content .contact-us label {
+    margin: 15px 0 3px;
+    display: block;
+}
+.home-content .contact-us input[type="submit"] {
+    display: -moz-inline-stack;
+    display: inline-block;
+    zoom: 1;
+    *display: inline;
+    -moz-box-shadow: 0 0 0 0 #000000;
+    -webkit-box-shadow: 0 0 0 0 #000000;
+    box-shadow: 0 0 0 0 #000000;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    behavior: url(../js/PIE.htc);
+    font-family: 'Open Sans','Lucida Grande','Lucida Sans',sans-serif;
+    font-weight: normal;
+    font-style: normal;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    line-height: 1.2em;
+    padding: 10px 15px;
+    text-align: center;
+    font-weight: bold;
+    background: #222222;
+    color: #ffffff;
+    border: 0;
+    text-decoration: none;
+    text-shadow: none;
+    cursor: pointer;
+    -webkit-transition-property: background-color,color;
+    -webkit-transition-duration: 100ms;
+}
+.home-content .contact-us input[type="submit"]:hover {
+    background: #da521f;
+    color: #ffffff;
+}
+.icon-comms {
+    display: -moz-inline-stack;
+    display: inline-block;
+    zoom: 1;
+    *display: inline;
+    height: 30px;
+    width: 30px;
+    background: url(img/comms.png) no-repeat;
+    margin-right: 10px;
+}
+.icon-dispatch {
+    display: -moz-inline-stack;
+    display: inline-block;
+    zoom: 1;
+    *display: inline;
+    height: 30px;
+    width: 30px;
+    background: url(img/dispatch.png) no-repeat;
+    margin-right: 10px;
+}

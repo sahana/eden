@@ -1,5 +1,3 @@
-"UUID","Name","OU","OU Type","Region Country","Default Country","Zoom","Lat","Lon","Projection","Symbology","LatMin","LatMax","LonMin","LonMax","WMS Browser"
-"SITE_DEFAULT","Default",,,,,10,40.793,-73.852,900913,"US",-90,90,-180,180,"http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
-,"WGS84",,,,,3,4.9,125,4326,"US",-90,90,60,180,"http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
-,"TL","Timor-Leste Red Cross Society","organisation","TL","TL",8,-8.88,125.92,900913,"US",-9.5,-8.4,124.04,127.3,"http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
-,"US","American Red Cross","organisation","US","US",4,39.1348,-98.41,900913,"US",0,90,-180,-50,"http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities"
+"UUID",Name,Region Country,Default Country,Default L1,Default L2,Zoom,Lat,Lon,Projection,Symbology,LatMin,LatMax,LonMin,LonMax,Geocoder
+"SITE_DEFAULT",Default,,US,,,9,40.71024,-73.8498,900913,US,20,90,-180,-50,True
+"QUEENS","Queens",,US,New York,Queens,11,40.6665,-73.7406,900913,US,40,41,-75,-73,True
