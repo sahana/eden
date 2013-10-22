@@ -677,24 +677,22 @@ def email_inbound_channel():
 
         s3.actions = \
         s3.actions + [
-                       dict(label=str(T("Enable")),
-                            _class="action-btn",
-                            url=URL(f="enable_email",
-                                    args="[id]"),
-                            restrict = restrict_e)
-                       ]
-        s3.actions.append(dict(label=str(T("Disable")),
-                               _class="action-btn",
-                               url = URL(f = "disable_email",
-                                         args = "[id]"),
-                               restrict = restrict_d)
-                          )
-        s3.actions.append(dict(label=str(T("Activate")),
-                               _class="action-btn",
-                               url = URL(f = "schedule_email",
-                                         args = "[id]"),
-                               restrict = restrict_a)
-                          )
+            dict(label=str(T("Enable")),
+                 _class="action-btn",
+                 url=URL(f="enable_email",
+                         args="[id]"),
+                 restrict = restrict_e),
+            dict(label=str(T("Disable")),
+                 _class="action-btn",
+                 url = URL(f="disable_email",
+                           args = "[id]"),
+                 restrict = restrict_d),
+            dict(label=str(T("Activate")),
+                 _class = "action-btn",
+                 url = URL(f="schedule_email",
+                           args="[id]"),
+                 restrict = restrict_a),
+            ]
         return output
     s3.postp = postp
 
@@ -1769,9 +1767,7 @@ def schedule_parser():
         Schedule a Parsing Workflow
     """
 
-    from s3db.msg import S3ParsingModel
-    S3ParsingModel.schedule_parser(s3task)
-    return
+    return s3db.msg_schedule_parser()
 
 # -----------------------------------------------------------------------------
 def schedule_email():
@@ -1780,7 +1776,7 @@ def schedule_email():
     """
 
     from s3db.msg import S3EmailInboundModel
-    S3EmailInboundModel.schedule(s3task)
+    S3EmailInboundModel.schedule()
     return
 
 # -----------------------------------------------------------------------------
@@ -1790,7 +1786,7 @@ def schedule_mcommons_sms():
     """
 
     from s3db.msg import S3MCommonsModel
-    S3MCommonsModel.schedule(s3task)
+    S3MCommonsModel.schedule()
     return
 
 # -----------------------------------------------------------------------------
@@ -1800,7 +1796,7 @@ def schedule_twilio_sms():
     """
 
     from s3db.msg import S3TwilioModel
-    S3TwilioModel.schedule(s3task)
+    S3TwilioModel.schedule()
     return
 
 # -----------------------------------------------------------------------------

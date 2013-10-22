@@ -1335,6 +1335,9 @@ class S3Msg(object):
         """
         # This is the former cron/email_receive.py.
         #
+        # @ToDo: This should be separate per-channel
+        # @ToDo: Maintain History, not just storing latest error
+        #
         # @ToDo: If delete_from_server is false, we don't want to download the
         # same messages repeatedly.  Perhaps record time of fetch runs (or use
         # info from the scheduler_run table), compare w/ message timestamp, as
@@ -1388,7 +1391,8 @@ class S3Msg(object):
                 print error
                 # Store status in the DB
                 try:
-                    id = db().select(inbound_status_table.id, limitby=(0, 1)).first().id
+                    id = db().select(inbound_status_table.id,
+                                     limitby=(0, 1)).first().id
                     db(inbound_status_table.id == id).update(status=error)
                 except:
                     inbound_status_table.insert(status=error)
@@ -1408,7 +1412,8 @@ class S3Msg(object):
                     print "Login failed:", e
                     # Store status in the DB
                     try:
-                        id = db().select(inbound_status_table.id, limitby=(0, 1)).first().id
+                        id = db().select(inbound_status_table.id,
+                                         limitby=(0, 1)).first().id
                         db(inbound_status_table.id == id).update(status="Login failed: %s" % e)
                     except:
                         inbound_status_table.insert(status="Login failed: %s" % e)
@@ -1443,7 +1448,7 @@ class S3Msg(object):
                 record = db(inbox_table.id == id).select(inbox_table.id,
                                                          inbox_table.message_id,
                                                          limitby=(0, 1)
-                                                        ).first()
+                                                         ).first()
                 update_super(inbox_table, record)
                 parsing_table.insert(message_id = record.message_id,
                                      source_task_id = source_task_id,
@@ -1473,7 +1478,8 @@ class S3Msg(object):
                 print error
                 # Store status in the DB
                 try:
-                    id = db().select(inbound_status_table.id, limitby=(0, 1)).first().id
+                    id = db().select(inbound_status_table.id,
+                                     limitby=(0, 1)).first().id
                     db(inbound_status_table.id == id).update(status=error)
                 except:
                     inbound_status_table.insert(status=error)
@@ -1489,7 +1495,8 @@ class S3Msg(object):
                 print error
                 # Store status in the DB
                 try:
-                    id = db().select(inbound_status_table.id, limitby=(0, 1)).first().id
+                    id = db().select(inbound_status_table.id,
+                                     limitby=(0, 1)).first().id
                     db(inbound_status_table.id == id).update(status=error)
                 except:
                     inbound_status_table.insert(status=error)
