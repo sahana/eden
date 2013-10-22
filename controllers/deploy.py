@@ -25,12 +25,18 @@ def deployment():
     """ RESTful CRUD Controller """
 
     def prep(r):
-        s3.cancel = r.url(method="summary", id=0)
         created_on = r.table.created_on
         created_on.readable = True
         created_on.label = T("Date Created")
         created_on.represent = lambda d: \
                                s3base.S3DateTime.date_represent(d, utc=True)
+        if r.id:
+            tablename = r.tablename if not r.component else r.component.tablename
+            next_url = r.url(component="", method="profile")
+            s3db.configure(tablename, create_next=next_url)
+            s3.cancel = next_url
+        else:
+            s3.cancel = r.url(method="summary", component=None, id=0)
         return True
     s3.prep = prep
 

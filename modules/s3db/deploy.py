@@ -126,7 +126,31 @@ class S3DeploymentModel(S3Model):
                                     )
 
         # Profile
+        alert_widget = dict(label="Alerts",
+                            insert=lambda r, add_title, add_url: \
+                                   A(add_title,
+                                     _href=r.url(component="alert",
+                                                 method="create"),
+                                     _class="action-btn profile-add-btn"),
+                            title_create="New Alert",
+                            type="datalist",
+                            list_fields = [
+                                "created_on",
+                                "subject",
+                            ],
+                            tablename = "deploy_alert",
+                            context = "deployment",
+                            colspan = 2,
+                            list_layout = deploy_render_alert,
+                            pagesize = 10,
+                           )
+
         assignment_widget = dict(label="Members Assigned",
+                                 insert=lambda r, add_title, add_url: \
+                                        A(add_title,
+                                          _href=r.url(component="human_resource_assignment",
+                                                      method="create"),
+                                          _class="action-btn profile-add-btn"),
                                  title_create="Add Member",
                                  type="datalist",
                                  list_fields = [
@@ -157,8 +181,9 @@ class S3DeploymentModel(S3Model):
                                  "status",
                                  ],
                   profile_header = deploy_deployment_profile_header,
-                  profile_widgets = [assignment_widget,
-                                    ],
+                  profile_widgets = [alert_widget,
+                                     assignment_widget,
+                                     ],
                   summary=[{"name": "rheader",
                             "common": True,
                             "widgets": [
@@ -193,7 +218,10 @@ class S3DeploymentModel(S3Model):
         # Components
         add_component("deploy_human_resource_assignment",
                       deploy_deployment="deployment_id")
-        
+
+        add_component("deploy_alert",
+                      deploy_deployment="deployment_id")
+
         # CRUD Strings
         crud_strings[tablename] = Storage(
             title_create = T("New Deployment"),
@@ -569,9 +597,9 @@ class S3DeploymentAlertModel(S3Model):
         form_vars = form.vars
         alert_id = form_vars.id
 
+        table = current.s3db.deploy_alert_message
         # Check whether the alert has already been sent
         # - alerts should be read-only after creation
-        #table = current.s3db.deploy_alert_message
         #if current.db(table.alert_id == alert_id).select(table.id,
         #                                                 limitby=(0, 1)
         #                                                 ).first():
@@ -701,6 +729,110 @@ def deploy_deployment_profile_header(r):
     else:
         return H2(title)
         
+# =============================================================================
+def deploy_render_alert(listid,
+                        resource,
+                        rfields,
+                        record,
+                        **attr):
+    """
+        Item renderer for data list of alerts
+
+        @param listid: the list ID
+        @param resource: the S3Resource
+        @param rfields: the list fields resolved as S3ResourceFields
+        @param record: the record
+        @param attr: additional attributes
+    """
+
+    pkey = "deploy_alert.id"
+
+    # Construct the item ID
+    if pkey in record:
+        record_id = record[pkey]
+        item_id = "%s-%s" % (listid, record_id)
+    else:
+        # template
+        record_id = None
+        item_id = "%s-[id]" % listid
+
+    item_class = "thumbnail"
+
+    created_on = record["deploy_alert.created_on"]
+    subject = record["deploy_alert.subject"]
+
+    fields = dict((rfield.colname, rfield) for rfield in rfields)
+    def render(*colnames):
+        items = DIV()
+        append = items.append
+        for colname in colnames:
+            rfield = fields[colname]
+            label = "%s:" % rfield.label
+            value = record[colname]
+            item_id = "profile-data-%s-%s" % (rfield.fname, record_id)
+            append(LABEL(label,
+                            _for=item_id,
+                            _class="profile-data-label"))
+            append(SPAN(value,
+                        _id=item_id,
+                            _class="profile-data-value"))
+        return items
+
+    # Edit bar
+    permit = current.auth.s3_has_permission
+    table = resource.table
+    tablename = "deploy_alert"
+    #if permit("update", table, record_id=record_id):
+        #edit_btn = A(I(" ", _class="icon icon-edit"),
+                     #_href=URL(c="deploy", f="human_resource_assignment",
+                               #args=[record_id, "update.popup"],
+                               #vars={"refresh": listid,
+                                     #"record": record_id}),
+                     #_class="s3_modal",
+                     #_title=current.response.s3.crud_strings[tablename].title_update,
+                    #)
+    #else:
+    edit_btn = ""
+    if permit("delete", table, record_id=record_id):
+        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+                       _class="dl-item-delete",
+                       _title=current.response.s3.crud_strings[tablename].label_delete_button,
+                      )
+    else:
+        delete_btn = ""
+    edit_bar = DIV(edit_btn,
+                   delete_btn,
+                   _class="edit-bar fright")
+
+    # Render the item
+    item = DIV(DIV(A(IMG(_class="media-object",
+                         _src=URL(c="static",
+                                  f="themes",
+                                  args=["IFRC", "img", "alert.png"]),
+                         ),
+                         _class="pull-left",
+                         _href="#",
+                   ),
+                   edit_bar,
+                   DIV(DIV(DIV(subject,
+                               _class="person-title"),
+                           DIV(created_on,
+                               _class="organisation-title"),
+                           _class="media-heading"),
+                       #render("deploy_human_resource_assignment.start_date",
+                              #"deploy_human_resource_assignment.end_date",
+                              #"deploy_human_resource_assignment.rating",
+                       #),
+                       _class="media-body",
+                   ),
+                   _class="media",
+               ),
+               _class=item_class,
+               _id=item_id,
+           )
+
+    return item
+
 # =============================================================================
 def deploy_render_human_resource_assignment(listid,
                                             resource,
