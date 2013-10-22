@@ -895,12 +895,12 @@ class S3SQLCustomForm(S3SQLForm):
 
             link = options.get("link", None)
             self.accept(form, format=format, link=link)
-            # Overall form onaccept
-            # - cannot just use onaccept of primary resource
-            #   if we need components linked already
-            onaccept = self.opts.get("onaccept", None)
-            if onaccept:
-                callback(onaccept, form, tablename=tablename)
+            # Post-process the form submission after all records have
+            # been accepted and linked together (self.accept() has
+            # already updated the form data with any new keys here):
+            postprocess = self.opts.get("postprocess", None)
+            if postprocess:
+                callback(postprocess, form, tablename=tablename)
             response.confirmation = message
 
         if form.errors:
