@@ -29,6 +29,7 @@
 
 __all__ = ["S3DeploymentModel",
            "S3DeploymentAlertModel",
+           "deploy_rheader",
            ]
 
 try:
@@ -353,15 +354,15 @@ class S3DeploymentAlertModel(S3Model):
         crud_form = S3SQLCustomForm("deployment_id",
                                     "subject",
                                     "body",
-                                    S3SQLInlineComponent("alert_recipient",
-                                                         name = "recipient",
-                                                         label = T("Recipients"),
-                                                         fields = ["human_resource_id"],
-                                    ),
+                                    #S3SQLInlineComponent("alert_recipient",
+                                    #                     name = "recipient",
+                                    #                     label = T("Recipients"),
+                                    #                     fields = ["human_resource_id"],
+                                    #),
                                     "created_on",
                                     # Use postprocess rather than onaccept to have
                                     # the recipients list populated for sending
-                                    postprocess = self.deploy_alert_postprocess,
+                                    #postprocess = self.deploy_alert_postprocess,
                                     )
 
         # Table Configuration
@@ -377,9 +378,18 @@ class S3DeploymentAlertModel(S3Model):
                   )
 
         # Components
-        add_component("deploy_alert_message", deploy_alert="alert_id")
+        add_component("deploy_alert_message",
+                      deploy_alert=dict(name="message",
+                                        joinby="alert_id"))
 
-        add_component("deploy_alert_recipient", deploy_alert="alert_id")
+        add_component("deploy_alert_recipient",
+                      deploy_alert=dict(name="recipient",
+                                        joinby="alert_id"))
+
+        # Custom Methods
+        self.set_method("deploy", "alert",
+                        method="select",
+                        action=self.deploy_alert_select_recipients)
 
         # Reusable field
         represent = S3Represent(lookup=tablename)
@@ -392,9 +402,8 @@ class S3DeploymentAlertModel(S3Model):
                                    ondelete = "CASCADE")
 
         # ---------------------------------------------------------------------
-        # Alert Message
-        # - keep track of which messages are related to alerts
-        # - @ToDo: is this really needed?
+        # Alert Messages
+        # - keep track of which messages are related to which alerts
         #
         tablename = "deploy_alert_message"
         table = define_table(tablename,
@@ -403,7 +412,7 @@ class S3DeploymentAlertModel(S3Model):
                              *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Recipient of the Alert
+        # Recipients of the Alert
         #
         tablename = "deploy_alert_recipient"
         table = define_table(tablename,
@@ -437,15 +446,131 @@ class S3DeploymentAlertModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def deploy_alert_select_recipients(r, **attr):
+        """
+            Custom Method to select recipients for an Alert
+        """
+
+        alert_id = r.id
+        if r.representation not in ("html", "aadata") or not alert_id or r.component:
+            raise HTTP(501, BADMETHOD)
+
+        T = current.T
+
+        if r.http == "POST":
+            # Why not in r.post_vars?
+            selected = current.request._post_vars.get("selected", None)
+            if selected:
+                selected = selected.split(",")
+                table = current.s3db.deploy_alert_recipient
+                for s in selected:
+                    table.insert(alert_id = alert_id,
+                                 human_resource_id = s)
+                current.response.confirmation = T("Resources added to Alert")
+            else:
+                current.response.warning = T("No Resources Selected!")
+
+        get_vars = r.get_vars or {}
+        response = current.response
+        settings = current.deployment_settings
+
+        resource = current.s3db.resource("hrm_human_resource")
+        list_fields = ["id",
+                       "person_id",
+                       "job_title_id",
+                       "organisation_id",
+                       "department_id",
+                       "site_id",
+                       (T("Email"), "email.value"),
+                       (settings.get_ui_label_mobile_phone(), "phone.value"),
+                       ]
+        totalrows = resource.count()
+        if "iDisplayLength" in get_vars:
+            display_length = int(get_vars["iDisplayLength"])
+        else:
+            display_length = 10
+        limit = 4 * display_length
+
+        filter, orderby, left = resource.datatable_filter(list_fields,
+                                                          get_vars)
+        resource.add_filter(filter)
+
+        data = resource.select(list_fields,
+                               start=0,
+                               limit=limit,
+                               orderby=orderby,
+                               left=left,
+                               count=True,
+                               represent=True)
+        filteredrows = data["numrows"]
+        rfields = data["rfields"]
+        rows = data["rows"]
+
+        dt = S3DataTable(rfields, rows)
+        dt_id = "hr_dt"
+
+        if r.extension == "html":
+            #dt.defaultActionButtons(resource)
+            response.s3.no_formats = True
+
+            items = dt.html(totalrows,
+                            filteredrows,
+                            dt_id,
+                            dt_displayLength=display_length,
+                            dt_ajax_url=URL(c="deploy",
+                                            f="alert",
+                                            args=[alert_id, "select"],
+                                            extension="aadata",
+                                            vars={"id": dt_id},
+                                            ),
+                            dt_pagination="true",
+                            dt_bulk_actions = [(T("Select"), "select")],
+                            )
+            output = dict(items=items,
+                          title = T("Select Recipients"),
+                          )
+
+            # Maintain RHeader for consistency
+            if attr.get("rheader"):
+                rheader = attr["rheader"](r)
+                if rheader:
+                    output["rheader"] = rheader
+
+            response.view = "deploy/select.html"
+            return output
+
+        elif r.extension == "aadata":
+            if "sEcho" in get_vars:
+                echo = int(get_vars.sEcho)
+            else:
+                echo = None
+            items = dt.json(totalrows,
+                            filteredrows,
+                            dt_id,
+                            echo,
+                            dt_bulk_actions = [(T("Select"), "select")],
+                            )
+
+            response.headers["Content-Type"] = "application/json"
+            return items
+
+        else:
+            from gluon.http import HTTP
+            raise HTTP(501, resource.ERROR.BAD_FORMAT)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def deploy_alert_postprocess(form):
         """
             After an Alert has been generated, send out the message
+            - unused
         """
 
         form_vars = form.vars
         alert_id = form_vars.id
 
         # Check whether the alert has already been sent
+        # - alerts should be read-only after creation
         #table = current.s3db.deploy_alert_message
         #if current.db(table.alert_id == alert_id).select(table.id,
         #                                                 limitby=(0, 1)
@@ -469,6 +594,55 @@ class S3DeploymentAlertModel(S3Model):
         # - for parsing replies?
         table.insert(alert_id=alert_id,
                      message_id=message_id)
+
+# =============================================================================
+def deploy_rheader(r, tabs=[]):
+    """ Deployment Resource Headers """
+
+    if r.representation != "html":
+        # RHeaders only used in interactive views
+        return None
+
+    record = r.record
+    if not record:
+        # List or Create form: rheader makes no sense here
+        return None
+
+    T = current.T
+    table = r.table
+    resourcename = r.name
+
+    rheader = None
+    if resourcename == "alert":
+        # Tabs
+        tabs = [(T("Basic Details"), None),
+                (T("Select"), "select"),
+                (T("Recipients"), "recipient"),
+                (T("Messages"), "message"),
+                ]
+        rheader_tabs = s3_rheader_tabs(r, tabs)
+
+        rheader = DIV(TABLE(TR(TH("%s: " % table.deployment_id.label),
+                               table.deployment_id.represent(record.deployment_id)
+                               ),
+                            TR(TH("%s: " % table.subject.label),
+                               record.subject
+                               ),
+                            ), rheader_tabs)
+
+    elif resourcename == "deployment":
+        # Unused
+        # Tabs
+        tabs = [(T("Basic Details"), None),
+                ]
+        rheader_tabs = s3_rheader_tabs(r, tabs)
+
+        rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
+                               record.name
+                               ),
+                            ), rheader_tabs)
+
+    return rheader
 
 # =============================================================================
 def deploy_deployment_hrquantity(row):

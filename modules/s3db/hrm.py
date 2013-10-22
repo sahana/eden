@@ -2342,7 +2342,7 @@ class S3HRSkillModel(S3Model):
                     list_fields = ["course_id",
                                    "date",
                                    "hours",
-                                  ]
+                                   ]
                   )
 
         # =====================================================================

@@ -586,7 +586,7 @@ def track_movement():
                 dummy, item_id = request.vars.viewing.split(".")
                 if item_id != "None":
                     filter = (table.send_inv_item_id == item_id ) | \
-                         (table.recv_inv_item_id == item_id)
+                             (table.recv_inv_item_id == item_id)
                     s3.filter = filter
         return True
     s3.prep = prep

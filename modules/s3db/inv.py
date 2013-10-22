@@ -3329,14 +3329,14 @@ def inv_rheader(r):
         # RHeaders only used in interactive views
         return None
 
-    s3db = current.s3db
-
     # Need to use this format as otherwise req_match?viewing=org_office.x
     # doesn't have an rheader
     tablename, record = s3_rheader_resource(r)
     if not record:
+        # List or Create form: rheader makes no sense here
         return None
 
+    s3db = current.s3db
     table = s3db.table(tablename)
 
     rheader = None

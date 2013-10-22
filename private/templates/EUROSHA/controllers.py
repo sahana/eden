@@ -264,16 +264,16 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
         resource = current.s3db.resource("org_organisation")
         totalrows = resource.count()
         if "iDisplayLength" in get_vars:
-            display_length = int(request.get_vars["iDisplayLength"])
+            display_length = int(get_vars["iDisplayLength"])
         else:
             display_length = 10
         limit = 4 * display_length
-        
+
         list_fields = ["id", "name"]
         filter, orderby, left = resource.datatable_filter(list_fields,
                                                           get_vars)
         resource.add_filter(filter)
-        
+
         data = resource.select(list_fields,
                                start=0,
                                limit=limit,
@@ -284,32 +284,34 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
         filteredrows = data["numrows"]
         rfields = data["rfields"]
         rows = data["rows"]
-                                    
+
         dt = S3DataTable(rfields, rows)
-        dt.defaultActionButtons(resource)
-        current.response.s3.no_formats = True
-        
+        dt_id = "org_dt"
+
         if request.extension == "html":
+            dt.defaultActionButtons(resource)
+            current.response.s3.no_formats = True
             items = dt.html(totalrows,
-                            totalrows,
-                            "org_dt",
+                            filteredrows,
+                            dt_id,
                             dt_displayLength=display_length,
                             dt_ajax_url=URL(c="default",
                                             f="organisation",
                                             extension="aadata",
-                                            vars={"id": "org_dt"},
+                                            vars={"id": dt_id},
                                             ),
                             dt_pagination="true",
-                           )
+                            )
         elif request.extension == "aadata":
-            if "sEcho" in request.vars:
-                echo = int(request.vars.sEcho)
+            if "sEcho" in get_vars:
+                echo = int(get_vars.sEcho)
             else:
                 echo = None
             items = dt.json(totalrows,
                             filteredrows,
-                            "org_dt",
+                            dt_id,
                             echo)
+            current.response.headers["Content-Type"] = "application/json"
         else:
             from gluon.http import HTTP
             raise HTTP(501, resource.ERROR.BAD_FORMAT)
