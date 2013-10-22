@@ -158,3 +158,9 @@ div.media a.pull-left img.media-object {
 .icon.icon-remove-sign:hover {
     color: #E74C3C;
 }
+
+.profile-add-btn {
+    float: right;
+    margin-top: 6px;
+    margin-right: 6px;
+}

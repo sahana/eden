@@ -359,11 +359,15 @@ class S3Profile(S3CRUD):
             c, f = tablename.split("_", 1)
             c = widget.get("create_controller", c)
             f = widget.get("create_function", f)
-            create = A(I(_class="icon icon-plus-sign small-add"),
-                       _href=URL(c=c, f=f, args=["create.popup"], vars=vars),
-                       _class="s3_modal",
-                       _title=title_create,
-                       )
+            add_url = URL(c=c, f=f, args=["create.popup"], vars=vars)
+            if callable(insert):
+                create = insert(r, title_create, add_url)
+            else:
+                create = A(I(_class="icon icon-plus-sign small-add"),
+                        _href=add_url,
+                        _class="s3_modal",
+                        _title=title_create,
+                        )
         else:
             create = ""
 
