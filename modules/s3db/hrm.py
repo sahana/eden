@@ -4798,11 +4798,6 @@ def hrm_human_resource_controller():
         if method in ("form", "lookup"):
             return True
         elif method == "summary":
-            
-            # @todo: follow global settings:
-            settings.ui.filter_auto_submit = 750
-            settings.ui.report_auto_submit = 750
-            
             s3.crud_strings["hrm_human_resource"]["title_list"] = T("Staff & Volunteers")
             filter_widgets = [
                 S3TextFilter(["person_id$first_name",
@@ -4838,6 +4833,14 @@ def hrm_human_resource_controller():
                                 hidden=True,
                                 ),
                 ]
+            # @ToDo
+            #if settings.get_org_regions():
+            #    filter_widgets.insert(2,
+            #        S3OptionsFilter("organisation_id.region_id",
+            #                        label = T("Region"),
+            #                        widget="multiselect",
+            #                        hidden=True,
+            #                        ))
             if settings.get_hrm_teams():
                 filter_widgets.append(
                     S3OptionsFilter("group_membership.group_id",
@@ -4855,6 +4858,9 @@ def hrm_human_resource_controller():
                              "site_id",
                              "department_id",
                              ]
+            # @ToDo
+            #if settings.get_org_regions():
+            #   report_fields.append()
 
             report_options = Storage(
                 rows=report_fields,

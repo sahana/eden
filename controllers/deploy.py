@@ -50,10 +50,6 @@ def deployment():
         return output
     s3.postp = postp
 
-    # @todo: follow global settings:
-    settings.ui.filter_auto_submit = 750
-    settings.ui.report_auto_submit = 750
-    
     return s3_rest_controller(hide_filter=False)
             
 # =============================================================================

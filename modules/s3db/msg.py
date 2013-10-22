@@ -242,6 +242,8 @@ class S3ChannelModel(S3Model):
 
     names = ["msg_channel",
              "msg_limit",
+             "msg_channel_enable",
+             "msg_channel_disable",
              ]
 
     def model(self):
@@ -299,7 +301,35 @@ class S3ChannelModel(S3Model):
                              *s3_timestamp())
 
         # ---------------------------------------------------------------------
-        return dict()
+        return dict(msg_channel_enable = self.channel_enable,
+                    msg_channel_disable = self.channel_disable,
+                    )
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def channel_enable():
+        """
+            Enable a Channel
+            - Schedule a Poll for new messages
+
+            @ToDo: S3Method for interactive requests
+            @ToDo: CLI API for shell scripts
+        """
+    
+        pass
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def channel_disable():
+        """
+            Disable a Channel
+            - Remove schedule for Polling for new messages
+
+            @ToDo: S3Method for interactive requests
+            @ToDo: CLI API for shell scripts
+        """
+    
+        pass
 
     # -----------------------------------------------------------------------------
     @staticmethod
@@ -307,7 +337,7 @@ class S3ChannelModel(S3Model):
         """
             Master Schedule method for various channels
 
-            @ToDo: rewrite as S3Method
+            @ToDo: Deprecate
         """
 
         T = current.T
@@ -360,7 +390,7 @@ class S3ChannelModel(S3Model):
 
         # A list "accountID" is passed as the variable to identify
         # the individual channel setting. A list is used so that
-        # multiple paramters (e.g. username & server) can be passed
+        # multiple parameters (e.g. username & server) can be passed
         current.s3task.schedule_task(task,
                                      vars={"account_id": accountID},
                                      period=300,  # seconds
@@ -376,7 +406,7 @@ class S3ChannelModel(S3Model):
         """
             Master enable method for various channels
 
-            @ToDo: rewrite as S3Method
+            @ToDo: Deprecate
         """
 
         T = current.T
@@ -454,7 +484,7 @@ class S3ChannelModel(S3Model):
         """
             Master disable method for various channels
 
-            @ToDo: rewrite as S3Method
+            @ToDo: Deprecate
         """
 
         T = current.T

@@ -205,9 +205,6 @@ settings.ui.summary = [{"common": True,
                         },
                        ]
 
-settings.ui.filter_auto_submit = 750
-settings.ui.report_auto_submit = 750
-
 settings.search.filter_manager = True
 settings.search.filter_manager_allow_delete = False
 settings.search.filter_manager_save = "Save"

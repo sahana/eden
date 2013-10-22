@@ -713,7 +713,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                    ),
                    M("Members",
                      c="deploy", f="human_resource", m="summary")(
-                        M("New", m="create"),
+                        M("New Staff", c="hrm", f="staff", m="create"),
+                        M("New Volunteer", c="vol", f="volunteer", m="create"),
                    ),
                )
 

@@ -1374,7 +1374,7 @@ def twitter_search_channel():
 def inject_search_after_save(output):
     """
         Inject a Search After Save checkbox
-        in the Search Query Form
+        in the Twitter Search Query Form
     """
     if "form" in output:
         id = "search_after_save"
@@ -1383,7 +1383,7 @@ def inject_search_after_save(output):
         widget = INPUT(_name="search_after_save",
                        _type="checkbox",
                        value="on",
-                       _id="search_after_save",
+                       _id=id,
                        _class="boolean")
         comment = ""
         if s3_formstyle == "bootstrap":
@@ -1403,15 +1403,18 @@ def inject_search_after_save(output):
             raise
 
         output["form"][0][-2].append(row)
+
 # -----------------------------------------------------------------------------
 def action_after_save(form):
     """
         Schedules Twitter query search immediately after save
         depending on flag
     """
-    if request.vars.get("search_after_save"):
+
+    if request.post_vars.get("search_after_save"):
         s3task.async("msg_process_twitter_search", args=[form.vars.id])
         session.information = T("The search results should appear shortly - refresh to see them")
+
 # -----------------------------------------------------------------------------
 def twitter_search_query():
     """
@@ -1447,7 +1450,7 @@ def twitter_search_query():
         msg_record_modified = T("Query updated")
         )
 
-    if request.vars.get("search_after_save"):
+    if request.post_vars.get("search_after_save"):
         url_after_save = URL(f="twitter_result")
     else:
         url_after_save = None
@@ -1460,55 +1463,49 @@ def twitter_search_query():
                    )
 
     def prep(r):
-
-        table = s3db.msg_twitter_search_channel
-        if not db(table.id > 0).select(table.id,
-                                       limitby=(0, 1)).first():
-            session.error = T("Need to configure Twitter Authentication")
-            redirect(URL(f="twitter_search_channel"))
+        if r.interactive:
+            table = s3db.msg_twitter_search_channel
+            if not db(table.id > 0).select(table.id,
+                                           limitby=(0, 1)).first():
+                session.error = T("Need to configure Twitter Authentication")
+                redirect(URL(f="twitter_search_channel"))
         return True
-
     s3.prep = prep
 
     def postp(r, output):
+        if r.interactive:
+            rtable = r.table
 
-        rtable = r.table
+            s3_action_buttons(r)
 
-        s3_action_buttons(r)
+            query = (rtable.deleted == False) & \
+                    (rtable.is_searched == False)
+            records = db(query).select(rtable.id)
 
-        query = (rtable.deleted == False) & \
-                (rtable.is_searched == False)
-        records = db(query).select(rtable.id)
+            restrict_s = [str(record.id) for record in records]
 
-        restrict_s = [str(record.id) for record in records]
+            query = (rtable.deleted == False) & \
+                    (rtable.is_processed == False)
+            records = db(query).select(rtable.id)
 
-        query = (rtable.deleted == False) & \
-                (rtable.is_processed == False)
-        records = db(query).select(rtable.id)
+            restrict_k = [str(record.id) for record in records]
 
-        restrict_k = [str(record.id) for record in records]
+            s3.actions += [dict(label=str(T("Search")),
+                                _class="action-btn",
+                                url=URL(f="search_tweet_query",
+                                        args="[id]"),
+                                        restrict = restrict_s),
+                           # @ToDo Add process_keygraph
+                           dict(label=str(T("Analyze with KeyGraph")),
+                                _class="action-btn",
+                                url = URL(f="process_keygraph",
+                                          args="[id]"),
+                                          restrict = restrict_k),
+                           ]
 
-        s3.actions = \
-        s3.actions + [
-                      dict(label=str(T("Search")),
-                           _class="action-btn",
-                           url=URL(f="search_tweet_query",
-                                  args="[id]"),
-                                  restrict = restrict_s)
-                     ]
-
-        # @ToDo Add process_keygraph
-        s3.actions.append(dict(label=str(T("Analyze with KeyGraph")),
-                               _class="action-btn",
-                               url = URL(f = "process_keygraph",
-                                         args = "[id]"),
-                                         restrict = restrict_k)
-        )
-
-        inject_search_after_save(output)
+            inject_search_after_save(output)
 
         return output
-
     s3.postp = postp
 
     return s3_rest_controller()
