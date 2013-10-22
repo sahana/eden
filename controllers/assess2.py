@@ -2542,12 +2542,9 @@ def custom_assess(custom_assess_fields, location_id=None):
         #                                                         session.auth.user.last_name
         #                                                         )
         # Hard coded notification message for Demo
-        #msg.send_by_pe_id(    3,
-        #                      subject="",
-        #                      message=message,
-        #                      pr_message_method = 2,
-        #                      sender="",
-        #                      fromaddress="")
+        #msg.send_by_pe_id(3,
+        #                  message=message,
+        #                  pr_message_method = 2)
 
     return form, form_accepted, assess_id
 

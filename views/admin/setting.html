@@ -1,5 +1,4 @@
 {{extend "layout.html"}}
-
 <div id='home'>
 <h2>{{=T("Settings")}}</h2>
 <p>{{=T("Settings which can be configured through the web interface are available here.")}}</p>
@@ -7,15 +6,13 @@
 {{if settings.has_module("msg"):}}
 <h3>{{=T("Messaging")}}:</h3>
 <ul>
-  <li><a href='{{=URL(c="msg", f="email_inbound_channel")}}'>{{=T("Email")}}</a>
+  <li><a href='{{=URL(c="msg", f="email_channel", args=[1, "update"])}}'>{{=T("Email (Inbound)")}}</a>
   <li><a href='{{=URL(c="msg", f="sms_outbound_gateway", args=[1, "update"])}}'>{{=T("SMS Outbound Gateway")}}</a>
   <li><a href='{{=URL(c="msg", f="sms_modem_channel")}}'>{{=T("SMS Modems (Inbound & Outbound)")}}</a>
   <li><a href='{{=URL(c="msg", f="twitter_channel", args=[1, "update"])}}'>{{=T("Twitter")}}</a>
 </ul>
 <h3>{{=T("Other")}}:</h3>
-{{else:}}
-<h3>{{=T("Options")}}:</h3>
-{{pass}}
+{{else:}}<h3>{{=T("Options")}}:</h3>{{pass}}
 <ul>
 </ul>
 </div>

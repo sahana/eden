@@ -195,23 +195,38 @@ if len(pop_list) > 0:
 
     # Messaging Module
     if has_module("msg"):
+        update_super = s3db.update_super
         # To read inbound email, set username (email address), password, etc.
         # here. Insert multiple records for multiple email sources.
-        db.msg_email_inbound_channel.insert(server = "imap.gmail.com",
-                                            protocol = "imap",
-                                            use_ssl = True,
-                                            port = 993,
-                                            username = "example-username",
-                                            password = "password",
-                                            delete_from_server = False
-                                            )
+        table = db.msg_email_channel
+        id = table.insert(server = "imap.gmail.com",
+                          protocol = "imap",
+                          use_ssl = True,
+                          port = 993,
+                          username = "example-username",
+                          password = "password",
+                          delete_from_server = False
+                          )
+        update_super(table, Storage(id=id))
         # Need entries for the Settings/1/Update URLs to work
-        db.msg_sms_outbound_gateway.insert( outgoing_sms_handler = "WEB_API" )
-        db.msg_sms_modem_channel.insert( modem_baud = 115200 )
-        db.msg_sms_webapi_channel.insert( to_variable = "to" )
-        db.msg_sms_smtp_channel.insert( address="changeme" )
-        db.msg_tropo_channel.insert( token_messaging = "" )
-        db.msg_twitter_channel.insert( pin = "" )
+        table = db.msg_sms_outbound_gateway
+        id = table.insert(outgoing_sms_handler = "WEB_API")
+        update_super(table, Storage(id=id))
+        table = db.msg_sms_modem_channel
+        id = table.insert(modem_baud = 115200)
+        update_super(table, Storage(id=id))
+        table = db.msg_sms_webapi_channel
+        id = table.insert(to_variable = "to")
+        update_super(table, Storage(id=id))
+        table = db.msg_sms_smtp_channel
+        id = table.insert(address="changeme")
+        update_super(table, Storage(id=id))
+        table = db.msg_tropo_channel
+        id = table.insert(token_messaging = "")
+        update_super(table, Storage(id=id))
+        table = db.msg_twitter_channel
+        id = table.insert(pin = "")
+        update_super(table, Storage(id=id))
 
     # Budget Module
     if has_module("budget"):
@@ -239,7 +254,7 @@ if len(pop_list) > 0:
 
     # Supply Module
     if has_module("supply"):
-        db.supply_catalog.insert(name = settings.get_supply_catalog_default() )
+        db.supply_catalog.insert(name = settings.get_supply_catalog_default())
 
     # Ensure DB population committed when running through shell
     db.commit()

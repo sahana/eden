@@ -1414,7 +1414,7 @@ class S3OptionsMenu(object):
         ADMIN = current.session.s3.system_roles.ADMIN
 
         if current.request.function in ("sms_outbound_gateway",
-                                        "email_inbound_channel",
+                                        "email_channel",
                                         "sms_modem_channel",
                                         "sms_smtp_channel",
                                         "sms_webapi_channel",
@@ -1865,13 +1865,13 @@ class S3OptionsMenu(object):
         """
 
         return [
-            M("Email Settings", c="msg", f="email_inbound_channel"),
+            M("Email Settings", c="msg", f="email_channel"),
             M("Parsing Settings", c="msg", f="workflow"),
             M("RSS Settings", c="msg", f="rss_channel"),
             M("SMS Gateway Settings", c="msg", f="sms_outbound_gateway",
                 args=[1], m="update"),
             M("Mobile Commons SMS Settings", c="msg", f="mcommons_channel"),
-            M("Twilio SMS Settings", c="msg", f="twilio_inbound_channel"),
+            M("Twilio SMS Settings", c="msg", f="twilio_channel"),
             M("Twitter Settings", c="msg", f="twitter_channel",
                 args=[1], m="update")
         ]
