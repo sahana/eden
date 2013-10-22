@@ -25,38 +25,55 @@ def deployment():
     """ RESTful CRUD Controller """
 
     def prep(r):
+        # Configure created_on field in deploy_deployment
         created_on = r.table.created_on
         created_on.readable = True
         created_on.label = T("Date Created")
         created_on.represent = lambda d: \
                                s3base.S3DateTime.date_represent(d, utc=True)
         if r.id:
-            tablename = r.tablename if not r.component else r.component.tablename
+            # Deployment-specific workflows return to the profile page
+            tablename = r.tablename \
+                        if not r.component else r.component.tablename
             next_url = r.url(component="", method="profile")
-            s3db.configure(tablename, create_next=next_url)
+            s3db.configure(tablename,
+                           create_next=next_url,
+                           update_next=next_url,
+                           delete_next=next_url)
             s3.cancel = next_url
         else:
+            # All other workflows return to the summary page
             s3.cancel = r.url(method="summary", component=None, id=0)
         return True
     s3.prep = prep
 
     def postp(r, output):
-        s3_action_buttons(r,
-                          editable=True,
-                          deletable=True,
-                          read_url=r.url(method="profile", id="[id]"),
-                          update_url=r.url(method="profile", id="[id]"),
-                          delete_url=r.url(method="delete", id="[id]"),
-                         )
-        if isinstance(output, dict) and "buttons" in output:
-            # Override standard "List" button
-            buttons = output["buttons"]
-            if "list_btn" in buttons and "summary_btn" in buttons:
-                buttons["list_btn"] = buttons["summary_btn"]
+        if not r.component:
+            # Override deployment open actions to go to the profile page
+            s3_action_buttons(r,
+                              editable=True,
+                              deletable=True,
+                              read_url=r.url(method="profile", id="[id]"),
+                              update_url=r.url(method="profile", id="[id]"),
+                              delete_url=r.url(method="delete", id="[id]"))
+            # Override the deployments list-button go to the summary page
+            if isinstance(output, dict) and "buttons" in output:
+                buttons = output["buttons"]
+                if "list_btn" in buttons and "summary_btn" in buttons:
+                    buttons["list_btn"] = buttons["summary_btn"]
+        elif "subtitle" in output and "rheader" in output:
+            # In component CRUD views, have a subtitle after the rheader
+            output["rheader"] = TAG[""](output["rheader"],
+                                        H3(output["subtitle"]))
         return output
     s3.postp = postp
 
-    return s3_rest_controller(hide_filter=False)
+    return s3_rest_controller(hide_filter=False,
+                              # Remove the title if we have a component
+                              # (rheader includes the title)
+                              notitle=lambda r: {"title": ""} \
+                                             if r.component else None,
+                              rheader=s3db.deploy_deployment_rheader)
             
 # =============================================================================
 def human_resource_assignment():
