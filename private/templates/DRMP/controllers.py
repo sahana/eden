@@ -166,7 +166,8 @@ def _newsfeed():
                                        ),
                       S3OptionsFilter("created_by$organisation_id",
                                       label=T("Filter by Organization"),
-                                      represent="%(name)s",
+                                      # Can't use this for integers, use field.represent instead
+                                      #represent="%(name)s",
                                       widget="multiselect",
                                       hidden=True,
                                       ),
@@ -190,7 +191,7 @@ def _newsfeed():
                                     (T("Date"), "date"),
                                     (T("Location"), "location_id"),
                                     (T("Description"), "body"),
-                                   ],
+                                    ],
                    notify_template = "notify_post",
                    )
 

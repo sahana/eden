@@ -47,7 +47,7 @@
          Emergency Contact Name.........optional.....pr_contact_emergency name
          Emergency Contact Relationship.optional.....pr_contact_emergency relationship
          Emergency Contact Phone........optional.....pr_contact_emergency phone
-         Home Address...................optional.....person home address
+         Home Street Address............optional.....person home address
          Home Postcode..................optional.....person home address postcode
          Home Lat.......................optional.....person home address latitude
          Home Lon.......................optional.....person home address longitude
@@ -102,6 +102,12 @@
     <xsl:variable name="PersonGender">
         <xsl:call-template name="ResolveColumnHeader">
             <xsl:with-param name="colname">PersonGender</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:variable name="HomeAddress">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">HomeAddress</xsl:with-param>
         </xsl:call-template>
     </xsl:variable>
 
@@ -453,6 +459,12 @@
             </xsl:call-template>
         </xsl:variable>
 
+        <xsl:variable name="home">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$HomeAddress"/>
+            </xsl:call-template>
+        </xsl:variable>
+
         <xsl:variable name="type">
             <xsl:call-template name="GetColumnValue">
                 <xsl:with-param name="colhdrs" select="$HRMType"/>
@@ -564,7 +576,7 @@
             <xsl:call-template name="ContactInformation"/>
 
             <!-- Addresses -->
-            <xsl:if test="col[@field='Home Address'] or col[@field='Home Postcode'] or col[@field='Home L4'] or col[@field='Home L3'] or col[@field='Home L2'] or col[@field='Home L1']">
+            <xsl:if test="$home or col[@field='Home Postcode'] or col[@field='Home L4'] or col[@field='Home L3'] or col[@field='Home L2'] or col[@field='Home L1']">
                 <xsl:call-template name="Address">
                     <xsl:with-param name="type">1</xsl:with-param>
                 </xsl:call-template>
@@ -625,9 +637,9 @@
         </resource>
 
         <!-- Locations -->
-        <xsl:if test="col[@field='Home Address'] or col[@field='Home Postcode'] or col[@field='Home L4'] or col[@field='Home L3'] or col[@field='Home L2'] or col[@field='Home L1']">
+        <xsl:if test="$home or col[@field='Home Postcode'] or col[@field='Home L4'] or col[@field='Home L3'] or col[@field='Home L2'] or col[@field='Home L1']">
             <xsl:call-template name="Locations">
-                <xsl:with-param name="address" select="col[@field='Home Address']/text()"/>
+                <xsl:with-param name="address" select="$home"/>
                 <xsl:with-param name="postcode" select="col[@field='Home Postcode']/text()"/>
                 <xsl:with-param name="type">1</xsl:with-param>
                 <xsl:with-param name="l0" select="col[@field='Home Country']/text()"/>

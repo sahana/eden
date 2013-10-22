@@ -188,9 +188,6 @@ settings.ui.summary = [#{"common": True,
                         },
                        ]
 
-settings.ui.filter_auto_submit = 750
-settings.ui.report_auto_submit = 750
-
 settings.search.filter_manager = False
 
 # =============================================================================
@@ -1944,6 +1941,9 @@ def customize_cms_post_fields():
 
     table.created_by.represent = s3_auth_user_represent_name
 
+    current.auth.settings.table_user.organisation_id.represent = \
+        s3db.org_organisation_represent
+
     list_fields = ["series_id",
                    "location_id",
                    "date",
@@ -2418,9 +2418,6 @@ def customize_event_event(**attr):
                 # Customise the cms_post table as that is used for the widgets
                 customize_cms_post_fields()
 
-                # Represent used in rendering
-                current.auth.settings.table_user.organisation_id.represent = s3db.org_organisation_represent
-
                 gtable = db.gis_location
                 ltable = db.event_event_location
                 query = (ltable.event_id == r.id) & \
@@ -2669,9 +2666,6 @@ def customize_gis_location(**attr):
                 list_fields = ["name",
                                "id",
                                ]
-
-                # Represent used in rendering
-                current.auth.settings.table_user.organisation_id.represent = s3db.org_organisation_represent
 
                 location = r.record
                 record_id = location.id

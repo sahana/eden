@@ -163,6 +163,11 @@
         <label>LONGITUDE</label>
     </column>
 
+    <column name="HomeAddress">
+        <label>Home Address</label>
+        <label>Home Street Address</label>
+    </column>
+
     <column name="Postcode">
         <!-- Special Element match for key generation -->
         <match>|Postcode|postcode|Zip|Zipcode|zipcode|</match>
