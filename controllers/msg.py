@@ -1371,6 +1371,48 @@ def twitter_search_channel():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def inject_search_after_save(output):
+    """
+        Inject a Search After Save checkbox
+        in the Search Query Form
+    """
+    if "form" in output:
+        id = "search_after_save"
+        label = LABEL("%s:" % T("Search After Save?"),
+                      _for="msg_twitter_search_query")
+        widget = INPUT(_name="search_after_save",
+                       _type="checkbox",
+                       value="on",
+                       _id="search_after_save",
+                       _class="boolean")
+        comment = ""
+        if s3_formstyle == "bootstrap":
+            _controls = DIV(widget, comment, _class="controls")
+            row = DIV(label,
+                      _controls,
+                      _class="control-group",
+                      _id="%s__row" % id
+                      )
+        elif callable(s3_formstyle):
+            row = s3_formstyle(id=id,
+                               label=label,
+                               widget=widget,
+                               comment=comment)
+        else:
+            # Unsupported
+            raise
+
+        output["form"][0][-2].append(row)
+# -----------------------------------------------------------------------------
+def action_after_save(form):
+    """
+        Schedules Twitter query search immediately after save
+        depending on flag
+    """
+    if request.vars.get("search_after_save"):
+        s3task.async("msg_process_twitter_search", args=[form.vars.id])
+        session.information = T("The search results should appear shortly - refresh to see them")
+# -----------------------------------------------------------------------------
 def twitter_search_query():
     """
        RESTful CRUD controller to add keywords
@@ -1405,7 +1447,17 @@ def twitter_search_query():
         msg_record_modified = T("Query updated")
         )
 
-    s3db.configure(tablename, listadd=True, deletable=True)
+    if request.vars.get("search_after_save"):
+        url_after_save = URL(f="twitter_result")
+    else:
+        url_after_save = None
+
+    s3db.configure(tablename,
+                   listadd=True,
+                   deletable=True,
+                   create_onaccept=action_after_save,
+                   create_next=url_after_save
+                   )
 
     def prep(r):
 
@@ -1452,6 +1504,8 @@ def twitter_search_query():
                                          args = "[id]"),
                                          restrict = restrict_k)
         )
+
+        inject_search_after_save(output)
 
         return output
 

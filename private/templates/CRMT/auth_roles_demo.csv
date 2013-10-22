@@ -8,6 +8,7 @@ ANONYMOUS,Anonymous,,"default","person","pr_saved_search",,,"READ|CREATE|UPDATE"
 ANONYMOUS,Anonymous,,"gis","config",,,"READ|CREATE","READ|CREATE|UPDATE",,,,
 ANONYMOUS,Anonymous,,"gis","index",,,"READ|CREATE","READ|CREATE|UPDATE",,,,
 ANONYMOUS,Anonymous,,"gis","location",,,"READ",,,,,
+ANONYMOUS,Anonymous,,"gis","proxy",,,"READ",,,,,
 ANONYMOUS,Anonymous,,"pr","person",,,,"READ|CREATE|UPDATE",,,,
 ANONYMOUS,Anonymous,,"pr","contact",,,,"READ|CREATE|UPDATE",,,,
 ANONYMOUS,Anonymous,,"pr","contact_emergency",,,,"READ|CREATE|UPDATE",,,,

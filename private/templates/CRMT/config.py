@@ -2147,7 +2147,7 @@ def render_log(listid, resource, rfields, record, **attr):
             label = row.name or ""
         else:
             label = ""
-        c, f = tablename.split("_")
+        c, f = tablename.split("_", 1)
         url = URL(c=c, f=f, args=[record_id, "read"])
         if tablename == "org_facility":
             if method == "create":

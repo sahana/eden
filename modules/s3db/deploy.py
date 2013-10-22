@@ -359,6 +359,8 @@ class S3DeploymentAlertModel(S3Model):
                                                          fields = ["human_resource_id"],
                                     ),
                                     "created_on",
+                                    # Use postprocess rather than onaccept to have
+                                    # the recipients list populated for sending
                                     postprocess = self.deploy_alert_postprocess,
                                     )
 
@@ -441,24 +443,32 @@ class S3DeploymentAlertModel(S3Model):
         """
 
         form_vars = form.vars
+        alert_id = form_vars.id
 
-        # @todo: check whether the alert had already been sent
+        # Check whether the alert has already been sent
+        #table = current.s3db.deploy_alert_message
+        #if current.db(table.alert_id == alert_id).select(table.id,
+        #                                                 limitby=(0, 1)
+        #                                                 ).first():
+        #    return
 
         # Send Message
-        # @ToDo: Embed the alert_id to parse replies
+
+        # Embed the alert_id to parse replies
+        message = "%s\nalert_id:%s:" % (form_vars.body, alert_id)
+
         # @ToDo: Support alternate channels, like SMS
         # if not body: body = subject
         message_id = current.msg.send_by_pe_id(form_vars.pe_id,
                                                subject=form_vars.subject,
-                                               message=form_vars.body,
+                                               message=message,
                                                )
 
         # Keep a record of the link between Alert & Message
-        # - for parsing replies
-        # @ToDo: is this really needed?
-        current.s3db.deploy_alert_message.insert(alert_id=form_vars.id,
-                                                 message_id=message_id,
-                                                 )
+        # - to track that the message has already been sent for this alert
+        # - for parsing replies?
+        table.insert(alert_id=alert_id,
+                     message_id=message_id)
 
 # =============================================================================
 def deploy_deployment_hrquantity(row):
