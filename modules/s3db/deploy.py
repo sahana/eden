@@ -134,10 +134,9 @@ class S3DeploymentModel(S3Model):
                                      _class="action-btn profile-add-btn"),
                             title_create="New Alert",
                             type="datalist",
-                            list_fields = [
-                                "created_on",
-                                "subject",
-                            ],
+                            list_fields = ["created_on",
+                                           "subject",
+                                           ],
                             tablename = "deploy_alert",
                             context = "deployment",
                             colspan = 2,
@@ -324,18 +323,22 @@ class S3DeploymentModel(S3Model):
 class S3DeploymentAlertModel(S3Model):
 
     names = ["deploy_alert",
-             "deploy_group",
-             "deploy_response"]
+             "deploy_alert_recipient",
+             "deploy_response",
+             ]
 
     def model(self):
 
         T = current.T
 
+        add_component = self.add_component
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+        set_method = self.set_method
         super_link = self.super_link
-        configure = self.configure
-        add_component = self.add_component
+
+        message_id = self.msg_message_id
 
         # ---------------------------------------------------------------------
         # Alert (also the PE representing its Recipients)
@@ -359,6 +362,8 @@ class S3DeploymentAlertModel(S3Model):
                                    represent = lambda v: \
                                     v or current.messages["NONE"],
                                    ),
+                             # Link to the Message once sent
+                             message_id(readable=False),
                              *s3_meta_fields())
 
         # CRUD Strings
@@ -382,15 +387,7 @@ class S3DeploymentAlertModel(S3Model):
         crud_form = S3SQLCustomForm("deployment_id",
                                     "subject",
                                     "body",
-                                    #S3SQLInlineComponent("alert_recipient",
-                                    #                     name = "recipient",
-                                    #                     label = T("Recipients"),
-                                    #                     fields = ["human_resource_id"],
-                                    #),
                                     "created_on",
-                                    # Use postprocess rather than onaccept to have
-                                    # the recipients list populated for sending
-                                    #postprocess = self.deploy_alert_postprocess,
                                     )
 
         # Table Configuration
@@ -406,18 +403,20 @@ class S3DeploymentAlertModel(S3Model):
                   )
 
         # Components
-        add_component("deploy_alert_message",
-                      deploy_alert=dict(name="message",
-                                        joinby="alert_id"))
-
         add_component("deploy_alert_recipient",
                       deploy_alert=dict(name="recipient",
                                         joinby="alert_id"))
 
+        add_component("deploy_response", deploy_alert="alert_id")
+
         # Custom Methods
-        self.set_method("deploy", "alert",
-                        method="select",
-                        action=self.deploy_alert_select_recipients)
+        set_method("deploy", "alert",
+                   method="select",
+                   action=self.deploy_alert_select_recipients)
+
+        set_method("deploy", "alert",
+                   method="send",
+                   action=self.deploy_alert_send)
 
         # Reusable field
         represent = S3Represent(lookup=tablename)
@@ -430,16 +429,6 @@ class S3DeploymentAlertModel(S3Model):
                                    ondelete = "CASCADE")
 
         # ---------------------------------------------------------------------
-        # Alert Messages
-        # - keep track of which messages are related to which alerts
-        #
-        tablename = "deploy_alert_message"
-        table = define_table(tablename,
-                             alert_id(),
-                             self.msg_message_id(),
-                             *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
         # Recipients of the Alert
         #
         tablename = "deploy_alert_recipient"
@@ -449,6 +438,23 @@ class S3DeploymentAlertModel(S3Model):
                                                         label=T("Member")),
                              *s3_meta_fields())
 
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            title_create = T("New Recipient"),
+            title_display = T("Recipient Details"),
+            title_list = T("Recipients"),
+            title_update = T("Edit Recipient Details"),
+            title_search = T("Search Recipients"),
+            title_upload = T("Import Recipients"),
+            subtitle_create = T("Add New Recipient"),
+            label_list_button = T("List Recipients"),
+            label_create_button = T("Add Recipient"),
+            label_delete_button = T("Delete Recipient"),
+            msg_record_created = T("Recipient added"),
+            msg_record_modified = T("Recipient Details updated"),
+            msg_record_deleted = T("Recipient deleted"),
+            msg_list_empty = T("No Recipients currently defined"))
+
         # ---------------------------------------------------------------------
         # Responses to Alerts
         #
@@ -457,7 +463,7 @@ class S3DeploymentAlertModel(S3Model):
                              self.deploy_deployment_id(),
                              self.hrm_human_resource_id(empty=False,
                                                         label=T("Member")),
-                             # @todo: link to response message
+                             message_id(),
                              *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -484,25 +490,26 @@ class S3DeploymentAlertModel(S3Model):
             raise HTTP(501, BADMETHOD)
 
         T = current.T
+        s3db = current.s3db
 
         if r.http == "POST":
             # Why not in r.post_vars?
             selected = current.request._post_vars.get("selected", None)
             if selected:
                 selected = selected.split(",")
-                table = current.s3db.deploy_alert_recipient
+                table = s3db.deploy_alert_recipient
                 for s in selected:
                     table.insert(alert_id = alert_id,
                                  human_resource_id = s)
-                current.response.confirmation = T("Resources added to Alert")
+                current.response.confirmation = T("Recipients added to Alert")
             else:
-                current.response.warning = T("No Resources Selected!")
+                current.response.warning = T("No Recipients Selected!")
 
         get_vars = r.get_vars or {}
         response = current.response
         settings = current.deployment_settings
 
-        resource = current.s3db.resource("hrm_human_resource")
+        resource = s3db.resource("hrm_human_resource")
         list_fields = ["id",
                        "person_id",
                        "job_title_id",
@@ -538,7 +545,10 @@ class S3DeploymentAlertModel(S3Model):
         dt_id = "hr_dt"
 
         if r.extension == "html":
-            #dt.defaultActionButtons(resource)
+            s3db.configure("hrm_human_resource",
+                           deletable = False,
+                           )
+            dt.defaultActionButtons(resource)
             response.s3.no_formats = True
 
             items = dt.html(totalrows,
@@ -588,40 +598,58 @@ class S3DeploymentAlertModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def deploy_alert_postprocess(form):
+    def deploy_alert_send(r, **attr):
         """
-            After an Alert has been generated, send out the message
-            - unused
+            Custom Method to send an Alert
         """
 
-        form_vars = form.vars
-        alert_id = form_vars.id
+        alert_id = r.id
+        if r.representation != "html" or not alert_id or r.component:
+            raise HTTP(501, BADMETHOD)
 
-        table = current.s3db.deploy_alert_message
+        T = current.T
+        record = r.record
+        # Always redirect to the Deployment Profile
+        next_url = URL(f="deployment", args=[record.deployment_id, "profile"])
+
         # Check whether the alert has already been sent
         # - alerts should be read-only after creation
-        #if current.db(table.alert_id == alert_id).select(table.id,
-        #                                                 limitby=(0, 1)
-        #                                                 ).first():
-        #    return
+        if record.message_id:
+            current.session.error = T("This Alert has already been sent!")
+            redirect(next_url)
+
+        db = current.db
+        table = current.s3db.deploy_alert
+
+        # Check whether there are recipients
+        ltable = db.deploy_alert_recipient
+        query = (ltable.alert_id == alert_id) & \
+                (ltable.deleted == False)
+        recipients = db(query).select(ltable.id,
+                                      limitby=(0, 1)).first()
+        if not recipients:
+            current.session.error = T("This Alert has no Recipients yet!")
+            redirect(next_url)
 
         # Send Message
 
         # Embed the alert_id to parse replies
-        message = "%s\nalert_id:%s:" % (form_vars.body, alert_id)
+        # = @ToDo: Use a Message Template to add Footer (very simple one for RDRT)
+        message = "%s\nalert_id:%s:" % (record.body, alert_id)
 
         # @ToDo: Support alternate channels, like SMS
         # if not body: body = subject
-        message_id = current.msg.send_by_pe_id(form_vars.pe_id,
-                                               subject=form_vars.subject,
+        message_id = current.msg.send_by_pe_id(record.pe_id,
+                                               subject=record.subject,
                                                message=message,
                                                )
 
-        # Keep a record of the link between Alert & Message
-        # - to track that the message has already been sent for this alert
-        # - for parsing replies?
-        table.insert(alert_id=alert_id,
-                     message_id=message_id)
+        # Update the Alert to show it's been Sent
+        db(table.id == alert_id).update(message_id=message_id)
+
+        # Return to the Deployment Profile
+        current.session.confirmation = T("Alert Sent")
+        redirect(next_url)
 
 # =============================================================================
 def deploy_rheader(r, tabs=[]):
@@ -646,12 +674,29 @@ def deploy_rheader(r, tabs=[]):
         tabs = [(T("Basic Details"), None),
                 (T("Select"), "select"),
                 (T("Recipients"), "recipient"),
-                (T("Messages"), "message"),
+                (T("Responses"), "response"),
                 ]
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
+        alert_id = r.id
+        db = current.db
+        ltable = db.deploy_alert_recipient
+        query = (ltable.alert_id == alert_id) & \
+                (ltable.deleted == False)
+        recipients = db(query).select(ltable.id,
+                                      limitby=(0, 1)).first()
+        if recipients:
+            send_button = S3CRUD.crud_button(T("Send Alert"),
+                                             _href=URL(c="deploy", f="alert",
+                                                       args=[alert_id, "send"]),
+                                             #_id="send-alert-btn",
+                                             )
+        else:
+            send_button = ""
+
         rheader = DIV(TABLE(TR(TH("%s: " % table.deployment_id.label),
-                               table.deployment_id.represent(record.deployment_id)
+                               table.deployment_id.represent(record.deployment_id),
+                               send_button,
                                ),
                             TR(TH("%s: " % table.subject.label),
                                record.subject

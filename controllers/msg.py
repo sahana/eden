@@ -675,24 +675,22 @@ def email_inbound_channel():
 
         restrict_a = [str(row.id) for row in rows]
 
-        s3.actions = \
-        s3.actions + [
-            dict(label=str(T("Enable")),
-                 _class="action-btn",
-                 url=URL(f="enable_email",
-                         args="[id]"),
-                 restrict = restrict_e),
-            dict(label=str(T("Disable")),
-                 _class="action-btn",
-                 url = URL(f="disable_email",
-                           args = "[id]"),
-                 restrict = restrict_d),
-            dict(label=str(T("Activate")),
-                 _class = "action-btn",
-                 url = URL(f="schedule_email",
-                           args="[id]"),
-                 restrict = restrict_a),
-            ]
+        s3.actions += [dict(label=str(T("Enable")),
+                            _class="action-btn",
+                            url=URL(f="enable_email",
+                                    args="[id]"),
+                            restrict = restrict_e),
+                       dict(label=str(T("Disable")),
+                            _class="action-btn",
+                            url = URL(f="disable_email",
+                                      args = "[id]"),
+                            restrict = restrict_d),
+                       dict(label=str(T("Activate")),
+                            _class = "action-btn",
+                            url = URL(f="schedule_email",
+                                      args="[id]"),
+                            restrict = restrict_a),
+                       ]
         return output
     s3.postp = postp
 

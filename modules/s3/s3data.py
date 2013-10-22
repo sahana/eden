@@ -544,6 +544,8 @@ class S3DataTable(object):
             @param custom_actions: custom actions as list of dicts like
                                    {"label":label, "url":url, "_class":class},
                                    will be appended to the default actions
+
+            @ToDo: DRY with S3CRUD.action_buttons()
         """
 
         from s3crud import S3CRUD
@@ -567,26 +569,33 @@ class S3DataTable(object):
             c = resource.prefix
             f = resource.name
 
+        tablename = resource.tablename
+        get_config = current.s3db.get_config
+
         # "Open" button
-        if has_permission("update", table) and \
+        editable = get_config(tablename, "editable", True)
+        if editable and has_permission("update", table) and \
            not ownership_required("update", table):
             update_url = URL(c=c, f=f, args=args + ["update"])
-            S3CRUD.action_button(labels.UPDATE, update_url)
+            S3CRUD.action_button(labels.UPDATE, update_url,
+                                 _class="action-btn edit")
         else:
             read_url = URL(c=c, f=f, args=args)
-            S3CRUD.action_button(labels.READ, read_url)
-        # Delete action
+            S3CRUD.action_button(labels.READ, read_url,
+                                 _class="action-btn read")
+
+        # Delete button
         # @todo: does not apply selective action (renders DELETE for
         #        all items even if the user is only permitted to delete
         #        some of them) => should implement "restrict", see
         #        S3CRUD.action_buttons
-        deletable = current.s3db.get_config(resource.tablename, "deletable",
-                                            True)
+        deletable = get_config(tablename, "deletable", True)
         if deletable and \
            has_permission("delete", table) and \
            not ownership_required("delete", table):
             delete_url = URL(c=c, f=f, args=args + ["delete"])
-            S3CRUD.action_button(labels.DELETE, delete_url)
+            S3CRUD.action_button(labels.DELETE, delete_url,
+                                 _class="delete-btn")
 
         # Append custom actions
         if custom_actions:
