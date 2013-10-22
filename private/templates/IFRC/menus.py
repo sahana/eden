@@ -702,7 +702,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                    M("Deployments",
                      c="deploy", f="deployment", m="summary")(
                         M("New", m="create"),
-                        M("Summary", m="summary"),
                    ),
                    M("Alerts",
                      c="deploy", f="alert")(

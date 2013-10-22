@@ -30,6 +30,7 @@
 __all__ = ["S3DeploymentModel",
            "S3DeploymentAlertModel",
            "deploy_rheader",
+           "deploy_deployment_rheader",
            ]
 
 try:
@@ -179,7 +180,8 @@ class S3DeploymentModel(S3Model):
                                  (T("Members"), "hrquantity"),
                                  "status",
                                  ],
-                  profile_header = deploy_deployment_profile_header,
+                  profile_header = lambda r: \
+                                   deploy_deployment_rheader(r, profile=True),
                   profile_widgets = [alert_widget,
                                      assignment_widget,
                                      ],
@@ -738,34 +740,66 @@ def deploy_deployment_hrquantity(row):
         return 0
 
 # =============================================================================
-def deploy_deployment_profile_header(r):
-    """ Header for deployment profile page """
+def deploy_render_profile_data(record,
+                               table=None,
+                               record_id=None,
+                               prefix="data",
+                               fields=None,
+                               columns=None):
+    """
+        Helper method to render record data with labels
+    """
 
-    table = r.table
+    items = DIV()
+    append = items.append
+
+    for column in columns:
+        if fields:
+            rfield = fields[column]
+            fname = rfield.fname
+            label = "%s:" % rfield.label
+            value = record[column]
+        else:
+            field = table[column]
+            fname = column
+            label = "%s:" % field.label
+            value = field.represent(record[fname])
+        if record_id:
+            item_id = "profile-%s-%s-%s" % (prefix, fname, record_id)
+        else:
+            item_id = "profile-%s-%s" % (prefix, fname)
+        append(LABEL(label,
+                     _for=item_id,
+                     _class="profile-%s-label" % prefix))
+        append(SPAN(value,
+                    _id=item_id,
+                    _class="profile-%s-value" % prefix))
+
+    return items
+
+# =============================================================================
+def deploy_deployment_rheader(r, profile=False):
+    """ Header for deployment pages """
+
+    if not profile and not r.component:
+        return ""
+
+    crud_string = S3Method.crud_string
+
     record = r.record
-    title = S3Method.crud_string(r.tablename, "title_display")
+    title = crud_string(r.tablename, "title_display")
     if record:
-        def render(*fnames):
-            items = DIV()
-            append = items.append
-            for fname in fnames:
-                field = table[fname]
-                label = "%s:" % field.label
-                value = field.represent(record[fname])
-                item_id = "profile-header-%s" % fname
-                append(LABEL(label,
-                             _for=item_id,
-                             _class="profile-header-label"))
-                append(SPAN(value,
-                            _id=item_id,
-                             _class="profile-header-value"))
-            return items
+        render = lambda *columns: deploy_render_profile_data(record,
+                                                             table=r.table,
+                                                             prefix="header",
+                                                             columns=columns)
 
         title = "%s: %s" % (title, record.name)
-        crud_button = r.resource.crud.crud_button
-        edit_btn = crud_button(current.T("Edit"), _href=r.url(method="update"))
         data = render("location_id", "created_on", "status")
-        data.append(edit_btn)
+        if profile:
+            crud_button = r.resource.crud.crud_button
+            edit_btn = crud_button(current.T("Edit"), _href=r.url(method="update"))
+            data.append(edit_btn)
         header = DIV(H2(title),
                      data,
                      _class="profile-header")
@@ -807,21 +841,9 @@ def deploy_render_alert(listid,
     subject = record["deploy_alert.subject"]
 
     fields = dict((rfield.colname, rfield) for rfield in rfields)
-    def render(*colnames):
-        items = DIV()
-        append = items.append
-        for colname in colnames:
-            rfield = fields[colname]
-            label = "%s:" % rfield.label
-            value = record[colname]
-            item_id = "profile-data-%s-%s" % (rfield.fname, record_id)
-            append(LABEL(label,
-                            _for=item_id,
-                            _class="profile-data-label"))
-            append(SPAN(value,
-                        _id=item_id,
-                            _class="profile-data-value"))
-        return items
+    render = lambda *columns: deploy_render_profile_data(record,
+                                                         fields=fields,
+                                                         columns=columns)
 
     # Edit bar
     permit = current.auth.s3_has_permission
@@ -911,21 +933,9 @@ def deploy_render_human_resource_assignment(listid,
     organisation = record["hrm_human_resource.organisation_id"]
 
     fields = dict((rfield.colname, rfield) for rfield in rfields)
-    def render(*colnames):
-        items = DIV()
-        append = items.append
-        for colname in colnames:
-            rfield = fields[colname]
-            label = "%s:" % rfield.label
-            value = record[colname]
-            item_id = "profile-data-%s-%s" % (rfield.fname, record_id)
-            append(LABEL(label,
-                            _for=item_id,
-                            _class="profile-data-label"))
-            append(SPAN(value,
-                        _id=item_id,
-                            _class="profile-data-value"))
-        return items
+    render = lambda *columns: deploy_render_profile_data(record,
+                                                         fields=fields,
+                                                         columns=columns)
 
     # Edit bar
     permit = current.auth.s3_has_permission
