@@ -41,9 +41,9 @@ def deployment():
                                # @ToDo: Integrate this into main page
                                # Widget? Custom Create method?
                                create_next=URL(f="alert",
-                                               args=["[id]", "select"],
+                                               args=["[id]", "select"]),
                                update_next=next_url,
-                               delete_next=next_url)
+                               delete_next=next_url,
                                )
             else:
                 s3db.configure(tablename,

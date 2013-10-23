@@ -137,6 +137,7 @@ class S3DeploymentModel(S3Model):
                             type="datalist",
                             list_fields = ["created_on",
                                            "subject",
+                                           "body",
                                            ],
                             tablename = "deploy_alert",
                             context = "deployment",
@@ -650,7 +651,7 @@ class S3DeploymentAlertModel(S3Model):
                                                     ).first()
         if not channel:
             current.session.error = T("Need to configure an Email Address!")
-            redirect(f="email_channel")
+            redirect(URL(f="email_channel"))
 
         from_address = "%s@%s" % (username, server)
 
@@ -763,7 +764,22 @@ def deploy_render_profile_data(record,
                                fields=None,
                                columns=None):
     """
-        Helper method to render record data with labels
+        DRY Helper method to render record data with labels, used
+        in deploy_deployment profile header and cards.
+
+        @param record: the record, either a Row (raw values, also specify
+                       table) or a Storage {colname: value} (represented
+                       data, also specify fields)
+        @param record_id: the record ID (to be added to the element ID)
+        @param prefix: the element ID prefix
+        @param fields: the S3ResourceFields as dict {colname: rfield}
+                       to lookup labels
+        @param table: the Table to lookup labels and represent function
+        @param columns: the columns (field names with table, column
+                        names with fields)
+                        to render
+
+        @return: a DIV with LABEL,SPAN pairs for each column
     """
 
     items = DIV()
@@ -794,8 +810,49 @@ def deploy_render_profile_data(record,
     return items
 
 # =============================================================================
+def deploy_render_profile_toolbox(resource, record_id, update_url):
+    """
+        DRY Helper method to render a toolbox with Edit/Delete action
+        buttons in datalist cards.
+
+        @param resource: the S3Resource
+        @param record_id: the record ID
+        @param update_url: the update URL
+    """
+
+    has_permission = current.auth.s3_has_permission
+    table = resource.table
+    tablename = resource.tablename
+
+    crud_string = S3Method.crud_string
+
+    toolbox = DIV(_class="edit-bar fright")
+
+    if update_url and \
+       has_permission("update", table, record_id=record_id):
+        edit_btn = A(I(" ", _class="icon icon-edit"),
+                     _href=update_url,
+                     _class="s3_modal",
+                     _title=crud_string(tablename, "title_update"))
+        toolbox.append(edit_btn)
+
+    if has_permission("delete", table, record_id=record_id):
+        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+                       _class="dl-item-delete",
+                       _title=crud_string(tablename, "label_delete_button"))
+        toolbox.append(delete_btn)
+
+    return toolbox
+
+# =============================================================================
 def deploy_deployment_rheader(r, profile=False):
-    """ Header for deployment pages """
+    """
+        Header for deployment pages
+
+        @param r: the S3Request
+        @param profile: render an S3Profile header (with edit button)
+                        rather than an rheader
+    """
 
     if not profile and not r.component:
         return ""
@@ -855,37 +912,15 @@ def deploy_render_alert(listid,
 
     created_on = record["deploy_alert.created_on"]
     subject = record["deploy_alert.subject"]
+    body = record["deploy_alert.body"]
 
-    fields = dict((rfield.colname, rfield) for rfield in rfields)
-    render = lambda *columns: deploy_render_profile_data(record,
-                                                         fields=fields,
-                                                         columns=columns)
+    #fields = dict((rfield.colname, rfield) for rfield in rfields)
+    #render = lambda *columns: deploy_render_profile_data(record,
+                                                         #fields=fields,
+                                                         #columns=columns)
 
-    # Edit bar
-    permit = current.auth.s3_has_permission
-    table = resource.table
-    tablename = "deploy_alert"
-    #if permit("update", table, record_id=record_id):
-        #edit_btn = A(I(" ", _class="icon icon-edit"),
-                     #_href=URL(c="deploy", f="human_resource_assignment",
-                               #args=[record_id, "update.popup"],
-                               #vars={"refresh": listid,
-                                     #"record": record_id}),
-                     #_class="s3_modal",
-                     #_title=current.response.s3.crud_strings[tablename].title_update,
-                    #)
-    #else:
-    edit_btn = ""
-    if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
-                       _class="dl-item-delete",
-                       _title=current.response.s3.crud_strings[tablename].label_delete_button,
-                      )
-    else:
-        delete_btn = ""
-    edit_bar = DIV(edit_btn,
-                   delete_btn,
-                   _class="edit-bar fright")
+    # Toolbox
+    toolbox = deploy_render_profile_toolbox(resource, record_id, None)
 
     # Render the item
     item = DIV(DIV(A(IMG(_class="media-object",
@@ -896,12 +931,13 @@ def deploy_render_alert(listid,
                          _class="pull-left",
                          _href="#",
                    ),
-                   edit_bar,
+                   toolbox,
                    DIV(DIV(DIV(subject,
                                _class="person-title"),
                            DIV(created_on,
                                _class="organisation-title"),
                            _class="media-heading"),
+                       DIV(body, _class="alert-message-body s3-truncate"),
                        #render("deploy_human_resource_assignment.start_date",
                               #"deploy_human_resource_assignment.end_date",
                               #"deploy_human_resource_assignment.rating",
@@ -953,31 +989,11 @@ def deploy_render_human_resource_assignment(listid,
                                                          fields=fields,
                                                          columns=columns)
 
-    # Edit bar
-    permit = current.auth.s3_has_permission
-    table = resource.table
-    tablename = "deploy_human_resource_assignment"
-    if permit("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="deploy", f="human_resource_assignment",
-                               args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
-                                     "record": record_id}),
-                     _class="s3_modal",
-                     _title=current.response.s3.crud_strings[tablename].title_update,
-                    )
-    else:
-        edit_btn = ""
-    if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
-                       _class="dl-item-delete",
-                       _title=current.response.s3.crud_strings[tablename].label_delete_button,
-                      )
-    else:
-        delete_btn = ""
-    edit_bar = DIV(edit_btn,
-                   delete_btn,
-                   _class="edit-bar fright")
+    # Toolbox
+    update_url = URL(c="deploy", f="human_resource_assignment",
+                     args=[record_id, "update.popup"],
+                     vars={"refresh": listid, "record": record_id})
+    toolbox = deploy_render_profile_toolbox(resource, record_id, update_url)
 
     # Render the item
     item = DIV(DIV(A(IMG(_class="media-object",
@@ -988,7 +1004,7 @@ def deploy_render_human_resource_assignment(listid,
                          _class="pull-left",
                          _href="#",
                    ),
-                   edit_bar,
+                   toolbox,
                    DIV(DIV(DIV(person,
                                _class="person-title"),
                            DIV(organisation,
