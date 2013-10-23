@@ -3,9 +3,8 @@
 
 """
    This file imports the Message parsers from the core code
-   and links them with the respective parsing tasks defined in msg_workflow.
+   and links them with the respective parsing tasks defined in msg_parser
 
-   @author: Ashwyn Sharma <ashwyn1092[at]gmail.com>
    @copyright: 2012-13 (c) Sahana Software Foundation
    @license: MIT
 
@@ -40,82 +39,84 @@ from gluon import current
 # =============================================================================
 class S3Parsing(object):
     """
-       Message Parsing Framework
+       Core Message Parsing Framework
+       - reusable functions
     """
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def parser(workflow, message = "", sender="", **kwargs):
+    @static_method
+    def parser(function_name, message_id, **kwargs):
         """
-           Parsing Workflow Filter.
-           Called by parse_import() in s3msg.py.
+           1st Stage Parser
+           - called by msg.parse()
+
+           Sets the appropriate Authorisation level and then calls the
+           parser function from the template
         """
 
-        Parse = AuthParse()
-        check_login = Parse.parse_login
-        check_session = Parse.is_session_alive
-        
-        is_session_alive = check_session(sender)
-        if is_session_alive:
-            email = is_session_alive
+        reply = None
+        s3db = current.s3db
+
+        # Retrieve Message
+        table = s3db.msg_message
+        message = current.db(table.message_id == message_id).select(limitby=(0, 1)
+                                                                    ).first()
+
+        from_address = message.from_address
+        if "<" in from_address:
+            from_address = from_address.split("<")[1].split(">")[0]
+        email = S3Parsing.is_session_alive(from_address)
+        if email:
             current.auth.s3_impersonate(email)
         else:
-            (email, password) = check_login(message, sender)
+            (email, password) = S3Parsing.parse_login(message)
             if email and password:
                 current.auth.login_bare(email, password)
                 expiration = current.session.auth["expiration"]
-                table = current.s3db.msg_session
+                table = s3db.msg_session
                 table.insert(email = email,
                              expiration_time = expiration,
-                             sender = sender)
-                return "Authenticated!"
+                             from_address = from_address)
+                reply = "Login succesful"
+                # The message may have multiple purposes
+                #return reply
 
         # Load the Parser template for this deployment
-        parser = current.deployment_settings.get_msg_parser()
-        application = current.request.application
+        template = current.deployment_settings.get_msg_parser()
         module_name = "applications.%s.private.templates.%s.parser" \
-            % (application, parser)
+            % (current.request.application, template)
         __import__(module_name)
         mymodule = sys.modules[module_name]
         S3Parsing = mymodule.S3Parsing()
 
-        # Get the list of available parsers
-        #parsers = inspect.getmembers(S3Parsing,
-        #                             predicate=inspect.isfunction)
-        #parse_opts = []
-        #for parser in parsers:
-        #    parse_opts += [parser[0]]
-
-        #for parser in parse_opts:
-        #    if parser == workflow:
+        # Pass the message to the parser
         try:
-            fn = getattr(S3Parsing, workflow)
+            fn = getattr(S3Parsing, function_name)
         except:
-            s3_debug("Parser not found: %s" % workflow)
+            s3_debug("Parser not found: %s" % function_name)
+            return None
 
-        return fn(message, sender, **kwargs)
+        reply = fn(message, **kwargs) or reply
+        if not reply:
+            return None
 
-# =============================================================================
-class AuthParse(object): 
-    """
-       Parser Authorising Framework.
-    """
+        # Send Reply
+        current.msg.send(from_address, reply)
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def parse_login(message="", sender=""):
+    def parse_login(message):
         """
-            Function to call to authenticate a login request
+            Authenticate a login request
         """
 
         if not message:
             return None, None
 
-        words = string.split(message)
+        words = string.split(message.body)
         login = False
-        email = ""
-        password = ""
-        reply = ""
+        email = None
+        password = None
         
         if "LOGIN" in [word.upper() for word in words]:
             login = True 
@@ -126,24 +127,25 @@ class AuthParse(object):
             password = words[2]
         if login:    
             if password and not email:
-                email = sender
+                email = message.from_address
             return email, password
         else:
             return None, None
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def is_session_alive(sender=""):
+    def is_session_alive(from_address):
         """
-            Function to check alive sessions from the same sender (if any)
+            Check whether there is an alive sessions from the same sender
         """
 
-        email = ""
+        email = None
         now = current.request.utcnow
         stable = current.s3db.msg_session
         query = (stable.is_expired == False) & \
-                (stable.sender == sender)
-        records = current.db(query).select(stable.created_datetime,
+                (stable.from_address == from_address)
+        records = current.db(query).select(stable.id,
+                                           stable.created_datetime,
                                            stable.expiration_time,
                                            stable.email,
                                            )
@@ -155,7 +157,7 @@ class AuthParse(object):
                 email = record.email
                 break
             else:
-                record.update(is_expired = True) 
+                record.update_record(is_expired = True) 
 
         return email
 

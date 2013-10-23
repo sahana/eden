@@ -91,15 +91,13 @@ if settings.has_module("doc"):
         else:
             data = os.popen("strings " + filename).read()
 
-
         # The text needs to be in unicode or ascii, with no contol characters
         data = str(unicode(data, errors="ignore"))
         data = "".join(c if ord(c) >= 32 else " " for c in data)
 
         # Put the data according to the Multiple Fields
         # @ToDo: Also, would change this according to requirement of Eden
-        document = {
-                    "id": str(id), # doc_document.id
+        document = {"id": str(id), # doc_document.id
                     "name": data, # the data of the file
                     "url": filename, # the encoded file name stored in uploads/
                     "filename": name, # the filename actually uploaded by the user
@@ -219,12 +217,12 @@ if settings.has_module("msg"):
     tasks["msg_process_outbox"] = msg_process_outbox
 
     # -------------------------------------------------------------------------
-    def msg_process_twitter_search(query_id, user_id=None):
+    def msg_twitter_search(search_id, user_id=None):
         """
-            Process a Twitter Search Query
+            Perform a Search of Twitter
             - will normally be done Asynchronously if there is a worker alive
 
-            @param query_id: one of s3db.msg_twitter_search_query.id
+            @param search_id: one of s3db.msg_twitter_search.id
             @param user_id: calling request's auth.user.id or None
 
         """
@@ -232,26 +230,26 @@ if settings.has_module("msg"):
             # Authenticate
             auth.s3_impersonate(user_id)
         # Run the Task & return the result
-        result = msg.twitter_search_poll(query_id)
+        result = msg.twitter_search(search_id)
         db.commit()
         return result
 
-    tasks["msg_process_twitter_search"] = msg_process_twitter_search
+    tasks["msg_twitter_search"] = msg_twitter_search
 
     # -------------------------------------------------------------------------
-    def msg_process_keygraph(query_id, user_id=None):
+    def msg_process_keygraph(search_id, user_id=None):
         """
             Process Twitter Search Results with KeyGraph
             - will normally be done Asynchronously if there is a worker alive
 
-            @param query_id: one of s3db.msg_twitter_search_query.id
+            @param search_id: one of s3db.msg_twitter_search.id
             @param user_id: calling request's auth.user.id or None
         """
         if user_id:
             # Authenticate
             auth.s3_impersonate(user_id)
         # Run the Task & return the result
-        result = msg.process_keygraph(query_id)
+        result = msg.process_keygraph(search_id)
         db.commit()
         return result
 
@@ -270,16 +268,16 @@ if settings.has_module("msg"):
     tasks["msg_poll"] = msg_poll
 
     # -----------------------------------------------------------------------------
-    def msg_parse_workflow(workflow, source, user_id):
+    def msg_parse(channel_id, function_name):
         """
-            Parses Messages coming in from a Source Channel.
+            Parse Messages coming in from a Source Channel
         """
         # Run the Task & return the result
-        result = msg.parse_import(workflow, source)
+        result = msg.parse(channel_id, function_name)
         db.commit()
         return result
 
-    tasks["msg_parse_workflow"] = msg_parse_workflow
+    tasks["msg_parse"] = msg_parse
 
     # --------------------------------------------------------------------------
     def msg_search_subscription_notifications(frequency):

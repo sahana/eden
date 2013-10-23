@@ -63,9 +63,9 @@ class S3Parsing(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def filter(message="", sender="", service="", coordinates=""):
+    def parse_twitter(message):
         """
-            Filter unstructured data (e.g. Tweets)
+            Filter unstructured tweets
         """
 
         db = current.db
@@ -78,10 +78,19 @@ class S3Parsing(object):
         # Default Category
         category = "Unknown"
 
-        if service == "twitter":
-            priority -= 1
-        elif service == "sms":
-            priority += 1
+        # Lookup the channel type
+        #ctable = s3db.msg_channel
+        #channel = db(ctable.channel_id == message.channel_id).select(ctable.instance_type,
+        #                                                             limitby=(0, 1)
+        #                                                             ).first()
+        #service = channel.instance_type.split("_", 2)[1]
+        #if service in ("mcommons", "tropo", "twilio"):
+        #    service = "sms"
+        #if service == "twitter":
+        #    priority -= 1
+        #elif service == "sms":
+        #    priority += 1
+        service = "twitter"
 
         # Lookup trusted senders
         # - these could be trained or just trusted
@@ -235,24 +244,24 @@ class S3Parsing(object):
             if lat and lon:
                 location_id = ltable.insert(lat = lat,
                                             lon = lon)
-            elif coordinates:
-                # Use Geolocation of Tweet
-                location_id = ltable.insert(lat = coordinates[0],
-                                            lon = coordinates[1])
+            elif service == "twitter":
+                # @ToDo: Use Geolocation of Tweet
+                location_id = pass
 
+        # @ToDo: Update records inside this function with parsed data
         # @ToDo: Image
-        return category, priority, location_id
+        #return category, priority, location_id
+
+        # No reply here
+        return None
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def keyword_search(message="", sender=""):
+    def _parse_keywords(message_body):
         """
-            1st Pass Parser for searching people, 
-            hospitals and organisations.
+            Parse Keywords
+            - helper function for search_resource, etc
         """
-
-        if not message:
-            return None
 
         # Equivalent keywords in one list
         primary_keywords = ["get", "give", "show"] 
@@ -261,10 +270,9 @@ class S3Parsing(object):
                             "person", "organisation"]
 
         pkeywords = primary_keywords + contact_keywords
-        keywords = string.split(message)
+        keywords = string.split(message_body)
         pquery = []
         name = ""
-        reply = ""
         for word in keywords:
             match = None
             for key in pkeywords:
@@ -276,29 +284,53 @@ class S3Parsing(object):
             else:
                 name = word
 
-        parser = S3Parsing()                
+        return pquery, name
+
+    # -------------------------------------------------------------------------
+    def search_resource(self, message):
+        """
+            1st Pass Parser for searching resources
+            - currently supports people, hospitals and organisations.
+        """
+
+        message_body = message.body
+        if not message_body:
+            return None
+
+        pquery, name = self._parse_keywords(message_body)
+
         if "person" in pquery:
-            reply = parser.parse_person(pquery, name, sender)
+            reply = self.search_person(message, pquery, name)
         elif "hospital" in pquery:
-            reply = parser.parse_hospital(pquery, name, sender)
+            reply = self.search_hospital(message, pquery, name)
         elif "organisation" in pquery:
-            reply = parser.parse_org(pquery, name, sender)
+            reply = self.search_organisation(message, pquery, name)
         else:
-            reply = False
+            reply = None
+
         return reply
 
     # -------------------------------------------------------------------------
-    def parse_person(self, pquery="", name="", sender=""):
+    def search_person(self, message, pquery=None, name=None):
         """
             Search for People
+           - can be called direct
+           - can be called from search_by_keyword
         """
+
+        message_body = message.body
+        if not message_body:
+            return None
+
+        if not pquery or not name:
+            pquery, name = self._parse_keywords(message_body)
 
         T = current.T
         db = current.db
         s3db = current.s3db
 
+        reply = None
         result = []
-        reply = ""
 
         # Person Search [get name person phone email]
         s3_accessible_query = current.auth.s3_accessible_query
@@ -354,17 +386,26 @@ class S3Parsing(object):
         return reply
     
     # ---------------------------------------------------------------------
-    def parse_hospital(self, pquery="", name="", sender=""):
+    def search_hospital(self, message, pquery=None, name=None):
         """
            Search for Hospitals
+           - can be called direct
+           - can be called from search_by_keyword
         """
+
+        message_body = message.body
+        if not message_body:
+            return None
+
+        if not pquery or not name:
+            pquery, name = self._parse_keywords(message_body)
 
         T = current.T
         db = current.db
         s3db = current.s3db
 
+        reply = None
         result = []
-        reply = ""
 
         #  Hospital Search [example: get name hospital facility status ]
         table = s3db.hms_hospital
@@ -418,17 +459,26 @@ class S3Parsing(object):
         return reply
 
     # ---------------------------------------------------------------------
-    def parse_org(self, pquery="", name="", sender=""):
+    def search_organisation(self, message, pquery=None, name=None):
         """
            Search for Organisations
+           - can be called direct
+           - can be called from search_by_keyword
         """
+
+        message_body = message.body
+        if not message_body:
+            return None
+
+        if not pquery or not name:
+            pquery, name = self._parse_keywords(message_body)
 
         T = current.T
         db = current.db
         s3db = current.s3db
 
+        reply = None
         result = []
-        reply = ""
 
         # Organization search [example: get name organisation phone]
         s3_accessible_query = current.auth.s3_accessible_query
@@ -469,55 +519,56 @@ class S3Parsing(object):
         return reply
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def parse_ireport(message="", sender=""):
+    def parse_ireport(self, message):
         """
-            Parse Messages directed to the IRS Module.
+            Parse Messages directed to the IRS Module
+            - logging new incidents
+            - responses to deployment requests
         """
 
-        if not message:
+        message_body = message.body
+        if not message_body:
             return None
 
-        parser = S3Parsing()
-
-        (lat, lon, code, text) = current.msg.parse_opengeosms(message)
+        (lat, lon, code, text) = current.msg.parse_opengeosms(message_body)
 
         if code == "SI":
-            # OpenGeoSMS
-            reply = parser.parse_opengeosms(lat, lon, text, message, sender)
+            # Create New Incident Report
+            reply = self._create_ireport(lat, lon, text)
         else:
-            words = string.split(message)
-            message = ""
+            # Is this a Response to a Deployment Request?
+            words = string.split(message_body)
+            text = ""
             reponse = ""
-            ireport = False
+            report_id = None
             comments = False
             for word in words:
                 if "SI#" in word and not ireport:
                     report = word.split("#")[1]
-                    report = int(report)
-                    ireport = True
-                elif (soundex(word) == soundex("Yes")) and ireport \
+                    report_id = int(report)
+                elif (soundex(word) == soundex("Yes")) and report_id \
                                                         and not comments:
                     response = True
                     comments = True
-                elif soundex(word) == soundex("No") and ireport \
+                elif soundex(word) == soundex("No") and report_id \
                                                     and not comments:
                     response = False
                     comments = True
                 elif comments:
-                    message += word + " "
+                    text += word + " "
 
-            if ireport:
-                reply = parser.parse_drequest(report, response, message, sender)
+            if report_id:
+                reply = self._respond_drequest(message, report_id, response, text)
             else:
-                reply = False
+                reply = None
                        
         return reply				    
 
     # -------------------------------------------------------------------------
-    def parse_opengeosms(self, lat="", lon="", text="", message="", sender=""):
+    @static_method
+    def _create_ireport(lat, lon, text):
         """
-            Parse OpenGeoSMS formatted messages.
+            Create New Incident Report
         """
 
         s3db = current.s3db
@@ -546,29 +597,31 @@ class S3Parsing(object):
                                     lat=lat,
                                     lon=lon)
         rtable.insert(name=name,
-                      message="",
+                      message=text,
                       category=category,
                       location_id=location_id)			
 
-        current.db.commit()
-        return "Incident Report Logged!"
+        # @ToDo: Include URL?
+        reply = "Incident Report Logged!"
+        return reply
 	                    
     # -------------------------------------------------------------------------
-    def parse_drequest(self, report, response, message="", sender=""):
+    @static_method
+    def _respond_drequest(message, report_id, response, text):
         """
-            Parse Replies To Deployment Request.
+            Parse Replies To Deployment Request
         """
         
         db = current.db
         s3db = current.s3db
         rtable = s3db.irs_ireport_human_resource
-        ctable = s3db.pr_contact
-        htable = s3db.hrm_human_resource
+        htable = db.hrm_human_resource
+        ctable = db.pr_contact
         ptable = s3db.pr_person_user
-        reply = ""        
+        reply = None       
         
         query = (ctable.contact_method == "EMAIL") & \
-                (ctable.value == sender)
+                (ctable.value == message.from_address)
         responder = db(query).select(ctable.pe_id, limitby=(0, 1)).first()
         if responder:
             query = (ptable.pe_id == responder.pe_id)
@@ -579,13 +632,12 @@ class S3Parsing(object):
                 query = (htable.person_id == human_resource.id)
                 person = db(query).select(htable.id, limitby=(0, 1)).first()
                 if person:
-                    query = (rtable.ireport_id == report) & \
+                    query = (rtable.ireport_id == report_id) & \
                             (rtable.human_resource_id == person.id)
-                    db(query).update(reply=message,
+                    db(query).update(reply=text,
                                      response=response)
-                    reply = "Response Logged in the Report (Id: %d )" % report
+                    reply = "Response Logged in the Report (Id: %d )" % report_id
 
-        db.commit()
         return reply
 
 # END =========================================================================

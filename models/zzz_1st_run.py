@@ -207,26 +207,26 @@ if len(pop_list) > 0:
                           password = "password",
                           delete_from_server = False
                           )
-        update_super(table, Storage(id=id))
+        update_super(table, dict(id=id))
         # Need entries for the Settings/1/Update URLs to work
         table = db.msg_sms_outbound_gateway
         id = table.insert(outgoing_sms_handler = "WEB_API")
-        update_super(table, Storage(id=id))
+        update_super(table, dict(id=id))
         table = db.msg_sms_modem_channel
         id = table.insert(modem_baud = 115200)
-        update_super(table, Storage(id=id))
+        update_super(table, dict(id=id))
         table = db.msg_sms_webapi_channel
         id = table.insert(to_variable = "to")
-        update_super(table, Storage(id=id))
+        update_super(table, dict(id=id))
         table = db.msg_sms_smtp_channel
         id = table.insert(address="changeme")
-        update_super(table, Storage(id=id))
+        update_super(table, dict(id=id))
         table = db.msg_tropo_channel
         id = table.insert(token_messaging = "")
-        update_super(table, Storage(id=id))
+        update_super(table, dict(id=id))
         table = db.msg_twitter_channel
-        id = table.insert(pin = "")
-        update_super(table, Storage(id=id))
+        id = table.insert(twitter_account = "")
+        update_super(table, dict(id=id))
 
     # Budget Module
     if has_module("budget"):

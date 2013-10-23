@@ -1428,8 +1428,8 @@ class S3OptionsMenu(object):
                     M("Compose", f="compose"),
                     M("InBox", f="inbox")(
                         M("Email", f="email_inbox"),
-                        M("RSS", f="rss_inbox"),
-                        M("Twilio SMS", f="twilio_inbox"),
+                        M("RSS", f="rss"),
+                        M("SMS", f="sms_inbox"),
                         M("Twitter", f="twitter_inbox"),
                     ),
                     M("Outbox", f="outbox")(
@@ -1443,8 +1443,7 @@ class S3OptionsMenu(object):
                         M("Group Memberships", f="group_membership"),
                     ),
                     M("Twitter Search", f="twitter_result")(
-                       M("Twitter Settings", f="twitter_search_channel"),
-                       M("Twitter Queries", f="twitter_search_query"),
+                       M("Search Queries", f="twitter_search"),
                        M("Results", f="twitter_result"),
                        # @ToDo KeyGraph Results
                     ),
