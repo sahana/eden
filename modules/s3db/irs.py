@@ -351,6 +351,35 @@ class S3IRSModel(S3Model):
             msg_record_deleted = T("Incident Report deleted"),
             msg_list_empty = T("No Incident Reports currently registered"))
 
+        filter_widgets = [
+            S3TextFilter(["name",
+                          "message",
+                          "comments",
+                          ],
+                         label=T("Description"),
+                         comment = T("You can search by description. You may use % as wildcard. Press 'Search' without input to list all incidents."),
+                        _class="filter-search",
+                         ),
+            S3LocationFilter("location_id",
+                             label=T("Location"),
+                             levels=["L1", "L2"],
+                             widget="multiselect",
+                             cols=3,
+                             #hidden=True,
+                             ),
+            S3OptionsFilter("category",
+                            label=T("Category"),
+                            widget="multiselect",
+                            #hidden=True,
+                            ),
+            S3DateFilter("datetime",
+                         label=T("Date"),
+                         hide_time=True,
+                         #hidden=True,
+                         ),
+            ]
+
+        # @ToDo: Deprecate
         ireport_search = S3Search(
             advanced=(
                     S3SearchSimpleWidget(
@@ -388,8 +417,7 @@ class S3IRSModel(S3Model):
                     ),
             ))
 
-        report_fields = [
-                         "category",
+        report_fields = ["category",
                          "datetime",
                          "location_id$L1",
                          "location_id$L2",
@@ -398,6 +426,7 @@ class S3IRSModel(S3Model):
         # Resource Configuration
         configure(tablename,
                   super_entity = ("sit_situation", "doc_entity"),
+                  filter_widgets = filter_widgets,
                   search_method = ireport_search,
                   report_options=Storage(
                       search=[

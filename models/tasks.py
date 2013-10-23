@@ -408,7 +408,7 @@ if settings.has_module("stats"):
 
         tasks["vulnerability_update_aggregates"] = vulnerability_update_aggregates
 
-        def vulnerability_update_location_aggregate(location_level,
+        def vulnerability_update_location_aggregate(#location_level,
                                                     root_location_id,
                                                     parameter_id,
                                                     start_date,
@@ -429,7 +429,7 @@ if settings.has_module("stats"):
                 # Authenticate
                 auth.s3_impersonate(user_id)
             # Run the Task & return the result
-            result = s3db.vulnerability_update_location_aggregate(location_level,
+            result = s3db.vulnerability_update_location_aggregate(#location_level,
                                                                   root_location_id,
                                                                   parameter_id,
                                                                   start_date,
