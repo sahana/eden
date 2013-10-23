@@ -183,7 +183,7 @@ class S3Msg(object):
     def receive_msg(subject="",
                     message="",
                     sender="",
-                    fromaddress="",
+                    from_address="",
                     system_generated = False,
                     pr_message_method = "EMAIL",
                    ):
@@ -199,7 +199,7 @@ class S3Msg(object):
                                                  subject = subject,
                                                  message = message,
                                                  sender  = sender,
-                                                 fromaddress = fromaddress,
+                                                 from_address = from_address,
                                                 )
         except:
             return False
@@ -420,7 +420,7 @@ class S3Msg(object):
                       message="",
                       pr_message_method = "EMAIL",
                       sender="",
-                      fromaddress="",
+                      from_address="",
                       system_generated = False):
         """
             Send a single message to a Person Entity (or list thereof)
@@ -437,13 +437,13 @@ class S3Msg(object):
 
         # Place the Message in the appropriate Log
         if pr_message_method == "EMAIL":
-            if not fromaddress:
-                fromaddress = current.deployment_settings.get_mail_sender()
+            if not from_address:
+                from_address = current.deployment_settings.get_mail_sender()
 
             table = s3db.msg_email
             id = table.insert(body=message,
                               subject=subject,
-                              from_address=fromaddress,
+                              from_address=from_address,
                               #to_address=pe_id,
                               inbound=False,
                               )
@@ -453,7 +453,7 @@ class S3Msg(object):
         elif pr_message_method == "SMS":
             table = s3db.msg_sms_outbox
             id = table.insert(body=message,
-                              #from_address=fromaddress,
+                              #from_address=from_address,
                               inbound=False,
                               )
             record = dict(id=id)
@@ -462,7 +462,7 @@ class S3Msg(object):
         elif pr_message_method == "TWITTER":
             table = s3db.msg_twitter_outbox
             id = table.insert(body=message,
-                              from_address=fromaddress,
+                              from_address=from_address,
                               inbound=False,
                               )
             record = dict(id=id)
@@ -813,7 +813,7 @@ class S3Msg(object):
                             subject="",
                             message="",
                             sender="",
-                            fromaddress="",
+                            from_address="",
                             system_generated=False):
         """
             API wrapper over send_by_pe_id
@@ -824,7 +824,7 @@ class S3Msg(object):
                                   message,
                                   "EMAIL",
                                   sender,
-                                  fromaddress,
+                                  from_address,
                                   system_generated)
 
     # =========================================================================
@@ -1070,7 +1070,7 @@ class S3Msg(object):
                           pe_id,
                           message="",
                           sender="",
-                          fromaddress="",
+                          from_address="",
                           system_generated=False):
         """
             API wrapper over send_by_pe_id
@@ -1080,7 +1080,7 @@ class S3Msg(object):
                                   message,
                                   "SMS",
                                   sender,
-                                  fromaddress,
+                                  from_address,
                                   system_generated,
                                   subject=""
                                   )
@@ -1205,7 +1205,7 @@ class S3Msg(object):
                         if twitter_api.send_direct_message(screen_name=rec,
                                                            text=c):
                             table = s3db.msg_twitter
-                            myname = twitter_api.me()['screen_name']
+                            myname = twitter_api.me()["screen_name"]
                             id = table.insert(body=c,
                                               from_address=myname,
                                               )
@@ -1287,7 +1287,7 @@ class S3Msg(object):
 
             for message in messages:
                 # Check if the tweet already exists in the inbox_table
-                query = (inbox_table.from_address == message['sender']['name'])
+                query = (inbox_table.from_address == message["sender"]["name"])
                 query = (query) & \
                         (inbox_table.posted_at == message["created_on"])
                 tweet_exists = db(query).select(inbox_table.id,
@@ -1326,7 +1326,46 @@ class S3Msg(object):
         return True
 
     # -------------------------------------------------------------------------
-    def fetch_inbound_email(self, username, server):
+    def poll(self, tablename, channel_id):
+        """
+            Poll a Channel for New Messages
+
+            @ToDo: Move the channel-specifics inside the called functions
+                   - each should have a common API
+        """
+
+        db = current.db
+        table = current.s3db.table(tablename)
+        query = (table.channel_id == channel_id)
+        if tablename == "msg_email_channel":
+            record = db(query).select(table.username,
+                                      table.server,
+                                      limitby=(0, 1)).first()
+            if not record:
+                return "No Such Channel: %s" % channel_id
+            result = self.email_poll(record.username, record.server)
+        elif tablename == "msg_mcommons_channel":
+            record = db(query).select(table.campaign_id,
+                                      limitby=(0, 1)).first()
+            if not record:
+                return "No Such Channel: %s" % channel_id
+            result = self.mcommons_poll(record.campaign_id)
+        elif tablename == "msg_rss_channel":
+            # Currently Polls all together
+            result = self.rss_poll()
+        elif tablename == "msg_twilio_channel":
+            record = db(query).select(table.account_name,
+                                      limitby=(0, 1)).first()
+            if not record:
+                return "No Such Channel: %s" % channel_id
+            result = self.twilio_poll(record.account_name)
+        else:
+            return "Unsupported Channel: %s" % tablename
+
+        return result
+
+    # -------------------------------------------------------------------------
+    def email_poll(self, username, server):
         """
             This is a simple mailbox polling script for the Messaging Module.
             It is called from the scheduler.
@@ -1362,7 +1401,7 @@ class S3Msg(object):
         inbox_table = s3db.msg_email
         parsing_table = s3db.msg_parsing_status
         source_task_id = username
-        setting_table = s3db.msg_email_inbound_channel
+        setting_table = s3db.msg_email_channel
 
         # Read-in configuration from Database
         query = (setting_table.username == username) & (setting_table.server == server)
@@ -1555,7 +1594,10 @@ class S3Msg(object):
     # -------------------------------------------------------------------------
     @staticmethod
     def source_id(username):
-        """ Extracts the source_task_id from a given message. """
+        """
+            Extracts the source_task_id from a given message.
+            - why?
+        """
 
         db = current.db
         table = db.scheduler_task
@@ -1629,11 +1671,14 @@ class S3Msg(object):
     # -------------------------------------------------------------------------
     @staticmethod
     def twilio_poll(account_name):
-        """ Fetches the inbound SMS from Twilio API."""
+        """
+            Fetches the inbound SMS from Twilio API
+            http://www.twilio.com/docs/api/rest
+        """
 
         db = current.db
         s3db = current.s3db
-        ttable = s3db.msg_twilio_inbound_channel
+        ttable = s3db.msg_twilio_channel
         query = (ttable.account_name == account_name) & \
                 (ttable.deleted == False)
         account = db(query).select(limitby=(0, 1)).first()
@@ -1690,36 +1735,34 @@ class S3Msg(object):
     # -------------------------------------------------------------------------
     @staticmethod
     def rss_poll():
-        """ Fetches RSS Feeds."""
+        """
+            Fetches all subscribed RSS Feeds
+        """
 
         import gluon.contrib.feedparser as feedparser
 
-        request = current.request
-        s3db = current.s3db
         db = current.db
+        s3db = current.s3db
         ctable = s3db.msg_rss_channel
-        ftable = s3db.msg_rss_inbox
+        mtable = db.msg_rss_inbox
         ptable = s3db.msg_parsing_status
 
-        query = (ctable.deleted == False) & (ctable.subscribed == True)
+        query = (ctable.deleted == False) & (ctable.enabled == True)
         links = db(query).select(ctable.url)
 
         update_super = s3db.update_super
 
         for link in links:
-            d = feedparser.parse(link.url)
+            url = link.url
+            d = feedparser.parse(url)
             for entry in d.entries:
-                id = ftable.insert(title = entry.title,
+                id = mtable.insert(title = entry.title,
                                    from_address = entry.link,
-                                   body = entry.description,
-                                   created_on = request.now)
-                record = db(ftable.id == id).select(ftable.id,
-                                                    ftable.message_id,
-                                                    limitby=(0, 1)).first()
-                update_super(ftable, record)
-                message_id = record.message_id
-                ptable.insert(message_id = message_id,
-                              source_task_id = link.url)
+                                   body = entry.description)
+                record = Storage(id=id)
+                update_super(mtable, record)
+                ptable.insert(message_id = record.message_id,
+                              source_task_id = url)
 
         # Commit as this is a task normally run async
         db.commit()
@@ -1853,20 +1896,15 @@ class S3Msg(object):
             RTs, extra whitespaces and replace hashtags
             with their definitions.
         """
+
         import re
 
         tagdef = S3Msg.tagdef
-
         tweet = tweet.lower()
-
-        tweet = re.sub('((www\.[\s]+)|(https?://[^\s]+))','',tweet)
-
-        tweet = re.sub('@[^\s]+','',tweet)
-
-        tweet = re.sub('[\s]+', ' ', tweet)
-
+        tweet = re.sub('((www\.[\s]+)|(https?://[^\s]+))', "", tweet)
+        tweet = re.sub('@[^\s]+', "", tweet)
+        tweet = re.sub('[\s]+', " ", tweet)
         tweet = re.sub(r'#([^\s]+)', lambda m:tagdef(m.group(0)), tweet)
-
         tweet = tweet.strip('\'"')
 
         return tweet
@@ -1877,19 +1915,18 @@ class S3Msg(object):
         """
             Returns the definition of a hashtag.
         """
-        hashtag = hashtag.split('#')[1]
+
+        hashtag = hashtag.split("#")[1]
 
         try:
-
             import json
             import urllib2
-            turl = "http://api.tagdef.com/one.%s.json"%hashtag
+            turl = "http://api.tagdef.com/one.%s.json" % hashtag
             hashstr = urllib2.urlopen(turl).read()
             hashdef = json.loads(hashstr)
             return hashdef["defs"]["def"]["text"]
 
         except:
-
             return hashtag
 
 # =============================================================================

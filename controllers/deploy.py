@@ -238,4 +238,65 @@ def email_inbox():
 
     return s3_rest_controller("msg", "email")
 
+# -----------------------------------------------------------------------------
+def email_channel():
+    """
+        RESTful CRUD controller for Inbound Email channels
+
+        @ToDo: Allow selection of a specific Channel for Alerts
+    """
+
+    def prep(r):
+        table = r.table
+        tablename = "msg_email_channel"
+        s3db.configure(tablename,
+                       deletable=False)
+
+        if not r.id:
+            # Have we got a channel defined?
+            record = db(table.deleted == False).select(table.id,
+                                                       limitby=(0, 1)
+                                                       ).first()
+            if record:
+                r.id = record.id
+                r.method = "update"
+            else:
+                r.method = "create"
+
+        if r.interactive:
+            table.server.label = T("Server")
+            table.protocol.label = T("Protocol")
+            table.use_ssl.label = "SSL"
+            table.port.label = T("Port")
+            table.username.label = T("Username")
+            table.password.label = T("Password")
+            table.delete_from_server.label = T("Delete from Server?")
+            table.port.comment = DIV(_class="tooltip",
+                                     _title="%s|%s" % (T("Port"),
+                                                       T("For POP-3 this is usually 110 (995 for SSL), for IMAP this is usually 143 (993 for IMAP).")))
+            table.delete_from_server.comment = DIV(_class="tooltip",
+                                                   _title="%s|%s" % (T("Delete"),
+                                                                     T("If this is set to True then mails will be deleted from the server after downloading.")))
+
+            # CRUD Strings
+            ADD_EMAIL_ACCOUNT = T("Add Email Account")
+            s3.crud_strings[tablename] = Storage(
+                title_display = T("Email Settings"),
+                title_list = T("Email Accounts"),
+                title_create = ADD_EMAIL_ACCOUNT,
+                title_update = T("Edit Email Settings"),
+                label_list_button = T("View Email Accounts"),
+                label_create_button = ADD_EMAIL_ACCOUNT,
+                subtitle_create = T("Add New Email Account"),
+                msg_record_created = T("Account added"),
+                msg_record_deleted = T("Email Account deleted"),
+                msg_list_empty = T("No Accounts currently defined"),
+                msg_record_modified = T("Email Settings updated")
+                )
+
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller("msg")
+
 # END =========================================================================

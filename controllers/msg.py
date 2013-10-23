@@ -55,13 +55,14 @@ def message():
 
     def postp(r, output):
         if r.interactive:
+            # Normal Action Buttons
             s3_action_buttons(r)
-            s3.actions += [
-                dict(label=str(T("Mark Sender")),
-                     _class="action-btn",
-                     url=URL(f="mark_sender",
-                             args="[id]"))
-                ]
+            # Custom Action Buttons
+            s3.actions += [dict(label=str(T("Mark Sender")),
+                                _class="action-btn",
+                                url=URL(f="mark_sender",
+                                        args="[id]")),
+                           ]
 
         return output
     s3.postp = postp
@@ -546,10 +547,9 @@ def sms_outbound_gateway():
     s3.prep = prep
 
     s3db.configure(tablename,
-                    deletable=False,
-                    listadd=False)
+                   deletable=False,
+                   listadd=False)
 
-    #response.menu_options = admin_menu_options
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
@@ -561,7 +561,7 @@ def channel():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def email_inbound_channel():
+def email_channel():
     """
         RESTful CRUD controller for Inbound Email channels
             - appears in the administration menu
@@ -571,7 +571,7 @@ def email_inbound_channel():
         session.error = UNAUTHORISED
         redirect(URL(f="index"))
 
-    tablename = "msg_email_inbound_channel"
+    tablename = "msg_email_channel"
     table = s3db[tablename]
 
     table.server.label = T("Server")
@@ -589,108 +589,43 @@ def email_inbound_channel():
                                                              T("If this is set to True then mails will be deleted from the server after downloading.")))
 
     # CRUD Strings
+    ADD_EMAIL_ACCOUNT = T("Add Email Account")
     s3.crud_strings[tablename] = Storage(
-        title_display = T("Email Setting Details"),
-        title_list = T("Email Settings"),
-        title_create = T("Add Email Settings"),
+        title_display = T("Email Settings"),
+        title_list = T("Email Accounts"),
+        title_create = ADD_EMAIL_ACCOUNT,
         title_update = T("Edit Email Settings"),
-        label_list_button = T("View Email Settings"),
-        label_create_button = T("Add Email Settings"),
-        msg_record_created = T("Setting added"),
-        msg_record_deleted = T("Email Setting deleted"),
-        msg_list_empty = T("No Settings currently defined"),
-        msg_record_modified = T("Email settings updated")
+        label_list_button = T("View Email Accounts"),
+        label_create_button = ADD_EMAIL_ACCOUNT,
+        subtitle_create = T("Add New Email Account"),
+        msg_record_created = T("Account added"),
+        msg_record_deleted = T("Email Account deleted"),
+        msg_list_empty = T("No Accounts currently defined"),
+        msg_record_modified = T("Email Settings updated")
         )
 
-    #response.menu_options = admin_menu_options
-    s3db.configure(tablename, listadd=True, deletable=True)
-
     def postp(r, output):
-        wtable = s3db.msg_workflow
-        stable = s3db.scheduler_task
-        mtable = r.table
+        if r.interactive:
+            # Normal Action Buttons
+            s3_action_buttons(r)
+            # Custom Action Buttons for Enable/Disable
+            table = r.table
+            query = (table.deleted == False)
+            rows = db(query).select(table.id,
+                                    table.enabled,
+                                    )
+            restrict_e = [str(row.id) for row in rows if not row.enabled]
+            restrict_d = [str(row.id) for row in rows if row.enabled]
 
-        s3_action_buttons(r)
-        query = (stable.enabled == False) & \
-                (stable.function_name == "msg_email_poll")
-        records = db(query).select()
-        rows = []
-        for record in records:
-            if "account_id" in record.vars:
-                r = record.vars.split("\"account_id\":")[1]
-                s = r.split("}")[0]
-                q = s.split("\"")[1].split("\"")[0]
-                server = s.split("\"")[3]
-                query = ((mtable.username == q) & (mtable.server == server))
-                record1 = db(query).select(mtable.id)
-                if record1:
-                    for rec in record1:
-                        rows += [rec]
-
-        restrict_e = [str(row.id) for row in rows]
-
-        query = (stable.enabled == True) & \
-                (stable.function_name == "msg_email_poll")
-        records = db(query).select()
-        rows = []
-        for record in records:
-            if "account_id" in record.vars:
-                r = record.vars.split("\"account_id\":")[1]
-                s = r.split("}")[0]
-                q = s.split("\"")[1].split("\"")[0]
-                server = s.split("\"")[3]
-                query = ((mtable.username == q) & (mtable.server == server))
-                record1 = db(query).select(mtable.id)
-                if record1:
-                    for rec in record1:
-                        rows += [rec]
-
-        restrict_d = [str(row.id) for row in rows]
-
-        rows = []
-        query = (stable.id > 0) & (stable.function_name == "msg_email_poll")
-        records = db(query).select()
-        tasks = [record.vars for record in records]
-        sources = {}
-        for task in tasks:
-            if "account_id" in task:
-                r = task.split("\"account_id\":")[1]
-                s = r.split("}")[0]
-                q = s.split("\"")[1].split("\"")[0]
-                server = s.split("\"")[3]
-                if not sources.has_key(q):
-                    sources[q] = [str(server)]
-                if server not in sources[q]:
-                    sources[q].append(str(server))
-
-        msettings = db(mtable.deleted == False).select(mtable.ALL)
-        for msetting in msettings :
-            if msetting.username and msetting.server:
-                if (msetting.username not in sources.keys()):
-                    if msetting:
-                        rows += [msetting]
-                elif (msetting.server not in sources[msetting.username]):
-                    if msetting:
-                        rows += [msetting]
-
-        restrict_a = [str(row.id) for row in rows]
-
-        s3.actions += [dict(label=str(T("Enable")),
-                            _class="action-btn",
-                            url=URL(f="enable_email",
-                                    args="[id]"),
-                            restrict = restrict_e),
-                       dict(label=str(T("Disable")),
-                            _class="action-btn",
-                            url = URL(f="disable_email",
-                                      args = "[id]"),
-                            restrict = restrict_d),
-                       dict(label=str(T("Activate")),
-                            _class = "action-btn",
-                            url = URL(f="schedule_email",
-                                      args="[id]"),
-                            restrict = restrict_a),
-                       ]
+            s3.actions += [dict(label=str(T("Enable")),
+                                _class="action-btn",
+                                url=URL(args=["[id]", "enable"]),
+                                restrict = restrict_e),
+                           dict(label=str(T("Disable")),
+                                _class="action-btn",
+                                url = URL(args = ["[id]", "disable"]),
+                                restrict = restrict_d),
+                           ]
         return output
     s3.postp = postp
 
@@ -743,87 +678,26 @@ def mcommons_channel():
 
     def postp(r, output):
         if r.interactive:
-            stable = s3db.scheduler_task
-            table = r.table
-
+            # Normal Action Buttons
             s3_action_buttons(r)
-            query = (stable.enabled == False) & \
-                    (stable.function_name == "msg_mcommons_poll")
-            records = db(query).select(stable.vars)
-            rows = []
-            for record in records:
-                if "account_id" in record.vars:
-                    r = record.vars.split("\"account_id\":")[1]
-                    s = r.split("}")[0]
-                    s = s.split("\"")[1].split("\"")[0]
+            # Custom Action Buttons for Enable/Disable
+            table = r.table
+            query = (table.deleted == False)
+            rows = db(query).select(table.id,
+                                    table.enabled,
+                                    )
+            restrict_e = [str(row.id) for row in rows if not row.enabled]
+            restrict_d = [str(row.id) for row in rows if row.enabled]
 
-                    record1 = db(table.campaign_id == s).select(table.id)
-                    if record1:
-                        for rec in record1:
-                            rows += [rec]
-
-            restrict_e = [str(row.id) for row in rows]
-
-            query = (stable.enabled == True) & \
-                    (stable.function_name == "msg_mcommons_poll")
-            records = db(query).select(stable.vars)
-            rows = []
-            for record in records:
-                if "account_id" in record.vars:
-                    r = record.vars.split("\"account_id\":")[1]
-                    s = r.split("}")[0]
-                    s = s.split("\"")[1].split("\"")[0]
-
-                    record1 = db(table.campaign_id == s).select(table.id)
-                    if record1:
-                        for rec in record1:
-                            rows += [rec]
-
-            restrict_d = [str(row.id) for row in rows]
-
-            query = (stable.id > 0) & \
-                    (stable.function_name == "msg_mcommons_poll")
-            records = db(query).select(stable.vars)
-            tasks = [record.vars for record in records]
-            sources = []
-            for task in tasks:
-                if "account_id" in task:
-                    u = task.split("\"account_id\":")[1]
-                    v = u.split("}")[0]
-                    v = v.split("\"")[1].split("\"")[0]
-                    sources += [v]
-
-            settings = db(table.deleted == False).select(table.id,
-                                                         table.campaign_id)
-            rows = []
-            for setting in settings :
-                if setting.campaign_id:
-                    if (setting.campaign_id not in sources):
-                        if setting:
-                            rows += [setting]
-
-            restrict_a = [str(row.id) for row in rows]
-
-            s3.actions = \
-            s3.actions + [
-                           dict(label=str(T("Enable")),
+            s3.actions += [dict(label=str(T("Enable")),
                                 _class="action-btn",
-                                url=URL(f="enable_mcommons_sms",
-                                        args="[id]"),
-                                restrict = restrict_e)
+                                url=URL(args=["[id]", "enable"]),
+                                restrict = restrict_e),
+                           dict(label=str(T("Disable")),
+                                _class="action-btn",
+                                url = URL(args = ["[id]", "disable"]),
+                                restrict = restrict_d),
                            ]
-            s3.actions.append(dict(label=str(T("Disable")),
-                                   _class="action-btn",
-                                   url = URL(f = "disable_mcommons_sms",
-                                             args = "[id]"),
-                                   restrict = restrict_d)
-                              )
-            s3.actions.append(dict(label=str(T("Activate")),
-                                   _class="action-btn",
-                                   url = URL(f = "schedule_mcommons_sms",
-                                             args = "[id]"),
-                                   restrict = restrict_a)
-                              )
         return output
     s3.postp = postp
 
@@ -872,72 +746,34 @@ def rss_channel():
     s3db.configure(tablename, listadd=True, deletable=True)
 
     def postp(r, output):
+        if r.interactive:
+            # Normal Action Buttons
+            s3_action_buttons(r)
+            # Custom Action Buttons for Enable/Disable
+            table = r.table
+            query = (table.deleted == False)
+            rows = db(query).select(table.id,
+                                    table.enabled,
+                                    )
+            restrict_e = [str(row.id) for row in rows if not row.enabled]
+            restrict_d = [str(row.id) for row in rows if row.enabled]
 
-        rtable = r.table
-
-        s3_action_buttons(r)
-
-        query = (rtable.deleted == False) & \
-        (rtable.subscribed == True)
-        records = db(query).select(rtable.id)
-
-        restrict_s = [str(record.id) for record in records]
-
-        query = (rtable.deleted == False) & \
-        (rtable.subscribed == False)
-        records = db(query).select(rtable.id)
-
-        restrict_u = [str(record.id) for record in records]
-
-        s3.actions = \
-        s3.actions + [
-        dict(label=str(T("Unsubscribe")),
-             _class="action-btn",
-             url=URL(f="unsubscribe_rss",
-                     args="[id]"),
-                     restrict = restrict_s)
-        ]
-
-        s3.actions.append(dict(label=str(T("Subscribe")),
-                               _class="action-btn",
-                               url = URL(f = "subscribe_rss",
-                                         args = "[id]"),
-                                         restrict = restrict_u)
-        )
-
-        ctable = s3db.msg_rss_channel
-        records = db(ctable.deleted == False).select()
-        if len(records) == 0:
-            return output
-
-        stable = s3db.scheduler_task
-        query = (stable.function_name == "msg_rss_poll")
-        functions = db(query).select(stable.function_name, stable.enabled)
-        if (len(functions) == 0) or (functions[0].enabled == False):
-            add_btn = A(T("Activate RSS"),
-                        _class="action-btn",
-                        _href=URL(f="enable_rss")
-                        )
-
-
-            output["rheader"] = add_btn
-        else:
-            add_btn = A(T("Deactivate RSS"),
-                        _class="action-btn",
-                        _href=URL(f="disable_rss")
-                        )
-
-
-            output["rheader"] = add_btn
-
+            s3.actions += [dict(label=str(T("Subscribe")),
+                                _class="action-btn",
+                                url=URL(args=["[id]", "enable"]),
+                                restrict = restrict_e),
+                           dict(label=str(T("Unsubscribe")),
+                                _class="action-btn",
+                                url = URL(args = ["[id]", "disable"]),
+                                restrict = restrict_d),
+                           ]
         return output
-
     s3.postp = postp
 
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def twilio_inbound_channel():
+def twilio_channel():
     """
         RESTful CRUD controller for Twilio SMS channels
             - appears in the administration menu
@@ -947,7 +783,7 @@ def twilio_inbound_channel():
         session.error = UNAUTHORISED
         redirect(URL(f="index"))
 
-    tablename = "msg_twilio_inbound_channel"
+    tablename = "msg_twilio_channel"
     table = s3db[tablename]
 
     table.account_name.label = T("Account Name")
@@ -978,86 +814,27 @@ def twilio_inbound_channel():
         )
 
     def postp(r, output):
+        if r.interactive:
+            # Normal Action Buttons
+            s3_action_buttons(r)
+            # Custom Action Buttons for Enable/Disable
+            table = r.table
+            query = (table.deleted == False)
+            rows = db(query).select(table.id,
+                                    table.enabled,
+                                    )
+            restrict_e = [str(row.id) for row in rows if not row.enabled]
+            restrict_d = [str(row.id) for row in rows if row.enabled]
 
-        stable = s3db.scheduler_task
-        ttable = r.table
-
-        s3_action_buttons(r)
-        query = (stable.enabled == False) & \
-                (stable.function_name == "msg_twilio_poll")
-        records = db(query).select()
-        rows = []
-        for record in records:
-            if "account_id" in record.vars:
-                r = record.vars.split("\"account_id\":")[1]
-                s = r.split("}")[0]
-                s = s.split("\"")[1].split("\"")[0]
-
-                record1 = db(ttable.account_name == s).select(ttable.id)
-                if record1:
-                    for rec in record1:
-                        rows += [rec]
-
-        restrict_e = [str(row.id) for row in rows]
-
-        query = (stable.enabled == True) & \
-                (stable.function_name == "msg_twilio_poll")
-        records = db(query).select()
-        rows = []
-        for record in records:
-            if "account_id" in record.vars:
-                r = record.vars.split("\"account_id\":")[1]
-                s = r.split("}")[0]
-                s = s.split("\"")[1].split("\"")[0]
-
-                record1 = db(ttable.account_name == s).select(ttable.id)
-                if record1:
-                    for rec in record1:
-                        rows += [rec]
-
-        restrict_d = [str(row.id) for row in rows]
-
-        rows = []
-        query = (stable.id > 0) & (stable.function_name == "msg_twilio_poll")
-        records = db(query).select()
-        tasks = [record.vars for record in records]
-        sources = []
-        for task in tasks:
-            if "account_id" in task:
-                u = task.split("\"account_id\":")[1]
-                v = u.split(",")[0]
-                v = v.split("\"")[1]
-                sources += [v]
-
-        tsettings = db(ttable.deleted == False).select(ttable.ALL)
-        for tsetting in tsettings :
-            if tsetting.account_name:
-                if (tsetting.account_name not in sources):
-                    if tsetting:
-                        rows += [tsetting]
-
-        restrict_a = [str(row.id) for row in rows]
-
-        s3.actions = \
-        s3.actions + [
-                       dict(label=str(T("Enable")),
-                            _class="action-btn",
-                            url=URL(f="enable_twilio_sms",
-                                    args="[id]"),
-                            restrict = restrict_e)
-                       ]
-        s3.actions.append(dict(label=str(T("Disable")),
-                               _class="action-btn",
-                               url = URL(f = "disable_twilio_sms",
-                                         args = "[id]"),
-                               restrict = restrict_d)
-                          )
-        s3.actions.append(dict(label=str(T("Activate")),
-                               _class="action-btn",
-                               url = URL(f = "schedule_twilio_sms",
-                                         args = "[id]"),
-                               restrict = restrict_a)
-                          )
+            s3.actions += [dict(label=str(T("Enable")),
+                                _class="action-btn",
+                                url=URL(args=["[id]", "enable"]),
+                                restrict = restrict_e),
+                           dict(label=str(T("Disable")),
+                                _class="action-btn",
+                                url = URL(args = ["[id]", "disable"]),
+                                restrict = restrict_d),
+                           ]
         return output
     s3.postp = postp
 
@@ -1306,15 +1083,37 @@ def twitter_channel():
     s3.prep = prep
 
     # Post-process
-    def user_postp(r, output):
-        if r.interactive and isinstance(output, dict):
-            if r.http == "GET" and r.method in ("create", "update"):
-                rheader = A(T("Collect PIN from Twitter"),
-                            _href=session.s3.twitter_oauth_url,
-                            _target="_blank")
-                output["rheader"] = rheader
+    def postp(r, output):
+        if r.interactive:
+            # Normal Action Buttons
+            s3_action_buttons(r)
+            # Custom Action Buttons for Enable/Disable
+            table = r.table
+            query = (table.deleted == False)
+            rows = db(query).select(table.id,
+                                    table.enabled,
+                                    )
+            restrict_e = [str(row.id) for row in rows if not row.enabled]
+            restrict_d = [str(row.id) for row in rows if row.enabled]
+
+            s3.actions += [dict(label=str(T("Enable")),
+                                _class="action-btn",
+                                url=URL(args=["[id]", "enable"]),
+                                restrict = restrict_e),
+                           dict(label=str(T("Disable")),
+                                _class="action-btn",
+                                url = URL(args = ["[id]", "disable"]),
+                                restrict = restrict_d),
+                           ]
+
+            if isinstance(output, dict):
+                if r.http == "GET" and r.method in ("create", "update"):
+                    rheader = A(T("Collect PIN from Twitter"),
+                                _href=session.s3.twitter_oauth_url,
+                                _target="_blank")
+                    output["rheader"] = rheader
         return output
-    s3.postp = user_postp
+    s3.postp = postp
 
     s3db.configure(tablename,
                    listadd=False,
@@ -1374,6 +1173,7 @@ def inject_search_after_save(output):
         Inject a Search After Save checkbox
         in the Twitter Search Query Form
     """
+
     if "form" in output:
         id = "search_after_save"
         label = LABEL("%s:" % T("Search After Save?"),
@@ -1472,10 +1272,11 @@ def twitter_search_query():
 
     def postp(r, output):
         if r.interactive:
-            rtable = r.table
-
+            # Normal Action Buttons
             s3_action_buttons(r)
 
+            # Custom Action Buttons
+            rtable = r.table
             query = (rtable.deleted == False) & \
                     (rtable.is_searched == False)
             records = db(query).select(rtable.id)
@@ -1601,7 +1402,6 @@ def sender():
     s3db.configure(tablename, listadd=True)
 
     def prep(r):
-
         if r.method == "create":
             dsender = request.vars['sender']
             dpriority = request.vars['priority']
@@ -1609,7 +1409,6 @@ def sender():
             r.table.priority.default = dpriority
 
         return True
-
     s3.prep = prep
 
     return s3_rest_controller()
@@ -1669,8 +1468,8 @@ def workflow():
             mymodule = sys.modules[module_name]
             S3Parsing = mymodule.S3Parsing()
 
-            mtable = s3db.msg_email_inbound_channel
-            ttable = s3db.msg_twilio_inbound_channel
+            mtable = s3db.msg_email_channel
+            ttable = s3db.msg_twilio_channel
             rtable = s3db.msg_rss_channel
 
             source_opts = []
@@ -1782,28 +1581,25 @@ def workflow():
 
         restrict_a = [str(row.id) for row in rows]
 
-        s3.actions = \
-        s3.actions + [
-                       dict(label=str(T("Enable")),
+        s3.actions += [dict(label=str(T("Enable")),
                             _class="action-btn",
                             url=URL(f="enable_parser",
                                     args="[id]"),
-                            restrict = restrict_e)
-                      ]
-
-        s3.actions.append(dict(label=str(T("Disable")),
-                                        _class="action-btn",
-                                        url = URL(f = "disable_parser",
-                                                  args = "[id]"),
-                                        restrict = restrict_d)
-                                   )
-
-        s3.actions.append(dict(label=str(T("Activate")),
-                                        _class="action-btn",
-                                        url = URL(f = "schedule_parser",
-                                                  args = "[id]"),
-                                        restrict = restrict_a)
-                                   )
+                            restrict = restrict_e,
+                            ),
+                       dict(label=str(T("Disable")),
+                            _class="action-btn",
+                            url = URL(f = "disable_parser",
+                                      args = "[id]"),
+                            restrict = restrict_d,
+                            ),
+                       dict(label=str(T("Activate")),
+                            _class="action-btn",
+                            url = URL(f = "schedule_parser",
+                                      args = "[id]"),
+                            restrict = restrict_a,
+                            ),
+                       ]
 
         return output
     s3.postp = postp
@@ -1811,150 +1607,11 @@ def workflow():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def schedule_parser():
-    """
-        Schedule a Parsing Workflow
-    """
-
-    return s3db.msg_schedule_parser()
-
-# -----------------------------------------------------------------------------
-def schedule_email():
-    """
-        Schedule Inbound Email
-    """
-
-    from s3db.msg import S3EmailInboundModel
-    S3EmailInboundModel.schedule()
-    return
-
-# -----------------------------------------------------------------------------
-def schedule_mcommons_sms():
-    """
-        Schedules Mobile Commons Inbound SMS
-    """
-
-    from s3db.msg import S3MCommonsModel
-    S3MCommonsModel.schedule()
-    return
-
-# -----------------------------------------------------------------------------
-def schedule_twilio_sms():
-    """
-        Schedules Twilio Inbound SMS
-    """
-
-    from s3db.msg import S3TwilioModel
-    S3TwilioModel.schedule()
-    return
-
-# -----------------------------------------------------------------------------
-def disable_parser():
-    """
-        Disables different parsing workflows.
-    """
-
-    from s3db.msg import S3ParsingModel
-    S3ParsingModel.disable_parser()
-    return
-
-# -----------------------------------------------------------------------------
-def disable_email():
-    """
-        Disables different Email Sources.
-    """
-
-    from s3db.msg import S3EmailInboundModel
-    S3EmailInboundModel.disable()
-    return
-
-# -----------------------------------------------------------------------------
-def disable_mcommons_sms():
-    """
-        Disables Mobile Commons Inbound SMS
-    """
-
-    from s3db.msg import S3MCommonsModel
-    S3MCommonsModel.disable()
-    return
-
-# -----------------------------------------------------------------------------
-def disable_twilio_sms():
-    """
-        Disables Twilio Inbound SMS
-    """
-
-    from s3db.msg import S3TwilioModel
-    S3TwilioModel.disable()
-    return
-
-# -----------------------------------------------------------------------------
-def enable_email():
-    """
-        Enables different Email Sources.
-    """
-
-    from s3db.msg import S3EmailInboundModel
-    S3EmailInboundModel.enable()
-    return
-
-# -----------------------------------------------------------------------------
-def enable_mcommons_sms():
-    """
-        Enable Mobile Commons Inbound SMS
-    """
-
-    from s3db.msg import S3MCommonsModel
-    S3MCommonsModel.enable()
-    return
-
-# -----------------------------------------------------------------------------
-def enable_twilio_sms():
-    """
-        Enable Twilio Inbound SMS
-    """
-
-    from s3db.msg import S3TwilioModel
-    S3TwilioModel.enable()
-    return
-
-# -----------------------------------------------------------------------------
-def enable_rss():
-    """
-        Enables/Activates RSS Feeds
-    """
-
-    stable = s3db.scheduler_task
-    query = (stable.function_name == "msg_rss_poll")
-    functions = db(query).select(stable.function_name)
-
-    if len(functions) == 0:
-        s3task.schedule_task("msg_rss_poll",
-                             period=300,  # seconds
-                             timeout=300, # seconds
-                             repeats=0    # unlimited
-                             )
-    else:
-        db(stable.function_name == "msg_rss_poll").update(enabled=True)
-
-    redirect(URL(f="rss_channel"))
-
-# -----------------------------------------------------------------------------
-def disable_rss():
-    """
-        Disables RSS Feeds
-    """
-
-    stable = s3db.scheduler_task
-
-    db(stable.function_name == "msg_rss_poll").update(enabled=False)
-
-    redirect(URL(f="rss_channel"))
-
-# -----------------------------------------------------------------------------
 def enable_parser():
     """
-        Enables different parsing workflows.
+        Enables different parsing workflows
+
+        @ToDo: Replace with API/S3Method
     """
 
     from s3db.msg import S3ParsingModel
@@ -1962,22 +1619,26 @@ def enable_parser():
     return
 
 # -----------------------------------------------------------------------------
-def subscribe_rss():
+def disable_parser():
     """
-        Subscribes to an RSS feed.
+        Disables different parsing workflows
+
+        @ToDo: Replace with API/S3Method
     """
 
-    db(s3db.msg_rss_channel.id == request.args[0]).update(subscribed = True)
-    redirect(URL(f="rss_channel"))
+    from s3db.msg import S3ParsingModel
+    S3ParsingModel.disable_parser()
+    return
 
 # -----------------------------------------------------------------------------
-def unsubscribe_rss():
+def schedule_parser():
     """
-        Unsubscribes from an RSS feed.
+        Schedule a Parsing Workflow
+
+        @ToDo: Replace with API/S3Method for just 'enable'
     """
 
-    db(s3db.msg_rss_channel.id == request.args[0]).update(subscribed = False)
-    redirect(URL(f="rss_channel"))
+    return s3db.msg_schedule_parser()
 
 # =============================================================================
 # The following functions hook into the pr functions:
@@ -2218,7 +1879,7 @@ def process_twitter_outbox():
     return
 
 # -----------------------------------------------------------------------------
-# Collect Inbound Messages
+# Collect Inbound Messages (useful for debugging)
 # -----------------------------------------------------------------------------
 def poll_mcommons_inbox():
     """ Collect Inbound Mobile Commons Messages """

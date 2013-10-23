@@ -709,6 +709,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("InBox",
                           c="deploy", f="email_inbox",
                         ),
+                        M("Settings",
+                          c="deploy", f="email_channel",
+                        ),
                    ),
                    M("Members",
                      c="deploy", f="human_resource", m="summary")(
@@ -718,4 +721,3 @@ class S3OptionsMenu(default.S3OptionsMenu):
                )
 
 # END =========================================================================
-

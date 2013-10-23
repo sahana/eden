@@ -621,7 +621,8 @@ class S3DeploymentAlertModel(S3Model):
             redirect(next_url)
 
         db = current.db
-        table = current.s3db.deploy_alert
+        s3db = current.s3db
+        table = s3db.deploy_alert
 
         # Check whether there are recipients
         ltable = db.deploy_alert_recipient
@@ -639,11 +640,26 @@ class S3DeploymentAlertModel(S3Model):
         # = @ToDo: Use a Message Template to add Footer (very simple one for RDRT)
         message = "%s\nalert_id:%s:" % (record.body, alert_id)
 
+        # Lookup from_address
+        # @ToDo: Allow multiple channels to be defined &
+        #        select the appropriate one for this deployment
+        table = s3db.msg_email_channel
+        channel = db(table.deleted == False).select(table.username,
+                                                    table.server,
+                                                    limitby = (0, 1)
+                                                    ).first()
+        if not channel:
+            current.session.error = T("Need to configure an Email Address!")
+            redirect(f="email_channel")
+
+        from_address = "%s@%s" % (username, server)
+
         # @ToDo: Support alternate channels, like SMS
         # if not body: body = subject
         message_id = current.msg.send_by_pe_id(record.pe_id,
                                                subject=record.subject,
                                                message=message,
+                                               from_address=from_address
                                                )
 
         # Update the Alert to show it's been Sent

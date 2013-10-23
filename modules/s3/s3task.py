@@ -384,6 +384,7 @@ class S3Task(object):
             @param args: the job position arguments (list)
             @param vars: the job named arguments (dict)
         """
+
         db = current.db
         ttable = db.scheduler_task
 
@@ -442,7 +443,8 @@ class S3Task(object):
         ttable = db.scheduler_task
 
         query = (ttable.id == task_id) & (ttable.status == "FAILED")
-        task = db(query).select(limitby=(0, 1)).first()
+        task = db(query).select(ttable.id,
+                                limitby=(0, 1)).first()
         if task:
             task.update_record(status="QUEUED")
 

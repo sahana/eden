@@ -244,6 +244,9 @@ class S3ChannelModel(S3Model):
              "msg_limit",
              "msg_channel_enable",
              "msg_channel_disable",
+             "msg_channel_enable_interactive",
+             "msg_channel_disable_interactive",
+             "msg_channel_onaccept",
              ]
 
     def model(self):
@@ -255,7 +258,7 @@ class S3ChannelModel(S3Model):
         #----------------------------------------------------------------------
         # Super entity: msg_channel
         #
-        channel_types = Storage(msg_email_inbound_channel = T("Email (Inbound)"),
+        channel_types = Storage(msg_email_channel = T("Email (Inbound)"),
                                 # @ToDo:
                                 #msg_facebook_channel = T("Facebook"),
                                 msg_mcommons_channel = T("Mobile Commons (Inbound)"),
@@ -263,7 +266,7 @@ class S3ChannelModel(S3Model):
                                 msg_sms_webapi_channel = T("SMS WebAPI (Outbound)"),
                                 msg_sms_smtp_channel = T("SMS via SMTP (Outbound)"),
                                 msg_tropo_channel = T("Tropo"),
-                                msg_twilio_inbound_channel = T("Twilio (Inbound)"),
+                                msg_twilio_channel = T("Twilio (Inbound)"),
                                 msg_twitter_channel = T("Twitter"),
                                 )
 
@@ -303,258 +306,147 @@ class S3ChannelModel(S3Model):
         # ---------------------------------------------------------------------
         return dict(msg_channel_enable = self.channel_enable,
                     msg_channel_disable = self.channel_disable,
+                    msg_channel_enable_interactive = self.channel_enable_interactive,
+                    msg_channel_disable_interactive = self.channel_disable_interactive,
+                    msg_channel_onaccept = self.channel_onaccept,
                     )
 
     # -----------------------------------------------------------------------------
     @staticmethod
-    def channel_enable():
+    def channel_enable(tablename, channel_id):
         """
             Enable a Channel
             - Schedule a Poll for new messages
 
-            @ToDo: S3Method for interactive requests
-            @ToDo: CLI API for shell scripts
+            CLI API for shell scripts & to be called by S3Method
         """
-    
-        pass
+
+        db = current.db
+        s3db = current.s3db
+        table = s3db.table(tablename)
+        record = db(table.channel_id == channel_id).select(table.id, # needed for update_record
+                                                           table.enabled,
+                                                           limitby=(0, 1),
+                                                           ).first()
+        if not record.enabled:
+            # Flag it as enabled
+            # Update Instance
+            record.update_record(enabled = True)
+            # Update Super
+            s3db.update_super(table, record)
+
+        # Do we have an existing Task?
+        ttable = db.scheduler_task
+        args = '["%s", %s]' % (tablename, channel_id)
+        query = ((ttable.function_name == "msg_poll") & \
+                 (ttable.args == args) & \
+                 (ttable.status.belongs(["RUNNING", "QUEUED", "ALLOCATED"])))
+        exists = db(query).select(ttable.id,
+                                  limitby=(0, 1)).first()
+        if exists:
+            return "Channel already enabled"
+        else:
+            current.s3task.schedule_task("msg_poll",
+                                         args=[tablename, channel_id],
+                                         period=300,  # seconds
+                                         timeout=300, # seconds
+                                         repeats=0    # unlimited
+                                         )
+            return "Channel enabled"
 
     # -----------------------------------------------------------------------------
     @staticmethod
-    def channel_disable():
+    def channel_enable_interactive(r, **attr):
+        """
+            Enable a Channel
+            - Schedule a Poll for new messages
+
+            S3Method for interactive requests
+        """
+
+        tablename = r.tablename
+        result = current.s3db.msg_channel_enable(tablename, r.record.channel_id)
+        current.session.confirmation = result
+        fn = tablename.split("_", 1)[1]
+        redirect(URL(f=fn))
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def channel_disable(tablename, channel_id):
         """
             Disable a Channel
             - Remove schedule for Polling for new messages
 
-            @ToDo: S3Method for interactive requests
-            @ToDo: CLI API for shell scripts
+            CLI API for shell scripts & to be called by S3Method
         """
     
-        pass
+        db = current.db
+        s3db = current.s3db
+        table = s3db.table(tablename)
+        record = db(table.channel_id == channel_id).select(table.id, # needed for update_record
+                                                           table.enabled,
+                                                           limitby=(0, 1),
+                                                           ).first()
+        if record.enabled:
+            # Flag it as disabled
+            # Update Instance
+            record.update_record(enabled = False)
+            # Update Super
+            s3db.update_super(table, record)
+
+        # Do we have an existing Task?
+        ttable = db.scheduler_task
+        args = '["%s", %s]' % (tablename, channel_id)
+        query = ((ttable.function_name == "msg_poll") & \
+                 (ttable.args == args) & \
+                 (ttable.status.belongs(["RUNNING", "QUEUED", "ALLOCATED"])))
+        exists = db(query).select(ttable.id,
+                                  limitby=(0, 1)).first()
+        if exists:
+            # Disable all
+            db(query).update(status="STOPPED")
+            return "Channel disabled"
+        else:
+            return "Channel already disabled"
 
     # -----------------------------------------------------------------------------
     @staticmethod
-    def schedule():
+    def channel_disable_interactive(r, **attr):
         """
-            Master Schedule method for various channels
+            Disable a Channel
+            - Remove schedule for Polling for new messages
 
-            @ToDo: Deprecate
+            S3Method for interactive requests
         """
 
-        T = current.T
-        db = current.db
-        s3db = current.s3db
-        session = current.session
-        request = current.request
-        function = request.function
-        accountID = []
+        tablename = r.tablename
+        result = current.s3db.msg_channel_disable(tablename, r.record.channel_id)
+        current.session.confirmation = result
+        fn = tablename.split("_", 1)[1]
+        redirect(URL(f=fn))
 
-        if function == "schedule_email":
-          f = "email_inbound_channel"
-          table = s3db.msg_email_inbound_channel
-          task = "msg_email_poll"
-
-          try:
-              id = request.args[0]
-          except:
-              session.error = T("Source not specified!")
-              redirect(URL(f=f))
-
-          record = db(table.id == id).select(table["username"],
-                                             table["server"],
-                                             limitby=(0, 1)).first()
-          accountID.append(str(record["username"]))
-          accountID.append(str(record["server"]))
-        elif function == "schedule_twilio_sms":
-          f = "twilio_inbound_channel"
-          table = s3db.msg_twilio_inbound_channel
-          account_id = "account_name"
-          task = "msg_twilio_poll"
-        elif function == "schedule_mcommons_sms":
-          f = "mcommons_channel"
-          table = s3db.msg_mcommons_channel
-          account_id = "campaign_id"
-          task = "msg_mcommons_poll"
-
-        if not accountID:
-
-          try:
-              id = request.args[0]
-          except:
-              session.error = T("Source not specified!")
-              redirect(URL(f=f))
-
-          record = db(table.id == id).select(table[account_id],
-                                             limitby=(0, 1)).first()
-
-          accountID.append(str(record[account_id]))
-
-        # A list "accountID" is passed as the variable to identify
-        # the individual channel setting. A list is used so that
-        # multiple parameters (e.g. username & server) can be passed
-        current.s3task.schedule_task(task,
-                                     vars={"account_id": accountID},
-                                     period=300,  # seconds
-                                     timeout=300, # seconds
-                                     repeats=0    # unlimited
-                                     )
-
-        redirect(URL(f=f))
-
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
-    def enable():
+    def channel_onaccept(form):
         """
-            Master enable method for various channels
-
-            @ToDo: Deprecate
+            Process the Enabled Flag
         """
 
-        T = current.T
-        db = current.db
-        s3db = current.s3db
-        session = current.session
-        request = current.request
-        function = request.function
-
-        if function == "enable_email":
-          f = "email_inbound_channel"
-          table = s3db.msg_email_inbound_channel
-
-          try:
-              id = request.args[0]
-          except:
-              session.error = T("Source not specified!")
-              redirect(URL(f=f))
-
-          stable = s3db.scheduler_task
-
-          settings = db(table.id == id).select(table["username"],
-                                               table["server"],
-                                               limitby=(0, 1)).first()
-          records = db(stable.id > 0).select(stable.id,
-                                             stable.vars)
-          for record in records:
-              if "account_id" in record.vars:
-                  r = record.vars.split("\"account_id\":")[1]
-                  s = r.split("}")[0]
-                  q = s.split("\"")[1].split("\"")[0]
-                  try:
-                    server =  s.split("\"")[3]
-                    if (q == settings["username"]) and \
-                       (server == settings["server"]):
-                        db(stable.id == record.id).update(enabled = True)
-                  except:
-                    pass
-
-          redirect(URL(f=f))
-        elif function == "enable_twilio_sms":
-          f = "twilio_inbound_channel"
-          table = s3db.msg_twilio_inbound_channel
-          account_id = "account_name"
-        elif function == "enable_mcommons_sms":
-          f = "mcommons_channel"
-          table = s3db.msg_mcommons_channel
-          account_id = "campaign_id"
-
-        try:
-            id = request.args[0]
-        except:
-            session.error = T("Source not specified!")
-            redirect(URL(f=f))
-
-        stable = s3db.scheduler_task
-
-        settings = db(table.id == id).select(table[account_id],
-                                             limitby=(0, 1)).first()
-        records = db(stable.id > 0).select(stable.id,
-                                           stable.vars)
-        for record in records:
-            if "account_id" in record.vars:
-                r = record.vars.split("\"account_id\":")[1]
-                s = r.split("}")[0]
-                q = s.split("\"")[1].split("\"")[0]
-                if (q == settings[account_id]) :
-                    db(stable.id == record.id).update(enabled = True)
-
-        redirect(URL(f=f))
-
-    # -----------------------------------------------------------------------------
-    @staticmethod
-    def disable():
-        """
-            Master disable method for various channels
-
-            @ToDo: Deprecate
-        """
-
-        T = current.T
-        db = current.db
-        s3db = current.s3db
-        session = current.session
-        request = current.request
-        function = request.function
-
-        if function == "disable_email":
-          f = "email_inbound_channel"
-          table = s3db.msg_email_inbound_channel
-
-          try:
-              id = request.args[0]
-          except:
-              session.error = T("Source not specified!")
-              redirect(URL(f=f))
-
-          stable = s3db.scheduler_task
-
-          settings = db(table.id == id).select(table["username"],
-                                               table["server"],
-                                               limitby=(0, 1)).first()
-          records = db(stable.id > 0).select(stable.id,
-                                             stable.vars)
-          for record in records:
-              if "account_id" in record.vars:
-                  r = record.vars.split("\"account_id\":")[1]
-                  s = r.split("}")[0]
-                  q = s.split("\"")[1].split("\"")[0]
-                  try:
-                    server =  s.split("\"")[3]
-                    if (q == settings["username"]) and \
-                       (server == settings["server"]):
-                        db(stable.id == record.id).update(enabled = False)
-                  except:
-                    pass
-
-          redirect(URL(f=f))
-        elif function == "disable_twilio_sms":
-          f = "twilio_inbound_channel"
-          table = s3db.msg_twilio_inbound_channel
-          account_id = "account_name"
-        elif function == "disable_mcommons_sms":
-          f = "mcommons_channel"
-          table = s3db.msg_mcommons_channel
-          account_id = "campaign_id"
-
-        try:
-            id = request.args[0]
-        except:
-            session.error = T("Source not specified!")
-            redirect(URL(f=f))
-
-        stable = s3db.scheduler_task
-
-        settings = db(table.id == id).select(table[account_id],
-                                             limitby=(0, 1)).first()
-        records = db(stable.id > 0).select(stable.id,
-                                           stable.vars)
-        for record in records:
-            if "account_id" in record.vars:
-                r = record.vars.split("\"account_id\":")[1]
-                s = r.split("}")[0]
-                q = s.split("\"")[1].split("\"")[0]
-                if (q == settings[account_id]) :
-                    db(stable.id == record.id).update(enabled = False)
-
-        redirect(URL(f=f))
+        if form.record:
+            # Update form
+            # process of changed
+            if form.record.enabled and not form.vars.enabled:
+                current.s3db.msg_channel_disable(form.table._tablename,
+                                                 form.vars.channel_id)
+            elif form.vars.enabled and not form.record.enabled:
+                current.s3db.msg_channel_enable(form.table._tablename,
+                                                form.vars.channel_id)
+        else:
+            # Create form
+            # Process only if enabled
+            if form.vars.enabled:
+                current.s3db.msg_channel_enable(form.table._tablename,
+                                                form.vars.channel_id)
 
 # =============================================================================
 class S3EmailModel(S3ChannelModel):
@@ -565,7 +457,7 @@ class S3EmailModel(S3ChannelModel):
             InBox/OutBox
     """
 
-    names = ["msg_email_inbound_channel",
+    names = ["msg_email_channel",
              "msg_email_inbound_status",
              "msg_email",
              ]
@@ -576,12 +468,13 @@ class S3EmailModel(S3ChannelModel):
 
         configure = self.configure
         define_table = self.define_table
+        set_method = self.set_method
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Email Inbound Channels
         #
-        tablename = "msg_email_inbound_channel"
+        tablename = "msg_email_channel"
         table = define_table(tablename,
                              # Instance
                              super_link("channel_id", "msg_channel"),
@@ -608,12 +501,21 @@ class S3EmailModel(S3ChannelModel):
 
         configure(tablename,
                   super_entity = "msg_channel",
+                  onaccept = self.msg_channel_onaccept,
                   )
+
+        set_method("msg", "email_channel",
+                   method="enable",
+                   action=self.msg_channel_enable_interactive)
+
+        set_method("msg", "email_channel",
+                   method="disable",
+                   action=self.msg_channel_disable_interactive)
 
         # ---------------------------------------------------------------------
         # Status
         # - store latest error received when polling for email
-        # - used by msg.fetch_inbound_email()
+        # - used by msg.email_poll()
         # @ToDo: This should be separate per-channel
         # @ToDo: Maintain History, not just storing latest error
         tablename = "msg_email_inbound_status"
@@ -661,7 +563,7 @@ class S3EmailModel(S3ChannelModel):
 
         # ---------------------------------------------------------------------
         return dict()
-
+        
 # =============================================================================
 class S3MCommonsModel(S3ChannelModel):
     """
@@ -677,6 +579,7 @@ class S3MCommonsModel(S3ChannelModel):
         #T = current.T
 
         define_table = self.define_table
+        set_method = self.set_method
 
         # ---------------------------------------------------------------------
         tablename = "msg_mcommons_channel"
@@ -684,9 +587,11 @@ class S3MCommonsModel(S3ChannelModel):
                              self.super_link("channel_id", "msg_channel"),
                              Field("name"),
                              Field("description"),
-                             Field("campaign_id",
-                                   length=128,
-                                   unique=True,
+                             Field("enabled", "boolean",
+                                   #label = T("Enabled?"),
+                                   represent = s3_yes_no_represent,
+                                   ),
+                             Field("campaign_id", length=128, unique=True,
                                    requires=IS_NOT_EMPTY()),
                              Field("url",
                                    default = \
@@ -705,7 +610,16 @@ class S3MCommonsModel(S3ChannelModel):
 
         self.configure(tablename,
                        super_entity = "msg_channel",
+                       onaccept = self.msg_channel_onaccept,
                        )
+
+        set_method("msg", "email_channel",
+                   method="enable",
+                   action=self.msg_channel_enable_interactive)
+
+        set_method("msg", "email_channel",
+                   method="disable",
+                   action=self.msg_channel_disable_interactive)
 
         # ---------------------------------------------------------------------
         return dict()
@@ -734,7 +648,7 @@ class S3ParsingModel(S3Model):
         #
         tablename = "msg_workflow"
         table = define_table(tablename,
-                             # @ToDo: Link this to Channel?
+                             # @ToDo: Link this to Channel instead of Task?
                              Field("source_task_id",
                                    label = T("Inbound Message Source"),
                                    represent = self.source_represent,
@@ -817,14 +731,14 @@ class S3ParsingModel(S3Model):
         """
 
         db = current.db
-        stable = db.msg_email_inbound_channel
+        stable = db.msg_email_channel
         setting = db(stable.username == id).select(stable.id,
                                                    limitby=(0, 1)
                                                    ).first()
         repr = id
         if setting:
             id = setting.id
-            repr = A(repr, _href=URL(f="email_inbound_channel",
+            repr = A(repr, _href=URL(f="email_channel",
                                      args=["update", id]))
             return repr
         else:
@@ -960,6 +874,7 @@ class S3RSSModel(S3ChannelModel):
         T = current.T
 
         define_table = self.define_table
+        set_method = self.set_method
 
         # ---------------------------------------------------------------------
         # RSS Settings for an account
@@ -971,16 +886,25 @@ class S3RSSModel(S3ChannelModel):
                                    length = 255,
                                    unique = True),
                              Field("description"),
-                             Field("url"),
-                             Field("subscribed", "boolean",
-                                   default = True,
+                             Field("enabled", "boolean",
+                                   label = T("Enabled?"),
                                    represent = s3_yes_no_represent,
-                                   label = T("Subscription Status")),
+                                   ),
+                             Field("url"),
                              *s3_meta_fields())
 
         self.configure(tablename,
                        super_entity = "msg_channel",
+                       onaccept = self.msg_channel_onaccept,
                        )
+
+        set_method("msg", "rss_channel",
+                   method="enable",
+                   action=self.msg_channel_enable_interactive)
+
+        set_method("msg", "rss_channel",
+                   method="disable",
+                   action=self.msg_channel_disable_interactive)
 
         # ---------------------------------------------------------------------
         # RSS Feed Posts
@@ -1185,6 +1109,8 @@ class S3SubscriptionModel(S3Model):
     """
         Handle Subscription
         - currently this is just for Saved Searches
+
+        @ToDo: Deprecate (replaced by s3notify)
     """
 
     names = ["msg_subscription"]
@@ -1254,6 +1180,7 @@ class S3TropoModel(S3Model):
         #T = current.T
 
         define_table = self.define_table
+        set_method = self.set_method
 
         # ---------------------------------------------------------------------
         # Tropo Channels
@@ -1263,6 +1190,10 @@ class S3TropoModel(S3Model):
                              self.super_link("channel_id", "msg_channel"),
                              Field("name"),
                              Field("description"),
+                             Field("enabled", "boolean",
+                                   #label = T("Enabled?"),
+                                   represent = s3_yes_no_represent,
+                                   ),
                              Field("token_messaging"),
                              #Field("token_voice"),
                              *s3_meta_fields())
@@ -1270,6 +1201,14 @@ class S3TropoModel(S3Model):
         self.configure(tablename,
                        super_entity = "msg_channel",
                        )
+
+        set_method("msg", "tropo_channel",
+                   method="enable",
+                   action=self.msg_channel_enable_interactive)
+
+        set_method("msg", "tropo_channel",
+                   method="disable",
+                   action=self.msg_channel_disable_interactive)
 
         # ---------------------------------------------------------------------
         # Tropo Scratch pad for outbound messaging
@@ -1292,7 +1231,7 @@ class S3TwilioModel(S3ChannelModel):
         Twilio Inbound SMS channel
     """
 
-    names = ["msg_twilio_inbound_channel",
+    names = ["msg_twilio_channel",
              "msg_twilio_inbox"
              ]
 
@@ -1302,15 +1241,20 @@ class S3TwilioModel(S3ChannelModel):
 
         configure = self.configure
         define_table = self.define_table
+        set_method = self.set_method
 
         # ---------------------------------------------------------------------
         # Twilio Channels
         #
-        tablename = "msg_twilio_inbound_channel"
+        tablename = "msg_twilio_channel"
         table = define_table(tablename,
                              self.super_link("channel_id", "msg_channel"),
                              Field("name"),
                              Field("description"),
+                             Field("enabled", "boolean",
+                                   #label = T("Enabled?"),
+                                   represent = s3_yes_no_represent,
+                                   ),
                              Field("account_name", length=255, unique=True),
                              Field("url",
                                    default = \
@@ -1325,7 +1269,16 @@ class S3TwilioModel(S3ChannelModel):
 
         configure(tablename,
                   super_entity = "msg_channel",
+                  onaccept = self.msg_channel_onaccept,
                   )
+
+        set_method("msg", "twilio_channel",
+                   method="enable",
+                   action=self.msg_channel_enable_interactive)
+
+        set_method("msg", "twilio_channel",
+                   method="disable",
+                   action=self.msg_channel_disable_interactive)
 
         # ---------------------------------------------------------------------
         # Twilio InBox
@@ -1366,6 +1319,7 @@ class S3TwitterModel(S3Model):
 
         configure = self.configure
         define_table = self.define_table
+        set_method = self.set_method
 
         # ---------------------------------------------------------------------
         # Twitter Channel
@@ -1375,6 +1329,10 @@ class S3TwitterModel(S3Model):
                              self.super_link("channel_id", "msg_channel"),
                              Field("name"),
                              Field("description"),
+                             Field("enabled", "boolean",
+                                   label = T("Enabled?"),
+                                   represent = s3_yes_no_represent,
+                                   ),
                              Field("pin"),
                              Field("oauth_key",
                                    readable = False,
@@ -1388,8 +1346,17 @@ class S3TwitterModel(S3Model):
 
         configure(tablename,
                   super_entity = "msg_channel",
+                  onaccept = self.msg_channel_onaccept,
                   onvalidation = self.twitter_channel_onvalidation
                   )
+
+        set_method("msg", "twitter_channel",
+                   method="enable",
+                   action=self.msg_channel_enable_interactive)
+
+        set_method("msg", "twitter_channel",
+                   method="disable",
+                   action=self.msg_channel_disable_interactive)
 
         # ---------------------------------------------------------------------
         # Twitter Outbox
@@ -1570,7 +1537,9 @@ class S3TwitterSearchModel(S3ChannelModel):
         define_table = self.define_table
 
         # ---------------------------------------------------------------------
-        # Twitter Search Settings for an account
+        # Twitter Account for Searching
+        #
+        # @ToDo: Use normal twitter_chanel instead - no need for duplication here!
         #
         tablename = "msg_twitter_search_channel"
         table = define_table(tablename,
@@ -1693,9 +1662,8 @@ class S3TwitterSearchModel(S3ChannelModel):
                   )
 
         # ---------------------------------------------------------------------
-        return dict(
-            msg_query_id = query_id,
-            )
+        return dict(msg_query_id = query_id,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
