@@ -1139,7 +1139,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var options = s3.options;
 
         // List of all map layers
-        s3.layers_all = [];
+        s3.all_popup_layers = [];
 
         // List of folders for the LayerTree
         s3.dirs = [];
@@ -1647,8 +1647,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             'visibilitychanged': layer_visibilitychanged  
         });
         map.addLayer(geojsonLayer);
-        // Ensure Highlight & Popup Controls act on this layer
-        map.s3.layers_all.push(geojsonLayer);
+        if (undefined == layer.no_popups) {
+            // Ensure Highlight & Popup Controls act on this layer
+            map.s3.all_popup_layers.push(geojsonLayer);
+        }
         // Ensure marker layers are rendered over other layers
         //map.setLayerIndex(geojsonLayer, 99);
     }
@@ -1921,7 +1923,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         });
         map.addLayer(gpxLayer);
         // Ensure Highlight & Popup Controls act on this layer
-        map.s3.layers_all.push(gpxLayer);
+        map.s3.all_popup_layers.push(gpxLayer);
     }
 
     // KML
@@ -2048,7 +2050,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         });
         map.addLayer(kmlLayer);
         // Ensure Highlight & Popup Controls act on this layer
-        s3.layers_all.push(kmlLayer);
+        s3.all_popup_layers.push(kmlLayer);
     }
 
     // OpenStreetMap
@@ -2155,7 +2157,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             });
             map.addLayer(layer);
             // Ensure Highlight & Popup Controls act on this layer
-            map.s3.layers_all.push(layer);
+            map.s3.all_popup_layers.push(layer);
         }
         if (owm.city) {
             layer = new OpenLayers.Layer.Vector.OWMWeather(
@@ -2176,7 +2178,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             });
             map.addLayer(layer);
             // Ensure Highlight & Popup Controls act on this layer
-            map.s3.layers_all.push(layer);
+            map.s3.all_popup_layers.push(layer);
         }
     }
 
@@ -2439,7 +2441,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         });
         map.addLayer(wfsLayer);
         // Ensure Highlight & Popup Controls act on this layer
-        map.s3.layers_all.push(wfsLayer);
+        map.s3.all_popup_layers.push(wfsLayer);
     }
 
     // WMS
@@ -2775,10 +2777,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             CLASS_NAME: 'OpenLayers.Handler.FeatureS3'
         });
 
-        var layers_all = map.s3.layers_all;
+        var all_popup_layers = map.s3.all_popup_layers;
         // onClick Popup
         var popupControl = new OpenLayers.Control.SelectFeature(
-            layers_all, {
+            all_popup_layers, {
                 toggle: true
                 //multiple: true
             }
@@ -2788,7 +2790,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         });
         // onHover Tooltip
         var highlightControl = new OpenLayers.Control.SelectFeature(
-            layers_all, {
+            all_popup_layers, {
                 hover: true,
                 highlightOnly: true,
                 //renderIntent: 'temporary',

@@ -2476,7 +2476,8 @@ class S3FeatureLayerModel(S3Model):
                                         ),
                                   # @ToDo: Build Popups from Attributes & Format to avoid duplication
                                   Field("popup_fields", "list:string",
-                                        default = "name",
+                                        # Want to be able to prepop layers with this empty to prevent popups from showing
+                                        #default = "name",
                                         label = T("Popup Fields"),
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s" % (T("Popup Fields"),

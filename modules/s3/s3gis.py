@@ -7123,6 +7123,8 @@ class LayerFeature(Layer):
             # Attributes which are defaulted client-side if not set
             self.setup_folder_visibility_and_opacity(output)
             self.setup_clustering(output)
+            if not self.popup_fields:
+                output["no_popups"] = 1
             style = self.style
             if style:
                 style = json.loads(style)

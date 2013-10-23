@@ -1,4 +1,4 @@
-"Name","Description","Controller","Function","Symbology","Marker","GPS Marker","Popup Label","Popup Fields","Filter","Site","Trackable","Folder","Visible","Enabled"
+Name,Description,Controller,Function,Symbology,Marker,GPS Marker,Popup Label,Popup Fields,Filter,Site,Trackable,Folder,Visible,Enabled
 "Airports","All Active Airports","transport","airport","US","airport","Airport","Airport","name","~.obsolete=False",,,,"False",
 "Heliports","All Active Heliports","transport","heliport","US","helicopter","Heliport","Heliport","name","~.obsolete=False",,,,"False",
 "Hospitals","All Active Medical Facilities","hms","hospital","US","hospital","Medical Facility","Hospital","name","~.obsolete=False",,,,"False",
