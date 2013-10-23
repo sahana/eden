@@ -77,6 +77,8 @@ class S3Profile(S3CRUD):
             @param attr: controller attributes for the request
         """
 
+        response = current.response
+
         tablename = self.tablename
         get_config = current.s3db.get_config
 
@@ -117,47 +119,53 @@ class S3Profile(S3CRUD):
                     except ValueError:
                         datalist = ""
                     else:
-                        # @ToDo: Check permissions to the Resource & do something different if no permission
+                        # @ToDo: Check permissions to the Resource & do
+                        # something different if no permission
                         datalist = self._datalist(r, widgets[index], **attr)
                 output["item"] = datalist
             else:
                 # Default page-load
                 rows = []
                 append = rows.append
-                odd = True
+                row = None
                 for widget in widgets:
+
+                    # Render the widget
                     w_type = widget["type"]
-                    if odd:
-                        row = DIV(_class="row profile")
-                    colspan = widget.get("colspan", 1)
                     if w_type == "map":
-                        row.append(self._map(r, widget, **attr))
-                        if colspan == 2:
-                            append(row)
-                            odd = True
-                            continue
+                        w = self._map(r, widget, **attr)
                     elif w_type == "comments":
-                        row.append(self._comments(r, widget, **attr))
-                        if colspan == 2:
-                            append(row)
-                            odd = True
-                            continue
+                        w = self._comments(r, widget, **attr)
                     elif w_type == "datalist":
-                        row.append(self._datalist(r, widget, **attr))
-                        if colspan == 2:
-                            append(row)
-                            odd = True
+                        w = self._datalist(r, widget, **attr)
+                    else:
+                        if response.s3.debug:
+                            raise SyntaxError("Unsupported widget type %s" %
+                                              w_type)
+                        else:
+                            # ignore
                             continue
-                    else:
-                        raise
-                    if odd:
-                        odd = False
-                    else:
-                        odd = True
+
+                    colspan = widget.get("colspan", 1)
+                    if colspan > 1 and row:
+                        # Close previous row
                         append(row)
+                        row = None
+                        
+                    if row is None:
+                        # Start new row
+                        row = DIV(_class="row profile")
+                        
+                    # Append widget to row
+                    row.append(w)
+                    
+                    if colspan > 1 or len(row) > 1:
+                        # Close this row
+                        append(row)
+                        row = None
 
                 output["rows"] = rows
-                current.response.view = self._view(r, "profile.html")
+                response.view = self._view(r, "profile.html")
 
         else:
             output["rows"] = []
