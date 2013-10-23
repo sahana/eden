@@ -907,7 +907,10 @@ class GIS(object):
         """
 
         db = current.db
-        table = db.gis_location
+        try:
+            table = db.gis_location
+        except:
+            table = current.s3db.gis_location
         query = (table.deleted == False)
         if level:
             query &= (table.level == level)
