@@ -155,6 +155,7 @@ class S3DeploymentModel(S3Model):
                                  title_create="Add Member",
                                  type="datalist",
                                  list_fields = [
+                                     "human_resource_id$id",
                                      "human_resource_id$person_id",
                                      "human_resource_id$organisation_id",
                                      "start_date",
@@ -933,9 +934,9 @@ def deploy_render_alert(listid,
                    ),
                    toolbox,
                    DIV(DIV(DIV(subject,
-                               _class="person-title"),
+                               _class="card-title"),
                            DIV(created_on,
-                               _class="organisation-title"),
+                               _class="card-subtitle"),
                            _class="media-heading"),
                        DIV(body, _class="alert-message-body s3-truncate"),
                        #render("deploy_human_resource_assignment.start_date",
@@ -981,7 +982,16 @@ def deploy_render_human_resource_assignment(listid,
 
     item_class = "thumbnail"
 
-    person = record["hrm_human_resource.person_id"]
+    row = record["_row"]
+    human_resource_id = row["hrm_human_resource.id"]
+
+    profile_url = URL(f="human_resource", args=[human_resource_id])
+    profile_title = current.T("Open Member Profile (in a new tab)")
+    
+    person = A(record["hrm_human_resource.person_id"],
+               _href=profile_url,
+               _target="_blank",
+               _title=profile_title)
     organisation = record["hrm_human_resource.organisation_id"]
 
     fields = dict((rfield.colname, rfield) for rfield in rfields)
@@ -1002,13 +1012,14 @@ def deploy_render_human_resource_assignment(listid,
                                   args=["IFRC", "img", "member.png"]),
                          ),
                          _class="pull-left",
-                         _href="#",
+                         _href=profile_url,
+                         _title=profile_title,
                    ),
                    toolbox,
                    DIV(DIV(DIV(person,
-                               _class="person-title"),
+                               _class="card-title"),
                            DIV(organisation,
-                               _class="organisation-title"),
+                               _class="card-category"),
                            _class="media-heading"),
                        render("deploy_human_resource_assignment.start_date",
                               "deploy_human_resource_assignment.end_date",

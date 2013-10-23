@@ -51,6 +51,8 @@ def deployment():
                                update_next=next_url,
                                delete_next=next_url)
                 s3.cancel = next_url
+            if not r.component and r.method == "profile":
+                s3base.s3_trunk8(lines=2)
         else:
             # All other workflows return to the summary page
             s3.cancel = r.url(method="summary", component=None, id=0)
