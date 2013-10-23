@@ -61,7 +61,7 @@ h4.profile-sub-header {
     font-size: 14px;
 }
 
-.card-holder .person-title {
+.card-holder .card-title {
     font: 14px "Helvetica Neue", Arial, sans-serif;
     font-weight: bold;
     color: #626261;
@@ -70,7 +70,16 @@ h4.profile-sub-header {
     padding-left: 0px;
 }
 
-.card-holder .organisation-title {
+.card-holder .card-category {
+    font: 12px "Helvetica Neue", Arial, sans-serif;
+    list-style: none outside none;
+    text-decoration: none;
+    text-transform: none;
+    color: #626261;
+    border-left-style: none;
+}
+
+.card-holder .card-subtitle {
     font: 12px "Helvetica Neue", Arial, sans-serif;
     list-style: none outside none;
     text-decoration: none;

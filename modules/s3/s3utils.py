@@ -240,6 +240,43 @@ def s3_truncate(text, length=48, nice=True):
         return text
 
 # =============================================================================
+def s3_trunk8(selector=None, lines=None, less=None, more=None):
+    """
+        Intelligent client-side text truncation
+
+        @param selector: the jQuery selector (default: .s3-truncate)
+        @param lines: maximum number of lines (default: 1)
+    """
+    
+    T = current.T
+    
+    s3 = current.response.s3
+    s3.scripts.append("/%s/static/scripts/trunk8.js" %
+                      current.request.application)
+
+    script = """
+$('%(selector)s').trunk8({
+  %(lines)s
+  fill: '&hellip; <a class="s3-truncate-more" href="#">%(more)s</a>'
+});
+$('.s3-truncate-more').live('click', function (event) {
+  $(this).parent()
+         .trunk8('revert')
+         .append(' <a class="s3-truncate-less" href="#">%(less)s</a>');
+  return false;
+});
+$('.s3-truncate-less').live('click', function (event) {
+  $(this).parent().trunk8();
+  return false;
+});""" % dict(selector=".s3-truncate" if selector is None else selector,
+              lines="" if lines is None else "lines: %s," % lines,
+              more=T("more") if more is None else more,
+              less=T("less") if less is None else less)
+
+    s3.jquery_ready.append(script)
+    return
+
+# =============================================================================
 def s3_split_multi_value(value):
     """
         Converts a series of numbers delimited by |, or already in a
