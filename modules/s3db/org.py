@@ -1247,7 +1247,8 @@ class S3OrganisationResourceModel(S3Model):
                                              ),
                                   Field("value", "integer", 
                                         requires=IS_INT_IN_RANGE(0, 999999),
-                                        label=T("Quantity")),
+                                        label=T("Quantity"),
+                                        ),
                                   s3_comments(),
                                   *s3_meta_fields())
 

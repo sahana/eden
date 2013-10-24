@@ -379,44 +379,6 @@ class S3IRSModel(S3Model):
                          ),
             ]
 
-        # @ToDo: Deprecate
-        ireport_search = S3Search(
-            advanced=(
-                    S3SearchSimpleWidget(
-                        name = "incident_search_simple",
-                        label = T("Description"),
-                        comment = T("You can search by description. You may use % as wildcard. Press 'Search' without input to list all incidents."),
-                        field = ["name",
-                                 "message",
-                                 "comments",
-                                ]
-                    ),
-                    S3SearchOptionsWidget(
-                        name="incident_search_L1",
-                        field="location_id$L1",
-                        location_level="L1",
-                        cols = 3,
-                    ),
-                    S3SearchOptionsWidget(
-                        name="incident_search_L2",
-                        field="location_id$L2",
-                        location_level="L2",
-                        cols = 3,
-                    ),
-                    S3SearchOptionsWidget(
-                        name="incident_search_category",
-                        field="category",
-                        label = T("Category"),
-                        cols = 3,
-                    ),
-                    S3SearchMinMaxWidget(
-                        name="incident_search_date",
-                        method="range",
-                        label=T("Date"),
-                        field="datetime"
-                    ),
-            ))
-
         report_fields = ["category",
                          "datetime",
                          "location_id$L1",
@@ -427,42 +389,14 @@ class S3IRSModel(S3Model):
         configure(tablename,
                   super_entity = ("sit_situation", "doc_entity"),
                   filter_widgets = filter_widgets,
-                  search_method = ireport_search,
-                  report_options=Storage(
-                      search=[
-                            S3SearchOptionsWidget(
-                                name="incident_search_L1",
-                                field="location_id$L1",
-                                location_level="L1",
-                                cols = 3,
-                            ),
-                            S3SearchOptionsWidget(
-                                name="incident_search_L2",
-                                field="location_id$L2",
-                                location_level="L2",
-                                cols = 3,
-                            ),
-                            S3SearchOptionsWidget(
-                                name="incident_search_category",
-                                field="category",
-                                label = T("Category"),
-                                cols = 3,
-                            ),
-                            S3SearchMinMaxWidget(
-                                name="incident_search_date",
-                                method="range",
-                                label=T("Date"),
-                                field="datetime"
-                            ),
-                      ],
-                      rows=report_fields,
-                      cols=report_fields,
-                      fact=report_fields,
-                      methods=["count", "list"],
-                      defaults = dict(rows="location_id$L1",
-                                      cols="category",
-                                      fact="datetime",
-                                      aggregate="count")
+                  report_options=Storage(rows=report_fields,
+                                         cols=report_fields,
+                                         fact=report_fields,
+                                         defaults = dict(rows="location_id$L1",
+                                                         cols="category",
+                                                         fact="count(datetime)",
+                                                         totals=True
+                                                         )
                   ),
                   list_fields = ["id",
                                  "name",

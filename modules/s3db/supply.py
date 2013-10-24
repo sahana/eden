@@ -1240,7 +1240,7 @@ class S3SupplyDistributionModel(S3Model):
                              # Populated automatically from project_location
                              self.gis_location_id(readable = False,
                                                   writable = False),
-                             Field("value", "double",
+                             Field("value", "integer",
                                    label = T("Quantity"),
                                    requires = IS_INT_IN_RANGE(0, 99999999),
                                    represent = lambda v: \
