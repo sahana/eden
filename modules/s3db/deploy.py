@@ -146,13 +146,28 @@ class S3DeploymentModel(S3Model):
                             pagesize = 10,
                            )
 
+        response_widget = dict(label="Responses",
+                               insert=False,
+                               type="datalist",
+                               list_fields = [
+                                     "human_resource_id$id",
+                                     "human_resource_id$person_id",
+                                     "human_resource_id$organisation_id",
+                               ],
+                               tablename = "deploy_response",
+                               context = "deployment",
+                               colspan = 2,
+                               list_layout = deploy_render_response,
+                               pagesize = 10,
+                              )
+
         assignment_widget = dict(label="Members Assigned",
                                  insert=lambda r, add_title, add_url: \
                                         A(add_title,
                                           _href=r.url(component="human_resource_assignment",
                                                       method="create"),
                                           _class="action-btn profile-add-btn"),
-                                 title_create="Add Member",
+                                 title_create="Assign New Member",
                                  type="datalist",
                                  list_fields = [
                                      "human_resource_id$id",
@@ -185,8 +200,9 @@ class S3DeploymentModel(S3Model):
                   profile_header = lambda r: \
                                    deploy_deployment_rheader(r, profile=True),
                   profile_widgets = [alert_widget,
+                                     response_widget,
                                      assignment_widget,
-                                     ],
+                                    ],
                   summary=[{"name": "rheader",
                             "common": True,
                             "widgets": [
@@ -881,7 +897,7 @@ def deploy_deployment_rheader(r, profile=False):
         return header
     else:
         return H2(title)
-        
+
 # =============================================================================
 def deploy_render_alert(listid,
                         resource,
@@ -942,6 +958,83 @@ def deploy_render_alert(listid,
                        #render("deploy_human_resource_assignment.start_date",
                               #"deploy_human_resource_assignment.end_date",
                               #"deploy_human_resource_assignment.rating",
+                       #),
+                       _class="media-body",
+                   ),
+                   _class="media",
+               ),
+               _class=item_class,
+               _id=item_id,
+           )
+
+    return item
+
+# =============================================================================
+def deploy_render_response(listid,
+                           resource,
+                           rfields,
+                           record,
+                           **attr):
+    """
+        Item renderer for data list of responses
+
+        @param listid: the list ID
+        @param resource: the S3Resource
+        @param rfields: the list fields resolved as S3ResourceFields
+        @param record: the record
+        @param attr: additional attributes
+    """
+
+    pkey = "deploy_response.id"
+
+    # Construct the item ID
+    if pkey in record:
+        record_id = record[pkey]
+        item_id = "%s-%s" % (listid, record_id)
+    else:
+        # template
+        record_id = None
+        item_id = "%s-[id]" % listid
+
+    item_class = "thumbnail"
+
+    row = record["_row"]
+    human_resource_id = row["hrm_human_resource.id"]
+
+    profile_url = URL(f="human_resource", args=[human_resource_id])
+    profile_title = current.T("Open Member Profile (in a new tab)")
+
+    person = A(record["hrm_human_resource.person_id"],
+               _href=profile_url,
+               _target="_blank",
+               _title=profile_title)
+    organisation = record["hrm_human_resource.organisation_id"]
+    
+    #fields = dict((rfield.colname, rfield) for rfield in rfields)
+    #render = lambda *columns: deploy_render_profile_data(record,
+                                                         #fields=fields,
+                                                         #columns=columns)
+
+    # Toolbox
+    toolbox = deploy_render_profile_toolbox(resource, record_id, None)
+
+    # Render the item
+    item = DIV(DIV(A(IMG(_class="media-object",
+                         _src=URL(c="static",
+                                  f="themes",
+                                  args=["IFRC", "img", "email.png"]),
+                         ),
+                         _class="pull-left",
+                         _href="#",
+                   ),
+                   toolbox,
+                   DIV(DIV(DIV(person,
+                               _class="card-title"),
+                           DIV(organisation,
+                               _class="card-category"),
+                           _class="media-heading"),
+                       #render("deploy_deployment.created_on",
+                              #"msg_message.body",
                        #),
                        _class="media-body",
                    ),
