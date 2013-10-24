@@ -629,7 +629,8 @@ $(function() {
     // Event handlers ---------------------------------------------------------
 
     // Submit all changed inline-rows, and then the main form
-    var inline_submit_all = function() {
+    var inline_submit_all = function(event) {
+        event.preventDefault();
         var $form = $(this);
         var success = false;
         $form.find('tr.inline-form.changed').each(function() {
