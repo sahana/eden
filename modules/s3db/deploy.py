@@ -150,9 +150,11 @@ class S3DeploymentModel(S3Model):
                                insert=False,
                                type="datalist",
                                list_fields = [
-                                     "human_resource_id$id",
-                                     "human_resource_id$person_id",
-                                     "human_resource_id$organisation_id",
+                                    "created_on",
+                                    "human_resource_id$id",
+                                    "human_resource_id$person_id",
+                                    "human_resource_id$organisation_id",
+                                    "message_id$body",
                                ],
                                tablename = "deploy_response",
                                context = "deployment",
@@ -931,11 +933,6 @@ def deploy_render_alert(listid,
     subject = record["deploy_alert.subject"]
     body = record["deploy_alert.body"]
 
-    #fields = dict((rfield.colname, rfield) for rfield in rfields)
-    #render = lambda *columns: deploy_render_profile_data(record,
-                                                         #fields=fields,
-                                                         #columns=columns)
-
     # Toolbox
     toolbox = deploy_render_profile_toolbox(resource, record_id, None)
 
@@ -946,19 +943,13 @@ def deploy_render_alert(listid,
                                   args=["IFRC", "img", "alert.png"]),
                          ),
                          _class="pull-left",
-                         _href="#",
                    ),
                    toolbox,
                    DIV(DIV(DIV(subject,
                                _class="card-title"),
-                           DIV(created_on,
-                               _class="card-subtitle"),
                            _class="media-heading"),
+                       DIV(created_on, _class="card-subtitle"),
                        DIV(body, _class="alert-message-body s3-truncate"),
-                       #render("deploy_human_resource_assignment.start_date",
-                              #"deploy_human_resource_assignment.end_date",
-                              #"deploy_human_resource_assignment.rating",
-                       #),
                        _class="media-body",
                    ),
                    _class="media",
@@ -1009,6 +1000,9 @@ def deploy_render_response(listid,
                _target="_blank",
                _title=profile_title)
     organisation = record["hrm_human_resource.organisation_id"]
+
+    created_on = record["deploy_response.created_on"]
+    message = record["msg_message.body"]
     
     #fields = dict((rfield.colname, rfield) for rfield in rfields)
     #render = lambda *columns: deploy_render_profile_data(record,
@@ -1025,7 +1019,6 @@ def deploy_render_response(listid,
                                   args=["IFRC", "img", "email.png"]),
                          ),
                          _class="pull-left",
-                         _href="#",
                    ),
                    toolbox,
                    DIV(DIV(DIV(person,
@@ -1033,9 +1026,8 @@ def deploy_render_response(listid,
                            DIV(organisation,
                                _class="card-category"),
                            _class="media-heading"),
-                       #render("deploy_deployment.created_on",
-                              #"msg_message.body",
-                       #),
+                       DIV(created_on, _class="card-subtitle"),
+                       DIV(message, _class="response-message-body s3-truncate"),
                        _class="media-body",
                    ),
                    _class="media",
@@ -1105,8 +1097,8 @@ def deploy_render_human_resource_assignment(listid,
                                   args=["IFRC", "img", "member.png"]),
                          ),
                          _class="pull-left",
-                         _href=profile_url,
-                         _title=profile_title,
+                         #_href=profile_url,
+                         #_title=profile_title,
                    ),
                    toolbox,
                    DIV(DIV(DIV(person,
