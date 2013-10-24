@@ -1209,7 +1209,8 @@ class S3StatsPeopleModel(S3Model):
                                         ),
                              Field("value", "integer", 
                                    requires=IS_INT_IN_RANGE(0, 999999),
-                                   label=T("Number of People")),
+                                   label=T("Number of People"),
+                                   ),
                              self.gis_location_id(label=T("Address")),
                              self.pr_person_id(label=T("Contact Person")),
                              s3_comments(),
@@ -1392,7 +1393,8 @@ class S3StatsTrainedPeopleModel(S3Model):
                                    requires=IS_NULL_OR(
                                                IS_INT_IN_RANGE(0, 999999)
                                                ),
-                                   label=T("Number of Trained People")),
+                                   label=T("Number of Trained People"),
+                                   ),
                              self.org_organisation_id(),
                              self.gis_location_id(label=T("Address")),
                              # Which contact is this?

@@ -662,12 +662,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Open Incidents", vars={"open": 1}),
                         M("Map", m="map"),
                         M("Timeline", args="timeline"),
-                        M("Search", m="search"),
-                        M("Report", m="report",
-                          vars=dict(rows="L1",
-                                    cols="category",
-                                    fact="datetime",
-                                    aggregate="count"))
+                        M("Report", m="report2")
                     ),
                     M("Incident Categories", c="irs", f="icategory",
                       check=current.auth.s3_has_role(current.session.s3.system_roles.ADMIN))(

@@ -1245,12 +1245,7 @@ class S3OptionsMenu(object):
                         M("Map", m="map"),
                         M("Timeline", args="timeline"),
                         M("Import", m="import"),
-                        M("Search", m="search"),
-                        M("Report", m="report",
-                          vars=dict(rows="L1",
-                                    cols="category",
-                                    fact="datetime",
-                                    aggregate="count"))
+                        M("Report", m="report2")
                     ),
                     M("Incident Categories", f="icategory", restrict=[ADMIN])(
                         M("New", m="create"),

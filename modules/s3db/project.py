@@ -1759,11 +1759,12 @@ class S3ProjectBeneficiaryModel(S3Model):
                              # Populated automatically from project_location
                              self.gis_location_id(readable = False,
                                                   writable = False),
-                             Field("value", "double",
+                             Field("value", "integer",
                                    label = T("Quantity"),
                                    requires = IS_INT_IN_RANGE(0, 99999999),
                                    represent = lambda v: \
-                                    IS_INT_AMOUNT.represent(v)),
+                                    IS_INT_AMOUNT.represent(v)
+                                   ),
                              s3_date("date",
                                      label = T("Start Date"),
                                      #empty = False,
@@ -2300,7 +2301,7 @@ class S3ProjectCampaignModel(S3Model):
                              # Populated automatically (by TERA)
                              # & will be a msg_basestation?
                              location_id(writable = False),
-                             Field("value", "double",
+                             Field("value", "integer",
                                    label = T("Number of Responses"),
                                    requires = IS_INT_IN_RANGE(0, 99999999),
                                    represent = lambda v: \
