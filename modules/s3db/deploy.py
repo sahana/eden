@@ -663,16 +663,16 @@ class S3DeploymentAlertModel(S3Model):
         # Lookup from_address
         # @ToDo: Allow multiple channels to be defined &
         #        select the appropriate one for this deployment
-        table = s3db.msg_email_channel
-        channel = db(table.deleted == False).select(table.username,
-                                                    table.server,
-                                                    limitby = (0, 1)
-                                                    ).first()
+        ctable = s3db.msg_email_channel
+        channel = db(ctable.deleted == False).select(ctable.username,
+                                                     ctable.server,
+                                                     limitby = (0, 1)
+                                                     ).first()
         if not channel:
             current.session.error = T("Need to configure an Email Address!")
             redirect(URL(f="email_channel"))
 
-        from_address = "%s@%s" % (username, server)
+        from_address = "%s@%s" % (channel.username, channel.server)
 
         # @ToDo: Support alternate channels, like SMS
         # if not body: body = subject
