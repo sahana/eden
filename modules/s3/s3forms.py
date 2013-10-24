@@ -2041,12 +2041,16 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 component = resource.components[component_name]
             else:
                 return
-            if component.link:
-                link = self.options.get("link", True)
-                if link:
-                    # For link-table components, embed the link
-                    # table rather than the component
-                    component = component.link
+
+            # Link table handling
+            link = component.link
+            if link and self.options.get("link", True):
+                # data are for the link table
+                actuate_link = False
+                component = link
+            else:
+                # data are for the component
+                actuate_link = True
 
             # Table, tablename, prefix and name of the component
             prefix = component.prefix
@@ -2139,35 +2143,43 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     authorized = permit("create", tablename)
                     if not authorized:
                         continue
-                    # Update the master table foreign key
+
+                    # Get master record ID
                     pkey = component.pkey
-                    fkey = component.fkey
                     mastertable = resource.table
                     if pkey != mastertable._id.name:
                         query = (mastertable._id == master_id)
-                        row = db(query).select(mastertable[pkey],
-                                               limitby=(0, 1)).first()
-                        if not row:
+                        master = db(query).select(mastertable[pkey],
+                                                  limitby=(0, 1)).first()
+                        if not master:
                             return
-                        values[fkey] = row[mastertable[pkey]]
                     else:
-                        values[fkey] = master_id
-
+                        master = Storage({pkey: master_id})
+                        
+                    # Add master record ID if linked directly
+                    if not actuate_link or not link:
+                        values[component.fkey] = master[pkey]
+                        
                     # Apply defaults
                     for f, v in defaults.iteritems():
                         if f not in item:
                             values[f] = v
-
+                            
                     # Create the new record
                     record_id = component.table.insert(**values)
-
+                    
                     # Post-process create
                     if record_id:
+                        # Audit
                         audit("create", prefix, name,
                               record=record_id, representation=format)
+                        # Add record_id
                         values[table._id.name] = record_id
                         # Update super entity link
                         s3db.update_super(table, values)
+                        # Update link table
+                        if link and actuate_link:
+                            link.update_link(master, values)
                         # Set record owner
                         auth.s3_set_record_owner(table, record_id)
                         # onaccept
