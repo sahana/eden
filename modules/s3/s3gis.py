@@ -2138,7 +2138,7 @@ class GIS(object):
         if layer:
             popup_label = layer.popup_label
             popup_fields = layer.popup_fields or []
-            if not attr:
+            if not attr_fields:
                 attr_fields = layer.attr_fields or []
             trackable = layer.trackable
             polygons = layer.polygons
