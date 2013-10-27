@@ -2137,9 +2137,13 @@ class GIS(object):
         attr_fields = get_vars.get("attr", [])
         if attr_fields:
             attr_fields = attr_fields.split(",")
+        popup_fields = get_vars.get("popup", [])
+        if popup_fields:
+            popup_fields = popup_fields.split(",")
         if layer:
             popup_label = layer.popup_label
-            popup_fields = layer.popup_fields or []
+            if not popup_fields:
+                popup_fields = layer.popup_fields or []
             if not attr_fields:
                 attr_fields = layer.attr_fields or []
             trackable = layer.trackable
