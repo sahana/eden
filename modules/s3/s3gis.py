@@ -2135,6 +2135,8 @@ class GIS(object):
                 layer = layers.first()
 
         attr_fields = get_vars.get("attr", [])
+        if attr_fields:
+            attr_fields = attr_fields.split(",")
         if layer:
             popup_label = layer.popup_label
             popup_fields = layer.popup_fields or []
