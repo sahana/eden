@@ -910,6 +910,7 @@ class GIS(object):
         try:
             table = db.gis_location
         except:
+            # Being run from CLI for debugging
             table = current.s3db.gis_location
         query = (table.deleted == False)
         if level:
@@ -2091,14 +2092,14 @@ class GIS(object):
         db = current.db
         s3db = current.s3db
         request = current.request
-        vars = request.get_vars
+        get_vars = request.get_vars
         format = current.auth.permission.format
 
         ftable = s3db.gis_layer_feature
 
         layer = None
 
-        layer_id = vars.get("layer", None)
+        layer_id = get_vars.get("layer", None)
         if layer_id:
             # Feature Layer
             query = (ftable.id == layer_id)
@@ -2133,18 +2134,20 @@ class GIS(object):
             if layers:
                 layer = layers.first()
 
+        attr_fields = get_vars.get("attr", [])
         if layer:
             popup_label = layer.popup_label
             popup_fields = layer.popup_fields or []
-            attr_fields = layer.attr_fields or []
+            if not attr:
+                attr_fields = layer.attr_fields or []
             trackable = layer.trackable
             polygons = layer.polygons
         else:
             popup_label = ""
             popup_fields = ["name"]
-            attr_fields = []
             trackable = False
             polygons = False
+        
 
         table = resource.table
         tablename = resource.tablename
