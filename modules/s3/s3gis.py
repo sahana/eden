@@ -2163,7 +2163,7 @@ class GIS(object):
                 # looked-up in bulk rather than as a separate lookup per record
                 if popup_fields:
                     tips = {}
-                    label_off = vars.get("label_off", None)
+                    label_off = get_vars.get("label_off", None)
                     if popup_label and not label_off:
                         _tooltip = "(%s)" % current.T(popup_label)
                     else:
@@ -2234,7 +2234,7 @@ class GIS(object):
                 #    _debug("Attributes/Tooltip lookup of layer %s completed in %s seconds" % \
                 #            (layer_name, duration))
 
-            _markers = vars.get("markers", None)
+            _markers = get_vars.get("markers", None)
             if _markers:
                 # Add a per-feature Marker
                 marker_fn = s3db.get_config(tablename, "marker_fn")
