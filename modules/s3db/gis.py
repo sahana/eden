@@ -759,23 +759,16 @@ class S3LocationModel(S3Model):
         # what uses "value"?
         value = _vars.term or _vars.value or _vars.q or None
 
-        # We want to do case-insensitive searches
-        # (default anyway on MySQL/SQLite, but not PostgreSQL)
-        if value:
-            value = value.lower().strip()
-
-        query = None
-        fields = []
-        field = table.id
-
-        if _vars.field and value:
-            pass
-        else:
+        if not value:
             raise
 
-        fieldname = str.lower(_vars.field)
-        field = table[fieldname]
+        # We want to do case-insensitive searches
+        # (default anyway on MySQL/SQLite, but not PostgreSQL)
+        value = value.lower().strip()
 
+        search_l10n = None
+        translate = None
+        levels = _vars.get("levels", None)
         loc_select = _vars.get("loc_select", None)
         if loc_select:
             # S3LocationSelectorWidget
@@ -784,34 +777,42 @@ class S3LocationModel(S3Model):
                       ]
         else:
             # S3LocationAutocompleteWidget
+            # Vulnerability Search
             fields = ["id",
                       "name",
                       "level",
-                      "L0",
                       "L1",
                       "L2",
                       "L3",
                       "L4",
                       "L5",
                       ]
+            multi_country = len(current.deployment_settings.get_gis_countries()) != 1
+            if multi_country:
+                fields.append("L0")
+            settings = current.deployment_settings
+            if settings.get_L10n_translate_gis_location():
+                search_l10n = True
+                language = current.session.s3.language
+                if language != current.deployment_settings.get_L10n_default_language():
+                    translate = True
+                    fields.append("path")
 
-        if "children" in _vars and _vars.children:
-            if _vars.children == "null":
+        children = _vars.get("children", None)
+        if children:
+            if children == "null":
                 children = None
             else:
-                children = int(_vars.children)
-        else:
-            children = None
+                children = int(children)
 
-        if "level" in _vars and _vars.level:
-            if _vars.level == "null":
+        level = _vars.get("level", None)
+        if level:
+            if level == "null":
                 level = None
-            elif "|" in _vars.level:
-                level = _vars.level.split("|")
+            elif "|" in level:
+                level = level.split("|")
             else:
-                level = str.upper(_vars.level)
-        else:
-            level = None
+                level = str.upper(level)
 
         if children:
             # LocationSelector
@@ -822,30 +823,31 @@ class S3LocationModel(S3Model):
             response.headers["Content-Type"] = "application/json"
             return output
 
-        if "field2" in _vars and _vars.field2:
+        query = S3FieldSelector("name").lower().like(value + "%")
+        field2 = _vars.get("field2", None)
+        if field2:
             # S3LocationSelectorWidget's s3_gis_autocomplete_search
             # addr_street
-            fieldname = str.lower(_vars.field2)
-            field2 = table[fieldname]
+            fieldname = str.lower(field2)
             fields.append(fieldname)
-            query = ((field.lower().like(value + "%")) | \
-                     (field2.lower().like(value + "%")))
-        else:
-            # Normal single-field
-            query = (field.lower().like(value + "%"))
-            if loc_select:
-                fields.append("level")
-                fields.append("parent")
+            query |= S3FieldSelector(fieldname).lower().like(value + "%")
+        elif loc_select:
+            fields.append("level")
+            fields.append("parent")
+        elif search_l10n:
+            query |= S3FieldSelector("name.name_l10n").lower().like(value + "%")
         resource.add_filter(query)
 
         if level:
             # LocationSelector or Autocomplete
             if isinstance(level, list):
                 query = (table.level.belongs(level))
-            elif level == "nullnone":
+            elif level == "NULLNONE":
                 # S3LocationSelectorWidget's s3_gis_autocomplete_search
-                level = None
-                query = (table.level == level)
+                query = (table.level == None)
+            elif level == "NOTNONE":
+                # Vulnerability Search
+                query = (table.level != None)
             else:
                 query = (table.level == level)
         else:
@@ -854,14 +856,15 @@ class S3LocationModel(S3Model):
 
         resource.add_filter(query)
 
-        if "parent" in _vars and _vars.parent:
+        parent = _vars.get("parent", None)
+        if parent:
             # LocationSelector
-            parent = int(_vars.parent)
-            query = (table.parent == parent)
+            query = (table.parent == int(parent))
             resource.add_filter(query)
 
         MAX_SEARCH_RESULTS = current.deployment_settings.get_search_max_results()
-        if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
+        if (not limit or limit > MAX_SEARCH_RESULTS) and \
+           resource.count() > MAX_SEARCH_RESULTS:
             from gluon.serializers import json as jsons
             output = jsons([dict(id="",
                                  name="Search results are over %d. Please input more characters." \
@@ -874,49 +877,112 @@ class S3LocationModel(S3Model):
                                        start=0,
                                        limit=limit,
                                        fields=fields,
-                                       orderby=field)
+                                       orderby=table.name)
         else:
             # S3LocationAutocompleteWidget
+            # Vulnerability Search
             rows = resource.select(fields=fields,
                                    start=0,
                                    limit=limit,
                                    orderby="gis_location.name")["rows"]
+            if translate:
+                # Lookup Translations
+                s3db = current.s3db
+                l10n_table = s3db.gis_location_name
+                l10n_query = (l10n_table.deleted == False) & \
+                             (l10n_table.language == language)
+                ids = []
+                for row in rows:
+                    path = row["gis_location.path"]
+                    if not path:
+                        path = current.gis.update_location_tree(row["gis_location"])
+                    ids += path.split("/")
+                # Remove Duplicates
+                ids = set(ids)
+                l10n_query &= (l10n_table.location_id.belongs(ids))
+                limitby = (0, len(ids))
+                l10n = current.db(l10n_query).select(l10n_table.location_id,
+                                                     l10n_table.name_l10n,
+                                                     limitby = limitby,
+                                                     ).as_dict(key="location_id")
             items = []
             iappend = items.append
-            COUNTRY = current.messages.COUNTRY
             for row in rows:
-                level = row["gis_location.level"]
-                name = row["gis_location.name"]
-                if level == "L0":
-                    represent = "%s (%s)" % (name, COUNTRY)
-                elif level == "L1":
-                    represent = "%s (%s)" % (name, row["gis_location.L0"])
-                elif level == "L2":
-                    represent = "%s (%s, %s)" % (name, row["gis_location.L1"],
-                                                 row["gis_location.L0"])
-                elif level == "L3":
-                    represent = "%s (%s, %s, %s)" % (name,
-                                                     row["gis_location.L2"],
-                                                     row["gis_location.L1"],
-                                                     row["gis_location.L0"])
-                elif level == "L4":
-                    represent = "%s (%s, %s, %s, %s)" % (name,
-                                                         row["gis_location.L3"],
-                                                         row["gis_location.L2"],
-                                                         row["gis_location.L1"],
-                                                         row["gis_location.L0"])
-                elif level == "L5":
-                    represent = "%s (%s, %s, %s, %s, %s)" % (name,
-                                                             row["gis_location.L4"],
-                                                             row["gis_location.L3"],
-                                                             row["gis_location.L2"],
-                                                             row["gis_location.L1"],
-                                                             row["gis_location.L0"])
+                item = {"id" : row["gis_location.id"],
+                        }
+                level = row.get("gis_location.level", None)
+                if level:
+                    item["level"] = level
+                if translate:
+                    path = row["gis_location.path"]
+                    ids = path.split("/")
+                    loc = l10n.get(int(ids.pop()), None) 
+                    if loc:
+                        item["name"] = loc["name_l10n"]
+                    else:
+                        item["name"] = row["gis_location.name"]
                 else:
-                    represent = name
-                iappend({"id"   : row["gis_location.id"],
-                         "name" : represent
-                         })
+                    item["name"] = row["gis_location.name"]
+                L5 = row.get("gis_location.L5", None)
+                if L5 and level != "L5":
+                    if translate:
+                        loc = l10n.get(int(ids.pop()), None) 
+                        if loc:
+                            item["L5"] = loc["name_l10n"]
+                        else:
+                            item["L5"] = L5
+                    else:
+                        item["L5"] = L5
+                L4 = row.get("gis_location.L4", None)
+                if L4 and level != "L4":
+                    if translate:
+                        loc = l10n.get(int(ids.pop()), None) 
+                        if loc:
+                            item["L4"] = loc["name_l10n"]
+                        else:
+                            item["L4"] = L4
+                    else:
+                        item["L4"] = L4
+                L3 = row.get("gis_location.L3", None)
+                if L3 and level != "L3":
+                    if translate:
+                        loc = l10n.get(int(ids.pop()), None) 
+                        if loc:
+                            item["L3"] = loc["name_l10n"]
+                        else:
+                            item["L3"] = L3
+                    else:
+                        item["L3"] = L3
+                L2 = row.get("gis_location.L2", None)
+                if L2 and level != "L2":
+                    if translate:
+                        loc = l10n.get(int(ids.pop()), None) 
+                        if loc:
+                            item["L2"] = loc["name_l10n"]
+                        else:
+                            item["L2"] = L2
+                    else:
+                        item["L2"] = L2
+                L1 = row.get("gis_location.L1", None)
+                if L1 and level != "L1":
+                    if translate:
+                        loc = l10n.get(int(ids.pop()), None) 
+                        if loc:
+                            item["L1"] = loc["name_l10n"]
+                        else:
+                            item["L1"] = L1
+                    else:
+                        item["L1"] = L1
+                L0 = row.get("gis_location.L0", None)
+                if L0 and level != "L0":
+                    if translate:
+                        loc = l10n.get(int(ids.pop()), None) 
+                        if loc:
+                            item["L0"] = loc["name_l10n"]
+                    else:
+                        item["L0"] = L0
+
+                iappend(item)
 
             output = json.dumps(items)
                                        

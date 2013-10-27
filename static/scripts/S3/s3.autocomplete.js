@@ -21,7 +21,7 @@
         }
 
         var real_input = $('#' + input);
-        // Bootstrap overides .hide :/
+        // Bootstrap overrides .hide :/
         real_input.hide();
 
         var throbber = $('#' + dummy + '_throbber');
@@ -239,9 +239,153 @@
     };
 
     /*
+     * Represent a Location
+     */
+    var represent_location = function(item) {
+        if (item.label != undefined) {
+            // No Match
+            return item.label;
+        }
+        var name = item.name;
+        if (item.L5) {
+            name += ', ' + item.L5;
+        }
+        if (item.L4) {
+            name += ', ' + item.L4;
+        }
+        if (item.L3) {
+            name += ', ' + item.L3;
+        }
+        if (item.L2) {
+            name += ', ' + item.L2;
+        }
+        if (item.L1) {
+            name += ', ' + item.L1;
+        }
+        if (item.L0) {
+            name += ', ' + item.L0;
+        }
+        return name;
+    }
+
+    /**
+     * S3LocationAutocompleteWidget
+     * - uses name_l10n & Lx
+     */
+    S3.autocomplete.location = function(input, level, min_length, delay, postprocess) {
+        var dummy = 'dummy_' + input;
+        var dummy_input = $('#' + dummy);
+
+        if (dummy_input == 'undefined') {
+            return;
+        }
+
+        var real_input = $('#' + input);
+        // Bootstrap overides .hide :/
+        real_input.hide();
+
+        var throbber = $('#' + dummy + '_throbber');
+
+        var url = S3.Ap.concat('/gis/location/search_ac.json');
+
+        // Optional args
+        if (level) {
+            url += '?level=' + level;
+        }
+        if (delay == 'undefined') {
+            delay = 450;
+        }
+        if (min_length == 'undefined') {
+            min_length = 2;
+        }
+        var data = {
+            val: dummy_input.val(),
+            accept: false
+        };
+        dummy_input.autocomplete({
+            delay: delay,
+            minLength: min_length,
+            source: function(request, response) {
+                // Patch the source so that we can handle No Matches
+                $.ajax({
+                    url: url,
+                    data: {
+                        term: request.term
+                    }
+                }).done(function (data) {
+                    if (data.length == 0) {
+                        data.push({
+                            id: 0,
+                            value: '',
+                            label: i18n.no_matching_records
+                        });
+                    }
+                    response(data);
+                });
+            },
+            search: function(event, ui) {
+                dummy_input.hide();
+                throbber.removeClass('hide').show();
+                return true;
+            },
+            response: function(event, ui, content) {
+                throbber.hide();
+                dummy_input.show();
+                return content;
+            },
+            focus: function(event, ui) {
+                dummy_input.val(ui.item.name);
+                return false;
+            },
+            select: function(event, ui) {
+                var item = ui.item;
+                if (item.id) {
+                    dummy_input.val(ui.item.name);
+                    real_input.val(item.id)
+                              .change();
+                } else {
+                    // No matching results
+                    dummy_input.val('');
+                    real_input.val('')
+                              .change();
+                }
+                if (postprocess) {
+                    // postprocess has to be able to handle the 'no match' option
+                    eval(postprocess);
+                }
+                data.accept = true;
+                return false;
+            }
+        })
+        .data('ui-autocomplete')._renderItem = function(ul, item) {
+            var label = represent_location(item);
+            return $('<li>').data('item.autocomplete', item)
+                            .append('<a>' + label + '</a>')
+                            .appendTo(ul);
+        };
+        // @ToDo: Do this only if new_items=False
+        dummy_input.blur(function() {
+            if (!dummy_input.val()) {
+                real_input.val('');
+                data.accept = true;
+            }
+            if (!data.accept) {
+                dummy_input.val(data.val);
+            } else {
+                data.val = dummy_input.val();
+            }
+            data.accept = false;
+        });
+    };
+
+    /*
      * Represent a Person or Human Resource
      */
     var represent_person = function(item) {
+        if (item.label != undefined) {
+            // No Match
+            return item.label;
+        }
         var name = item.first;
         if (item.middle) {
             name += ' ' + item.middle;
@@ -295,13 +439,10 @@
                     }
                 }).done(function (data) {
                     if (data.length == 0) {
-                        var no_matching_records = i18n.no_matching_records;
                         data.push({
                             id: 0,
                             value: '',
-                            label: no_matching_records,
-                            // First Name
-                            first: no_matching_records
+                            label: i18n.no_matching_records
                         });
                     }
                     response(data);
@@ -344,9 +485,9 @@
             }
         })
         .data('ui-autocomplete')._renderItem = function(ul, item) {
-            var name = represent_person(item);
+            var label = represent_person(item);
             return $('<li>').data('item.autocomplete', item)
-                            .append('<a>' + name + '</a>')
+                            .append('<a>' + label + '</a>')
                             .appendTo(ul);
         };
         // @ToDo: Do this only if new_items=False
@@ -414,8 +555,7 @@
                         data.push({
                             id: 0,
                             value: '',
-                            label: no_matching_records,
-                            name: no_matching_records
+                            label: no_matching_records
                         });
                     }
                     response(data);
@@ -458,9 +598,9 @@
             }
         })
         .data('ui-autocomplete')._renderItem = function(ul, item) {
-            var name = item.name;
+            var label = item.name || item.label;
             return $('<li>').data('item.autocomplete', item)
-                            .append('<a>' + name + '</a>')
+                            .append('<a>' + label + '</a>')
                             .appendTo(ul);
         };
         // @ToDo: Do this only if new_items=False
@@ -482,6 +622,10 @@
      * Represent a Human Resource
      */
     var represent_hr = function(item) {
+        if (item.label != undefined) {
+            // No Match
+            return item.label;
+        }
         var name = item.first;
         if (item.middle) {
             name += ' ' + item.middle;
@@ -557,13 +701,10 @@
                     }
                 }).done(function (data) {
                     if (data.length == 0) {
-                        var no_matching_records = i18n.no_matching_records;
                         data.push({
                             id: 0,
                             value: '',
-                            label: no_matching_records,
-                            // First Name
-                            first: no_matching_records
+                            label: i18n.no_matching_records
                         });
                     }
                     response(data);
@@ -606,9 +747,9 @@
             }
         })
         .data('ui-autocomplete')._renderItem = function(ul, item) {
-            var name = represent_hr(item);
+            var label = represent_hr(item);
             return $('<li>').data('item.autocomplete', item)
-                            .append('<a>' + name + '</a>')
+                            .append('<a>' + label + '</a>')
                             .appendTo(ul);
         };
         // @ToDo: Do this only if new_items=False

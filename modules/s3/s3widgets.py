@@ -2758,68 +2758,79 @@ class S3LocationAutocompleteWidget(FormWidget):
     """
 
     def __init__(self,
-                 prefix="gis",
-                 resourcename="location",
-                 fieldname="name",
-                 level="",
-                 hidden = False,
+                 level = "",
                  post_process = "",
                  delay = 450,     # milliseconds
                  min_length = 2): # Increase this for large deployments
 
-        self.prefix = prefix
-        self.resourcename = resourcename
-        self.fieldname = fieldname
         self.level = level
-        self.hidden = hidden
         self.post_process = post_process
         self.delay = delay
         self.min_length = min_length
 
     def __call__(self, field, value, **attributes):
-        fieldname = self.fieldname
         level = self.level
-        if level:
-            if isinstance(level, list):
-                levels = ""
-                counter = 0
-                for _level in level:
-                    levels += _level
-                    if counter < len(level):
-                        levels += "|"
-                    counter += 1
-                url = URL(c=self.prefix,
-                          f=self.resourcename,
-                          args="search_ac",
-                          vars={"filter":"~",
-                                "field":fieldname,
-                                "level":levels,
-                                })
-            else:
-                url = URL(c=self.prefix,
-                          f=self.resourcename,
-                          args="search_ac",
-                          vars={"filter":"~",
-                                "field":fieldname,
-                                "level":level,
-                                })
-        else:
-            url = URL(c=self.prefix,
-                      f=self.resourcename,
-                      args="search_ac",
-                      vars={"filter":"~",
-                            "field":fieldname,
-                            })
+        if isinstance(level, list):
+            levels = ""
+            counter = 0
+            for _level in level:
+                levels += _level
+                if counter < len(level):
+                    levels += "|"
+                counter += 1
 
-        return S3GenericAutocompleteTemplate(
-            self.post_process,
-            self.delay,
-            self.min_length,
-            field,
-            value,
-            attributes,
-            source = url,
-        )
+        default = dict(
+            _type = "text",
+            value = (value != None and s3_unicode(value)) or "",
+            )
+        attr = StringWidget._attributes(field, default, **attributes)
+
+        # Hide the real field
+        attr["_class"] = attr["_class"] + " hide"
+
+        if "_id" in attr:
+            real_input = attr["_id"]
+        else:
+            real_input = str(field).replace(".", "_")
+
+        dummy_input = "dummy_%s" % real_input
+
+        if value:
+            try:
+                value = long(value)
+            except ValueError:
+                pass
+            # Provide the representation for the current/default Value
+            text = s3_unicode(field.represent(value))
+            if "<" in text:
+                text = s3_strip_markup(text)
+            represent = text.encode("utf-8")
+        else:
+            represent = ""
+
+        # Mandatory part
+        script = '''S3.autocomplete.location("%s"''' % real_input
+        # Optional parts
+        if self.post_process:
+            # We need all
+            script = '''%s,'%s',%s,%s,"%s"''' % (script, level, self.min_length, self.delay, self.post_process)
+        elif self.delay:
+            script = '''%s,"%s",%s,%s''' % (script, level, self.min_length, self.delay)
+        elif self.min_length:
+            script = '''%s,"%s",%s''' % (script, level, self.min_length)
+        elif levels:
+            script = '''%s,"%s"''' % (script, level)
+        # Close
+        script = "%s)" % script
+        current.response.s3.jquery_ready.append(script)
+        return TAG[""](INPUT(_id=dummy_input,
+                             _class="string",
+                             value=represent),
+                       DIV(_id="%s_throbber" % dummy_input,
+                           _class="throbber hide"),
+                       INPUT(**attr),
+                       requires = field.requires
+                       )
 
 # =============================================================================
 class S3LocationDropdownWidget(FormWidget):
