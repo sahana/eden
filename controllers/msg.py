@@ -1396,11 +1396,28 @@ def twitter_result():
                      )
         ]
 
+    report_fields = ["search_id",
+                     "created_on",
+                     "lang",
+                     ]
+
+    report_options = Storage(
+        rows=report_fields,
+        cols=report_fields,
+        fact=report_fields,
+        defaults=Storage(
+            rows="minimum(created_on)",
+            cols="search_id",
+            totals=True,
+        )
+    )
+
     s3db.configure(tablename,
-                   deletable = False,
-                   editable = False,
-                   insertable = False,
-                   filter_widgets = filter_widgets,
+                   deletable=False,
+                   editable=False,
+                   insertable=False,
+                   filter_widgets=filter_widgets,
+                   report_options=report_options,
                    )
 
     return s3_rest_controller(hide_filter=False)
