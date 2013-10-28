@@ -1601,7 +1601,7 @@ class S3TwitterSearchModel(S3ChannelModel):
         configure = self.configure
         define_table = self.define_table
         set_method = self.set_method
-
+        s3db = current.s3db
         # ---------------------------------------------------------------------
         # Twitter Search Query
         #
@@ -1693,14 +1693,8 @@ class S3TwitterSearchModel(S3ChannelModel):
                              #      label = T("Priority"),
                              #      ),
                              # @ToDo: Replace lat/lon with a mappable gis_location_id
-                             #self.gis_location_id(),
-                             Field("lat", "double",
-                                   label = T("Latitude"),
-                                   requires = IS_NULL_OR(IS_LAT())),
-                             Field("lon", "double",
-                                   label = T("Longitude"),
-                                   requires = IS_NULL_OR(IS_LON()),
-                                   ),
+                             Field("location_id",
+                                   s3db.gis_location),
                              # Just present for Super Entity
                              Field("inbound", "boolean",
                                    default = True,
@@ -1723,11 +1717,11 @@ class S3TwitterSearchModel(S3ChannelModel):
                                  "body",
                                  #"category",
                                  #"priority",
-                                 #"location_id",
-                                 #"lat",
-                                 #"lon",
+                                 "location_id",
                                  ],
                   )
+
+        self.gis_location_id = S3ReusableField("location_id",table)
 
         # ---------------------------------------------------------------------
         return dict()

@@ -180,6 +180,11 @@ current.response.menu = [
      "f":"evac_route",
      "icon": "icon-road"
      },
+    {"name": T("Twitter"),
+     "c":"msg",
+     "f":"twitter_result",
+     "icon": "icon-star-empty"
+     },
     ]
 
 for item in current.response.menu:

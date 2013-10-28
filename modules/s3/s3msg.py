@@ -1713,6 +1713,7 @@ class S3Msg(object):
         qtable = s3db.msg_twitter_search
         rtable = db.msg_twitter_result
         mtable = db.msg_message
+        gtable = s3db.gis_location
         search_query = db(qtable.id == search_id).select(qtable.id,
                                                          qtable.keywords,
                                                          qtable.lang,
@@ -1754,19 +1755,21 @@ class S3Msg(object):
                 created_on = parser.parse(tweet["created_at"])
                 lat = None
                 lon = None
+                location_id = None
                 if tweet["coordinates"]:
                     lat = tweet["coordinates"]["coordinates"][1]
                     lon = tweet["coordinates"]["coordinates"][0]
+                    location_id = gtable.insert(lat=lat,
+                                                lon=lon
+                                                )
                 id = rtable.insert(from_address = user,
                                    search_id = search_id,
                                    body = body,
                                    tweet_id = tweet_id,
                                    lang = lang,
                                    created_on = created_on,
+                                   location_id = location_id,
                                    inbound = True,
-                                   # @ToDo: Use gis_location instead!
-                                   lat = lat,
-                                   lon = lon,
                                    )
                 update_super(rtable, dict(id=id))
 

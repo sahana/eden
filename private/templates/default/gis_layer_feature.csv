@@ -14,3 +14,4 @@ Name,Description,Controller,Function,Symbology,Marker,GPS Marker,Popup Label,Pop
 "Vehicles",,"vehicle","vehicle","US","vehicle","Car","Vehicle","number,person_id","asset.type=1",,"True",,"False",
 "Volunteers","All Active Volunteers","vol","volunteer","US","volunteer","Contact, Dreadlocks","Volunteer","person_id,organisation_id","~.status=1",,"True",,"False",
 "Warehouses","All Active Warehouses","inv","warehouse","US","warehouse","Building","Office","name,organisation_id","~.obsolete=False",,,,"False",
+"Tweets","Tweets for keywords","msg","twitter_result","US","twitter",,"Tweet","body",,,,,"True",
