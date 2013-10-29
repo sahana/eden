@@ -13,7 +13,7 @@
 #nav{clear:both;float:left;width:964px;height:40px;margin:0 0 0 60px;padding:0px;border-top:1px solid #9c9c9c;}
 #nav > li{position:relative;float:left;list-style:none;padding: 0;border-right:1px solid #9c9c9c;}
 #nav > li:first-child{border-left:1px solid #9c9c9c;}
-#nav > li > a{display:block;min-width:50px;background:#fcf9ed;padding:12px 10px 10px 10px;font-size:1em;font-weight:bold;color:#000;text-transform:uppercase;text-decoration:none;}
+#nav > li > a{display:block;min-width:40px;background:#fcf9ed;padding:12px 10px 10px 10px;font-size:1em;font-weight:bold;color:#000;text-transform:uppercase;text-decoration:none;}
 #nav > li > a:hover{border-top:2px solid #dc032e;padding-top:10px}
 #nav .highlight{background:#891735;color:#fff;}
 
