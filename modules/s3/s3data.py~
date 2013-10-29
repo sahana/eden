@@ -1650,7 +1650,6 @@ class S3PivotTable(object):
                                                    represent=True),
                                     u=url,
                                     f=filter_vars,
-				    nc=self.numcols,
                                     h=hide_opts,
                                     cell_lookup_table=cell_lookup_table))
         self.report_data = Storage(row_label=row_label,
