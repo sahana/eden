@@ -86,6 +86,7 @@ class S3Model(object):
 
         mandatory_models = ("auth",
                             "sync",
+                            "s3",
                             "gis",
                             "pr",
                             "sit",

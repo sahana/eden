@@ -46,10 +46,15 @@ class S3Hierarchy(object):
     """ Class representing an object hierarchy """
 
     # -------------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, tablename=None):
         """
             Constructor
+
+            @param tablename: the name of the hierarchy table, for DB
+                              persistance (None to disable)
         """
+
+        self.tablename = tablename
 
         self.roots = set()
         self.nodes = dict()
@@ -162,6 +167,28 @@ class S3Hierarchy(object):
         return hierarchy
 
     # -------------------------------------------------------------------------
+    def store(self):
+        """ Store this hierarchy in the database """
+
+        tablename = self.tablename
+        if not tablename:
+            return
+
+        htable = current.s3db.s3_hierarchy
+
+        db = current.db
+        row = db(htable.tablename == tablename).select(htable.id,
+                                                       limitby=(0, 1)).first()
+
+        hierarchy = self.serialize()
+        if row:
+            row.update_record(hierarchy=hierarchy)
+        else:
+            htable.insert(tablename=tablename,
+                          hierarchy=hierarchy)
+        return
+
+    # -------------------------------------------------------------------------
     def serialize(self, as_json=False):
         """
             Serialize this hierarchy
@@ -208,6 +235,39 @@ class S3Hierarchy(object):
                                     "s": set(item["s"]) \
                                          if item["s"] else set()}
         return hierarchy
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def update_hierarchy(cls, tablename=None):
+        """
+            Update the stored hierarchy for a table, or all stored
+            hierarchies which are marked "dirty"
+
+            @param tablename: tablename to force update of the respective
+                              stored hierarchy
+        """
+
+        if tablename is None:
+            htable = current.s3db.s3_hierarchy
+            rows = db(htable.dirty == True).select(htable.tablename)
+            for _tablename in [row.tablename for row in rows]:
+                cls.update_hierarchy(tablename=_tablename)
+        else:
+            s3db = current.s3db
+
+            hconf = s3db.get_config(tablename, "hierarchy")
+            if not hierarchy:
+                return
+            if hconf is True:
+                pfield, cfield = None, None
+            elif isinstance(hconf, tuple):
+                pfield, cfield = hconf[:2]
+            else:
+                pfield, cfield = hconf, None
+            hierarchy = cls.read(tablename, parent=pfield, category=cfield)
+            hierarchy.store()
+            
+        return
 
     # -------------------------------------------------------------------------
     def category(self, node_id):
