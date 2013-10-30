@@ -51,7 +51,8 @@ from ..s3 import *
 # =============================================================================
 class S3DeploymentModel(S3Model):
 
-    names = ["deploy_deployment",
+    names = ["deploy_event_type",
+             "deploy_deployment",
              "deploy_deployment_id",
              "deploy_human_resource_assignment"]
 
@@ -70,6 +71,28 @@ class S3DeploymentModel(S3Model):
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
         
         # ---------------------------------------------------------------------
+        # Event type
+        #
+        tablename = "deploy_event_type"
+        table = define_table(tablename,
+                             Field("name",
+                                   label = T("Name"),
+                                   requires=IS_NOT_EMPTY(),
+                             ),
+                             s3_comments(),
+                             *s3_meta_fields())
+                             
+        represent = S3Represent(lookup=tablename)
+        event_type_id = S3ReusableField("event_type_id", table,
+                                        requires = IS_EMPTY_OR(
+                                                     IS_ONE_OF(db,
+                                                       "deploy_event_type.id",
+                                                       represent)),
+                                        represent = represent,
+                                        label = T("Event Type"),
+                                        ondelete = "SET NULL")
+
+        # ---------------------------------------------------------------------
         # Deployment
         #
         deployment_status_opts = {
@@ -82,7 +105,7 @@ class S3DeploymentModel(S3Model):
                              Field("name",
                                    label = T("Name"),
                                    requires=IS_NOT_EMPTY(),
-                                   ),
+                             ),
                              self.gis_location_id(
                                 label = T("Country"),
                                 widget = S3LocationAutocompleteWidget(level="L0"),
@@ -92,9 +115,11 @@ class S3DeploymentModel(S3Model):
                                               _title="%s|%s" % (T("Country"),
                                                                 T("Enter some characters to bring up a list of possible matches"))),
                              ),
-                             Field("event_type", # @todo: replace by link
-                                   label = T("Event Type"),
-                                   ),        
+                             event_type_id(),
+                             Field("code",
+                                   length = 24,
+                                   readable = False,
+                                   writable = False),
                              Field("status", "integer",
                                    requires = IS_IN_SET(deployment_status_opts),
                                    represent = lambda opt: \
@@ -112,9 +137,10 @@ class S3DeploymentModel(S3Model):
 
         # CRUD Form
         crud_form = S3SQLCustomForm("name",
+                                    "event_type_id",
                                     "location_id",
+                                    "code",
                                     "status",
-                                    "event_type",
                                     S3SQLInlineComponent("document",
                                                          name = "file",
                                                          label = T("Attachments"),
@@ -195,7 +221,9 @@ class S3DeploymentModel(S3Model):
                   update_next = profile,
                   list_fields = ["name",
                                  (T("Date"), "created_on"),
+                                 "event_type_id",
                                  (T("Country"), "location_id"),
+                                 "code",
                                  (T("Members"), "hrquantity"),
                                  "status",
                                  ],
@@ -222,15 +250,19 @@ class S3DeploymentModel(S3Model):
                             },
                   ],
                   filter_widgets = [
-                      S3TextFilter("name",
-                                   label=T("Search"),
-                                  ),
+                      S3TextFilter(["name", "code"],
+                                   label=T("Search")),
+                      S3OptionsFilter("event_type_id",
+                                      widget="multiselect",
+                                      hidden=True),
                       S3LocationFilter("location_id",
-                                       label=T("Location"),
+                                       label=T("Country"),
                                        widget="multiselect",
                                        levels=["L0"],
-                                       hidden=True,
-                                      ),
+                                       hidden=True),
+                      S3OptionsFilter("status",
+                                      options=deployment_status_opts,
+                                      hidden=True),
                   ],
                   orderby="deploy_deployment.created_on desc",
                   delete_next=URL(c="deploy", f="deployment", args="summary"),
@@ -319,8 +351,7 @@ class S3DeploymentModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(deploy_deployment_id = deployment_id,
-                    )
+        return dict(deploy_deployment_id = deployment_id)
 
     # -------------------------------------------------------------------------
     def defaults(self):

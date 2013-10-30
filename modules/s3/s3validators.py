@@ -623,7 +623,7 @@ class IS_ONE_OF_EMPTY(Validator):
                                                     instance_types=self.instance_types)
 
                 if "deleted" in table:
-                    query &= (table["deleted"] == False)
+                    query &= (table["deleted"] != True)
 
                 # Realms filter?
                 if self.realms:
