@@ -77,7 +77,8 @@ class S3Model(object):
             current.model = Storage(config = Storage(),
                                     components = Storage(),
                                     methods = Storage(),
-                                    cmethods = Storage())
+                                    cmethods = Storage(),
+                                    hierarchies = Storage())
 
         response = current.response
         if "s3" not in response:
