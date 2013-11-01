@@ -73,28 +73,6 @@ class S3DeploymentModel(S3Model):
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
         
         # ---------------------------------------------------------------------
-        # Event type
-        #
-        tablename = "deploy_event_type"
-        table = define_table(tablename,
-                             Field("name",
-                                   label = T("Name"),
-                                   requires=IS_NOT_EMPTY(),
-                             ),
-                             s3_comments(),
-                             *s3_meta_fields())
-                             
-        represent = S3Represent(lookup=tablename)
-        event_type_id = S3ReusableField("event_type_id", table,
-                                        requires = IS_EMPTY_OR(
-                                                     IS_ONE_OF(db,
-                                                       "deploy_event_type.id",
-                                                       represent)),
-                                        represent = represent,
-                                        label = T("Disaster Type"),
-                                        ondelete = "SET NULL")
-
-        # ---------------------------------------------------------------------
         # Deployment
         #
         mission_status_opts = {
@@ -117,7 +95,9 @@ class S3DeploymentModel(S3Model):
                                               _title="%s|%s" % (T("Country"),
                                                                 T("Enter some characters to bring up a list of possible matches"))),
                              ),
-                             event_type_id(),
+                             Field("event_type", # @todo: replace by link
+                                   label = T("Event Type"),
+                             ),
                              Field("code",
                                    length = 24,
                                    represent = lambda v: s3_unicode(v) \
@@ -141,7 +121,7 @@ class S3DeploymentModel(S3Model):
 
         # CRUD Form
         crud_form = S3SQLCustomForm("name",
-                                    "event_type_id",
+                                    "event_type",
                                     "location_id",
                                     "code",
                                     "status",
@@ -225,7 +205,7 @@ class S3DeploymentModel(S3Model):
                   update_next = profile,
                   list_fields = ["name",
                                  (T("Date"), "created_on"),
-                                 "event_type_id",
+                                 "event_type",
                                  (T("Country"), "location_id"),
                                  "code",
                                  (T("Members"), "hrquantity"),
@@ -254,11 +234,8 @@ class S3DeploymentModel(S3Model):
                             },
                   ],
                   filter_widgets = [
-                      S3TextFilter(["name", "code"],
+                      S3TextFilter(["name", "code", "event_type"],
                                    label=T("Search")),
-                      S3OptionsFilter("event_type_id",
-                                      widget="multiselect",
-                                      hidden=True),
                       S3LocationFilter("location_id",
                                        label=T("Country"),
                                        widget="multiselect",
@@ -938,8 +915,7 @@ def deploy_mission_rheader(r, profile=False):
                                                              columns=columns)
 
         title = "%s: %s" % (title, record.name)
-        data = render("event_type_id",
-                      "location_id",
+        data = render("location_id",
                       "code",
                       "created_on",
                       "status")
