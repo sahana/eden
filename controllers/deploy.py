@@ -21,11 +21,11 @@ def index():
     return dict(module_name=module_name)
     
 # =============================================================================
-def deployment():
+def mission():
     """ RESTful CRUD Controller """
 
     def prep(r):
-        # Configure created_on field in deploy_deployment
+        # Configure created_on field in deploy_mission
         created_on = r.table.created_on
         created_on.readable = True
         created_on.label = T("Date Created")
@@ -67,7 +67,7 @@ def deployment():
 
     def postp(r, output):
         if not r.component:
-            # Override deployment open actions to go to the profile page
+            # Override mission open actions to go to the profile page
             s3_action_buttons(r,
                               editable=True,
                               deletable=True,
@@ -75,7 +75,7 @@ def deployment():
                               update_url=r.url(method="profile", id="[id]"),
                               delete_url=r.url(method="delete", id="[id]"),
                               )
-            # Override the deployments list-button go to the summary page
+            # Override the missions list-button go to the summary page
             if isinstance(output, dict) and "buttons" in output:
                 # Override standard "List" button
                 buttons = output["buttons"]
@@ -94,10 +94,10 @@ def deployment():
                               # (rheader includes the title)
                               notitle=lambda r: {"title": ""} \
                                              if r.component else None,
-                              rheader=s3db.deploy_deployment_rheader)
+                              rheader=s3db.deploy_mission_rheader)
 
 # =============================================================================
-def human_resource_assignment():
+def human_resource_deployment():
     """ RESTful CRUD Controller """
 
     def prep(r):

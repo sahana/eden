@@ -30,7 +30,7 @@
 __all__ = ["S3DeploymentModel",
            "S3DeploymentAlertModel",
            "deploy_rheader",
-           "deploy_deployment_rheader",
+           "deploy_mission_rheader",
            ]
 
 try:
@@ -52,9 +52,9 @@ from ..s3 import *
 class S3DeploymentModel(S3Model):
 
     names = ["deploy_event_type",
-             "deploy_deployment",
-             "deploy_deployment_id",
-             "deploy_human_resource_assignment"]
+             "deploy_mission",
+             "deploy_mission_id",
+             "deploy_human_resource_deployment"]
 
     def model(self):
 
@@ -89,17 +89,17 @@ class S3DeploymentModel(S3Model):
                                                        "deploy_event_type.id",
                                                        represent)),
                                         represent = represent,
-                                        label = T("Event Type"),
+                                        label = T("Disaster Type"),
                                         ondelete = "SET NULL")
 
         # ---------------------------------------------------------------------
         # Deployment
         #
-        deployment_status_opts = {
+        mission_status_opts = {
             1 : T("Closed"),
             2 : T("Open")
         }
-        tablename = "deploy_deployment"
+        tablename = "deploy_mission"
         table = define_table(tablename,
                              super_link("doc_id", "doc_entity"),
                              Field("name",
@@ -121,9 +121,9 @@ class S3DeploymentModel(S3Model):
                                    readable = False,
                                    writable = False),
                              Field("status", "integer",
-                                   requires = IS_IN_SET(deployment_status_opts),
+                                   requires = IS_IN_SET(mission_status_opts),
                                    represent = lambda opt: \
-                                    deployment_status_opts.get(opt,
+                                    mission_status_opts.get(opt,
                                                                UNKNOWN_OPT),
                                    default = 2,
                                    label = T("Status"),
@@ -133,7 +133,7 @@ class S3DeploymentModel(S3Model):
 
         # Virtual field
         # @todo: move to real field written onaccept?
-        table.hrquantity = Field.Lazy(deploy_deployment_hrquantity)
+        table.hrquantity = Field.Lazy(deploy_mission_hrquantity)
 
         # CRUD Form
         crud_form = S3SQLCustomForm("name",
@@ -146,8 +146,8 @@ class S3DeploymentModel(S3Model):
                                                          label = T("Attachments"),
                                                          fields = ["file",
                                                                    "comments",
-                                                                   ],
-                                    ),
+                                                                  ],
+                                                        ),
                                     "comments",
                                     "created_on",
                                     )
@@ -166,7 +166,7 @@ class S3DeploymentModel(S3Model):
                                            "body",
                                            ],
                             tablename = "deploy_alert",
-                            context = "deployment",
+                            context = "mission",
                             colspan = 2,
                             list_layout = deploy_render_alert,
                             pagesize = 10,
@@ -183,19 +183,19 @@ class S3DeploymentModel(S3Model):
                                     "message_id$body",
                                ],
                                tablename = "deploy_response",
-                               context = "deployment",
+                               context = "mission",
                                colspan = 2,
                                list_layout = deploy_render_response,
                                pagesize = 10,
                               )
 
-        assignment_widget = dict(label="Members Assigned",
+        deployment_widget = dict(label="Members Deployed",
                                  insert=lambda r, add_title, add_url: \
                                         A(add_title,
-                                          _href=r.url(component="human_resource_assignment",
+                                          _href=r.url(component="human_resource_deployment",
                                                       method="create"),
                                           _class="action-btn profile-add-btn"),
-                                 title_create="Assign New Member",
+                                 title_create="Deploy New Member",
                                  type="datalist",
                                  list_fields = [
                                      "human_resource_id$id",
@@ -205,15 +205,15 @@ class S3DeploymentModel(S3Model):
                                      "end_date",
                                      "rating",
                                  ],
-                                 tablename = "deploy_human_resource_assignment",
-                                 context = "deployment",
+                                 tablename = "deploy_human_resource_deployment",
+                                 context = "mission",
                                  colspan = 2,
-                                 list_layout = deploy_render_human_resource_assignment,
+                                 list_layout = deploy_render_human_resource_deployment,
                                  pagesize = None, # all records
                                 )
 
         # Table configuration
-        profile = URL(c="deploy", f="deployment", args=["[id]", "profile"])
+        profile = URL(c="deploy", f="mission", args=["[id]", "profile"])
         configure(tablename,
                   super_entity = "doc_entity",
                   crud_form = crud_form,
@@ -228,10 +228,10 @@ class S3DeploymentModel(S3Model):
                                  "status",
                                  ],
                   profile_header = lambda r: \
-                                   deploy_deployment_rheader(r, profile=True),
+                                   deploy_mission_rheader(r, profile=True),
                   profile_widgets = [alert_widget,
                                      response_widget,
-                                     assignment_widget,
+                                     deployment_widget,
                                     ],
                   summary=[{"name": "rheader",
                             "common": True,
@@ -261,54 +261,54 @@ class S3DeploymentModel(S3Model):
                                        levels=["L0"],
                                        hidden=True),
                       S3OptionsFilter("status",
-                                      options=deployment_status_opts,
+                                      options=mission_status_opts,
                                       hidden=True),
                   ],
-                  orderby="deploy_deployment.created_on desc",
-                  delete_next=URL(c="deploy", f="deployment", args="summary"),
+                  orderby="deploy_mission.created_on desc",
+                  delete_next=URL(c="deploy", f="mission", args="summary"),
                   )
 
         # Components
-        add_component("deploy_human_resource_assignment",
-                      deploy_deployment="deployment_id")
+        add_component("deploy_human_resource_deployment",
+                      deploy_mission="mission_id")
 
         add_component("deploy_alert",
-                      deploy_deployment="deployment_id")
+                      deploy_mission="mission_id")
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("New Deployment"),
-            title_display = T("Deployment"),
-            title_list = T("Deployments"),
-            title_update = T("Edit Deployment Details"),
-            title_search = T("Search Deployments"),
-            title_upload = T("Import Deployments"),
-            subtitle_create = T("Add New Deployment"),
-            label_list_button = T("List Deployments"),
-            label_create_button = T("New Deployment"),
-            label_delete_button = T("Delete Deployment"),
-            msg_record_created = T("Deployment added"),
-            msg_record_modified = T("Deployment Details updated"),
-            msg_record_deleted = T("Deployment deleted"),
-            msg_list_empty = T("No Deployments currently registered"))
+            title_create = T("New Mission"),
+            title_display = T("Mission"),
+            title_list = T("Missions"),
+            title_update = T("Edit Mission Details"),
+            title_search = T("Search Missions"),
+            title_upload = T("Import Missions"),
+            subtitle_create = T("Add New Mission"),
+            label_list_button = T("List Missions"),
+            label_create_button = T("New Mission"),
+            label_delete_button = T("Delete Mission"),
+            msg_record_created = T("Mission added"),
+            msg_record_modified = T("Mission Details updated"),
+            msg_record_deleted = T("Mission deleted"),
+            msg_list_empty = T("No Missions currently registered"))
                 
         # Reusable field
         represent = S3Represent(lookup=tablename)
-        deployment_id = S3ReusableField("deployment_id", table,
-                                        requires = IS_ONE_OF(db,
-                                                             "deploy_deployment.id",
-                                                             represent),
-                                        represent = represent,
-                                        label = T("Deployment"),
-                                        ondelete = "CASCADE")
+        mission_id = S3ReusableField("mission_id", table,
+                                     requires = IS_ONE_OF(db,
+                                                          "deploy_mission.id",
+                                                          represent),
+                                     represent = represent,
+                                     label = T("Mission"),
+                                     ondelete = "CASCADE")
 
         # ---------------------------------------------------------------------
         # Deployment of human resources
         #
-        tablename = "deploy_human_resource_assignment"
+        tablename = "deploy_human_resource_deployment"
         table = define_table(tablename,
                              super_link("doc_id", "doc_entity"),
-                             deployment_id(),
+                             mission_id(),
                              self.hrm_human_resource_id(empty=False,
                                                         label=T("Member")),
                              s3_date("start_date",
@@ -323,44 +323,44 @@ class S3DeploymentModel(S3Model):
         # Table configuration
         configure(tablename,
                   super_entity="doc_entity",
-                  context = {"deployment": "deployment_id"},
-                  )
+                  context = {"mission": "mission_id"},
+                 )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("New Assignment"),
-            title_display = T("Assignment Details"),
-            title_list = T("Assignments"),
-            title_update = T("Edit Assignment Details"),
-            title_search = T("Search Assignments"),
-            title_upload = T("Import Assignments"),
-            subtitle_create = T("Add New Assignment"),
-            label_list_button = T("List Assignments"),
-            label_create_button = T("Add Assignment"),
-            label_delete_button = T("Delete Assignment"),
-            msg_record_created = T("Assignment added"),
-            msg_record_modified = T("Assignment Details updated"),
-            msg_record_deleted = T("Assignment deleted"),
-            msg_list_empty = T("No Assignments currently registered"))
+            title_create = T("New Deployment"),
+            title_display = T("Deployment Details"),
+            title_list = T("Deployments"),
+            title_update = T("Edit Deployment Details"),
+            title_search = T("Search Deployments"),
+            title_upload = T("Import Deployments"),
+            subtitle_create = T("Add New Deployment"),
+            label_list_button = T("List Deployments"),
+            label_create_button = T("Add Deployment"),
+            label_delete_button = T("Delete Deployment"),
+            msg_record_created = T("Deployment added"),
+            msg_record_modified = T("Deployment Details updated"),
+            msg_record_deleted = T("Deployment deleted"),
+            msg_list_empty = T("No Deployments currently registered"))
 
         # ---------------------------------------------------------------------
         # Deployment of assets
         #
-        # @todo: deploy_asset_assignment
+        # @todo: deploy_asset_deployment
         
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(deploy_deployment_id = deployment_id)
+        return dict(deploy_mission_id = mission_id)
 
     # -------------------------------------------------------------------------
     def defaults(self):
         """
             Safe defaults for model-global names in case module is disabled
         """
-        deployment_id = S3ReusableField("deployment_id", "integer",
-                                        readable=False, writable=False)
-        return dict(deploy_deployment_id = deployment_id)
+        mission_id = S3ReusableField("mission_id", "integer",
+                                     readable=False, writable=False)
+        return dict(deploy_mission_id = mission_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -378,7 +378,7 @@ class S3DeploymentAlertModel(S3Model):
     names = ["deploy_alert",
              "deploy_alert_recipient",
              "deploy_response",
-             ]
+            ]
 
     def model(self):
 
@@ -399,10 +399,10 @@ class S3DeploymentAlertModel(S3Model):
         tablename = "deploy_alert"
         table = define_table(tablename,
                              super_link("pe_id", "pr_pentity"),
-                             self.deploy_deployment_id(
+                             self.deploy_mission_id(
                                 requires = IS_ONE_OF(current.db,
-                                    "deploy_deployment.id",
-                                    S3Represent(lookup="deploy_deployment"),
+                                    "deploy_mission.id",
+                                    S3Represent(lookup="deploy_mission"),
                                     filterby="status",
                                     filter_opts=(2,),
                                     )),
@@ -437,7 +437,7 @@ class S3DeploymentAlertModel(S3Model):
             msg_list_empty = T("No Alerts currently registered"))
 
         # CRUD Form
-        crud_form = S3SQLCustomForm("deployment_id",
+        crud_form = S3SQLCustomForm("mission_id",
                                     "subject",
                                     "body",
                                     "created_on",
@@ -446,9 +446,9 @@ class S3DeploymentAlertModel(S3Model):
         # Table Configuration
         configure(tablename,
                   super_entity = "pr_pentity",
-                  context = {"deployment": "deployment_id"},
+                  context = {"mission": "mission_id"},
                   crud_form = crud_form,
-                  list_fields = ["deployment_id",
+                  list_fields = ["mission_id",
                                  "subject",
                                  "body",
                                  "alert_recipient.human_resource_id",
@@ -513,7 +513,7 @@ class S3DeploymentAlertModel(S3Model):
         #
         tablename = "deploy_response"
         table = define_table(tablename,
-                             self.deploy_deployment_id(),
+                             self.deploy_mission_id(),
                              self.hrm_human_resource_id(empty=False,
                                                         label=T("Member")),
                              message_id(),
@@ -663,7 +663,7 @@ class S3DeploymentAlertModel(S3Model):
         T = current.T
         record = r.record
         # Always redirect to the Deployment Profile
-        next_url = URL(f="deployment", args=[record.deployment_id, "profile"])
+        next_url = URL(f="mission", args=[record.mission_id, "profile"])
 
         # Check whether the alert has already been sent
         # - alerts should be read-only after creation
@@ -693,7 +693,7 @@ class S3DeploymentAlertModel(S3Model):
 
         # Lookup from_address
         # @ToDo: Allow multiple channels to be defined &
-        #        select the appropriate one for this deployment
+        #        select the appropriate one for this mission
         ctable = s3db.msg_email_channel
         channel = db(ctable.deleted == False).select(ctable.username,
                                                      ctable.server,
@@ -763,8 +763,8 @@ def deploy_rheader(r, tabs=[]):
         else:
             send_button = ""
 
-        rheader = DIV(TABLE(TR(TH("%s: " % table.deployment_id.label),
-                               table.deployment_id.represent(record.deployment_id),
+        rheader = DIV(TABLE(TR(TH("%s: " % table.mission_id.label),
+                               table.mission_id.represent(record.mission_id),
                                send_button,
                                ),
                             TR(TH("%s: " % table.subject.label),
@@ -772,7 +772,7 @@ def deploy_rheader(r, tabs=[]):
                                ),
                             ), rheader_tabs)
 
-    elif resourcename == "deployment":
+    elif resourcename == "mission":
         # Unused
         # Tabs
         tabs = [(T("Basic Details"), None),
@@ -787,20 +787,20 @@ def deploy_rheader(r, tabs=[]):
     return rheader
 
 # =============================================================================
-def deploy_deployment_hrquantity(row):
+def deploy_mission_hrquantity(row):
     """ Number of human resources deployed """
 
-    if hasattr(row, "deploy_deployment"):
-        row = row.deploy_deployment
+    if hasattr(row, "deploy_mission"):
+        row = row.deploy_mission
     try:
-        deployment_id = row.id
+        mission_id = row.id
     except AttributeError:
         return 0
 
     db = current.db
-    table = db.deploy_human_resource_assignment
+    table = db.deploy_human_resource_deployment
     count = table.id.count()
-    row = db(table.deployment_id == deployment_id).select(count).first()
+    row = db(table.mission_id == mission_id).select(count).first()
     if row:
         return row[count]
     else:
@@ -815,7 +815,7 @@ def deploy_render_profile_data(record,
                                columns=None):
     """
         DRY Helper method to render record data with labels, used
-        in deploy_deployment profile header and cards.
+        in deploy_mission profile header and cards.
 
         @param record: the record, either a Row (raw values, also specify
                        table) or a Storage {colname: value} (represented
@@ -895,9 +895,9 @@ def deploy_render_profile_toolbox(resource, record_id, update_url):
     return toolbox
 
 # =============================================================================
-def deploy_deployment_rheader(r, profile=False):
+def deploy_mission_rheader(r, profile=False):
     """
-        Header for deployment pages
+        Header for mission pages
 
         @param r: the S3Request
         @param profile: render an S3Profile header (with edit button)
@@ -1070,13 +1070,13 @@ def deploy_render_response(listid,
     return item
 
 # =============================================================================
-def deploy_render_human_resource_assignment(listid,
+def deploy_render_human_resource_deployment(listid,
                                             resource,
                                             rfields,
                                             record,
                                             **attr):
     """
-        Item renderer for data list of assigned human resources
+        Item renderer for data list of deployed human resources
 
         @param listid: the list ID
         @param resource: the S3Resource
@@ -1085,7 +1085,7 @@ def deploy_render_human_resource_assignment(listid,
         @param attr: additional attributes
     """
 
-    pkey = "deploy_human_resource_assignment.id"
+    pkey = "deploy_human_resource_deployment.id"
 
     # Construct the item ID
     if pkey in record:
@@ -1116,7 +1116,7 @@ def deploy_render_human_resource_assignment(listid,
                                                          columns=columns)
 
     # Toolbox
-    update_url = URL(c="deploy", f="human_resource_assignment",
+    update_url = URL(c="deploy", f="human_resource_deployment",
                      args=[record_id, "update.popup"],
                      vars={"refresh": listid, "record": record_id})
     toolbox = deploy_render_profile_toolbox(resource, record_id, update_url)
@@ -1137,9 +1137,9 @@ def deploy_render_human_resource_assignment(listid,
                            DIV(organisation,
                                _class="card-category"),
                            _class="media-heading"),
-                       render("deploy_human_resource_assignment.start_date",
-                              "deploy_human_resource_assignment.end_date",
-                              "deploy_human_resource_assignment.rating",
+                       render("deploy_human_resource_deployment.start_date",
+                              "deploy_human_resource_deployment.end_date",
+                              "deploy_human_resource_deployment.rating",
                        ),
                        _class="media-body",
                    ),
