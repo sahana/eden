@@ -4781,7 +4781,7 @@ def hrm_group_controller():
     return output
 
 # =============================================================================
-def hrm_human_resource_controller():
+def hrm_human_resource_controller(extra_filter=None):
     """
         Human Resources Controller, defined in the model for use from
         multiple controllers for unified menus
@@ -4794,6 +4794,8 @@ def hrm_human_resource_controller():
     settings = current.deployment_settings
 
     def prep(r):
+        if extra_filter is not None:
+            r.resource.add_filter(extra_filter)
         method = r.method
         if method in ("form", "lookup"):
             return True

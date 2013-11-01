@@ -54,6 +54,7 @@ class S3DeploymentModel(S3Model):
     names = ["deploy_event_type",
              "deploy_mission",
              "deploy_mission_id",
+             "deploy_human_resource_application",
              "deploy_human_resource_deployment"]
 
     def model(self):
@@ -68,6 +69,7 @@ class S3DeploymentModel(S3Model):
         s3 = current.response.s3
         crud_strings = s3.crud_strings
 
+        NONE = current.messages["NONE"]
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
         
         # ---------------------------------------------------------------------
@@ -118,6 +120,8 @@ class S3DeploymentModel(S3Model):
                              event_type_id(),
                              Field("code",
                                    length = 24,
+                                   represent = lambda v: s3_unicode(v) \
+                                                         if v else NONE,
                                    readable = False,
                                    writable = False),
                              Field("status", "integer",
@@ -303,7 +307,22 @@ class S3DeploymentModel(S3Model):
                                      ondelete = "CASCADE")
 
         # ---------------------------------------------------------------------
-        # Deployment of human resources
+        # Application of human resources (= agreement that an HR is
+        # generally available for deployments, can come with certain
+        # restrictions)
+        #
+        tablename = "deploy_human_resource_application"
+        table = define_table(tablename,
+                             self.hrm_human_resource_id(empty=False,
+                                                        label=T("Member")),
+                             Field("active", "boolean",
+                                   default=True,
+                             ),
+                             *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Deployment of human resources (= actual assignment of an HR to
+        # a mission)
         #
         tablename = "deploy_human_resource_deployment"
         table = define_table(tablename,
@@ -845,7 +864,8 @@ def deploy_render_profile_data(record,
             field = table[column]
             fname = column
             label = "%s:" % field.label
-            value = field.represent(record[fname])
+            represent = field.represent or s3_unicode
+            value = represent(record[fname])
         if record_id:
             item_id = "profile-%s-%s-%s" % (prefix, fname, record_id)
         else:
@@ -918,7 +938,11 @@ def deploy_mission_rheader(r, profile=False):
                                                              columns=columns)
 
         title = "%s: %s" % (title, record.name)
-        data = render("location_id", "created_on", "status")
+        data = render("event_type_id",
+                      "location_id",
+                      "code",
+                      "created_on",
+                      "status")
         if profile:
             crud_button = r.resource.crud.crud_button
             edit_btn = crud_button(current.T("Edit"), _href=r.url(method="update"))

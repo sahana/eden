@@ -637,19 +637,19 @@ def customize_survey_series(**attr):
 settings.ui.customize_survey_series = customize_survey_series
 
 # -----------------------------------------------------------------------------
-def customize_deploy_deployment(**attr):
+def customize_deploy_mission(**attr):
     """
-        Customize deploy/deployment controller
+        Customize deploy/mission controller
     """
 
-    code = current.s3db.deploy_deployment.code
+    code = current.s3db.deploy_mission.code
     code.readable = True
     code.writable = True
     code.label = current.T("M-Code")
 
     return attr
 
-settings.ui.customize_deploy_deployment = customize_deploy_deployment
+settings.ui.customize_deploy_mission = customize_deploy_mission
 
 # -----------------------------------------------------------------------------
 # Projects

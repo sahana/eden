@@ -180,6 +180,24 @@ def alert():
     return s3_rest_controller(rheader=s3db.deploy_rheader)
 
 # =============================================================================
+def member():
+    """ RESTful CRUD Controller """
+
+    # Tweak settings for RDRT
+    settings.hrm.staff_experience = True
+    settings.hrm.use_skills = True
+    settings.search.filter_manager = True
+
+    s3db.add_component("deploy_human_resource_application",
+                       hrm_human_resource="human_resource_id")
+
+    q = s3base.S3FieldSelector("human_resource_application.active") == True
+    output = s3db.hrm_human_resource_controller(extra_filter=q)
+    if isinstance(output, dict) and "title" in output:
+        output["title"] = T("Members")
+    return output
+
+# =============================================================================
 def human_resource():
     """
         'Members' RESTful CRUD Controller
