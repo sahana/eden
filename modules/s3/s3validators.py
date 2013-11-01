@@ -2424,8 +2424,6 @@ class IS_PROCESSED_IMAGE(Validator):
         Uses an S3ImageCropWidget to allow the user to crop/scale images and
         processes the results sent by the browser.
 
-        @author: aviraldg
-
         @param file_cb: callback that returns the file for this field
 
         @param error_message: the error message to be returned
@@ -2514,8 +2512,6 @@ class IS_PROCESSED_IMAGE(Validator):
 class IS_UTC_OFFSET(Validator):
     """
         Validates a given string value as UTC offset in the format +/-HHMM
-
-        @author: nursix
 
         @param error_message:   the error message to be returned
 
@@ -2688,8 +2684,6 @@ class IS_ACL(IS_IN_SET):
         Validator for ACLs
 
         @attention: Incomplete! Does not validate yet, but just convert.
-
-        @author: Dominic König <dominic@aidiq.com>
     """
 
     def __call__(self, value):

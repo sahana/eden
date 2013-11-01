@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-    Missing Person Registry
-
-    @author: nursix
-"""
+""" Missing Person Registry """
 
 module = request.controller
 prefix = request.controller
