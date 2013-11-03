@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-    Disaster Victim Identification, Controllers
-
-    @author: nursix
-"""
+""" Disaster Victim Identification, Controllers """
 
 module = request.controller
 resourcename = request.function

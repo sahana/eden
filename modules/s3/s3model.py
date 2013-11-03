@@ -77,7 +77,8 @@ class S3Model(object):
             current.model = Storage(config = Storage(),
                                     components = Storage(),
                                     methods = Storage(),
-                                    cmethods = Storage())
+                                    cmethods = Storage(),
+                                    hierarchies = Storage())
 
         response = current.response
         if "s3" not in response:
@@ -86,6 +87,7 @@ class S3Model(object):
 
         mandatory_models = ("auth",
                             "sync",
+                            "s3",
                             "gis",
                             "pr",
                             "sit",

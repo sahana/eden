@@ -894,8 +894,6 @@ class GIS(object):
             the requested feature, using Materialized path for retrieving
             the children
 
-            @author: Aravind Venkatesan and Ajay Kumar Sreenivasan from NCSU
-
             This has been chosen over Modified Preorder Tree Traversal for
             greater efficiency:
             http://eden.sahanafoundation.org/wiki/HaitiGISToDo#HierarchicalTrees

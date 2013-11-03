@@ -5151,8 +5151,6 @@ class S3SliderWidget(FormWidget):
     """
         Standard Slider Widget
 
-        @author: Daniel Klischies (daniel.klischies@freenet.de)
-
         @ToDo: The range of the slider should ideally be picked up from the Validator
         @ToDo: Show the value of the slider numerically as well as simply a position
     """

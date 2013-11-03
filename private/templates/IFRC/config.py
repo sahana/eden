@@ -637,6 +637,21 @@ def customize_survey_series(**attr):
 settings.ui.customize_survey_series = customize_survey_series
 
 # -----------------------------------------------------------------------------
+def customize_deploy_mission(**attr):
+    """
+        Customize deploy/mission controller
+    """
+
+    code = current.s3db.deploy_mission.code
+    code.readable = True
+    code.writable = True
+    code.label = current.T("M-Code")
+
+    return attr
+
+settings.ui.customize_deploy_mission = customize_deploy_mission
+
+# -----------------------------------------------------------------------------
 # Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
 settings.project.mode_3w = True
