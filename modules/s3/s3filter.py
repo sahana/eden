@@ -874,6 +874,9 @@ class S3LocationFilter(S3FilterWidget):
             if translate:
                 fields.append("%s$path" % selector)
             joined = True
+            # Filter out old Locations
+            # @ToDo: Allow override
+            resource.add_filter(current.s3db.gis_location.end_date == None)
 
         else:
             # Neither fixed options nor resource to look them up

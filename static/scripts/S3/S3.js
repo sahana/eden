@@ -481,7 +481,7 @@ function S3EnableNavigateAwayConfirm() {
     $.ajaxS3Settings = {
         timeout : 10000,
         msgTimeout: 2000,
-        retryLimit : 10,
+        retryLimit: 5,
         dataType: 'json',
         async: true,
         type: 'GET'
@@ -500,6 +500,7 @@ function S3EnableNavigateAwayConfirm() {
             options
         ).done(function(data, status) {
             s3_hideStatus();
+            this.tryCount = 0;
             if (s.success) {
                 s.success(data, status);
             }
@@ -507,7 +508,7 @@ function S3EnableNavigateAwayConfirm() {
             if (textStatus == 'timeout') {
                 this.tryCount++;
                 if (this.tryCount <= this.retryLimit) {
-                    // try again
+                    // Try again
                     s3_showStatus(i18n.ajax_get + ' ' + (s.message ? s.message : i18n.ajax_fmd) + '... ' + i18n.ajax_rtr + ' ' + this.tryCount,
                         $.ajaxS3Settings.msgTimeout);
                     $.ajax(this);
@@ -586,6 +587,8 @@ function S3EnableNavigateAwayConfirm() {
  *
  *  to remove bar, use
  *  s3_hideStatus()
+ *
+ *  @ToDo: Styling
  */
 function S3StatusBar(sel, options) {
     var _I = this;

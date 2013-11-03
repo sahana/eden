@@ -89,6 +89,7 @@ class S3AssetModel(S3Model):
     """
 
     names = ["asset_asset",
+             #"asset_sub_asset",
              "asset_log",
              "asset_log_prep",
              "asset_asset_id",
@@ -120,7 +121,6 @@ class S3AssetModel(S3Model):
         #--------------------------------------------------------------------------
         # Assets
         #
-
         asset_type_opts = {ASSET_TYPE_VEHICLE     : T("Vehicle"),
                            #ASSET_TYPE_RADIO      : T("Radio"),
                            #ASSET_TYPE_TELEPHONE  : T("Telephone"),
@@ -241,6 +241,7 @@ S3OptionsFilter({
                                    ondelete = "CASCADE")
 
         # Search Method
+        # @ToDo: Replace with S3Filter
         report_search = [
             S3SearchSimpleWidget(
                 name="asset_search_text",
@@ -312,6 +313,20 @@ S3OptionsFilter({
                          "location_id$L2",
                          ]
 
+        # Work-in-progress
+        #crud_form = S3SQLCustomForm("number",
+        #                            S3SQLInlineComponent(
+        #                                "sub",
+        #                                label = T("Component Assets"),
+        #                                link = True,
+        #                                #comment = "Bob",
+        #                                fields = ["number",
+        #                                          "type",
+        #                                          "item_id",
+        #                                          ],
+        #                                ),
+        #                            )
+
         # Resource Configuration
         configure(tablename,
                   super_entity = ("supply_item_entity", "sit_trackable"),
@@ -320,6 +335,7 @@ S3OptionsFilter({
                   create_next = URL(c="asset", f="asset",
                                     args=["[id]"]),
                   onaccept=self.asset_onaccept,
+                  #crud_form = crud_form,
                   search_method=search_method,
                   report_options=Storage(
                         search=report_search,
@@ -362,6 +378,38 @@ S3OptionsFilter({
         # GPS as a component of Assets
         add_component("vehicle_gps", asset_asset="asset_id")
 
+        # Sub Assets
+        #add_component("asset_asset",
+        #              asset_asset=dict(name="sub",
+        #                               link="asset_sub_asset",
+        #                               joinby="organisation_id",
+        #                               key="sub_id",
+        #                               #actuate="embed",
+        #                               #autocomplete="number",
+        #                               autodelete=True))
+
+        # For imports
+        #add_component("asset_asset",
+        #              asset_asset=dict(name="parent",
+        #                               link="asset_sub_asset",
+        #                               joinby="sub_id",
+        #                               key="organisation_id",
+        #                               #actuate="embed",
+        #                               #autocomplete="number",
+        #                               autodelete=False))
+
+        # ---------------------------------------------------------------------
+        # Sub Assets
+        #
+        #tablename = "asset_sub_asset"
+        #table = define_table(tablename,
+        #                     asset_id(ondelete="CASCADE"),
+        #                     asset_id("sub_id",
+        #                              label=T("Component Asset"),
+        #                              default=None,
+        #                              ondelete="CASCADE"),
+        #                     *s3_meta_fields())
+
         # =====================================================================
         # Asset Log
         #
@@ -383,12 +431,25 @@ S3OptionsFilter({
                                 5:T("Needs Maintenance"),
                                 }
 
-        # T isn't JSON serializable
-        # @ToDo: Do this only in Interactive views
-        site_types = auth.org_site_types
-        for key in site_types.keys():
-            site_types[key] = str(site_types[key])
-        site_types = json.dumps(site_types)
+        if auth.permission.format == "html":
+            # T isn't JSON serializable
+            site_types = auth.org_site_types
+            for key in site_types.keys():
+                site_types[key] = str(site_types[key])
+            site_types = json.dumps(site_types)
+            script = '''
+S3OptionsFilter({
+ 'triggerName':'organisation_id',
+ 'targetName':'site_id',
+ 'lookupPrefix':'org',
+ 'lookupResource':'site',
+ 'lookupField':'site_id',
+ 'fncRepresent': function(record,PrepResult){
+  var InstanceTypeNice=%(instance_type_nice)s
+  return record.name+" ("+InstanceTypeNice[record.instance_type]+")"
+}})''' % dict(instance_type_nice = site_types)
+        else:
+            script = None
 
         tablename = "asset_log"
         table = define_table(tablename,
@@ -441,17 +502,7 @@ S3OptionsFilter({
                                         empty = False,
                                         represent = self.org_site_represent,
                                         #widget = S3SiteAutocompleteWidget(),
-                                        script = '''
-S3OptionsFilter({
- 'triggerName':'organisation_id',
- 'targetName':'site_id',
- 'lookupPrefix':'org',
- 'lookupResource':'site',
- 'lookupField':'site_id',
- 'fncRepresent': function(record,PrepResult){
-  var InstanceTypeNice=%(instance_type_nice)s
-  return record.name+" ("+InstanceTypeNice[record.instance_type]+")"
-}})''' % dict(instance_type_nice = site_types),
+                                        script = script,
                                         ),
                              self.org_room_id(),
                              #location_id(),
@@ -514,12 +565,11 @@ S3OptionsFilter({
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                    asset_asset_id = asset_id,
+        return dict(asset_asset_id = asset_id,
                     asset_rheader = asset_rheader,
                     asset_represent = self.asset_represent,
                     asset_log_prep = self.asset_log_prep,
-                )
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -253,7 +253,7 @@ class S3HRModel(S3Model):
                 msg_record_deleted = T("Job Title deleted"),
                 msg_list_empty = T("Currently no entries in the catalog"))
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup=tablename, translate=True)
         job_title_id = S3ReusableField("job_title_id", table,
                                 sortby = "name",
                                 label = label,

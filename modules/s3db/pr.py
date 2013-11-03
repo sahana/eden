@@ -2335,6 +2335,8 @@ class S3PersonIdentityModel(S3Model):
                                         represent = lambda opt: \
                                              pr_id_type_opts.get(opt,
                                                                  current.messages.UNKNOWN_OPT)),
+                                  Field("description",
+                                        label = T("Description")),
                                   Field("value",
                                         label = T("Number")),
                                   s3_date("valid_from",
@@ -2344,8 +2346,6 @@ class S3PersonIdentityModel(S3Model):
                                   s3_date("valid_until",
                                           label = T("Valid Until"),
                                           ),
-                                  Field("description",
-                                        label = T("Description")),
                                   Field("country_code", length=4,
                                         label=T("Country Code")),
                                   Field("ia_name",

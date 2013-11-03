@@ -119,112 +119,115 @@ class S3LocationModel(S3Model):
 
         tablename = "gis_location"
         table = self.define_table(tablename,
-                             Field("name", length=128,
-                                   # Placenames don't have to be unique.
-                                   # Waypoints don't need to have a name at all.
-                                   #requires = IS_NOT_EMPTY()
-                                   label = T("Name"),
-                                   ),
-                             Field("level", length=2,
-                                   label = T("Level"),
-                                   requires = IS_NULL_OR(IS_IN_SET(hierarchy_level_keys)),
-                                   represent = self.gis_level_represent,
-                                   ),
-                             Field("parent", "reference gis_location", # This form of hierarchy may not work on all Databases
-                                   label = T("Parent"),
-                                   represent = gis_location_represent,
-                                   widget=S3LocationAutocompleteWidget(level=hierarchy_level_keys),
-                                   ondelete = "RESTRICT"),
-                             # Materialised Path
-                             Field("path", length=256,
-                                   readable=False,
-                                   writable=False),
-                             Field("gis_feature_type", "integer",
-                                   default=1, notnull=True,
-                                   requires = IS_IN_SET(gis_feature_type_opts,
-                                                        zero=None),
-                                   represent = lambda opt: \
-                                    gis_feature_type_opts.get(opt,
-                                                              messages.UNKNOWN_OPT),
-                                   label = T("Feature Type")
-                                   ),
-                             # Points or Centroid for Polygons
-                             Field("lat", "double",
-                                   label = T("Latitude"),
-                                   requires = IS_NULL_OR(IS_LAT()),
-                                   comment = DIV(_class="tooltip",
-                                                 _id="gis_location_lat_tooltip",
-                                                 _title="%s|%s|%s|%s|%s|%s" % \
-                                                 (T("Latitude & Longitude"),
-                                                  T("Latitude is North - South (Up-Down)."),
-                                                  T("Longitude is West - East (sideways)."),
-                                                  T("Latitude is zero on the equator and positive in the northern hemisphere and negative in the southern hemisphere."),
-                                                  T("Longitude is zero on the prime meridian (through Greenwich, United Kingdom) and is positive to the east, across Europe and Asia.  Longitude is negative to the west, across the Atlantic and the Americas."),
-                                                  T("These need to be added in Decimal Degrees."))),
-                                   ),
-                             Field("lon", "double",
-                                   label = T("Longitude"),
-                                   requires = IS_NULL_OR(IS_LON()),
-                                   ),
-                             Field("wkt", "text",
-                                   # Full WKT validation is done in the onvalidation callback
-                                   # - all we do here is allow longer fields than the default (2 ** 16)
-                                   # - this size handles the standard USA_L0
-                                   requires = IS_LENGTH(2 ** 27),
-                                   represent = self.gis_wkt_represent,
-                                   label = "WKT (Well-Known Text)"),
-                             Field("inherited", "boolean",
-                                   label = T("Inherited?"),
-                                   default = False,
-                                   writable = False,
-                                   represent = s3_yes_no_represent,
-                                   ),
-                             # Bounding box
-                             Field("lat_min", "double",
-                                   readable=False, writable=False),
-                             Field("lat_max", "double",
-                                   readable=False, writable=False),
-                             Field("lon_min", "double",
-                                   readable=False, writable=False),
-                             Field("lon_max", "double",
-                                   readable=False, writable=False),
-                             # m in height above WGS84 ellipsoid (approximately sea-level).
-                             Field("elevation", "double",
-                                   readable=False, writable=False),
-                             # Street Address (other address fields come from hierarchy)
-                             Field("addr_street", "text",
-                                   represent = lambda v: v or NONE,
-                                   label = T("Street Address")),
-                             Field("addr_postcode", length=128,
-                                   represent = lambda v: v or NONE,
-                                   label = T("Postcode")),
-                             s3_comments(),
-                             Field("L5",
-                                   represent = lambda v: v or NONE,
-                                   readable=False,
-                                   writable=False),
-                             Field("L4",
-                                   represent = lambda v: v or NONE,
-                                   readable=False,
-                                   writable=False),
-                             Field("L3",
-                                   represent = lambda v: v or NONE,
-                                   readable=False,
-                                   writable=False),
-                             Field("L2",
-                                   represent = lambda v: v or NONE,
-                                   readable=False,
-                                   writable=False),
-                             Field("L1",
-                                   represent = lambda v: v or NONE,
-                                   readable=False,
-                                   writable=False),
-                             Field("L0",
-                                   #label=current.messages.COUNTRY,
-                                   represent = lambda v: v or NONE,
-                                   readable=False,
-                                   writable=False),
-                             *meta_spatial_fields)
+            Field("name", length=128,
+                  # Placenames don't have to be unique.
+                  # Waypoints don't need to have a name at all.
+                  #requires = IS_NOT_EMPTY()
+                  label = T("Name"),
+                  ),
+            Field("level", length=2,
+                  label = T("Level"),
+                  requires = IS_NULL_OR(IS_IN_SET(hierarchy_level_keys)),
+                  represent = self.gis_level_represent,
+                  ),
+            Field("parent", "reference gis_location", # This form of hierarchy may not work on all Databases
+                  label = T("Parent"),
+                  represent = gis_location_represent,
+                  widget=S3LocationAutocompleteWidget(level=hierarchy_level_keys),
+                    ondelete = "RESTRICT"),
+            # Materialised Path
+            Field("path", length=256,
+                  readable=False,
+                  writable=False),
+            Field("gis_feature_type", "integer",
+                  default=1, notnull=True,
+                  requires = IS_IN_SET(gis_feature_type_opts,
+                                       zero=None),
+                  represent = lambda opt: \
+                    gis_feature_type_opts.get(opt,
+                                              messages.UNKNOWN_OPT),
+                  label = T("Feature Type")
+                  ),
+            # Points or Centroid for Polygons
+            Field("lat", "double",
+                  label = T("Latitude"),
+                  requires = IS_NULL_OR(IS_LAT()),
+                  comment = DIV(_class="tooltip",
+                                _id="gis_location_lat_tooltip",
+                                _title="%s|%s|%s|%s|%s|%s" % \
+                                (T("Latitude & Longitude"),
+                                 T("Latitude is North - South (Up-Down)."),
+                                 T("Longitude is West - East (sideways)."),
+                                 T("Latitude is zero on the equator and positive in the northern hemisphere and negative in the southern hemisphere."),
+                                 T("Longitude is zero on the prime meridian (through Greenwich, United Kingdom) and is positive to the east, across Europe and Asia.  Longitude is negative to the west, across the Atlantic and the Americas."),
+                                 T("These need to be added in Decimal Degrees."))),
+                  ),
+            Field("lon", "double",
+                  label = T("Longitude"),
+                  requires = IS_NULL_OR(IS_LON()),
+                  ),
+            Field("wkt", "text",
+                  # Full WKT validation is done in the onvalidation callback
+                  # - all we do here is allow longer fields than the default (2 ** 16)
+                  # - this size handles the standard USA_L0
+                  requires = IS_LENGTH(2 ** 27),
+                  represent = self.gis_wkt_represent,
+                  label = "WKT (Well-Known Text)"
+                  ),
+            Field("inherited", "boolean",
+                  label = T("Inherited?"),
+                  default = False,
+                  writable = False,
+                  represent = s3_yes_no_represent,
+                  ),
+            # Bounding box
+            Field("lat_min", "double",
+                  readable=False, writable=False),
+            Field("lat_max", "double",
+                  readable=False, writable=False),
+            Field("lon_min", "double",
+                  readable=False, writable=False),
+            Field("lon_max", "double",
+                  readable=False, writable=False),
+            # m in height above WGS84 ellipsoid (approximately sea-level).
+            Field("elevation", "double",
+                  readable=False, writable=False),
+            # Street Address (other address fields come from hierarchy)
+            Field("addr_street", "text",
+                  represent = lambda v: v or NONE,
+                  label = T("Street Address")),
+            Field("addr_postcode", length=128,
+                  represent = lambda v: v or NONE,
+                  label = T("Postcode")),
+            s3_date("start_date"),
+            s3_date("end_date"),
+            s3_comments(),
+            Field("L5",
+                  represent = lambda v: v or NONE,
+                  readable=False,
+                  writable=False),
+            Field("L4",
+                  represent = lambda v: v or NONE,
+                  readable=False,
+                  writable=False),
+            Field("L3",
+                  represent = lambda v: v or NONE,
+                  readable=False,
+                  writable=False),
+            Field("L2",
+                  represent = lambda v: v or NONE,
+                  readable=False,
+                  writable=False),
+            Field("L1",
+                  represent = lambda v: v or NONE,
+                  readable=False,
+                  writable=False),
+            Field("L0",
+                  #label=current.messages.COUNTRY,
+                  represent = lambda v: v or NONE,
+                  readable=False,
+                  writable=False),
+            *meta_spatial_fields)
 
         # Default the owning role to Authenticated. This can be used to allow the site
         # to control whether authenticated users get to create / update locations, or
@@ -359,7 +362,7 @@ class S3LocationModel(S3Model):
                 gis_location_represent = gis_location_represent,
                 gis_location_onvalidation = self.gis_location_onvalidation,
                 gis_feature_type_opts = gis_feature_type_opts,
-            )
+                )
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -657,6 +660,8 @@ class S3LocationModel(S3Model):
                 and, if level exists in the import, the same level
                 and, if parent exists in the import, the same parent
 
+            @ToDo: Check name.name_l10n
+
             @ToDo: Use codes that we know are unique
 
             @ToDo: Check soundex? (only good in English)
@@ -749,6 +754,10 @@ class S3LocationModel(S3Model):
         # Query comes in pre-filtered to accessible & deletion_status
         # Respect response.s3.filter
         resource.add_filter(response.s3.filter)
+
+        # Filter out old Locations
+        # @ToDo: Allow override
+        resource.add_filter(table.end_date == None)
 
         _vars = current.request.get_vars
 
@@ -1007,7 +1016,7 @@ class S3LocationNameModel(S3Model):
         l10n_languages = current.response.s3.l10n_languages
 
         # ---------------------------------------------------------------------
-        # Local Names
+        # Local/Alternate Names
         #
         tablename = "gis_location_name"
         table = self.define_table(tablename,
@@ -1019,7 +1028,7 @@ class S3LocationNameModel(S3Model):
                                             l10n_languages.get(opt,
                                                                current.messages.UNKNOWN_OPT)),
                                   Field("name_l10n",
-                                        label = T("Name")),
+                                        label = T("Local Name")),
                                   s3_comments(),
                                   *s3_meta_fields())
 

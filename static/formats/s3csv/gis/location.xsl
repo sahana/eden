@@ -37,7 +37,10 @@
          lon_min............
          lon_max............
          Elevation..........Elevation    (optional)
+         Start Date.........Start Date   (optional)
+         End Date...........End Date     (optional)
          Population.........Population   (optional)
+         Comments...........Comments     (optional)
 
          Specify as many level of hierarchy as you need to ensure correct
          location within the hierarchy
@@ -795,6 +798,15 @@
                                 </xsl:if>
                             </xsl:when>
                         </xsl:choose>
+                        <xsl:if test="col[@field='Start Date']!=''">
+                            <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
+                        </xsl:if>
+                        <xsl:if test="col[@field='End Date']!=''">
+                            <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
+                        </xsl:if>
+                        <xsl:if test="col[@field='Comments']!=''">
+                            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+                        </xsl:if>
                         <xsl:if test="col[@field='Population']!=''">
                             <resource name="gis_location_tag">
                                 <data field="tag">population</data>
@@ -865,6 +877,15 @@
                 </xsl:choose>
                 <xsl:if test="col[@field='Elevation']!=''">
                     <data field="elevation"><xsl:value-of select="col[@field='Elevation']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='Start Date']!=''">
+                    <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='End Date']!=''">
+                    <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='Comments']!=''">
+                    <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
                 </xsl:if>
                 <xsl:if test="col[@field='Population']!=''">
                     <resource name="gis_location_tag">
