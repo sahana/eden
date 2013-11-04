@@ -278,7 +278,7 @@
 "staff_data_entry","Staff Data Entry",,"hrm","human_resource",,,"NONE",,,,,
 "staff_data_entry","Staff Data Entry",,"hrm","job_title",,,"READ",,,,,
 "staff_data_entry","Staff Data Entry",,"hrm","training",,,"READ",,,,,
-"staff_data_entry","Staff Data Entry",,"org",,,,"READ",,,,,"Used to filter organisation fields"
+"staff_data_entry","Staff Data Entry",,"org",,,,"READ",,,,,
 "staff_data_entry","Staff Data Entry",,"vol",,,,"NONE",,,,,
 "staff_data_entry","Staff Data Entry",,"pr",,,,"READ|CREATE","READ|CREATE|UPDATE",,,,
 "staff_data_entry","Staff Data Entry",,"pr","contact",,,"READ|CREATE","READ|CREATE|UPDATE",,,,
@@ -415,7 +415,7 @@
 "vol_reader","Volunteer Reader",,,,"pr_person",,"READ","READ|UPDATE",,,,
 "vol_reader","Volunteer Reader",,,,"pr_physical_description",,"READ","READ|UPDATE",,,,
 "vol_data_entry","Volunteer Data Entry",,"hrm","human_resource",,,"NONE",,,,,
-"vol_data_entry","Volunteer Data Entry",,"org",,,,"READ",,,,,"Used to filter organisation fields"
+"vol_data_entry","Volunteer Data Entry",,"org",,,,"READ",,,,,
 "vol_data_entry","Volunteer Data Entry",,"vol",,,,"READ|CREATE","READ|CREATE|UPDATE",,,,
 "vol_data_entry","Volunteer Data Entry",,"vol","award",,,"READ",,,,,
 "vol_data_entry","Volunteer Data Entry",,"vol","certificate",,,"READ",,,,,
@@ -456,6 +456,7 @@
 "vol_editor","Volunteer Editor",,"vol","training",,,"READ",,,,,
 "vol_editor","Volunteer Editor",,,,"hrm_human_resource",,"READ|CREATE|UPDATE",,,,,
 "vol_editor","Volunteer Editor",,,,"hrm_training",,"READ|CREATE|UPDATE",,,,,
+"vol_editor","Volunteer Editor",,,,"org_organisation",,"READ|UPDATE",,,,,"Used to filter organisation fields"
 "vol_editor","Volunteer Editor",,,,"pr_address",,"READ|CREATE|UPDATE",,,,,
 "vol_editor","Volunteer Editor",,,,"pr_contact",,"READ|CREATE|UPDATE",,,,,
 "vol_editor","Volunteer Editor",,,,"pr_contact_emergency",,"READ|CREATE|UPDATE",,,,,
@@ -481,6 +482,7 @@
 "vol_super","Volunteer Super Editor",,"vol","training",,,"READ|CREATE|UPDATE|DELETE",,,,,
 "vol_super","Volunteer Super Editor",,,,"hrm_human_resource",,"READ|CREATE|UPDATE|DELETE",,,,,
 "vol_super","Volunteer Super Editor",,,,"hrm_training",,"READ|CREATE|UPDATE|DELETE",,,,,
+"vol_super","Volunteer Super Editor",,,,"org_organisation",,"READ|UPDATE",,,,,"Used to filter organisation fields"
 "vol_super","Volunteer Super Editor",,,,"pr_address",,"READ|CREATE|UPDATE|DELETE",,,,,
 "vol_super","Volunteer Super Editor",,,,"pr_contact",,"READ|CREATE|UPDATE|DELETE",,,,,
 "vol_super","Volunteer Super Editor",,,,"pr_contact_emergency",,"READ|CREATE|UPDATE|DELETE",,,,,

@@ -442,11 +442,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Search Members", f="group_membership", m="search"),
                         M("Import", f="group_membership", m="import"),
                     ),
-                    M("Department Catalog", f="department",
-                      check=manager_mode)(
-                        M("New", m="create"),
-                        M("List All"),
-                    ),
+                    #M("Department Catalog", f="department",
+                    #  check=manager_mode)(
+                    #    M("New", m="create"),
+                    #    M("List All"),
+                    #),
                     M("Volunteer Role Catalog", f="job_title",
                       check=manager_mode)(
                         M("New", m="create"),
