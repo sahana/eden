@@ -723,6 +723,10 @@ class S3Config(Storage):
         return self.gis.get("poi_resources",
                             ["cr_shelter", "hms_hospital", "org_office"])
 
+    def get_gis_postcode_selector(self):
+        " Display Postcode form field when selecting Locations "
+        return self.gis.get("postcode_selector", True)
+
     def get_gis_print_service(self):
         """
             URL for a Print Service
@@ -1414,7 +1418,7 @@ class S3Config(Storage):
     def get_hrm_vol_experience(self):
         """
             Whether to use Experience for Volunteers &, if so, which table to use
-            - options are: False, "experience" or "programme"
+            - options are: False, "experience", "programme" or "both"
         """
         return self.hrm.get("vol_experience", "programme")
 
@@ -1700,6 +1704,27 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # Persons
+    def get_pr_age_group(self, age):
+        """
+            Function to provide the age group for an age
+        """
+        fn = self.pr.get("age_group", None)
+        if fn:
+            group = fn(age)
+        else:
+            # Default
+            if age < 18 :
+                group = "-17" # "< 18"/" < 18" don't sort correctly
+            elif age < 25 :
+                group = "18-24"
+            elif age < 40:
+                group = "25-39"
+            elif age < 60:
+                group = "40-59"
+            else:
+                group = "60+"
+        return group
+
     def get_pr_request_dob(self):
         """ Include Date of Birth in the AddPersonWidget[2] """
         return self.pr.get("request_dob", True)

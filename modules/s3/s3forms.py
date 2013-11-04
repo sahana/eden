@@ -1090,7 +1090,10 @@ class S3SQLCustomForm(S3SQLForm):
         """
 
         if not data:
-            return
+            if alias is None:
+                return None, Storage()
+            else:
+                return None
 
         s3db = current.s3db
 

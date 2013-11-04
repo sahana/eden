@@ -1035,16 +1035,8 @@ class S3PersonModel(S3Model):
         else:
             age = today.year - dob.year
 
-        if age < 18 :
-            return "-17" # "< 18"/" < 18" don't sort correctly
-        elif age < 25 :
-            return "18-24"
-        elif age < 40:
-            return "25-39"
-        elif age < 60:
-            return "40-59"
-        else:
-            return "60+"
+        result = current.deployment_settings.get_pr_age_group(age)
+        return result
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2315,13 +2307,12 @@ class S3PersonIdentityModel(S3Model):
         #  <xs:enumeration value="Certificate"/>
         #  <xs:enumeration value="MileageProgram"/>
         #
-        pr_id_type_opts = {
-            1:T("Passport"),
-            2:T("National ID Card"),
-            3:T("Driving License"),
-            #4:T("Credit Card"),
-            99:T("other")
-        }
+        pr_id_type_opts = {1:  T("Passport"),
+                           2:  T("National ID Card"),
+                           3:  T("Driving License"),
+                           #4: T("Credit Card"),
+                           99: T("other")
+                           }
 
         tablename = "pr_identity"
         table = self.define_table(tablename,

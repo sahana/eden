@@ -45,4 +45,5 @@ Vulnerability,Reader,vul_reader@example.com,eden,"reader/0,vulnerability_reader/
 Vulnerability,Data Entry,vul_data_entry@example.com,eden,"reader/0,vulnerability_data_entry/0",International Federation of Red Cross and Red Crescent Societies,
 Vulnerability,Editor,vul_editor@example.com,eden,"reader/0,vulnerability_editor/0",International Federation of Red Cross and Red Crescent Societies,
 Vulnerability,Super Editor,vul_super@example.com,eden,"reader/0,vulnerability_super/0",International Federation of Red Cross and Red Crescent Societies,
-Vietnam,Volunteer Data Entry,vn@example.com,eden,"vol_data_entry",Viet Nam Red Cross,vi
+Vietnam,Volunteer Data Entry,vn_dataentry@example.com,eden,"vol_data_entry",Viet Nam Red Cross,vi
+Vietnam,Volunteer Editor,vn_editor@example.com,eden,"vol_editor",Viet Nam Red Cross,vi

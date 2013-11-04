@@ -227,7 +227,8 @@ def volunteer():
                                "search_method")
     report_options = get_config(tablename,
                                 "report_options")
-    if settings.get_hrm_vol_experience() == "programme":
+    vol_experience = settings.get_hrm_vol_experience()
+    if vol_experience in ("programme", "both"):
         enable_active_field = settings.set_org_dependent_field("vol_details", "active",
                                                                enable_field = False)
         # Add to List Fields
@@ -328,6 +329,7 @@ def volunteer():
                 set_org_dependent_field("pr_person_details", "mother_name")
                 set_org_dependent_field("pr_person_details", "affiliations")
                 set_org_dependent_field("pr_person_details", "company")
+                set_org_dependent_field("vol_details", "availability")
                 set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_type_id")
                 set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_id")
                 set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_position_id")
@@ -365,7 +367,8 @@ def volunteer():
                             "_class": "action-btn send",
                             "label": str(T("Send Message"))
                         })
-                if settings.get_hrm_vol_experience() == "programme" and \
+                vol_experience = settings.get_hrm_vol_experience()
+                if vol_experience in ("programme", "both") and \
                    r.method not in ["search", "report", "import"] and \
                    "form" in output:
                     # Insert field to set the Programme
@@ -416,6 +419,11 @@ def person():
     set_method("pr", resourcename,
                method="contacts",
                action=s3db.pr_contacts)
+
+    # Custom Method for CV
+    set_method("pr", resourcename,
+               method="cv",
+               action=s3db.hrm_cv)
 
     # Plug-in role matrix for Admins/OrgAdmins
     realms = auth.user is not None and auth.user.realms or []
@@ -589,6 +597,7 @@ def person():
 
                     # Organisation Dependent Fields
                     set_org_dependent_field = settings.set_org_dependent_field
+                    set_org_dependent_field("vol_details", "availability")
                     set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_type_id")
                     set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_id")
                     set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_position_id")
@@ -654,7 +663,8 @@ def person():
                 # Set the minimum end_date to the same as the start_date
                 s3.jquery_ready.append(
 '''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
-                if settings.get_hrm_vol_experience() == "programme" and \
+                vol_experience = settings.get_hrm_vol_experience()
+                if vol_experience in ("programme", "both") and \
                    r.method not in ["search", "report", "import"] and \
                    "form" in output:
                     # Insert field to set the Programme

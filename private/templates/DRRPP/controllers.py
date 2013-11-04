@@ -714,9 +714,6 @@ class organisations():
 
     def __call__(self):
 
-        from gluon.storage import Storage
-        from s3 import S3FieldSelector
-
         #T = current.T
         request = current.request
         response = current.response
@@ -736,9 +733,6 @@ class organisations():
 
         tables = []
         table = request.vars.get("table", None)
-
-        # URL format breaks the REST controller conventions
-        #request.args.pop()
 
         if table is None:
             # HTML call
@@ -777,7 +771,6 @@ class organisations():
             - Filtered subset of Organisations
         """
 
-        from s3 import S3FieldSelector, s3_request
         T = current.T
 
         s3request = s3_request("org", "organisation", extension="aadata")
@@ -807,7 +800,6 @@ class organisations():
             - Filtered subset of Organisations
         """
 
-        from s3 import S3FieldSelector, s3_request
         T = current.T
 
         s3db = current.s3db
@@ -820,15 +812,14 @@ class organisations():
                                                                  "Network"]))
         s3request.resource.add_filter(f)
 
-        field_list = [
-            "id",
-            "name",
-            "acronym",
-            (T("Type"), "organisation_type_id"),
-            "year",
-            (T("Address"), "address"),
-            (T("Notes"), "comments"),
-        ]
+        field_list = ["id",
+                      "name",
+                      "acronym",
+                      (T("Type"), "organisation_type_id"),
+                      "year",
+                      (T("Address"), "address"),
+                      (T("Notes"), "comments"),
+                      ]
         return (s3request, field_list)
 
     # -------------------------------------------------------------------------
@@ -876,7 +867,6 @@ class organisations():
         table = Storage(cols=cols,
                         rows=rows,
                         #options=options,
-                        classes="dataTable display"
                         )
 
         return table

@@ -805,7 +805,7 @@ class S3ProjectModel(S3Model):
             response.view = "map.html"
             return output
         else:
-            raise HTTP(501, BADMETHOD)
+            raise HTTP(501, current.messages.BADMETHOD)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -929,7 +929,7 @@ class S3ProjectModel(S3Model):
             return output
 
         else:
-            raise HTTP(501, BADMETHOD)
+            raise HTTP(501, current.messages.BADMETHOD)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5095,7 +5095,7 @@ class S3ProjectTaskModel(S3Model):
             return output
 
         else:
-            raise HTTP(501, BADMETHOD)
+            raise HTTP(501, current.messages.BADMETHOD)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5210,7 +5210,7 @@ class S3ProjectTaskModel(S3Model):
             return output
 
         else:
-            raise HTTP(501, BADMETHOD)
+            raise HTTP(501, current.messages.BADMETHOD)
 
 # =============================================================================
 class S3ProjectTaskHRMModel(S3Model):

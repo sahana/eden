@@ -3065,6 +3065,8 @@ class S3LocationSelectorWidget(FormWidget):
             no_map = '''S3.gis.no_map = true;\n'''
         # Should we display LatLon boxes?
         latlon_selector = settings.get_gis_latlon_selector()
+        # Should we display Postcode box?
+        postcode_selector = settings.get_gis_postcode_selector()
         # Show we display Polygons?
         polygon = self.polygon
         # Navigate Away Confirm?
@@ -3350,7 +3352,8 @@ S3.gis.tab="%s"''' % s3.gis.tab
         else:
             NAME_LABEL = T("Building Name")
         STREET_LABEL = T("Street Address")
-        POSTCODE_LABEL = settings.get_ui_label_postcode()
+        if postcode_selector:
+            POSTCODE_LABEL = settings.get_ui_label_postcode()
         LAT_LABEL = T("Latitude")
         LON_LABEL = T("Longitude")
         AUTOCOMPLETE_HELP = T("Enter some characters to bring up a list of possible matches")
@@ -3376,10 +3379,11 @@ S3.gis.tab="%s"''' % s3.gis.tab
                                      _class="text",
                                      _name="gis_location_street",
                                      _disabled="disabled")
-            postcode_widget = INPUT(value=postcode,
-                                    _id="gis_location_postcode",
-                                    _name="gis_location_postcode",
-                                    _disabled="disabled")
+            if postcode_selector:
+                postcode_widget = INPUT(value=postcode,
+                                        _id="gis_location_postcode",
+                                        _name="gis_location_postcode",
+                                        _disabled="disabled")
 
             lat_widget = S3LatLonWidget("lat",
                                         disabled=True).widget(value=lat)
@@ -3428,10 +3432,11 @@ S3.gis.tab="%s"''' % s3.gis.tab
             name_widget = INPUT(_id="gis_location_name",
                                 _name="gis_location_name")
             street_widget = TEXTAREA(_id="gis_location_street",
-                                     _class="text",
+                                     _class="text comments",
                                      _name="gis_location_street")
-            postcode_widget = INPUT(_id="gis_location_postcode",
-                                    _name="gis_location_postcode")
+            if postcode_selector:
+                postcode_widget = INPUT(_id="gis_location_postcode",
+                                        _name="gis_location_postcode")
             lat_widget = S3LatLonWidget("lat").widget()
             lon_widget = S3LatLonWidget("lon", switch_button=True).widget()
 
@@ -3525,16 +3530,19 @@ S3.gis.geocoder=true'''
             hidden = "hide"
         elif value and not postcode:
             hidden = "hide"
-        postcode_rows = DIV(TR(LABEL("%s:" % POSTCODE_LABEL), TD(),
-                               _id="gis_location_postcode_label__row",
-                               _class="%s locselect box_middle" % hidden),
-                            TR(postcode_widget, TD(),
-                               _id="gis_location_postcode__row",
-                               _class="%s locselect box_middle" % hidden),
-                            TR(INPUT(_id="gis_location_postcode_search",
-                                     _disabled="disabled"), TD(),
-                               _id="gis_location_postcode_search__row",
-                               _class="hide locselect box_middle"))
+        if postcode_selector:
+            postcode_rows = DIV(TR(LABEL("%s:" % POSTCODE_LABEL), TD(),
+                                   _id="gis_location_postcode_label__row",
+                                   _class="%s locselect box_middle" % hidden),
+                                TR(postcode_widget, TD(),
+                                   _id="gis_location_postcode__row",
+                                   _class="%s locselect box_middle" % hidden),
+                                TR(INPUT(_id="gis_location_postcode_search",
+                                         _disabled="disabled"), TD(),
+                                   _id="gis_location_postcode_search__row",
+                                   _class="hide locselect box_middle"))
+        else:
+            postcode_rows = DIV()
 
         hidden = ""
         no_latlon = ""

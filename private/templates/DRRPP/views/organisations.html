@@ -2,34 +2,32 @@
 {{if globals().get("tables", False):}}
 <div class='body-content-wrapper grid_12 alpha omega'>
  <div id='table-container'>
-  <div class='body-label-wrapper grid_12'>
+  <div class='body-label-wrapper grid_12'>{{table = tables[0]}}
    <span class='icon body-icon icon-doc'></span>
    <span class='body-label-text label-text'><h2>Regional Organisations</h2></span>
   </div>
   <div class='line grid_12 alpha omega'></div>
-{{table = tables[0]}}
-<table class='{{=table.classes}}'>
- <thead>
-  <tr>{{for col in table.cols:}}<th scope='col'>{{=col["label"]}}</th>{{pass}}</tr>
- </thead>
- <tbody>
- {{for row in table.rows:}}<tr>{{for cell in row:}}<td>{{=XML(cell)}}</td>{{pass}}</tr>{{pass}}
- </tbody>
-</table>
-  <div class='body-label-wrapper grid_12'>
+  <table class='dataTable display'>
+   <thead>
+    <tr>{{for col in table.cols:}}<th scope='col'>{{=col["label"]}}</th>{{pass}}</tr>
+   </thead>
+   <tbody>
+    {{for row in table.rows:}}<tr>{{for cell in row:}}<td>{{=XML(cell)}}</td>{{pass}}</tr>{{pass}}
+   </tbody>
+  </table>
+  <div class='body-label-wrapper grid_12'>{{table = tables[1]}}
    <span class='icon body-icon icon-doc'></span>
    <span class='body-label-text label-text'><h2>Committees, Forums, Mechanism, Meetings and Networks</h2></span>
   </div>
   <div class='line grid_12 alpha omega'></div>
-{{table = tables[1]}}
-<table class='{{=table.classes}}'>
- <thead>
-  <tr>{{for col in table.cols:}}<th scope='col'>{{=col["label"]}}</th>{{pass}}</tr>
- </thead>
- <tbody>
- {{for row in table.rows:}}<tr>{{for cell in row:}}<td>{{=XML(cell)}}</td>{{pass}}</tr>{{pass}}
- </tbody>
-</table>
+  <table class='dataTable display'>
+   <thead>
+    <tr>{{for col in table.cols:}}<th scope='col'>{{=col["label"]}}</th>{{pass}}</tr>
+   </thead>
+   <tbody>
+    {{for row in table.rows:}}<tr>{{for cell in row:}}<td>{{=XML(cell)}}</td>{{pass}}</tr>{{pass}}
+   </tbody>
+  </table>
  </div>
 </div>
 {{pass}}
