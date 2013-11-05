@@ -4848,7 +4848,7 @@ def hrm_human_resource_controller(extra_filter=None):
             if teams:
                 filter_widgets.append(
                     S3OptionsFilter("group_membership.group_id",
-                                    label = team,
+                                    label = T(teams),
                                     widget="multiselect",
                                     hidden=True,
                                     ))
