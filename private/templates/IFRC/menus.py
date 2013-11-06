@@ -313,7 +313,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       check=manager_mode)(
                         M("New", m="create"),
                         M("List All"),
-                        M("Search", m="search"),
+                        #M("Search", m="search"),
                         M("Import", m="import", p="create"),
                     ),
                     M("Department Catalog", c="hrm", f="department",

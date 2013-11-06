@@ -106,12 +106,14 @@ div#header-top-menu {
  </div>
 </div>
 <div id='content-wrapper' class='container_12'>
-{{if response.error:}}<div class='error'>{{=response.error}}</div>{{pass}}
-{{if response.warning:}}<div class='warning'>{{=response.warning}}</div>{{pass}}
-{{if response.information:}}<div class='information'>{{=response.information}}</div>{{pass}}
-{{if response.confirmation:}}<div class='confirmation'>{{=response.confirmation}}</div>{{pass}}
-{{if response.flash:}}<div class='confirmation'>{{=response.flash}}</div>{{pass}}
-{{include}}
+ <div id='alert-space'>
+  {{if response.error:}}<div class='alert alert-error'>{{=response.error}}</div>{{pass}}
+  {{if response.warning:}}<div class='alert alert-warning'>{{=response.warning}}</div>{{pass}}
+  {{if response.information:}}<div class='alert alert-info'>{{=response.information}}</div>{{pass}}
+  {{if response.confirmation:}}<div class='alert alert-success'>{{=response.confirmation}}</div>{{pass}}
+  {{if response.flash:}}<div class='alert alert-success'>{{=response.flash}}</div>{{pass}}
+ </div>
+ {{include}}
 </div>
 {{if request.get_vars.footer != "hide":}}
 <div id='footer' class='container_12'>

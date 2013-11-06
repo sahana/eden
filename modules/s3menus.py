@@ -1463,7 +1463,7 @@ class S3OptionsMenu(object):
                         M("New", m="create"),
                         M("List All"),
                         M("Map", m="map"),
-                        M("Search", m="search"),
+                        #M("Search", m="search"),
                         M("Import", m="import")
                     ),
                     M("Facilities", f="facility")(

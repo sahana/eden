@@ -84,6 +84,7 @@ class S3LocationModel(S3Model):
         T = current.T
         db = current.db
         messages = current.messages
+        settings = current.deployment_settings
         NONE = messages["NONE"]
 
         # Shortcuts
@@ -107,7 +108,7 @@ class S3LocationModel(S3Model):
 
         hierarchy_level_keys = current.gis.hierarchy_level_keys
 
-        if current.deployment_settings.get_gis_spatialdb():
+        if settings.get_gis_spatialdb():
             # Add a spatial field
             # Should we do a test to confirm this? Ideally that would be done only in eden_update_check
             meta_spatial_fields = (s3_meta_fields() + (Field("the_geom", "geometry()",
@@ -199,8 +200,10 @@ class S3LocationModel(S3Model):
             Field("addr_postcode", length=128,
                   represent = lambda v: v or NONE,
                   label = T("Postcode")),
-            s3_date("start_date"),
-            s3_date("end_date"),
+            s3_date("start_date",
+                    label = T("Start Date")),
+            s3_date("end_date",
+                    label = T("End Date")),
             s3_comments(),
             Field("L5",
                   represent = lambda v: v or NONE,
@@ -291,23 +294,29 @@ class S3LocationModel(S3Model):
                                      represent = self.gis_country_represent,
                                      ondelete = "RESTRICT")
 
+        list_fields = ["id",
+                       "name",
+                       "level",
+                       #"parent",
+                       "L0",
+                       "L1",
+                       "L2",
+                       "L3",
+                       "L4",
+                       "start_date",
+                       "end_date",
+                       "lat",
+                       "lon",
+                       ]
+        if settings.get_L10n_translate_gis_location():
+            list_fields.insert(2, "name.name_l10n")
+            
         self.configure(tablename,
                        onvalidation=self.gis_location_onvalidation,
                        onaccept=self.gis_location_onaccept,
                        deduplicate=self.gis_location_duplicate,
                        list_orderby=table.name,
-                       list_fields = ["id",
-                                      "name",
-                                      "level",
-                                      #"parent",
-                                      "L0",
-                                      "L1",
-                                      "L2",
-                                      "L3",
-                                      "L4",
-                                      "lat",
-                                      "lon"
-                                      ],
+                       list_fields = list_fields,
                        context = {"location": "parent",
                                   },
                        )
@@ -656,28 +665,29 @@ class S3LocationModel(S3Model):
           If the record is a duplicate then it will set the job method to update
 
           Rules for finding a duplicate:
-           - Look for a record with the same name, ignoring case
-                and, if level exists in the import, the same level
-                and, if parent exists in the import, the same parent
-
-            @ToDo: Check name.name_l10n
+           - Don't do deduplication if there is no level
+           - Look for a record with the same name, ignopring case
+           - If no match, also check name_l10n
+           - If parent exists in the import, the same parent
+           - If start_date exists in the import, the same start_date
+           - If end_date exists in the import, the same end_date
 
             @ToDo: Use codes that we know are unique
 
             @ToDo: Check soundex? (only good in English)
                    http://eden.sahanafoundation.org/ticket/481
+                   - make a deployment_setting for relevant function?
         """
 
         if job.tablename == "gis_location":
             table = job.table
             data = job.data
-            name = "name" in data and data.name or None
-            level = "level" in data and data.level or None
-            parent = "parent" in data and data.parent or None
+            name = data.get("name", None)
 
             if not name:
                 return
 
+            level = data.get("level", None)
             if not level:
                 # Don't deduplicate precise locations as hard to ensure these have unique names
                 return
@@ -687,6 +697,10 @@ class S3LocationModel(S3Model):
                 job.method = None
                 return
 
+            parent = data.get("parent", None)
+            start_date = data.get("start_date", None)
+            end_date = data.get("end_date", None)
+
             # @ToDo: check the the lat and lon if they exist?
             #lat = "lat" in data and data.lat
             #lon = "lon" in data and data.lon
@@ -695,15 +709,45 @@ class S3LocationModel(S3Model):
             # @ToDo: Hook for possible duplicates vs definite?
             #query = (table.name.lower().like('%%%s%%' % name.lower()))
             query = (table.name.lower() == name.lower()) & \
-                    (table.level == level)
+                    (table.level == level) & \
+                    (table.end_date == end_date)
             if parent:
                 query &= (table.parent == parent)
+            if start_date:
+                query &= (table.start_date == start_date)
 
             _duplicate = current.db(query).select(table.id,
                                                   limitby=(0, 1)).first()
             if _duplicate:
+                # @ToDo: Import Log
+                #s3_debug("Location Match")
                 job.id = _duplicate.id
                 job.method = job.METHOD.UPDATE
+            elif current.deployment_settings.get_L10n_translate_gis_location():
+                # See if this a name_l10n
+                ltable = current.s3db.gis_location_name
+                query = (ltable.name_l10n == name) & \
+                        (ltable.location_id == table.id) & \
+                        (table.level == level) & \
+                        (table.end_date == end_date)
+                if parent:
+                    query &= (table.parent == parent)
+                if start_date:
+                    query &= (table.start_date == start_date)
+
+                _duplicate = current.db(query).select(table.id,
+                                                      table.name,
+                                                      limitby=(0, 1)).first()
+                if _duplicate:
+                    # @ToDo: Import Log
+                    #s3_debug("Location l10n Match")
+                    data.name = _duplicate.name # Don't update the name
+                    job.id = _duplicate.id
+                    job.method = job.METHOD.UPDATE
+                else:
+                    # @ToDo: Import Log
+                    #s3_debug("No Match: %s" % s3_unicode(name))
+                    pass
 
     # -------------------------------------------------------------------------
     @staticmethod

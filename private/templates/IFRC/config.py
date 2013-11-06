@@ -207,7 +207,7 @@ settings.L10n.date_format = T("%d-%b-%y")
 # Make last name in person/user records mandatory
 settings.L10n.mandatory_lastname = True
 # Translate Location Names
-#settings.L10n.translate_gis_location = True
+settings.L10n.translate_gis_location = True
 
 # -----------------------------------------------------------------------------
 # Finance settings

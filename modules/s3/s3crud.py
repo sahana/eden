@@ -559,6 +559,7 @@ class S3CRUD(S3Method):
                 if popup_url:
                     details_btn = A(T("Open"),
                                     _href=popup_url,
+                                    _class="btn",
                                     _id="details-btn",
                                     _target="_blank")
                     output["details_btn"] = details_btn

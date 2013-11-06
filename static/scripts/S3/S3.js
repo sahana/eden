@@ -174,23 +174,23 @@ function s3_popup_remove() {
 
 $(document).ready(function() {
     // Web2Py Layer
-    $('.error').hide().slideDown('slow');
-    $('.error').click(function() {
+    $('.alert-error').hide().slideDown('slow');
+    $('.alert-error').click(function() {
         $(this).fadeOut('slow');
         return false;
     });
-    $('.warning').hide().slideDown('slow');
-    $('.warning').click(function() {
+    $('.alert-warning').hide().slideDown('slow');
+    $('.alert-warning').click(function() {
         $(this).fadeOut('slow');
         return false;
     });
-    $('.information').hide().slideDown('slow');
-    $('.information').click(function() {
+    $('.alert-info').hide().slideDown('slow');
+    $('.alert-info').click(function() {
         $(this).fadeOut('slow');
         return false;
     });
-    $('.confirmation').hide().slideDown('slow');
-    $('.confirmation').click(function() {
+    $('.alert-success').hide().slideDown('slow');
+    $('.alert-success').click(function() {
         $(this).fadeOut('slow');
         return false;
     });

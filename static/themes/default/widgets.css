@@ -583,7 +583,7 @@ body.popup {
     right: 0;
     z-index: 7000;
 }
-.confirmation {
+.alert-success {
     color: #070;
     font-weight: bold;
     text-align: center;
@@ -598,10 +598,10 @@ body.popup {
     cursor: pointer;
     clear: left; /* Added to avoid merging with breadcrumbs */
 }
-.confirmation p em {
+.alert-success p em {
     color: #070;
 }
-.error {
+.alert-error {
     color: #c00;
     font-weight: bold;
     text-align: center;
@@ -616,10 +616,10 @@ body.popup {
     cursor: pointer;
     clear: left; /* Added to avoid merging with breadcrumbs */
 }
-.error p em {
+.alert-error p em {
     color: #c00;
 }
-.information {
+.alert-info {
     color: #748d8e;
     font-weight: bold;
     text-align: center;
@@ -634,10 +634,10 @@ body.popup {
     cursor: pointer;
     clear: left; /* Added to avoid merging with breadcrumbs */
 }
-.information p em {
+.alert-info p em {
     color: #748d8e;
 }
-.warning {
+.alert-warning {
     color: #c00;
     font-weight: bold;
     text-align: center;
@@ -652,7 +652,7 @@ body.popup {
     cursor: pointer;
     clear: left; /* Added to avoid merging with breadcrumbs */
 }
-.warning p em {
+.alert-warning p em {
     color: #c00;
 }
 
