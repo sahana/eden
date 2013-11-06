@@ -4848,7 +4848,7 @@ class gis_LocationRepresent(S3Represent):
                         else:
                             represent = parent_name
                 if not represent:
-                    represent = name or row.id
+                    represent = name or "ID: %s" % row.id
 
         return s3_unicode(represent)
         

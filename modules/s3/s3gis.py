@@ -2629,12 +2629,15 @@ class GIS(object):
         if countries:
             ttable = s3db.gis_location_tag
             cquery = (table.level == "L0") & \
+                     (table.end_date == None) & \
                      (ttable.location_id == ifield) & \
                      (ttable.tag == "ISO2") & \
                      (ttable.value.belongs(countries))
         else:
             # All countries
-            cquery = (table.level == "L0")
+            cquery = (table.level == "L0") & \
+                     (table.end_date == None) & \
+                     (table.deleted != True)
 
         if current.deployment_settings.get_gis_spatialdb():
             spatial = True
@@ -2715,13 +2718,17 @@ class GIS(object):
                 File.close()
 
         q1 = (table.level == "L1") & \
-             (table.deleted != True)
+             (table.deleted != True) & \
+             (table.end_date == None)
         q2 = (table.level == "L2") & \
-             (table.deleted != True)
+             (table.deleted != True) & \
+             (table.end_date == None)
         q3 = (table.level == "L3") & \
-             (table.deleted != True)
+             (table.deleted != True) & \
+             (table.end_date == None)
         q4 = (table.level == "L4") & \
-             (table.deleted != True)
+             (table.deleted != True) & \
+             (table.end_date == None)
 
         if "L1" in levels:
             if "L0" not in levels:

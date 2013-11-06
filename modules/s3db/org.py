@@ -2927,7 +2927,7 @@ class S3OfficeModel(S3Model):
             msg_record_deleted=T("Office Type deleted"),
             msg_list_empty=T("No Office Types currently registered"))
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup=tablename, translate=True)
         office_type_id = S3ReusableField("office_type_id", table,
                             sortby="name",
                             requires=IS_NULL_OR(
