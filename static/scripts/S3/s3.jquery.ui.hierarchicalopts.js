@@ -20,7 +20,6 @@
 
         // Default options
         options: {
-            appname: 'eden',
             selected: null
         },
 
@@ -60,12 +59,24 @@
                 }
             }
 
-            $.jstree._themes = '/' + opts.appname + '/static/styles/jstree/';
+            $.jstree._themes = S3.Ap.concat('/static/styles/jstree/');
+            if ($('body').css('direction') == 'ltr') {
+                rtl = false;
+            } else {
+                rtl = true;
+            }
+            if (rtl) {
+                theme = 'default-rtl';
+            } else {
+                theme = 'default';
+            }
             this.tree.jstree({
                 'core': {
-                    animation: 100
+                    animation: 100,
+                    rtl: rtl
                 },
                 'themes': {
+                    'theme' : theme,
                     'icons': false
                 },
                 'ui': {
@@ -126,7 +137,7 @@
 
             this.tree.jstree('uncheck_all');
             if (values) {
-                for (var i=0, len=values.length, node_id; i<len; i++) {
+                for (var i=0, len=values.length, node_id; i < len; i++) {
                     node = $('#' + this.treeID + '-' + values[i]);
                     this.tree.jstree('check_node', node);
                 }
