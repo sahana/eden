@@ -351,12 +351,17 @@ def customize_pr_person(**attr):
         s3db = current.s3db
         tablename = "pr_person"
 
+        interactive = r.interactive
+        if interactive:
+            EMAIL = T("Email")
+            MOBILE = settings.get_ui_label_mobile_phone()
+
         if r.method == "validate":
             # Can't validate image without the file
             image_field = s3db.pr_image.image
             image_field.requires = None
 
-        elif r.interactive or r.representation == "aadata":
+        elif interactive or r.representation == "aadata":
             # Modify list_fields
             db = current.db
             field = db.auth_user.org_group_id
@@ -373,9 +378,6 @@ def customize_pr_person(**attr):
             is_logged_in = current.auth.is_logged_in()
             if is_logged_in:
                 # Don't include Email/Phone for unauthenticated users
-                MOBILE = settings.get_ui_label_mobile_phone()
-                EMAIL = T("Email")
-
                 list_fields += [(MOBILE, "phone.value"),
                                 (EMAIL, "email.value"),
                                 ]
@@ -383,7 +385,7 @@ def customize_pr_person(**attr):
                            list_fields = list_fields,
                            )
 
-        if r.interactive:
+        if interactive:
             if current.request.controller != "default":
                 # CRUD Strings
                 ADD_CONTACT = T("Add New Contact")
