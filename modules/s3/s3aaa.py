@@ -512,10 +512,12 @@ Thank you
             @return: a login form
         """
 
-        db = current.db
         T = current.T
-
-        current.response.title = T("Login")
+        db = current.db
+        request = current.request
+        response = current.response
+        session = current.session
+        deployment_settings = current.deployment_settings
 
         utable = self.settings.table_user
         if self.settings.login_userfield:
@@ -526,10 +528,6 @@ Thank you
             username = "email"
         old_requires = utable[username].requires
         utable[username].requires = [IS_NOT_EMPTY(), IS_LOWER()]
-        request = current.request
-        response = current.response
-        session = current.session
-        deployment_settings = current.deployment_settings
         passfield = self.settings.password_field
         try:
             utable[passfield].requires[-1].min_length = 0
@@ -545,6 +543,8 @@ Thank you
             log = self.messages.login_log
 
         user = None # default
+
+        response.title = T("Login")
 
         # Do we use our own login form, or from a central source?
         formstyle = self.settings.formstyle
@@ -580,7 +580,7 @@ Thank you
                                             _name="auth_user_clientlocation",
                                             _style="display:none"),
                        "display:none", "auth_user_client_location")
-                current.response.s3.jquery_ready.append('''s3_get_client_location($('#auth_user_clientlocation'))''')
+                response.s3.jquery_ready.append('''S3.getClientLocation($('#auth_user_clientlocation'))''')
 
             captcha = self.settings.login_captcha or \
                 (self.settings.login_captcha!=False and self.settings.captcha)

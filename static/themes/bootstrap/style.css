@@ -166,6 +166,8 @@ div.dl {
     -webkit-box-shadow: 0 1px 1px #aaaaa7;
     box-shadow: 0 1px 1px #aaaaa7;
     margin-top: -22px;
+    /* restore Bootstrap default to override widgets.css */
+    padding: 8px 35px 8px 14px;
 }
 
 a.btn.btn-primary.main-add {

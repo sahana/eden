@@ -53,7 +53,7 @@ function s3_popup_refresh_main_form() {
             self.parent.S3.search.ajaxUpdateOptions(filterform);
         }
         // Remove popup
-        self.parent.s3_popup_remove();
+        self.parent.S3.popup_remove();
         return;
     }
 
@@ -61,7 +61,7 @@ function s3_popup_refresh_main_form() {
     var level = $_GET['level'];
     if (typeof level != 'undefined') {
         // Location Selector
-        self.parent.s3_popup_remove();
+        self.parent.S3.popup_remove();
         return;
     }
 
@@ -75,7 +75,7 @@ function s3_popup_refresh_main_form() {
             var field = self.parent.$('#' + caller);
             field.val(person_id).change();
         }
-        self.parent.s3_popup_remove();
+        self.parent.S3.popup_remove();
         return;
     }
 
@@ -266,7 +266,7 @@ function s3_popup_refresh_main_form() {
         //    }, 1);
 
         // Clean-up
-        self.parent.s3_popup_remove();
+        self.parent.S3.popup_remove();
     });
 }
 

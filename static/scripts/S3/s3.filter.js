@@ -1002,7 +1002,7 @@ S3.search = {};
         }
 
         // Initialise jQueryUI Tabs
-        $('#summary-tabs-tabbed').tabs({
+        $('#summary-tabs').tabs({
             active: active_tab,
             activate: function(event, ui) {
                 var newPanel = $(ui.newPanel);
@@ -1047,8 +1047,7 @@ S3.search = {};
                     updatePendingTargets(form);
                 }
             }
-        });
-        $('#summary-tabs').css({visibility: 'visible'});
+        }).css({visibility: 'visible'});
         // Activate not called? Unhide initial section anyway:
         $('.ui-tabs-panel[aria-hidden="false"]').first().removeClass('hide');
     };

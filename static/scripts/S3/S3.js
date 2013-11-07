@@ -166,190 +166,23 @@ S3.popup_loaded = function(id) {
     $('#' + id).css({width: width})
                // Display the hidden form
                .contents().find('#popup form').show();
-}
-function s3_popup_remove() {
+};
+S3.popup_remove = function() {
     // Close jQueryUI Dialog Modal Popup
+    // - called from s3.popup.js but in parent scope
     $('iframe.ui-dialog-content').dialog('close');
-}
+};
 
-$(document).ready(function() {
-    // Web2Py Layer
-    $('.alert-error').hide().slideDown('slow');
-    $('.alert-error').click(function() {
-        $(this).fadeOut('slow');
-        return false;
-    });
-    $('.alert-warning').hide().slideDown('slow');
-    $('.alert-warning').click(function() {
-        $(this).fadeOut('slow');
-        return false;
-    });
-    $('.alert-info').hide().slideDown('slow');
-    $('.alert-info').click(function() {
-        $(this).fadeOut('slow');
-        return false;
-    });
-    $('.alert-success').hide().slideDown('slow');
-    $('.alert-success').click(function() {
-        $(this).fadeOut('slow');
-        return false;
-    });
-    $("input[type='checkbox'].delete").click(function() {
-        if ((this.checked) && (!confirm(i18n.delete_confirmation))) {
-                this.checked = false;
-        }
-    });
-
-    // If a form is submitted with errors, this will scroll
-    // the window to the first form error message
-    var inputErrorId = $('form .error[id]').eq(0).attr('id');
-    if (inputErrorId != undefined) {
-        inputName = inputErrorId.replace('__error', '');
-        inputId = $('[name=' + inputName + ']').attr('id');
-        inputLabel = $('[for=' + inputId + ']');
-        window.scrollTo(0, inputLabel.offset().top);
-    }
-
-    // T2 Layer
-    //try { $('.zoom').fancyZoom( {
-    //    scaleImg: true,
-    //    closeOnClick: true,
-    //    directory: S3.Ap.concat('/static/media')
-    //}); } catch(e) {}
-
-    // S3 Layer
-    // dataTables' delete button
-    // (can't use S3ConfirmClick as the buttons haven't yet rendered)
-    if (S3.interactive) {
-        $(document).on('click', 'a.delete-btn', function(event) {
-            if (confirm(i18n.delete_confirmation)) {
-                return true;
-            } else {
-                event.preventDefault();
-                return false;
-            }
-        });
-
-        if (S3.FocusOnFirstField != false) {
-            // Focus On First Field
-            $('input:text:visible:first').focus();
-        };
-    }
-
-    // Accept comma as thousands separator
-    $('input.int_amount').keyup(function() {
-        this.value = this.value.reverse()
-                               .replace(/[^0-9\-,]|\-(?=.)/g, '')
-                               .reverse();
-    });
-    $('input.float_amount').keyup(function() {
-        this.value = this.value.reverse()
-                               .replace(/[^0-9\-\.,]|[\-](?=.)|[\.](?=[0-9]*[\.])/g, '')
-                               .reverse();
-    });
-    // Auto-capitalize first names
-    $('input[name="first_name"]').focusout(function() {
-        this.value = this.value.charAt(0).toLocaleUpperCase() + this.value.substring(1);
-    });
-
-    // Resizable textareas
-    $('textarea.resizable:not(.textarea-processed)').each(function() {
-        var that = $(this);
-        // Avoid non-processed teasers.
-        if (that.is(('textarea.teaser:not(.teaser-processed)'))) {
-            return false;
-        }
-        var textarea = that.addClass('textarea-processed');
-        var staticOffset = null;
-        // When wrapping the text area, work around an IE margin bug. See:
-        // http://jaspan.com/ie-inherited-margin-bug-form-elements-and-haslayout
-        that.wrap('<div class="resizable-textarea"><span></span></div>')
-        .parent().append($('<div class="grippie"></div>').mousedown(startDrag));
-        var grippie = $('div.grippie', that.parent())[0];
-        grippie.style.marginRight = (grippie.offsetWidth - that[0].offsetWidth) + 'px';
-        function startDrag(e) {
-            staticOffset = textarea.height() - e.pageY;
-            textarea.css('opacity', 0.25);
-            $(document).mousemove(performDrag).mouseup(endDrag);
-            return false;
-        }
-        function performDrag(e) {
-            textarea.height(Math.max(32, staticOffset + e.pageY) + 'px');
-            return false;
-        }
-        function endDrag(e) {
-            $(document).unbind('mousemove', performDrag).unbind('mouseup', endDrag);
-            textarea.css('opacity', 1);
-        }
-        return true;
-    });
-
-    // IE6 non anchor hover hack
-    $('#modulenav .hoverable').hover(
-        function() {
-            $(this).addClass('hovered');
-        },
-        function() {
-            $(this).removeClass('hovered');
-        }
-    );
-
-    // Menu popups (works in IE6)
-    $('#modulenav li').hover(
-        function() {
-                var header_width = $(this).width();
-                var popup_width = $('ul', this).width();
-                if (popup_width !== null){
-                  if (popup_width < header_width){
-                    $('ul', this).css({
-                        'width': header_width.toString() + 'px'
-                    });
-                  }
-                }
-                $('ul', this).css('display', 'block');
-            },
-        function() {
-            $('ul', this).css('display', 'none');
-        }
-    );
-
-    // jQueryUI Dialog Modal Popups
-    S3.addModals();
-
-    // Help Tooltips
-    S3.addTooltips();
-
-    // De-duplication Event Handlers
-    S3.deduplication();
-
-    // UTC Offset
-    now = new Date();
-    $('form').append("<input type='hidden' value=" + now.getTimezoneOffset() + " name='_utc_offset'/>");
-
-    // Social Media 'share' buttons
-    if ($('#socialmedia_share').length > 0) {
-        // DIV exists (deployment_setting on)
-        var currenturl = document.location.href;
-        var currenttitle = document.title;
-        // Linked-In
-        $('#socialmedia_share').append("<div class='socialmedia_element'><script src='//platform.linkedin.com/in.js'></script><script type='IN/Share' data-counter='right'></script></div>");
-        // Twitter
-        $('#socialmedia_share').append("<div class='socialmedia_element'><a href='https://twitter.com/share' class='twitter-share-button' data-count='none' data-hashtags='sahana-eden'>Tweet</a><script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='//platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','twitter-wjs');</script></div>");
-        // Facebook
-        $('#socialmedia_share').append("<div class='socialmedia_element'><div id='fb-root'></div><script>(function(d, s, id) { var js, fjs = d.getElementsByTagName(s)[0]; if (d.getElementById(id)) return; js = d.createElement(s); js.id = id; js.src = '//connect.facebook.net/en_US/all.js#xfbml=1'; fjs.parentNode.insertBefore(js, fjs); }(document, 'script', 'facebook-jssdk'));</script> <div class='fb-like' data-send='false' data-layout='button_count' data-show-faces='true' data-href='" + currenturl + "'></div></div>");
-    }
-
-});
-
-function s3_get_client_location(targetfield) {
-   // Geolocation
+// Geolocation
+// - called from Auth.login()
+S3.getClientLocation = function(targetfield) {
    if (navigator.geolocation) {
     	navigator.geolocation.getCurrentPosition(function(position) {
 			var clientlocation = position.coords.latitude + '|' + position.coords.longitude + '|' + position.coords.accuracy;
 			targetfield.val(clientlocation);
     	});
     }
-}
+};
 
 // ============================================================================
 S3.deduplication = function() {
@@ -427,7 +260,7 @@ S3.deduplication = function() {
 };
 
 // ============================================================================
-function S3ConfirmClick(ElementID, Message) {
+S3.confirmClick = function(ElementID, Message) {
 	// @param ElementID: the ID of the element which will be clicked
 	// @param Message: the Message displayed in the confirm dialog
 	if (S3.interactive) {
@@ -440,21 +273,21 @@ function S3ConfirmClick(ElementID, Message) {
             }
         });
     }
-}
+};
 
 // ============================================================================
 // Code to warn on exit without saving
-function S3SetNavigateAwayConfirm() {
+var S3SetNavigateAwayConfirm = function() {
     window.onbeforeunload = function() {
         return i18n.unsaved_changes;
     };
-}
+};
 
-function S3ClearNavigateAwayConfirm() {
+var S3ClearNavigateAwayConfirm = function() {
     window.onbeforeunload = function() {};
-}
+};
 
-function S3EnableNavigateAwayConfirm() {
+var S3EnableNavigateAwayConfirm = function() {
     $(document).ready(function() {
         if ( $('[class=error]').length > 0 ) {
             // If there are errors, ensure the unsaved form is still protected
@@ -468,33 +301,35 @@ function S3EnableNavigateAwayConfirm() {
         $(form + ' ' + select).change( S3SetNavigateAwayConfirm );
         $('form').submit( S3ClearNavigateAwayConfirm );
     });
-}
+};
 
 // ============================================================================
 /**
  * ajaxS3
- * added by sunneach 2010-feb-14
+ * - wrapper for jQuery AJAX to handle poor network environments
+ * - retries failed requests & alerts on errors
  */
 
 (function($) {
     // Default AJAX settings
     $.ajaxS3Settings = {
         timeout : 10000,
-        msgTimeout: 2000,
+        //msgTimeout: 2000,
         retryLimit: 5,
         dataType: 'json',
         async: true,
         type: 'GET'
     };
 
-    // Wrapper for jQuery's .ajax to provide notifications on errors
     $.ajaxS3 = function(s) {
+        var message;
         var options = $.extend( {}, $.ajaxS3Settings, s );
         options.tryCount = 0;
         options.error = null;   // prevent callback from being executed twice
         options.success = null; // prevent callback from being executed twice
         if (s.message) {
-            s3_showStatus(i18n.ajax_get + ' ' + (s.message ? s.message : i18n.ajax_fmd) + '...', this.ajaxS3Settings.msgTimeout);
+            message = i18n.ajax_get + ' ' + (s.message ? s.message : i18n.ajax_fmd) + '...';
+            S3.showAlert(message, 'info');
         }
         $.ajax(
             options
@@ -502,6 +337,7 @@ function S3EnableNavigateAwayConfirm() {
             s3_hideStatus();
             this.tryCount = 0;
             if (s.success) {
+                // Calling function's success callback
                 s.success(data, status);
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
@@ -509,24 +345,26 @@ function S3EnableNavigateAwayConfirm() {
                 this.tryCount++;
                 if (this.tryCount <= this.retryLimit) {
                     // Try again
-                    s3_showStatus(i18n.ajax_get + ' ' + (s.message ? s.message : i18n.ajax_fmd) + '... ' + i18n.ajax_rtr + ' ' + this.tryCount,
-                        $.ajaxS3Settings.msgTimeout);
+                    message = i18n.ajax_get + ' ' + (s.message ? s.message : i18n.ajax_fmd) + '... ' + i18n.ajax_rtr + ' ' + this.tryCount;
+                    S3.showAlert(message, 'warning');
                     $.ajax(this);
                     return;
                 }
-                s3_showStatus(i18n.ajax_wht + ' ' + (this.retryLimit + 1) + ' ' + i18n.ajax_gvn,
-                    $.ajaxS3Settings.msgTimeout, false, true);
+                message = i18n.ajax_wht + ' ' + (this.retryLimit + 1) + ' ' + i18n.ajax_gvn;
+                S3.showAlert(message, 'error');
                 if (s.error) {
+                    // Calling function's error callback
                     s.error(jqXHR, textStatus, errorThrown);
                 }
                 return;
             }
             if (jqXHR.status == 500) {
-                s3_showStatus(i18n.ajax_500, $.ajaxS3Settings.msgTimeout, false, true);
+                S3.showAlert(i18n.ajax_500, 'error');
             } else {
-                s3_showStatus(i18n.ajax_dwn, $.ajaxS3Settings.msgTimeout, false, true);
+                S3.showAlert(i18n.ajax_dwn, 'error');
             }
             if (s.error) {
+                // Calling function's error callback
                 s.error(jqXHR, textStatus, errorThrown);
             }
         });
@@ -535,7 +373,7 @@ function S3EnableNavigateAwayConfirm() {
     // Simplified wrappers for .ajaxS3
     $.getS3 = function(url, data, callback, type, message, sync) {
         // shift arguments if data argument was omitted
-        if ( $.isFunction( data ) ) {
+        if ( $.isFunction(data) ) {
             sync = message;
             message = type;
             type = callback;
@@ -559,7 +397,7 @@ function S3EnableNavigateAwayConfirm() {
 
     $.getJSONS3 = function(url, data, callback, message, sync) {
         // shift arguments if data argument was omitted
-        if ( $.isFunction( data ) ) {
+        if ( $.isFunction(data) ) {
             sync = message;
             message = callback;
             callback = data;
@@ -574,108 +412,29 @@ function S3EnableNavigateAwayConfirm() {
 })($);
 
 /**
- * status bar for ajaxS3 operation
- * taken from http://www.west-wind.com/WebLog/posts/388213.aspx
- * added and fixed by sunneach on Feb 16, 2010
+ * Display Status in Alerts section
  *
- *  to use make a call:
- *  s3_showStatus(message, timeout, additive, isError)
- *     1. message  - string - message to display
- *     2. timeout  - integer - milliseconds to change the statusbar style - flash effect (1000 works OK)
- *     3. additive - boolean - default false - to accumulate messages in the bar
- *     4. isError  - boolean - default false - show in the statusbarerror class
+ *  To display an alert:
+ *  S3.showAlert(message, type)
+ *    message - string - message to display
+ *    type    - string - alert type: 'error', 'info', 'success', 'warning'
  *
- *  to remove bar, use
- *  s3_hideStatus()
- *
- *  @ToDo: Styling
+ *  To hide alerts:
+ *  S3.hideAlerts()
  */
-function S3StatusBar(sel, options) {
-    var _I = this;
-    var _sb = null;
-    // options
-    // ToDo allow options passed-in to over-ride defaults
-    this.elementId = '_showstatus';
-    this.prependMultiline = true;
-    this.showCloseButton = false;
-    this.afterTimeoutText = null;
-
-    this.cssClass = 'statusbar';
-    this.highlightClass = 'statusbarhighlight';
-    this.errorClass = 'statusbarerror';
-    this.closeButtonClass = 'statusbarclose';
-    this.additive = false;
-    $.extend(this, options);
-    if (sel) {
-      _sb = $(sel);
+S3.showAlert = function(message, type) {
+    if (undefined == type) {
+        type = 'success';
     }
-    // Create statusbar object manually
-    if (!_sb) {
-        _sb = $("<div id='_statusbar' class='" + _I.cssClass + "'>" +
-                "<div class='" + _I.closeButtonClass +  "'>" +
-                (_I.showCloseButton ? ' X </div></div>' : '') )
-                .appendTo(document.body)
-                .show();
-    }
-    //if (_I.showCloseButton)
-        $('.' + _I.cssClass).click(function(e) { $(_sb).hide(); });
-    this.show = function(message, timeout, additive, isError) {
-        if (additive || ((additive == undefined) && _I.additive)) {
-            var html = "<div style='margin-bottom: 2px;' >" + message + '</div>';
-            if (_I.prependMultiline) {
-                _sb.prepend(html);
-            } else {
-                _sb.append(html);
-            }
-        } else {
-            if (!_I.showCloseButton) {
-                _sb.text(message);
-            } else {
-                var t = _sb.find('div.statusbarclose');
-                _sb.text(message).prepend(t);
-            }
-        }
-        _sb.show();
-        if (timeout) {
-            if (isError) {
-                _sb.addClass(_I.errorClass);
-            } else {
-                _sb.addClass(_I.highlightClass);
-            }
-            setTimeout(
-                function() {
-                    _sb.removeClass(_I.highlightClass);
-                    if (_I.afterTimeoutText) {
-                       _I.show(_I.afterTimeoutText);
-                    }
-                },
-                timeout);
-        }
-    };
-    this.release = function() {
-        if (_statusbar) {
-            $('#_statusbar').remove();
-            _statusbar = undefined;
-        }
-    };
-}
-// Use this as a global instance to customize constructor
-// or do nothing and get a default status bar
-var _statusbar = null;
-function s3_showStatus(message, timeout, additive, isError) {
-    if (!_statusbar) {
-        _statusbar = new S3StatusBar();
-    }
-    _statusbar.show(message, timeout, additive, isError);
-}
-function s3_hideStatus() {
-    if (_statusbar) {
-        _statusbar.release();
-    }
-}
+    var alert = '<div class="alert alert-' + type + '"><button type="button" class="close" data-dismiss="alert">×</button>' + message + '</div>';
+    $('#alert-space').append(alert);
+};
+S3.hideAlerts = function() {
+    $('#alert-space').empty();
+};
 
 // ============================================================================
-function s3_viewMap(feature_id) {
+var s3_viewMap = function(feature_id) {
     // Display a Feature on a BaseMap within an iframe
     var url = S3.Ap.concat('/gis/display_feature/') + feature_id;
     var oldhtml = $('#map').html();
@@ -690,8 +449,8 @@ function s3_viewMap(feature_id) {
 
     $('#map').html(iframe);
     $('#map').append($("<div style='margin-bottom: 10px' />").append(closelink));
-}
-function s3_viewMapMulti(module, resource, instance, jresource) {
+};
+var s3_viewMapMulti = function(module, resource, instance, jresource) {
     // Display a set of Features on a BaseMap within an iframe
     var url = S3.Ap.concat('/gis/display_feature//?module=') + module + '&resource=' + resource + '&instance=' + instance + '&jresource=' + jresource;
     var oldhtml = $('#map').html();
@@ -706,7 +465,7 @@ function s3_viewMapMulti(module, resource, instance, jresource) {
 
     $('#map').html(iframe);
     $('#map').append($("<div style='margin-bottom: 10px' />").append(closelink));
-}
+};
 S3.popupWin = null;
 S3.openPopup = function(url, center) {
     if ( !S3.popupWin || S3.popupWin.closed ) {
@@ -717,8 +476,8 @@ S3.openPopup = function(url, center) {
         }
         S3.popupWin = window.open(url, 'popupWin', params);
     } else S3.popupWin.focus();
-}
-function s3_showMap(feature_id) {
+};
+var s3_showMap = function(feature_id) {
     // Display a Feature on a BaseMap within an iframe
     var url = S3.Ap.concat('/gis/display_feature/') + feature_id;
 	// new Ext.Window({
@@ -735,7 +494,7 @@ function s3_showMap(feature_id) {
 		// }]
 	// }).show();
     S3.openPopup(url, true);
-}
+};
 
 // ============================================================================
 /**
@@ -746,7 +505,7 @@ function s3_showMap(feature_id) {
  * Themes filtered by Sector
  **/
 
-function S3OptionsFilter(settings) {
+var S3OptionsFilter = function(settings) {
     /**
      * Settings:
      *          triggerName: the trigger field name (not the HTML element name)
@@ -1084,14 +843,14 @@ function S3OptionsFilter(settings) {
 
     // If the field value is empty - disable - but keep initial value
     triggerField.change();
-}
+};
 
 // ============================================================================
 /**
  * Add a Slider to a field - used by S3SliderWidget
  */
 S3.slider = function(fieldname, minval, maxval, steprange, value) {
-    $( '#' + fieldname ).slider({
+    $('#' + fieldname).slider({
         min: parseFloat(minval),
         max: parseFloat(maxval),
         step: parseFloat(steprange),
@@ -1109,31 +868,202 @@ S3.slider = function(fieldname, minval, maxval, steprange, value) {
  * Sample usage: _onchange="S3reloadWithQueryStringVars({'_language': $(this).val()});")
  */
 
-function S3reloadWithQueryStringVars(queryStringVars) {
-    var existingQueryVars = location.search ? location.search.substring(1).split("&") : [],
-        currentUrl = location.search ? location.href.replace(location.search,"") : location.href,
+var S3reloadWithQueryStringVars = function(queryStringVars) {
+    var existingQueryVars = location.search ? location.search.substring(1).split('&') : [],
+        currentUrl = location.search ? location.href.replace(location.search, '') : location.href,
         newQueryVars = {},
-        newUrl = currentUrl + "?";
-    if(existingQueryVars.length > 0) {
+        newUrl = currentUrl + '?';
+    if (existingQueryVars.length > 0) {
         for (var i = 0; i < existingQueryVars.length; i++) {
-            var pair = existingQueryVars[i].split("=");
+            var pair = existingQueryVars[i].split('=');
             newQueryVars[pair[0]] = pair[1];
         }
     }
-    if(queryStringVars) {
+    if (queryStringVars) {
         for (var queryStringVar in queryStringVars) {
             newQueryVars[queryStringVar] = queryStringVars[queryStringVar];
         }
     }
-    if(newQueryVars) { 
+    if (newQueryVars) {
         for (var newQueryVar in newQueryVars) {
-            newUrl += newQueryVar + "=" + newQueryVars[newQueryVar] + "&";
+            newUrl += newQueryVar + '=' + newQueryVars[newQueryVar] + '&';
         }
-        newUrl = newUrl.substring(0, newUrl.length-1);
+        newUrl = newUrl.substring(0, newUrl.length - 1);
         window.location.href = newUrl;
     } else {
         window.location.href = location.href;
     }
-}
+};
+
+// ============================================================================
+
+$(document).ready(function() {
+    // Web2Py Layer
+    $('.alert-error').hide().slideDown('slow');
+    $('.alert-error').click(function() {
+        $(this).fadeOut('slow');
+        return false;
+    });
+    $('.alert-warning').hide().slideDown('slow');
+    $('.alert-warning').click(function() {
+        $(this).fadeOut('slow');
+        return false;
+    });
+    $('.alert-info').hide().slideDown('slow');
+    $('.alert-info').click(function() {
+        $(this).fadeOut('slow');
+        return false;
+    });
+    $('.alert-success').hide().slideDown('slow');
+    $('.alert-success').click(function() {
+        $(this).fadeOut('slow');
+        return false;
+    });
+    $("input[type='checkbox'].delete").click(function() {
+        if ((this.checked) && (!confirm(i18n.delete_confirmation))) {
+                this.checked = false;
+        }
+    });
+
+    // If a form is submitted with errors, this will scroll
+    // the window to the first form error message
+    var inputErrorId = $('form .error[id]').eq(0).attr('id');
+    if (inputErrorId != undefined) {
+        inputName = inputErrorId.replace('__error', '');
+        inputId = $('[name=' + inputName + ']').attr('id');
+        inputLabel = $('[for=' + inputId + ']');
+        window.scrollTo(0, inputLabel.offset().top);
+    }
+
+    // T2 Layer
+    //try { $('.zoom').fancyZoom( {
+    //    scaleImg: true,
+    //    closeOnClick: true,
+    //    directory: S3.Ap.concat('/static/media')
+    //}); } catch(e) {}
+
+    // S3 Layer
+    // dataTables' delete button
+    // (can't use S3.confirmClick as the buttons haven't yet rendered)
+    if (S3.interactive) {
+        $(document).on('click', 'a.delete-btn', function(event) {
+            if (confirm(i18n.delete_confirmation)) {
+                return true;
+            } else {
+                event.preventDefault();
+                return false;
+            }
+        });
+
+        if (S3.FocusOnFirstField != false) {
+            // Focus On First Field
+            $('input:text:visible:first').focus();
+        };
+    }
+
+    // Accept comma as thousands separator
+    $('input.int_amount').keyup(function() {
+        this.value = this.value.reverse()
+                               .replace(/[^0-9\-,]|\-(?=.)/g, '')
+                               .reverse();
+    });
+    $('input.float_amount').keyup(function() {
+        this.value = this.value.reverse()
+                               .replace(/[^0-9\-\.,]|[\-](?=.)|[\.](?=[0-9]*[\.])/g, '')
+                               .reverse();
+    });
+    // Auto-capitalize first names
+    $('input[name="first_name"]').focusout(function() {
+        this.value = this.value.charAt(0).toLocaleUpperCase() + this.value.substring(1);
+    });
+
+    // Resizable textareas
+    $('textarea.resizable:not(.textarea-processed)').each(function() {
+        var that = $(this);
+        // Avoid non-processed teasers.
+        if (that.is(('textarea.teaser:not(.teaser-processed)'))) {
+            return false;
+        }
+        var textarea = that.addClass('textarea-processed');
+        var staticOffset = null;
+        // When wrapping the text area, work around an IE margin bug. See:
+        // http://jaspan.com/ie-inherited-margin-bug-form-elements-and-haslayout
+        that.wrap('<div class="resizable-textarea"><span></span></div>')
+        .parent().append($('<div class="grippie"></div>').mousedown(startDrag));
+        var grippie = $('div.grippie', that.parent())[0];
+        grippie.style.marginRight = (grippie.offsetWidth - that[0].offsetWidth) + 'px';
+        function startDrag(e) {
+            staticOffset = textarea.height() - e.pageY;
+            textarea.css('opacity', 0.25);
+            $(document).mousemove(performDrag).mouseup(endDrag);
+            return false;
+        }
+        function performDrag(e) {
+            textarea.height(Math.max(32, staticOffset + e.pageY) + 'px');
+            return false;
+        }
+        function endDrag(e) {
+            $(document).unbind('mousemove', performDrag).unbind('mouseup', endDrag);
+            textarea.css('opacity', 1);
+        }
+        return true;
+    });
+
+    // IE6 non anchor hover hack
+    $('#modulenav .hoverable').hover(
+        function() {
+            $(this).addClass('hovered');
+        },
+        function() {
+            $(this).removeClass('hovered');
+        }
+    );
+
+    // Menu popups (works in IE6)
+    $('#modulenav li').hover(
+        function() {
+                var header_width = $(this).width();
+                var popup_width = $('ul', this).width();
+                if (popup_width !== null){
+                  if (popup_width < header_width){
+                    $('ul', this).css({
+                        'width': header_width.toString() + 'px'
+                    });
+                  }
+                }
+                $('ul', this).css('display', 'block');
+            },
+        function() {
+            $('ul', this).css('display', 'none');
+        }
+    );
+
+    // jQueryUI Dialog Modal Popups
+    S3.addModals();
+
+    // Help Tooltips
+    S3.addTooltips();
+
+    // De-duplication Event Handlers
+    S3.deduplication();
+
+    // UTC Offset
+    now = new Date();
+    $('form').append("<input type='hidden' value=" + now.getTimezoneOffset() + " name='_utc_offset'/>");
+
+    // Social Media 'share' buttons
+    if ($('#socialmedia_share').length > 0) {
+        // DIV exists (deployment_setting on)
+        var currenturl = document.location.href;
+        var currenttitle = document.title;
+        // Linked-In
+        $('#socialmedia_share').append("<div class='socialmedia_element'><script src='//platform.linkedin.com/in.js'></script><script type='IN/Share' data-counter='right'></script></div>");
+        // Twitter
+        $('#socialmedia_share').append("<div class='socialmedia_element'><a href='https://twitter.com/share' class='twitter-share-button' data-count='none' data-hashtags='sahana-eden'>Tweet</a><script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='//platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','twitter-wjs');</script></div>");
+        // Facebook
+        $('#socialmedia_share').append("<div class='socialmedia_element'><div id='fb-root'></div><script>(function(d, s, id) { var js, fjs = d.getElementsByTagName(s)[0]; if (d.getElementById(id)) return; js = d.createElement(s); js.id = id; js.src = '//connect.facebook.net/en_US/all.js#xfbml=1'; fjs.parentNode.insertBefore(js, fjs); }(document, 'script', 'facebook-jssdk'));</script> <div class='fb-like' data-send='false' data-layout='button_count' data-show-faces='true' data-href='" + currenturl + "'></div></div>");
+    }
+
+});
 
 // ============================================================================

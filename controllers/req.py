@@ -552,7 +552,7 @@ S3OptionsFilter({
                             )
                         )
                     s3.jquery_ready.append(
-'''S3ConfirmClick('.commit-btn','%s')''' % T("Do you want to commit to this request?"))
+'''S3.confirmClick('.commit-btn','%s')''' % T("Do you want to commit to this request?"))
                 # This is only appropriate for item requests
                 #query = (r.table.type == 1)
                 #rows = db(query).select(r.table.id)
@@ -585,7 +585,7 @@ S3OptionsFilter({
                             )
                         )
                 s3.jquery_ready.append(
-'''S3ConfirmClick('.send-btn','%s')''' % T("Are you sure you want to commit to this request and send a shipment?"))
+'''S3.confirmClick('.send-btn','%s')''' % T("Are you sure you want to commit to this request and send a shipment?"))
             else:
                 s3_action_buttons(r)
                 if r.component.name == "req_item" and settings.get_req_prompt_match():
@@ -610,7 +610,7 @@ S3OptionsFilter({
                                                _class="action-btn",
                                                _id="commit-btn")
                             s3.jquery_ready.append('''
-S3ConfirmClick('#commit-btn','%s')''' % T("Do you want to commit to this request?"))
+S3.confirmClick('#commit-btn','%s')''' % T("Do you want to commit to this request?"))
                         else:
                             s3.actions.append(
                                           dict(url = URL(c="req", f="send_commit",
@@ -620,7 +620,7 @@ S3ConfirmClick('#commit-btn','%s')''' % T("Do you want to commit to this request
                                               )
                                        )
                             s3.jquery_ready.append(
-'''S3ConfirmClick('.send-btn','%s')''' % T("Are you sure you want to send this shipment?"))
+'''S3.confirmClick('.send-btn','%s')''' % T("Are you sure you want to send this shipment?"))
                 if r.component.alias == "job":
                     s3.actions = [
                         dict(label=str(T("Open")),
@@ -1188,7 +1188,7 @@ S3OptionsFilter({
                             )
                        )
                 s3.jquery_ready.append(
-'''S3ConfirmClick('.send-btn','%s')''' % T("Are you sure you want to send this shipment?"))
+'''S3.confirmClick('.send-btn','%s')''' % T("Are you sure you want to send this shipment?"))
 
         return output
     s3.postp = postp    
@@ -1246,7 +1246,7 @@ def commit_rheader(r):
 #                              _class = "action-btn"
 #                              )
 #
-#                send_btn_confirm = SCRIPT("S3ConfirmClick('#send_commit', '%s')" %
+#                send_btn_confirm = SCRIPT("S3.confirmClick('#send_commit', '%s')" %
 #                                          T("Do you want to send these Committed items?") )
 #                s3.rfooter = TAG[""](send_btn,send_btn_confirm)
                 #rheader.append(send_btn)

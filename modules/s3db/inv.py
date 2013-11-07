@@ -3652,7 +3652,7 @@ def inv_send_rheader(r):
                                         )
                                       )
 
-                        jappend('''S3ConfirmClick("#send_process","%s")''' \
+                        jappend('''S3.confirmClick("#send_process","%s")''' \
                                    % T("Do you want to send this shipment?"))
                     #if not r.component and not r.method == "form":
                     #    ritable = s3db.req_req_item
@@ -3680,7 +3680,7 @@ def inv_send_rheader(r):
                                         _class = "action-btn"
                                         )
                                       )
-                        jappend('''S3ConfirmClick("#return_process","%s")''' \
+                        jappend('''S3.confirmClick("#return_process","%s")''' \
                             % T("Do you want to complete the return process?") )
                     else:
                         msg = T("You need to check all item quantities before you can complete the return process")
@@ -3703,7 +3703,7 @@ def inv_send_rheader(r):
                                         )
                                       )
 
-                        jappend('''S3ConfirmClick("#send_return","%s")''' \
+                        jappend('''S3.confirmClick("#send_return","%s")''' \
                             % T("Confirm that some items were returned from a delivery to beneficiaries and they will be accepted back into stock."))
                         action.append(A(T("Confirm Shipment Received"),
                                         _href = URL(f = "send",
@@ -3716,7 +3716,7 @@ def inv_send_rheader(r):
                                         )
                                       )
 
-                        jappend('''S3ConfirmClick("#send_receive","%s")''' \
+                        jappend('''S3.confirmClick("#send_receive","%s")''' \
                             % T("Confirm that the shipment has been received by a destination which will not record the shipment directly into the system and confirmed as received.") )
                     if s3_has_permission("delete",
                                          "inv_send",
@@ -3731,7 +3731,7 @@ def inv_send_rheader(r):
                                         )
                                       )
 
-                        jappend('''S3ConfirmClick("#send_cancel","%s")''' \
+                        jappend('''S3.confirmClick("#send_cancel","%s")''' \
                             % T("Do you want to cancel this sent shipment? The items will be returned to the Warehouse. This action CANNOT be undone!") )
             if not r.method == "form":
             #    msg = ""
@@ -3885,7 +3885,7 @@ def inv_recv_rheader(r):
                                               _class = "action-btn"
                                         )
                                       )
-                        recv_btn_confirm = SCRIPT("S3ConfirmClick('#recv_process', '%s')"
+                        recv_btn_confirm = SCRIPT("S3.confirmClick('#recv_process', '%s')"
                                                   % T("Do you want to receive this shipment?") )
                         rfooter.append(recv_btn_confirm)
                     else:
@@ -3907,7 +3907,7 @@ def inv_recv_rheader(r):
             #                            )
             #                         )
 
-            #            cancel_btn_confirm = SCRIPT("S3ConfirmClick('#recv_cancel', '%s')"
+            #            cancel_btn_confirm = SCRIPT("S3.confirmClick('#recv_cancel', '%s')"
             #                                         % T("Do you want to cancel this received shipment? The items will be removed from the Warehouse. This action CANNOT be undone!") )
             #            rfooter.append(cancel_btn_confirm)
             msg = ""
@@ -4393,7 +4393,7 @@ def inv_adj_rheader(r):
                                   _id = "adj_close",
                                   _class = "action-btn"
                                   )
-                    close_btn_confirm = SCRIPT("S3ConfirmClick('#adj_close', '%s')"
+                    close_btn_confirm = SCRIPT("S3.confirmClick('#adj_close', '%s')"
                                               % T("Do you want to complete & close this adjustment?") )
                     rheader.append(close_btn)
                     rheader.append(close_btn_confirm)
