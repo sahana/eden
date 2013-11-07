@@ -491,10 +491,14 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             ]
         });
 
-        mapWin.on("beforehide", function(mw){
+        mapWin.on('beforehide', function(mw) {
             if (mw.maximized) {
                 mw.restore();
             }
+        });
+
+        mapWin.on('move', function(mw) {
+            map.events.clearMouseCache(); 
         });
 
         // Set Options

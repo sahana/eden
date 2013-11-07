@@ -217,6 +217,8 @@ class S3StatsModel(S3Model):
 class S3StatsDemographicModel(S3Model):
     """
         Baseline Demographics
+
+        @ToDo: Don't aggregate data for locations which don't exist in time window
     """
 
     names = ["stats_demographic",

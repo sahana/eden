@@ -709,14 +709,16 @@ class S3LocationModel(S3Model):
             # @ToDo: Hook for possible duplicates vs definite?
             #query = (table.name.lower().like('%%%s%%' % name.lower()))
             query = (table.name.lower() == name.lower()) & \
-                    (table.level == level) & \
-                    (table.end_date == end_date)
+                    (table.level == level)
             if parent:
                 query &= (table.parent == parent)
+            if end_date:
+                query &= (table.end_date == end_date)
             if start_date:
                 query &= (table.start_date == start_date)
 
             _duplicate = current.db(query).select(table.id,
+                                                  orderby=~table.end_date,
                                                   limitby=(0, 1)).first()
             if _duplicate:
                 # @ToDo: Import Log
@@ -728,16 +730,18 @@ class S3LocationModel(S3Model):
                 ltable = current.s3db.gis_location_name
                 query = (ltable.name_l10n == name) & \
                         (ltable.location_id == table.id) & \
-                        (table.level == level) & \
-                        (table.end_date == end_date)
+                        (table.level == level)
                 if parent:
                     query &= (table.parent == parent)
+                if end_date:
+                    query &= (table.end_date == end_date)
                 if start_date:
                     query &= (table.start_date == start_date)
 
                 _duplicate = current.db(query).select(table.id,
                                                       table.name,
-                                                      limitby=(0, 1)).first()
+                                                      orderby=~table.end_date,
+                                                      limitby=(0, 1)).last()
                 if _duplicate:
                     # @ToDo: Import Log
                     #s3_debug("Location l10n Match")
@@ -746,7 +750,8 @@ class S3LocationModel(S3Model):
                     job.method = job.METHOD.UPDATE
                 else:
                     # @ToDo: Import Log
-                    #s3_debug("No Match: %s" % s3_unicode(name))
+                    #s3_debug("No Match:")
+                    #s3_debug(name)
                     pass
 
     # -------------------------------------------------------------------------
@@ -4956,9 +4961,9 @@ def gis_rheader(r, tabs=[]):
 
     if resourcename == "location":
         tabs = [(T("Location Details"), None),
-                (T("Import from OpenStreetMap"), "import_poi"),
                 (T("Local Names"), "name"),
                 (T("Key Value pairs"), "tag"),
+                (T("Import from OpenStreetMap"), "import_poi"),
                 ]
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
