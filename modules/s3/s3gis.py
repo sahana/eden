@@ -4092,7 +4092,8 @@ class GIS(object):
             if name is False or lat is False or lon is False or inherited is None or \
                parent is False or path is False or L0 is False or L1 is False:
                 # Get the whole feature
-                feature = db(table.id == id).select(table.name,
+                feature = db(table.id == id).select(table.id,
+                                                    table.name,
                                                     table.parent,
                                                     table.path,
                                                     table.lat,
@@ -4184,7 +4185,8 @@ class GIS(object):
                parent is False or path is False or L0 is False or L1 is False or \
                                                    L2 is False:
                 # Get the whole feature
-                feature = db(table.id == id).select(table.name,
+                feature = db(table.id == id).select(table.id,
+                                                    table.name,
                                                     table.parent,
                                                     table.path,
                                                     table.lat,
@@ -4304,7 +4306,8 @@ class GIS(object):
                parent is False or path is False or L0 is False or L1 is False or \
                                                    L2 is False or L3 is False:
                 # Get the whole feature
-                feature = db(table.id == id).select(table.name,
+                feature = db(table.id == id).select(table.id,
+                                                    table.name,
                                                     table.parent,
                                                     table.path,
                                                     table.lat,
@@ -4461,7 +4464,8 @@ class GIS(object):
                                                    L2 is False or L3 is False or \
                                                    L4 is False:
                 # Get the whole feature
-                feature = db(table.id == id).select(table.name,
+                feature = db(table.id == id).select(table.id,
+                                                    table.name,
                                                     table.parent,
                                                     table.path,
                                                     table.lat,
@@ -4653,7 +4657,8 @@ class GIS(object):
                                                    L2 is False or L3 is False or \
                                                    L4 is False or L5 is False:
                 # Get the whole feature
-                feature = db(table.id == id).select(table.name,
+                feature = db(table.id == id).select(table.id,
+                                                    table.name,
                                                     table.parent,
                                                     table.path,
                                                     table.lat,
@@ -4881,7 +4886,8 @@ class GIS(object):
                                                L2 is False or L3 is False or \
                                                L4 is False or L5 is False:
             # Get the whole feature
-            feature = db(table.id == id).select(table.name,
+            feature = db(table.id == id).select(table.id,
+                                                table.name,
                                                 table.level,
                                                 table.parent,
                                                 table.path,

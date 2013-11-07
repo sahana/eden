@@ -313,54 +313,87 @@
             }
         }
         if (tableConfig['bulkActions']) {
-            $('.bulkcheckbox').unbind('change')
-                              .change(function(event) {
-                var id = this.id.substr(6);
-                var posn = inList(id, selectedRows[t]);
+            $('.bulkcheckbox').unbind('click.bulkSelect')
+                              .on('click.bulkSelect', function(event) {
+                                  
+                var id = this.id.substr(6),
+                    rows = selectedRows[t];
+                    
+                var posn = inList(id, rows);
                 if (posn == -1) {
-                    selectedRows[t].push(id);
-                    posn = 0; // force the row to be selected
+                    rows.push(id);
+                    posn = 0; // toggle selection class
                 } else {
-                    selectedRows[t].splice(posn, 1);
-                    posn = -1; // force the row to be deselected
+                    rows.splice(posn, 1);
+                    posn = -1; // toggle selection class
                 }
-                var row = $(this).parent().parent();
+                var row = $(this).closest('tr');
                 togglePairActions(t);
                 setSelectionClass(t, row, posn);
+                
             });
         }
     }
 
     // Show which rows have been selected for a bulk select action
     var setSelectionClass = function(t, row, index) {
+        var $totalAvailable = $('#totalAvailable'),
+            $totalSelected = $('#totalSelected'),
+            numSelected = selectedRows[t].length;
         if (selectionMode[t] == 'Inclusive') {
             // @ToDo: can 'selected' be pulled in from a parameter rather than module-scope?
-            $('#totalSelected').text(selected.length);
+            if ($totalSelected.length && $totalAvailable.length) {
+                $('#totalSelected').text(numSelected);
+            }
             if (index == -1) {
+                // Row is not currently selected
                 $(row).removeClass('row_selected');
                 $('.bulkcheckbox', row).prop('checked', false);
             } else {
+                // Row is currently selected
                 $(row).addClass('row_selected');
                 $('.bulkcheckbox', row).prop('checked', true);
             }
-        }
-        if (selectionMode[t] == 'Exclusive') {
-            $('#totalSelected').text(parseInt($('#totalAvailable').text(), 10) - selected.length);
+            if (numSelected == totalRecords[t]) {
+                $('#modeSelectionAll').prop('checked', true);
+                selectionMode[t] = 'Exclusive';
+                selectedRows[t] = [];
+            }
+        } else {
+            if ($totalSelected.length && $totalAvailable.length) {
+                $('#totalSelected').text(parseInt($('#totalAvailable').text(), 10) - numSelected);
+            }
             if (index == -1) {
+                // Row is currently selected
                 $(row).addClass('row_selected');
                 $('.bulkcheckbox', row).prop('checked', true);
             } else {
+                // Row is not currently selected
                 $(row).removeClass('row_selected');
                 $('.bulkcheckbox', row).prop('checked', false);
             }
+            if (numSelected == totalRecords[t]) {
+                $('#modeSelectionAll').prop('checked', false);
+                selectionMode[t] = 'Inclusive';
+                selectedRows[t] = [];
+            }
         }
+
         if (aoTableConfig[t]['bulkActions']) {
-            // Make sure that the details of the selected records are stored in the hidden fields
+
+            // Make sure that the details of the selected records
+            // are stored in the hidden fields
             $(aHiddenFieldsID[t][0]).val(selectionMode[t]);
             $(aHiddenFieldsID[t][1]).val(selectedRows[t].join(','));
+            
             // Add the bulk action controls to the dataTable
             $('.dataTable-action').remove();
             $(bulk_action_controls).insertBefore('#bulk_select_options');
+
+            // Activate bulk actions?
+            numSelected = selectedRows[t].length;
+            var off = selectionMode[t] == 'Inclusive' ? 0 : totalRecords[t];
+            $('.selected-action').prop('disabled', (numSelected == off));
             togglePairActions(t);
         };
     }
@@ -641,7 +674,7 @@
         if (tableConfig['bulkActions']) {
             tableColumns[tableConfig['bulkCol']] = {
                 // @ToDo: i18n
-                'sTitle': '<select id="bulk_select_options"><option></option><option id="modeSelectionAll">Select All</option><option id="modeSelectionNone">Deselect All</option></select>',
+                'sTitle': '<div id="bulk_select_options"><input id="modeSelectionAll" type="checkbox">' + i18n.sSelectAll + '</input></div>',
                 'bSortable': false
             };
         }
@@ -688,7 +721,7 @@
                     value = bulk_action;
                     name = value;
                 }
-                bulk_submit += '<input type="submit" id="submitSelection" class="' + cls + '" name="' + name + '" value="' + value + '">&nbsp;';
+                bulk_submit += '<input type="submit" id="' + name + '-selected-action" class="' + cls + ' selected-action" name="' + name + '" value="' + value + '">&nbsp;';
             }
             // Module-scope currently as read by setSelectionClass()
             bulk_action_controls = '<div class="dataTable-action">' + bulk_submit + '</div>';
@@ -928,23 +961,17 @@
                 'sZeroRecords': i18n.sZeroRecords
             },
             'fnHeaderCallback' : function (nHead, aasData, iStart, iEnd, aiDisplay) {
-                $('#modeSelectionAll').on('click', function(event) {
-                    //var wrapper = $(this).parents('.dataTables_wrapper')[0].id;
-                    //var selector = '#' + wrapper.substr(0, wrapper.length - 8);
-                    //var t = tableIdReverse(selector);
-                    selectionMode[t] = 'Exclusive';
-                    selectedRows[t] = [];
-                    //oDataTable[t].fnDraw(false);
-                    dt.fnDraw(false);
-                });
-                $('#modeSelectionNone').on('click', function(event) {
-                    //var wrapper = $(this).parents('.dataTables_wrapper')[0].id;
-                    //var selector = '#' + wrapper.substr(0, wrapper.length - 8);
-                    //var t = tableIdReverse(selector);
-                    selectionMode[t] = 'Inclusive';
-                    selectedRows[t] = [];
-                    //oDataTable[t].fnDraw(false);
-                    dt.fnDraw(false);
+                $('#modeSelectionAll').unbind('click.selectAll')
+                                      .on('click.selectAll', function(event) {
+                    if ($(this).prop('checked')) {
+                        selectionMode[t] = 'Exclusive';
+                        selectedRows[t] = [];
+                        dt.fnDraw(false);
+                    } else {
+                        selectionMode[t] = 'Inclusive';
+                        selectedRows[t] = [];
+                        dt.fnDraw(false);
+                    }
                 });
             },
             'fnServerData': fnAjaxCallback[t],

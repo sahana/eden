@@ -63,6 +63,7 @@ class S3EventModel(S3Model):
     """
 
     names = ["event_event_type",
+             "event_type_id",
              "event_event",
              "event_event_id",
              "event_event_location",
@@ -84,12 +85,12 @@ class S3EventModel(S3Model):
         # Event Types / Disaster Types
         #
         tablename = "event_event_type"
-        table = self.define_table(tablename,
-                                  Field("name", notnull=True,
-                                        length=64,
-                                        label=T("Name")),
-                                  s3_comments(),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             Field("name", notnull=True,
+                                   length=64,
+                                   label=T("Name")),
+                             s3_comments(),
+                             *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
             title_create = T("Add Event Type"),
@@ -282,7 +283,8 @@ class S3EventModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(event_event_id = event_id,
+        return dict(event_type_id = event_type_id,
+                    event_event_id = event_id,
                     )
 
     # -------------------------------------------------------------------------
@@ -298,7 +300,7 @@ class S3EventModel(S3Model):
                                                  writable=False),
                 )
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def event_update_onaccept(form):
         """
@@ -328,7 +330,7 @@ class S3EventModel(S3Model):
             for row in rows:
                 db(table.id == row.post_id).update(expired=True)
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def event_duplicate(item):
         """
@@ -350,7 +352,7 @@ class S3EventModel(S3Model):
             item.data.id = _duplicate.id
             item.method = item.METHOD.UPDATE
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def event_type_duplicate(item):
         """

@@ -246,6 +246,22 @@ def dojs(dogis = False, warnings = True):
         pass
     shutil.move(outputFilename, "../S3")
 
+    # JSTree
+    print "Compressing JSTree"
+    sourceDirectory = ".."
+    configFilename = "sahana.js.jstree.cfg"
+    outputFilename = "s3.jstree.min.js"
+    merged = mergejs.run(sourceDirectory,
+                         None,
+                         configFilename)
+    minimized = minimize(merged)
+    open(outputFilename, "w").write(minimized)
+    try:
+        os.remove("../S3/%s" % outputFilename)
+    except:
+        pass
+    shutil.move(outputFilename, "../S3")
+
     # Reports
     print "Compressing Reports"
     sourceDirectory = ".."
@@ -334,13 +350,13 @@ def dojs(dogis = False, warnings = True):
             pass
         shutil.move(outputFilename, "../S3")
 
-    for filename in ("spectrum",):
-        print "Compressing %s.js" % filename
-        in_f = os.path.join("..", filename + ".js")
-        out_f = os.path.join("..", filename + ".min.js")
-        with open(in_f, "r") as inp:
-            with open(out_f, "w") as out:
-                out.write(minimize(inp.read()))
+    #for filename in ("spectrum",):
+    #    print "Compressing %s.js" % filename
+    #    in_f = os.path.join("..", filename + ".js")
+    #    out_f = os.path.join("..", filename + ".min.js")
+    #    with open(in_f, "r") as inp:
+    #        with open(out_f, "w") as out:
+    #            out.write(minimize(inp.read()))
         
     if dogis:
         sourceDirectoryOpenLayers = "../gis/openlayers/lib"

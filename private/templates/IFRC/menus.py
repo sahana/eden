@@ -712,10 +712,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           c="deploy", f="email_channel",
                         ),
                    ),
-                   M("Members",
-                     c="deploy", f="human_resource", m="summary")(
-                        M("New Staff", c="hrm", f="staff", m="create"),
-                        M("New Volunteer", c="vol", f="volunteer", m="create"),
+                   M("RDRT Members",
+                     c="deploy", f="member", m="summary")(
+                        M("Add RDRT Members", c="deploy", f="add_members", m="select"),
                    ),
                )
 

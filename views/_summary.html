@@ -6,11 +6,13 @@
 {{try:}}{{=filter_form}}{{except:}}{{pass}}
 </div>
 </div>
+<div id='summary-tabs-tabbed'>
 <div id='summary-tab-headers'>
 {{try:}}{{=tabs}}{{except:}}{{pass}}
 </div>
 <div id='summary-sections'>
 {{try:}}{{for section in sections:}}{{=section}}{{pass}}{{except:}}{{pass}}
+</div>
 </div>
 </div>
 {{if s3.debug:}}

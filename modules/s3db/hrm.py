@@ -4836,14 +4836,16 @@ def hrm_human_resource_controller(extra_filter=None):
                                 hidden=True,
                                 ),
                 ]
-            # @ToDo
-            #if settings.get_org_regions():
-            #    filter_widgets.insert(2,
-            #        S3OptionsFilter("organisation_id.region_id",
-            #                        label = T("Region"),
-            #                        widget="multiselect",
-            #                        hidden=True,
-            #                        ))
+                
+            if settings.get_org_regions():
+                # Experimental: hierarchy filter
+                s3db.configure("org_region", hierarchy="parent")
+                filter_widgets.insert(1,
+                   S3HierarchyFilter("organisation_id$region_id",
+                                     label = T("Region"),
+                                     #hidden=True,
+                                    ))
+                                    
             teams = settings.get_hrm_teams()
             if teams:
                 filter_widgets.append(
