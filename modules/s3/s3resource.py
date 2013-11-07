@@ -2329,8 +2329,8 @@ class S3Resource(object):
 
         # XSLT transformation
         if tree and xmlformat is not None:
-            if DEBUG:
-                _start = datetime.datetime.now()
+            #if DEBUG:
+            #    _start = datetime.datetime.now()
             import uuid
             tfmt = xml.ISOFORMAT
             args.update(domain=manager.domain,
@@ -2401,10 +2401,8 @@ class S3Resource(object):
                               level element (off by default)
         """
 
-        define_resource = current.s3db.resource
-
-        manager = current.manager
         xml = current.xml
+        manager = current.manager
 
         if manager.show_urls:
             base_url = manager.s3.base_url
@@ -2455,6 +2453,15 @@ class S3Resource(object):
 
         format = current.auth.permission.format
         if format == "geojson":
+            if results > current.deployment_settings.get_gis_max_features():
+                headers = {"Content-Type":"application/json"}
+                message = "Too Many Records"
+                status = 509
+                raise HTTP(status,
+                           body=xml.json_message(success=False,
+                                                 statuscode=status,
+                                                 message=message),
+                           **headers)
             # Lookups per layer not per record
             if tablename == "gis_layer_shapefile":
                 # GIS Shapefile Layer
@@ -2520,6 +2527,8 @@ class S3Resource(object):
         # Add referenced resources to the tree
         #if DEBUG:
         #    _start = datetime.datetime.now()
+
+        define_resource = current.s3db.resource
 
         depth = dereference and manager.MAX_DEPTH or 0
         while reference_map and depth:
@@ -7020,17 +7029,13 @@ class S3RecordMerger(object):
         self.main = main
 
         db = current.db
-        manager = current.manager
-
         resource = self.resource
         table = resource.table
         tablename = resource.tablename
 
-        raise_error = self.raise_error
-
         # Check for master resource
         if resource.parent:
-            raise_error("Must not merge from component", SyntaxError)
+            self.raise_error("Must not merge from component", SyntaxError)
 
         # Check permissions
         auth = current.auth
@@ -7040,7 +7045,7 @@ class S3RecordMerger(object):
                     has_permission("delete", table,
                                    record_id = duplicate_id)
         if not permitted:
-            raise_error("Operation not permitted", auth.permission.error)
+            self.raise_error("Operation not permitted", auth.permission.error)
 
         # Load all models
         s3db = current.s3db

@@ -664,6 +664,14 @@ class S3Config(Storage):
     def get_gis_marker_max_width(self):
         return self.gis.get("marker_max_width", 30)
 
+    def get_gis_max_features(self):
+        """
+            The maximum number of features to return in a Map Layer
+            - more than this will prompt the user to zoom in to load the layer
+            Lower this number to get extra performance from an overloaded server.
+        """
+        return self.gis.get("max_features", 1000)
+
     def get_gis_legend(self):
         """
             Should we display a Legend on the Map?
@@ -1200,7 +1208,6 @@ class S3Config(Storage):
         return self.msg.get("max_send_retries", 9)
     
     # -------------------------------------------------------------------------
-    # Save Search and Subscription
     def get_search_max_results(self):
         """
             The maximum number of results to return in an Autocomplete Search

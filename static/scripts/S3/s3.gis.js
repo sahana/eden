@@ -1117,6 +1117,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     };
     var layer_loadend = function(event) {
         hideThrobber(event.object);
+        if (event.response.priv.status == 509) {
+            S3.showAlert(i18n.gis_too_many_features, 'warning');
+        }
     };
 
     /**

@@ -5747,6 +5747,7 @@ class MAP(DIV):
                 "gis_cluster_multiple": T("There are multiple records at this location"),
                 "gis_loading": T("Loading"),
                 "gis_requires_login": T("Requires Login"),
+                "gis_too_many_features": T("There are too many features, please Zoom In"),
                 "gis_zoomin": T("Zoom In"),
                 }
 
