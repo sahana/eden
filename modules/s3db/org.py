@@ -47,6 +47,7 @@ __all__ = ["S3OrganisationModel",
            "org_organisation_address",
            "org_root_organisation",
            "org_organisation_requires",
+           "org_region_options",
            "org_rheader",
            "org_organisation_controller",
            "org_office_controller",
@@ -176,9 +177,9 @@ class S3OrganisationModel(S3Model):
                                  s3_comments(),
                                  *s3_meta_fields())
 
-            represent = S3Represent(lookup=tablename, translate=True)
+            region_represent = S3Represent(lookup=tablename, translate=True)
             # Can't be defined in-line as otherwise get a circular reference
-            table.parent.represent = represent
+            table.parent.represent = region_represent
             table.parent.requires = IS_NULL_OR(
                                         IS_ONE_OF(db, "org_region.id",
                                                   represent,
@@ -207,13 +208,13 @@ class S3OrganisationModel(S3Model):
                 sortby="name",
                 requires=IS_NULL_OR(
                             IS_ONE_OF(db, "org_region.id",
-                                      represent,
+                                      region_represent,
                                       sort=True,
                                       # Only show the Regions, not the Zones
                                       not_filterby="parent",
                                       not_filter_opts=[None]
                                       )),
-                represent=represent,
+                represent=region_represent,
                 label=T("Region"),
                 comment=S3AddResourceLink(c="org",
                     f="region",
@@ -226,6 +227,7 @@ class S3OrganisationModel(S3Model):
                       deduplicate=self.org_region_duplicate,
                       )
         else:
+            region_represent = None
             region_id = S3ReusableField("region_id", "integer",
                                         readable = False,
                                         writable = False)
@@ -569,6 +571,7 @@ class S3OrganisationModel(S3Model):
         return dict(org_organisation_type_id=organisation_type_id,
                     org_organisation_id=organisation_id,
                     org_organisation_represent=org_organisation_represent,
+                    org_region_represent=region_represent,
                     )
 
     # -------------------------------------------------------------------------
@@ -3469,6 +3472,31 @@ def org_organisation_requires(required = False,
     if not required:
         requires = IS_NULL_OR(requires)
     return requires
+
+# =============================================================================
+def org_region_options(zones=False):
+    """
+        Get all options for region IDs
+
+        @param zones: select only zones if True, otherwise only regions
+        @return: dict of {org_region.id: representation}
+    """
+
+    represent = current.s3db.org_region_represent
+    if represent is None:
+        return dict()
+
+    db = current.db
+    rtable = db.org_region
+    if zones:
+        query = (rtable.parent == None)
+    else:
+        query = (rtable.parent != None)
+    query &= (rtable.deleted != True)
+    rows = db(query).select(rtable.id, rtable.name)
+    options = represent.bulk(None, rows=rows)
+    options.pop(None, None) # Remove the None options
+    return options
 
 # =============================================================================
 class org_OrganisationRepresent(S3Represent):

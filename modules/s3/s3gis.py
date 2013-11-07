@@ -4304,7 +4304,8 @@ class GIS(object):
                parent is False or path is False or L0 is False or L1 is False or \
                                                    L2 is False or L3 is False:
                 # Get the whole feature
-                feature = db(table.id == id).select(table.name,
+                feature = db(table.id == id).select(table.id,
+                                                    table.name,
                                                     table.parent,
                                                     table.path,
                                                     table.lat,

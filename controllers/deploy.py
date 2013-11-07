@@ -32,7 +32,7 @@ def mission():
         created_on.represent = lambda d: \
                                s3base.S3DateTime.date_represent(d, utc=True)
         if r.id:
-            # Deployment-specific workflows return to the profile page
+            # Mission-specific workflows return to the profile page
             tablename = r.tablename if not r.component else r.component.tablename
             next_url = r.url(component="", method="profile")
             if r.component_name == "alert":
@@ -97,7 +97,7 @@ def mission():
                               rheader=s3db.deploy_mission_rheader)
 
 # =============================================================================
-def human_resource_deployment():
+def human_resource_assignment():
     """ RESTful CRUD Controller """
 
     def prep(r):
@@ -181,7 +181,11 @@ def alert():
 
 # =============================================================================
 def member():
-    """ RESTful CRUD Controller """
+    """
+        RESTful CRUD Controller (limited to RDRT members)
+
+        @todo: merge into human_resource controller
+    """
 
     # Tweak settings for RDRT
     settings.hrm.staff_experience = True
@@ -194,13 +198,16 @@ def member():
     q = s3base.S3FieldSelector("human_resource_application.active") == True
     output = s3db.hrm_human_resource_controller(extra_filter=q)
     if isinstance(output, dict) and "title" in output:
-        output["title"] = T("Members")
+        output["title"] = T("RDRT Members")
     return output
 
 # =============================================================================
 def human_resource():
     """
-        'Members' RESTful CRUD Controller
+        RESTful CRUD Controller, currently used for member profiles
+
+        @todo: filter to RDRT members only (see member-controller)
+        @todo: use for imports of RDRT members (with automatic application)
     """
 
     # Tweak settings for RDRT
@@ -210,6 +217,23 @@ def human_resource():
 
     return s3db.hrm_human_resource_controller()
     
+# =============================================================================
+def add_members():
+    """
+        Custom worklfow to manually add RDRT members
+
+        @todo: generalize ("member" term is RDRT specific)
+    """
+
+    def prep(r):
+        if not r.method:
+            r.method = "select"
+        r.custom_action = s3db.deploy_add_members
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller("hrm", "human_resource")
+
 # =============================================================================
 def person():
     """

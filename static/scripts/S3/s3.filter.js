@@ -95,6 +95,10 @@ S3.search = {};
         form.find('.date-filter-input').each(function() {
             $(this).val('');
         });
+        // Hierarchy filter widget (experimental)
+        form.find('.hierarchy-filter').each(function() {
+            $(this).hierarchicalopts('reset');
+        });
         // Other widgets go here
 
         // Clear filter manager
@@ -321,8 +325,31 @@ S3.search = {};
             }
         });
 
-        // Other widgets go here...
+        // Hierarchy filter (experimental)
+        form.find('.hierarchy-filter:visible').each(function() {
+            $this = $(this);
+            id = $this.attr('id');
+            url_var = $('#' + id + '-data').val();
+            values = $this.hierarchicalopts('get');
+            value = '';
+            if (values) {
+                for (i=0; i < values.length; i++) {
+                    if (value === '') {
+                        value += values[i];
+                    } else {
+                        value = value + ',' + values[i];
+                    }
+                }
+            }
+            if (value === '') {
+                queries.push([url_var, null]);
+            } else {
+                queries.push([url_var, value]);
+            }
+        });
 
+        // Other widgets go here...
+        
         // return queries to caller
         return queries;
     };
@@ -352,7 +379,11 @@ S3.search = {};
         for (i=0, len=queries.length; i < len; i++) {
             var query = queries[i];
             expression = query[0];
-            values = parseValue(query[1]);
+            if (typeof query[1] == 'string') {
+                values = parseValue(query[1]);
+            } else {
+                values = query[1];
+            }
             if (q.hasOwnProperty(expression)) {
                 q[expression] = q[expression].concat(values);
             } else {
@@ -530,6 +561,17 @@ S3.search = {};
                     }
                     hierarchical_location_change(this);
                 }
+            }
+        });
+
+        // Hierarchy filter widget (experimental)
+        form.find('.hierarchy-filter:visible').each(function() {
+            $this = $(this);
+            id = $this.attr('id');
+            expression = $('#' + id + '-data').val();
+            if (q.hasOwnProperty(expression)) {
+                values = q[expression];
+                $this.hierarchicalopts('set', values);
             }
         });
         
@@ -857,6 +899,9 @@ S3.search = {};
                     s = parts.join("','");
                     $this.attr('onclick', s);
                 });
+                $('#' + dt[0].id + '_dataTable_filterURL').each(function() {
+                    $(this).val(target_data['ajaxurl']);
+                });
             } else if (t.hasClass('map_wrapper')) {
                 S3.gis.refreshLayer('search_results');
             } else if (t.hasClass('pt-container')) {
@@ -957,7 +1002,7 @@ S3.search = {};
         }
 
         // Initialise jQueryUI Tabs
-        $('#summary-tabs').tabs({
+        $('#summary-tabs-tabbed').tabs({
             active: active_tab,
             activate: function(event, ui) {
                 var newPanel = $(ui.newPanel);
@@ -1002,7 +1047,8 @@ S3.search = {};
                     updatePendingTargets(form);
                 }
             }
-        }).css({visibility: 'visible'});
+        });
+        $('#summary-tabs').css({visibility: 'visible'});
         // Activate not called? Unhide initial section anyway:
         $('.ui-tabs-panel[aria-hidden="false"]').first().removeClass('hide');
     };
@@ -1387,6 +1433,9 @@ S3.search = {};
                         s = parts.join("','");
                         $this.attr('onclick', s);
                     });
+                    $('#' + dt[0].id + '_dataTable_filterURL').each(function() {
+                        $(this).val(dt_ajaxurl[target_id]);
+                    });
                 } else if (t.hasClass('map_wrapper')) {
                     S3.gis.refreshLayer('search_results', queries);
                 } else if (t.hasClass('pt-container')) {
@@ -1486,6 +1535,9 @@ S3.search = {};
             $(this).closest('form').trigger('optionChanged');
         });
         $('.options-filter, .location-filter, .date-filter-input').on('change.autosubmit', function () {
+            $(this).closest('form').trigger('optionChanged');
+        });
+        $('.hierarchy-filter').on('select.s3hierarchy', function() {
             $(this).closest('form').trigger('optionChanged');
         });
 

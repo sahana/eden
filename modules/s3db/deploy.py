@@ -31,6 +31,7 @@ __all__ = ["S3DeploymentModel",
            "S3DeploymentAlertModel",
            "deploy_rheader",
            "deploy_mission_rheader",
+           "deploy_add_members",
            ]
 
 try:
@@ -55,7 +56,7 @@ class S3DeploymentModel(S3Model):
              "deploy_mission",
              "deploy_mission_id",
              "deploy_human_resource_application",
-             "deploy_human_resource_deployment"]
+             "deploy_human_resource_assignment"]
 
     def model(self):
 
@@ -73,7 +74,7 @@ class S3DeploymentModel(S3Model):
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
         
         # ---------------------------------------------------------------------
-        # Deployment
+        # Mission
         #
         mission_status_opts = {
             1 : T("Closed"),
@@ -173,10 +174,11 @@ class S3DeploymentModel(S3Model):
                                pagesize = 10,
                               )
 
-        deployment_widget = dict(label="Members Deployed",
+        # @todo: generalize terminology (currently RDRT specific)
+        assignment_widget = dict(label="Members Deployed",
                                  insert=lambda r, add_title, add_url: \
                                         A(add_title,
-                                          _href=r.url(component="human_resource_deployment",
+                                          _href=r.url(component="human_resource_assignment",
                                                       method="create"),
                                           _class="action-btn profile-add-btn"),
                                  title_create="Deploy New Member",
@@ -189,10 +191,10 @@ class S3DeploymentModel(S3Model):
                                      "end_date",
                                      "rating",
                                  ],
-                                 tablename = "deploy_human_resource_deployment",
+                                 tablename = "deploy_human_resource_assignment",
                                  context = "mission",
                                  colspan = 2,
-                                 list_layout = deploy_render_human_resource_deployment,
+                                 list_layout = deploy_render_human_resource_assignment,
                                  pagesize = None, # all records
                                 )
 
@@ -215,7 +217,7 @@ class S3DeploymentModel(S3Model):
                                    deploy_mission_rheader(r, profile=True),
                   profile_widgets = [alert_widget,
                                      response_widget,
-                                     deployment_widget,
+                                     assignment_widget,
                                     ],
                   summary=[{"name": "rheader",
                             "common": True,
@@ -250,7 +252,7 @@ class S3DeploymentModel(S3Model):
                   )
 
         # Components
-        add_component("deploy_human_resource_deployment",
+        add_component("deploy_human_resource_assignment",
                       deploy_mission="mission_id")
 
         add_component("deploy_alert",
@@ -285,7 +287,7 @@ class S3DeploymentModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Application of human resources (= agreement that an HR is
-        # generally available for deployments, can come with certain
+        # generally available for assignments, can come with certain
         # restrictions)
         #
         tablename = "deploy_human_resource_application"
@@ -298,10 +300,10 @@ class S3DeploymentModel(S3Model):
                              *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Deployment of human resources (= actual assignment of an HR to
+        # Assignment of human resources (= actual assignment of an HR to
         # a mission)
         #
-        tablename = "deploy_human_resource_deployment"
+        tablename = "deploy_human_resource_assignment"
         table = define_table(tablename,
                              super_link("doc_id", "doc_entity"),
                              mission_id(),
@@ -323,6 +325,7 @@ class S3DeploymentModel(S3Model):
                  )
 
         # CRUD Strings
+        # @todo: this is RDRT-specific, move into IFRC config
         crud_strings[tablename] = Storage(
             title_create = T("New Deployment"),
             title_display = T("Deployment Details"),
@@ -340,9 +343,9 @@ class S3DeploymentModel(S3Model):
             msg_list_empty = T("No Deployments currently registered"))
 
         # ---------------------------------------------------------------------
-        # Deployment of assets
+        # Assignment of assets
         #
-        # @todo: deploy_asset_deployment
+        # @todo: deploy_asset_assignment
         
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -658,7 +661,7 @@ class S3DeploymentAlertModel(S3Model):
 
         T = current.T
         record = r.record
-        # Always redirect to the Deployment Profile
+        # Always redirect to the Mission Profile
         next_url = URL(f="mission", args=[record.mission_id, "profile"])
 
         # Check whether the alert has already been sent
@@ -712,7 +715,7 @@ class S3DeploymentAlertModel(S3Model):
         # Update the Alert to show it's been Sent
         db(table.id == alert_id).update(message_id=message_id)
 
-        # Return to the Deployment Profile
+        # Return to the Mission Profile
         current.session.confirmation = T("Alert Sent")
         redirect(next_url)
 
@@ -794,7 +797,7 @@ def deploy_mission_hrquantity(row):
         return 0
 
     db = current.db
-    table = db.deploy_human_resource_deployment
+    table = db.deploy_human_resource_assignment
     count = table.id.count()
     row = db(table.mission_id == mission_id).select(count).first()
     if row:
@@ -1070,7 +1073,7 @@ def deploy_render_response(listid,
     return item
 
 # =============================================================================
-def deploy_render_human_resource_deployment(listid,
+def deploy_render_human_resource_assignment(listid,
                                             resource,
                                             rfields,
                                             record,
@@ -1085,7 +1088,7 @@ def deploy_render_human_resource_deployment(listid,
         @param attr: additional attributes
     """
 
-    pkey = "deploy_human_resource_deployment.id"
+    pkey = "deploy_human_resource_assignment.id"
 
     # Construct the item ID
     if pkey in record:
@@ -1116,7 +1119,7 @@ def deploy_render_human_resource_deployment(listid,
                                                          columns=columns)
 
     # Toolbox
-    update_url = URL(c="deploy", f="human_resource_deployment",
+    update_url = URL(c="deploy", f="human_resource_assignment",
                      args=[record_id, "update.popup"],
                      vars={"refresh": listid, "record": record_id})
     toolbox = deploy_render_profile_toolbox(resource, record_id, update_url)
@@ -1137,9 +1140,9 @@ def deploy_render_human_resource_deployment(listid,
                            DIV(organisation,
                                _class="card-category"),
                            _class="media-heading"),
-                       render("deploy_human_resource_deployment.start_date",
-                              "deploy_human_resource_deployment.end_date",
-                              "deploy_human_resource_deployment.rating",
+                       render("deploy_human_resource_assignment.start_date",
+                              "deploy_human_resource_assignment.end_date",
+                              #"deploy_human_resource_assignment.rating",
                        ),
                        _class="media-body",
                    ),
@@ -1150,5 +1153,209 @@ def deploy_render_human_resource_deployment(listid,
            )
 
     return item
+
+# =============================================================================
+def deploy_add_members(r, **attr):
+    """
+        Custom method to select new RDRT members
+
+        @todo: make filter re-usable for alerts recipient selection
+        @todo: make workflow re-usable for manual assignments
+    """
+
+    T = current.T
+    s3db = current.s3db
+
+    get_vars = r.get_vars
+    response = current.response
+    settings = current.deployment_settings
+
+    # @todo: move into model
+    s3db.configure("org_region", hierarchy="parent")
+
+    resource = r.resource
+    if r.http == "POST":
+        added = 0
+        post_vars = r.post_vars
+        if all([n in post_vars for n in ("add", "selected", "mode")]):
+            selected = post_vars.selected
+            if selected:
+                selected = selected.split(",")
+            else:
+                selected = []
+                
+            db = current.db
+            atable = s3db.deploy_human_resource_application
+            if selected:
+                # Handle exclusion filter
+                if post_vars.mode == "Exclusive":
+                    if "filterURL" in post_vars:
+                        filters = S3URLQuery.parse_url(post_vars.ajaxURL)
+                    else:
+                        filters = None
+                    query = ~(S3FieldSelector("id").belongs(selected))
+                    hresource = s3db.resource("hrm_human_resource",
+                                              filter=query, vars=filters)
+                    rows = hresource.select(["id"], as_rows=True)
+                    selected = [str(row.id) for row in rows]
+                    
+                query = (atable.human_resource_id.belongs(selected)) & \
+                        (atable.deleted != True)
+                rows = db(query).select(atable.id,
+                                        atable.active)
+                rows = dict((row.id, row) for row in rows)
+                for human_resource_id in selected:
+                    try:
+                        hr_id = int(human_resource_id.strip())
+                    except ValueError:
+                        continue
+                    if hr_id in rows:
+                        row = rows[hr_id]
+                        if not row.active:
+                            added += 1
+                        row.update_record(active=True)
+                    else:
+                        atable.insert(human_resource_id=human_resource_id,
+                                    active=True)
+                        added += 1
+        current.session.confirmation = T("%(number)s RDRT members added") % \
+                                       dict(number=added)
+        if added > 0:
+            redirect(URL(f="member", args=["summary"], vars={}))
+        else:
+            redirect(URL(f="add_members", vars={}))
+    
+    elif r.http == "GET":
+
+        # Filter widgets
+        filter_widgets = [
+            S3TextFilter(["person_id$first_name",
+                          "person_id$middle_name",
+                          "person_id$last_name",
+                         ],
+                         label=T("Name")),
+            S3OptionsFilter("organisation_id",
+                            widget="multiselect",
+                            filter=True,
+                            header="",
+                            hidden=True,
+                            ),
+        ]
+        if settings.get_org_regions():
+           filter_widgets.insert(1,
+               S3HierarchyFilter("organisation_id$region_id",
+                                 lookup="org_region",
+                                 #hidden=True,
+                               ))
+
+        # List fields
+        list_fields = ["id", "person_id", "organisation_id"]
+        
+        # Data table
+        totalrows = resource.count()
+        if "iDisplayLength" in get_vars:
+            display_length = int(get_vars["iDisplayLength"])
+        else:
+            display_length = 25
+        limit = 4 * display_length
+        filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
+        resource.add_filter(filter)
+        data = resource.select(list_fields,
+                               start=0,
+                               limit=limit,
+                               orderby=orderby,
+                               left=left,
+                               count=True,
+                               represent=True)
+        filteredrows = data["numrows"]
+        dt = S3DataTable(data["rfields"], data["rows"])
+        dt_id = "datatable"
+
+        # Bulk actions
+        # @todo: generalize
+        dt_bulk_actions = [(T("Add as RDRT Members"), "add")]
+
+        if r.extension == "html":
+            # Page load
+            resource.configure(deletable = False)
+
+            dt.defaultActionButtons(resource)
+            response.s3.no_formats = True
+
+            # Data table (items)
+            items = dt.html(totalrows,
+                            filteredrows,
+                            dt_id,
+                            dt_displayLength=display_length,
+                            dt_ajax_url=URL(c="deploy",
+                                            f="add_members",
+                                            extension="aadata",
+                                            vars={},
+                                            ),
+                            dt_pagination="true",
+                            dt_bulk_actions=dt_bulk_actions,
+                            dt_bFilter="false")
+
+            # Filter form
+            if filter_widgets:
+
+                # Where to retrieve filtered data from:
+                _vars = resource.crud._remove_filters(r.get_vars)
+                filter_submit_url = r.url(vars=_vars)
+
+                # Where to retrieve updated filter options from:
+                filter_ajax_url = URL(f="human_resource",
+                                    args=["filter.options"],
+                                    vars={})
+
+                #from s3filter import S3FilterForm
+                get_config = resource.get_config
+                filter_clear = get_config("filter_clear", True)
+                filter_formstyle = get_config("filter_formstyle", None)
+                filter_submit = get_config("filter_submit", True)
+                filter_form = S3FilterForm(filter_widgets,
+                                        clear=filter_clear,
+                                        formstyle=filter_formstyle,
+                                        submit=filter_submit,
+                                        ajax=True,
+                                        url=filter_submit_url,
+                                        ajaxurl=filter_ajax_url,
+                                        _class="filter-form",
+                                        _id="datatable-filter-form")
+                fresource = current.s3db.resource(resource.tablename)
+                alias = resource.alias if r.component else None
+                ff = filter_form.html(fresource,
+                                      r.get_vars,
+                                      target="datatable",
+                                      alias=alias)
+            else:
+                ff = ""
+                
+            output = dict(items=items,
+                          # @todo: generalize
+                          title = T("Add RDRT Members"),
+                          list_filter_form=ff)
+
+            response.view = "list_filter.html"
+            return output
+
+        elif r.extension == "aadata":
+            # Ajax refresh
+            if "sEcho" in get_vars:
+                echo = int(get_vars.sEcho)
+            else:
+                echo = None
+            items = dt.json(totalrows,
+                            filteredrows,
+                            dt_id,
+                            echo,
+                            dt_bulk_actions=dt_bulk_actions)
+            response.headers["Content-Type"] = "application/json"
+            return items
+
+        else:
+            r.error(501, resource.ERROR.BAD_FORMAT)
+    else:
+        r.error(405, r.ERROR.BAD_METHOD)
 
 # END =========================================================================

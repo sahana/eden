@@ -54,7 +54,7 @@ from gluon.tools import callback
 
 from s3rest import S3Method
 from s3resource import S3FieldSelector, S3ResourceField, S3URLQuery
-from s3utils import s3_unicode, S3TypeConverter
+from s3utils import s3_get_foreign_key, s3_unicode, S3TypeConverter
 from s3validators import *
 from s3widgets import S3DateWidget, S3DateTimeWidget, S3GroupedOptionsWidget, S3MultiSelectWidget, S3OrganisationHierarchyWidget, S3RadioOptionsWidget, s3_grouped_checkboxes_widget, S3SelectChosenWidget
 
@@ -1387,6 +1387,104 @@ class S3OptionsFilter(S3FilterWidget):
 
         # Sort the options
         return (ftype, options, None)
+
+# =============================================================================
+class S3HierarchyFilter(S3FilterWidget):
+    """
+        Filter widget for hierarchical types
+
+        Specific options:
+
+            lookup              name of the lookup table
+            represent           representation method for the key
+
+        @status: experimental
+    """
+
+    _class = "hierarchy-filter"
+
+    operator = "belongs"
+
+    # -------------------------------------------------------------------------
+    def widget(self, resource, values):
+        """
+            Render this widget as HTML helper object(s)
+
+            @param resource: the resource
+            @param values: the search values from the URL query
+        """
+
+        attr = self._attr(resource)
+        opts = self.opts
+        name = attr["_name"]
+
+        widget_id = attr["_id"]
+        
+        rfield = None
+        selector = self.field
+        
+        lookup = opts.get("lookup")
+        if not lookup:
+            if resource:
+                rfield = S3ResourceField(resource, selector)
+                if rfield.field:
+                    lookup = s3_get_foreign_key(rfield.field, m2m=False)[0]
+            if not lookup:
+                raise SyntaxError("No lookup table known for %s" % selector)
+
+        represent = opts.get("represent")
+        if not represent:
+            if not rfield:
+                rfield = S3ResourceField(resource, selector)
+                if rfield.field:
+                    represent = rfield.field.represent
+
+        from s3hierarchy import S3Hierarchy
+        h = S3Hierarchy(tablename=lookup, represent=represent)
+
+        if not h.config:
+            raise AttributeError("No hierarchy configured for %s" % lookup)
+
+        widget = DIV(INPUT(_type="hidden",
+                           _class="s3-hierarchy-input"),
+                     DIV(h.html("%s-tree" % widget_id),
+                         _class="s3-hierarchy-tree"),
+                     **attr)
+        widget.add_class(self._class)
+
+        s3 = current.response.s3
+        scripts = s3.scripts
+        script_dir = "/%s/static/scripts" % current.request.application
+
+        # Currently selected values
+        selected = []
+        append = selected.append
+        if not isinstance(values, (list, tuple, set)):
+            values = [values]
+        for v in values:
+            if isinstance(v, (int, long)) or str(v).isdigit():
+                append(v)
+
+        script = "%s/jquery.jstree.js" % script_dir
+        if script not in scripts:
+            scripts.append(script)
+
+        script = "%s/S3/s3.jquery.ui.hierarchicalopts.js" % script_dir
+        if script not in scripts:
+            scripts.append(script)
+
+        script = """
+$('#%(widget_id)s').hierarchicalopts({
+    appname: '%(appname)s',
+    selected: %(selected)s
+});""" % {
+            "appname": current.request.application,
+            "widget_id": widget_id,
+            "selected": json.dumps(selected) if selected else "null",
+        }
+        s3.jquery_ready.append(script)
+
+        return widget
 
 # =============================================================================
 class S3FilterForm(object):
