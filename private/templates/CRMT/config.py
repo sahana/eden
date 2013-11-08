@@ -351,17 +351,12 @@ def customize_pr_person(**attr):
         s3db = current.s3db
         tablename = "pr_person"
 
-        interactive = r.interactive
-        if interactive:
-            EMAIL = T("Email")
-            MOBILE = settings.get_ui_label_mobile_phone()
-
         if r.method == "validate":
             # Can't validate image without the file
             image_field = s3db.pr_image.image
             image_field.requires = None
 
-        elif interactive or r.representation == "aadata":
+        elif r.interactive or r.representation == "aadata":
             # Modify list_fields
             db = current.db
             field = db.auth_user.org_group_id
@@ -378,14 +373,14 @@ def customize_pr_person(**attr):
             is_logged_in = current.auth.is_logged_in()
             if is_logged_in:
                 # Don't include Email/Phone for unauthenticated users
-                list_fields += [(MOBILE, "phone.value"),
-                                (EMAIL, "email.value"),
+                list_fields += [(settings.get_ui_label_mobile_phone(), "phone.value"),
+                                (T("Email"), "email.value"),
                                 ]
             s3db.configure(tablename,
                            list_fields = list_fields,
                            )
 
-        if interactive:
+        if r.interactive:
             if current.request.controller != "default":
                 # CRUD Strings
                 ADD_CONTACT = T("Add New Contact")
@@ -496,7 +491,7 @@ def customize_pr_person(**attr):
                         ),
                     S3SQLInlineComponent("contact",
                         name = "phone",
-                        label = MOBILE,
+                        label = settings.get_ui_label_mobile_phone(),
                         multiple = False,
                         fields = ["value"],
                         filterby = dict(field = "contact_method",
@@ -504,7 +499,7 @@ def customize_pr_person(**attr):
                         ),
                     S3SQLInlineComponent("contact",
                         name = "email",
-                        label = EMAIL,
+                        label = T("Email"),
                         multiple = False,
                         fields = ["value"],
                         filterby = dict(field = "contact_method",

@@ -2461,6 +2461,7 @@ class S3Resource(object):
                            body=xml.json_message(success=False,
                                                  statuscode=status,
                                                  message=message),
+                           web2py_error=message,
                            **headers)
             # Lookups per layer not per record
             if tablename == "gis_layer_shapefile":
