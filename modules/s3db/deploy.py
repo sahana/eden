@@ -1289,7 +1289,7 @@ def deploy_render_human_resource_assignment(listid,
     return item
 
 # =============================================================================
-def deploy_add_members(r, **attr):
+def deploy_application(r, **attr):
     """
         Custom method to select new RDRT members
 
