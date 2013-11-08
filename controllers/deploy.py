@@ -37,9 +37,6 @@ def mission():
             next_url = r.url(component="", method="profile")
             if r.component_name == "alert":
                 s3db.configure(tablename,
-                               # Open up the Select page
-                               # @ToDo: Integrate this into main page
-                               # Widget? Custom Create method?
                                create_next=URL(f="alert",
                                                args=["[id]", "select"]),
                                update_next=next_url,
@@ -94,7 +91,7 @@ def mission():
                               # (rheader includes the title)
                               notitle=lambda r: {"title": ""} \
                                              if r.component else None,
-                              rheader=s3db.deploy_mission_rheader)
+                              rheader=s3db.deploy_rheader)
 
 # =============================================================================
 def human_resource():
@@ -124,6 +121,9 @@ def human_resource():
 def person():
     """
         'Members' RESTful CRUD Controller
+        - currently used as "member profile"
+
+        @todo: replace by S3Profile page
     """
 
     # Tweak settings for RDRT
@@ -173,14 +173,34 @@ def human_resource_assignment():
 def alert():
     """ RESTful CRUD Controller """
 
+    # Tweak settings for RDRT
+    settings.hrm.staff_experience = True
+    settings.hrm.use_skills = True
+    settings.search.filter_manager = True
+    
+    # Add application component
+    # @todo: move into HRM model
+    s3db.add_component("deploy_human_resource_application",
+                       hrm_human_resource="human_resource_id")
+
     def prep(r):
         if r.component:
-            if r.component_name == "response":
+            if r.component.alias == "select":
+                if not r.method:
+                    r.method = "select"
+                if r.method == "select":
+                    r.custom_action = s3db.deploy_alert_select_recipients
+            elif r.component_name == "response":
                 s3db.configure(r.component.tablename,
                                deletable = False,
                                editable = False,
                                insertable = False,
                                )
+            elif r.component_name == "recipient":
+                if r.record.message_id:
+                    s3db.configure(r.component.tablename,
+                                   insertable=False,
+                                   deletable=False)
         else:
             if r.record:
                 if r.record.message_id:
@@ -209,31 +229,36 @@ def alert():
     def postp(r, output):
         if r.component:
             if r.component_name == "recipient":
-                # Open should open the Member, not the Link
-                # Delete should remove the Link, not the Member
+                # Open should open the member profile, not the link
                 s3.actions = [dict(label=str(READ),
                                    _class="action-btn read",
                                    url=URL(f="person",
-                                           vars={"human_resource.id":"[id]"})),
-                              dict(label=str(DELETE),
-                                   _class="delete-btn",
-                                   url=URL(f="alert",
-                                           args=[r.id, "recipient", "[id]", "delete"])),
-                              ]
+                                           vars={"human_resource.id":"[id]"}))]
+                if not r.record.message_id:
+                    # Delete should remove the Link, not the Member
+                    s3.actions.append(dict(label=str(DELETE),
+                                           _class="delete-btn",
+                                           url=URL(f="alert",
+
+
+                                                   args=[r.id,
+                                                         "recipient",
+                                                         "[id]",
+                                                         "delete"])))
         else:
             # Delete should only be possible if the Alert hasn't yet been sent
             table = r.table
-            query = (table.message_id == None)
-            rows = db(query).select(table.id)
+            rows = db(table.message_id == None).select(table.id)
             restrict = [str(row.id) for row in rows]
             s3.actions = [dict(label=str(READ),
                                _class="action-btn read",
-                               url=URL(f="alert", args="[id]")),
+                               url=URL(f="alert",
+                                       args="[id]")),
                           dict(label=str(DELETE),
                                _class="delete-btn",
                                restrict=restrict,
                                url=URL(f="alert",
-                                       args=[r.id, "delete"])),
+                                       args=["[id]", "delete"])),
                           ]
         return output
     s3.postp = postp
