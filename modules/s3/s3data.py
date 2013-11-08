@@ -320,7 +320,8 @@ class S3DataTable(object):
     def getConfigData():
         """
             Method to extract the configuration data from S3 globals and
-            store them as an attr variable
+            store them as an attr variable.
+            - used by Survey module
 
             @return: dictionary of attributes which can be passed into html()
 

@@ -68,6 +68,8 @@ class S3Summary(S3Method):
         """
 
         output = {}
+        response = current.response
+        s3 = response.s3
         resource = self.resource
         get_config = resource.get_config
 
@@ -149,6 +151,11 @@ class S3Summary(S3Method):
                 else:
                     handler = r.get_widget_handler(method)
                     if handler is not None:
+                        if method == "datatable":
+                            # Assume that we have a FilterForm, so disable Quick Search
+                            dtargs = attr.get("dtargs", {})
+                            dtargs["dt_bFilter"] = "false"
+                            attr["dtargs"] = dtargs
                         content = handler(r,
                                           method=method,
                                           widget_id=widget_id,
@@ -217,9 +224,9 @@ class S3Summary(S3Method):
 
             # Where to retrieve updated filter options from:
             filter_ajax_url = attr.get("filter_ajax_url",
-                                        r.url(method="filter",
-                                              vars={},
-                                              representation="options"))
+                                       r.url(method="filter",
+                                             vars={},
+                                             representation="options"))
 
             filter_formstyle = get_config("filter_formstyle")
             filter_submit = get_config("filter_submit", True)
@@ -243,7 +250,6 @@ class S3Summary(S3Method):
             output["filter_form"] = ""
 
         # View
-        response = current.response
         response.view = self._view(r, "summary.html")
 
         if len(sections) > 1:
@@ -255,7 +261,7 @@ class S3Summary(S3Method):
             # Render the Sections as Tabs
             script = '''S3.search.summary_tabs("%s",%s,"%s")''' % \
                      (form_id, active_tab, pending)
-            response.s3.jquery_ready.append(script)
+            s3.jquery_ready.append(script)
 
             if active_map:
                 # If there is a map on the active tab then we need to add

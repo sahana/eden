@@ -1134,9 +1134,6 @@ def deploy_application(r, **attr):
     response = current.response
     settings = current.deployment_settings
 
-    # @todo: move into model
-    s3db.configure("org_region", hierarchy="parent")
-
     resource = r.resource
     if r.http == "POST":
         added = 0
@@ -1238,9 +1235,10 @@ def deploy_application(r, **attr):
                                             extension="aadata",
                                             vars={},
                                             ),
+                            dt_bFilter="false",
                             dt_pagination="true",
                             dt_bulk_actions=dt_bulk_actions,
-                            dt_bFilter="false")
+                            )
 
             # Filter form
             if filter_widgets:
@@ -1251,23 +1249,25 @@ def deploy_application(r, **attr):
 
                 # Where to retrieve updated filter options from:
                 filter_ajax_url = URL(f="human_resource",
-                                    args=["filter.options"],
-                                    vars={})
+                                      args=["filter.options"],
+                                      vars={})
 
-                #from s3filter import S3FilterForm
+
+
                 get_config = resource.get_config
                 filter_clear = get_config("filter_clear", True)
                 filter_formstyle = get_config("filter_formstyle", None)
                 filter_submit = get_config("filter_submit", True)
                 filter_form = S3FilterForm(filter_widgets,
-                                        clear=filter_clear,
-                                        formstyle=filter_formstyle,
-                                        submit=filter_submit,
-                                        ajax=True,
-                                        url=filter_submit_url,
-                                        ajaxurl=filter_ajax_url,
-                                        _class="filter-form",
-                                        _id="datatable-filter-form")
+                                           clear=filter_clear,
+                                           formstyle=filter_formstyle,
+                                           submit=filter_submit,
+                                           ajax=True,
+                                           url=filter_submit_url,
+                                           ajaxurl=filter_ajax_url,
+                                           _class="filter-form",
+                                           _id="datatable-filter-form",
+                                           )
                 fresource = current.s3db.resource(resource.tablename)
                 alias = resource.alias if r.component else None
                 ff = filter_form.html(fresource,
@@ -1277,10 +1277,10 @@ def deploy_application(r, **attr):
             else:
                 ff = ""
                 
-            output = dict(items=items,
+            output = dict(items = items,
                           # @todo: generalize
                           title = T("Add RDRT Members"),
-                          list_filter_form=ff)
+                          list_filter_form = ff)
 
             response.view = "list_filter.html"
             return output

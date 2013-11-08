@@ -235,11 +235,12 @@ def person():
     # Tweak settings for RDRT
     settings.hrm.staff_experience = "experience"
     settings.hrm.vol_experience = "experience"
+
     settings.hrm.use_skills = True
     settings.search.filter_manager = True
 
     return s3db.hrm_person_controller()
-    
+
 # =============================================================================
 def application():
     """
@@ -263,7 +264,7 @@ def application():
     #return s3db.hrm_human_resource_controller()
     return s3_rest_controller("hrm", "human_resource")
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 def email_inbox():
     """
         RESTful CRUD controller for the Email Inbox
@@ -303,7 +304,7 @@ def email_inbox():
 
     return s3_rest_controller("msg", "email")
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 def email_channel():
     """
         RESTful CRUD controller for Inbound Email channels

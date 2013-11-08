@@ -1656,7 +1656,7 @@ class S3Request(object):
                                                      statuscode=status,
                                                      message=message,
                                                      tree=tree),
-                       web2py_header=message,
+                       web2py_error=message,
                        **headers)
 
     # -------------------------------------------------------------------------
