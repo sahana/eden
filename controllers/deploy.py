@@ -180,11 +180,11 @@ def alert():
     return s3_rest_controller(rheader=s3db.deploy_rheader)
 
 # =============================================================================
-def member():
+def human_resource():
     """
-        RESTful CRUD Controller (limited to RDRT members)
+        RESTful CRUD Controller
 
-        @todo: merge into human_resource controller
+        @todo: use for imports of RDRT members (with automatic application)
     """
 
     # Tweak settings for RDRT
@@ -192,6 +192,8 @@ def member():
     settings.hrm.use_skills = True
     settings.search.filter_manager = True
 
+    # Add application component
+    # @todo: move into HRM model
     s3db.add_component("deploy_human_resource_application",
                        hrm_human_resource="human_resource_id")
 
@@ -202,39 +204,6 @@ def member():
     return output
 
 # =============================================================================
-def human_resource():
-    """
-        RESTful CRUD Controller, currently used for member profiles
-
-        @todo: filter to RDRT members only (see member-controller)
-        @todo: use for imports of RDRT members (with automatic application)
-    """
-
-    # Tweak settings for RDRT
-    settings.hrm.staff_experience = True
-    settings.hrm.use_skills = True
-    settings.search.filter_manager = True
-
-    return s3db.hrm_human_resource_controller()
-    
-# =============================================================================
-def add_members():
-    """
-        Custom workflow to manually add RDRT members
-
-        @todo: generalize ("member" term is RDRT specific)
-    """
-
-    def prep(r):
-        if not r.method:
-            r.method = "select"
-        r.custom_action = s3db.deploy_add_members
-        return True
-    s3.prep = prep
-
-    return s3_rest_controller("hrm", "human_resource")
-
-# =============================================================================
 def person():
     """
         'Members' RESTful CRUD Controller
@@ -243,11 +212,35 @@ def person():
     # Tweak settings for RDRT
     settings.hrm.staff_experience = "experience"
     settings.hrm.vol_experience = "experience"
+
     settings.hrm.use_skills = True
     settings.search.filter_manager = True
 
     return s3db.hrm_person_controller()
-    
+
+# =============================================================================
+def application():
+    """
+        Custom worklfow to manually create standing applications
+        for deployments (for staff/volunteers)
+    """
+
+    # Tweak settings for RDRT
+    settings.hrm.staff_experience = True
+    settings.hrm.use_skills = True
+    settings.search.filter_manager = True
+
+    def prep(r):
+        if not r.method:
+            r.method = "select"
+        if r.method == "select":
+            r.custom_action = s3db.deploy_application
+        return True
+    s3.prep = prep
+
+    #return s3db.hrm_human_resource_controller()
+    return s3_rest_controller("hrm", "human_resource")
+
 # -----------------------------------------------------------------------------
 def email_inbox():
     """

@@ -334,7 +334,7 @@ var S3EnableNavigateAwayConfirm = function() {
         $.ajax(
             options
         ).done(function(data, status) {
-            s3_hideStatus();
+            S3.hideAlerts();
             this.tryCount = 0;
             if (s.success) {
                 // Calling function's success callback

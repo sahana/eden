@@ -392,11 +392,14 @@ S3.search = {};
         }
         
         // Text widgets
-        form.find('.text-filter:visible').each(function() {
+        form.find('.text-filter').each(function() {
             $this = $(this);
             id = $this.attr('id');
             expression = $('#' + id + '-data').val();
             if (q.hasOwnProperty(expression)) {
+                if (!$this.is(':visible') && !$this.hasClass('active')) {
+                    toggleAdvanced(form);
+                }
                 values = q[expression];
                 value = '';
                 if (values) {
@@ -422,24 +425,13 @@ S3.search = {};
         });
 
         // Options widgets
-        form.find('.s3-groupedopts-widget:visible').prev(
-                  '.options-filter.groupedopts-filter-widget')
-        .add(
-        form.find('.ui-multiselect:visible').prev(
-                  '.options-filter.multiselect-filter-widget'))
-        .add(
-        form.find('.options-filter:visible,' +
-                  '.options-filter.multiselect-filter-widget.active' /*+
-                  ',.options-filter.multiselect-filter-bootstrap.active'*/))
-        .each(function() {
+        form.find('.options-filter').each(function() {
             $this = $(this);
             id = $this.attr('id');
             expression = $('#' + id + '-data').val();
             var operator = $('input:radio[name="' + id + '_filter"]:checked').val();
-
             if (this.tagName && this.tagName.toLowerCase() == 'select') {
                 var refresh = false;
-                
                 if (q.hasOwnProperty(expression)) {
                     values = q[expression];
                     refresh = true;
@@ -459,6 +451,9 @@ S3.search = {};
                     }
                 }
                 if (refresh) {
+                    if (!$this.is(':visible') && !$this.hasClass('active')) {
+                        toggleAdvanced(form);
+                    }
                     $this.val(values);
                     if ($this.hasClass('groupedopts-filter-widget') &&
                         typeof $this.groupedopts != 'undefined') {
@@ -478,6 +473,9 @@ S3.search = {};
             id = $this.attr('id');
             expression = $('#' + id + '-data').val();
             if (q.hasOwnProperty(expression)) {
+                if (!$this.is(':visible') && !$this.hasClass('active')) {
+                    toggleAdvanced(form);
+                }
                 values = q[expression];
                 if (values) {
                     $this.val(values[0]);
@@ -493,6 +491,9 @@ S3.search = {};
             id = $this.attr('id');
             expression = $('#' + id + '-data').val();
             if (q.hasOwnProperty(expression)) {
+                if (!$this.is(':visible') && !$this.hasClass('active')) {
+                    toggleAdvanced(form);
+                }
                 values = q[expression];
                 if (values) {
                     value = new Date(values[0]);
@@ -515,22 +516,13 @@ S3.search = {};
         });
 
         // Location filter widget
-        form.find('.ui-multiselect:visible').prev(
-          '.location-filter.multiselect-filter-widget,' +
-          '.location-filter.groupedopts-filter-widget')
-        .add(
-        form.find('.location-filter:visible,' +
-          '.location-filter.multiselect-filter-widget.active' /*+
-          ',.location-filter.multiselect-filter-bootstrap.active'*/))
-        .each(function() {
+        form.find('.location-filter').each(function() {
             $this = $(this);
             id = $this.attr('id');
             expression = $('#' + id + '-data').val();
             var operator = $('input:radio[name="' + id + '_filter"]:checked').val();
-
             if (this.tagName && this.tagName.toLowerCase() == 'select') {
                 var refresh = false;
-
                 if (q.hasOwnProperty(expression)) {
                     values = q[expression];
                     refresh = true;
@@ -550,6 +542,9 @@ S3.search = {};
                     }
                 }
                 if (refresh) {
+                    if (!$this.is(':visible') && !$this.hasClass('active')) {
+                        toggleAdvanced(form);
+                    }
                     $this.val(values);
                     if ($this.hasClass('groupedopts-filter-widget') &&
                         typeof $this.groupedopts != 'undefined') {
@@ -570,6 +565,9 @@ S3.search = {};
             id = $this.attr('id');
             expression = $('#' + id + '-data').val();
             if (q.hasOwnProperty(expression)) {
+                if (!$this.is(':visible') && !$this.hasClass('active')) {
+                    toggleAdvanced(form);
+                }
                 values = q[expression];
                 $this.hierarchicalopts('set', values);
             }
@@ -1448,6 +1446,55 @@ S3.search = {};
         }
     }
 
+    var toggleAdvanced = function(form) {
+
+        var $form = $(form), hidden;
+        
+        $form.find('.advanced').each(function() {
+            var widget = $(this);
+            // Ignoring .multiselect-filter-bootstrap as not used & to be deprecated
+            var selectors = '.multiselect-filter-widget,.groupedopts-filter-widget';
+            if (widget.hasClass('hide')) {
+                // Show the Widgets
+                widget.removeClass('hide')
+                        .show()
+                        .find(selectors).each( function() {
+                            selector = $(this)
+                            // Mark them as Active
+                            selector.addClass('active');
+                            // Refresh the contents
+                            if (selector.hasClass('groupedopts-filter-widget') &&
+                                typeof selector.groupedopts != 'undefined') {
+                                selector.groupedopts('refresh');
+                            } else
+                            if (selector.hasClass('multiselect-filter-widget') &&
+                                typeof selector.multiselect != 'undefined') {
+                                selector.multiselect('refresh');
+                            }
+                        });
+                hidden = true;
+            } else {
+                // Hide the Widgets
+                widget.addClass('hide')
+                        .hide()
+                        // Mark them as Inactive
+                        .find(selectors)
+                        .removeClass('active');
+                hidden = false;
+            }
+        });
+        
+        var $btn = $($form.find('.filter-advanced'));
+        if (hidden) {
+            // Change label to label_off
+            $btn.attr('value', $btn.attr('label_off'));
+        } else {
+            // Change label to label_on
+            $btn.attr('value', $btn.attr('label_on'));
+        }
+        
+    };
+
     /**
      * document-ready script
      */
@@ -1477,51 +1524,7 @@ S3.search = {};
 
         // Advanced button
         $('.filter-advanced').on('click', function() {
-            
-            // Toggle visibility & mark widgets as [in]active
-            // @todo: select form
-            var hidden;
-            $('.advanced').each(function() {
-                var that = $(this);
-                // Ignoring .multiselect-filter-bootstrap as not used & to be deprecated
-                var selectors = '.multiselect-filter-widget,.groupedopts-filter-widget';
-                if (that.hasClass('hide')) {
-                    // Show the Widgets
-                    that.removeClass('hide')
-                        .show()
-                        .find(selectors).each( function() {
-                            $this = $(this)
-                            // Mark them as Active
-                            $this.addClass('active');
-                            // Refresh the contents
-                            if ($this.hasClass('groupedopts-filter-widget') && typeof $this.groupedopts != 'undefined') {
-                                $this.groupedopts('refresh');
-                            } else
-                            if ($this.hasClass('multiselect-filter-widget') && typeof $this.multiselect != 'undefined') {
-                                $this.multiselect('refresh');
-                            }
-                        });
-                    hidden = true;
-                } else {
-                    // Hide the Widgets
-                    that.addClass('hide')
-                        .hide()
-                        // Mark them as Inactive
-                        .find(selectors)
-                        .removeClass('active');
-                    hidden = false;
-                }
-            });
-            var that = $(this);
-            if (hidden) {
-                // Change label to label_off
-                var label_off = that.attr('label_off');
-                that.attr('value', label_off);
-            } else {
-                // Change label to label_on
-                var label_on = that.attr('label_on');
-                that.attr('value', label_on);
-            }
+            toggleAdvanced($(this).closest('form'));
         });
 
         // Hierarchical Location Filter

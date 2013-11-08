@@ -713,8 +713,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         ),
                    ),
                    M("RDRT Members",
-                     c="deploy", f="member", m="summary")(
-                        M("Add RDRT Members", c="deploy", f="add_members", m="select"),
+                     c="deploy", f="human_resource", m="summary")(
+                        M("Add RDRT Members", c="deploy", f="application", m="select"),
                    ),
                )
 

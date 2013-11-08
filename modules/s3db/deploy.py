@@ -31,7 +31,7 @@ __all__ = ["S3DeploymentModel",
            "S3DeploymentAlertModel",
            "deploy_rheader",
            "deploy_mission_rheader",
-           "deploy_add_members",
+           "deploy_application",
            ]
 
 try:
@@ -1352,9 +1352,9 @@ def deploy_add_members(r, **attr):
         current.session.confirmation = T("%(number)s RDRT members added") % \
                                        dict(number=added)
         if added > 0:
-            redirect(URL(f="member", args=["summary"], vars={}))
+            redirect(URL(f="human_resource", args=["summary"], vars={}))
         else:
-            redirect(URL(f="add_members", vars={}))
+            redirect(URL(f="application", vars={}))
     
     elif r.http == "GET":
 
@@ -1376,7 +1376,7 @@ def deploy_add_members(r, **attr):
             filter_widgets.insert(1,
                 S3HierarchyFilter("organisation_id$region_id",
                                   lookup="org_region",
-                                  #hidden=True,
+                                  hidden=True,
                                   ))
 
         # List fields
@@ -1419,7 +1419,7 @@ def deploy_add_members(r, **attr):
                             dt_id,
                             dt_displayLength=display_length,
                             dt_ajax_url=URL(c="deploy",
-                                            f="add_members",
+                                            f="application",
                                             extension="aadata",
                                             vars={},
                                             ),
@@ -1439,6 +1439,8 @@ def deploy_add_members(r, **attr):
                 filter_ajax_url = URL(f="human_resource",
                                       args=["filter.options"],
                                       vars={})
+
+
 
                 get_config = resource.get_config
                 filter_clear = get_config("filter_clear", True)
