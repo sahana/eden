@@ -304,7 +304,7 @@ def _newsfeed():
             response.view = open(view, "rb")
         except IOError:
             from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         scripts = []
         sappend = scripts.append
@@ -1067,7 +1067,7 @@ class contact():
             response.view = open(view, "rb")
         except IOError:
             from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         if request.env.request_method == "POST":
             # Processs Form

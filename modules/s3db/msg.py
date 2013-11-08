@@ -113,6 +113,7 @@ class S3ChannelModel(S3Model):
 
         # Reusable Field
         channel_id = S3ReusableField("channel_id", table,
+                                     label = T("Channel"),
                                      requires = IS_NULL_OR(
                                         IS_ONE_OF_EMPTY(db, "msg_channel.id")),
                                      represent = S3Represent(lookup=tablename),
@@ -564,6 +565,8 @@ class S3EmailModel(S3ChannelModel):
                                    requires = IS_EMAIL()
                                    ),
                              Field("raw", "text",
+                                   readable = False,
+                                   writable = False,
                                    label = T("Message Source")
                                    ),
                              Field("inbound", "boolean",

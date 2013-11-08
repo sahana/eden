@@ -248,7 +248,7 @@ def _newsfeed():
             response.view = open(view, "rb")
         except IOError:
             from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         s3.js_global.append('''i18n.adv_search="%s"''' % T("Advanced Search"))
         s3.scripts.append("/%s/static/themes/%s/js/newsfeed.js" % (request.application, THEME))
@@ -1051,7 +1051,7 @@ class contact():
             current.response.view = open(view, "rb")
         except IOError:
             from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         title = current.T("Contact Us")
 

@@ -97,6 +97,67 @@ def mission():
                               rheader=s3db.deploy_mission_rheader)
 
 # =============================================================================
+def human_resource():
+    """
+        RESTful CRUD Controller
+
+        @todo: use for imports of RDRT members (with automatic application)
+    """
+
+    # Tweak settings for RDRT
+    settings.hrm.staff_experience = True
+    settings.hrm.use_skills = True
+    settings.search.filter_manager = True
+
+    # Add application component
+    # @todo: move into HRM model
+    s3db.add_component("deploy_human_resource_application",
+                       hrm_human_resource="human_resource_id")
+
+    q = s3base.S3FieldSelector("human_resource_application.active") == True
+    output = s3db.hrm_human_resource_controller(extra_filter=q)
+    if isinstance(output, dict) and "title" in output:
+        output["title"] = T("RDRT Members")
+    return output
+
+# -----------------------------------------------------------------------------
+def person():
+    """
+        'Members' RESTful CRUD Controller
+    """
+
+    # Tweak settings for RDRT
+    settings.hrm.staff_experience = "experience"
+    settings.hrm.vol_experience = "experience"
+    settings.hrm.use_skills = True
+    settings.search.filter_manager = True
+
+    return s3db.hrm_person_controller()
+
+# -----------------------------------------------------------------------------
+def application():
+    """
+        Custom workflow to manually create standing applications
+        for deployments (for staff/volunteers)
+    """
+
+    # Tweak settings for RDRT
+    settings.hrm.staff_experience = True
+    settings.hrm.use_skills = True
+    settings.search.filter_manager = True
+
+    def prep(r):
+        if not r.method:
+            r.method = "select"
+        if r.method == "select":
+            r.custom_action = s3db.deploy_application
+        return True
+    s3.prep = prep
+
+    #return s3db.hrm_human_resource_controller()
+    return s3_rest_controller("hrm", "human_resource")
+
+# -----------------------------------------------------------------------------
 def human_resource_assignment():
     """ RESTful CRUD Controller """
 
@@ -107,7 +168,7 @@ def human_resource_assignment():
     s3.prep = prep
 
     return s3_rest_controller()
-    
+
 # =============================================================================
 def alert():
     """ RESTful CRUD Controller """
@@ -179,68 +240,6 @@ def alert():
 
     return s3_rest_controller(rheader=s3db.deploy_rheader)
 
-# =============================================================================
-def human_resource():
-    """
-        RESTful CRUD Controller
-
-        @todo: use for imports of RDRT members (with automatic application)
-    """
-
-    # Tweak settings for RDRT
-    settings.hrm.staff_experience = True
-    settings.hrm.use_skills = True
-    settings.search.filter_manager = True
-
-    # Add application component
-    # @todo: move into HRM model
-    s3db.add_component("deploy_human_resource_application",
-                       hrm_human_resource="human_resource_id")
-
-    q = s3base.S3FieldSelector("human_resource_application.active") == True
-    output = s3db.hrm_human_resource_controller(extra_filter=q)
-    if isinstance(output, dict) and "title" in output:
-        output["title"] = T("RDRT Members")
-    return output
-
-# =============================================================================
-def person():
-    """
-        'Members' RESTful CRUD Controller
-    """
-
-    # Tweak settings for RDRT
-    settings.hrm.staff_experience = "experience"
-    settings.hrm.vol_experience = "experience"
-
-    settings.hrm.use_skills = True
-    settings.search.filter_manager = True
-
-    return s3db.hrm_person_controller()
-
-# =============================================================================
-def application():
-    """
-        Custom worklfow to manually create standing applications
-        for deployments (for staff/volunteers)
-    """
-
-    # Tweak settings for RDRT
-    settings.hrm.staff_experience = True
-    settings.hrm.use_skills = True
-    settings.search.filter_manager = True
-
-    def prep(r):
-        if not r.method:
-            r.method = "select"
-        if r.method == "select":
-            r.custom_action = s3db.deploy_application
-        return True
-    s3.prep = prep
-
-    #return s3db.hrm_human_resource_controller()
-    return s3_rest_controller("hrm", "human_resource")
-
 # -----------------------------------------------------------------------------
 def email_inbox():
     """
@@ -263,6 +262,8 @@ def email_inbox():
     table = s3db.msg_email
     s3.filter = (table.inbound == True)
     table.inbound.readable = False
+    table.channel_id.readable = False
+    table.to_address.readable = False
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
@@ -279,7 +280,89 @@ def email_inbox():
                    insertable=False,
                    editable=False)
 
+    s3db.set_method("msg", "email",
+                    method="link",
+                    action=link_response
+                    )
+
+    def postp(r, output):
+        if r.interactive:
+            # Normal Action Buttons
+            s3_action_buttons(r)
+            # Custom Action Buttons
+            s3.actions += [dict(label=str(T("Link to Mission")),
+                                _class="action-btn link",
+                                url=URL(f="email_inbox",
+                                        args=["[id]", "link"])),
+                           ]
+
+        return output
+    s3.postp = postp
+
     return s3_rest_controller("msg", "email")
+
+# -----------------------------------------------------------------------------
+def link_response(r, **attr):
+    """
+        Manually link an email to a Mission
+    """
+
+    if r.http == "POST":
+        session.confirmation = T("Message Linked")
+        redirect(URL(f="email_inbox"))
+
+    formstyle = s3.crud.formstyle
+    if not callable(formstyle):
+        # Unsupported
+        raise
+
+    form = DIV()
+    message_id = r.record.message_id
+    htable = s3db.hrm_human_resource
+    ptable = db.pr_person
+    ctable = s3db.pr_contact
+    query = (ctable.contact_method == "EMAIL") & \
+            (ctable.value == r.record.from_address) & \
+            (ctable.pe_id == ptable.pe_id) & \
+            (ptable.id == htable.person_id)
+    hr = db(query).select(htable.id,
+                          limitby=(0, 1)).first()
+    if hr:
+        # Show read-only view
+        pass
+    else:
+        # @ToDo: Search based on Name?
+        if not hr:
+            # Select HR
+            pass
+
+    comment = None
+    # Show Dropdown for Missions
+    id = "mission_id"
+    label = T("Mission")
+    widget = SELECT()
+    row = formstyle(id, label, widget, comment, hidden=False)
+    form.append(row)
+
+    # Show Message
+    id = "subject"
+    label = T("Subject")
+    widget = INPUT(_value=r.record.subject,
+                   _readonly=True)
+    row = formstyle(id, label, widget, comment, hidden=False)
+    form.append(row)
+    id = "body"
+    label = T("Message")
+    widget = TEXTAREA(_value=r.record.body,
+                      _readonly=True)
+    row = formstyle(id, label, widget, comment, hidden=False)
+    form.append(row)
+
+    output = dict(title=T("Link Response to Mission"),
+                  form=form,
+                  )
+    response.view = "deploy/link_response.html"
+    return output
 
 # -----------------------------------------------------------------------------
 def email_channel():

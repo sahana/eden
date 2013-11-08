@@ -117,7 +117,7 @@ def homepage():
             response.view = open(view, "rb")
         except IOError:
             from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         # Latest 5 Disasters
         resource = s3db.resource("event_event")
@@ -177,7 +177,7 @@ def login():
         response.view = open(view, "rb")
     except IOError:
         from gluon.http import HTTP
-        raise HTTP("404", "Unable to open Custom View: %s" % view)
+        raise HTTP(404, "Unable to open Custom View: %s" % view)
 
     response.title = current.T("Login")
 
@@ -452,7 +452,7 @@ class secondary():
             current.response.view = open(view, "rb")
         except IOError:
             from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         return dict()
 

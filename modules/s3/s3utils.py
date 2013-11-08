@@ -1025,7 +1025,7 @@ def search_vars_represent(search_vars):
     try:
         search_vars = cPickle.loads(str(search_vars))
     except:
-        raise HTTP(500,"ERROR RETRIEVING THE SEARCH CRITERIA")
+        raise HTTP(500, "ERROR RETRIEVING THE SEARCH CRITERIA")
     else:
         s = "<p>"
         pat = '_'
@@ -1387,7 +1387,7 @@ class S3CustomController(object):
             current.response.view = open(view, "rb")
         except IOError:
             from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
         return
 
 # =============================================================================

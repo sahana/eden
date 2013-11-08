@@ -2454,7 +2454,7 @@ class S3Resource(object):
         format = current.auth.permission.format
         if format == "geojson":
             if results > current.deployment_settings.get_gis_max_features():
-                headers = {"Content-Type":"application/json"}
+                headers = {"Content-Type": "application/json"}
                 message = "Too Many Records"
                 status = 509
                 raise HTTP(status,

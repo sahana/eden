@@ -1,5 +1,13 @@
 @charset "UTF-8";
 
+@font-face {
+  font-family: 'FontAwesome';
+  src: url('../../fonts/fontawesome-webfont.eot?v=3.2.1');
+  src: url('../../fonts/fontawesome-webfont.eot?#iefix&v=3.2.1') format('embedded-opentype'), url('../../fonts/fontawesome-webfont.woff?v=3.2.1') format('woff'), url('../../fonts/fontawesome-webfont.ttf?v=3.2.1') format('truetype'), url('../../fonts/fontawesome-webfont.svg#fontawesomeregular?v=3.2.1') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
 /*** General ***/
 html {
     font-size: 100.01%;
@@ -351,6 +359,16 @@ table.dataTable .action-btn.send:before {
 }
 table.dataTable .action-btn.dispatch:before {
     content: url(img/truck.png);
+}
+table.dataTable .action-btn.link {
+    font-family: FontAwesome;
+    -webkit-font-smoothing: antialiased;
+    *margin-right: .3em;
+}
+table.dataTable .action-btn.link:before {
+    /* icon-link */
+    content: "\f0c1";
+    speak: none;
 }
 /*
 table.dataTable td.actions {

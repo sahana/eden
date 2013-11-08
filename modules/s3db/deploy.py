@@ -290,6 +290,8 @@ class S3DeploymentModel(S3Model):
         # Role Type ('Sector' in RDRT)
         # - used to classify Assignments & Trainings
         #
+        # @ToDo: Replace with real Sectors
+        #
         tablename = "deploy_role_type"
         table = define_table(tablename,
                              Field("name", notnull=True,
@@ -335,6 +337,8 @@ class S3DeploymentModel(S3Model):
         # Application of human resources (= agreement that an HR is
         # generally available for assignments, can come with certain
         # restrictions)
+        #
+        # @ToDo: Better Name. human_resource_member perhaps.
         #
         tablename = "deploy_human_resource_application"
         table = define_table(tablename,
@@ -537,7 +541,7 @@ class S3DeploymentAlertModel(S3Model):
         # Custom Methods
         set_method("deploy", "alert",
                    method="select",
-                   action=self.deploy_alert_select_recipients)
+                   action=deploy_alert_select_recipients)
 
         set_method("deploy", "alert",
                    method="send",
@@ -602,185 +606,6 @@ class S3DeploymentAlertModel(S3Model):
             Safe defaults for model-global names in case module is disabled
         """
         return dict()
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def deploy_alert_select_recipients(r, **attr):
-        """
-            Custom Method to select recipients for an Alert
-        """
-
-        alert_id = r.id
-        if r.representation not in ("html", "aadata") or not alert_id or r.component:
-            raise HTTP(501, BADMETHOD)
-
-        T = current.T
-        s3db = current.s3db
-
-        if r.http == "POST":
-            selected = r.post_vars.get("selected", None)
-            if selected:
-                selected = selected.split(",")
-                table = s3db.deploy_alert_recipient
-                for s in selected:
-                    table.insert(alert_id = alert_id,
-                                 human_resource_id = s)
-                current.response.confirmation = T("Recipients added to Alert")
-            else:
-                current.response.warning = T("No Recipients Selected!")
-
-        get_vars = r.get_vars or {}
-        response = current.response
-        settings = current.deployment_settings
-
-        resource = s3db.resource("hrm_human_resource")
-        filter = S3FieldSelector("human_resource_application.active") == True
-        resource.add_filter(filter)
-        list_fields = ["id",
-                       "person_id",
-                       "job_title_id",
-                       "organisation_id",
-                       "department_id",
-                       "site_id",
-                       (T("Email"), "email.value"),
-                       (settings.get_ui_label_mobile_phone(), "phone.value"),
-                       ]
-        totalrows = resource.count()
-        if "iDisplayLength" in get_vars:
-            display_length = int(get_vars["iDisplayLength"])
-        else:
-            display_length = 10
-        limit = 4 * display_length
-
-        filter, orderby, left = resource.datatable_filter(list_fields,
-                                                          get_vars)
-        resource.add_filter(filter)
-
-        data = resource.select(list_fields,
-                               start=0,
-                               limit=limit,
-                               orderby=orderby,
-                               left=left,
-                               count=True,
-                               represent=True)
-        filteredrows = data["numrows"]
-        rfields = data["rfields"]
-        rows = data["rows"]
-
-        dt = S3DataTable(rfields, rows)
-        dt_id = "hr_dt"
-
-        # Filter widgets
-        filter_widgets = [
-            S3TextFilter(["person_id$first_name",
-                          "person_id$middle_name",
-                          "person_id$last_name",
-                         ],
-                         label=T("Name")),
-            S3OptionsFilter("organisation_id",
-                            widget="multiselect",
-                            filter=True,
-                            header="",
-                            hidden=True,
-                            ),
-            ]
-        if settings.get_org_regions():
-            filter_widgets.insert(1,
-                S3HierarchyFilter("organisation_id$region_id",
-                                  lookup="org_region",
-                                  #hidden=True,
-                                  ))
-
-        if r.extension == "html":
-            s3db.configure("hrm_human_resource",
-                           deletable = False,
-                           )
-            dt.defaultActionButtons(resource)
-            response.s3.no_formats = True
-
-            items = dt.html(totalrows,
-                            filteredrows,
-                            dt_id,
-                            dt_displayLength=display_length,
-                            dt_ajax_url=URL(c="deploy",
-                                            f="alert",
-                                            args=[alert_id, "select"],
-                                            extension="aadata",
-                                            vars={"id": dt_id},
-                                            ),
-                            dt_bFilter="false",
-                            dt_pagination="true",
-                            dt_bulk_actions = [(T("Select"), "select")],
-                            )
-
-            # Filter form
-            if filter_widgets:
-
-                # Where to retrieve filtered data from:
-                _vars = resource.crud._remove_filters(r.get_vars)
-                filter_submit_url = r.url(vars=_vars)
-
-                # Where to retrieve updated filter options from:
-                filter_ajax_url = URL(f="human_resource",
-                                      args=["filter.options"],
-                                      vars={})
-
-                get_config = resource.get_config
-                filter_clear = get_config("filter_clear", True)
-                filter_formstyle = get_config("filter_formstyle", None)
-                filter_submit = get_config("filter_submit", True)
-                filter_form = S3FilterForm(filter_widgets,
-                                           clear=filter_clear,
-                                           formstyle=filter_formstyle,
-                                           submit=filter_submit,
-                                           ajax=True,
-                                           url=filter_submit_url,
-                                           ajaxurl=filter_ajax_url,
-                                           _class="filter-form",
-                                           _id="datatable-filter-form",
-                                           )
-                fresource = current.s3db.resource(resource.tablename)
-                alias = resource.alias if r.component else None
-                ff = filter_form.html(fresource,
-                                      r.get_vars,
-                                      target=dt_id,
-                                      alias=alias)
-            else:
-                ff = ""
-
-            output = dict(items = items,
-                          title = T("Select Recipients"),
-                          list_filter_form = ff,
-                          )
-
-            # Maintain RHeader for consistency
-            if attr.get("rheader"):
-                rheader = attr["rheader"](r)
-                if rheader:
-                    output["rheader"] = rheader
-
-            #response.view = "deploy/select.html"
-            response.view = "list_filter.html"
-            return output
-
-        elif r.extension == "aadata":
-            if "sEcho" in get_vars:
-                echo = int(get_vars.sEcho)
-            else:
-                echo = None
-            items = dt.json(totalrows,
-                            filteredrows,
-                            dt_id,
-                            echo,
-                            dt_bulk_actions = [(T("Select"), "select")],
-                            )
-
-            response.headers["Content-Type"] = "application/json"
-            return items
-
-        else:
-            from gluon.http import HTTP
-            raise HTTP(501, resource.ERROR.BAD_FORMAT)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1103,6 +928,12 @@ def deploy_render_alert(listid,
 
     # Toolbox
     toolbox = deploy_render_profile_toolbox(resource, record_id, None)
+    no_recipients = True
+    if no_recipients:
+        send_btn = A(I(" ", _class="icon icon-search"),
+                     #_class="dl-item-custom",
+                     _title=current.T("Select Recipients"))
+        toolbox.append(send_btn)
 
     # Render the item
     item = DIV(DIV(A(IMG(_class="media-object",
@@ -1314,7 +1145,7 @@ def deploy_application(r, **attr):
                 selected = selected.split(",")
             else:
                 selected = []
-                
+
             db = current.db
             atable = s3db.deploy_human_resource_application
             if selected:
@@ -1347,7 +1178,7 @@ def deploy_application(r, **attr):
                         row.update_record(active=True)
                     else:
                         atable.insert(human_resource_id=human_resource_id,
-                                    active=True)
+                                      active=True)
                         added += 1
         current.session.confirmation = T("%(number)s RDRT members added") % \
                                        dict(number=added)
@@ -1355,7 +1186,7 @@ def deploy_application(r, **attr):
             redirect(URL(f="human_resource", args=["summary"], vars={}))
         else:
             redirect(URL(f="application", vars={}))
-    
+
     elif r.http == "GET":
 
         # Filter widgets
@@ -1380,7 +1211,11 @@ def deploy_application(r, **attr):
                                   ))
 
         # List fields
-        list_fields = ["id", "person_id", "organisation_id"]
+        list_fields = ["id",
+                       "person_id",
+                       "job_title_id",
+                       "organisation_id",
+                       ]
         
         # Data table
         totalrows = resource.count()
@@ -1403,7 +1238,7 @@ def deploy_application(r, **attr):
         dt_id = "datatable"
 
         # Bulk actions
-        # @todo: generalize
+        # @todo: generalize label
         dt_bulk_actions = [(T("Add as RDRT Members"), "add")]
 
         if r.extension == "html":
@@ -1440,8 +1275,6 @@ def deploy_application(r, **attr):
                                       args=["filter.options"],
                                       vars={})
 
-
-
                 get_config = resource.get_config
                 filter_clear = get_config("filter_clear", True)
                 filter_formstyle = get_config("filter_formstyle", None)
@@ -1469,6 +1302,225 @@ def deploy_application(r, **attr):
                           # @todo: generalize
                           title = T("Add RDRT Members"),
                           list_filter_form = ff)
+
+            response.view = "list_filter.html"
+            return output
+
+        elif r.extension == "aadata":
+            # Ajax refresh
+            if "sEcho" in get_vars:
+                echo = int(get_vars.sEcho)
+            else:
+                echo = None
+            items = dt.json(totalrows,
+                            filteredrows,
+                            dt_id,
+                            echo,
+                            dt_bulk_actions=dt_bulk_actions)
+            response.headers["Content-Type"] = "application/json"
+            return items
+
+        else:
+            r.error(501, resource.ERROR.BAD_FORMAT)
+    else:
+        r.error(405, r.ERROR.BAD_METHOD)
+
+# =============================================================================
+def deploy_alert_select_recipients(r, **attr):
+    """
+        Custom method to select Recipients for an Alert
+    """
+
+    alert_id = r.id
+    if not alert_id:
+        r.error(405, r.ERROR.BAD_METHOD)
+
+    T = current.T
+    s3db = current.s3db
+
+    get_vars = r.get_vars
+    response = current.response
+    settings = current.deployment_settings
+
+    resource = s3db.resource("hrm_human_resource")
+    # Add application component
+    # @todo: move into HRM model
+    s3db.add_component("deploy_human_resource_application",
+                       hrm_human_resource="human_resource_id")
+    q = S3FieldSelector("human_resource_application.active") == True
+    resource.add_filter(q)
+    # @ToDo: Filter out existing recipients
+    if r.http == "POST":
+        added = 0
+        post_vars = r.post_vars
+        if all([n in post_vars for n in ("add", "selected", "mode")]):
+            selected = post_vars.selected
+            if selected:
+                selected = selected.split(",")
+            else:
+                selected = []
+
+            db = current.db
+            rtable = s3db.deploy_alert_recipient
+            if selected:
+                # Handle exclusion filter
+                if post_vars.mode == "Exclusive":
+                    if "filterURL" in post_vars:
+                        filters = S3URLQuery.parse_url(post_vars.ajaxURL)
+                    else:
+                        filters = None
+                    query = ~(S3FieldSelector("id").belongs(selected))
+                    hresource = s3db.resource("hrm_human_resource",
+                                              filter=query, vars=filters)
+                    rows = hresource.select(["id"], as_rows=True)
+                    selected = [str(row.id) for row in rows]
+
+                query = (rtable.human_resource_id.belongs(selected)) & \
+                        (rtable.alert_id == alert_id) & \
+                        (rtable.deleted != True)
+                rows = db(query).select(rtable.id,
+                                        rtable.alert_id)
+                rows = dict((row.id, row) for row in rows)
+                for human_resource_id in selected:
+                    try:
+                        hr_id = int(human_resource_id.strip())
+                    except ValueError:
+                        continue
+                    if hr_id in rows:
+                        continue
+                    else:
+                        rtable.insert(human_resource_id=human_resource_id,
+                                      alert_id=alert_id)
+                        added += 1
+        current.session.confirmation = T("%(number)s recipients added") % \
+                                       dict(number=added)
+        # @ToDo: Make these go back to Mission profile
+        if added > 0:
+            redirect(URL(f="alert", args=["recipient"], vars={}))
+        else:
+            redirect(URL(f="alert", args=["select"], vars={}))
+
+    elif r.http == "GET":
+
+        # Filter widgets
+        # @ToDo: Get these working
+        filter_widgets = [
+            S3TextFilter(["human_resource.person_id$first_name",
+                          "human_resource.person_id$middle_name",
+                          "human_resource.person_id$last_name",
+                         ],
+                         label=T("Name")),
+            S3OptionsFilter("human_resource.organisation_id",
+                            widget="multiselect",
+                            filter=True,
+                            header="",
+                            hidden=True,
+                            ),
+            ]
+        if settings.get_org_regions():
+            filter_widgets.insert(1,
+                S3HierarchyFilter("human_resource.organisation_id$region_id",
+                                  lookup="org_region",
+                                  hidden=True,
+                                  ))
+
+        # List fields
+        list_fields = ["id",
+                       "person_id",
+                       "job_title_id",
+                       "organisation_id",
+                       ]
+        
+        # Data table
+        totalrows = resource.count()
+        if "iDisplayLength" in get_vars:
+            display_length = int(get_vars["iDisplayLength"])
+        else:
+            display_length = 25
+        limit = 4 * display_length
+        filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
+        resource.add_filter(filter)
+        data = resource.select(list_fields,
+                               start=0,
+                               limit=limit,
+                               orderby=orderby,
+                               left=left,
+                               count=True,
+                               represent=True)
+        filteredrows = data["numrows"]
+        dt = S3DataTable(data["rfields"], data["rows"])
+        dt_id = "datatable"
+
+        # Bulk actions
+        dt_bulk_actions = [(T("Add as Recipient"), "add")]
+
+        if r.extension == "html":
+            # Page load
+            resource.configure(deletable = False)
+
+            dt.defaultActionButtons(resource)
+            response.s3.no_formats = True
+
+            # Data table (items)
+            items = dt.html(totalrows,
+                            filteredrows,
+                            dt_id,
+                            dt_displayLength=display_length,
+                            dt_ajax_url=URL(c="deploy",
+                                            f="alert",
+                                            args=[alert_id, "select"],
+                                            extension="aadata",
+                                            vars={},
+                                            ),
+                            dt_bFilter="false",
+                            dt_pagination="true",
+                            dt_bulk_actions=dt_bulk_actions,
+                            )
+
+            # Filter form
+            if filter_widgets:
+
+                # Where to retrieve filtered data from:
+                _vars = resource.crud._remove_filters(r.get_vars)
+                filter_submit_url = r.url(vars=_vars)
+
+                # Where to retrieve updated filter options from:
+                filter_ajax_url = URL(f="human_resource",
+                                      args=["filter.options"],
+                                      vars={})
+
+                get_config = resource.get_config
+                filter_clear = get_config("filter_clear", True)
+                filter_formstyle = get_config("filter_formstyle", None)
+                filter_submit = get_config("filter_submit", True)
+                filter_form = S3FilterForm(filter_widgets,
+                                           clear=filter_clear,
+                                           formstyle=filter_formstyle,
+                                           submit=filter_submit,
+                                           ajax=True,
+                                           url=filter_submit_url,
+                                           ajaxurl=filter_ajax_url,
+                                           _class="filter-form",
+                                           _id="datatable-filter-form",
+                                           )
+                fresource = current.s3db.resource(resource.tablename)
+                alias = resource.alias if r.component else None
+                ff = filter_form.html(fresource,
+                                      r.get_vars,
+                                      target="datatable",
+                                      alias=alias)
+            else:
+                ff = ""
+                
+            output = dict(items = items,
+                          title = T("Add Recipients"),
+                          list_filter_form = ff)
+
+            # Maintain RHeader for consistency
+            if attr.get("rheader"):
+                rheader = attr["rheader"](r)
+                if rheader:
+                    output["rheader"] = rheader
 
             response.view = "list_filter.html"
             return output
