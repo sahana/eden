@@ -220,7 +220,7 @@ def human_resource():
 # =============================================================================
 def add_members():
     """
-        Custom worklfow to manually add RDRT members
+        Custom workflow to manually add RDRT members
 
         @todo: generalize ("member" term is RDRT specific)
     """

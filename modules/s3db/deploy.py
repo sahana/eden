@@ -618,8 +618,7 @@ class S3DeploymentAlertModel(S3Model):
         s3db = current.s3db
 
         if r.http == "POST":
-            # Why not in r.post_vars?
-            selected = current.request._post_vars.get("selected", None)
+            selected = r.post_vars.get("selected", None)
             if selected:
                 selected = selected.split(",")
                 table = s3db.deploy_alert_recipient
@@ -635,6 +634,8 @@ class S3DeploymentAlertModel(S3Model):
         settings = current.deployment_settings
 
         resource = s3db.resource("hrm_human_resource")
+        filter = S3FieldSelector("human_resource_application.active") == True
+        resource.add_filter(filter)
         list_fields = ["id",
                        "person_id",
                        "job_title_id",
@@ -669,6 +670,27 @@ class S3DeploymentAlertModel(S3Model):
         dt = S3DataTable(rfields, rows)
         dt_id = "hr_dt"
 
+        # Filter widgets
+        filter_widgets = [
+            S3TextFilter(["person_id$first_name",
+                          "person_id$middle_name",
+                          "person_id$last_name",
+                         ],
+                         label=T("Name")),
+            S3OptionsFilter("organisation_id",
+                            widget="multiselect",
+                            filter=True,
+                            header="",
+                            hidden=True,
+                            ),
+            ]
+        if settings.get_org_regions():
+            filter_widgets.insert(1,
+                S3HierarchyFilter("organisation_id$region_id",
+                                  lookup="org_region",
+                                  #hidden=True,
+                                  ))
+
         if r.extension == "html":
             s3db.configure("hrm_human_resource",
                            deletable = False,
@@ -686,11 +708,49 @@ class S3DeploymentAlertModel(S3Model):
                                             extension="aadata",
                                             vars={"id": dt_id},
                                             ),
+                            dt_bFilter="false",
                             dt_pagination="true",
                             dt_bulk_actions = [(T("Select"), "select")],
                             )
-            output = dict(items=items,
+
+            # Filter form
+            if filter_widgets:
+
+                # Where to retrieve filtered data from:
+                _vars = resource.crud._remove_filters(r.get_vars)
+                filter_submit_url = r.url(vars=_vars)
+
+                # Where to retrieve updated filter options from:
+                filter_ajax_url = URL(f="human_resource",
+                                      args=["filter.options"],
+                                      vars={})
+
+                get_config = resource.get_config
+                filter_clear = get_config("filter_clear", True)
+                filter_formstyle = get_config("filter_formstyle", None)
+                filter_submit = get_config("filter_submit", True)
+                filter_form = S3FilterForm(filter_widgets,
+                                           clear=filter_clear,
+                                           formstyle=filter_formstyle,
+                                           submit=filter_submit,
+                                           ajax=True,
+                                           url=filter_submit_url,
+                                           ajaxurl=filter_ajax_url,
+                                           _class="filter-form",
+                                           _id="datatable-filter-form",
+                                           )
+                fresource = current.s3db.resource(resource.tablename)
+                alias = resource.alias if r.component else None
+                ff = filter_form.html(fresource,
+                                      r.get_vars,
+                                      target=dt_id,
+                                      alias=alias)
+            else:
+                ff = ""
+
+            output = dict(items = items,
                           title = T("Select Recipients"),
+                          list_filter_form = ff,
                           )
 
             # Maintain RHeader for consistency
@@ -699,7 +759,8 @@ class S3DeploymentAlertModel(S3Model):
                 if rheader:
                     output["rheader"] = rheader
 
-            response.view = "deploy/select.html"
+            #response.view = "deploy/select.html"
+            response.view = "list_filter.html"
             return output
 
         elif r.extension == "aadata":
@@ -1243,9 +1304,6 @@ def deploy_add_members(r, **attr):
     response = current.response
     settings = current.deployment_settings
 
-    # @todo: move into model
-    s3db.configure("org_region", hierarchy="parent")
-
     resource = r.resource
     if r.http == "POST":
         added = 0
@@ -1313,13 +1371,13 @@ def deploy_add_members(r, **attr):
                             header="",
                             hidden=True,
                             ),
-        ]
+            ]
         if settings.get_org_regions():
-           filter_widgets.insert(1,
-               S3HierarchyFilter("organisation_id$region_id",
-                                 lookup="org_region",
-                                 #hidden=True,
-                               ))
+            filter_widgets.insert(1,
+                S3HierarchyFilter("organisation_id$region_id",
+                                  lookup="org_region",
+                                  #hidden=True,
+                                  ))
 
         # List fields
         list_fields = ["id", "person_id", "organisation_id"]
@@ -1365,9 +1423,10 @@ def deploy_add_members(r, **attr):
                                             extension="aadata",
                                             vars={},
                                             ),
+                            dt_bFilter="false",
                             dt_pagination="true",
                             dt_bulk_actions=dt_bulk_actions,
-                            dt_bFilter="false")
+                            )
 
             # Filter form
             if filter_widgets:
@@ -1378,23 +1437,23 @@ def deploy_add_members(r, **attr):
 
                 # Where to retrieve updated filter options from:
                 filter_ajax_url = URL(f="human_resource",
-                                    args=["filter.options"],
-                                    vars={})
+                                      args=["filter.options"],
+                                      vars={})
 
-                #from s3filter import S3FilterForm
                 get_config = resource.get_config
                 filter_clear = get_config("filter_clear", True)
                 filter_formstyle = get_config("filter_formstyle", None)
                 filter_submit = get_config("filter_submit", True)
                 filter_form = S3FilterForm(filter_widgets,
-                                        clear=filter_clear,
-                                        formstyle=filter_formstyle,
-                                        submit=filter_submit,
-                                        ajax=True,
-                                        url=filter_submit_url,
-                                        ajaxurl=filter_ajax_url,
-                                        _class="filter-form",
-                                        _id="datatable-filter-form")
+                                           clear=filter_clear,
+                                           formstyle=filter_formstyle,
+                                           submit=filter_submit,
+                                           ajax=True,
+                                           url=filter_submit_url,
+                                           ajaxurl=filter_ajax_url,
+                                           _class="filter-form",
+                                           _id="datatable-filter-form",
+                                           )
                 fresource = current.s3db.resource(resource.tablename)
                 alias = resource.alias if r.component else None
                 ff = filter_form.html(fresource,
@@ -1404,10 +1463,10 @@ def deploy_add_members(r, **attr):
             else:
                 ff = ""
                 
-            output = dict(items=items,
+            output = dict(items = items,
                           # @todo: generalize
                           title = T("Add RDRT Members"),
-                          list_filter_form=ff)
+                          list_filter_form = ff)
 
             response.view = "list_filter.html"
             return output

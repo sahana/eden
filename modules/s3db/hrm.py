@@ -4836,15 +4836,14 @@ def hrm_human_resource_controller(extra_filter=None):
                                 hidden=True,
                                 ),
                 ]
-                
-            if settings.get_org_regions():
-                # Experimental: hierarchy filter
-                s3db.configure("org_region", hierarchy="parent")
+
+            regions = settings.get_org_regions()
+            if regions:
                 filter_widgets.insert(1,
                    S3HierarchyFilter("organisation_id$region_id",
                                      label = T("Region"),
                                      #hidden=True,
-                                    ))
+                                     ))
                                     
             teams = settings.get_hrm_teams()
             if teams:
@@ -4867,9 +4866,8 @@ def hrm_human_resource_controller(extra_filter=None):
             if teams:
                 report_fields.append((teams, "group_membership.group_id"))
 
-            # @ToDo
-            #if settings.get_org_regions():
-            #   report_fields.append()
+            if regions:
+               report_fields.append("organisation_id$region_id")
 
             report_options = Storage(
                 rows=report_fields,

@@ -35,7 +35,8 @@
     var totalRecords = [];
 
     var appendUrlQuery = function(url, extension, query) {
-        var parts = url.split('?'), q = '';
+        var parts = url.split('?'),
+            q = '';
         var newurl = parts[0] + '.' + extension;
         if (parts.length > 1) {
             if (query) {
@@ -901,11 +902,11 @@
             tableConfig['ajaxUrl'] = null;
             var fnDataTablesPipeline = function(url, data, callback) {
                 var nonDefaultData = data.filter(isNonDefaultData);
-                $.ajax({
-                    'url': url,
-                    'data': nonDefaultData,
-                    'dataType': 'json',
-                    'cache': false
+                // @ToDo: Switch to ajaxS3
+                $.ajax({'url': url,
+                        'data': nonDefaultData,
+                        'dataType': 'json',
+                        'cache': false
                 }).done(function(data, status) {
                     if (callback) {
                         callback(data, status);

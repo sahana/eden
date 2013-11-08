@@ -225,6 +225,7 @@ class S3OrganisationModel(S3Model):
 
             configure(tablename,
                       deduplicate=self.org_region_duplicate,
+                      hierarchy="parent",
                       )
         else:
             region_represent = None
