@@ -1478,7 +1478,7 @@ def deploy_alert_select_recipients(r, **attr):
             if rheader:
                 output["rheader"] = rheader
 
-        response.view = "deploy/select.html"
+        response.view = "list_filter.html"
         return output
 
     elif r.representation == "aadata":
