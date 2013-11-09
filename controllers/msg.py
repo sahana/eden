@@ -822,9 +822,6 @@ def rss_channel():
     table.url.comment = DIV(_class="tooltip",
                             _title="%s|%s" % (T("URL"),
                                               T("Link for the RSS Feed.")))
-    table.subscribed.comment = DIV(_class="tooltip",
-                                   _title="%s|%s" % (T("Subscriptions Status"),
-                                                     T("Are you susbscribed?")))
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
