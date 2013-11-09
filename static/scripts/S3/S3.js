@@ -426,9 +426,14 @@ S3.showAlert = function(message, type) {
     if (undefined == type) {
         type = 'success';
     }
-    var alert = '<div class="alert alert-' + type + '"><button type="button" class="close" data-dismiss="alert">×</button>' + message + '</div>';
+    var alert = '<div class="alert alert-' + type + '">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>';
     $('#alert-space').append(alert);
+    $('.alert-' + type).click(function() {
+        $(this).fadeOut('slow');
+        return false;
+    });
 };
+
 S3.hideAlerts = function() {
     $('#alert-space').empty();
 };

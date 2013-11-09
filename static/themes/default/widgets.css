@@ -649,6 +649,13 @@ body.popup {
 .alert-warning p em {
     color: #c00;
 }
+/* Copy of BootStrap Styling */
+button.close {
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0);
+    border: 0 none;
+    cursor: pointer;
+    padding: 0;
+}
 
 /* Throbber */
 /* Used by Autocompletes, map popups, map toolbar, dropdown widgets */
