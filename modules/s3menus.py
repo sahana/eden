@@ -1858,7 +1858,7 @@ class S3OptionsMenu(object):
 
         return [
             M("Email Settings", c="msg", f="email_channel"),
-            M("Parsing Settings", c="msg", f="workflow"),
+            M("Parsing Settings", c="msg", f="parser"),
             M("RSS Settings", c="msg", f="rss_channel"),
             M("SMS Gateway Settings", c="msg", f="sms_outbound_gateway",
                 args=[1], m="update"),

@@ -246,7 +246,8 @@ class S3Parsing(object):
                                             lon = lon)
             elif service == "twitter":
                 # @ToDo: Use Geolocation of Tweet
-                location_id = pass
+                #location_id = 
+                pass
 
         # @ToDo: Update records inside this function with parsed data
         # @ToDo: Image
@@ -565,7 +566,7 @@ class S3Parsing(object):
         return reply				    
 
     # -------------------------------------------------------------------------
-    @static_method
+    @staticmethod
     def _create_ireport(lat, lon, text):
         """
             Create New Incident Report
@@ -606,7 +607,7 @@ class S3Parsing(object):
         return reply
 	                    
     # -------------------------------------------------------------------------
-    @static_method
+    @staticmethod
     def _respond_drequest(message, report_id, response, text):
         """
             Parse Replies To Deployment Request

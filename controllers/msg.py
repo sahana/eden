@@ -822,9 +822,9 @@ def rss_channel():
     table.url.comment = DIV(_class="tooltip",
                             _title="%s|%s" % (T("URL"),
                                               T("Link for the RSS Feed.")))
-    table.subscribed.comment = DIV(_class="tooltip",
-                                   _title="%s|%s" % (T("Subscriptions Status"),
-                                                     T("Are you susbscribed?")))
+    table.enabled.comment = DIV(_class="tooltip",
+                                _title="%s|%s" % (T("Subscriptions Status"),
+                                                  T("Are you susbscribed?")))
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
@@ -1463,15 +1463,15 @@ def parser():
         if r.interactive:
             # CRUD Strings
             s3.crud_strings["msg_parser"] = Storage(
-                title_display = T("Parser Details"),
-                title_list = T("Parsers"),
-                title_create = T("Add Parser"),
-                title_update = T("Edit Parser"),
-                label_list_button = T("View Parsers"),
-                label_create_button = T("Add New Parser"),
-                msg_record_created = T("Parser added"),
-                msg_record_deleted = T("Parser deleted"),
-                msg_record_modified = T("Parser updated"),
+                title_display = T("Parser Connection Details"),
+                title_list = T("Parser Connections"),
+                title_create = T("Connect Parser"),
+                title_update = T("Edit Parser Connection"),
+                label_list_button = T("View Parser Connections"),
+                label_create_button = T("Connect New Parser"),
+                msg_record_created = T("Parser connected"),
+                msg_record_deleted = T("Parser connection removed"),
+                msg_record_modified = T("Parser connection updated"),
                 msg_list_empty = T("No Parsers currently connected"),
             )
 
@@ -1497,8 +1497,8 @@ def parser():
                     pappend(parser)
 
             table = r.table
-            table.channel_id.requires = IS_ONE_OF(db, "msg_channel.id",
-                                                  S3Represent(lookup="msg_channel"),
+            table.channel_id.requires = IS_ONE_OF(db, "msg_channel.channel_id",
+                                                  s3base.S3Represent(lookup="msg_channel"),
                                                   sort = True,
                                                   )
             table.function_name.requires = IS_IN_SET(parse_opts,
