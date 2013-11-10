@@ -1,4 +1,4 @@
-""" Sahana Eden Automated Test - IRS001 Create Event
+""" Sahana Eden Automated Test - EVN001 Create Event
 
     @copyright: 2011-2012 (c) Sahana Software Foundation
     @license: MIT
@@ -30,7 +30,7 @@ from tests.web2unittest import SeleniumUnitTest
 class CreateEvent(SeleniumUnitTest):
     def test_irs001_create_event(self):
         """
-            @case:IRS001
+            @case:EVN001
             @description: Create a Event
             
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
