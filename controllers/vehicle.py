@@ -116,7 +116,7 @@ def vehicle():
                   ),
                 s3base.S3SearchOptionsWidget(
                     name="vehicle_search_location",
-                    field="L1",
+                    field="location_id$L1",
                     location_level="L1",
                     cols = 3
                 ),
