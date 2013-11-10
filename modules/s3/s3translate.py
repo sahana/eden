@@ -186,7 +186,7 @@ class TranslateGetFiles:
 
             # Initialize to an empty list for each module
             d = {}
-            modlist = self.get_module_list()
+            modlist = self.get_module_list(current.request.folder)
             for m in modlist:
                 d[m] = []
 
@@ -205,7 +205,7 @@ class TranslateGetFiles:
 
         # ---------------------------------------------------------------------
         @staticmethod
-        def get_module_list():
+        def get_module_list(dir):
             """
                 Returns a list of modules using files in /controllers/
                 as point of reference
@@ -213,7 +213,7 @@ class TranslateGetFiles:
 
             mod = []
             mappend = mod.append
-            cont_dir = os.path.join(current.request.folder, "controllers")
+            cont_dir = os.path.join(dir, "controllers")
             mod_files = os.listdir(cont_dir)
 
             for f in mod_files:
