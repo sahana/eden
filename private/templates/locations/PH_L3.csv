@@ -1,5 +1,5 @@
 L2,L3,L3 KV:PSGC
-Abra,Bangued (capital),140101000
+Abra,Bangued,140101000
 Abra,Boliney,140102000
 Abra,Bucay,140103000
 Abra,Bucloc,140104000
@@ -11,7 +11,7 @@ Abra,Lacub,140109000
 Abra,Lagangilang,140110000
 Abra,Lagayan,140111000
 Abra,Langiden,140112000
-Abra,Licuan-Baay (Licuan),140113000
+Abra,Licuan-Baay,140113000
 Abra,Luba,140114000
 Abra,Malibcong,140115000
 Abra,Manabo,140116000
@@ -27,7 +27,7 @@ Abra,Tineg,140125000
 Abra,Tubo,140126000
 Abra,Villaviciosa,140127000
 Agusan del Norte,Buenavista,160201000
-Agusan del Norte,Butuan City (capital),160202000
+Agusan del Norte,Butuan City,160202000
 Agusan del Norte,Carmen,160204000
 Agusan del Norte,City Of Cabadbaran,160203000
 Agusan del Norte,Jabonga,160205000
@@ -43,7 +43,7 @@ Agusan del Sur,City Of Bayugan,160301000
 Agusan del Sur,Esperanza,160303000
 Agusan del Sur,La Paz,160304000
 Agusan del Sur,Loreto,160305000
-Agusan del Sur,Prosperidad (capital),160306000
+Agusan del Sur,Prosperidad,160306000
 Agusan del Sur,Rosario,160307000
 Agusan del Sur,San Francisco,160308000
 Agusan del Sur,San Luis,160309000
@@ -58,7 +58,7 @@ Aklan,Banga,60403000
 Aklan,Batan,60404000
 Aklan,Buruanga,60405000
 Aklan,Ibajay,60406000
-Aklan,Kalibo (capital),60407000
+Aklan,Kalibo,60407000
 Aklan,Lezo,60408000
 Aklan,Libacao,60409000
 Aklan,Madalag,60410000
@@ -73,10 +73,10 @@ Albay,Bacacay,50501000
 Albay,Camalig,50502000
 Albay,City Of Ligao,50508000
 Albay,City Of Tabaco,50517000
-Albay,Daraga (Locsin),50503000
+Albay,Daraga,50503000
 Albay,Guinobatan,50504000
 Albay,Jovellar,50505000
-Albay,Legazpi City (capital),50506000
+Albay,Legazpi City,50506000
 Albay,Libon,50507000
 Albay,Malilipot,50509000
 Albay,Malinao,50510000
@@ -85,7 +85,7 @@ Albay,Oas,50512000
 Albay,Pio Duran,50513000
 Albay,Polangui,50514000
 Albay,Rapu-Rapu,50515000
-Albay,Santo Domingo (Libog),50516000
+Albay,Santo Domingo,50516000
 Albay,Tiwi,50518000
 Antique,Anini-Y,60601000
 Antique,Barbaza,60602000
@@ -98,21 +98,21 @@ Antique,Laua-An,60609000
 Antique,Libertad,60610000
 Antique,Pandan,60611000
 Antique,Patnongon,60612000
-Antique,San Jose (capital),60613000
+Antique,San Jose,60613000
 Antique,San Remigio,60614000
 Antique,Sebaste,60615000
 Antique,Sibalom,60616000
 Antique,Tibiao,60617000
-Antique,Tobias Fornier (Dao),60607000
+Antique,Tobias Fornier,60607000
 Antique,Valderrama,60618000
-Apayao,Calanasan (Bayag),148101000
+Apayao,Calanasan,148101000
 Apayao,Conner,148102000
 Apayao,Flora,148103000
-Apayao,Kabugao (capital),148104000
+Apayao,Kabugao,148104000
 Apayao,Luna,148105000
 Apayao,Pudtol,148106000
 Apayao,Santa Marcela,148107000
-Aurora,Baler (capital),37701000
+Aurora,Baler,37701000
 Aurora,Casiguran,37702000
 Aurora,Dilasag,37703000
 Aurora,Dinalungan,37704000
@@ -133,7 +133,7 @@ Basilan,Tuburan,150707000
 Basilan,Ungkaya Pukan,150711000
 Bataan,Abucay,30801000
 Bataan,Bagac,30802000
-Bataan,City of Balanga (capital),30803000
+Bataan,City of Balanga,30803000
 Bataan,Dinalupihan,30804000
 Bataan,Hermosa,30805000
 Bataan,Limay,30806000
@@ -143,7 +143,7 @@ Bataan,Orani,30809000
 Bataan,Orion,30810000
 Bataan,Pilar,30811000
 Bataan,Samal,30812000
-Batanes,Basco (capital),20901000
+Batanes,Basco,20901000
 Batanes,Itbayat,20902000
 Batanes,Ivana,20903000
 Batanes,Mahatao,20904000
@@ -153,7 +153,7 @@ Batangas,Agoncillo,41001000
 Batangas,Alitagtag,41002000
 Batangas,Balayan,41003000
 Batangas,Balete,41004000
-Batangas,Batangas City (capital),41005000
+Batangas,Batangas City,41005000
 Batangas,Bauan,41006000
 Batangas,Calaca,41007000
 Batangas,Calatagan,41008000
@@ -192,7 +192,7 @@ Benguet,Itogon,141106000
 Benguet,Kabayan,141107000
 Benguet,Kapangan,141108000
 Benguet,Kibungan,141109000
-Benguet,La Trinidad (capital),141110000
+Benguet,La Trinidad,141110000
 Benguet,Mankayan,141111000
 Benguet,Sablan,141112000
 Benguet,Tuba,141113000
@@ -204,7 +204,7 @@ Biliran,Caibiran,87804000
 Biliran,Culaba,87805000
 Biliran,Kawayan,87806000
 Biliran,Maripipi,87807000
-Biliran,Naval (capital),87808000
+Biliran,Naval,87808000
 Bohol,Alburquerque,71201000
 Bohol,Alicia,71202000
 Bohol,Anda,71203000
@@ -240,14 +240,14 @@ Bohol,Mabini,71231000
 Bohol,Maribojoc,71232000
 Bohol,Panglao,71233000
 Bohol,Pilar,71234000
-Bohol,Pres. Carlos P. Garcia (Pitogo),71235000
-Bohol,Sagbayan (Borja),71236000
+Bohol,Pres. Carlos P. Garcia,71235000
+Bohol,Sagbayan,71236000
 Bohol,San Isidro,71237000
 Bohol,San Miguel,71238000
 Bohol,Sevilla,71239000
 Bohol,Sierra Bullones,71240000
 Bohol,Sikatuna,71241000
-Bohol,Tagbilaran City (capital),71242000
+Bohol,Tagbilaran City,71242000
 Bohol,Talibon,71243000
 Bohol,Trinidad,71244000
 Bohol,Tubigon,71245000
@@ -255,7 +255,7 @@ Bohol,Ubay,71246000
 Bohol,Valencia,71247000
 Bukidnon,Baungon,101301000
 Bukidnon,Cabanglasan,101322000
-Bukidnon,City Of Malaybalay (capital),101312000
+Bukidnon,City Of Malaybalay,101312000
 Bukidnon,City Of Valencia,101321000
 Bukidnon,Damulog,101302000
 Bukidnon,Dangcagan,101303000
@@ -276,13 +276,13 @@ Bukidnon,San Fernando,101318000
 Bukidnon,Sumilao,101319000
 Bukidnon,Talakag,101320000
 Bulacan,Angat,31401000
-Bulacan,Balagtas (Bigaa),31402000
+Bulacan,Balagtas,31402000
 Bulacan,Baliuag,31403000
 Bulacan,Bocaue,31404000
 Bulacan,Bulacan,31405000
 Bulacan,Bustos,31406000
 Bulacan,Calumpit,31407000
-Bulacan,City Of Malolos (capital),31410000
+Bulacan,City Of Malolos,31410000
 Bulacan,City Of Meycauayan,31412000
 Bulacan,City Of San Jose Del Monte,31420000
 Bulacan,Doña Remedios Trinidad,31424000
@@ -327,10 +327,10 @@ Cagayan,Santa Teresita,21525000
 Cagayan,Santo Niño (Faire),21526000
 Cagayan,Solana,21527000
 Cagayan,Tuao,21528000
-Cagayan,Tuguegarao City (capital),21529000
+Cagayan,Tuguegarao City,21529000
 Camarines Norte,Basud,51601000
 Camarines Norte,Capalonga,51602000
-Camarines Norte,Daet (capital),51603000
+Camarines Norte,Daet,51603000
 Camarines Norte,Jose Panganiban,51605000
 Camarines Norte,Labo,51606000
 Camarines Norte,Mercedes,51607000
@@ -367,7 +367,7 @@ Camarines Sur,Naga City,51724000
 Camarines Sur,Ocampo,51725000
 Camarines Sur,Pamplona,51726000
 Camarines Sur,Pasacao,51727000
-Camarines Sur,Pili (capital),51728000
+Camarines Sur,Pili,51728000
 Camarines Sur,Presentacion (Parubcan),51729000
 Camarines Sur,Ragay,51730000
 Camarines Sur,Sagñay,51731000
@@ -380,7 +380,7 @@ Camarines Sur,Tinambac,51737000
 Camiguin,Catarman,101801000
 Camiguin,Guinsiliban,101802000
 Camiguin,Mahinog,101803000
-Camiguin,Mambajao (capital),101804000
+Camiguin,Mambajao,101804000
 Camiguin,Sagay,101805000
 Capiz,Cuartero,61901000
 Capiz,Dao,61902000
@@ -395,7 +395,7 @@ Capiz,Panitan,61910000
 Capiz,Pilar,61911000
 Capiz,Pontevedra,61912000
 Capiz,President Roxas,61913000
-Capiz,Roxas City (capital),61914000
+Capiz,Roxas City,61914000
 Capiz,Sapi-An,61915000
 Capiz,Sigma,61916000
 Capiz,Tapaz,61917000
@@ -409,7 +409,7 @@ Catanduanes,Panganiban (Payo),52007000
 Catanduanes,San Andres (Calolbon),52008000
 Catanduanes,San Miguel,52009000
 Catanduanes,Viga,52010000
-Catanduanes,Virac (capital),52011000
+Catanduanes,Virac,52011000
 Cavite,Alfonso,42101000
 Cavite,Amadeo,42102000
 Cavite,Bacoor,42103000
@@ -432,7 +432,7 @@ Cavite,Silang,42118000
 Cavite,Tagaytay City,42119000
 Cavite,Tanza,42120000
 Cavite,Ternate,42121000
-Cavite,Trece Martires City (capital),42122000
+Cavite,Trece Martires City,42122000
 Cebu,Alcantara,72201000
 Cebu,Alcoy,72202000
 Cebu,Alegria,72203000
@@ -447,7 +447,7 @@ Cebu,Boljoon,72212000
 Cebu,Borbon,72213000
 Cebu,Carmen,72215000
 Cebu,Catmon,72216000
-Cebu,Cebu City (capital),72217000
+Cebu,Cebu City,72217000
 Cebu,City Of Bogo,72211000
 Cebu,City Of Carcar,72214000
 Cebu,City Of Naga,72234000
@@ -486,7 +486,7 @@ Cebu,Tabuelan,72249000
 Cebu,Toledo City,72251000
 Cebu,Tuburan,72252000
 Cebu,Tudela,72253000
-City of Isabela,City Of Isabela (capital),99701000
+City of Isabela,City Of Isabela,99701000
 Compostela Valley,Compostela,118201000
 Compostela Valley,Laak (San Vicente),118202000
 Compostela Valley,Mabini (Doña Alicia),118203000
@@ -495,7 +495,7 @@ Compostela Valley,Maragusan (San Mariano),118205000
 Compostela Valley,Mawab,118206000
 Compostela Valley,Monkayo,118207000
 Compostela Valley,Montevista,118208000
-Compostela Valley,Nabunturan (capital),118209000
+Compostela Valley,Nabunturan,118209000
 Compostela Valley,New Bataan,118210000
 Compostela Valley,Pantukan,118211000
 North Cotabato,Alamada,124701000
@@ -504,7 +504,7 @@ North Cotabato,Antipas,124715000
 North Cotabato,Arakan,124718000
 North Cotabato,Banisilan,124716000
 North Cotabato,Carmen,124702000
-North Cotabato,City Of Kidapawan (capital),124704000
+North Cotabato,City Of Kidapawan,124704000
 North Cotabato,Kabacan,124703000
 North Cotabato,Libungan,124705000
 North Cotabato,M'Lang,124710000
@@ -522,17 +522,17 @@ Davao Oriental,Banaybanay,112502000
 Davao Oriental,Boston,112503000
 Davao Oriental,Caraga,112504000
 Davao Oriental,Cateel,112505000
-Davao Oriental,City Of Mati (capital),112509000
+Davao Oriental,City Of Mati,112509000
 Davao Oriental,Governor Generoso,112506000
 Davao Oriental,Lupon,112507000
 Davao Oriental,Manay,112508000
 Davao Oriental,San Isidro,112510000
 Davao Oriental,Tarragona,112511000
-Davao del Norte,Asuncion (Saug),112301000
+Davao del Norte,Asuncion,112301000
 Davao del Norte,Braulio E. Dujali,112323000
 Davao del Norte,Carmen,112303000
 Davao del Norte,City Of Panabo,112315000
-Davao del Norte,City Of Tagum (capital),112319000
+Davao del Norte,City Of Tagum,112319000
 Davao del Norte,Island Garden City Of Samal,112317000
 Davao del Norte,Kapalong,112305000
 Davao del Norte,New Corella,112314000
@@ -540,7 +540,7 @@ Davao del Norte,San Isidro,112324000
 Davao del Norte,Santo Tomas,112318000
 Davao del Norte,Talaingod,112322000
 Davao del Sur,Bansalan,112401000
-Davao del Sur,City Of Digos (capital),112403000
+Davao del Sur,City Of Digos,112403000
 Davao del Sur,Davao City,112402000
 Davao del Sur,Don Marcelino,112416000
 Davao del Sur,Hagonoy,112404000
@@ -560,13 +560,13 @@ Dinagat Islands,Cagdianao,168502000
 Dinagat Islands,Dinagat,168503000
 Dinagat Islands,Libjo (Albor),168504000
 Dinagat Islands,Loreto,168505000
-Dinagat Islands,San Jose (capital),168506000
+Dinagat Islands,San Jose,168506000
 Dinagat Islands,Tubajon,168507000
 Eastern Samar,Arteche,82601000
 Eastern Samar,Balangiga,82602000
 Eastern Samar,Balangkayan,82603000
 Eastern Samar,Can-Avid,82605000
-Eastern Samar,City Of Borongan (capital),82604000
+Eastern Samar,City Of Borongan,82604000
 Eastern Samar,Dolores,82606000
 Eastern Samar,General Macarthur,82607000
 Eastern Samar,Giporlos,82608000
@@ -586,7 +586,7 @@ Eastern Samar,San Policarpo,82621000
 Eastern Samar,Sulat,82622000
 Eastern Samar,Taft,82623000
 Guimaras,Buenavista,67901000
-Guimaras,Jordan (capital),67902000
+Guimaras,Jordan,67902000
 Guimaras,Nueva Valencia,67903000
 Guimaras,San Lorenzo,67904000
 Guimaras,Sibunag,67905000
@@ -597,7 +597,7 @@ Ifugao,Banaue,142701000
 Ifugao,Hingyon,142709000
 Ifugao,Hungduan,142702000
 Ifugao,Kiangan,142703000
-Ifugao,Lagawe (capital),142704000
+Ifugao,Lagawe,142704000
 Ifugao,Lamut,142705000
 Ifugao,Mayoyao,142706000
 Ifugao,Tinoc,142710000
@@ -612,7 +612,7 @@ Ilocos Norte,City of Batac,12805000
 Ilocos Norte,Currimao,12808000
 Ilocos Norte,Dingras,12809000
 Ilocos Norte,Dumalneg,12810000
-Ilocos Norte,Laoag City (capital),12812000
+Ilocos Norte,Laoag City,12812000
 Ilocos Norte,Marcos,12813000
 Ilocos Norte,Nueva Era,12814000
 Ilocos Norte,Pagudpud,12815000
@@ -632,7 +632,7 @@ Ilocos Sur,Cabugao,12905000
 Ilocos Sur,Caoayan,12907000
 Ilocos Sur,Cervantes,12908000
 Ilocos Sur,City Of Candon,12906000
-Ilocos Sur,City Of Vigan (capital),12934000
+Ilocos Sur,City Of Vigan,12934000
 Ilocos Sur,Galimuyod,12909000
 Ilocos Sur,Gregorio Del Pilar (Concepcion),12910000
 Ilocos Sur,Lidlidda,12911000
@@ -679,7 +679,7 @@ Iloilo,Dumangas,63018000
 Iloilo,Estancia,63019000
 Iloilo,Guimbal,63020000
 Iloilo,Igbaras,63021000
-Iloilo,Iloilo City (capital),63022000
+Iloilo,Iloilo City,63022000
 Iloilo,Janiuay,63023000
 Iloilo,Lambunao,63025000
 Iloilo,Leganes,63026000
@@ -717,7 +717,7 @@ Isabela,Dinapigue,23110000
 Isabela,Divilacan,23111000
 Isabela,Echague,23112000
 Isabela,Gamu,23113000
-Isabela,Ilagan (capital),23114000
+Isabela,Ilagan,23114000
 Isabela,Jones,23115000
 Isabela,Luna,23116000
 Isabela,Maconacon,23117000
@@ -740,7 +740,7 @@ Isabela,Santa Maria,23134000
 Isabela,Santo Tomas,23136000
 Isabela,Tumauini,23137000
 Kalinga,Balbalan,143201000
-Kalinga,City Of Tabuk (capital),143213000
+Kalinga,City Of Tabuk,143213000
 Kalinga,Lubuagan,143206000
 Kalinga,Pasil,143208000
 Kalinga,Pinukpuk,143209000
@@ -756,7 +756,7 @@ La Union,Bangar,13306000
 La Union,Bauang,13307000
 La Union,Burgos,13308000
 La Union,Caba,13309000
-La Union,City Of San Fernando (capital),13314000
+La Union,City Of San Fernando,13314000
 La Union,Luna,13310000
 La Union,Naguilian,13311000
 La Union,Pugo,13312000
@@ -793,7 +793,7 @@ Laguna,Pila,43422000
 Laguna,Rizal,43423000
 Laguna,San Pablo City,43424000
 Laguna,San Pedro,43425000
-Laguna,Santa Cruz (capital),43426000
+Laguna,Santa Cruz,43426000
 Laguna,Santa Maria,43427000
 Laguna,Siniloan,43429000
 Laguna,Victoria,43430000
@@ -819,10 +819,10 @@ Lanao del Norte,Sapad,103519000
 Lanao del Norte,Sultan Naga Dimaporo (Karomatan),103506000
 Lanao del Norte,Tagoloan,103520000
 Lanao del Norte,Tangcal,103521000
-Lanao del Norte,Tubod (capital),103522000
-Lanao del Sur,Bacolod-Kalawi (Bacolod Grande),153601000
+Lanao del Norte,Tubod,103522000
+Lanao del Sur,Bacolod-Kalawi,153601000
 Lanao del Sur,Balabagan,153602000
-Lanao del Sur,Balindong (Watu),153603000
+Lanao del Sur,Balindong,153603000
 Lanao del Sur,Bayang,153604000
 Lanao del Sur,Binidayan,153605000
 Lanao del Sur,Buadiposo-Buntong,153633000
@@ -843,7 +843,7 @@ Lanao del Sur,Madamba,153614000
 Lanao del Sur,Maguing,153634000
 Lanao del Sur,Malabang,153615000
 Lanao del Sur,Marantao,153616000
-Lanao del Sur,Marawi City (capital),153617000
+Lanao del Sur,Marawi City,153617000
 Lanao del Sur,Marogong,153631000
 Lanao del Sur,Masiu,153618000
 Lanao del Sur,Mulondo,153619000
@@ -898,7 +898,7 @@ Leyte,San Miguel,83743000
 Leyte,Santa Fe,83744000
 Leyte,Tabango,83745000
 Leyte,Tabontabon,83746000
-Leyte,Tacloban City (capital),83747000
+Leyte,Tacloban City,83747000
 Leyte,Tanauan,83748000
 Leyte,Tolosa,83749000
 Leyte,Tunga,83750000
@@ -920,12 +920,12 @@ Maguindanao,Pagalungan,153810000
 Maguindanao,Paglat,153823000
 Maguindanao,Pandag,153833000
 Maguindanao,Rajah Buayan,153829000
-Maguindanao,Shariff Aguak (Maganoy) (capital),153808000
+Maguindanao,Shariff Aguak (Maganoy),153808000
 Maguindanao,South Upi,153817000
 Maguindanao,Sultan Sa Barongis (Lambayong),153813000
 Maguindanao,Talayan,153816000
 Maguindanao,Talitay,153821000
-Marinduque,Boac (capital),174001000
+Marinduque,Boac,174001000
 Marinduque,Buenavista,174002000
 Marinduque,Gasan,174003000
 Marinduque,Mogpog,174004000
@@ -937,7 +937,7 @@ Masbate,Balud,54103000
 Masbate,Batuan,54104000
 Masbate,Cataingan,54105000
 Masbate,Cawayan,54106000
-Masbate,City Of Masbate (capital),54111000
+Masbate,City Of Masbate,54111000
 Masbate,Claveria,54107000
 Masbate,Dimasalang,54108000
 Masbate,Esperanza,54109000
@@ -961,7 +961,7 @@ Misamis Occidental,Concepcion,104206000
 Misamis Occidental,Don Victoriano Chiongbian (Don Mariano Marcos),104217000
 Misamis Occidental,Jimenez,104207000
 Misamis Occidental,Lopez Jaena,104208000
-Misamis Occidental,Oroquieta City (capital),104209000
+Misamis Occidental,Oroquieta City,104209000
 Misamis Occidental,Ozamis City,104210000
 Misamis Occidental,Panaon,104211000
 Misamis Occidental,Plaridel,104212000
@@ -973,7 +973,7 @@ Misamis Oriental,Alubijid,104301000
 Misamis Oriental,Balingasag,104302000
 Misamis Oriental,Balingoan,104303000
 Misamis Oriental,Binuangan,104304000
-Misamis Oriental,Cagayan de Oro City (capital),104305000
+Misamis Oriental,Cagayan de Oro City,104305000
 Misamis Oriental,City Of El Salvador,104307000
 Misamis Oriental,Claveria,104306000
 Misamis Oriental,Gingoog City,104308000
@@ -998,7 +998,7 @@ Misamis Oriental,Villanueva,104326000
 Mountain Province,Barlig,144401000
 Mountain Province,Bauko,144402000
 Mountain Province,Besao,144403000
-Mountain Province,Bontoc (capital),144404000
+Mountain Province,Bontoc,144404000
 Mountain Province,Natonin,144405000
 Mountain Province,Paracelis,144406000
 Mountain Province,Sabangan,144407000
@@ -1035,7 +1035,7 @@ NCR Third District,City Of Malabon,137502000
 NCR Third District,City Of Navotas,137503000
 NCR Third District,City Of Valenzuela,137504000
 NCR Third District,Kalookan City,137501000
-Negros Occidental,Bacolod City (capital),64501000
+Negros Occidental,Bacolod City,64501000
 Negros Occidental,Bago City,64502000
 Negros Occidental,Binalbagan,64503000
 Negros Occidental,Cadiz City,64504000
@@ -1067,7 +1067,7 @@ Negros Occidental,San Enrique,64525000
 Negros Occidental,Silay City,64526000
 Negros Occidental,Toboso,64529000
 Negros Occidental,Valladolid,64530000
-Negros Oriental,Amlan (Ayuquitan),74601000
+Negros Oriental,Amlan,74601000
 Negros Oriental,Ayungon,74602000
 Negros Oriental,Bacong,74603000
 Negros Oriental,Bais City,74604000
@@ -1078,7 +1078,7 @@ Negros Oriental,City Of Bayawan (Tulong),74606000
 Negros Oriental,City Of Guihulngan,74611000
 Negros Oriental,City Of Tanjay,74621000
 Negros Oriental,Dauin,74609000
-Negros Oriental,Dumaguete City (capital),74610000
+Negros Oriental,Dumaguete City,74610000
 Negros Oriental,Jimalalud,74612000
 Negros Oriental,La Libertad,74613000
 Negros Oriental,Mabinay,74614000
@@ -1096,7 +1096,7 @@ Northern Samar,Allen,84801000
 Northern Samar,Biri,84802000
 Northern Samar,Bobon,84803000
 Northern Samar,Capul,84804000
-Northern Samar,Catarman (capital),84805000
+Northern Samar,Catarman,84805000
 Northern Samar,Catubig,84806000
 Northern Samar,Gamay,84807000
 Northern Samar,Laoang,84808000
@@ -1133,7 +1133,7 @@ Nueva Ecija,Licab,34914000
 Nueva Ecija,Llanera,34915000
 Nueva Ecija,Lupao,34916000
 Nueva Ecija,Nampicuan,34918000
-Nueva Ecija,Palayan City (capital),34919000
+Nueva Ecija,Palayan City,34919000
 Nueva Ecija,Pantabangan,34920000
 Nueva Ecija,Peñaranda,34921000
 Nueva Ecija,Quezon,34922000
@@ -1153,7 +1153,7 @@ Nueva Vizcaya,Ambaguio,25001000
 Nueva Vizcaya,Aritao,25002000
 Nueva Vizcaya,Bagabag,25003000
 Nueva Vizcaya,Bambang,25004000
-Nueva Vizcaya,Bayombong (capital),25005000
+Nueva Vizcaya,Bayombong,25005000
 Nueva Vizcaya,Diadi,25006000
 Nueva Vizcaya,Dupax Del Norte,25007000
 Nueva Vizcaya,Dupax Del Sur,25008000
@@ -1168,7 +1168,7 @@ Occidental Mindoro,Calintaan,175102000
 Occidental Mindoro,Looc,175103000
 Occidental Mindoro,Lubang,175104000
 Occidental Mindoro,Magsaysay,175105000
-Occidental Mindoro,Mamburao (capital),175106000
+Occidental Mindoro,Mamburao,175106000
 Occidental Mindoro,Paluan,175107000
 Occidental Mindoro,Rizal,175108000
 Occidental Mindoro,Sablayan,175109000
@@ -1178,7 +1178,7 @@ Oriental Mindoro,Baco,175201000
 Oriental Mindoro,Bansud,175202000
 Oriental Mindoro,Bongabong,175203000
 Oriental Mindoro,Bulalacao (San Pedro),175204000
-Oriental Mindoro,City Of Calapan (capital),175205000
+Oriental Mindoro,City Of Calapan,175205000
 Oriental Mindoro,Gloria,175206000
 Oriental Mindoro,Mansalay,175207000
 Oriental Mindoro,Naujan,175208000
@@ -1206,7 +1206,7 @@ Palawan,Kalayaan,175321000
 Palawan,Linapacan,175313000
 Palawan,Magsaysay,175314000
 Palawan,Narra,175315000
-Palawan,Puerto Princesa City (capital),175316000
+Palawan,Puerto Princesa City,175316000
 Palawan,Quezon,175317000
 Palawan,Rizal (Marcos),175323000
 Palawan,Roxas,175318000
@@ -1218,7 +1218,7 @@ Pampanga,Apalit,35402000
 Pampanga,Arayat,35403000
 Pampanga,Bacolor,35404000
 Pampanga,Candaba,35405000
-Pampanga,City Of San Fernando (capital),35416000
+Pampanga,City Of San Fernando,35416000
 Pampanga,Floridablanca,35406000
 Pampanga,Guagua,35407000
 Pampanga,Lubao,35408000
@@ -1258,7 +1258,7 @@ Pangasinan,Dasol,15519000
 Pangasinan,Infanta,15520000
 Pangasinan,Labrador,15521000
 Pangasinan,Laoac,15548000
-Pangasinan,Lingayen (capital),15522000
+Pangasinan,Lingayen,15522000
 Pangasinan,Mabini,15523000
 Pangasinan,Malasiqui,15524000
 Pangasinan,Manaoag,15525000
@@ -1301,7 +1301,7 @@ Quezon,Infanta,45620000
 Quezon,Jomalig,45621000
 Quezon,Lopez,45622000
 Quezon,Lucban,45623000
-Quezon,Lucena City (capital),45624000
+Quezon,Lucena City,45624000
 Quezon,Macalelon,45625000
 Quezon,Mauban,45627000
 Quezon,Mulanay,45628000
@@ -1325,7 +1325,7 @@ Quezon,Tagkawayan,45646000
 Quezon,Tiaong,45648000
 Quezon,Unisan,45649000
 Quirino,Aglipay,25701000
-Quirino,Cabarroguis (capital),25702000
+Quirino,Cabarroguis,25702000
 Quirino,Diffun,25703000
 Quirino,Maddela,25704000
 Quirino,Nagtipunan,25706000
@@ -1354,7 +1354,7 @@ Romblon,Ferrol,175916000
 Romblon,Looc,175907000
 Romblon,Magdiwang,175908000
 Romblon,Odiongan,175909000
-Romblon,Romblon (capital),175910000
+Romblon,Romblon,175910000
 Romblon,San Agustin,175911000
 Romblon,San Andres,175912000
 Romblon,San Fernando,175913000
@@ -1365,7 +1365,7 @@ Samar,Almagro,86001000
 Samar,Basey,86002000
 Samar,Calbayog City,86003000
 Samar,Calbiga,86004000
-Samar,City Of Catbalogan (capital),86005000
+Samar,City Of Catbalogan,86005000
 Samar,Daram,86006000
 Samar,Gandara,86007000
 Samar,Hinabangan,86008000
@@ -1387,7 +1387,7 @@ Samar,Talalora,86019000
 Samar,Tarangnan,86020000
 Samar,Villareal,86021000
 Samar,Zumarraga,86023000
-Sarangani,Alabel (capital),128001000
+Sarangani,Alabel,128001000
 Sarangani,Glan,128002000
 Sarangani,Kiamba,128003000
 Sarangani,Maasim,128004000
@@ -1397,7 +1397,7 @@ Sarangani,Malungon,128007000
 Shariff Kabunsuan,Barira,158401000
 Shariff Kabunsuan,Buldon,158402000
 Shariff Kabunsuan,Datu Blah T. Sinsuat,158403000
-Shariff Kabunsuan,Datu Odin Sinsuat (Dinaig) (capital),158404000
+Shariff Kabunsuan,Datu Odin Sinsuat (Dinaig),158404000
 Shariff Kabunsuan,Kabuntalan (Tumbao),158405000
 Shariff Kabunsuan,Matanog,158406000
 Shariff Kabunsuan,Northern Kabuntalan,158411000
@@ -1410,13 +1410,13 @@ Siquijor,Larena,76102000
 Siquijor,Lazi,76103000
 Siquijor,Maria,76104000
 Siquijor,San Juan,76105000
-Siquijor,Siquijor (capital),76106000
+Siquijor,Siquijor,76106000
 Sorsogon,Barcelona,56202000
 Sorsogon,Bulan,56203000
 Sorsogon,Bulusan,56204000
 Sorsogon,Casiguran,56205000
 Sorsogon,Castilla,56206000
-Sorsogon,City Of Sorsogon (capital),56216000
+Sorsogon,City Of Sorsogon,56216000
 Sorsogon,Donsol,56207000
 Sorsogon,Gubat,56208000
 Sorsogon,Irosin,56209000
@@ -1427,7 +1427,7 @@ Sorsogon,Pilar,56213000
 Sorsogon,Prieto Diaz,56214000
 Sorsogon,Santa Magdalena,56215000
 South Cotabato,Banga,126302000
-South Cotabato,City Of Koronadal (capital),126306000
+South Cotabato,City Of Koronadal,126306000
 South Cotabato,General Santos City (Dadiangas),126303000
 South Cotabato,Lake Sebu,126319000
 South Cotabato,Norala,126311000
@@ -1440,7 +1440,7 @@ South Cotabato,Tantangan,126315000
 South Cotabato,Tupi,126317000
 Southern Leyte,Anahawan,86401000
 Southern Leyte,Bontoc,86402000
-Southern Leyte,City Of Maasin (capital),86407000
+Southern Leyte,City Of Maasin,86407000
 Southern Leyte,Hinunangan,86403000
 Southern Leyte,Hinundayan,86404000
 Southern Leyte,Libagon,86405000
@@ -1461,7 +1461,7 @@ Sultan Kudarat,Bagumbayan,126501000
 Sultan Kudarat,City Of Tacurong,126511000
 Sultan Kudarat,Columbio,126502000
 Sultan Kudarat,Esperanza,126503000
-Sultan Kudarat,Isulan (capital),126504000
+Sultan Kudarat,Isulan,126504000
 Sultan Kudarat,Kalamansig,126505000
 Sultan Kudarat,Lambayong (Mariano Marcos),126508000
 Sultan Kudarat,Lebak,126506000
@@ -1471,7 +1471,7 @@ Sultan Kudarat,President Quirino,126510000
 Sultan Kudarat,Sen. Ninoy Aquino,126512000
 Sulu,Hadji Panglima Tahil (Marunggas),156606000
 Sulu,Indanan,156601000
-Sulu,Jolo (capital),156602000
+Sulu,Jolo,156602000
 Sulu,Kalingalan Caluang,156603000
 Sulu,Lugus,156617000
 Sulu,Luuk,156604000
@@ -1506,7 +1506,7 @@ Surigao del Norte,San Isidro,166720000
 Surigao del Norte,Santa Monica (Sapao),166721000
 Surigao del Norte,Sison,166722000
 Surigao del Norte,Socorro,166723000
-Surigao del Norte,Surigao City (capital),166724000
+Surigao del Norte,Surigao City,166724000
 Surigao del Norte,Tagana-An,166725000
 Surigao del Norte,Tubod,166727000
 Surigao del Sur,Barobo,166801000
@@ -1516,7 +1516,7 @@ Surigao del Sur,Cantilan,166805000
 Surigao del Sur,Carmen,166806000
 Surigao del Sur,Carrascal,166807000
 Surigao del Sur,City Of Bislig,166803000
-Surigao del Sur,City Of Tandag (capital),166819000
+Surigao del Sur,City Of Tandag,166819000
 Surigao del Sur,Cortes,166808000
 Surigao del Sur,Hinatuan,166809000
 Surigao del Sur,Lanuza,166810000
@@ -1532,7 +1532,7 @@ Tarlac,Anao,36901000
 Tarlac,Bamban,36902000
 Tarlac,Camiling,36903000
 Tarlac,Capas,36904000
-Tarlac,City Of Tarlac (capital),36916000
+Tarlac,City Of Tarlac,36916000
 Tarlac,Concepcion,36905000
 Tarlac,Gerona,36906000
 Tarlac,La Paz,36907000
@@ -1546,10 +1546,10 @@ Tarlac,San Jose,36918000
 Tarlac,San Manuel,36914000
 Tarlac,Santa Ignacia,36915000
 Tarlac,Victoria,36917000
-Tawi-Tawi,Bongao (capital),157002000
+Tawi-Tawi,Bongao,157002000
 Tawi-Tawi,Languyan,157009000
 Tawi-Tawi,Mapun (Cagayan De Tawi-Tawi),157003000
-Tawi-Tawi,Panglima Sugala (Balimbing) (capital),157001000
+Tawi-Tawi,Panglima Sugala (Balimbing),157001000
 Tawi-Tawi,Sapa-Sapa,157010000
 Tawi-Tawi,Sibutu,157011000
 Tawi-Tawi,Simunul,157004000
@@ -1561,7 +1561,7 @@ Zambales,Botolan,37101000
 Zambales,Cabangan,37102000
 Zambales,Candelaria,37103000
 Zambales,Castillejos,37104000
-Zambales,Iba (capital),37105000
+Zambales,Iba,37105000
 Zambales,Masinloc,37106000
 Zambales,Olongapo City,37107000
 Zambales,Palauig,37108000
@@ -1575,7 +1575,7 @@ Zamboanga Sibugay,Alicia,98301000
 Zamboanga Sibugay,Buug,98302000
 Zamboanga Sibugay,Diplahan,98303000
 Zamboanga Sibugay,Imelda,98304000
-Zamboanga Sibugay,Ipil (capital),98305000
+Zamboanga Sibugay,Ipil,98305000
 Zamboanga Sibugay,Kabasalan,98306000
 Zamboanga Sibugay,Mabuhay,98307000
 Zamboanga Sibugay,Malangas,98308000
@@ -1587,10 +1587,10 @@ Zamboanga Sibugay,Siay,98313000
 Zamboanga Sibugay,Talusan,98314000
 Zamboanga Sibugay,Titay,98315000
 Zamboanga Sibugay,Tungawan,98316000
-Zamboanga del Norte,Bacungan (Leon T. Postigo),97226000
+Zamboanga del Norte,Bacungan,97226000
 Zamboanga del Norte,Baliguian,97224000
 Zamboanga del Norte,Dapitan City,97201000
-Zamboanga del Norte,Dipolog City (capital),97202000
+Zamboanga del Norte,Dipolog City,97202000
 Zamboanga del Norte,Godod,97225000
 Zamboanga del Norte,Gutalac,97223000
 Zamboanga del Norte,Jose Dalman (Ponot),97222000
@@ -1630,7 +1630,7 @@ Zamboanga del Sur,Mahayag,97315000
 Zamboanga del Sur,Margosatubig,97317000
 Zamboanga del Sur,Midsalip,97318000
 Zamboanga del Sur,Molave,97319000
-Zamboanga del Sur,Pagadian City (capital),97322000
+Zamboanga del Sur,Pagadian City,97322000
 Zamboanga del Sur,Pitogo,97338000
 Zamboanga del Sur,Ramon Magsaysay (Liargo),97323000
 Zamboanga del Sur,San Miguel,97324000
