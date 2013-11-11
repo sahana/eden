@@ -256,10 +256,12 @@ if settings.has_module("msg"):
     tasks["msg_process_keygraph"] = msg_process_keygraph
 
     # -------------------------------------------------------------------------
-    def msg_poll(tablename, channel_id):
+    def msg_poll(tablename, channel_id, user_id=None):
         """
             Poll an inbound channel
         """
+        if user_id:
+            auth.s3_impersonate(user_id)
         # Run the Task & return the result
         result = msg.poll(tablename, channel_id)
         db.commit()
@@ -268,10 +270,12 @@ if settings.has_module("msg"):
     tasks["msg_poll"] = msg_poll
 
     # -----------------------------------------------------------------------------
-    def msg_parse(channel_id, function_name):
+    def msg_parse(channel_id, function_name, user_id=None):
         """
             Parse Messages coming in from a Source Channel
         """
+        if user_id:
+            auth.s3_impersonate(user_id)
         # Run the Task & return the result
         result = msg.parse(channel_id, function_name)
         db.commit()
@@ -280,11 +284,13 @@ if settings.has_module("msg"):
     tasks["msg_parse"] = msg_parse
 
     # --------------------------------------------------------------------------
-    def msg_search_subscription_notifications(frequency):
+    def msg_search_subscription_notifications(frequency, user_id=None):
         """
             Search Subscriptions & send Notifications.
             @ToDo: Deprecate
         """
+        if user_id:
+            auth.s3_impersonate(user_id)
         # Run the Task & return the result
         result = s3db.msg_search_subscription_notifications(frequency=frequency)
         db.commit()
@@ -298,6 +304,8 @@ if settings.has_module("msg"):
             Scheduled task to check subscriptions for updates,
             creates notify_notify tasks where updates exist.
         """
+        if user_id:
+            auth.s3_impersonate(user_id)
         notify = s3base.S3Notifications()
         return notify.check_subscriptions()
 
@@ -312,7 +320,8 @@ if settings.has_module("msg"):
             @param subscription: JSON with the subscription data
             @param now: lookup date (@todo: remove this)
         """
-
+        if user_id:
+            auth.s3_impersonate(user_id)
         notify = s3base.S3Notifications
         return notify.notify(resource_id)
 

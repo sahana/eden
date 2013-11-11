@@ -1308,11 +1308,16 @@ class S3Msg(object):
                 # Store the whole raw message
                 raw = msg.as_string()
                 # Parse out the 'Body'
-                body = msg.get_payload(0).as_string().split("\n\n")[1]
+                #body = msg.get_payload(0).as_string().split("\n\n")[1]
+                payload = msg.get_payload()
+                if not isinstance(payload, basestring):
+                    payload = payload[0].as_string()
+                body = payload.split("\n\n")
+                body = body[1] if len(body) > 1 else body[0]
                 # Store in DB
                 id = minsert(channel_id=channel_id,
                              from_address=sender,
-                             subject=subject,
+                             subject=subject[:78],
                              body=body,
                              raw=raw,
                              inbound=True)
@@ -1379,11 +1384,16 @@ class S3Msg(object):
                         # Store the whole raw message
                         raw = msg.as_string()
                         # Parse out the 'Body'
-                        body = msg.get_payload(0).as_string().split("\n\n")[1]
+                        #body = msg.get_payload(0).as_string().split("\n\n")[1]
+                        payload = msg.get_payload()
+                        if not isinstance(payload, basestring):
+                            payload = payload[0].as_string()
+                        body = payload.split("\n\n")
+                        body = body[1] if len(body) > 1 else body[0]
                         # Store in DB
                         id = minsert(channel_id=channel_id,
                                      from_address=sender,
-                                     subject=subject,
+                                     subject=subject[:78],
                                      body=body,
                                      raw=raw,
                                      inbound=True)
