@@ -849,8 +849,8 @@ def translate():
             # Retrieve list of active modules
             activemodlist = settings.modules.keys()
             modlist = activemodlist
-            # Hide core modules
-            hidden_modules = ["auth", "default", "error", "appadmin"]
+            # Hiding core modules
+            hidden_modules = A.core_modules
             for module in hidden_modules:
                 if module in modlist:
                     modlist.remove(module)
