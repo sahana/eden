@@ -749,10 +749,18 @@ def customize_deploy_mission(**attr):
         Customize deploy/mission controller
     """
 
-    code = current.s3db.deploy_mission.code
+    T = current.T
+    table = current.s3db.deploy_mission
+
+    event_type_id = table.event_type_id
+    event_type_id.readable = True
+    event_type_id.writable = True
+    event_type_id.label = T("Disaster Type")
+
+    code = table.code
     code.readable = True
     code.writable = True
-    code.label = current.T("M-Code")
+    code.label = T("M-Code")
 
     return attr
 
