@@ -2784,7 +2784,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             CLASS_NAME: 'OpenLayers.Handler.FeatureS3'
         });
 
-        var all_popup_layers = map.s3.all_popup_layers;
+        var s3 = map.s3;
+        var all_popup_layers = s3.all_popup_layers;
         // onClick Popup
         var popupControl = new OpenLayers.Control.SelectFeature(
             all_popup_layers, {
@@ -2811,6 +2812,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         map.addControl(popupControl);
         highlightControl.activate();
         popupControl.activate();
+        // Allow access from global scope
+        s3.popupControl = popupControl;
     };
 
     // Supports highlightControl for All Vector Layers
@@ -3171,7 +3174,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             loadDetails(feature.attributes.data, data_id, popup);
         }
         feature.popup = popup;
-        //popup.feature = feature;
+        popup.feature = feature;
         map.addPopup(popup);
     };
 
@@ -3185,14 +3188,15 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
     };
     var onPopupClose = function(event) {
-        // Close all Popups
-        // Close popups associated with features
-        //popupControl.unselectAll();
-
-        // @ToDo: Make this configurable to allow multiple popups open at once
+        var map = this.map;
+        // Unselect the associated feature
+        if (this.feature) {
+            delete this.feature.popup;
+            map.popupControl.unselect(this.feature);
+        }
         // Close ALL popups
         // inc orphaned Popups (e.g. from Refresh)
-        var map = this.map;
+        // @ToDo: Make this configurable to allow multiple popups open at once
         while (map.popups.length) {
             map.removePopup(map.popups[0]);
         }

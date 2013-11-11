@@ -44,23 +44,27 @@ class CreateOrganisation(SeleniumUnitTest):
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
 
+        settings = current.deployment_settings
+
         # Configuration
         tablename = "org_organisation"
         url = "org/organisation/create"
         account = "admin"
         data = [
-    [
-        # 1st field used to check whether record already exists
-        # & for organisation_id lookups
-        ("name", "Romanian Food Assistance Association (Test)"),
-        ("acronym", "RFAAT"),
-        ("organisation_type_id", "Government"),
-        ("region", "Europe"),
-        # Whilst the short form is accepted by the DB, our validation routine needs the full form
-        ("website", "http://www.rfaat.com"),
-        ("comments", "This is a Test Organization"),
-    ],
-]
+            [
+                # 1st field used to check whether record already exists
+                # & for organisation_id lookups
+                ("name", "Romanian Food Assistance Association (Test)"),
+                ("acronym", "RFAAT"),
+                ("organisation_type_id", "Government"),
+                # Whilst the short form is accepted by the DB, our validation routine needs the full form
+                ("website", "http://www.rfaat.com"),
+                ("comments", "This is a Test Organization"),
+            ],
+        ]
+
+        if settings.get_org_regions():
+            data[0].append(("region_id", "Europe"))
 
         db = current.db
         s3db = current.s3db
