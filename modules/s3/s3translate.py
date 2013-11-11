@@ -72,6 +72,8 @@ class TranslateAPI:
             files, modules and strings individually
         """
 
+        core_modules = ["auth", "default", "errors", "appadmin"]
+
         def __init__(self):
 
             self.grp = TranslateGetFiles()
