@@ -2630,7 +2630,7 @@ def customize_gis_location(**attr):
             s3db = current.s3db
             table = s3db.gis_location
 
-            s3.crud_strings["gis_location"].title_list = T("States")
+            s3.crud_strings["gis_location"].title_list = T("Regions")
 
             if r.method == "datalist":
                 # District selection page
@@ -2638,8 +2638,8 @@ def customize_gis_location(**attr):
                 s3.dl_pagelength = 12
                 s3.dl_rowsize = 2
 
-                # Just show specific States
-                s3.filter = (table.L0 == "India") & (table.level == "L1")
+                # Just show PH L1s
+                s3.filter = (table.L0 == "Philippines") & (table.level == "L1")
                 # Default 5 triggers an AJAX call, we should load all by default
                 s3.dl_pagelength = 13
 

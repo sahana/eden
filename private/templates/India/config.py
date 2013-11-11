@@ -2638,7 +2638,7 @@ def customize_gis_location(**attr):
                 s3.dl_pagelength = 12
                 s3.dl_rowsize = 2
 
-                # Just show specific States
+                # Just show In L1s
                 s3.filter = (table.L0 == "India") & (table.level == "L1")
                 # Default 5 triggers an AJAX call, we should load all by default
                 s3.dl_pagelength = 13
