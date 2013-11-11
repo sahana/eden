@@ -1243,7 +1243,7 @@ class S3Msg(object):
         host = channel.server
         protocol = channel.protocol
         ssl = channel.use_ssl
-        port = channel.port
+        port = int(channel.port)
         delete = channel.delete_from_server
 
         mtable = db.msg_email

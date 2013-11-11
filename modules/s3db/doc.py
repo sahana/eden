@@ -81,6 +81,7 @@ class S3DocumentLibrary(S3Model):
                                project_framework=T("Project Framework"),
                                project_task=T("Task"),
                                hms_hospital=T("Hospital"),
+                               hrm_human_resource=T("Human Resource"),
                                org_office=T("Office"),
                                org_facility=T("Facility"),
                                cr_shelter=T("Shelter"),

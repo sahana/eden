@@ -310,6 +310,7 @@ class S3HRModel(S3Model):
         realms = auth.permission.permitted_realms(tablename, method="create")
         table = define_table(tablename,
                              super_link("track_id", "sit_trackable"),
+                             super_link("doc_id", "doc_entity"),
                              organisation_id(
                                label = organisation_label,
                                requires = self.org_organisation_requires(required=True,
@@ -809,7 +810,7 @@ class S3HRModel(S3Model):
             mark_required = []
         configure(tablename,
                   crud_form = crud_form,
-                  super_entity = "sit_trackable",
+                  super_entity = ("sit_trackable", "doc_entity"),
                   mark_required = mark_required,
                   deletable = settings.get_hrm_deletable(),
                   search_method = search_method,
@@ -4786,7 +4787,7 @@ def hrm_human_resource_controller(extra_filter=None):
     """
         Human Resources Controller, defined in the model for use from
         multiple controllers for unified menus
-         - used for Summary view, Imports and S3AddPersonWidget2
+         - used for Summary & Profile views, Imports and S3AddPersonWidget2
     """
 
     T = current.T
@@ -4800,6 +4801,113 @@ def hrm_human_resource_controller(extra_filter=None):
         method = r.method
         if method in ("form", "lookup"):
             return True
+        elif method == "profile":
+            db = current.db
+            table = r.table
+            record = r.record
+            person_id = record.person_id
+            ptable = db.pr_person
+            person = db(ptable.id == person_id).select(ptable.first_name,
+                                                       ptable.middle_name,
+                                                       ptable.last_name,
+                                                       ptable.pe_id,
+                                                       limitby=(0, 1)
+                                                       ).first()
+            name = s3_fullname(person)
+            pe_id = person.pe_id
+            comments = r.table.organisation_id.represent(record.organisation_id)
+            if record.job_title_id:
+                comments = "%s, %s" % (r.table.job_title_id_id.represent(record.job_title_id), comments)
+            #ctable = s3db.pr_contact
+            #ctable.contact_method.readable = False
+            #ctable.priority.readable = False
+            #ctable.value.label = ""
+            contacts_widget = dict(label = "Contacts",
+                                   title_create = "Add New Contact",
+                                   #type = "datatable",
+                                   type = "datalist",
+                                   tablename = "pr_contact",
+                                   #context = "event",
+                                   #default = default,
+                                   filter = S3FieldSelector("pe_id") == pe_id,
+                                   icon = "icon-phone",
+                                   #list_layout = render_contacts,
+                                   )
+            address_widget = dict(label = "Address",
+                                  title_create = "Add New Address",
+                                  #type = "datatable",
+                                  type = "datalist",
+                                  tablename = "pr_address",
+                                  #context = "event",
+                                  #default = default,
+                                  filter = S3FieldSelector("pe_id") == pe_id,
+                                  icon = "icon-home",
+                                  #list_layout = render_address,
+                                  )
+            skills_widget = dict(label = "Skills",
+                                 title_create = "Add New Skill",
+                                 #type = "datatable",
+                                 type = "datalist",
+                                 tablename = "hrm_competency",
+                                 #context = "event",
+                                 #default = default,
+                                 filter = S3FieldSelector("person_id") == person_id,
+                                 icon = "icon-comment-alt",
+                                 #list_layout = render_skills,
+                                 )
+            training_widget = dict(label = "Trainings",
+                                   title_create = "Add New Training",
+                                   #type = "datatable",
+                                   type = "datalist",
+                                   tablename = "hrm_training",
+                                   #context = "event",
+                                   #default = default,
+                                   filter = S3FieldSelector("person_id") == person_id,
+                                   icon = "icon-truck",
+                                   #list_layout = render_training,
+                                   )
+            experience_widget = dict(label = "Experience",
+                                     title_create = "Add New Experience",
+                                     #type = "datatable",
+                                     type = "datalist",
+                                     tablename = "hrm_experience",
+                                     #context = "event",
+                                     #default = default,
+                                     filter = S3FieldSelector("person_id") == person_id,
+                                     icon = "icon-truck",
+                                     #list_layout = render_training,
+                                     )
+            docs_widget = dict(label = "Documents",
+                               title_create = "Add New Document",
+                               #type = "datatable",
+                               type = "datalist",
+                               tablename = "doc_document",
+                               #context = "event",
+                               #default = default,
+                               filter = S3FieldSelector("doc_id") == record.doc_id,
+                               icon = "icon-paperclip",
+                               #list_layout = render_docs,
+                               )
+            s3db.configure("hrm_human_resource",
+                           profile_title = "%s : %s" % (s3.crud_strings["hrm_human_resource"].title_display, 
+                                                        name),
+                           profile_header = DIV(A(s3_avatar_represent(person_id,
+                                                                      tablename="pr_person",
+                                                                      _class="media-object"),
+                                                  _class="pull-left",
+                                                  #_href=event_url,
+                                                  ),
+                                                H2(name),
+                                                P(comments),
+                                                _class="profile_header",
+                                                ),
+                           profile_widgets = [contacts_widget,
+                                              address_widget,
+                                              skills_widget,
+                                              training_widget,
+                                              experience_widget,
+                                              docs_widget,
+                                              ])
         elif method == "summary":
             s3.crud_strings["hrm_human_resource"]["title_list"] = T("Staff & Volunteers")
             filter_widgets = [
@@ -4927,7 +5035,7 @@ def hrm_human_resource_controller(extra_filter=None):
                 redirect(URL(c=c, f=f,
                              args=request.args,
                              vars=request.vars))
-            elif method == "delete":
+            elif method in ("delete", "profile"):
                 # Don't redirect
                 pass
             elif method == "deduplicate":
