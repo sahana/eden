@@ -67,9 +67,11 @@
     text-decoration: underline;
     margin-bottom: 3px;
 }
-
 .pt-chart {
     margin-top: 20px;
+}
+.pt-table {
+    overflow: auto;
 }
 .pt-table,
 .pt-table-contents {
