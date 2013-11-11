@@ -752,10 +752,11 @@ def deploy_rheader(r, tabs=[], profile=False):
                                                     prefix="header",
                                                     columns=columns)
                 title = "%s: %s" % (title, record.name)
-                data = render("location_id",
-                            "code",
-                            "created_on",
-                            "status")
+                data = render("event_type_id",
+                              "location_id",
+                              "code",
+                              "created_on",
+                              "status")
                 if profile:
                     crud_button = S3CRUD.crud_button
                     edit_btn = crud_button(current.T("Edit"),
