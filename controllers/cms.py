@@ -100,10 +100,10 @@ def post():
         if r.interactive:
             if r.method in ("create", "update"):
                 table = r.table
-                vars = request.get_vars
+                get_vars = request.get_vars
 
                 # Filter from a Profile page?"
-                series = vars.get("~.series_id$name", None)
+                series = get_vars.get("~.series_id$name", None)
                 if series:
                     # Lookup ID
                     stable = db.cms_series
@@ -116,13 +116,13 @@ def post():
                         field.readable = field.writable = False
 
                 # Context from a Profile page?"
-                location_id = vars.get("(location)", None)
+                location_id = get_vars.get("(location)", None)
                 if location_id:
                     field = table.location_id
                     field.default = location_id
                     field.readable = field.writable = False
 
-                page = vars.get("page", None)
+                page = get_vars.get("page", None)
                 if page:
                     table.name.default = page
                     table.name.readable = table.name.writable = False
@@ -134,14 +134,20 @@ def post():
                                    create_next = url,
                                    update_next = url)
 
-                _module = vars.get("module", None)
+                _module = get_vars.get("module", None)
                 if _module:
                     table.avatar.readable = table.avatar.writable = False
                     table.location_id.readable = table.location_id.writable = False
                     table.date.readable = table.date.writable = False
                     table.expired.readable = table.expired.writable = False
                     resource = request.get_vars.get("resource", None)
-                    if resource:
+                    if resource == "contact":
+                        # We're creating/updating text for a Contact page
+                        table.name.default = "Contact Page"
+                        #table.title.readable = table.title.writable = False
+                        table.replies.readable = table.replies.writable = False
+                        url = URL(c=_module, f=resource)
+                    elif resource:
                         # We're creating/updating text for a Resource Summary page
                         table.name.default = "%s Summary Page Header" % resource
                         table.title.readable = table.title.writable = False
@@ -159,7 +165,7 @@ def post():
                                    create_next = url,
                                    update_next = url)
 
-                layer_id = vars.get("layer_id", None)
+                layer_id = get_vars.get("layer_id", None)
                 if layer_id:
                     # Editing cms_post_layer
                     table.name.default = "Metadata Page for Layer %s" % layer_id

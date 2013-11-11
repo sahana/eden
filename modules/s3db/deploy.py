@@ -78,8 +78,6 @@ class S3DeploymentModel(S3Model):
         # ---------------------------------------------------------------------
         # Mission
         #
-        # @ToDo: Replace with event_event
-        #
         mission_status_opts = {
             1 : T("Closed"),
             2 : T("Open")
@@ -91,8 +89,13 @@ class S3DeploymentModel(S3Model):
                                    label = T("Name"),
                                    requires=IS_NOT_EMPTY(),
                                    ),
+                             # @ToDo: Link to location via link table
+                             # - country is very IFRC-specific
+                             # link table could be event_event_location for IFRC (would still allow 1 multi-country event to have multiple missions)
                              self.gis_country_id(),
+                             # @ToDo: Link to event_type via event_id link table instead of duplicating
                              self.event_type_id(label=T("Disaster Type")),
+                             # Is this an Event code or a Mission code?
                              Field("code",
                                    length = 24,
                                    represent = lambda v: s3_unicode(v) \

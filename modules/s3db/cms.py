@@ -540,7 +540,7 @@ def cms_rheader(r, tabs=[]):
     return rheader
 
 # =============================================================================
-def cms_index(module, alt_function=None):
+def cms_index(module, resource=None, page_name=None, alt_function=None):
     """
         Return a module index page retrieved from CMS
         - or run an alternate function if not found
@@ -549,8 +549,10 @@ def cms_index(module, alt_function=None):
     response = current.response
     settings = current.deployment_settings
 
-    module_name = settings.modules[module].name_nice
-    response.title = module_name
+    if not page_name:
+        page_name = settings.modules[module].name_nice
+
+    response.title = page_name
 
     item = None
     if settings.has_module("cms"):
@@ -559,9 +561,14 @@ def cms_index(module, alt_function=None):
         ltable = db.cms_post_module
         query = (ltable.module == module) & \
                 (ltable.post_id == table.id) & \
-                (table.deleted != True) & \
-                ((ltable.resource == None) | \
-                 (ltable.resource == "index"))
+                (table.deleted != True)
+
+        if resource is None:
+            query &= ((ltable.resource == None) | \
+                     (ltable.resource == "index"))
+        else:
+            query &= (ltable.resource == resource)
+
         _item = db(query).select(table.id,
                                  table.body,
                                  table.title,
@@ -571,6 +578,9 @@ def cms_index(module, alt_function=None):
         auth = current.auth
         ADMIN = auth.get_system_roles().ADMIN
         ADMIN = auth.s3_has_role(ADMIN)
+        get_vars = {"module": module}
+        if resource:
+            get_vars["resource"] = resource
         if _item:
             if _item.title:
                 response.title = _item.title
@@ -580,15 +590,15 @@ def cms_index(module, alt_function=None):
                            A(current.T("Edit"),
                              _href=URL(c="cms", f="post",
                                        args=[_item.id, "update"],
-                                       vars={"module": module}),
+                                       vars=get_vars),
                              _class="action-btn"))
             else:
                 item = XML(_item.body)
         elif ADMIN:
-            item = DIV(H2(module_name),
+            item = DIV(H2(page_name),
                        A(current.T("Edit"),
                          _href=URL(c="cms", f="post", args="create",
-                                   vars={"module": module}),
+                                   vars=get_vars),
                          _class="action-btn"))
 
     if not item:
@@ -620,15 +630,13 @@ def cms_index(module, alt_function=None):
             raise HTTP(response.status, page, **response.headers)
 
         else:
-            item = H2(module_name)
+            item = H2(page_name)
 
     # tbc
     report = ""
 
     response.view = "index.html"
     return dict(item=item, report=report)
-    
-    return None
 
 # =============================================================================
 class S3CMS(S3Method):
