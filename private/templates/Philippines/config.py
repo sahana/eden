@@ -99,14 +99,14 @@ settings.auth.realm_entity = drmp_realm_entity
 
 # -----------------------------------------------------------------------------
 # Pre-Populate
-settings.base.prepopulate = ["India"]
+settings.base.prepopulate = ["Philippines"]
 
-settings.base.system_name = T("India Disaster Risk Management Information System ")
+settings.base.system_name = T("Philippines Disaster Risk Management Information System ")
 settings.base.system_name_short = T("DRMIS")
 
 # -----------------------------------------------------------------------------
 # Theme (folder to use for views/layout.html)
-settings.base.theme = "India"
+settings.base.theme = "Philippines"
 settings.ui.formstyle_row = "bootstrap"
 settings.ui.formstyle = "bootstrap"
 #settings.gis.map_height = 600
@@ -115,12 +115,12 @@ settings.ui.formstyle = "bootstrap"
 # -----------------------------------------------------------------------------
 # L10n (Localization) settings
 settings.L10n.languages = OrderedDict([
-    ("en-gb", "English"),
+    ("en", "English"),
 ])
 # Default Language
-settings.L10n.default_language = "en-gb"
+settings.L10n.default_language = "en"
 # Default timezone for users
-settings.L10n.utc_offset = "UTC +0530"
+settings.L10n.utc_offset = "UTC +0700"
 # Unsortable 'pretty' date format
 settings.L10n.date_format = "%d %b %y"
 # Number formats (defaults to ISO 31-0)
@@ -136,7 +136,7 @@ settings.L10n.thousands_separator = ","
 #settings.L10n.translate_gis_location = True
 
 # Restrict the Location Selector to just certain countries
-settings.gis.countries = ["IN"]
+settings.gis.countries = ["PH"]
 
 # Until we add support to LocationSelector2 to set dropdowns from LatLons
 #settings.gis.check_within_parent_boundaries = False

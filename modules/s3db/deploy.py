@@ -623,7 +623,8 @@ class S3DeploymentAlertModel(S3Model):
         T = current.T
         record = r.record
         # Always redirect to the Mission Profile
-        next_url = URL(f="mission", args=[record.mission_id, "profile"])
+        mission_id = record.mission_id
+        next_url = URL(f="mission", args=[mission_id, "profile"])
 
         # Check whether the alert has already been sent
         # - alerts should be read-only after creation
@@ -647,9 +648,9 @@ class S3DeploymentAlertModel(S3Model):
 
         # Send Message
 
-        # Embed the alert_id to parse replies
+        # Embed the mission_id to parse replies
         # = @ToDo: Use a Message Template to add Footer (very simple one for RDRT)
-        message = "%s\nalert_id:%s:" % (record.body, alert_id)
+        message = "%s\n:mission_id:%s:" % (record.body, mission_id)
 
         # Lookup from_address
         # @ToDo: Allow multiple channels to be defined &
