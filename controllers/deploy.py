@@ -285,10 +285,25 @@ def email_inbox():
 
     tablename = "msg_email"
     table = s3db.msg_email
-    s3.filter = (table.inbound == True)
     table.inbound.readable = False
     table.channel_id.readable = False
     table.to_address.readable = False
+
+    s3db.add_component("deploy_response",
+                       msg_email="message_id")
+
+    from s3.s3resource import S3FieldSelector
+    s3.filter = (S3FieldSelector("response.id") == None) & \
+                (S3FieldSelector("inbound") == True)
+
+    s3db.configure(tablename,
+                   insertable=False,
+                   editable=False)
+
+    s3db.set_method("msg", "email",
+                    method="link",
+                    action=link_response
+                    )
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
@@ -300,15 +315,6 @@ def email_inbox():
         msg_record_deleted = T("Message deleted"),
         msg_list_empty = T("No Messages currently in InBox")
     )
-
-    s3db.configure(tablename,
-                   insertable=False,
-                   editable=False)
-
-    s3db.set_method("msg", "email",
-                    method="link",
-                    action=link_response
-                    )
 
     def postp(r, output):
         if r.interactive:

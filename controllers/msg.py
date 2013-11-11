@@ -1478,23 +1478,23 @@ def parser():
             import inspect
             import sys
 
-            parser = settings.get_msg_parser()
+            template = settings.get_msg_parser()
             module_name = "applications.%s.private.templates.%s.parser" % \
-                (appname, parser)
+                (appname, template)
             __import__(module_name)
             mymodule = sys.modules[module_name]
-            S3Parsing = mymodule.S3Parsing()
+            S3Parser = mymodule.S3Parser()
 
-            # Dynamic lookup of the parsing functions in S3Parsing class.
-            parsers = inspect.getmembers(S3Parsing, \
+            # Dynamic lookup of the parsing functions in S3Parser class.
+            parsers = inspect.getmembers(S3Parser, \
                                          predicate=inspect.isfunction)
             parse_opts = []
             pappend = parse_opts.append
-            for parser in parsers:
-                parser = parser[0]
+            for p in parsers:
+                p = p[0]
                 # Filter out helper functions
-                if not parser.startswith("_"):
-                    pappend(parser)
+                if not p.startswith("_"):
+                    pappend(p)
 
             table = r.table
             table.channel_id.requires = IS_ONE_OF(db, "msg_channel.channel_id",

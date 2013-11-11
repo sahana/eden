@@ -258,6 +258,9 @@ class S3DeploymentModel(S3Model):
         add_component("deploy_alert",
                       deploy_mission="mission_id")
 
+        add_component("deploy_response",
+                      deploy_mission="mission_id")
+
         # CRUD Strings
         crud_strings[tablename] = Storage(
             title_create = T("New Mission"),

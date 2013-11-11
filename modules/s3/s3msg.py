@@ -1004,7 +1004,7 @@ class S3Msg(object):
     # Twitter
     # -------------------------------------------------------------------------
     @staticmethod
-    def sanitise_twitter_account(account):
+    def _sanitise_twitter_account(account):
         """
             Only keep characters that are legal for a twitter account:
             letters, digits, and _
@@ -1014,10 +1014,10 @@ class S3Msg(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def break_to_chunks(text,
-                        chunk_size=TWITTER_MAX_CHARS,
-                        suffix = TWITTER_HAS_NEXT_SUFFIX,
-                        prefix = TWITTER_HAS_PREV_PREFIX):
+    def _break_to_chunks(text,
+                         chunk_size=TWITTER_MAX_CHARS,
+                         suffix = TWITTER_HAS_NEXT_SUFFIX,
+                         prefix = TWITTER_HAS_PREV_PREFIX):
         """
             Breaks text to <=chunk_size long chunks. Tries to do this at a space.
             All chunks, except for last, end with suffix.
@@ -1121,13 +1121,13 @@ class S3Msg(object):
             return False
 
         if recipient:
-            recipient = self.sanitise_twitter_account(recipient)
+            recipient = self._sanitise_twitter_account(recipient)
             try:
                 can_dm = twitter_api.exists_friendship(recipient, twitter_account)
             except tweepy.TweepError: # recipient not found
                 return False
             if can_dm:
-                chunks = self.break_to_chunks(text, TWITTER_MAX_CHARS)
+                chunks = self._break_to_chunks(text, TWITTER_MAX_CHARS)
                 for c in chunks:
                     try:
                         # Note: send_direct_message() requires explicit kwargs (at least in tweepy 1.5)
@@ -1159,15 +1159,15 @@ class S3Msg(object):
                         s3_debug("Unable to Tweet DM")
             else:
                 prefix = "@%s " % recipient
-                chunks = self.break_to_chunks(text,
-                                              TWITTER_MAX_CHARS - len(prefix))
+                chunks = self._break_to_chunks(text,
+                                               TWITTER_MAX_CHARS - len(prefix))
                 for c in chunks:
                     try:
                         twitter_api.update_status(prefix + c)
                     except tweepy.TweepError:
                         s3_debug("Unable to Tweet @mention")
         else:
-            chunks = self.break_to_chunks(text, TWITTER_MAX_CHARS)
+            chunks = self._break_to_chunks(text, TWITTER_MAX_CHARS)
             for c in chunks:
                 try:
                     twitter_api.update_status(c)

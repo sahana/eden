@@ -234,6 +234,11 @@ settings.search.filter_manager = False
 # Old S3Search
 settings.search.save_widget = False
 
+# -----------------------------------------------------------------------------
+# Messaging
+# Parser
+settings.msg.parser = "IFRC"
+
 # =============================================================================
 # Module Settings
 
