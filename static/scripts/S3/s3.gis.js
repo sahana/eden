@@ -3192,7 +3192,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         // Unselect the associated feature
         if (this.feature) {
             delete this.feature.popup;
-            map.popupControl.unselect(this.feature);
+            map.s3.popupControl.unselect(this.feature);
         }
         // Close ALL popups
         // inc orphaned Popups (e.g. from Refresh)
@@ -5263,7 +5263,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
 
         if (style_array) {
-            // Style Features according to rules in JSON style (currently Shapefile or Theme Layer)
+            // Style Features according to rules in JSON style (currently Feature, Shapefile or Theme Layer)
             // Needs to be uniquely instantiated
             var rules = [];
             var prop, filter, rule, symbolizer, title, value,

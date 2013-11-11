@@ -1048,7 +1048,7 @@ class S3XML(S3Codec):
 
                 if attributes and tablename in attributes:
                     _attr = ""
-                    attrs = attributes[tablename][id]
+                    attrs = attributes[tablename].get(id, [])
                     for a in attrs:
                         if _attr:
                             _attr = "%s,[%s]=[%s]" % (_attr, a, attrs[a])

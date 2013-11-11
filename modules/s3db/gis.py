@@ -287,7 +287,7 @@ class S3LocationModel(S3Model):
                                                 filterby = "level",
                                                 filter_opts = ["L0"],
                                                 sort=True))
-        country_id = S3ReusableField("country_id", table,
+        country_id = S3ReusableField("location_id", table,
                                      sortby = "name",
                                      label = messages.COUNTRY,
                                      requires = country_requires,
@@ -1280,7 +1280,7 @@ class S3LocationHierarchyModel(S3Model):
 
         tablename = "gis_hierarchy"
         table = self.define_table(tablename,
-                                  self.gis_country_id("location_id"),
+                                  self.gis_country_id(),
                                   Field("L1", default = "State / Province"),
                                   Field("L2", default = "County / District"),
                                   Field("L3", default = "City / Town / Village"),

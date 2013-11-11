@@ -78,6 +78,8 @@ class S3DeploymentModel(S3Model):
         # ---------------------------------------------------------------------
         # Mission
         #
+        # @ToDo: Replace with event_event
+        #
         mission_status_opts = {
             1 : T("Closed"),
             2 : T("Open")
@@ -89,16 +91,8 @@ class S3DeploymentModel(S3Model):
                                    label = T("Name"),
                                    requires=IS_NOT_EMPTY(),
                                    ),
-                             self.gis_location_id(
-                                label = T("Country"),
-                                widget = S3LocationAutocompleteWidget(level="L0"),
-                                requires = IS_EMPTY_OR(IS_LOCATION(level="L0")),
-                                represent = self.gis_LocationRepresent(sep=", "),
-                                comment = DIV(_class="tooltip",
-                                              _title="%s|%s" % (T("Country"),
-                                                                T("Enter some characters to bring up a list of possible matches"))),
-                                ),
-                             self.event_type_id(),
+                             self.gis_country_id(),
+                             self.event_type_id(label=T("Disaster Type")),
                              Field("code",
                                    length = 24,
                                    represent = lambda v: s3_unicode(v) \
@@ -243,6 +237,9 @@ class S3DeploymentModel(S3Model):
                                        widget="multiselect",
                                        levels=["L0"],
                                        hidden=True),
+                      S3OptionsFilter("event_type_id",
+                                      widget="multiselect",
+                                      hidden=True),
                       S3OptionsFilter("status",
                                       options=mission_status_opts,
                                       hidden=True),

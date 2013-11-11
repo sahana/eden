@@ -8006,25 +8006,38 @@ class S3Map(S3Method):
             widget_id = "default_map"
 
         gis = current.gis
+        s3db = current.s3db
         tablename = self.tablename
+        prefix, name = tablename.split("_", 1)
+        ftable = s3db.gis_layer_feature
+        query = (ftable.controller == prefix) & \
+                (ftable.function == name)
+        layers = current.db(query).select(ftable.layer_id,
+                                          ftable.style_default,
+                                          )
+        if len(layers) > 1:
+            layers.exclude(lambda row: row.style_default == False)
+        if len(layers) == 1:
+            layer_id = layers.first().layer_id
+        else:
+            layer_id = None
 
-        marker_fn = current.s3db.get_config(tablename, "marker_fn")
+        marker_fn = s3db.get_config(tablename, "marker_fn")
         if marker_fn:
             # Per-feature markers added in get_location_data()
             marker = None
         else:
             # Single Marker for the layer
-            request = self.request
-            marker = gis.get_marker(request.controller,
-                                    request.function)
+            marker = gis.get_marker(prefix, name)
 
         url = URL(extension="geojson", args=None)
 
         # @ToDo: Support maps with multiple layers (Dashboards)
-        #layer_id = "search_results_%s" % widget_id
-        layer_id = "search_results"
+        #id = "search_results_%s" % widget_id
+        id = "search_results"
         feature_resources = [{"name"      : current.T("Search Results"),
-                              "id"        : layer_id,
+                              "id"        : id,
+                              "layer_id"  : layer_id,
                               "tablename" : tablename,
                               "url"       : url,
                               # We activate in callback after ensuring URL is updated for current filter status
