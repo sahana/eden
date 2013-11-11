@@ -254,15 +254,16 @@ def _newsfeed():
 
     s3.dl_pagelength = 6  # 5 forces an AJAX call
 
-    if "datalist_dl_post" in request.args:
+    old_args = request.args
+    if "datalist_dl_post" in old_args:
         # DataList pagination or Ajax-deletion request
         request.args = ["datalist_f"]
         ajax = "list"
-    elif "datalist_dl_filter" in request.args:
+    elif "datalist_dl_filter" in old_args:
         # FilterForm options update request
         request.args = ["filter"]
         ajax = "filter"
-    elif "validate.json" in request.args:
+    elif "validate.json" in old_args:
         # Inline component validation request
         request.args = []
         ajax = True
@@ -289,6 +290,8 @@ def _newsfeed():
                                      filter_ajax_url = URL(f="index",
                                                            args="datalist_dl_filter",
                                                            vars={}))
+
+    request.args = old_args
 
     if ajax == "list":
         # Don't override view if this is an Ajax-deletion request

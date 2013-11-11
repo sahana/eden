@@ -116,12 +116,12 @@
       <ul class='dropdown-menu'>
        {{get_vars = request.get_vars}}
        {{language = response.s3.language}}
-       {{icon = {"en":"icon-check"}.get(language,"icon-check-empty")}}
-       {{get_vars["_language"] = "en"}} 
-       <li><a href='{{=URL(args=request.args, vars=get_vars)}}'><i class='{{=icon}}'></i> English</a></li>
-       {{icon = {"es":"icon-check"}.get(language,"icon-check-empty")}}
-       {{get_vars["_language"] = "es"}}
-       <li><a href='{{=URL(args=request.args, vars=get_vars)}}'><i class='{{=icon}}'></i> Español</a></li>
+       {{icon = {"en":"icon-check"}.get(language, "icon-check-empty")}}
+       {{lang_vars = dict(_language="en")}}{{for var in get_vars:}}{{if var != "_language":}}{{lang_vars[var] = get_vars[var]}}{{pass}}{{pass}}
+       <li><a href='{{=URL(args=request.args, vars=lang_vars)}}'><i class='{{=icon}}'></i> English</a></li>
+       {{icon = {"es":"icon-check"}.get(language, "icon-check-empty")}}
+       {{lang_vars = dict(_language="es")}}{{for var in get_vars:}}{{if var != "_language":}}{{lang_vars[var] = get_vars[var]}}{{pass}}{{pass}}
+       <li><a href='{{=URL(args=request.args, vars=lang_vars)}}'><i class='{{=icon}}'></i> Español</a></li>
       </ul>
      </li>
      <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-question-sign'></i><b class='caret'></b></a>
