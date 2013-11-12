@@ -2020,6 +2020,7 @@ class S3RequestSummaryModel(S3Model):
         configure(tablename,
                   context = {"location": "site_id$organisation_id",
                              "organisation": "organisation_id",
+                             "site": "site_id",
                              },
                   )
 

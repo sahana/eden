@@ -833,6 +833,7 @@ class S3HRModel(S3Model):
                   #update_next = hrm_url,
                   context = {"location": "site_id$location_id",
                              "organisation": "organisation_id",
+                             "site": "site_id",
                              },
                   realm_components = ["presence"],
                   update_realm = True,

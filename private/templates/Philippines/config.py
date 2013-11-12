@@ -19,7 +19,7 @@ from s3.s3resource import S3FieldSelector
 from s3.s3utils import S3DateTime, s3_auth_user_represent_name, s3_avatar_represent, s3_unicode
 from s3.s3validators import IS_INT_AMOUNT, IS_LOCATION_SELECTOR2, IS_ONE_OF
 from s3.s3widgets import S3LocationSelectorWidget2
-from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
+from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
 
 T = current.T
 s3 = current.response.s3
@@ -72,8 +72,8 @@ settings.auth.person_realm_human_resource_site_then_org = False
 # Pre-Populate
 settings.base.prepopulate = ["Philippines"]
 
-settings.base.system_name = T("Philippines Disaster Risk Management Information System ")
-settings.base.system_name_short = T("DRMIS")
+settings.base.system_name = T("Sahana")
+settings.base.system_name_short = T("Sahana")
 
 # -----------------------------------------------------------------------------
 # Theme (folder to use for views/layout.html)
@@ -1251,11 +1251,11 @@ def customize_org_facility_fields():
                    ]
 
     crud_form = S3SQLCustomForm("name",
-                                S3SQLInlineComponentCheckbox(
+                                S3SQLInlineComponentMultiSelectWidget(
                                     "facility_type",
                                     label = T("Facility Type"),
                                     field = "facility_type_id",
-                                    cols = 2,
+                                    widget = "multiselect",
                                 ),
                                 "organisation_id",
                                 "location_id",
@@ -1294,21 +1294,90 @@ def customize_org_facility(**attr):
             if not result:
                 return False
 
-        customize_org_facility_fields()
-        if r.method == "datalist":
-            s3db.configure("org_facility",
-                           # Don't include a Create form in 'More' popups
-                           listadd = False,
-                           list_layout = render_sites,
-                           )
+        if r.interactive:
+            customize_org_facility_fields()
+            if r.method == "datalist":
+                # Lx selection page
+                # 2-column datalist, 6 rows per page
+                s3.dl_pagelength = 12
+                s3.dl_rowsize = 2
 
-        elif r.interactive or r.representation == "aadata":
+                get_vars = current.request.get_vars
+                goods = get_vars.get("needs.goods", None)
+                vol = get_vars.get("needs.vol", None)
+                if goods:
+                    s3.crud_strings["org_facility"].title_list = T("Sites where you can Drop-off Goods")
+                elif vol:
+                    s3.crud_strings["org_facility"].title_list = T("Sites where you can Volunteer your time")
+
+                s3db.configure("org_facility",
+                               # Don't include a Create form in 'More' popups
+                               listadd = False,
+                               list_layout = render_sites,
+                               )
+
+            elif r.method == "profile":
+                # Customise tables used by widgets
+                #customize_cms_post_fields()
+
+                list_fields = ["name",
+                               "id",
+                               ]
+
+                record = r.record
+                record_id = record.id
+                # @ToDo: Add this Site on the Map
+                map_widget = dict(label = "Map",
+                                  type = "map",
+                                  context = "site",
+                                  icon = "icon-map",
+                                  height = 383,
+                                  width = 568,
+                                  )
+                contacts_widget = dict(label = "Contacts",
+                                       title_create = "Add New Contact",
+                                       type = "datalist",
+                                       tablename = "hrm_human_resource",
+                                       context = "site",
+                                       create_controller = "pr",
+                                       create_function = "person",
+                                       icon = "icon-contact",
+                                       show_on_map = False, # Since they will show within Offices
+                                       list_layout = render_contacts,
+                                       )
+                needs_widget = dict(label = "Needs",
+                                    title_create = "Add New Need",
+                                    type = "datalist",
+                                    tablename = "req_site_needs",
+                                    context = "site",
+                                    icon = "icon-hand-up",
+                                    multiple = False,
+                                    #layer = "Facilities",
+                                    #list_layout = render_needs,
+                                    )
+
+                name = record.name
+                s3db.configure("org_facility",
+                               list_fields = list_fields,
+                               profile_title = "%s : %s" % (s3.crud_strings["org_facility"].title_list, 
+                                                            name),
+                               profile_header = DIV(H2(name),
+                                                    _class="profile_header",
+                                                    ),
+                               profile_widgets = [needs_widget,
+                                                  map_widget,
+                                                  contacts_widget,
+                                                  ],
+                               )
+
+        if r.interactive or r.representation == "aadata":
             # Configure fields
             table.code.readable = table.code.writable = False
             table.phone1.readable = table.phone1.writable = False
             table.phone2.readable = table.phone2.writable = False
             table.email.readable = table.email.writable = False
             location_field = table.location_id
+            
 
             # Filter from a Profile page?
             # If so, then default the fields we know
@@ -1325,9 +1394,8 @@ def customize_org_facility(**attr):
             else:
                 # Don't add new Locations here
                 location_field.comment = None
-                # L1s only
-                location_field.requires = IS_LOCATION_SELECTOR2(levels=("L0", "L1"))
-                location_field.widget = S3LocationSelectorWidget2(levels=("L0", "L1"),
+                location_field.requires = IS_LOCATION_SELECTOR2(levels=("L1", "L2", "L3", "L4"))
+                location_field.widget = S3LocationSelectorWidget2(levels=("L1", "L2", "L3", "L4"),
                                                                   show_address=True,
                                                                   show_map=False)
             s3.cancel = True
@@ -1339,6 +1407,18 @@ def customize_org_facility(**attr):
     standard_postp = s3.postp
     def custom_postp(r, output):
         if r.interactive:
+            if isinstance(output, dict) and \
+                current.auth.s3_has_permission("create", r.table):
+                # Insert a Button to Create New in Modal
+                output["showadd_btn"] = A(I(_class="icon icon-plus-sign big-add"),
+                                          _href=URL(c="org", f="facility",
+                                                    args=["create.popup"],
+                                                    vars={"refresh": "datalist"}),
+                                          _class="btn btn-primary s3_modal",
+                                          _role="button",
+                                          _title=T("Add New Site"),
+                                          )
+
             actions = [dict(label=str(T("Open")),
                             _class="action-btn",
                             url=URL(c="org", f="facility",
@@ -1519,6 +1599,14 @@ def customize_org_organisation(**attr):
                 #s3.dl_rowsize = 2
 
                 # Needs page
+                get_vars = current.request.get_vars
+                money = get_vars.get("needs.money", None)
+                vol = get_vars.get("needs.vol", None)
+                if money:
+                    s3.crud_strings["org_organisation"].title_list = T("Organizations soliciting Money")
+                elif vol:
+                    s3.crud_strings["org_organisation"].title_list = T("Organizations with remote Volunteer opportunities")
+
                 ntable = s3db.req_organisation_needs
                 from s3.s3filter import S3OptionsFilter
                 filter_widgets = [S3OptionsFilter("needs.money",
@@ -1851,7 +1939,6 @@ def customize_pr_person(**attr):
                     field.readable = field.writable = False
                     hr_fields.remove("organisation_id")
 
-            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
             s3_sql_custom_fields = [
                     "first_name",
                     #"middle_name",

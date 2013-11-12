@@ -1710,14 +1710,18 @@ def organisation_needs():
         RESTful CRUD Controller for Organisation Needs
     """
 
-    # Filter from a Profile page?
-    # If so, then default the fields we know
-    organisation_id = request.get_vars.get("~.(organisation)", None)
-    if organisation_id:
-        field = s3db.req_organisation_needs.organisation_id
-        field.default = organisation_id
-        field.readable = False
-        field.writable = False
+    def prep(r):
+        if r.interactive and r.method == "create":
+            # Filter from a Profile page?
+            # If so, then default the fields we know
+            organisation_id = request.get_vars.get("~.(organisation)", None)
+            if organisation_id:
+                field = s3db.req_organisation_needs.organisation_id
+                field.default = organisation_id
+                field.readable = False
+                field.writable = False
+        return True
+    s3.prep = prep
 
     return s3_rest_controller()
 
@@ -1734,6 +1738,20 @@ def site_needs():
     """
         RESTful CRUD Controller for Site Needs
     """
+
+    def prep(r):
+        if r.interactive and r.method == "create":
+            # Filter from a Profile page?
+            # If so, then default the fields we know
+            site_id = request.get_vars.get("~.(site)", None)
+            if site_id:
+                field = s3db.req_site_needs.site_id
+                field.default = site_id
+                field.readable = False
+                field.writable = False
+
+        return True
+    s3.prep = prep
 
     return s3_rest_controller()
 

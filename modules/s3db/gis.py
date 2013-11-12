@@ -291,6 +291,7 @@ class S3LocationModel(S3Model):
                                      sortby = "name",
                                      label = messages.COUNTRY,
                                      requires = country_requires,
+                                     widget = S3SelectChosenWidget(),
                                      represent = self.gis_country_represent,
                                      ondelete = "RESTRICT")
 
