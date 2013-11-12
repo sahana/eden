@@ -4817,7 +4817,7 @@ def hrm_human_resource_controller(extra_filter=None):
             pe_id = person.pe_id
             comments = r.table.organisation_id.represent(record.organisation_id)
             if record.job_title_id:
-                comments = "%s, %s" % (r.table.job_title_id_id.represent(record.job_title_id), comments)
+                comments = "%s, %s" % (r.table.job_title_id.represent(record.job_title_id), comments)
             #ctable = s3db.pr_contact
             #ctable.contact_method.readable = False
             #ctable.priority.readable = False
