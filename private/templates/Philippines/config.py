@@ -678,18 +678,21 @@ def render_sites(listid, resource, rfields, record, **attr):
 
     raw = record._row
     name = record["org_facility.name"]
+    site_id = raw["org_facility.id"]
     author = record["org_facility.modified_by"]
     date = record["org_facility.modified_on"]
     organisation = record["org_facility.organisation_id"]
     organisation_id = raw["org_facility.organisation_id"]
     location = record["org_facility.location_id"]
-    location_id = raw["org_facility.location_id"]
-    location_url = URL(c="gis", f="location",
-                       args=[location_id, "profile"])
+    #location_id = raw["org_facility.location_id"]
+    #location_url = URL(c="gis", f="location",
+    #                   args=[location_id, "profile"])
     address = raw["gis_location.addr_street"]
+    phone = raw["org_facility.phone1"] or ""
     facility_type = record["org_site_facility_type.facility_type_id"]
     logo = raw["org_organisation.logo"]
 
+    site_url = URL(c="org", f="facility", args=[site_id, "profile"])
     org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
     if logo:
         logo = A(IMG(_src=URL(c="default", f="download", args=[logo]),
@@ -734,10 +737,15 @@ def render_sites(listid, resource, rfields, record, **attr):
 
     # Render the item
     avatar = logo
-    body = TAG[""](P(name),
-                   P(I(_class="icon-flag"),
+    body = TAG[""](P(I(_class="icon-flag"),
                      " ",
                      SPAN(facility_type),
+                     " ",
+                     _class="main_contact_ph",
+                     ),
+                   P(I(_class="icon-phone"),
+                     " ",
+                     SPAN(phone),
                      " ",
                      _class="main_contact_ph",
                      ),
@@ -747,10 +755,15 @@ def render_sites(listid, resource, rfields, record, **attr):
                      _class="main_office-add",
                      ))
 
-    item = DIV(DIV(SPAN(" ", _class="card-title"),
-                   SPAN(A(location,
-                          _href=location_url,
+    item = DIV(DIV(SPAN(A(name,
+                          _href=site_url,
                           ),
+                        _class="card-title",
+                        ),
+                   SPAN(#A(location,
+                        #  _href=location_url,
+                        #  ),
+                        location,
                         _class="location-title",
                         ),
                    SPAN(date,
@@ -1077,7 +1090,7 @@ def render_site_needs(listid, resource, rfields, record, **attr):
                           _class="main_contact_ph",
                           )
     else:
-        money_details = ""
+        goods_details = ""
     time = raw["req_site_needs.vol"]
     if time:
         time_details = record["req_site_needs.vol_details"]
@@ -1524,6 +1537,7 @@ def customize_org_facility_fields():
                    "modified_by",
                    "modified_on",
                    "organisation_id$logo",
+                   "phone1",
                    ]
 
     crud_form = S3SQLCustomForm("name",
@@ -1594,7 +1608,7 @@ def customize_org_facility(**attr):
 
             elif r.method == "profile":
                 # Customise tables used by widgets
-                #customize_cms_post_fields()
+                customize_site_needs_fields(profile=True)
 
                 list_fields = ["name",
                                "id",
@@ -1640,11 +1654,30 @@ def customize_org_facility(**attr):
                 else:
                     edit_btn = ""
                 name = record.name
+                location = table.location_id.represent(record.location_id)
+                db = current.db
+                otable = db.org_organisation
+                query = (otable.id == record.organisation_id)
+                org = db(query).select(otable.name,
+                                       otable.logo,
+                                       limitby=(0, 1)).first()
+                if org.logo:
+                    logo = URL(c="default", f="download", args=[org.logo])
+                else:
+                    logo = ""
                 s3db.configure("org_facility",
                                list_fields = list_fields,
                                profile_title = "%s : %s" % (s3.crud_strings["org_facility"].title_list, 
                                                             name),
-                               profile_header = DIV(H2(name),
+                               profile_header = DIV(A(IMG(_class="media-object",
+                                                          _src=logo,
+                                                          ),
+                                                      _class="pull-left",
+                                                      #_href=org_url,
+                                                      ),
+                                                    H2(name),
+                                                    P(org.name),
+                                                    P(location),
                                                     edit_btn,
                                                     _class="profile_header",
                                                     ),
@@ -1768,7 +1801,7 @@ def customize_org_facility(**attr):
 settings.ui.customize_org_facility = customize_org_facility
 
 # -----------------------------------------------------------------------------
-def customize_org_needs_fields(profile=True):
+def customize_org_needs_fields(profile=False):
 
     s3db = current.s3db
     table = s3db.req_organisation_needs
@@ -1788,7 +1821,7 @@ def customize_org_needs_fields(profile=True):
                    "modified_on",
                    "modified_by",
                    ]
-    if profile:
+    if not profile:
         list_fields += ["organisation_id$name",
                         ]
 
@@ -1796,6 +1829,8 @@ def customize_org_needs_fields(profile=True):
                    list_fields=list_fields,
                    )
     return
+
+s3.customize_org_needs_fields = customize_org_needs_fields
 
 # -----------------------------------------------------------------------------
 def customize_org_organisation(**attr):
@@ -1995,6 +2030,43 @@ def customize_org_organisation(**attr):
     return attr
 
 settings.ui.customize_org_organisation = customize_org_organisation
+
+# -----------------------------------------------------------------------------
+def customize_site_needs_fields(profile=False):
+
+    s3db = current.s3db
+    table = s3db.req_site_needs
+    table.modified_by.represent = s3_auth_user_represent_name
+    table.modified_on.represent = datetime_represent
+
+    list_fields = ["id",
+                   "organisation_id$id",
+                   # @ToDo: Are these better displayed elsewhere in Profile view?
+                   "organisation_id$name",
+                   "organisation_id$logo",
+                   "organisation_id$website",
+                   "location_id$L1",
+                   "location_id$L2",
+                   "location_id$L3",
+                   "location_id$L4",
+                   "location_id$addr_street",
+                   "phone1",
+                   "goods",
+                   "goods_details",
+                   "vol",
+                   "vol_details",
+                   "modified_on",
+                   "modified_by",
+                   ]
+    if not profile:
+        list_fields += ["site_id$name"]
+
+    s3db.configure("req_site_needs",
+                   list_fields=list_fields,
+                   )
+    return
+
+s3.customize_site_needs_fields = customize_site_needs_fields
 
 # -----------------------------------------------------------------------------
 def customize_org_resource_fields(method):

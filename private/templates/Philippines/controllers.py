@@ -27,21 +27,13 @@ class index(S3CustomController):
         from s3.s3resource import S3FieldSelector
         s3db = current.s3db
         # Organisations
+        s3.customize_org_needs_fields()
         layout = s3.render_org_needs # defined in config.py
-        layout = None
         listid = "org_reqs"
         limit = 4
-        list_fields = ["organisation_id",
-                       "organisation_id$logo",
-                       "organisation_id$phone",
-                       "organisation_id$website",
-                       "created_on",
-                       "created_by",
-                       "money",
-                       "money_details",
-                       "vol",
-                       "vol_details",
-                       ]
+        list_fields = s3db.get_config("req_organisation_needs",
+                                      "list_fields")
+
 
         resource = s3db.resource("req_organisation_needs")
         # Order with most recent first
@@ -49,20 +41,12 @@ class index(S3CustomController):
         output["org_reqs"] = latest_records(resource, layout, listid, limit, list_fields, orderby)
 
         # Sites
+        s3.customize_site_needs_fields()
         layout = s3.render_site_needs # defined in config.py
-        layout = None
         listid = "site_reqs"
         limit = 4
-        list_fields = ["organisation_id",
-                       "site_id",
-                       "site_id$location_id",
-                       "created_on",
-                       "created_by",
-                       "goods",
-                       "goods_details",
-                       "vol",
-                       "vol_details",
-                       ]
+        list_fields = s3db.get_config("req_site_needs",
+                                      "list_fields")
 
         resource = s3db.resource("req_site_needs")
         # Order with most recent first
