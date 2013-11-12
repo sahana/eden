@@ -704,7 +704,7 @@ def render_sites(listid, resource, rfields, record, **attr):
 
     # Edit Bar
     permit = current.auth.s3_has_permission
-    table = current.db.org_office
+    table = current.db.org_facility
     if permit("update", table, record_id=record_id):
         vars = {"refresh": listid,
                 "record": record_id,
@@ -713,11 +713,11 @@ def render_sites(listid, resource, rfields, record, **attr):
         if f == "organisation" and organisation_id:
             vars["(organisation)"] = organisation_id
         edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="org", f="office",
+                     _href=URL(c="org", f="facility",
                                args=[record_id, "update.popup"],
                                vars=vars),
                      _class="s3_modal",
-                     _title=current.response.s3.crud_strings.org_office.title_update,
+                     _title=current.response.s3.crud_strings.org_facility.title_update,
                      )
     else:
         edit_btn = ""
@@ -1250,7 +1250,28 @@ def customize_org_facility_fields():
                    "organisation_id$logo",
                    ]
 
+    crud_form = S3SQLCustomForm("name",
+                                S3SQLInlineComponentCheckbox(
+                                    "facility_type",
+                                    label = T("Facility Type"),
+                                    field = "facility_type_id",
+                                    cols = 2,
+                                ),
+                                "organisation_id",
+                                "location_id",
+                                "opening_times",
+                                "contact",
+                                "website",
+                                S3SQLInlineComponent(
+                                    "needs",
+                                    label = T("Needs"),
+                                    multiple = False,
+                                ),
+                                "comments",
+    )
+
     s3db.configure("org_facility",
+                   crud_form = crud_form,
                    list_fields = list_fields,
                    )
 
@@ -1273,8 +1294,8 @@ def customize_org_facility(**attr):
             if not result:
                 return False
 
+        customize_org_facility_fields()
         if r.method == "datalist":
-            customize_org_facility_fields()
             s3db.configure("org_facility",
                            # Don't include a Create form in 'More' popups
                            listadd = False,
