@@ -1258,7 +1258,8 @@ class S3OptionsFilter(S3FilterWidget):
 
         # Find the options
         opt_keys = []
-        
+
+        multiple = ftype[:5] == "list:"
         if opts.options is not None:
             # Custom dict of options {value: label} or a callable
             # returning such a dict:
@@ -1274,7 +1275,6 @@ class S3OptionsFilter(S3FilterWidget):
                 opt_keys = (True, False)
 
             elif field or rfield.virtual:
-                multiple = ftype[:5] == "list:"
                 groupby = field if field and not multiple else None
                 virtual = field is None
                 rows = resource.select([selector],
