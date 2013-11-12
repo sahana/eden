@@ -1599,7 +1599,7 @@ def customize_org_facility(**attr):
     s3 = current.response.s3
     s3db = current.s3db
     table = s3db.org_facility
-    
+
     # Custom PreP
     standard_prep = s3.prep
     def custom_prep(r):
@@ -1617,18 +1617,59 @@ def customize_org_facility(**attr):
                 s3.dl_pagelength = 12
                 s3.dl_rowsize = 2
 
+                from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
+                filter_widgets = [
+                    S3LocationFilter("location_id",
+                                     levels=["L1", "L2", "L3", "L4"],
+                                     widget="multiselect",
+                                     hidden=True,
+                                    ),
+                    S3OptionsFilter(
+                        name="facility_search_type",
+                        label=T("Type"),
+                        field="site_facility_type.facility_type_id",
+                        widget="multiselect",
+                        hidden=True,
+                    ),
+                ]
+                    
                 get_vars = current.request.get_vars
                 goods = get_vars.get("needs.goods", None)
                 vol = get_vars.get("needs.vol", None)
                 if goods:
+                    needs_fields = ["needs.goods_details"]
                     s3.crud_strings["org_facility"].title_list = T("Sites where you can Drop-off Goods")
                 elif vol:
+                    needs_fields = ["needs.vol_details"]
                     s3.crud_strings["org_facility"].title_list = T("Sites where you can Volunteer your time")
+                else:
+                    yesno = {True: T("Yes"), False: T("No")}
+                    needs_fields = ["needs.goods_details", "needs.vol_details"]
+                    filter_widgets.insert(0, S3OptionsFilter("needs.goods",
+                                                             label = T("Drop-off Goods"),
+                                                             options = yesno,
+                                                             multiple=False,
+                                                             widget="groupedopts",
+                                                             hidden=True,
+                                                            ))
+                    filter_widgets.insert(1, S3OptionsFilter("needs.vol",
+                                                             label = T("Volunteer Time"),
+                                                             options = yesno,
+                                                             multiple=False,
+                                                             widget="groupedopts",
+                                                             hidden=True,
+                                                            ))
+
+                filter_widgets.insert(0, S3TextFilter(["name",
+                                                       "comments",
+                                                      ] + needs_fields,
+                                                      label = T("Search")))
 
                 s3db.configure("org_facility",
                                # Don't include a Create form in 'More' popups
                                listadd = False,
                                list_layout = render_sites,
+                               filter_widgets = filter_widgets,
                                )
 
             elif r.method == "profile":
@@ -1821,6 +1862,7 @@ def customize_org_facility(**attr):
         return output
     s3.postp = custom_postp
 
+    attr["hide_filter"] = False
     return attr
 
 settings.ui.customize_org_facility = customize_org_facility

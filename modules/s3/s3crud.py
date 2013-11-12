@@ -119,12 +119,14 @@ class S3CRUD(S3Method):
         elif method in ("datatable", "datatable_f"):
             _attr = Storage(attr)
             _attr["list_type"] = "datatable"
-            self.hide_filter = method == "datatable"
+            if method == "datatable_f":
+                self.hide_filter = False
             output = self.select(r, **_attr)
         elif method in ("datalist", "datalist_f"):
             _attr = Storage(attr)
             _attr["list_type"] = "datalist"
-            self.hide_filter = method == "datalist"
+            if method == "datalist_f":
+                self.hide_filter = False
             output = self.select(r, **_attr)
             
         elif method == "validate":

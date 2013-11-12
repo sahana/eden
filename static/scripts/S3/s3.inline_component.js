@@ -333,6 +333,9 @@ $(function() {
                               .attr('name', name)
                               .css({display: ''});
                     }
+                } else
+                if (input.attr('type') == 'checkbox') {
+                    input.prop('checked', value);
                 } else {
                     input.val(value);
                     // Populate text in autocompletes
