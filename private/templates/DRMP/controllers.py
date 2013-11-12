@@ -133,15 +133,16 @@ def _newsfeed():
     s3 = response.s3
 
     # Ensure that filtered views translate into options which update the Widget
-    if "~.series_id$name" in request.get_vars:
-        series_name = request.vars["~.series_id$name"]
+    get_vars = request.get_vars
+    if "~.series_id$name" in get_vars:
+        series_name = get_vars["~.series_id$name"]
         table = s3db.cms_series
         series = current.db(table.name == series_name).select(table.id,
                                                               limitby=(0, 1)).first()
         if series:
             series_id = str(series.id)
-            request.get_vars.pop("~.series_id$name")
-            request.get_vars["~.series_id__belongs"] = series_id
+            get_vars.pop("~.series_id$name")
+            get_vars["~.series_id__belongs"] = series_id
 
     current.deployment_settings.ui.customize_cms_post()
 

@@ -2355,17 +2355,16 @@ def customize_cms_post(**attr):
             utable = current.auth.settings.table_user
             utable.organisation_id.represent = s3db.org_organisation_represent
 
-            list_fields = [
-                (T("Date"), "date"),
-                (T("Disaster"), "event_post.event_id"),
-                (T("Type"), "series_id"),
-                (T("Details"), "body"),
-                (T("District"), "location_id$L1"),
-                (T("Sub-District"), "location_id$L2"),
-                (T("Suco"), "location_id$L3"),
-                (T("Author"), "created_by"),
-                (T("Organization"), "created_by$organisation_id"),
-                ]
+            list_fields = [(T("Date"), "date"),
+                           (T("Disaster"), "event_post.event_id"),
+                           (T("Type"), "series_id"),
+                           (T("Details"), "body"),
+                           (T("District"), "location_id$L1"),
+                           (T("Sub-District"), "location_id$L2"),
+                           (T("Suco"), "location_id$L3"),
+                           (T("Author"), "created_by"),
+                           (T("Organization"), "created_by$organisation_id"),
+                           ]
             s3db.configure("cms_post",
                            list_fields = list_fields,
                            )
