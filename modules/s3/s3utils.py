@@ -1002,7 +1002,11 @@ def s3_orderby_fields(table, orderby, expr=False):
                 except (AttributeError, KeyError):
                     continue
             else:
-                continue
+                if current.response.s3.debug:
+                    raise SyntaxError('Tablename prefix required for orderby="%s"' % item)
+                else:
+                    # Ignore
+                    continue
             if expr and direction[:3] == "des":
                 f = ~f
         else:
