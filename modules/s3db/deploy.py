@@ -600,6 +600,11 @@ class S3DeploymentAlertModel(S3Model):
                              message_id(),
                              *s3_meta_fields())
 
+        # Table Configuration
+        configure(tablename,
+                  context = {"mission": "mission_id"},
+                  )
+                  
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
