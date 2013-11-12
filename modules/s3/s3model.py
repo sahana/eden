@@ -202,14 +202,14 @@ class S3Model(object):
 
         db = current.db
         found = None
-        if hasattr(db, tablename):
+        if tablename!=None and hasattr(db, tablename):
             return ogetattr(db, tablename)
         elif ogetattr(db, "_lazy_tables") and \
              tablename in ogetattr(db, "_LAZY_TABLES"):
             return ogetattr(db, tablename)
         else:
             prefix, name = tablename.split("_", 1)
-            if hasattr(models, prefix):
+            if prefix!=None and hasattr(models, prefix):
                 module = models.__dict__[prefix]
                 loaded = False
                 generic = []
@@ -237,7 +237,7 @@ class S3Model(object):
             return found
         if not db_only and tablename in s3:
             return s3[tablename]
-        elif hasattr(db, tablename):
+        elif tablename!=None and hasattr(db, tablename):
             return ogetattr(db, tablename)
         elif ogetattr(db, "_lazy_tables") and \
              tablename in ogetattr(db, "_LAZY_TABLES"):
@@ -263,7 +263,7 @@ class S3Model(object):
         elif "_" in name:
             prefix = name.split("_", 1)[0]
             models = current.models
-            if hasattr(models, prefix):
+            if prefix!=None and hasattr(models, prefix):
                 module = models.__dict__[prefix]
                 loaded = False
                 generic = []
@@ -303,7 +303,7 @@ class S3Model(object):
             s3 = current.response.s3 = Storage()
         models = current.models
 
-        if models is not None and hasattr(models, name):
+        if models is not None and name!=None and hasattr(models, name):
             module = models.__dict__[name]
             for n in module.__all__:
                 model = module.__dict__[n]
@@ -347,7 +347,7 @@ class S3Model(object):
         """
 
         db = current.db
-        if hasattr(db, tablename):
+        if tablename!=None and hasattr(db, tablename):
             table = ogetattr(db, tablename)
         else:
             table = db.define_table(tablename, *fields, **args)
