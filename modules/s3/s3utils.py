@@ -996,9 +996,12 @@ def s3_orderby_fields(table, orderby, expr=False):
         elif isinstance(item, str):
             fn, direction = (item.strip().split() + ["asc"])[:2]
             tn, fn = ([tablename] + fn.split(".", 1))[-2:]
-            try:
-                f = s3db.table(tn)[fn]
-            except (AttributeError, KeyError):
+            if tn:
+                try:
+                    f = s3db.table(tn)[fn]
+                except (AttributeError, KeyError):
+                    continue
+            else:
                 continue
             if expr and direction[:3] == "des":
                 f = ~f

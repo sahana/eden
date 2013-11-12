@@ -1377,7 +1377,7 @@ def track_item():
                                            (T("Source"), "supply_org_id"),
                                            (T("Remarks"), "comments"),
                                            ],
-                            orderby = "recipient_id",
+                            orderby = "inv_recv.recipient_id",
                             )
             s3.filter = (table.recv_id != None)
 
