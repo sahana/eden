@@ -494,7 +494,9 @@ class S3OrganisationModel(S3Model):
         # Needs
         add_component("req_organisation_needs",
                       org_organisation = dict(name="needs",
-                                              joinby="organisation_id"))
+                                              joinby="organisation_id",
+                                              multiple=False,
+                                              ))
 
         # Requests
         #add_component("req_req",
@@ -1954,7 +1956,9 @@ class S3SiteModel(S3Model):
         # Needs
         add_component("req_site_needs",
                       org_site = dict(name="needs",
-                                      joinby="site_id"))
+                                      joinby="site_id",
+                                      multiple=False,
+                                      ))
 
         # Requests
         add_component("req_req",

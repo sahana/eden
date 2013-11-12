@@ -1973,6 +1973,11 @@ class S3RequestSummaryModel(S3Model):
             msg_record_modified=T("Organization Needs updated"),
             msg_record_deleted=T("Organization Needs deleted"))
 
+        configure(tablename,
+                  context = {"organisation": "organisation_id",
+                             },
+                  )
+
         # -----------------------------------------------------------------
         # Summary of Needs for a site
         #
@@ -2011,6 +2016,12 @@ class S3RequestSummaryModel(S3Model):
             msg_record_created=T("Site Needs added"),
             msg_record_modified=T("Site Needs updated"),
             msg_record_deleted=T("Site Needs deleted"))
+
+        configure(tablename,
+                  context = {"location": "site_id$organisation_id",
+                             "organisation": "organisation_id",
+                             },
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

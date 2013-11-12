@@ -1685,7 +1685,7 @@ def fema():
 # =============================================================================
 def organisation():
     """
-        RESTful CRUD Controller for Organisation Needs
+        RESTful CRUD Controller for Organisations and their Needs
     """
 
     # @ToDo: Generic configuration
@@ -1704,12 +1704,37 @@ def organisation():
 
     return s3db.org_organisation_controller()
 
+# -----------------------------------------------------------------------------
+def organisation_needs():
+    """
+        RESTful CRUD Controller for Organisation Needs
+    """
+
+    # Filter from a Profile page?
+    # If so, then default the fields we know
+    organisation_id = request.get_vars.get("~.(organisation)", None)
+    if organisation_id:
+        field = s3db.req_organisation_needs.organisation_id
+        field.default = organisation_id
+        field.readable = False
+        field.writable = False
+
+    return s3_rest_controller()
+
 # =============================================================================
 def facility():
+    """
+        RESTful CRUD Controller for Sites and their Needs
+    """
+
+    return s3db.org_facility_controller()
+
+# -----------------------------------------------------------------------------
+def site_needs():
     """
         RESTful CRUD Controller for Site Needs
     """
 
-    return s3db.org_facility_controller()
+    return s3_rest_controller()
 
 # END =========================================================================

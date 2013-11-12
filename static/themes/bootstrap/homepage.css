@@ -154,7 +154,9 @@ p.quote.mb4 {
 .icon-bullhorn{
     color: #bd382e;	
 }
-#homepage-layer .icon-calendar{
+#homepage-layer .icon-calendar,
+#homepage-layer .icon-home,
+#homepage-layer .icon-sitemap {
     color: #1ebaa6;	
 }
 .icon-bookmark-empty {
