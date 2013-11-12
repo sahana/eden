@@ -1919,21 +1919,9 @@ def customize_org_organisation(**attr):
                 return False
 
         if r.interactive:
-            # ADD_ORGANISATION = T("New Stakeholder")
-            # s3.crud_strings["org_organisation"] = Storage(
-                # title_create = ADD_ORGANISATION,
-                # title_display = T("Stakeholder Details"),
-                # title_list = T("Stakeholders"),
-                # title_update = T("Edit Stakeholder"),
-                # title_search = T("Search Stakeholders"),
-                # subtitle_create = T("Add New Stakeholder"),
-                # label_list_button = T("List Stakeholders"),
-                # label_create_button = ADD_ORGANISATION,
-                # label_delete_button = T("Delete Stakeholder"),
-                # msg_record_created = T("Stakeholder added"),
-                # msg_record_modified = T("Stakeholder updated"),
-                # msg_record_deleted = T("Stakeholder deleted"),
-                # msg_list_empty = T("No Stakeholders currently registered"))
+            # Load normal Model
+            s3db = current.s3db
+            table = s3db.org_organisation
 
             list_fields = ["id",
                            "name",
@@ -1946,7 +1934,6 @@ def customize_org_organisation(**attr):
                            "needs.vol_details",
                            ]
 
-            s3db = current.s3db
             if r.method == "profile":
                 # Customise tables used by widgets
                 customize_hrm_human_resource_fields()
@@ -2048,9 +2035,6 @@ def customize_org_organisation(**attr):
 
             # Represent used in rendering
             current.auth.settings.table_user.organisation_id.represent = s3db.org_organisation_represent
-
-            # Load normal Model
-            table = s3db.org_organisation
 
             # Hide fields
             table.organisation_type_id.readable = table.organisation_type_id.writable = False
