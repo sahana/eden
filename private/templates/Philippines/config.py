@@ -679,6 +679,7 @@ def render_sites(listid, resource, rfields, record, **attr):
     raw = record._row
     name = record["org_facility.name"]
     site_id = raw["org_facility.id"]
+    opening_times = raw["org_facility.opening_times"] or ""
     author = record["org_facility.modified_by"]
     date = record["org_facility.modified_on"]
     organisation = record["org_facility.organisation_id"]
@@ -687,7 +688,7 @@ def render_sites(listid, resource, rfields, record, **attr):
     #location_id = raw["org_facility.location_id"]
     #location_url = URL(c="gis", f="location",
     #                   args=[location_id, "profile"])
-    address = raw["gis_location.addr_street"]
+    address = raw["gis_location.addr_street"] or ""
     phone = raw["org_facility.phone1"] or ""
     facility_type = record["org_site_facility_type.facility_type_id"]
     logo = raw["org_organisation.logo"]
@@ -736,10 +737,15 @@ def render_sites(listid, resource, rfields, record, **attr):
                    )
 
     # Render the item
-    avatar = logo
     body = TAG[""](P(I(_class="icon-flag"),
                      " ",
                      SPAN(facility_type),
+                     " ",
+                     _class="main_contact_ph",
+                     ),
+                   P(I(_class="icon-time"),
+                     " ",
+                     SPAN(opening_times),
                      " ",
                      _class="main_contact_ph",
                      ),
@@ -753,7 +759,8 @@ def render_sites(listid, resource, rfields, record, **attr):
                      " ",
                      address,
                      _class="main_office-add",
-                     ))
+                     ),
+                   )
 
     item = DIV(DIV(SPAN(A(name,
                           _href=site_url,
@@ -772,7 +779,7 @@ def render_sites(listid, resource, rfields, record, **attr):
                    edit_bar,
                    _class="card-header",
                    ),
-               DIV(avatar,
+               DIV(logo,
                    DIV(DIV(body,
                            DIV(author,
                                " - ",
@@ -822,15 +829,30 @@ def render_organisations(listid, resource, rfields, record, **attr):
     raw = record._row
     name = record["org_organisation.name"]
     logo = raw["org_organisation.logo"]
-    addresses = raw["gis_location.addr_street"]
-    if addresses:
-        if isinstance(addresses, list):
-            address = addresses[0]
-        else:
-            address = addresses
-    else:
-        address = ""
     phone = raw["org_organisation.phone"] or ""
+    website = raw["org_organisation.website"] or ""
+    if website:
+        website = A(website, _href=website)
+    money = raw["req_organisation_needs.money"]
+    if money:
+        money_details = record["req_organisation_needs.money_details"]
+        money_details = P(I(_class="icon icon-dollar"),
+                          " ",
+                          XML(money_details),
+                          _class="main_contact_ph",
+                          )
+    else:
+        money_details = ""
+    time = raw["req_organisation_needs.vol"]
+    if time:
+        time_details = record["req_organisation_needs.vol_details"]
+        time_details = P(I(_class="icon icon-time"),
+                         " ",
+                         XML(time_details),
+                         _class="main_contact_ph",
+                         )
+    else:
+        time_details = ""
 
     org_url = URL(c="org", f="organisation", args=[record_id, "profile"])
     if logo:
@@ -868,15 +890,6 @@ def render_organisations(listid, resource, rfields, record, **attr):
                    _class="edit-bar fright",
                    )
 
-    # Tallies
-    # NB We assume that all records are readable here
-    db = current.db
-    s3db = current.s3db
-    table = s3db.org_site
-    query = (table.deleted == False) & \
-            (table.organisation_id == record_id)
-    tally_sites = db(query).count()
-    
     # Render the item
     item = DIV(DIV(logo,
                    DIV(SPAN(A(name,
@@ -892,17 +905,13 @@ def render_organisations(listid, resource, rfields, record, **attr):
                          phone,
                          _class="main_contact_ph",
                          ),
-                       P(I(_class="icon icon-home"),
+                       P(I(_class="icon icon-map"),
                          " ",
-                         address,
-                         _class="main_office-add",
+                         website,
+                         _class="main_contact_ph",
                          ),
-                       P(T("Sites"),
-                         SPAN(tally_sites,
-                              _class="badge",
-                              ),
-                         _class="tally",
-                         ),
+                       money_details,
+                       time_details,
                        _class="media-body",
                        ),
                    _class="media",
@@ -1075,6 +1084,8 @@ def render_site_needs(listid, resource, rfields, record, **attr):
             address = addresses
     else:
         address = ""
+    contact = raw["org_facility.contact"] or ""
+    opening_times = raw["org_facility.opening_times"] or ""
     phone = raw["org_facility.phone1"] or ""
     website = raw["org_organisation.website"] or ""
     if website:
@@ -1154,6 +1165,12 @@ def render_site_needs(listid, resource, rfields, record, **attr):
                DIV(logo,
                    DIV(goods_details,
                        time_details,
+                       P(I(_class="icon-time"),
+                         " ",
+                         SPAN(opening_times),
+                         " ",
+                         _class="main_contact_ph",
+                         ),
                        P(I(_class="icon icon-phone"),
                          " ",
                          phone,
@@ -1162,12 +1179,17 @@ def render_site_needs(listid, resource, rfields, record, **attr):
                        P(I(_class="icon icon-map"),
                          " ",
                          website,
-                         _class="main_office-add",
+                         _class="main_contact_ph",
                          ),
                        P(I(_class="icon icon-home"),
                          " ",
                          address,
                          _class="main_office-add",
+                         ),
+                       P(I(_class="icon icon-user"),
+                         " ",
+                         contact,
+                         _class="main_contact_ph",
                          ),
                        _class="media-body",
                        ),
@@ -1534,9 +1556,11 @@ def customize_org_facility_fields():
                    "site_facility_type.facility_type_id",
                    "location_id",
                    "location_id$addr_street",
-                   "modified_by",
-                   "modified_on",
+                   #"modified_by",
+                   #"modified_on",
                    "organisation_id$logo",
+                   "opening_times",
+                   "contact",
                    "phone1",
                    ]
 
@@ -1550,6 +1574,7 @@ def customize_org_facility_fields():
                                 "organisation_id",
                                 "location_id",
                                 "opening_times",
+                                "phone1",
                                 "contact",
                                 "website",
                                 S3SQLInlineComponent(
@@ -1872,8 +1897,11 @@ def customize_org_organisation(**attr):
                            "name",
                            "logo",
                            "phone",
+                           "website",
                            "needs.money",
+                           "needs.money_details",
                            "needs.vol",
+                           "needs.vol_details",
                            ]
 
             s3db = current.s3db
@@ -1953,8 +1981,8 @@ def customize_org_organisation(**attr):
             elif r.method == "datalist":
                 # Stakeholder selection page
                 # 2-column datalist, 6 rows per page
-                #s3.dl_pagelength = 12
-                #s3.dl_rowsize = 2
+                s3.dl_pagelength = 12
+                s3.dl_rowsize = 2
 
                 # Needs page
                 get_vars = current.request.get_vars
