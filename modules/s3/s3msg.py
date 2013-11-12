@@ -1308,7 +1308,6 @@ class S3Msg(object):
                 # Store the whole raw message
                 raw = msg.as_string()
                 # Parse out the 'Body'
-                #body = msg.get_payload(0).as_string().split("\n\n")[1]
                 payload = msg.get_payload()
                 if not isinstance(payload, basestring):
                     payload = payload[0].as_string()
@@ -1384,7 +1383,6 @@ class S3Msg(object):
                         # Store the whole raw message
                         raw = msg.as_string()
                         # Parse out the 'Body'
-                        #body = msg.get_payload(0).as_string().split("\n\n")[1]
                         payload = msg.get_payload()
                         if not isinstance(payload, basestring):
                             payload = payload[0].as_string()

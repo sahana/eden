@@ -1682,4 +1682,34 @@ def fema():
     output = req_item()
     return output
 
+# =============================================================================
+def organisation():
+    """
+        RESTful CRUD Controller for Organisation Needs
+    """
+
+    # @ToDo: Generic configuration
+    #        - for now this is in templates/philippines/config.py
+    # Load Model
+    #tablename = "org_organisation"
+    #table = s3db.org_organisation
+
+    # Custom CRUD Form
+    #crud_form = None
+    #list_fields = []
+    #s3db.configure(tablename,
+    #               crud_form = crud_form,
+    #               list_fields = list_fields
+    #               )
+
+    return s3db.org_organisation_controller()
+
+# =============================================================================
+def facility():
+    """
+        RESTful CRUD Controller for Site Needs
+    """
+
+    return s3db.org_facility_controller()
+
 # END =========================================================================

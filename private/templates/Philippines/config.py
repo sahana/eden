@@ -68,35 +68,6 @@ settings.security.map = True
 # Owner Entity
 settings.auth.person_realm_human_resource_site_then_org = False
 
-def drmp_realm_entity(table, row):
-    """
-        Assign a Realm Entity to records
-    """
-
-    tablename = table._tablename
-
-    if tablename == "cms_post":
-        # Give the Post the Realm of the author's Organisation
-        db = current.db
-        utable = db.auth_user
-        otable = current.s3db.org_organisation
-        if "created_by" in row:
-            query = (utable.id == row.created_by) & \
-                    (otable.id == utable.organisation_id)
-        else:
-            query = (table.id == row.id) & \
-                    (utable.id == table.created_by) & \
-                    (otable.id == utable.organisation_id)
-        org = db(query).select(otable.pe_id,
-                               limitby=(0, 1)).first()
-        if org:
-            return org.pe_id
-
-    # Follow normal rules
-    return 0
-
-settings.auth.realm_entity = drmp_realm_entity
-
 # -----------------------------------------------------------------------------
 # Pre-Populate
 settings.base.prepopulate = ["Philippines"]
@@ -418,140 +389,6 @@ def render_contacts(listid, resource, rfields, record, **attr):
     return item
 
 # -----------------------------------------------------------------------------
-def render_events(listid, resource, rfields, record, **attr):
-    """
-        Custom dataList item renderer for Events on the Disaster Selection Page
-
-        @param listid: the HTML ID for this list
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
-        @param attr: additional HTML attributes for the item
-    """
-
-    pkey = "event_event.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
-    item_class = "thumbnail"
-
-    raw = record._row
-    name = record["event_event.name"]
-    date = record["event_event.zero_hour"]
-    closed = raw["event_event.closed"]
-    event_type = record["event_event_type.name"]
-    event_url = URL(c="event", f="event",
-                    args=[record_id, "profile"])
-    comments = raw["event_event.comments"] or ""
-
-    if closed:
-        edit_bar = DIV()
-    else:
-        item_class = "%s disaster" % item_class
-
-        permit = current.auth.s3_has_permission
-        table = resource.table
-        if permit("update", table, record_id=record_id):
-            edit_btn = A(I(" ", _class="icon icon-edit"),
-                         _href=URL(c="event", f="event",
-                                   args=[record_id, "update.popup"],
-                                   vars={"refresh": listid,
-                                         "record": record_id}),
-                         _class="s3_modal",
-                         _title=current.response.s3.crud_strings.event_event.title_update,
-                         )
-        else:
-            edit_btn = ""
-        if permit("delete", table, record_id=record_id):
-            delete_btn = A(I(" ", _class="icon icon-remove-sign"),
-                           _class="dl-item-delete",
-                          )
-        else:
-            delete_btn = ""
-        edit_bar = DIV(edit_btn,
-                       delete_btn,
-                       _class="edit-bar fright",
-                       )
-
-    # Tallies
-    tally_alerts = 0
-    tally_incidents = 0
-    tally_assessments = 0
-    tally_activities = 0
-    tally_reports = 0
-    db = current.db
-    s3db = current.s3db
-    ltable = s3db.event_event_post
-    table = db.cms_post
-    stable = db.cms_series
-    types = ["Incident", "Assessment", "Report"]
-    query = (table.deleted == False) & \
-            (ltable.event_id == record_id) & \
-            (ltable.post_id == table.id) & \
-            (stable.id == table.series_id) & \
-            (stable.name.belongs(types))
-    rows = db(query).select(stable.name)
-    for row in rows:
-        series = row.name
-        if series == "Incident":
-            tally_incidents += 1
-        elif series == "Assessment":
-            tally_assessments += 1
-        elif series == "Report":
-            tally_reports += 1
-
-    # Render the item
-    item = DIV(DIV(A(IMG(_class="media-object",
-                         _src=URL(c="static",
-                                  f="img",
-                                  args=["event", "%s.png" % event_type]),
-                         ),
-                     _class="pull-left",
-                     _href=event_url,
-                     ),
-  		           DIV(SPAN(A(name,
-                              _href=event_url,
-                              _class="media-heading"
-                              ),
-                            ),
-                       SPAN(date,
-                            _class="date-title",
-                            ),
-                       edit_bar,
-                       _class="card-header-select",
-                       ),
-                   DIV(P(comments),
-                       P(T("Incidents"),
-                         SPAN(tally_incidents,
-                              _class="badge badge-warning",
-                              ),
-                         T("Assessments"),
-                         SPAN(tally_assessments,
-                              _class="badge",
-                              ),
-                        T("Reports"),
-                         SPAN(tally_reports,
-                              _class="badge",
-                              ),
-                         _class="tally",
-                         ),
-                       _class="media-body",
-                       ),
-                   _class="media",
-                   ),
-               _class=item_class,
-               _id=item_id,
-               )
-
-    return item
-
-# -----------------------------------------------------------------------------
 def quote_unicode(s):
     """
         Quote unicode strings for URLs for Rocket
@@ -642,33 +479,10 @@ def render_locations(listid, resource, rfields, record, **attr):
     locations.append(record_id)
     db = current.db
     s3db = current.s3db
-    ltable = s3db.project_location
-    table = db.project_project
+    table = s3db.org_site
     query = (table.deleted == False) & \
-            (ltable.deleted == False) & \
-            (ltable.project_id == table.id) & \
-            (ltable.location_id.belongs(locations))
-    rows = db(query).select(table.id, distinct=True)
-    tally_projects = len(rows)
-    tally_incidents = 0
-    tally_activities = 0
-    tally_reports = 0
-    table = s3db.cms_post
-    stable = db.cms_series
-    types = ["Incident", "Activity", "Report"]
-    query = (table.deleted == False) & \
-            (table.location_id.belongs(locations)) & \
-            (stable.id == table.series_id) & \
-            (stable.name.belongs(types))
-    rows = db(query).select(stable.name)
-    for row in rows:
-        series = row.name
-        if series == "Incident":
-            tally_incidents += 1
-        elif series == "Activity":
-            tally_activities += 1
-        elif series == "Report":
-            tally_reports += 1
+            (table.location_id.belongs(locations))
+    tally_sites = db(query).count()
 
     # Build the icon, if it doesn't already exist
     filename = "%s.svg" % record_id
@@ -701,20 +515,8 @@ def render_locations(listid, resource, rfields, record, **attr):
                        #edit_bar,
                        _class="card-header-select",
                        ),
-                   DIV(P(T("Incidents"),
-                         SPAN(tally_incidents,
-                              _class="badge",
-                              ),
-                         T("Reports"),
-                         SPAN(tally_reports,
-                              _class="badge",
-                              ),
-                         T("Projects"),
-                         SPAN(tally_projects,
-                              _class="badge",
-                              ),
-                         T("Activities"),
-                         SPAN(tally_activities,
+                   DIV(P(T("Locations"),
+                         SPAN(tally_sites,
                               _class="badge",
                               ),
                          _class="tally",
@@ -813,9 +615,9 @@ def render_locations_profile(listid, resource, rfields, record, **attr):
     return item
 
 # -----------------------------------------------------------------------------
-def render_offices(listid, resource, rfields, record, **attr):
+def render_sites(listid, resource, rfields, record, **attr):
     """
-        Custom dataList item renderer for Offices on the Profile pages
+        Custom dataList item renderer for Facilities on the Profile pages
 
         @param listid: the HTML ID for this list
         @param resource: the S3Resource to render
@@ -824,7 +626,7 @@ def render_offices(listid, resource, rfields, record, **attr):
         @param attr: additional HTML attributes for the item
     """
 
-    pkey = "org_office.id"
+    pkey = "org_facility.id"
 
     # Construct the item ID
     if pkey in record:
@@ -837,17 +639,17 @@ def render_offices(listid, resource, rfields, record, **attr):
     item_class = "thumbnail"
 
     raw = record._row
-    name = record["org_office.name"]
-    author = record["org_office.modified_by"]
-    date = record["org_office.modified_on"]
-    organisation = record["org_office.organisation_id"]
-    organisation_id = raw["org_office.organisation_id"]
-    location = record["org_office.location_id"]
-    location_id = raw["org_office.location_id"]
+    name = record["org_facility.name"]
+    author = record["org_facility.modified_by"]
+    date = record["org_facility.modified_on"]
+    organisation = record["org_facility.organisation_id"]
+    organisation_id = raw["org_facility.organisation_id"]
+    location = record["org_facility.location_id"]
+    location_id = raw["org_facility.location_id"]
     location_url = URL(c="gis", f="location",
                        args=[location_id, "profile"])
     address = raw["gis_location.addr_street"]
-    office_type = record["org_office.office_type_id"]
+    facility_type = record["org_site_facility_type.facility_type_id"]
     logo = raw["org_organisation.logo"]
 
     org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
@@ -897,7 +699,7 @@ def render_offices(listid, resource, rfields, record, **attr):
     body = TAG[""](P(name),
                    P(I(_class="icon-flag"),
                      " ",
-                     SPAN(office_type),
+                     SPAN(facility_type),
                      " ",
                      _class="main_contact_ph",
                      ),
@@ -1020,31 +822,10 @@ def render_organisations(listid, resource, rfields, record, **attr):
     # NB We assume that all records are readable here
     db = current.db
     s3db = current.s3db
-    table = s3db.project_project
+    table = s3db.org_site
     query = (table.deleted == False) & \
             (table.organisation_id == record_id)
-    tally_projects = db(query).count()
-    tally_assessments = 0
-    tally_activities = 0
-    tally_reports = 0
-    table = s3db.cms_post
-    atable = db.auth_user
-    stable = db.cms_series
-    types = ["Assessment", "Activity", "Report"]
-    query = (table.deleted == False) & \
-            (table.created_by == atable.id) & \
-            (atable.organisation_id == record_id) & \
-            (stable.id == table.series_id) & \
-            (stable.name.belongs(types))
-    rows = db(query).select(stable.name)
-    for row in rows:
-        series = row.name
-        if series == "Assessment":
-            tally_assessments += 1
-        elif series == "Activity":
-            tally_activities += 1
-        elif series == "Report":
-            tally_reports += 1
+    tally_sites = db(query).count()
     
     # Render the item
     item = DIV(DIV(logo,
@@ -1066,20 +847,8 @@ def render_organisations(listid, resource, rfields, record, **attr):
                          address,
                          _class="main_office-add",
                          ),
-                       P(T("Projects"),
-                         SPAN(tally_projects,
-                              _class="badge",
-                              ),
-                         T("Activities"),
-                         SPAN(tally_activities,
-                              _class="badge",
-                              ),
-                         T("Reports"),
-                         SPAN(tally_reports,
-                              _class="badge",
-                              ),
-                         T("Assessments"),
-                         SPAN(tally_assessments,
+                       P(T("Locations"),
+                         SPAN(tally_sites,
                               _class="badge",
                               ),
                          _class="tally",
@@ -1093,1080 +862,6 @@ def render_organisations(listid, resource, rfields, record, **attr):
                )
 
     return item
-
-# -----------------------------------------------------------------------------
-def render_posts(listid, resource, rfields, record, 
-                 type = None,
-                 **attr):
-    """
-        Custom dataList item renderer for CMS Posts on the Home & News Feed pages
-
-        @param listid: the HTML ID for this list
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
-        @param attr: additional HTML attributes for the item
-    """
-
-    pkey = "cms_post.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
-    item_class = "thumbnail"
-
-    raw = record._row
-    series = record["cms_post.series_id"]
-    date = record["cms_post.date"]
-    body = record["cms_post.body"]
-    location = record["cms_post.location_id"]
-    location_id = raw["cms_post.location_id"]
-    location_url = URL(c="gis", f="location", args=[location_id, "profile"])
-    author = record["cms_post.created_by"]
-    author_id = raw["cms_post.created_by"]
-    organisation = record["auth_user.organisation_id"]
-    organisation_id = raw["auth_user.organisation_id"]
-    org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
-
-    db = current.db
-    s3db = current.s3db
-    ltable = s3db.pr_person_user
-    ptable = db.pr_person
-    query = (ltable.user_id == author_id) & \
-            (ltable.pe_id == ptable.pe_id)
-    row = db(query).select(ptable.id,
-                           limitby=(0, 1)
-                           ).first()
-    if row:
-        person_url = URL(c="hrm", f="person", args=[row.id])
-    else:
-        person_url = "#"
-    author = A(author,
-               _href=person_url,
-               )
-
-    # Use Personal Avatar
-    # @ToDo: Optimise by not doing DB lookups (especially duplicate) within render, but doing these in the bulk query
-    #avatar = s3_avatar_represent(author_id,
-    #                             _class="media-object")
-    #avatar = A(avatar,
-    #           _href=person_url,
-    #           _class="pull-left",
-    #           )
-
-    # Use Organisation Logo
-    otable = db.org_organisation
-    row = db(otable.id == organisation_id).select(otable.logo,
-                                                  limitby=(0, 1)
-                                                  ).first()
-    if row and row.logo:
-        logo = URL(c="default", f="download", args=[row.logo])
-    else:
-        logo = ""
-    avatar = IMG(_src=logo,
-                 _height=50,
-                 _width=50,
-                 _style="padding-right:5px;",
-                 _class="media-object")
-    avatar = A(avatar,
-               _href=org_url,
-               _class="pull-left",
-               )
-
-    # Edit Bar
-    permit = current.auth.s3_has_permission
-    table = db.cms_post
-    if permit("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="cms", f="post",
-                               args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
-                                     "record": record_id}),
-                     _class="s3_modal",
-                     _title=T("Edit %(type)s") % dict(type=T(series)),
-                     )
-    else:
-        edit_btn = ""
-    if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
-                       _class="dl-item-delete",
-                       )
-    else:
-        delete_btn = ""
-    edit_bar = DIV(edit_btn,
-                   delete_btn,
-                   _class="edit-bar fright",
-                   )
-
-    # Dropdown of available documents
-    documents = raw["doc_document.file"]
-    if documents:
-        if not isinstance(documents, list):
-            documents = [documents]
-        doc_list = UL(_class="dropdown-menu",
-                      _role="menu",
-                      )
-        retrieve = db.doc_document.file.retrieve
-        for doc in documents:
-            try:
-                doc_name = retrieve(doc)[0]
-            except IOError:
-                doc_name = current.messages["NONE"]
-            doc_url = URL(c="default", f="download",
-                          args=[doc])
-            doc_item = LI(A(I(_class="icon-file"),
-                            " ",
-                            doc_name,
-                            _href=doc_url,
-                            ),
-                          _role="menuitem",
-                          )
-            doc_list.append(doc_item)
-        docs = DIV(A(I(_class="icon-paper-clip"),
-                     SPAN(_class="caret"),
-                     _class="btn dropdown-toggle",
-                     _href="#",
-                     **{"_data-toggle": "dropdown"}
-                     ),
-                   doc_list,
-                   _class="btn-group attachments dropdown pull-right",
-                   )
-    else:
-        docs = ""
-
-    if current.request.controller == "default":
-        # Mixed resource lists (Home, News Feed)
-        icon = series.lower().replace(" ", "_")
-        card_label = TAG[""](I(_class="icon icon-%s" % icon),
-                             SPAN(" %s" % T(series),
-                                  _class="card-title"))
-        # Type cards
-        if series == "Incident": 
-            # Apply additional highlighting for Incidents
-            item_class = "%s disaster" % item_class
-    else:
-        card_label = SPAN(" ", _class="card-title")
-
-    # Render the item
-    if "newsfeed" not in current.request.args and series == "Event":
-        item = DIV(DIV(SPAN(date,
-                            _class="date-title event",
-                            ),
-                       SPAN(A(location,
-                              _href=location_url,
-                              ),
-                            _class="location-title",
-                            ),
-                       edit_bar,
-                       _class="card-header",
-                       ),
-                   DIV(avatar,
-                       DIV(DIV(body,
-                               DIV(author,
-                                   " - ",
-                                   A(organisation,
-                                     _href=org_url,
-                                     _class="card-organisation",
-                                     ),
-                                   _class="card-person",
-                                   ),
-                               _class="media",
-                               ),
-                           _class="media-body",
-                           ),
-                       _class="media",
-                       ),
-                   docs,
-                   _class=item_class,
-                   _id=item_id,
-                   )
-    else:
-        item = DIV(DIV(card_label,
-                       SPAN(A(location,
-                              _href=location_url,
-                              ),
-                            _class="location-title",
-                            ),
-                       SPAN(date,
-                            _class="date-title",
-                            ),
-                       edit_bar,
-                       _class="card-header",
-                       ),
-                   DIV(avatar,
-                       DIV(DIV(body,
-                               DIV(author,
-                                   " - ",
-                                   A(organisation,
-                                     _href=org_url,
-                                     _class="card-organisation",
-                                     ),
-                                   _class="card-person",
-                                   ),
-                               _class="media",
-                               ),
-                           _class="media-body",
-                           ),
-                       _class="media",
-                       ),
-                   docs,
-                   _class=item_class,
-                   _id=item_id,
-                   )
-
-    return item
-
-s3.render_posts = render_posts
-
-# -----------------------------------------------------------------------------
-def render_profile_posts(listid, resource, rfields, record, **attr):
-    """
-        Custom dataList item renderer for CMS Posts on the Profile pages
-
-        @param listid: the HTML ID for this list
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
-        @param attr: additional HTML attributes for the item
-    """
-
-    pkey = "cms_post.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
-    item_class = "thumbnail"
-
-    raw = record._row
-    series = record["cms_post.series_id"]
-    date = record["cms_post.date"]
-    body = record["cms_post.body"]
-    event_id = raw["event_event_post.event_id"]
-    location = record["cms_post.location_id"]
-    location_id = raw["cms_post.location_id"]
-    location_url = URL(c="gis", f="location", args=[location_id, "profile"])
-    author = record["cms_post.created_by"]
-    author_id = raw["cms_post.created_by"]
-    organisation = record["auth_user.organisation_id"]
-    organisation_id = raw["auth_user.organisation_id"]
-    org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
-
-    db = current.db
-    s3db = current.s3db
-    ltable = s3db.pr_person_user
-    ptable = db.pr_person
-    query = (ltable.user_id == author_id) & \
-            (ltable.pe_id == ptable.pe_id)
-    row = db(query).select(ptable.id,
-                           limitby=(0, 1)
-                           ).first()
-    if row:
-        person_url = URL(c="hrm", f="person", args=[row.id])
-    else:
-        person_url = "#"
-    author = A(author,
-               _href=person_url,
-               )
-
-    # Use Personal Avatar
-    # @ToDo: Optimise by not doing DB lookups (especially duplicate) within render, but doing these in the bulk query
-    #avatar = s3_avatar_represent(author_id,
-    #                             _class="media-object")
-    #avatar = A(avatar,
-    #           _href=person_url,
-    #           _class="pull-left",
-    #           )
-
-    # Use Organisation Logo
-    otable = db.org_organisation
-    row = db(otable.id == organisation_id).select(otable.logo,
-                                                  limitby=(0, 1)
-                                                  ).first()
-    if row and row.logo:
-        logo = URL(c="default", f="download", args=[row.logo])
-    else:
-        logo = ""
-    avatar = IMG(_src=logo,
-                 _height=50,
-                 _width=50,
-                 #_style="padding-right:5px;",
-                 _class="media-object")
-    avatar = A(avatar,
-               _href=org_url,
-               _class="pull-left",
-               )
-
-    # Edit Bar
-    permit = current.auth.s3_has_permission
-    table = db.cms_post
-    if permit("update", table, record_id=record_id):
-        T = current.T
-        vars = {"refresh": listid,
-                "record": record_id,
-                "~.series_id$name": series,
-                }
-        f = current.request.function
-        if f == "event" and event_id:
-            vars["(event)"] = event_id
-        if f == "location" and location_id:
-            vars["(location)"] = location_id
-        edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="cms", f="post",
-                               args=[record_id, "update.popup"],
-                               vars=vars),
-                     _class="s3_modal",
-                     _title=T("Edit %(type)s") % dict(type=T(series)),
-                     )
-    else:
-        edit_btn = ""
-    if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
-                       _class="dl-item-delete",
-                       )
-    else:
-        delete_btn = ""
-    edit_bar = DIV(edit_btn,
-                   delete_btn,
-                   _class="edit-bar fright",
-                   )
-
-    # Dropdown of available documents
-    documents = raw["doc_document.file"]
-    if documents:
-        if not isinstance(documents, list):
-            documents = [documents]
-        doc_list = UL(_class="dropdown-menu",
-                      _role="menu",
-                      )
-        retrieve = db.doc_document.file.retrieve
-        for doc in documents:
-            try:
-                doc_name = retrieve(doc)[0]
-            except IOError:
-                doc_name = current.messages["NONE"]
-            doc_url = URL(c="default", f="download",
-                          args=[doc])
-            doc_item = LI(A(I(_class="icon-file"),
-                            " ",
-                            doc_name,
-                            _href=doc_url,
-                            ),
-                          _role="menuitem",
-                          )
-            doc_list.append(doc_item)
-        docs = DIV(A(I(_class="icon-paper-clip"),
-                     SPAN(_class="caret"),
-                     _class="btn dropdown-toggle",
-                     _href="#",
-                     **{"_data-toggle": "dropdown"}
-                     ),
-                   doc_list,
-                   _class="btn-group attachments dropdown pull-right",
-                   )
-    else:
-        docs = ""
-
-    # Render the item
-    class SMALL(DIV):
-        tag = "small"
-
-    item = DIV(DIV(DIV(avatar,
-                       P(SMALL(" ", author, " ",
-                               A(organisation,
-                                 _href=org_url,
-                                 _class="card-organisation",
-                                 ),
-                               ),
-                         _class="citation"),
-                       _class="span1"),
-                   DIV(SPAN(A(location,
-                              _href=location_url,
-                              ),
-                            _class="location-title"),
-                       " ",
-                       SPAN(date,
-                            _class="date-title"),
-                       edit_bar,
-                       P(body,
-                         _class="card_comments"),
-                       docs,
-                       _class="span5 card-details"),
-                   _class="row",
-                   ),
-               _class=item_class,
-               _id=item_id,
-               )
-
-    return item
-
-# -----------------------------------------------------------------------------
-def render_projects(listid, resource, rfields, record, **attr):
-    """
-        Custom dataList item renderer for Projects on the Profile pages
-
-        @param listid: the HTML ID for this list
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
-        @param attr: additional HTML attributes for the item
-    """
-
-    pkey = "project_project.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
-    item_class = "thumbnail"
-
-    raw = record._row
-    name = record["project_project.name"]
-    author = record["project_project.modified_by"]
-    author_id = raw["project_project.modified_by"]
-    contact = record["project_project.human_resource_id"]
-    date = record["project_project.modified_on"]
-    organisation = record["project_project.organisation_id"]
-    organisation_id = raw["project_project.organisation_id"]
-    location = record["project_location.location_id"]
-    location_ids = raw["project_location.location_id"]
-    if isinstance(location_ids, list):
-        locations = location.split(",")
-        locations_list = []
-        length = len(location_ids)
-        i = 0
-        for location_id in location_ids:
-            location_url = URL(c="gis", f="location",
-                               args=[location_id, "profile"])
-            locations_list.append(A(locations[i], _href=location_url))
-            i += 1
-            if i != length:
-                locations_list.append(",")
-    else:
-        location_url = URL(c="gis", f="location",
-                           args=[location_ids, "profile"])
-        locations_list = [A(location, _href=location_url)]
-
-    logo = raw["org_organisation.logo"]
-    org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
-    if logo:
-        avatar = A(IMG(_src=URL(c="default", f="download", args=[logo]),
-                       _class="media-object",
-                       ),
-                   _href=org_url,
-                   _class="pull-left",
-                   )
-    else:
-        avatar = DIV(IMG(_class="media-object"),
-                     _class="pull-left")
-
-    db = current.db
-    s3db = current.s3db
-    ltable = s3db.pr_person_user
-    ptable = db.pr_person
-    query = (ltable.user_id == author_id) & \
-            (ltable.pe_id == ptable.pe_id)
-    row = db(query).select(ptable.id,
-                           limitby=(0, 1)
-                           ).first()
-    if row:
-        person_url = URL(c="hrm", f="person", args=[row.id])
-    else:
-        person_url = "#"
-    author = A(author,
-               _href=person_url,
-               )
-
-    start_date = raw["project_project.start_date"] or ""
-    if start_date:
-        start_date = record["project_project.start_date"]
-    end_date = raw["project_project.end_date"] or ""
-    if end_date:
-        end_date = record["project_project.end_date"]
-    budget = record["project_project.budget"]
-    if budget:
-        budget = "USD %s" % budget
-
-    partner = record["project_partner_organisation.organisation_id"]
-    partner_ids = raw["project_partner_organisation.organisation_id"]
-    if isinstance(partner_ids, list):
-        partners = partner.split(",")
-        partners_list = []
-        length = len(partner_ids)
-        i = 0
-        for partner_id in partner_ids:
-            partner_url = URL(c="org", f="organisation",
-                              args=[partner_id, "profile"])
-            partners_list.append(A(partners[i], _href=partner_url))
-            i += 1
-            if i != length:
-                partners_list.append(",")
-    elif partner_ids:
-        partner_url = URL(c="org", f="organisation",
-                          args=[partner_ids, "profile"])
-        partners_list = [A(partner, _href=partner_url)]
-    else:
-        partners_list = [current.messages["NONE"]]
-
-    donor = record["project_donor_organisation.organisation_id"]
-    donor_ids = raw["project_donor_organisation.organisation_id"]
-    if isinstance(donor_ids, list):
-        donors = donor.split(",")
-        amounts = raw["project_donor_organisation.amount"]
-        if not isinstance(amounts, list):
-            amounts = [amounts for donor_id in donor_ids]
-        currencies = raw["project_donor_organisation.currency"]
-        if not isinstance(currencies, list):
-            currencies = [currencies for donor_id in donor_ids]
-        amount_represent = IS_INT_AMOUNT.represent
-        donors_list = []
-        length = len(donor_ids)
-        i = 0
-        for donor_id in donor_ids:
-            if donor_id:
-                donor_url = URL(c="org", f="organisation",
-                                args=[donor_id, "profile"])
-                donor = A(donors[i], _href=donor_url)
-                amount = amounts[i]
-                if amount:
-                    donor = TAG[""](donor,
-                                    " - ",
-                                    currency_represent(currencies[i]),
-                                    amount_represent(amount))
-            else:
-                donor = current.messages["NONE"]
-            donors_list.append(donor)
-            i += 1
-            if i != length:
-                donors_list.append(",")
-    elif donor_ids:
-        donor_url = URL(c="org", f="organisation",
-                      args=[donor_ids, "profile"])
-        donors_list = [A(donor, _href=donor_url)]
-    else:
-        donors_list = [current.messages["NONE"]]
-
-    # Edit Bar
-    permit = current.auth.s3_has_permission
-    table = current.db.project_project
-    if permit("update", table, record_id=record_id):
-        vars = {"refresh": listid,
-                "record": record_id,
-                }
-        f = current.request.function
-        if f == "organisation" and organisation_id:
-            vars["(organisation)"] = organisation_id
-        # "record not found" since multiples here
-        #elif f == "location" and location_ids:
-        #    vars["(location)"] = location_ids
-        edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="project", f="project",
-                               args=[record_id, "update.popup"],
-                               vars=vars),
-                     _class="s3_modal",
-                     _title=current.response.s3.crud_strings.project_project.title_update,
-                     )
-    else:
-        # Read in Popup
-        edit_btn = A(I(" ", _class="icon icon-search"),
-                     _href=URL(c="project", f="project",
-                               args=[record_id, "read.popup"]),
-                     _class="s3_modal",
-                     _title=current.response.s3.crud_strings.project_project.title_display,
-                     )
-    if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
-                       _class="dl-item-delete",
-                       )
-    else:
-        delete_btn = ""
-    edit_bar = DIV(edit_btn,
-                   delete_btn,
-                   _class="edit-bar fright",
-                   )
-
-    # Dropdown of available documents
-    documents = raw["doc_document.file"]
-    if documents:
-        if not isinstance(documents, list):
-            documents = [documents]
-        doc_list = UL(_class="dropdown-menu",
-                      _role="menu",
-                      )
-        retrieve = db.doc_document.file.retrieve
-        for doc in documents:
-            try:
-                doc_name = retrieve(doc)[0]
-            except IOError:
-                doc_name = current.messages["NONE"]
-            doc_url = URL(c="default", f="download",
-                          args=[doc])
-            doc_item = LI(A(I(_class="icon-file"),
-                            " ",
-                            doc_name,
-                            _href=doc_url,
-                            ),
-                          _role="menuitem",
-                          )
-            doc_list.append(doc_item)
-        docs = DIV(A(I(_class="icon-paper-clip"),
-                     SPAN(_class="caret"),
-                     _class="btn dropdown-toggle",
-                     _href="#",
-                     **{"_data-toggle": "dropdown"}
-                     ),
-                   doc_list,
-                   _class="btn-group attachments dropdown pull-right",
-                   )
-    else:
-        docs = ""
-
-    # Render the item,
-    body = TAG[""](P(I(_class="icon-user"),
-                     " ",
-                     STRONG("%s:" % T("Focal Point")),
-                     " ",
-                     contact,
-                     _class="main_contact_ph"),
-                   P(I(_class="icon-calendar"),
-                     " ",
-                     STRONG("%s:" % T("Start & End Date")),
-                     " ",
-                     T("%(start_date)s to %(end_date)s") % \
-                            dict(start_date=start_date,
-                            end_date = end_date),
-                     _class="main_contact_ph"),
-                   P(I(_class="icon-link"),
-                     " ",
-                     STRONG("%s:" % T("Partner")),
-                     " ",
-                     *partners_list,
-                     _class="main_contact_ph"),
-                   P(I(_class="icon-money"),
-                     " ",
-                     STRONG("%s:" % T("Donor")),
-                     " ",
-                     *donors_list,
-                     _class="main_office-add")
-                   )
-
-    item = DIV(DIV(SPAN(" ", _class="card-title"),
-                   SPAN(*locations_list,
-                        _class="location-title"
-                        ),
-                   SPAN(date,
-                        _class="date-title",
-                        ),
-                   edit_bar,
-                   _class="card-header",
-                   ),
-               DIV(avatar,
-                   DIV(DIV(body,
-                           DIV(author,
-                               " - ",
-                               A(organisation,
-                                 _href=org_url,
-                                 _class="card-organisation",
-                                 ),
-                               _class="card-person",
-                               ),
-                           _class="media",
-                           ),
-                       _class="media-body",
-                       ),
-                   _class="media",
-                   ),
-               docs,
-               _class=item_class,
-               _id=item_id,
-               )
-
-    return item
-
-# -----------------------------------------------------------------------------
-def render_resources(listid, resource, rfields, record, **attr):
-    """
-        Custom dataList item renderer for Resources on the Profile pages
-
-        @param listid: the HTML ID for this list
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
-        @param attr: additional HTML attributes for the item
-    """
-
-    pkey = "org_resource.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
-    item_class = "thumbnail"
-
-    raw = record._row
-    author = record["org_resource.modified_by"]
-    date = record["org_resource.modified_on"]
-    quantity = record["org_resource.value"]
-    resource_type = record["org_resource.parameter_id"]
-    body = "%s %s" % (quantity, resource_type)
-    comments = raw["org_resource.comments"]
-    organisation = record["org_resource.organisation_id"]
-    organisation_id = raw["org_resource.organisation_id"]
-    location = record["org_resource.location_id"]
-    location_id = raw["org_resource.location_id"]
-    location_url = URL(c="gis", f="location",
-                       args=[location_id, "profile"])
-    logo = raw["org_organisation.logo"]
-
-    org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
-    if logo:
-        logo = A(IMG(_src=URL(c="default", f="download", args=[logo]),
-                     _class="media-object",
-                     ),
-                 _href=org_url,
-                 _class="pull-left",
-                 )
-    else:
-        logo = DIV(IMG(_class="media-object"),
-                   _class="pull-left")
-
-    # Edit Bar
-    permit = current.auth.s3_has_permission
-    table = current.db.org_resource
-    if permit("update", table, record_id=record_id):
-        vars = {"refresh": listid,
-                "record": record_id,
-                }
-        f = current.request.function
-        if f == "organisation" and organisation_id:
-            vars["(organisation)"] = organisation_id
-        elif f == "location" and location_id:
-            vars["(location)"] = location_id
-        edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="org", f="resource",
-                               args=[record_id, "update.popup"],
-                               vars=vars),
-                     _class="s3_modal",
-                     _title=current.response.s3.crud_strings.org_resource.title_update,
-                     )
-    else:
-        edit_btn = ""
-    if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
-                       _class="dl-item-delete",
-                       )
-    else:
-        delete_btn = ""
-    edit_bar = DIV(edit_btn,
-                   delete_btn,
-                   _class="edit-bar fright",
-                   )
-
-    # Render the item
-    avatar = logo
-    body = TAG[""](body, BR(), comments)
-
-    item = DIV(DIV(SPAN(" ", _class="card-title"),
-                   SPAN(A(location,
-                          _href=location_url,
-                          ),
-                        _class="location-title",
-                        ),
-                   SPAN(date,
-                        _class="date-title",
-                        ),
-                   edit_bar,
-                   _class="card-header",
-                   ),
-               DIV(avatar,
-                   DIV(DIV(body,
-                           DIV(author,
-                               " - ",
-                               A(organisation,
-                                 _href=org_url,
-                                 _class="card-organisation",
-                                 ),
-                               _class="card-person",
-                               ),
-                           _class="media",
-                           ),
-                       _class="media-body",
-                       ),
-                   _class="media",
-                   ),
-               #docs,
-               _class=item_class,
-               _id=item_id,
-               )
-
-    return item
-
-# -----------------------------------------------------------------------------
-def customize_cms_post_fields():
-    """
-        Customize cms_post fields for it's own controller & for Profile pages
-    """
-
-    s3db = current.s3db
-
-    # Hide Labels when just 1 column in inline form
-    s3db.doc_document.file.label = ""
-    s3db.event_event_post.event_id.label = ""
-
-    table = s3db.cms_post
-    field = table.location_id
-    field.label = ""
-    field.represent = s3db.gis_LocationRepresent(sep=" | ")
-    field.requires = IS_NULL_OR(
-                        IS_LOCATION_SELECTOR2(levels=("L0", "L1", "L2", "L3"))
-                     )
-    field.widget = S3LocationSelectorWidget2(levels=("L0", "L1", "L2", "L3"))
-
-    table.created_by.represent = s3_auth_user_represent_name
-
-    current.auth.settings.table_user.organisation_id.represent = \
-        s3db.org_organisation_represent
-
-    list_fields = ["series_id",
-                   "location_id",
-                   "date",
-                   "body",
-                   "created_by",
-                   "created_by$organisation_id",
-                   "document.file",
-                   #"event_post.event_id",
-                   ]
-
-    s3db.configure("cms_post",
-                   list_fields = list_fields,
-                   )
-
-    return table
-    
-# -----------------------------------------------------------------------------
-def cms_post_popup(r):
-    """
-        Customized Map popup for cms_post resource
-        - style like the cards
-        - currently unused
-    """
-
-    record = r.record
-    pkey = "cms_post.id"
-
-    # Construct the item ID
-    map_id = "default_map" # @ToDo: provide the map_id as a var in order to be able to support multiple maps
-    record_id = record[pkey]
-    item_id = "%s-%s" % (map_id, record_id)
-
-    item_class = "thumbnail"
-
-    db = current.db
-    table = db.cms_post
-
-    series = table.series_id.represent(record.series_id)
-    date = table.date.represent(record.date)
-    body = record.body
-    location_id = record.location_id
-    location = table.location_id.represent(location_id)
-    location_url = URL(c="gis", f="location", args=[location_id])
-    author_id = record.created_by
-    author = table.created_by.represent(author_id)
-
-    s3db = current.s3db
-    ltable = s3db.pr_person_user
-    ptable = db.pr_person
-    query = (ltable.user_id == author_id) & \
-            (ltable.pe_id == ptable.pe_id)
-    row = db(query).select(ptable.id,
-                           limitby=(0, 1)
-                           ).first()
-    if row:
-        person_url = URL(c="hrm", f="person", args=[row.id])
-    else:
-        person_url = "#"
-    author = A(author,
-               _href=person_url,
-               )
-
-    utable = db.auth_user
-    otable = db.org_organisation
-    query = (utable.id == author_id) & \
-            (otable.id == utable.organisation_id)
-    row = db(query).select(otable.id,
-                           otable.name,
-                           otable.logo,
-                           limitby=(0, 1)
-                           ).first()
-    if row:
-        organisation_id = row.id
-        organisation = row.name
-        org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
-        logo = URL(c="default", f="download", args=[row.logo])
-    else:
-        organisation_id = 0
-        organisation = ""
-        org_url = ""
-        logo = ""
-
-    avatar = IMG(_src=logo,
-                 _height=50,
-                 _width=50,
-                 _style="padding-right:5px;",
-                 _class="media-object")
-    avatar = A(avatar,
-               _href=org_url,
-               _class="pull-left",
-               )
-
-    # Edit Bar
-    permit = current.auth.s3_has_permission
-    if permit("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="cms", f="post",
-                               args=[record_id, "update.popup"],
-                               #vars={"refresh": listid,
-                               #      "record": record_id}
-                               ),
-                     _class="s3_modal",
-                     _title=T("Edit %(type)s") % dict(type=T(series)),
-                     )
-    else:
-        edit_btn = ""
-    if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
-                       _class="dl-item-delete",
-                       )
-    else:
-        delete_btn = ""
-    edit_bar = DIV(edit_btn,
-                   delete_btn,
-                   _class="edit-bar fright",
-                   )
-
-    # Dropdown of available documents
-    dtable = db.doc_document
-    query = (table.doc_id == dtable.doc_id) & \
-            (dtable.deleted == False)
-    documents = db(query).select(dtable.file) 
-    if documents:
-        doc_list = UL(_class="dropdown-menu",
-                      _role="menu",
-                      )
-        retrieve = db.doc_document.file.retrieve
-        for doc in documents:
-            filename = doc.file
-            try:
-                doc_name = retrieve(filename)[0]
-            except IOError:
-                doc_name = current.messages["NONE"]
-            doc_url = URL(c="default", f="download",
-                          args=[filename])
-            doc_item = LI(A(I(_class="icon-file"),
-                            " ",
-                            doc_name,
-                            _href=doc_url,
-                            ),
-                          _role="menuitem",
-                          )
-            doc_list.append(doc_item)
-        docs = DIV(A(I(_class="icon-paper-clip"),
-                     SPAN(_class="caret"),
-                     _class="btn dropdown-toggle",
-                     _href="#",
-                     **{"_data-toggle": "dropdown"}
-                     ),
-                   doc_list,
-                   _class="btn-group attachments dropdown pull-right",
-                   )
-    else:
-        docs = ""
-
-    icon = series.lower().replace(" ", "_")
-    card_label = TAG[""](I(_class="icon icon-%s" % icon),
-                         SPAN(" %s" % T(series),
-                              _class="card-title"))
-    # Type cards
-    if series == "Incident": 
-        # Apply additional highlighting for Incidents
-        item_class = "%s disaster" % item_class
-
-    # Render the item
-    item = DIV(DIV(card_label,
-                   SPAN(A(location,
-                          _href=location_url,
-                          ),
-                        _class="location-title",
-                        ),
-                   SPAN(date,
-                        _class="date-title",
-                        ),
-                   #edit_bar,
-                   _class="card-header",
-                   ),
-               DIV(avatar,
-                   DIV(DIV(body,
-                           DIV(author,
-                               " - ",
-                               A(organisation,
-                                 _href=org_url,
-                                 _class="card-organisation",
-                                 ),
-                               _class="card-person",
-                               ),
-                           _class="media",
-                           ),
-                       _class="media-body",
-                       ),
-                   _class="media",
-                   ),
-               docs,
-               _class=item_class,
-               _id=item_id,
-               )
-
-    return item
-    
-# =============================================================================
-def cms_post_age(row):
-    """
-        The age of the post
-        - used for colour-coding markers of Incidents
-    """
-
-    if hasattr(row, "cms_post"):
-        row = row.cms_post
-    try:
-        date = row.date
-    except:
-        # not available
-        return current.messages["NONE"]
-
-    now = current.request.utcnow
-    age = now - date
-    if age < timedelta(days=2):
-        return 1
-    elif age < timedelta(days=7):
-        return 2
-    else:
-        return 3
 
 # -----------------------------------------------------------------------------
 def customize_cms_post(**attr):
@@ -2370,250 +1065,6 @@ def customize_cms_post(**attr):
 settings.ui.customize_cms_post = customize_cms_post
 
 # -----------------------------------------------------------------------------
-def customize_event_event(**attr):
-    """
-        Customize event_event controller
-        - Profile Page
-    """
-
-    s3 = current.response.s3
-
-    # Custom PreP
-    standard_prep = s3.prep
-    def custom_prep(r):
-        if r.interactive:
-            ADD_EVENT = T("New Disaster")
-            s3.crud_strings["event_event"] = Storage(
-                title_create = ADD_EVENT,
-                title_display = T("Disaster Details"),
-                title_list = T("Disasters"),
-                title_update = T("Edit Disaster"),
-                title_search = T("Search Disasters"),
-                subtitle_create = T("Add New Disaster"),
-                label_list_button = T("List Disasters"),
-                label_create_button = ADD_EVENT,
-                label_delete_button = T("Delete Disaster"),
-                msg_record_created = T("Disaster added"),
-                msg_record_modified = T("Disaster updated"),
-                msg_record_deleted = T("Disaster deleted"),
-                msg_list_empty = T("No Disasters currently registered"))
-            
-            db = current.db
-            s3db = current.s3db
-
-            # Load normal Model
-            table = s3db.event_event
-
-            table.exercise.label = T("Is this an Exercise?")
-            table.zero_hour.label = T("Start Time")
-
-            if r.method =="datalist":
-                # Disaster selection page
-                # 2-column datalist, 6 rows per page
-                s3.dl_pagelength = 12
-                s3.dl_rowsize = 2
-
-            elif r.method == "profile":
-                # Customise the cms_post table as that is used for the widgets
-                customize_cms_post_fields()
-
-                gtable = db.gis_location
-                ltable = db.event_event_location
-                query = (ltable.event_id == r.id) & \
-                        (ltable.location_id == gtable.id)
-                location = db(query).select(gtable.id,
-                                            gtable.lat_max,
-                                            gtable.lon_max,
-                                            gtable.lat_min,
-                                            gtable.lon_min,
-                                            limitby=(0, 1)).first()
-                if location:
-                    bbox = {"lat_max" : location.lat_max,
-                            "lon_max" : location.lon_max,
-                            "lat_min" : location.lat_min,
-                            "lon_min" : location.lon_min
-                            }
-                    default = "~.(location)=%s" % location.id
-                else:
-                    # Default bounds
-                    bbox = {}
-                    # No default Location
-                    default = None
-                map_widget = dict(label = "Map",
-                                  type = "map",
-                                  context = "event",
-                                  icon = "icon-map",
-                                  height = 383,
-                                  width = 568,
-                                  bbox = bbox,
-                                  )
-                incidents_widget = dict(label = "Incidents",
-                                        title_create = "Add New Incident",
-                                        type = "datalist",
-                                        tablename = "cms_post",
-                                        context = "event",
-                                        default = default,
-                                        filter = S3FieldSelector("series_id$name") == "Incident",
-                                        icon = "icon-incident",
-                                        layer = "Incidents",
-                                        # provided by Catalogue Layer
-                                        #marker = "incident",
-                                        list_layout = render_profile_posts,
-                                        )
-                assessments_widget = dict(label = "Assessments",
-                                          title_create = "Add New Assessment",
-                                          type = "datalist",
-                                          tablename = "cms_post",
-                                          context = "event",
-                                          default = default,
-                                          filter = S3FieldSelector("series_id$name") == "Assessment",
-                                          icon = "icon-assessment",
-                                          layer = "Assessments",
-                                          # provided by Catalogue Layer
-                                          #marker = "assessment",
-                                          list_layout = render_profile_posts,
-                                          )
-                activities_widget = dict(label = "Activities",
-                                         title_create = "Add New Activity",
-                                         type = "datalist",
-                                         tablename = "cms_post",
-                                         context = "event",
-                                         default = default,
-                                         filter = S3FieldSelector("series_id$name") == "Activity",
-                                         icon = "icon-activity",
-                                         layer = "Activities",
-                                         # provided by Catalogue Layer
-                                         #marker = "activity",
-                                         list_layout = render_profile_posts,
-                                         )
-                reports_widget = dict(label = "Reports",
-                                      title_create = "Add New Report",
-                                      type = "datalist",
-                                      tablename = "cms_post",
-                                      context = "event",
-                                      default = default,
-                                      filter = S3FieldSelector("series_id$name") == "Report",
-                                      icon = "icon-report",
-                                      layer = "Reports",
-                                      # provided by Catalogue Layer
-                                      #marker = "report",
-                                      list_layout = render_profile_posts,
-                                      )
-                #comments_widget = dict(label = "Comments",
-                #                       type = "comments",
-                #                       icon = "icon-comments-alt",
-                #                       colspan = 2,
-                #                       )
-                record = r.record
-                ttable = db.event_event_type
-                event_type = db(ttable.id == record.event_type_id).select(ttable.name,
-                                                                          limitby=(0, 1),
-                                                                          ).first().name
-                s3db.configure("event_event",
-                               profile_title = "%s : %s" % (s3.crud_strings["event_event"].title_list, 
-                                                            record.name),
-                               profile_header = DIV(A(IMG(_class="media-object",
-                                                          _src=URL(c="static",
-                                                                   f="img",
-                                                                   args=["event",
-                                                                         "%s.png" % event_type]),
-                                                          ),
-                                                      _class="pull-left",
-                                                      #_href=event_url,
-                                                      ),
-                                                    H2(record.name),
-                                                    #P(record.comments),
-                                                    _class="profile_header",
-                                                    ),
-                               profile_widgets = [incidents_widget,
-                                                  map_widget,
-                                                  assessments_widget,
-                                                  activities_widget,
-                                                  reports_widget,
-                                                  #comments_widget,
-                                                  ])
-
-            # Include a Location inline
-            location_field = s3db.event_event_location.location_id
-            # Don't label a single field InlineComponent
-            location_field.label = ""
-            represent = S3Represent(lookup="gis_location")
-            location_field.represent = represent
-            # L1s only
-            location_field.requires = IS_NULL_OR(
-                                        IS_ONE_OF(db, "gis_location.id",
-                                                  represent,
-                                                  sort = True,
-                                                  filterby = "level",
-                                                  filter_opts = ["L1"]
-                                                  )
-                                        )
-            # Don't add new Locations here
-            location_field.comment = None
-            # Simple dropdown
-            location_field.widget = None
-
-            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-            crud_form = S3SQLCustomForm(
-                    "name",
-                    "event_type_id",
-                    "exercise",
-                    "zero_hour",
-                    "closed",
-                    S3SQLInlineComponent(
-                        "event_location",
-                        label = T("District"),
-                        multiple = False,
-                        fields = ["location_id"],
-                    ),
-                    "comments",
-                )
-            
-            s3db.configure("event_event",
-                           create_next = URL(c="event", f="event",
-                                             args=["[id]", "profile"]),
-                           crud_form = crud_form,
-                           # We want the Create form to be in a modal, not inline, for consistency
-                           listadd = False,
-                           list_layout = render_events,
-                           )
-
-        # Call standard prep
-        if callable(standard_prep):
-            result = standard_prep(r)
-            if not result:
-                return False
-
-        return True
-    s3.prep = custom_prep
-
-    # Custom postp
-    standard_postp = s3.postp
-    def custom_postp(r, output):
-        if r.interactive and \
-           current.auth.s3_has_permission("create", r.table):
-            # Insert a Button to Create New in Modal
-            output["showadd_btn"] = A(I(_class="icon icon-plus-sign big-add"),
-                                      _href=URL(c="event", f="event",
-                                                args=["create.popup"],
-                                                vars={"refresh": "datalist"}),
-                                      _class="btn btn-primary s3_modal",
-                                      _role="button",
-                                      _title=T("Add New Disaster"),
-                                      )
-
-        # Call standard postp
-        if callable(standard_postp):
-            output = standard_postp(r, output)
-
-        return output
-    s3.postp = custom_postp
-
-    return attr
-
-settings.ui.customize_event_event = customize_event_event
-
-# -----------------------------------------------------------------------------
 def customize_gis_location(**attr):
     """
         Customize gis_location controller
@@ -2656,8 +1107,7 @@ def customize_gis_location(**attr):
             elif r.method == "profile":
         
                 # Customise tables used by widgets
-                customize_cms_post_fields()
-                customize_project_project_fields()
+                #customize_cms_post_fields()
 
                 # gis_location table (Sub-Locations)
                 table.parent.represent = s3db.gis_LocationRepresent(sep=" | ")
@@ -2692,52 +1142,18 @@ def customize_gis_location(**attr):
                 #                        show_on_map = False,
                 #                        list_layout = render_locations_profile,
                 #                        )
-                incidents_widget = dict(label = "Incidents",
-                                        title_create = "Add New Incident",
-                                        type = "datalist",
-                                        tablename = "cms_post",
-                                        context = "location",
-                                        default = default,
-                                        filter = (S3FieldSelector("series_id$name") == "Incident") & (S3FieldSelector("expired") == False),
-                                        icon = "icon-incident",
-                                        layer = "Incidents",
-                                        # provided by Catalogue Layer
-                                        #marker = "incident",
-                                        list_layout = render_profile_posts,
-                                        )
-                projects_widget = dict(label = "Projects",
-                                       title_create = "Add New Project",
-                                       type = "datalist",
-                                       tablename = "project_project",
-                                       context = "location",
-                                       default = default,
-                                       icon = "icon-project",
-                                       show_on_map = False, # No Marker yet & only show at L1-level anyway
-                                       list_layout = render_projects,
-                                       )
-                reports_widget = dict(label = "Reports",
-                                      title_create = "Add New Report",
-                                      type = "datalist",
-                                      tablename = "cms_post",
-                                      context = "location",
-                                      default = default,
-                                      filter = S3FieldSelector("series_id$name") == "Report",
-                                      icon = "icon-report",
-                                      layer = "Reports",
-                                      # provided by Catalogue Layer
-                                      #marker = "report",
-                                      list_layout = render_profile_posts,
-                                      )
-                # @ToDo: Renderer
-                #distributions_widget = dict(label = "Distributions",
-                #                            title_create = "Add New Distribution",
-                #                            type = "datalist",
-                #                            tablename = "supply_distribution",
-                #                            context = "location",
-                #                            default = default,
-                #                            icon = "icon-resource",
-                #                            list_layout = render_distributions,
-                #                            )
+                sites_widget = dict(label = "Locations",
+                                    title_create = "Add New Location",
+                                    type = "datalist",
+                                    tablename = "org_facility",
+                                    context = "location",
+                                    default = default,
+                                    icon = "icon-home",
+                                    layer = "Facilities",
+                                    # provided by Catalogue Layer
+                                    #marker = "office",
+                                    list_layout = render_sites,
+                                    )
                 # Build the icon, if it doesn't already exist
                 filename = "%s.svg" % record_id
                 import os
@@ -2769,12 +1185,8 @@ def customize_gis_location(**attr):
                                                     _class="profile_header",
                                                     ),
                                profile_widgets = [#locations_widget,
-                                                  incidents_widget,
+                                                  sites_widget,
                                                   map_widget,
-                                                  projects_widget,
-                                                  reports_widget,
-                                                  #activities_widget,
-                                                  #distributions_widget,
                                                   ],
                                )
 
@@ -2937,20 +1349,20 @@ def customize_hrm_job_title(**attr):
 settings.ui.customize_hrm_job_title = customize_hrm_job_title
 
 # -----------------------------------------------------------------------------
-def customize_org_office_fields():
+def customize_org_facility_fields():
     """
-        Customize org_office for Profile widgets and 'more' popups
+        Customize org_facility for Profile widgets and 'more' popups
     """
 
     s3db = current.s3db
-    table = s3db.org_office
+    table = s3db.org_facility
     table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
     table.modified_by.represent = s3_auth_user_represent_name
     table.modified_on.represent = datetime_represent
 
     list_fields = ["name",
                    "organisation_id",
-                   "office_type_id",
+                   "site_facility_type.facility_type_id",
                    "location_id",
                    "location_id$addr_street",
                    "modified_by",
@@ -2958,19 +1370,19 @@ def customize_org_office_fields():
                    "organisation_id$logo",
                    ]
 
-    s3db.configure("org_office",
+    s3db.configure("org_facility",
                    list_fields = list_fields,
                    )
 
 # -----------------------------------------------------------------------------
-def customize_org_office(**attr):
+def customize_org_facility(**attr):
     """
-        Customize org_office controller
+        Customize org_facility controller
     """
 
     s3 = current.response.s3
     s3db = current.s3db
-    table = s3db.org_office
+    table = s3db.org_facility
     
     # Custom PreP
     standard_prep = s3.prep
@@ -2982,21 +1394,19 @@ def customize_org_office(**attr):
                 return False
 
         if r.method == "datalist":
-            customize_org_office_fields()
-            s3db.configure("org_office",
+            customize_org_facility_fields()
+            s3db.configure("org_facility",
                            # Don't include a Create form in 'More' popups
                            listadd = False,
-                           list_layout = render_offices,
+                           list_layout = render_sites,
                            )
 
         elif r.interactive or r.representation == "aadata":
             # Configure fields
             table.code.readable = table.code.writable = False
-            #table.office_type_id.readable = table.office_type_id.writable = False
             table.phone1.readable = table.phone1.writable = False
             table.phone2.readable = table.phone2.writable = False
             table.email.readable = table.email.writable = False
-            table.fax.readable = table.fax.writable = False
             location_field = table.location_id
 
             # Filter from a Profile page?
@@ -3030,7 +1440,7 @@ def customize_org_office(**attr):
         if r.interactive:
             actions = [dict(label=str(T("Open")),
                             _class="action-btn",
-                            url=URL(c="org", f="office",
+                            url=URL(c="org", f="facility",
                                     args=["[id]", "read"]))
                        ]
             db = current.db
@@ -3041,7 +1451,7 @@ def customize_org_office(**attr):
             if has_permission("update", table):
                 action = dict(label=str(T("Edit")),
                               _class="action-btn",
-                              url=URL(c="org", f="office",
+                              url=URL(c="org", f="facility",
                                       args=["[id]", "update"]),
                               )
                 if ownership_required("update", table):
@@ -3059,7 +1469,7 @@ def customize_org_office(**attr):
             if has_permission("delete", table):
                 action = dict(label=str(T("Delete")),
                               _class="action-btn",
-                              url=URL(c="org", f="office",
+                              url=URL(c="org", f="facility",
                                       args=["[id]", "delete"]),
                               )
                 if ownership_required("delete", table):
@@ -3077,9 +1487,9 @@ def customize_org_office(**attr):
             s3.actions = actions
             if isinstance(output, dict):
                 if "form" in output:
-                    output["form"].add_class("org_office")
+                    output["form"].add_class("org_facility")
                 elif "item" in output and hasattr(output["item"], "add_class"):
-                    output["item"].add_class("org_office")
+                    output["item"].add_class("org_facility")
 
         # Call standard postp
         if callable(standard_postp):
@@ -3090,13 +1500,14 @@ def customize_org_office(**attr):
 
     return attr
 
-settings.ui.customize_org_office = customize_org_office
+settings.ui.customize_org_facility = customize_org_facility
 
 # -----------------------------------------------------------------------------
 def customize_org_organisation(**attr):
     """
         Customize org_organisation controller
         - Profile Page
+        - Requests
     """
 
     s3 = current.response.s3
@@ -3131,15 +1542,15 @@ def customize_org_organisation(**attr):
                            "name",
                            "logo",
                            "phone",
+                           "needs.money",
+                           "needs.vol",
                            ]
 
             s3db = current.s3db
             if r.method == "profile":
                 # Customise tables used by widgets
-                customize_cms_post_fields()
                 customize_hrm_human_resource_fields()
-                customize_org_office_fields()
-                customize_project_project_fields()
+                customize_org_facility_fields()
 
                 contacts_widget = dict(label = "Contacts",
                                        title_create = "Add New Contact",
@@ -3159,60 +1570,17 @@ def customize_org_organisation(**attr):
                                   height = 383,
                                   width = 568,
                                   )
-                offices_widget = dict(label = "Offices",
-                                      title_create = "Add New Office",
-                                      type = "datalist",
-                                      tablename = "org_office",
-                                      context = "organisation",
-                                      icon = "icon-home",
-                                      layer = "Offices",
-                                      # provided by Catalogue Layer
-                                      #marker = "office",
-                                      list_layout = render_offices,
-                                      )
-                projects_widget = dict(label = "Projects",
-                                       title_create = "Add New Project",
-                                       type = "datalist",
-                                       tablename = "project_project",
-                                       context = "organisation",
-                                       icon = "icon-project",
-                                       show_on_map = False, # No Marker yet & only show at L1-level anyway
-                                       list_layout = render_projects,
-                                       )
-                reports_widget = dict(label = "Reports",
-                                      title_create = "Add New Report",
-                                      type = "datalist",
-                                      tablename = "cms_post",
-                                      context = "organisation",
-                                      filter = S3FieldSelector("series_id$name") == "Report",
-                                      icon = "icon-report",
-                                      layer = "Reports",
-                                      # provided by Catalogue Layer
-                                      #marker = "report",
-                                      list_layout = render_profile_posts,
-                                      )
-                assessments_widget = dict(label = "Assessments",
-                                          title_create = "Add New Assessment",
-                                          type = "datalist",
-                                          tablename = "cms_post",
-                                          context = "organisation",
-                                          filter = S3FieldSelector("series_id$name") == "Assessment",
-                                          icon = "icon-assessment",
-                                          layer = "Assessments",
-                                          # provided by Catalogue Layer
-                                          #marker = "assessment",
-                                          list_layout = render_profile_posts,
-                                          )
-                # @ToDo: Renderer
-                #distributions_widget = dict(label = "Distributions",
-                #                            title_create = "Add New Distribution",
-                #                            type = "datalist",
-                #                            tablename = "supply_distribution",
-                #                            context = "location",
-                #                            default = default,
-                #                            icon = "icon-resource",
-                #                            list_layout = render_distributions,
-                #                            )
+                sites_widget = dict(label = "Locations",
+                                    title_create = "Add New Location",
+                                    type = "datalist",
+                                    tablename = "org_facility",
+                                    context = "organisation",
+                                    icon = "icon-home",
+                                    layer = "Facilities",
+                                    # provided by Catalogue Layer
+                                    #marker = "office",
+                                    list_layout = render_sites,
+                                    )
                 record = r.record
                 s3db.configure("org_organisation",
                                profile_title = "%s : %s" % (s3.crud_strings["org_organisation"].title_list, 
@@ -3229,33 +1597,27 @@ def customize_org_organisation(**attr):
                                                     ),
                                profile_widgets = [contacts_widget,
                                                   map_widget,
-                                                  offices_widget,
-                                                  projects_widget,
-                                                  #activities_widget,
-                                                  reports_widget,
-                                                  assessments_widget,
-                                                  #distributions_widget,
+                                                  sites_widget,
+                                                  #needs_widget,
                                                   ]
                                )
             elif r.method == "datalist":
                 # Stakeholder selection page
                 # 2-column datalist, 6 rows per page
-                s3.dl_pagelength = 12
-                s3.dl_rowsize = 2
+                #s3.dl_pagelength = 12
+                #s3.dl_rowsize = 2
 
-                # Add a component of just National offices for the Org address
-                ottable = s3db.org_office_type
-                query = (ottable.name == "National")
-                national = current.db(query).select(ottable.id,
-                                                    limitby=(0, 1)
-                                                    ).first().id
-                s3db.add_component("org_office",
-                                   org_organisation=dict(name="nat_office",
-                                                         joinby="organisation_id",
-                                                         filterby="office_type_id",
-                                                         filterfor=[national],
-                                                         ))
-                list_fields.append("nat_office.location_id$addr_street")
+                # Needs page
+                ntable = s3db.req_organisation_needs
+                from s3.s3filter import S3OptionsFilter
+                filter_widgets = [S3OptionsFilter("needs.money",
+                                                  ),
+                                  S3OptionsFilter("needs.vol",
+                                                  ),
+                                  ]
+                s3db.configure("org_organisation",
+                               filter_widgets=filter_widgets
+                               )
 
             # Represent used in rendering
             current.auth.settings.table_user.organisation_id.represent = s3db.org_organisation_represent
@@ -4331,42 +2693,48 @@ settings.modules = OrderedDict([
         # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
         module_type = None,
     )),
-    ("event", Storage(
-        name_nice = "Disasters",
-        #description = "Events",
-        restricted = True,
-        module_type = None
-    )),
-    ("project", Storage(
-        name_nice = "Projects",
-        restricted = True,
-        module_type = None
-    )),
+    #("event", Storage(
+    #    name_nice = "Disasters",
+    #    #description = "Events",
+    #    restricted = True,
+    #    module_type = None
+    #)),
+    ("req", Storage(
+            name_nice = "Requests",
+            #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
+            restricted = True,
+            module_type = None,
+        )),
+    #("project", Storage(
+    #    name_nice = "Projects",
+    #    restricted = True,
+    #    module_type = None
+    #)),
     ("stats", Storage(
         name_nice = "Statistics",
         restricted = True,
         module_type = None
     )),
-    ("vulnerability", Storage(
-        name_nice = "Vulnerability",
-        restricted = True,
-        module_type = None
-    )),
-    ("transport", Storage(
-        name_nice = "Transport",
-        restricted = True,
-        module_type = None
-    )),
-    ("hms", Storage(
-        name_nice = "Hospitals",
-        restricted = True,
-        module_type = None
-    )),
-    ("cr", Storage(
-        name_nice = "Shelters",
-        restricted = True,
-        module_type = None
-    )),
+    #("vulnerability", Storage(
+    #    name_nice = "Vulnerability",
+    #    restricted = True,
+    #    module_type = None
+    #)),
+    #("transport", Storage(
+    #    name_nice = "Transport",
+    #    restricted = True,
+    #    module_type = None
+    #)),
+    #("hms", Storage(
+    #    name_nice = "Hospitals",
+    #    restricted = True,
+    #    module_type = None
+    #)),
+    #("cr", Storage(
+    #    name_nice = "Shelters",
+    #    restricted = True,
+    #    module_type = None
+    #)),
     ("supply", Storage(
         name_nice = "Supply Chain Management",
         restricted = True,

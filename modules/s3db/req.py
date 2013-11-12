@@ -1922,31 +1922,89 @@ class S3RequestRecurringModel(S3Model):
 # =============================================================================
 class S3RequestSummaryModel(S3Model):
     """
+        Simple Requests Management System
+        - Organisations can request Money or Time from remote volunteers
+        - Sites can request Time from local volunteers or accept drop-off for Goods
     """
 
-    names = ["req_site_needs",
+    names = ["req_organisation_needs",
+             "req_site_needs",
              ]
 
     def model(self):
 
         T = current.T
 
+        configure = self.configure
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+
+        # -----------------------------------------------------------------
+        # Summary of Needs for an Organisation
+        #
+        tablename = "req_organisation_needs"
+        table = define_table(tablename,
+                             self.org_organisation_id(),
+                             Field("money", "boolean",
+                                   label = T("Soliciting Cash Donations?"),
+                                   represent = s3_yes_no_represent,
+                                   ),
+                             Field("money_details", "text",
+                                   label = T("Details"),
+                                   widget = s3_richtext_widget,
+                                   ),
+                             Field("vol", "boolean",
+                                   label = T("Opportunities to Volunteer Remotely?"),
+                                   represent = s3_yes_no_represent,
+                                   ),
+                             Field("vol_details", "text",
+                                   label = T("Details"),
+                                   widget = s3_richtext_widget,
+                                   ),
+                             *s3_meta_fields())
+
+        # CRUD strings
+        ADD_NEEDS = T("Add Organization Needs")
+        crud_strings[tablename] = Storage(
+            title_display=T("Organization Needs"),
+            title_update=T("Edit Organization Needs"),
+            label_delete_button=T("Delete Organization Needs"),
+            msg_record_created=T("Organization Needs added"),
+            msg_record_modified=T("Organization Needs updated"),
+            msg_record_deleted=T("Organization Needs deleted"))
+
         # -----------------------------------------------------------------
         # Summary of Needs for a site
         #
         tablename = "req_site_needs"
-        table = self.define_table(tablename,
-                                  self.super_link("site_id", "org_site"),
-                                  s3_comments("needs",
-                                              label=T("Needs"),
-                                              comment=None,
-                                              widget=S3PriorityListWidget(),
-                                              ),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             self.super_link("site_id", "org_site"),
+                             Field("vol", "boolean",
+                                   label = T("Opportunities to Volunteer On-Site?"),
+                                   represent = s3_yes_no_represent,
+                                   ),
+                             Field("vol_details", "text",
+                                   label = T("Details"),
+                                   widget = s3_richtext_widget,
+                                   ),
+                             Field("goods", "boolean",
+                                   label = T("Drop-off Location for Goods?"),
+                                   represent = s3_yes_no_represent,
+                                   ),
+                             Field("goods_details", "text",
+                                   label = T("Details"),
+                                   widget = s3_richtext_widget,
+                                   ),
+                             #s3_comments("needs",
+                             #            label=T("Needs"),
+                             #            comment=None,
+                             #            widget=S3PriorityListWidget(),
+                             #            ),
+                             *s3_meta_fields())
 
         # CRUD strings
         ADD_NEEDS = T("Add Site Needs")
-        current.response.s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             title_display=T("Site Needs"),
             title_update=T("Edit Site Needs"),
             label_delete_button=T("Delete Site Needs"),

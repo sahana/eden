@@ -77,31 +77,14 @@
    <a class='brand' href='/{{=appname}}/default/index'><img src="/{{=appname}}/static/img/S3menu_logo.png" style="width:29px;margin:0 0 -20px 0" alt=""/></a>
    <div class='nav-collapse collapse'>
     <ul class='nav'>
-     <li><a href='/{{=appname}}/default/index/newsfeed'> <i class='icon-updates'></i> {{=T("News Feed")}}</a></li>
-     <li><a href='/{{=appname}}/gis/index'><i class='icon-map'></i> {{=T("Map")}}</a></li>
-     <li class='dropdown'> <a href='#' class='dropdown-toggle disabled top-level' id='resources' data-toggle='dropdown'><i class='icon-project'></i> {{=T("Resources")}}<b class='caret'></b></a>
-      <ul class='dropdown-menu' role='menu' aria-labelledby='resources'>
-       <li role='menuitem'><a href='/{{=appname}}/hms/hospital/summary' tabindex='-1' class='menu-item'><i class='icon-h-sign'></i> {{=T("Health Facilities")}}</a></li>
-       <li role='menuitem'><a href='/{{=appname}}/org/resource' tabindex='-1' class='menu-item'><i class='icon-project'></i> {{=T("Resources")}}</a></li>
-       <li role='menuitem'><a href='/{{=appname}}/cr/shelter/summary' tabindex='-1' class='menu-item'><i class='icon-umbrella'></i> {{=T("Shelters")}}</a></li>
-      </ul>
-     </li>
-     <li class='dropdown'> <a href='#' class='dropdown-toggle disabled top-level' id='projects' data-toggle='dropdown'><i class='icon-project'></i> {{=T("Projects")}}<b class='caret'></b></a>
-      <ul class='dropdown-menu' role='menu' aria-labelledby='projects'>
-       <li role='menuitem'><a href='/{{=appname}}/project/beneficiary/summary' tabindex='-1' class='menu-item'><i class='icon-tasks'></i> {{=T("Beneficiaries")}}</a></li>
-       <li role='menuitem'><a href='/{{=appname}}/supply/distribution/summary' tabindex='-1' class='menu-item'><i class='icon-tasks'></i> {{=T("Distributions")}}</a></li>
-       <li role='menuitem'><a href='/{{=appname}}/project/project' tabindex='-1' class='menu-item'><i class='icon-project'></i> {{=T("Projects")}}</a></li>
-      </ul>
-     </li>
-     <li class='dropdown'> <a href='#' class='dropdown-toggle disabled top-level' id='profiles' data-toggle='dropdown'><i class='icon-folder-open-alt'></i> {{=T("Profiles")}}<b class='caret'></b></a>
-      <ul class='dropdown-menu' role='menu' aria-labelledby='profiles'>
-       <!--<li role='menuitem'><a href='/{{=appname}}/event/event/datalist' tabindex='-1' class='menu-item'><i class='icon-incident'></i> {{=T("Disasters")}}</a></li>-->
-       <li role='menuitem'><a href='/{{=appname}}/gis/location/datalist' tabindex='-1' class='menu-item'><i class='icon-map'></i> {{=T("Regions")}}</a></li>
-       <li role='menuitem'><a href='/{{=appname}}/org/organisation/datalist' tabindex='-1' class='menu-item'><i class='icon-sitemap'></i> {{=T("Organizations")}}</a></li>
-      </ul>
-     </li>
+     <li><a href='/{{=appname}}/gis'><i class='icon-map'></i> {{=T("Map")}}</a></li>
+     <li><a href='/{{=appname}}/req/organisation/datalist?needs.money=True'><i class='icon-dollar'></i> {{=T("Money")}}</a></li>
+     <li><a href='/{{=appname}}/default/index/time'><i class='icon-time'></i> {{=T("Time")}}</a></li>
+     <li><a href='/{{=appname}}/req/facility/datalist?needs.goods=True'><i class='icon-truck'></i> {{=T("Goods")}}</a></li>
      <li class='dropdown'> <a href='#' class='dropdown-toggle disabled top-level' id='more' data-toggle='dropdown'><i class='icon-plus-sign'></i> {{=T("More")}}<b class='caret'></b></a>
       <ul class='dropdown-menu' role='menu' aria-labelledby='more'>
+       <li role='menuitem'><a href='/{{=appname}}/org/organisation/datalist' tabindex='-1' class='menu-item'><i class='icon-sitemap'></i> {{=T("Organizations")}}</a></li>
+       <li role='menuitem'><a href='/{{=appname}}/gis/location/datalist' tabindex='-1' class='menu-item'><i class='icon-map'></i> {{=T("Regions")}}</a></li>
        <li role='menuitem'><a href='/{{=appname}}/pr/person' tabindex='-1' class='menu-item'><i class='icon-contact'></i> {{=T("Contact Directory")}}</a></li>
        <li role='menuitem'><a href='/{{=appname}}/stats/demographic' tabindex='-1' class='menu-item'><i class='icon-tasks'></i> {{=T("Demographics")}}</a></li>
        <li role='menuitem'><a href='/{{=appname}}/doc/document' tabindex='-1' class='menu-item'><i class='icon-file-alt'></i> {{=T("Documents")}}</a></li>
@@ -118,11 +101,8 @@
        <li><a href='/{{=appname}}/pr/person'><i class='icon-list'></i> {{=T("Contact People")}}</a></li>
        <li class='divider'></li>
        <li><a href='/{{=appname}}/default/person'><i class='icon-user'></i> {{=auth.user.email}}</a></li>
-       <!--<li><a href='/{{=appname}}/default/index/filters'><i class='icon-filter'></i> {{=T("Saved Filters")}}</a></li>-->
-       <!--<li><a href='/{{=appname}}/gis/config'><i class='icon-globe'></i> {{=T("Saved Maps")}}</a></li>-->
        <li><a href='/{{=appname}}/default/user/change_password'><i class='icon-lock'></i> {{=T("Change Password")}}</a></li>
        <li><a href='/{{=appname}}/default/user/logout'><i class='icon-off'></i> {{=T("Logout")}}</a></li>
-       <!--<li><a href='/{{=appname}}/default/user/register'><i class='icon-check'></i> {{=T("Register")}}</a></li>-->
       </ul>
      </li>
      {{else:}}{{if request.controller == "default" and request.function == "user" and "login" in request.args:}} {{else:}}
