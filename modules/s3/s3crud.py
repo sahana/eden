@@ -1456,41 +1456,41 @@ class S3CRUD(S3Method):
                     available_records = current.db(table._id > 0)
                 if available_records.select(table._id,
                                             limitby=(0, 1)).first():
-                    msg = DIV(self.crud_string(resource.tablename,
-                                               "msg_no_match"),
-                              _class="empty")
+                    empty = self.crud_string(resource.tablename,
+                                             "msg_no_match")
                 else:
-                    msg = DIV(self.crud_string(resource.tablename,
-                                               "msg_list_empty"),
-                              _class="empty")
+                    empty = self.crud_string(resource.tablename,
+                                             "msg_list_empty")
 
                 s3.no_formats = True
                 if r.component and "showadd_btn" in output:
                     # Hide the list and show the form by default
                     del output["showadd_btn"]
-                    msg = ""
-
-                data = msg
-
+                    empty = ""
             else:
-                # Allow customization of the datalist Ajax-URL
-                # Note: the Ajax-URL must use the .dl representation and
-                # plain.html view for pagination to work properly!
+                empty = None
+
+            # Allow customization of the datalist Ajax-URL
+            # Note: the Ajax-URL must use the .dl representation and
+            # plain.html view for pagination to work properly!
+            ajax_url = attr.get("list_ajaxurl", None)
+            if not ajax_url:
                 vars = dict([(k,v) for k, v in r.get_vars.iteritems()
                                    if k not in ("start", "limit")])
-                ajax_url = attr.get("list_ajaxurl", None)
-                if not ajax_url:
-                    ajax_url = r.url(representation="dl", vars=vars)
+                ajax_url = r.url(representation="dl", vars=vars)
                     
-                # Render the list
-                dl = datalist.html(
-                        start = start if start else 0,
-                        limit = limit if limit else numrows,
-                        pagesize = pagelength,
-                        rowsize = rowsize,
-                        ajaxurl = ajax_url
-                     )
-                data = dl
+            # Render the list (even if empty => Ajax-section is required
+            # in any case to be able to Ajax-refresh e.g. after adding
+            # new records or changing the filter)
+            dl = datalist.html(start = start if start else 0,
+                               limit = limit if limit else numrows,
+                               pagesize = pagelength,
+                               rowsize = rowsize,
+                               ajaxurl = ajax_url)
+            if empty:
+                # Insert empty message
+                dl.insert(0, DIV(empty, _class="empty"))
+            data = dl
         else:
             r.error(501, r.ERROR.BAD_FORMAT)
 
