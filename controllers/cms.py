@@ -330,19 +330,14 @@ def newsfeed():
     if len(settings.gis.countries) == 1:
         levels.remove("L0")
 
-    # @ToDo: deployment_settings
+    # @ToDo: deployment_setting
     #org_field = "created_by$organisation_id"
     org_field = "post_organisation.organisation_id"
-    s3db.add_component("cms_post_organisation",
-                       cms_post=dict(joinby="post_id",
-                                     # @ToDo: deployment_setting
-                                     multiple=False,
-                                     ))
-    s3db.add_component("cms_post_contact",
-                       cms_post=dict(joinby="post_id",
-                                     # @ToDo: deployment_setting
-                                     multiple=False,
-                                     ))
+
+    # @ToDo: deployment_setting
+    #contact_field = "created_by"
+    #table.created_by.represent = s3_auth_user_represent_name
+    contact_field = "post_contact.person_id"
 
     from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter, S3DateFilter
     filter_widgets = [S3TextFilter(["body"],
@@ -386,11 +381,12 @@ def newsfeed():
                    filter_widgets = filter_widgets,
                    list_layout = s3db.cms_render_posts,
                    # Create form comes via AJAX in a Modal
-                   insertable = False,
+                   #insertable = False,
                    notify_fields = [(T("Type"), "series_id"),
                                     (T("Date"), "date"),
                                     (T("Location"), "location_id"),
                                     (T("Organization"), org_field),
+                                    (T("Contact"), contact_field),
                                     (T("Description"), "body"),
                                     ],
                    notify_template = "notify_post",
@@ -496,6 +492,20 @@ def newsfeed():
                     #    fields = ["event_id"],
                     #    orderby = "event_id$name",
                     #),
+                    # @ToDo: deployment_setting
+                    S3SQLInlineComponent(
+                        "post_organisation",
+                        label = T("Organization"),
+                        fields = ["organisation_id"],
+                        multiple = False,
+                    ),
+                    # @ToDo: deployment_setting
+                    S3SQLInlineComponent(
+                        "post_contact",
+                        label = T("Contact"),
+                        fields = ["person_id"],
+                        multiple = False,
+                    ),
                     S3SQLInlineComponent(
                         "document",
                         name = "file",

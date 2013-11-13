@@ -241,6 +241,17 @@ class S3ContentModel(S3Model):
                                        key="tag_id",
                                        actuate="hide"))
 
+        add_component("cms_post_organisation",
+                      cms_post=dict(joinby="post_id",
+                                    # @ToDo: deployment_setting
+                                    multiple=False,
+                                    ))
+        add_component("cms_post_contact",
+                      cms_post=dict(joinby="post_id",
+                                    # @ToDo: deployment_setting
+                                    multiple=False,
+                                    ))
+
         # For InlineForm to tag Posts to Events
         add_component("event_event_post", cms_post="post_id")
 
@@ -787,28 +798,28 @@ def cms_customize_post_fields():
 
     s3db = current.s3db
 
-    # @ToDo: deployment_settings
-    #org_field = "created_by$organisation_id"
-    #current.auth.settings.table_user.organisation_id.represent = \
-    #    s3db.org_organisation_represent
-
-    org_field = "post_organisation.organisation_id"
-    s3db.add_component("cms_post_organisation",
-                       cms_post=dict(joinby="post_id",
-                                     # @ToDo: deployment_setting
-                                     multiple=False,
-                                     ))
-    contact_field = "post_contact.person_id"
-    s3db.add_component("cms_post_contact",
-                       cms_post=dict(joinby="post_id",
-                                     # @ToDo: deployment_setting
-                                     multiple=False,
-                                     ))
-
     # Hide Labels when just 1 column in inline form
     s3db.doc_document.file.label = ""
     # @ToDo: deployment_setting for Events
     #s3db.event_event_post.event_id.label = ""
+
+    # @ToDo: deployment_setting
+    #org_field = "created_by$organisation_id"
+    #current.auth.settings.table_user.organisation_id.represent = \
+    #    s3db.org_organisation_represent
+    org_field = "post_organisation.organisation_id"
+    s3db.cms_post_organisation.organisation_id.label = ""
+
+    # @ToDo: deployment_setting
+    #contact_field = "created_by"
+    #table.created_by.represent = s3_auth_user_represent_name
+    contact_field = "post_contact.person_id"
+    field = s3db.cms_post_contact.person_id
+    field.label = ""
+    field.comment = None
+    # @ToDo: Doesn't work in inline component :/
+    #field.requires = IS_ADD_PERSON_WIDGET2()
+    #field.widget = S3AddPersonWidget2(controller="pr")
 
     # Which levels of Hierarchy are we using?
     hierarchy = current.gis.get_location_hierarchy()
@@ -827,13 +838,17 @@ def cms_customize_post_fields():
                      )
     field.widget = S3LocationSelectorWidget2(levels=levels)
 
-    table.created_by.represent = s3_auth_user_represent_name
+    def URLise(body):
+        if "http" in body:
+            # @ToDo:
+            pass
+        return body
+    table.body.represent = URLise
 
     list_fields = ["series_id",
                    "location_id",
                    "date",
                    "body",
-                   "created_by",
                    contact_field,
                    org_field,
                    "document.file",
@@ -877,7 +892,8 @@ def cms_render_posts(listid, resource, rfields, record,
     org_field = "cms_post_organisation.organisation_id"
 
     # @ToDo: deployment_setting
-    # author vs contact
+    #contact_field = "cms_post.created_by"
+    contact_field = "cms_post_contact.person_id"
 
     raw = record._row
     series = record["cms_post.series_id"]
@@ -886,8 +902,8 @@ def cms_render_posts(listid, resource, rfields, record,
     location = record["cms_post.location_id"]
     location_id = raw["cms_post.location_id"]
     location_url = URL(c="gis", f="location", args=[location_id, "profile"])
-    author = record["cms_post.created_by"]
-    author_id = raw["cms_post.created_by"]
+    author = record[contact_field]
+    author_id = raw[contact_field]
     organisation = record[org_field]
     organisation_id = raw[org_field]
     org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
