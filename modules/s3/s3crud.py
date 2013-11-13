@@ -198,7 +198,7 @@ class S3CRUD(S3Method):
         insertable = _config("insertable", True)
         if not insertable:
             if native:
-                r.error(405, resource.ERROR.BAD_METHOD)
+                r.error(405, resource.ERROR.METHOD_DISABLED)
             else:
                 return dict(form=None)
 
@@ -646,7 +646,7 @@ class S3CRUD(S3Method):
             if r.interactive:
                 return self.read(r, **attr)
             else:
-                r.error(405, resource.ERROR.BAD_METHOD)
+                r.error(405, resource.ERROR.METHOD_DISABLED)
 
         # Check permission for update
         authorised = self._permitted(method="update")

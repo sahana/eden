@@ -108,6 +108,7 @@ class S3RequestManager(object):
         self.ERROR = Storage(
             BAD_RECORD = T("Record not found"),
             BAD_METHOD = T("Unsupported method"),
+            METHOD_DISABLED = T("Method disabled"),
             BAD_FORMAT = T("Unsupported data format"),
             BAD_REQUEST = T("Invalid request"),
             BAD_TEMPLATE = T("XSLT stylesheet not found"),
