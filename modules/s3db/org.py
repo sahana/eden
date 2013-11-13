@@ -28,6 +28,7 @@
 """
 
 __all__ = ["S3OrganisationModel",
+           "S3OrganisationBranchModel",
            "S3OrganisationGroupModel",
            "S3OrganisationLocationModel",
            "S3OrganisationResourceModel",
@@ -84,7 +85,6 @@ class S3OrganisationModel(S3Model):
              "org_region",
              "org_organisation",
              "org_organisation_id",
-             "org_organisation_branch",
              "org_organisation_user",
              "org_organisation_represent",
              ]
@@ -508,63 +508,26 @@ class S3OrganisationModel(S3Model):
         #add_component(db.auth_user,
         #              org_organisation="organisation_id")
 
-        if use_branches:
-            # Branches
-            add_component("org_organisation",
-                          org_organisation=dict(name="branch",
-                                                link="org_organisation_branch",
-                                                joinby="organisation_id",
-                                                key="branch_id",
-                                                actuate="embed",
-                                                autocomplete="name",
-                                                autodelete=True))
+        # Branches
+        add_component("org_organisation",
+                      org_organisation=dict(name="branch",
+                                            link="org_organisation_branch",
+                                            joinby="organisation_id",
+                                            key="branch_id",
+                                            actuate="embed",
+                                            autocomplete="name",
+                                            autodelete=True))
 
-            # For imports
-            add_component("org_organisation",
-                          org_organisation=dict(name="parent",
-                                                link="org_organisation_branch",
-                                                joinby="branch_id",
-                                                key="organisation_id",
-                                                actuate="embed",
-                                                autocomplete="name",
-                                                autodelete=False))
+        # For imports
+        add_component("org_organisation",
+                      org_organisation=dict(name="parent",
+                                            link="org_organisation_branch",
+                                            joinby="branch_id",
+                                            key="organisation_id",
+                                            actuate="embed",
+                                            autocomplete="name",
+                                            autodelete=False))
 
-            # ---------------------------------------------------------------------
-            # Organisation Branches
-            #
-            tablename = "org_organisation_branch"
-            table = define_table(tablename,
-                                 organisation_id(ondelete="CASCADE"),
-                                 organisation_id("branch_id",
-                                                 label=T("Branch"),
-                                                 default=None,
-                                                 ondelete="CASCADE"),
-                                 *s3_meta_fields())
-
-            # CRUD strings
-            ADD_BRANCH = T("Add Branch Organization")
-            crud_strings[tablename] = Storage(
-                title_create=ADD_BRANCH,
-                title_display=T("Branch Organization Details"),
-                title_list=T("Branch Organizations"),
-                title_update=T("Edit Branch Organization"),
-                title_search=T("Search Branch Organizations"),
-                #title_upload=T("Import Branch Organizations"),
-                subtitle_create=T("Add New Branch Organization"),
-                label_list_button=T("List Branch Organizations"),
-                label_create_button=T("Add New Branch"),
-                label_delete_button=T("Delete Branch"),
-                msg_record_created=T("Branch Organization added"),
-                msg_record_modified=T("Branch Organization updated"),
-                msg_record_deleted=T("Branch Organization deleted"),
-                msg_list_empty=T("No Branch Organizations currently registered"))
-
-            configure(tablename,
-                      deduplicate=self.org_branch_duplicate,
-                      onaccept=self.org_branch_onaccept,
-                      onvalidation=self.org_branch_onvalidation,
-                      ondelete=self.org_branch_ondelete,
-                      )
 
         # ---------------------------------------------------------------------
         # Organisation <-> User
@@ -576,7 +539,9 @@ class S3OrganisationModel(S3Model):
                              organisation_id(),
                              *s3_meta_fields())
 
+        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
+        #
         return dict(org_organisation_type_id=organisation_type_id,
                     org_organisation_id=organisation_id,
                     org_organisation_represent=org_organisation_represent,
@@ -844,6 +809,62 @@ class S3OrganisationModel(S3Model):
         response.headers["Content-Type"] = "application/json"
         return output
 
+# =============================================================================
+class S3OrganisationBranchModel(S3Model):
+    """
+        Organisation Branches
+    """
+
+    names = ["org_organisation_branch"]
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        configure = self.configure
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+
+        organisation_id = self.org_organisation_id
+
+        # ---------------------------------------------------------------------
+        # Organisation Branches
+        #
+        tablename = "org_organisation_branch"
+        table = define_table(tablename,
+                             organisation_id(ondelete="CASCADE"),
+                             organisation_id("branch_id",
+                                             label=T("Branch"),
+                                             default=None,
+                                             ondelete="CASCADE"),
+                             *s3_meta_fields())
+
+        # CRUD strings
+        ADD_BRANCH = T("Add Branch Organization")
+        crud_strings[tablename] = Storage(
+            title_create=ADD_BRANCH,
+            title_display=T("Branch Organization Details"),
+            title_list=T("Branch Organizations"),
+            title_update=T("Edit Branch Organization"),
+            title_search=T("Search Branch Organizations"),
+            #title_upload=T("Import Branch Organizations"),
+            subtitle_create=T("Add New Branch Organization"),
+            label_list_button=T("List Branch Organizations"),
+            label_create_button=T("Add New Branch"),
+            label_delete_button=T("Delete Branch"),
+            msg_record_created=T("Branch Organization added"),
+            msg_record_modified=T("Branch Organization updated"),
+            msg_record_deleted=T("Branch Organization deleted"),
+            msg_list_empty=T("No Branch Organizations currently registered"))
+
+        configure(tablename,
+                    deduplicate=self.org_branch_duplicate,
+                    onaccept=self.org_branch_onaccept,
+                    onvalidation=self.org_branch_onvalidation,
+                    ondelete=self.org_branch_ondelete,
+                    )
+
     # -----------------------------------------------------------------------------
     @staticmethod
     def org_branch_duplicate(item):
@@ -906,7 +927,7 @@ class S3OrganisationModel(S3Model):
 
         left = [otable.on(ltable.organisation_id == otable.id),
                 btable.on(ltable.branch_id == btable.id)]
-        
+
         record = db(ltable.id == id).select(
                     ltable.branch_id,
                     ltable.organisation_id,
@@ -3888,35 +3909,42 @@ def org_rheader(r, tabs=[]):
     if tablename == "org_organisation":
         # Tabs
         if not tabs:
-            tabs = [(T("Basic Details"), None),
-                    (T("Branches"), "branch"),
-                    (T("Offices"), "office"),
-                    (T("Warehouses"), "warehouse"),
-                    (T("Facilities"), "facility"),
-                    (T("Staff & Volunteers"), "human_resource"),
-                    (T("Assets"), "asset"),
-                    (T("Projects"), "project"),
-                    (T("User Roles"), "roles"),
-                    #(T("Tasks"), "task"),
-                    ]
+            skip_branches = False
+            
             # If a filter is being applied to the Organisations, amend the tabs accordingly
             type_filter = current.request.get_vars.get("organisation.organisation_type_id$name",
                                                        None)
             if type_filter:
                 if type_filter == "Supplier":
+                    skip_branches = True
                     tabs = [(T("Basic Details"), None),
                             (T("Offices"), "office"),
                             (T("Warehouses"), "warehouse"),
                             (T("Contacts"), "human_resource"),
-                            ]
+                           ]
                 elif type_filter == "Academic,Bilateral,Government,Intergovernmental,NGO,UN agency":
                     tabs = [(T("Basic Details"), None, {"native": 1}),
-                            (T("Branches"), "branch"),
                             (T("Offices"), "office"),
                             (T("Warehouses"), "warehouse"),
                             (T("Contacts"), "human_resource"),
                             (T("Projects"), "project"),
-                            ]
+                           ]
+            else:
+                tabs = [(T("Basic Details"), None),
+                        (T("Offices"), "office"),
+                        (T("Warehouses"), "warehouse"),
+                        (T("Facilities"), "facility"),
+                        (T("Staff & Volunteers"), "human_resource"),
+                        (T("Assets"), "asset"),
+                        (T("Projects"), "project"),
+                        (T("User Roles"), "roles"),
+                        #(T("Tasks"), "task"),
+                       ]
+                       
+            # Use branches?
+            if settings.org.branches and not skip_branches:
+                tabs.insert(1, (T("Branches"), "branch"))
+                
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
         # @ToDo: Update for Component
