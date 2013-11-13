@@ -35,7 +35,7 @@ __all__ = ["S3ChannelModel",
            "S3RSSModel",
            "S3SMSModel",
            "S3SMSOutboundModel",
-           "S3SubscriptionModel",
+           "S3MessageSubscriptionModel",
            "S3TropoModel",
            "S3TwilioModel",
            "S3TwitterModel",
@@ -1215,7 +1215,7 @@ class S3SMSOutboundModel(S3Model):
         return dict()
 
 # =============================================================================
-class S3SubscriptionModel(S3Model):
+class S3MessageSubscriptionModel(S3Model):
     """
         Handle Subscription
         - currently this is just for Saved Searches
