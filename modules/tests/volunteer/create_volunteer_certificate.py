@@ -63,17 +63,19 @@ class CreateVolunteerCertificate(SeleniumUnitTest):
             certskill_table = current.s3db["hrm_certificate_skill"]
             db = current.db
             query = (skill_table.id == certskill_table.skill_id)
-            rows = db(query).select()
+            row = db(query).select(skill_table.name,
+                                   limitby=(0, 1)).first()
 
-            if not len(rows):
-                new_skill_id = skill_table.insert(name='Test - Entry')
+            if row:
+                new_skill_id = skill_table.insert(name="Test - Entry")
                 certskill_table.insert(skill_id=new_skill_id)
                 db.commit()
                 query = (new_skill_id == skill_table.id) & query
-                rows = db(query).select()
+                row = db(query).select(skill_table.name,
+                                       limitby=(0, 1)).first()
 
             self.create("hrm_certificate_skill",
                         [("skill_id",
-                           rows[0].hrm_skill.name),
+                           row.name),
                          ]
                          )
