@@ -306,13 +306,11 @@
 
             <!-- Link to Contact -->
             <xsl:if test="$Contact!=''">
-                <resource name="cms_post_contact">
-                    <reference field="person_id" resource="pr_person">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="$Contact"/>
-                        </xsl:attribute>
-                    </reference>
-                </resource>
+                <reference field="person_id" resource="pr_person">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$Contact"/>
+                    </xsl:attribute>
+                </reference>
             </xsl:if>
 
             <!-- Link to Location -->

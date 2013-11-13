@@ -337,7 +337,7 @@ def newsfeed():
     # @ToDo: deployment_setting
     #contact_field = "created_by"
     #table.created_by.represent = s3_auth_user_represent_name
-    contact_field = "post_contact.person_id"
+    contact_field = "person_id"
 
     from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter, S3DateFilter
     filter_widgets = [S3TextFilter(["body"],
@@ -497,15 +497,11 @@ def newsfeed():
                         "post_organisation",
                         label = T("Organization"),
                         fields = ["organisation_id"],
+                        # @ToDo: deployment_setting
                         multiple = False,
                     ),
                     # @ToDo: deployment_setting
-                    S3SQLInlineComponent(
-                        "post_contact",
-                        label = T("Contact"),
-                        fields = ["person_id"],
-                        multiple = False,
-                    ),
+                    "person_id",
                     S3SQLInlineComponent(
                         "document",
                         name = "file",
@@ -545,7 +541,7 @@ def newsfeed():
                            ]
             for level in levels:
                 list_fields.append((hierarchy[level], "location_id$%s" % level))
-            list_fields = + [(T("Author"), "created_by"),
+            list_fields = + [(T("Contact"), contact_field),
                              (T("Organization"), org_field),
                              ]
             s3db.configure("cms_post",
@@ -580,7 +576,7 @@ def newsfeed():
 
     def postp(r, output):
         if r.interactive:
-            if r.method == "datalist":
+            if r.method == "datalist" and r.representation != "dl":
                 response.view = "cms/newsfeed.html"
         return output
     s3.postp = postp

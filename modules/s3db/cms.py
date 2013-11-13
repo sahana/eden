@@ -28,7 +28,6 @@
 """
 
 __all__ = ["S3ContentModel",
-           "S3ContentContactModel",
            "S3ContentMapModel",
            "S3ContentOrgModel",
            #"S3ContentOrgGroupModel",
@@ -160,9 +159,16 @@ class S3ContentModel(S3Model):
                              Field("body", "text", notnull=True,
                                    widget = s3_richtext_widget,
                                    label=T("Body")),
-                             # @ToDo: Move this to link table
+                             # @ToDo: Move this to link table?
+                             # - although this makes widget hard!
                              self.gis_location_id(),
-                             # @ToDo: Just use series_id setting?
+                             # @ToDo: Move this to link table?
+                             # - although this makes widget hard!
+                             self.pr_person_id(label=T("Contact"),
+                                               # Enable only in certain conditions
+                                               readable = False,
+                                               writable = False,
+                                               ),
                              Field("avatar", "boolean",
                                    default=False,
                                    represent = s3_yes_no_represent,
@@ -242,11 +248,6 @@ class S3ContentModel(S3Model):
                                        actuate="hide"))
 
         add_component("cms_post_organisation",
-                      cms_post=dict(joinby="post_id",
-                                    # @ToDo: deployment_setting
-                                    multiple=False,
-                                    ))
-        add_component("cms_post_contact",
                       cms_post=dict(joinby="post_id",
                                     # @ToDo: deployment_setting
                                     multiple=False,
@@ -459,31 +460,6 @@ class S3ContentModel(S3Model):
                              )
 
         return
-
-# =============================================================================
-class S3ContentContactModel(S3Model):
-    """
-        Link Posts to Contacts
-    """
-
-    names = ["cms_post_contact",
-             ]
-
-    def model(self):
-
-        # ---------------------------------------------------------------------
-        # Contacts <> Posts link table
-        #
-        tablename = "cms_post_contact"
-        table = self.define_table(tablename,
-                                  self.cms_post_id(empty=False),
-                                  self.pr_person_id(empty=False),
-                                  *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return dict()
 
 # =============================================================================
 class S3ContentMapModel(S3Model):
@@ -810,16 +786,17 @@ def cms_customize_post_fields():
     org_field = "post_organisation.organisation_id"
     s3db.cms_post_organisation.organisation_id.label = ""
 
+    table = s3db.cms_post
     # @ToDo: deployment_setting
     #contact_field = "created_by"
     #table.created_by.represent = s3_auth_user_represent_name
-    contact_field = "post_contact.person_id"
-    field = s3db.cms_post_contact.person_id
-    field.label = ""
+    contact_field = "person_id"
+    field = table.person_id
+    field.readable = True
+    field.writable = True
     field.comment = None
-    # @ToDo: Doesn't work in inline component :/
-    #field.requires = IS_ADD_PERSON_WIDGET2()
-    #field.widget = S3AddPersonWidget2(controller="pr")
+    field.requires = IS_ADD_PERSON_WIDGET2()
+    field.widget = S3AddPersonWidget2(controller="pr")
 
     # Which levels of Hierarchy are we using?
     hierarchy = current.gis.get_location_hierarchy()
@@ -829,7 +806,6 @@ def cms_customize_post_fields():
 
     from s3.s3validators import IS_LOCATION_SELECTOR2
     from s3.s3widgets import S3LocationSelectorWidget2
-    table = s3db.cms_post
     field = table.location_id
     field.label = ""
     field.represent = s3db.gis_LocationRepresent(sep=" | ")
@@ -893,7 +869,7 @@ def cms_render_posts(listid, resource, rfields, record,
 
     # @ToDo: deployment_setting
     #contact_field = "cms_post.created_by"
-    contact_field = "cms_post_contact.person_id"
+    contact_field = "cms_post.person_id"
 
     raw = record._row
     series = record["cms_post.series_id"]
