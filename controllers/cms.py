@@ -537,21 +537,28 @@ def newsfeed():
             get_vars.pop("~.series_id$name")
             get_vars["~.series_id__belongs"] = series_id
 
+    # Which levels of Hierarchy are we using?
+    hierarchy = gis.get_location_hierarchy()
+    levels = hierarchy.keys()
+    if len(settings.gis.countries) == 1:
+        levels.remove("L0")
+
     from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter, S3DateFilter
     filter_widgets = [S3TextFilter(["body"],
-                                   label="",
-                                   _class="filter-search",
+                                   label=T("Search"),
+                                   #_class="filter-search",
                                    #_placeholder=T("Search").upper(),
                                    ),
                       S3OptionsFilter("series_id",
                                       label=T("Filter by Type"),
-                                      represent="%(name)s",
+                                      # We want translations
+                                      #represent="%(name)s",
                                       widget="multiselect",
                                       hidden=True,
                                       ),
                       S3LocationFilter("location_id",
                                        label=T("Filter by Location"),
-                                       levels=["L1", "L2", "L3", "L4"],
+                                       levels=levels,
                                        widget="multiselect",
                                        hidden=True,
                                        ),
@@ -571,9 +578,10 @@ def newsfeed():
 
     s3db.configure("cms_post",
                    # We use a custom Advanced widget
-                   filter_advanced = False,
+                   #filter_advanced = False,
                    filter_formstyle = filter_formstyle,
-                   filter_submit = (T("SEARCH"), "btn btn-primary"),
+                   # No Submit button (done automatically)
+                   #filter_submit = (T("SEARCH"), "btn btn-primary"),
                    filter_widgets = filter_widgets,
                    list_layout = render_posts,
                    # Create form comes via AJAX in a Modal
@@ -605,9 +613,9 @@ def newsfeed():
             field.label = ""
             field.represent = s3db.gis_LocationRepresent(sep=" | ")
             field.requires = IS_NULL_OR(
-                                IS_LOCATION_SELECTOR2(levels=("L1", "L2", "L3", "L4"))
+                                IS_LOCATION_SELECTOR2(levels=levels)
                              )
-            field.widget = S3LocationSelectorWidget2(levels=("L1", "L2", "L3", "L4"))
+            field.widget = S3LocationSelectorWidget2(levels=levels)
 
             field = table.series_id
             field.label = T("Type")
@@ -757,12 +765,12 @@ def newsfeed():
                            (T("Disaster"), "event_post.event_id"),
                            (T("Type"), "series_id"),
                            (T("Details"), "body"),
-                           (T("District"), "location_id$L1"),
-                           (T("Sub-District"), "location_id$L2"),
-                           (T("Suco"), "location_id$L3"),
-                           (T("Author"), "created_by"),
-                           (T("Organization"), "created_by$organisation_id"),
                            ]
+            for level in levels:
+                list_fields.append((hierarchy[level], "location_id$%s" % level))
+            list_fields = + [(T("Author"), "created_by"),
+                             (T("Organization"), "created_by$organisation_id"),
+                             ]
             s3db.configure("cms_post",
                            list_fields = list_fields,
                            )
@@ -794,10 +802,12 @@ def newsfeed():
         return True
     s3.prep = prep
 
-    s3.js_global.append('''i18n.adv_search="%s"''' % T("Advanced Search"))
-    s3.scripts.append("/%s/static/themes/%s/js/newsfeed.js" % (request.application, "DRMP"))
+    #s3.js_global.append('''i18n.adv_search="%s"''' % T("Advanced Search"))
+    #s3.scripts.append("/%s/static/themes/%s/js/newsfeed.js" % (request.application, "DRMP"))
 
-    output = s3_rest_controller("cms", "post")
+    output = s3_rest_controller("cms", "post",
+                                hide_filter=False,
+                                )
     return output
 
 # =============================================================================

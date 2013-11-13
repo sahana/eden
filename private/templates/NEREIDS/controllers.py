@@ -198,7 +198,8 @@ def _updates():
                                    ),
                       S3OptionsFilter("series_id",
                                       label=T("Filter by Type"),
-                                      represent="%(name)s",
+                                      # We want translations
+                                      #represent="%(name)s",
                                       widget="multiselect",
                                       hidden=True,
                                       ),
