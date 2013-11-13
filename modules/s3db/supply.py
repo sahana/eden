@@ -2185,8 +2185,6 @@ def supply_item_controller():
     s3db = current.s3db
 
     def prep(r):
-        #if r.representation in ("xls", "pdf"):
-        #    current.deployment_settings.supply_category_uses_codes = False
         if r.component:
             if r.component_name == "inv_item":
                 # Inventory Items need proper accountability so are edited through inv_adj
@@ -2215,6 +2213,11 @@ def supply_item_controller():
                 # field = r.table.kit
                 # field.default = True
                 # field.readable = field.writable = False
+
+        elif r.representation == "xls":
+            # Use full Category names in XLS output
+            s3db.supply_item.item_category_id.represent = \
+                supply_ItemCategoryRepresent(use_code=False)
 
         return True
     s3.prep = prep

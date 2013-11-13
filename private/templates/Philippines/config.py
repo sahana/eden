@@ -2013,22 +2013,43 @@ def customize_org_organisation(**attr):
                 s3.dl_pagelength = 12
                 s3.dl_rowsize = 2
 
+                from s3.s3filter import S3TextFilter, S3OptionsFilter
+                filter_widgets = [
+                    # no other filter widgets here yet?
+                ]
+
                 # Needs page
                 get_vars = current.request.get_vars
                 money = get_vars.get("needs.money", None)
                 vol = get_vars.get("needs.vol", None)
                 if money:
+                    needs_fields = ["needs.money_details"]
                     s3.crud_strings["org_organisation"].title_list = T("Organizations soliciting Money")
                 elif vol:
+                    needs_fields = ["needs.vol_details"]
                     s3.crud_strings["org_organisation"].title_list = T("Organizations with remote Volunteer opportunities")
+                else:
+                    yesno = {True: T("Yes"), False: T("No")}
+                    needs_fields = ["needs.money_details", "needs.vol_details"]
+                    filter_widgets.insert(0, S3OptionsFilter("needs.money",
+                                                             options = yesno,
+                                                             multiple=False,
+                                                             hidden=True,
+                                                            ))
+                    filter_widgets.insert(1, S3OptionsFilter("needs.vol",
+                                                             options = yesno,
+                                                             multiple=False,
+                                                             hidden=True,
+                                                            ))
+
+                filter_widgets.insert(0, S3TextFilter(["name",
+                                                       "acronym",
+                                                       "website",
+                                                       "comments",
+                                                      ] + needs_fields,
+                                                      label = T("Search")))
 
                 ntable = s3db.req_organisation_needs
-                from s3.s3filter import S3OptionsFilter
-                filter_widgets = [S3OptionsFilter("needs.money",
-                                                  ),
-                                  S3OptionsFilter("needs.vol",
-                                                  ),
-                                  ]
                 s3db.configure("org_organisation",
                                filter_widgets=filter_widgets
                                )
