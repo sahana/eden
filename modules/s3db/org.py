@@ -34,6 +34,7 @@ __all__ = ["S3OrganisationModel",
            "S3OrganisationSectorModel",
            "S3OrganisationServiceModel",
            "S3OrganisationSummaryModel",
+           "S3OrganisationTeamModel",
            "S3OrganisationTypeTagModel",
            "S3SiteModel",
            "S3SiteDetailsModel",
@@ -1787,6 +1788,30 @@ class S3OrganisationSummaryModel(S3Model):
                                   Field("international_staff", "integer",
                                         requires=IS_NULL_OR(IS_INT_IN_RANGE(0, 9999)),
                                         label=T("# of International Staff")),
+                                  *s3_meta_fields())
+
+        # Pass names back to global scope (s3.*)
+        return dict()
+
+# =============================================================================
+class S3OrganisationTeamModel(S3Model):
+    """
+        Link table between Organisations & Teams
+    """
+
+    names = ["org_organisation_team"]
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Link table between Organisations & Teams
+        #
+        tablename = "org_organisation_team"
+        table = self.define_table(tablename,
+                                  self.org_organisation_id(ondelete="CASCADE"),
+                                  self.pr_group_id(ondelete="CASCADE"),
                                   *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)

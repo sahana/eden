@@ -1561,22 +1561,21 @@ class S3GroupModel(S3Model):
                 msg_record_deleted = T("Membership deleted"),
                 msg_list_empty = T("No Members currently registered"))
 
-        # Search method
-        search_method = S3Search(
-            name="group_membership_search_simple",
-            label=T("Name"),
-            comment=T("To search for a member, enter any portion of the name of the person or group. You may use % as wildcard. Press 'Search' without input to list all members."),
-            field=["group_id$name",
-                   "person_id$first_name",
-                   "person_id$middle_name",
-                   "person_id$last_name",
-                   ]
-            )
+        filter_widgets = [
+            S3TextFilter(["group_id$name",
+                          "person_id$first_name",
+                          "person_id$middle_name",
+                          "person_id$last_name",
+                          ],
+                          label = T("Name"),
+                          comment = T("To search for a member, enter any portion of the name of the person or group. You may use % as wildcard. Press 'Search' without input to list all members."),
+                          _class="filter-search",
+                          )]
 
         configure(tablename,
                   onaccept = self.group_membership_onaccept,
                   ondelete = self.group_membership_onaccept,
-                  search_method = search_method,
+                  filter_widgets = filter_widgets,
                   list_fields = ["id",
                                  "group_id",
                                  "group_id$description",

@@ -546,7 +546,7 @@ def newsfeed():
     from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter, S3DateFilter
     filter_widgets = [S3TextFilter(["body"],
                                    label=T("Search"),
-                                   #_class="filter-search",
+                                   _class="filter-search",
                                    #_placeholder=T("Search").upper(),
                                    ),
                       S3OptionsFilter("series_id",

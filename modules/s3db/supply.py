@@ -93,6 +93,7 @@ class S3SupplyModel(S3Model):
 
         T = current.T
         db = current.db
+        auth = current.auth
         s3 = current.response.s3
         settings = current.deployment_settings
 
@@ -107,7 +108,8 @@ class S3SupplyModel(S3Model):
 
         NONE = current.messages["NONE"]
 
-        if current.auth.permission.format == "html":
+        format = auth.permission.format
+        if format == "html":
             i18n = {"in_inv": T("in Stock"),
                     "no_packs": T("No Packs for Item"),
                     }
@@ -191,7 +193,7 @@ class S3SupplyModel(S3Model):
                     sortby="name",
                     requires = IS_NULL_OR(
                                    IS_ONE_OF( # Restrict to catalogs the user can update
-                                              db(current.auth.s3_accessible_query("update", table)),
+                                              db(auth.s3_accessible_query("update", table)),
                                               "supply_catalog.id",
                                               represent,
                                               sort=True,
@@ -220,7 +222,13 @@ class S3SupplyModel(S3Model):
         vehicle = settings.has_module("vehicle")
 
         item_category_represent = supply_ItemCategoryRepresent()
-        item_category_represent_nocodes = supply_ItemCategoryRepresent(use_code=False)
+        item_category_represent_nocodes = \
+            supply_ItemCategoryRepresent(use_code=False)
+
+        if format == "xls":
+            parent_represent = item_category_represent_nocodes
+        else:
+            parent_represent = item_category_represent
 
         tablename = "supply_item_category"
         table = define_table(tablename,
@@ -229,7 +237,7 @@ class S3SupplyModel(S3Model):
                              Field("parent_item_category_id",
                                    "reference supply_item_category",
                                    label = T("Parent"),
-                                   represent = item_category_represent,
+                                   represent = parent_represent,
                                    ondelete = "RESTRICT",
                                    ),
                              Field("code", length=16,

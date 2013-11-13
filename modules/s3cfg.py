@@ -1618,7 +1618,7 @@ class S3Config(Storage):
         """
             Whether to support Organisation branches or not
         """
-        return self.org.get("branches", True)
+        return self.org.get("branches", False)
 
     def get_org_regions(self):
         """

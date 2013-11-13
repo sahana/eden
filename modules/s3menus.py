@@ -949,7 +949,7 @@ class S3OptionsMenu(object):
                       check=[manager_mode, use_teams])(
                         M("New", m="create"),
                         M("List All"),
-                        M("Search Members", f="group_membership", m="search"),
+                        M("Search Members", f="group_membership"),
                         M("Import", f="group_membership", m="import"),
                     ),
                     M("Department Catalog", f="department",
@@ -1044,7 +1044,7 @@ class S3OptionsMenu(object):
                       check=[manager_mode, use_teams])(
                         M("New", m="create"),
                         M("List All"),
-                        M("Search Members", f="group_membership", m="search"),
+                        M("Search Members", f="group_membership"),
                         M("Import", f="group_membership", m="import"),
                     ),
                     M("Department Catalog", f="department",

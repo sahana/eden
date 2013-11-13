@@ -4702,7 +4702,8 @@ def hrm_group_controller():
 
     # Set Defaults
     _group_type.default = 3  # 'Relief Team'
-    _group_type.readable = _group_type.writable = False
+    # We use crud_form
+    #_group_type.readable = _group_type.writable = False
 
     # Only show Relief Teams
     # Do not show system groups
@@ -4727,10 +4728,53 @@ def hrm_group_controller():
             msg_record_deleted = T("Team deleted"),
             msg_list_empty = T("No Teams currently registered"))
 
-    s3db.configure(tablename, main="name", extra="description",
+    # Format for filter_widgets & imports
+    s3db.add_component("org_organisation_team",
+                       pr_group="group_id")
+
+    crud_form = S3SQLCustomForm("name",
+                                "description",
+                                S3SQLInlineComponent("organisation_team",
+                                                     label = T("Organization"),
+                                                     fields = ["organisation_id"],
+                                                     # @ToDo: Make this optional?
+                                                     multiple = False,
+                                                     ),
+                                "comments",
+                                )
+
+    filter_widgets = [S3TextFilter(["name",
+                                    "description",
+                                    "comments",
+                                    "organisation_team.organisation_id$name",
+                                    "organisation_team.organisation_id$acronym",
+                                    ],
+                                   label = T("Text"),
+                                   comment = T("You can search by by group name, description or comments and by organization name or acronym. You may use % as wildcard. Press 'Search' without input to list all trainees."),
+                                   _class="filter-search",
+                                   ),
+                      S3OptionsFilter("organisation_team.organisation_id",
+                                      label=T("Organization"),
+                                      widget="multiselect",
+                                      #hidden=True,
+                                      ),
+                      ]
+
+    list_fields = ["id",
+                   "organisation_team.organisation_id",
+                   "name",
+                   "description",
+                   "comments",
+                   ]
+
+    s3db.configure(tablename,
+                   crud_form = crud_form,
+                   filter_widgets = filter_widgets,
+                   list_fields = list_fields,
                    # Redirect to member list when a new group has been created
                    create_next = URL(f="group",
-                                     args=["[id]", "group_membership"]))
+                                     args=["[id]", "group_membership"])
+                   )
 
     # Pre-process
     def prep(r):
@@ -4778,6 +4822,9 @@ def hrm_group_controller():
             ]
 
     output = current.rest_controller("pr", "group",
+                                     hide_filter=False,
+                                     csv_template="group",
+                                     csv_stylesheet=("hrm", "group.xsl"),
                                      rheader=lambda r: \
                                         s3db.pr_rheader(r, tabs=tabs))
 
@@ -5616,7 +5663,7 @@ def hrm_configure_pr_group_membership():
 
     phone_label = settings.get_ui_label_mobile_phone()
     site_label = settings.get_org_site_label()
-    if function == "group":
+    if function in ("group", "group_membership"):
         db = current.db
         ptable = db.pr_person
         controller = request.controller
@@ -5647,6 +5694,7 @@ def hrm_configure_pr_group_membership():
                        ]
         orderby = "pr_person.first_name"
     else:
+        # Person
         list_fields = ["id",
                        "group_id",
                        "group_head",

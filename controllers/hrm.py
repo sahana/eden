@@ -310,6 +310,7 @@ def group_membership():
                 (htable.person_id == table.person_id)
 
     output = s3_rest_controller("pr", "group_membership",
+                                hide_filter=False,
                                 csv_template="group_membership",
                                 csv_stylesheet=("hrm", "group_membership.xsl"),
                                 )
