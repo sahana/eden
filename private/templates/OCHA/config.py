@@ -94,6 +94,8 @@ settings.ui.cluster = True
 #]
 
 # Organisation Management
+# Enable the use of Organisation Branches
+settings.org.branches = True
 # Uncomment to add summary fields for Organisations/Offices for # National/International staff
 settings.org.summary = True
 

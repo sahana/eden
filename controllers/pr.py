@@ -335,7 +335,7 @@ def group():
                                  "person_id",
                                  "group_head",
                                  "description"
-                                ])
+                                 ])
 
     rheader = lambda r: s3db.pr_rheader(r, tabs = [(T("Group Details"), None),
                                                    (T("Address"), "address"),

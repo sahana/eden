@@ -325,8 +325,8 @@ settings.L10n.decimal_separator = "."
 
 # -----------------------------------------------------------------------------
 # Organisations
-# Disable the use of Organisation Branches
-#settings.org.branches = False
+# Enable the use of Organisation Branches
+#settings.org.branches = True
 # Enable the use of Organisation Regions
 #settings.org.regions = True
 # Set the length of the auto-generated org/site code the default is 10

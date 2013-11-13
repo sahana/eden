@@ -301,10 +301,6 @@ settings.hrm.use_skills = False
 # Uncomment to disable the use of HR Teams
 settings.hrm.teams = False
 
-# Organisations
-# Disable the use of Organisation Branches
-settings.org.branches = False
-
 # -----------------------------------------------------------------------------
 # Contacts
 # -----------------------------------------------------------------------------

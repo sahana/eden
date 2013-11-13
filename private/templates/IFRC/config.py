@@ -244,6 +244,8 @@ settings.msg.parser = "IFRC"
 
 # -----------------------------------------------------------------------------
 # Organisation Management
+# Enable the use of Organisation Branches
+settings.org.branches = True
 # Set the length of the auto-generated org/site code the default is 10
 settings.org.site_code_len = 3
 # Set the label for Sites
@@ -650,6 +652,22 @@ def customize_pr_contact(**attr):
     return attr
 
 settings.ui.customize_pr_contact = customize_pr_contact
+
+# -----------------------------------------------------------------------------
+def customize_pr_group(**attr):
+    """
+        Customize pr_group controller
+    """
+
+    # Organisation needs to be an NS/Branch
+    ns_only(current.s3db.org_organisation_team.organisation_id,
+            required=False,
+            branches=True,
+            )
+
+    return attr
+
+settings.ui.customize_pr_group = customize_pr_group
 
 # -----------------------------------------------------------------------------
 def customize_pr_person(**attr):
