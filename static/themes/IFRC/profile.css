@@ -88,6 +88,16 @@ h4.profile-sub-header {
     border-left-style: none;
 }
 
+.card-holder .card-actions {
+    margin-top: 8px;
+}
+
+.card-holder .card-actions .card-action {
+    vertical-align: middle;
+    padding-top: 3px;
+    padding-left: 2px;
+}
+
 .card-holder .dl-header {
     display: none;
 }
@@ -97,21 +107,25 @@ h4.profile-sub-header {
     background-color: #faf6ea !important;
 }
 
+div.media {
+    position: relative;
+}
+
 img.media-object {
     border-radius: 4px;
     margin-bottom: 20px;
 }
 
 div.media a.pull-left img.media-object {
-    float: left;
-    margin-right: 10px;
+    position: absolute;
 }
 
 .media-heading {
     margin-bottom: 8px;
 }
 .media-body {
-    margin-bottom: 8px;
+    margin-left: 40px;
+    margin-bottom: 2px;
 }
 .profile-data-label{
     font: 11px "Helvetica Neue", Arial, sans-serif;
@@ -166,6 +180,17 @@ div.media a.pull-left img.media-object {
 
 .icon.icon-remove-sign:hover {
     color: #E74C3C;
+}
+
+.icon.icon-deploy,
+.icon.icon-deployed {
+    background: url(img/deploy.png) no-repeat;
+}
+.icon.icon-deploy {
+    background-position: -14px 0;
+}
+.icon.icon-deployed {
+    background-position: 0 0;
 }
 
 .profile-add-btn {

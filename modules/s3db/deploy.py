@@ -159,6 +159,7 @@ class S3DeploymentModel(S3Model):
                                type="datalist",
                                list_fields = [
                                     "created_on",
+                                    "mission_id",
                                     "human_resource_id$id",
                                     "human_resource_id$person_id",
                                     "human_resource_id$organisation_id",
@@ -970,6 +971,7 @@ def deploy_render_response(listid,
         @param attr: additional attributes
     """
 
+    T = current.T
     pkey = "deploy_response.id"
 
     # Construct the item ID
@@ -985,6 +987,29 @@ def deploy_render_response(listid,
 
     row = record["_row"]
     human_resource_id = row["hrm_human_resource.id"]
+    mission_id = row["deploy_response.mission_id"]
+
+    # Member deployed?
+    # @todo: bulk lookup instead of per-card
+    table = current.s3db.deploy_human_resource_assignment
+    query = (table.mission_id == mission_id) & \
+            (table.human_resource_id == human_resource_id) & \
+            (table.deleted != True)
+    row = current.db(query).select(table.id, limitby=(0, 1)).first()
+    if row:
+        deploy_action = A(I(" ", _class="icon icon-deployed"),
+                          SPAN(T("Member Deployed"), _class="card-action"),
+                          _class="action-lnk")
+    else:
+        deploy_action = A(I(" ", _class="icon icon-deploy"),
+                          SPAN(T("Deploy this Member"), _class="card-action"),
+                          _href=URL(f="mission",
+                                    args=[mission_id,
+                                          "human_resource_assignment",
+                                          "create"
+                                         ],
+                                    vars={"member_id": human_resource_id}),
+                          _class="action-lnk")
 
     profile_url = URL(f="human_resource", args=[human_resource_id])
     profile_title = current.T("Open Member Profile (in a new tab)")
@@ -1022,6 +1047,9 @@ def deploy_render_response(listid,
                            _class="media-heading"),
                        DIV(created_on, _class="card-subtitle"),
                        DIV(message, _class="response-message-body s3-truncate"),
+                       DIV(deploy_action,
+                           _class="card-actions",
+                       ),
                        _class="media-body",
                    ),
                    _class="media",

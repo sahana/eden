@@ -34,7 +34,7 @@ def mission():
         if r.id:
             # Mission-specific workflows return to the profile page
             tablename = r.tablename if not r.component else r.component.tablename
-            next_url = r.url(component="", method="profile")
+            next_url = r.url(component="", method="profile", vars={})
             if r.component_name == "alert":
                 s3db.configure(tablename,
                                create_next=URL(f="alert",
@@ -47,14 +47,29 @@ def mission():
                                create_next=next_url,
                                update_next=next_url,
                                delete_next=next_url)
-                s3.cancel = next_url
+            s3.cancel = next_url
+            if r.component_name == "human_resource_assignment":
+                get_vars = r.get_vars
+                if "member_id" in get_vars:
+                    # Deploy-this-member action
+                    member_id = get_vars["member_id"]
+                    if str(member_id).isdigit():
+                        # Check if this member exists, otherwise ignore
+                        htable = s3db.hrm_human_resource
+                        query = (htable.id == member_id) & \
+                                (htable.deleted != True)
+                        row = db(query).select(htable.id, limitby=(0, 1)).first()
+                        if row:
+                            field = s3db.deploy_human_resource_assignment \
+                                        .human_resource_id
+                            field.default = row.id
+                            field.writable = False
+                            field.comment = None
             if not r.component and r.method == "profile":
-                created_on = s3db.deploy_alert.created_on
-                created_on.represent = lambda d: \
-                                       s3base.S3DateTime.datetime_represent(d, utc=True)
-                created_on = s3db.deploy_response.created_on
-                created_on.represent = lambda d: \
-                                       s3base.S3DateTime.datetime_represent(d, utc=True)
+                represent = lambda d: \
+                            s3base.S3DateTime.datetime_represent(d, utc=True)
+                s3db.deploy_alert.created_on.represent = represent
+                s3db.deploy_response.created_on.represent = represent
                 s3base.s3_trunk8(lines=1)
         else:
             # All other workflows return to the summary page
