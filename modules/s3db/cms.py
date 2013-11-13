@@ -28,10 +28,14 @@
 """
 
 __all__ = ["S3ContentModel",
+           "S3ContentContactModel",
            "S3ContentMapModel",
+           "S3ContentOrgModel",
            #"S3ContentOrgGroupModel",
            "cms_index",
            "cms_rheader",
+           "cms_customize_post_fields",
+           "cms_render_posts",
            "S3CMS",
            ]
 
@@ -446,6 +450,31 @@ class S3ContentModel(S3Model):
         return
 
 # =============================================================================
+class S3ContentContactModel(S3Model):
+    """
+        Link Posts to Contacts
+    """
+
+    names = ["cms_post_contact",
+             ]
+
+    def model(self):
+
+        # ---------------------------------------------------------------------
+        # Contacts <> Posts link table
+        #
+        tablename = "cms_post_contact"
+        table = self.define_table(tablename,
+                                  self.cms_post_id(empty=False),
+                                  self.pr_person_id(empty=False),
+                                  *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return dict()
+
+# =============================================================================
 class S3ContentMapModel(S3Model):
     """
         Use of the CMS to provide extra data about Map Layers
@@ -463,6 +492,31 @@ class S3ContentMapModel(S3Model):
         table = self.define_table(tablename,
                                   self.cms_post_id(empty=False),
                                   self.super_link("layer_id", "gis_layer_entity"),
+                                  *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return dict()
+
+# =============================================================================
+class S3ContentOrgModel(S3Model):
+    """
+        Link Posts to Organisations
+    """
+
+    names = ["cms_post_organisation",
+             ]
+
+    def model(self):
+
+        # ---------------------------------------------------------------------
+        # Organisations <> Posts link table
+        #
+        tablename = "cms_post_organisation"
+        table = self.define_table(tablename,
+                                  self.cms_post_id(empty=False),
+                                  self.org_organisation_id(empty=False),
                                   *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -724,5 +778,318 @@ class S3CMS(S3Method):
 
         output = DIV(item, _id=widget_id, _class="cms_content")
         return output
+
+# =============================================================================
+def cms_customize_post_fields():
+    """
+        Customize cms_post fields for the Newsfeed / Home Pages
+    """
+
+    s3db = current.s3db
+
+    # @ToDo: deployment_settings
+    #org_field = "created_by$organisation_id"
+    #current.auth.settings.table_user.organisation_id.represent = \
+    #    s3db.org_organisation_represent
+
+    org_field = "post_organisation.organisation_id"
+    s3db.add_component("cms_post_organisation",
+                       cms_post=dict(joinby="post_id",
+                                     # @ToDo: deployment_setting
+                                     multiple=False,
+                                     ))
+    contact_field = "post_contact.person_id"
+    s3db.add_component("cms_post_contact",
+                       cms_post=dict(joinby="post_id",
+                                     # @ToDo: deployment_setting
+                                     multiple=False,
+                                     ))
+
+    # Hide Labels when just 1 column in inline form
+    s3db.doc_document.file.label = ""
+    # @ToDo: deployment_setting for Events
+    #s3db.event_event_post.event_id.label = ""
+
+    # Which levels of Hierarchy are we using?
+    hierarchy = current.gis.get_location_hierarchy()
+    levels = hierarchy.keys()
+    if len(current.deployment_settings.gis.countries) == 1:
+        levels.remove("L0")
+
+    from s3.s3validators import IS_LOCATION_SELECTOR2
+    from s3.s3widgets import S3LocationSelectorWidget2
+    table = s3db.cms_post
+    field = table.location_id
+    field.label = ""
+    field.represent = s3db.gis_LocationRepresent(sep=" | ")
+    field.requires = IS_NULL_OR(
+                        IS_LOCATION_SELECTOR2(levels=levels)
+                     )
+    field.widget = S3LocationSelectorWidget2(levels=levels)
+
+    table.created_by.represent = s3_auth_user_represent_name
+
+    list_fields = ["series_id",
+                   "location_id",
+                   "date",
+                   "body",
+                   "created_by",
+                   contact_field,
+                   org_field,
+                   "document.file",
+                   #"event_post.event_id",
+                   ]
+
+    s3db.configure("cms_post",
+                   list_fields = list_fields,
+                   )
+
+    return table
+    
+# =============================================================================
+def cms_render_posts(listid, resource, rfields, record, 
+                     type = None,
+                     **attr):
+    """
+        Custom dataList item renderer for CMS Posts on the Home & News Feed pages
+
+        @param listid: the HTML ID for this list
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+        @param attr: additional HTML attributes for the item
+    """
+
+    pkey = "cms_post.id"
+
+    # Construct the item ID
+    if pkey in record:
+        record_id = record[pkey]
+        item_id = "%s-%s" % (listid, record_id)
+    else:
+        # template
+        item_id = "%s-[id]" % listid
+
+    item_class = "thumbnail"
+
+    # @ToDo: deployment_setting
+    #org_field = "auth_user.organisation_id"
+    org_field = "cms_post_organisation.organisation_id"
+
+    # @ToDo: deployment_setting
+    # author vs contact
+
+    raw = record._row
+    series = record["cms_post.series_id"]
+    date = record["cms_post.date"]
+    body = record["cms_post.body"]
+    location = record["cms_post.location_id"]
+    location_id = raw["cms_post.location_id"]
+    location_url = URL(c="gis", f="location", args=[location_id, "profile"])
+    author = record["cms_post.created_by"]
+    author_id = raw["cms_post.created_by"]
+    organisation = record[org_field]
+    organisation_id = raw[org_field]
+    org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
+
+    db = current.db
+    s3db = current.s3db
+
+    ltable = s3db.pr_person_user
+    ptable = db.pr_person
+    query = (ltable.user_id == author_id) & \
+            (ltable.pe_id == ptable.pe_id)
+    row = db(query).select(ptable.id,
+                           limitby=(0, 1)
+                           ).first()
+    if row:
+        person_url = URL(c="hrm", f="person", args=[row.id])
+    else:
+        person_url = "#"
+    author = A(author,
+               _href=person_url,
+               )
+
+    # @ToDo: deployment_setting
+    # Use Personal Avatar
+    # @ToDo: Optimise by not doing DB lookups (especially duplicate) within render, but doing these in the bulk query
+    #avatar = s3_avatar_represent(author_id,
+    #                             _class="media-object")
+    #avatar = A(avatar,
+    #           _href=person_url,
+    #           _class="pull-left",
+    #           )
+
+    # Use Organisation Logo
+    otable = db.org_organisation
+    row = db(otable.id == organisation_id).select(otable.logo,
+                                                  limitby=(0, 1)
+                                                  ).first()
+    if row and row.logo:
+        logo = URL(c="default", f="download", args=[row.logo])
+    else:
+        logo = ""
+    avatar = IMG(_src=logo,
+                 _height=50,
+                 _width=50,
+                 _style="padding-right:5px;",
+                 _class="media-object")
+    avatar = A(avatar,
+               _href=org_url,
+               _class="pull-left",
+               )
+
+    T = current.T
+    translate = current.deployment_settings.get_L10n_translate_cms_series()
+    if translate:
+        title = T(series)
+    else:
+        title = series
+
+    # Edit Bar
+    permit = current.auth.s3_has_permission
+    table = db.cms_post
+    if permit("update", table, record_id=record_id):
+        edit_btn = A(I(" ", _class="icon icon-edit"),
+                     _href=URL(c="cms", f="newsfeed",
+                               args=[record_id, "update.popup"],
+                               vars={"refresh": listid,
+                                     "record": record_id}),
+                     _class="s3_modal",
+                     _title=T("Edit %(type)s") % dict(type=title),
+                     )
+    else:
+        edit_btn = ""
+    if permit("delete", table, record_id=record_id):
+        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+                       _class="dl-item-delete",
+                       )
+    else:
+        delete_btn = ""
+    edit_bar = DIV(edit_btn,
+                   delete_btn,
+                   _class="edit-bar fright",
+                   )
+
+    # Dropdown of available documents
+    documents = raw["doc_document.file"]
+    if documents:
+        if not isinstance(documents, list):
+            documents = [documents]
+        doc_list = UL(_class="dropdown-menu",
+                      _role="menu",
+                      )
+        retrieve = db.doc_document.file.retrieve
+        for doc in documents:
+            try:
+                doc_name = retrieve(doc)[0]
+            except (IOError, TypeError):
+                doc_name = messages["NONE"]
+            doc_url = URL(c="default", f="download",
+                          args=[doc])
+            doc_item = LI(A(I(_class="icon-file"),
+                            " ",
+                            doc_name,
+                            _href=doc_url,
+                            ),
+                          _role="menuitem",
+                          )
+            doc_list.append(doc_item)
+        docs = DIV(A(I(_class="icon-paper-clip"),
+                     SPAN(_class="caret"),
+                     _class="btn dropdown-toggle",
+                     _href="#",
+                     **{"_data-toggle": "dropdown"}
+                     ),
+                   doc_list,
+                   _class="btn-group attachments dropdown pull-right",
+                   )
+    else:
+        docs = ""
+
+    request = current.request
+    if "profile" in request.args:
+        # Single resource list
+        card_label = SPAN(" ", _class="card-title")
+    else:
+        # Mixed resource lists (Home, News Feed)
+        icon = series.lower().replace(" ", "_")
+        card_label = TAG[""](I(_class="icon icon-%s" % icon),
+                             SPAN(" %s" % title,
+                                  _class="card-title"))
+        # Type cards
+        if series == "Alert": 
+            # Apply additional highlighting for Alerts
+            item_class = "%s disaster" % item_class
+
+    # Render the item
+    # @ToDo: Review for generalisability
+    if "newsfeed" not in request.args and series == "Event":
+        item = DIV(DIV(SPAN(date,
+                            _class="date-title event",
+                            ),
+                       SPAN(A(location,
+                              _href=location_url,
+                              ),
+                            _class="location-title",
+                            ),
+                       edit_bar,
+                       _class="card-header",
+                       ),
+                   DIV(avatar,
+                       DIV(DIV(body,
+                               DIV(author,
+                                   " - ",
+                                   A(organisation,
+                                     _href=org_url,
+                                     _class="card-organisation",
+                                     ),
+                                   _class="card-person",
+                                   ),
+                               _class="media",
+                               ),
+                           _class="media-body",
+                           ),
+                       _class="media",
+                       ),
+                   docs,
+                   _class=item_class,
+                   _id=item_id,
+                   )
+    else:
+        item = DIV(DIV(card_label,
+                       SPAN(A(location,
+                              _href=location_url,
+                              ),
+                            _class="location-title",
+                            ),
+                       SPAN(date,
+                            _class="date-title",
+                            ),
+                       edit_bar,
+                       _class="card-header",
+                       ),
+                   DIV(avatar,
+                       DIV(DIV(body,
+                               DIV(author,
+                                   " - ",
+                                   A(organisation,
+                                     _href=org_url,
+                                     _class="card-organisation",
+                                     ),
+                                   _class="card-person",
+                                   ),
+                               _class="media",
+                               ),
+                           _class="media-body",
+                           ),
+                       _class="media",
+                       ),
+                   docs,
+                   _class=item_class,
+                   _id=item_id,
+                   )
+
+    return item
 
 # END =========================================================================

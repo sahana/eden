@@ -249,231 +249,6 @@ function comment_reply(id){
     return output
 
 # -----------------------------------------------------------------------------
-def render_posts(listid, resource, rfields, record, 
-                 type = None,
-                 **attr):
-    """
-        Custom dataList item renderer for CMS Posts on the Home & News Feed pages
-
-        @param listid: the HTML ID for this list
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
-        @param attr: additional HTML attributes for the item
-    """
-
-    pkey = "cms_post.id"
-
-    # Construct the item ID
-    if pkey in record:
-        record_id = record[pkey]
-        item_id = "%s-%s" % (listid, record_id)
-    else:
-        # template
-        item_id = "%s-[id]" % listid
-
-    item_class = "thumbnail"
-
-    raw = record._row
-    series = record["cms_post.series_id"]
-    date = record["cms_post.date"]
-    body = record["cms_post.body"]
-    location = record["cms_post.location_id"]
-    location_id = raw["cms_post.location_id"]
-    location_url = URL(c="gis", f="location", args=[location_id, "profile"])
-    author = record["cms_post.created_by"]
-    author_id = raw["cms_post.created_by"]
-    organisation = record["auth_user.organisation_id"]
-    organisation_id = raw["auth_user.organisation_id"]
-    org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
-
-    ltable = s3db.pr_person_user
-    ptable = db.pr_person
-    query = (ltable.user_id == author_id) & \
-            (ltable.pe_id == ptable.pe_id)
-    row = db(query).select(ptable.id,
-                           limitby=(0, 1)
-                           ).first()
-    if row:
-        person_url = URL(c="hrm", f="person", args=[row.id])
-    else:
-        person_url = "#"
-    author = A(author,
-               _href=person_url,
-               )
-
-    # Use Personal Avatar
-    # @ToDo: Optimise by not doing DB lookups (especially duplicate) within render, but doing these in the bulk query
-    #avatar = s3_avatar_represent(author_id,
-    #                             _class="media-object")
-    #avatar = A(avatar,
-    #           _href=person_url,
-    #           _class="pull-left",
-    #           )
-
-    # Use Organisation Logo
-    otable = db.org_organisation
-    row = db(otable.id == organisation_id).select(otable.logo,
-                                                  limitby=(0, 1)
-                                                  ).first()
-    if row and row.logo:
-        logo = URL(c="default", f="download", args=[row.logo])
-    else:
-        logo = ""
-    avatar = IMG(_src=logo,
-                 _height=50,
-                 _width=50,
-                 _style="padding-right:5px;",
-                 _class="media-object")
-    avatar = A(avatar,
-               _href=org_url,
-               _class="pull-left",
-               )
-
-    # Edit Bar
-    permit = auth.s3_has_permission
-    table = db.cms_post
-    if permit("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="cms", f="post",
-                               args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
-                                     "record": record_id}),
-                     _class="s3_modal",
-                     _title=T("Edit %(type)s") % dict(type=T(series)),
-                     )
-    else:
-        edit_btn = ""
-    if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
-                       _class="dl-item-delete",
-                       )
-    else:
-        delete_btn = ""
-    edit_bar = DIV(edit_btn,
-                   delete_btn,
-                   _class="edit-bar fright",
-                   )
-
-    # Dropdown of available documents
-    documents = raw["doc_document.file"]
-    if documents:
-        if not isinstance(documents, list):
-            documents = [documents]
-        doc_list = UL(_class="dropdown-menu",
-                      _role="menu",
-                      )
-        retrieve = db.doc_document.file.retrieve
-        for doc in documents:
-            try:
-                doc_name = retrieve(doc)[0]
-            except (IOError, TypeError):
-                doc_name = messages["NONE"]
-            doc_url = URL(c="default", f="download",
-                          args=[doc])
-            doc_item = LI(A(I(_class="icon-file"),
-                            " ",
-                            doc_name,
-                            _href=doc_url,
-                            ),
-                          _role="menuitem",
-                          )
-            doc_list.append(doc_item)
-        docs = DIV(A(I(_class="icon-paper-clip"),
-                     SPAN(_class="caret"),
-                     _class="btn dropdown-toggle",
-                     _href="#",
-                     **{"_data-toggle": "dropdown"}
-                     ),
-                   doc_list,
-                   _class="btn-group attachments dropdown pull-right",
-                   )
-    else:
-        docs = ""
-
-    if request.controller == "default":
-        # Mixed resource lists (Home, News Feed)
-        icon = series.lower().replace(" ", "_")
-        card_label = TAG[""](I(_class="icon icon-%s" % icon),
-                             SPAN(" %s" % T(series),
-                                  _class="card-title"))
-        # Type cards
-        if series == "Alert": 
-            # Apply additional highlighting for Alerts
-            item_class = "%s disaster" % item_class
-    else:
-        card_label = SPAN(" ", _class="card-title")
-
-    # Render the item
-    if "newsfeed" not in request.args and series == "Event":
-        item = DIV(DIV(SPAN(date,
-                            _class="date-title event",
-                            ),
-                       SPAN(A(location,
-                              _href=location_url,
-                              ),
-                            _class="location-title",
-                            ),
-                       edit_bar,
-                       _class="card-header",
-                       ),
-                   DIV(avatar,
-                       DIV(DIV(body,
-                               DIV(author,
-                                   " - ",
-                                   A(organisation,
-                                     _href=org_url,
-                                     _class="card-organisation",
-                                     ),
-                                   _class="card-person",
-                                   ),
-                               _class="media",
-                               ),
-                           _class="media-body",
-                           ),
-                       _class="media",
-                       ),
-                   docs,
-                   _class=item_class,
-                   _id=item_id,
-                   )
-    else:
-        item = DIV(DIV(card_label,
-                       SPAN(A(location,
-                              _href=location_url,
-                              ),
-                            _class="location-title",
-                            ),
-                       SPAN(date,
-                            _class="date-title",
-                            ),
-                       edit_bar,
-                       _class="card-header",
-                       ),
-                   DIV(avatar,
-                       DIV(DIV(body,
-                               DIV(author,
-                                   " - ",
-                                   A(organisation,
-                                     _href=org_url,
-                                     _class="card-organisation",
-                                     ),
-                                   _class="card-person",
-                                   ),
-                               _class="media",
-                               ),
-                           _class="media-body",
-                           ),
-                       _class="media",
-                       ),
-                   docs,
-                   _class=item_class,
-                   _id=item_id,
-                   )
-
-    return item
-
-# -----------------------------------------------------------------------------
 def filter_formstyle(row_id, label, widget, comment, hidden=False):
     """
         Custom Formstyle for FilterForm
@@ -525,23 +300,49 @@ def newsfeed():
         RESTful CRUD controller for display of posts as a filterable dataList
     """
 
+    # Load Model
+    table = s3db.cms_post
+    title_list = T("Latest Information")
+
     # Ensure that filtered views translate into options which update the Widget
     get_vars = request.get_vars
     if "~.series_id$name" in get_vars:
         series_name = get_vars["~.series_id$name"]
-        table = s3db.cms_series
-        series = db(table.name == series_name).select(table.id,
-                                                      limitby=(0, 1)).first()
+        # Disabled as can change filters dynamically
+        # @ToDo: Better Mechanism: Another field in cms_series?
+        #if series_name == "Request":
+        #    title_list = T("Latest Requests")
+        #elif series_name == "Offer":
+        #    title_list = T("Latest Offers")
+        stable = s3db.cms_series
+        series = db(stable.name == series_name).select(stable.id,
+                                                       limitby=(0, 1)).first()
         if series:
             series_id = str(series.id)
             get_vars.pop("~.series_id$name")
             get_vars["~.series_id__belongs"] = series_id
+
+    s3.crud_strings["cms_post"].title_list = title_list
 
     # Which levels of Hierarchy are we using?
     hierarchy = gis.get_location_hierarchy()
     levels = hierarchy.keys()
     if len(settings.gis.countries) == 1:
         levels.remove("L0")
+
+    # @ToDo: deployment_settings
+    #org_field = "created_by$organisation_id"
+    org_field = "post_organisation.organisation_id"
+    s3db.add_component("cms_post_organisation",
+                       cms_post=dict(joinby="post_id",
+                                     # @ToDo: deployment_setting
+                                     multiple=False,
+                                     ))
+    s3db.add_component("cms_post_contact",
+                       cms_post=dict(joinby="post_id",
+                                     # @ToDo: deployment_setting
+                                     multiple=False,
+                                     ))
 
     from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter, S3DateFilter
     filter_widgets = [S3TextFilter(["body"],
@@ -562,14 +363,14 @@ def newsfeed():
                                        widget="multiselect",
                                        hidden=True,
                                        ),
-                      S3OptionsFilter("created_by$organisation_id",
+                      S3OptionsFilter(org_field,
                                       label=T("Filter by Organization"),
-                                      # Can't use this for integers, use field.represent instead
+                                      # Can't use this for created_by as integer, use field.represent instead
                                       #represent="%(name)s",
                                       widget="multiselect",
                                       hidden=True,
                                       ),
-                      S3DateFilter("created_on",
+                      S3DateFilter("date",
                                    label=T("Filter by Date"),
                                    hide_time=True,
                                    hidden=True,
@@ -577,18 +378,19 @@ def newsfeed():
                       ]
 
     s3db.configure("cms_post",
-                   # We use a custom Advanced widget
+                   # We could use a custom Advanced widget
                    #filter_advanced = False,
                    filter_formstyle = filter_formstyle,
                    # No Submit button (done automatically)
                    #filter_submit = (T("SEARCH"), "btn btn-primary"),
                    filter_widgets = filter_widgets,
-                   list_layout = render_posts,
+                   list_layout = s3db.cms_render_posts,
                    # Create form comes via AJAX in a Modal
                    insertable = False,
                    notify_fields = [(T("Type"), "series_id"),
                                     (T("Date"), "date"),
                                     (T("Location"), "location_id"),
+                                    (T("Organization"), org_field),
                                     (T("Description"), "body"),
                                     ],
                    notify_template = "notify_post",
@@ -597,26 +399,10 @@ def newsfeed():
     s3.dl_pagelength = 6  # 5 forces an AJAX call
 
     def prep(r):
-        table = r.table
+        if r.interactive or r.representation == "aadata":
+            s3db.cms_customize_post_fields()
+
         if r.interactive:
-            if r.method == "datalist":
-                s3.crud_strings["cms_post"].title_list = T("News Feed")
-
-            # Hide Labels when just 1 column in inline form
-            s3db.doc_document.file.label = ""
-            # @ToDo: Deployment_setting
-            #s3db.event_event_post.event_id.label = ""
-
-            from s3.s3validators import IS_LOCATION_SELECTOR2
-            from s3.s3widgets import S3LocationSelectorWidget2
-            field = table.location_id
-            field.label = ""
-            field.represent = s3db.gis_LocationRepresent(sep=" | ")
-            field.requires = IS_NULL_OR(
-                                IS_LOCATION_SELECTOR2(levels=levels)
-                             )
-            field.widget = S3LocationSelectorWidget2(levels=levels)
-
             field = table.series_id
             field.label = T("Type")
 
@@ -624,16 +410,18 @@ def newsfeed():
                 # Restore the label for the Location
                 table.location_id.label = T("Location")
             elif r.method == "create":
-                ADMIN = current.session.s3.system_roles.ADMIN
-                if (not current.auth.s3_has_role(ADMIN)):
-                    represent = S3Represent(lookup="cms_series", 
-                                            translate=settings.get_L10n_translate_cms_series())
-                    field.requires = IS_ONE_OF(current.db, 
-                                               "cms_series.id",
-                                               represent,
-                                               not_filterby="name",
-                                               not_filter_opts = ["Alert"], 
-                                               )
+                pass
+                # @ToDo: deployment_setting
+                #ADMIN = session.s3.system_roles.ADMIN
+                #if (not auth.s3_has_role(ADMIN)):
+                #    represent = S3Represent(lookup="cms_series", 
+                #                            translate=settings.get_L10n_translate_cms_series())
+                #    field.requires = IS_ONE_OF(db, 
+                #                               "cms_series.id",
+                #                               represent,
+                #                               not_filterby="name",
+                #                               not_filter_opts = ["Alert"], 
+                #                               )
 
             refresh = get_vars.get("refresh", None)
             if refresh == "datalist":
@@ -658,9 +446,9 @@ def newsfeed():
             field.widget = s3_comments_widget
             #table.comments.readable = table.comments.writable = False
 
-            if request.controller == "default":
-                # Don't override card layout for News Feed/Homepage
-                return True
+            #if request.controller == "default":
+            #    # Don't override card layout for News Feed/Homepage
+            #    return True
 
             from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
 
@@ -699,14 +487,15 @@ def newsfeed():
                     "series_id",
                     "body",
                     "location_id",
-                    S3SQLInlineComponent(
-                        "event_post",
-                        #label = T("Disaster(s)"),
-                        label = T("Disaster"),
-                        multiple = False,
-                        fields = ["event_id"],
-                        orderby = "event_id$name",
-                    ),
+                    # @ToDo: deployment_setting for Events
+                    #S3SQLInlineComponent(
+                    #    "event_post",
+                    #    #label = T("Disaster(s)"),
+                    #    label = T("Disaster"),
+                    #    multiple = False,
+                    #    fields = ["event_id"],
+                    #    orderby = "event_id$name",
+                    #),
                     S3SQLInlineComponent(
                         "document",
                         name = "file",
@@ -728,48 +517,26 @@ def newsfeed():
                            crud_form = crud_form,
                            # Don't include a Create form in 'More' popups
                            listadd = False,
-                           list_layout = render_posts,
+                           list_layout = s3db.cms_render_posts,
                            )
 
             s3.cancel = True
 
-        if r.interactive or r.representation == "aadata":
-            # Represents
-            table.created_by.represent = s3base.s3_auth_user_represent_name
-            auth.settings.table_user.organisation_id.represent = \
-                s3db.org_organisation_represent
-
-            list_fields = ["series_id",
-                           "location_id",
-                           "date",
-                           "body",
-                           "created_by",
-                           "created_by$organisation_id",
-                           "document.file",
-                           # @ToDo: Deployment_setting
-                           #"event_post.event_id",
-                           ]
-
-            s3db.configure("cms_post",
-                           list_fields = list_fields,
-                           )
-            
         elif r.representation == "xls":
-            table = r.table
-            table.created_by.represent = s3_auth_user_represent_name
+            table.created_by.represent = s3base.s3_auth_user_represent_name
             #table.created_on.represent = datetime_represent
-            utable = current.auth.settings.table_user
+            utable = auth.settings.table_user
             utable.organisation_id.represent = s3db.org_organisation_represent
 
             list_fields = [(T("Date"), "date"),
-                           (T("Disaster"), "event_post.event_id"),
+                           #(T("Disaster"), "event_post.event_id"),
                            (T("Type"), "series_id"),
                            (T("Details"), "body"),
                            ]
             for level in levels:
                 list_fields.append((hierarchy[level], "location_id$%s" % level))
             list_fields = + [(T("Author"), "created_by"),
-                             (T("Organization"), "created_by$organisation_id"),
+                             (T("Organization"), org_field),
                              ]
             s3db.configure("cms_post",
                            list_fields = list_fields,
@@ -778,11 +545,10 @@ def newsfeed():
         elif r.representation == "plain" and \
              r.method != "search":
             # Map Popups
-            table = r.table
             table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
             table.created_by.represent = s3base.s3_auth_user_represent_name
             # Used by default popups
-            series = T(table.series_id.represent(r.record.series_id))
+            series = table.series_id.represent(r.record.series_id)
             s3.crud_strings["cms_post"].title_display = "%(series)s Details" % dict(series=series)
             s3db.configure("cms_post",
                            popup_url="",
@@ -802,8 +568,12 @@ def newsfeed():
         return True
     s3.prep = prep
 
-    #s3.js_global.append('''i18n.adv_search="%s"''' % T("Advanced Search"))
-    #s3.scripts.append("/%s/static/themes/%s/js/newsfeed.js" % (request.application, "DRMP"))
+    def postp(r, output):
+        if r.interactive:
+            if r.method == "datalist":
+                response.view = "cms/newsfeed.html"
+        return output
+    s3.postp = postp
 
     output = s3_rest_controller("cms", "post",
                                 hide_filter=False,

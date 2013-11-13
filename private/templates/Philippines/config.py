@@ -26,7 +26,8 @@ s3 = current.response.s3
 settings = current.deployment_settings
 
 """
-    Template settings for DRM Portal
+    Template settings for Requests Management
+    - for Philippines
 """
 
 datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
@@ -35,6 +36,8 @@ datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
 # System Settings
 # -----------------------------------------------------------------------------
 # Authorization Settings
+# Should users be allowed to register themselves?
+#settings.security.self_registration = False # Disabled in Prod
 settings.auth.registration_requires_approval = True
 settings.auth.registration_requires_verification = False
 settings.auth.registration_requests_organisation = True
@@ -866,8 +869,9 @@ def render_organisations(listid, resource, rfields, record, **attr):
         logo = DIV(IMG(_class="media-object"),
                    _class="pull-left")
 
+    db = current.db
     permit = current.auth.s3_has_permission
-    table = current.db.org_organisation
+    table = db.org_organisation
     if permit("update", table, record_id=record_id):
         edit_btn = A(I(" ", _class="icon icon-edit"),
                      _href=URL(c="org", f="organisation",
@@ -889,6 +893,23 @@ def render_organisations(listid, resource, rfields, record, **attr):
                    delete_btn,
                    _class="edit-bar fright",
                    )
+
+    # Tallies
+    # NB We assume that all records are readable here
+    s3db = current.s3db
+    table = s3db.org_site
+    query = (table.deleted == False) & \
+            (table.obsolete == False) & \
+            (table.organisation_id == record_id)
+    tally_sites = db(query).count()
+
+    table = s3db.cms_post
+    ltable = s3db.cms_post_organisation
+    base_query = (table.deleted == False) & \
+                 (ltable.post_id == table.id) & \
+                 (ltable.organisation_id == record_id)
+    #query = base_query & (table.series_id)
+    #tally_reqs = db(query).count()
 
     # Render the item
     item = DIV(DIV(logo,
@@ -1313,17 +1334,44 @@ def customize_gis_location(**attr):
                 #                        show_on_map = False,
                 #                        list_layout = render_locations_profile,
                 #                        )
-                needs_widget = dict(label = "Needs",
-                                    title_create = "Add New Need",
-                                    type = "datalist",
-                                    tablename = "req_site_needs",
-                                    context = "location",
-                                    icon = "icon-hand-up",
-                                    multiple = False,
-                                    # Would just show up on Sites
-                                    show_on_map = False,
-                                    list_layout = render_site_needs,
-                                    )
+                #needs_widget = dict(label = "Needs",
+                #                    title_create = "Add New Need",
+                #                    type = "datalist",
+                #                    tablename = "req_site_needs",
+                #                    context = "location",
+                #                    icon = "icon-hand-up",
+                #                    multiple = False,
+                #                    # Would just show up on Sites
+                #                    show_on_map = False,
+                #                    list_layout = render_site_needs,
+                #                    )
+                render_posts = s3db.cms_render_posts
+                reqs_widget = dict(label = "Requests",
+                                   title_create = "Add New Request",
+                                   type = "datalist",
+                                   tablename = "cms_post",
+                                   context = "location",
+                                   default = default,
+                                   filter = S3FieldSelector("series_id$name") == "Request",
+                                   icon = "icon-flag",
+                                   layer = "Requests",
+                                   # provided by Catalogue Layer
+                                   #marker = "request",
+                                   list_layout = render_posts,
+                                   )
+                offers_widget = dict(label = "Offers",
+                                     title_create = "Add New Offer",
+                                     type = "datalist",
+                                     tablename = "cms_post",
+                                     context = "location",
+                                     default = default,
+                                     filter = S3FieldSelector("series_id$name") == "Offer",
+                                     icon = "icon-truck",
+                                     layer = "Offers",
+                                     # provided by Catalogue Layer
+                                     #marker = "offer",
+                                     list_layout = render_posts,
+                                     )
                 sites_widget = dict(label = "Sites",
                                     title_create = "Add New Site",
                                     type = "datalist",
@@ -1374,8 +1422,9 @@ def customize_gis_location(**attr):
                                                     edit_btn,
                                                     _class="profile_header",
                                                     ),
-                               profile_widgets = [needs_widget,
+                               profile_widgets = [reqs_widget,
                                                   map_widget,
+                                                  offers_widget,
                                                   sites_widget,
                                                   #locations_widget,
                                                   ],
@@ -1577,11 +1626,12 @@ def customize_org_facility_fields():
                                 "phone1",
                                 "contact",
                                 "website",
-                                S3SQLInlineComponent(
-                                    "needs",
-                                    label = T("Needs"),
-                                    multiple = False,
-                                ),
+                                # This is too Ugly right now!
+                                #S3SQLInlineComponent(
+                                #   "needs",
+                                #    label = T("Needs"),
+                                #    multiple = False,
+                                #),
                                 "comments",
     )
 

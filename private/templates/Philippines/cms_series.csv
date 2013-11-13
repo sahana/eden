@@ -1,5 +1,3 @@
 Name,Avatar,Location,Replies,Comments
-Offer of Goods,Y,Y,N,
-Offer of Volunteer(s),Y,Y,N,
-Request for Goods,Y,Y,N,
-Request for Volunteer(s),Y,Y,N,
+Offer,Y,Y,N,
+Request,Y,Y,N,

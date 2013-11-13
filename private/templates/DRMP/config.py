@@ -127,6 +127,8 @@ settings.L10n.date_format = "%d %b %y"
 settings.L10n.decimal_separator = "."
 # Thousands separator for numbers (defaults to space)
 settings.L10n.thousands_separator = ","
+# Uncomment this to Translate CMS Series Names
+settings.L10n.translate_cms_series = True
 
 # Restrict the Location Selector to just certain countries
 settings.gis.countries = ["TL"]
@@ -2373,7 +2375,7 @@ def customize_cms_post(**attr):
             table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
             table.created_by.represent = s3_auth_user_represent_name
             # Used by default popups
-            series = T(table.series_id.represent(r.record.series_id))
+            series = table.series_id.represent(r.record.series_id)
             s3.crud_strings["cms_post"].title_display = "%(series)s Details" % dict(series=series)
             s3db.configure("cms_post",
                            popup_url="",

@@ -16,8 +16,12 @@
   <h1>{{=T("India Disaster Information System")}}<br></h1>
   <p>{{=T("Improving disaster prevention, preparedness and response in India.")}}</p>
   {{if not auth.is_logged_in():}}
-  <p><a href='/{{=appname}}/default/user/login?_next=/{{=appname}}/default/index/newsfeed' class='btn btn-custom btn-login'><i class='icon-signin'></i> {{=T("LOGIN")}} </a>
-  <a href='/{{=appname}}/default/user/register' class='btn btn-register'><i class='icon-pencil'></i> {{=T("REGISTER")}} </a></p>{{pass}}
+  <p>
+   <a href='/{{=appname}}/default/user/login' class='btn btn-custom btn-login'><i class='icon-signin'></i> {{=T("LOGIN")}} </a>
+   {{if settings.get_security_self_registration():}}
+    <a href='/{{=appname}}/default/user/register' class='btn btn-register'><i class='icon-pencil'></i> {{=T("REGISTER")}} </a>
+   {{pass}}
+  </p>{{pass}}
  </div>
 </div>
 <section id='homepage-about'>

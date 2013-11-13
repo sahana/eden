@@ -13,11 +13,15 @@
   <div class='item'><img src='/{{=appname}}/static/themes/{{=theme}}/img/442014.jpg' alt='' /></div>-->
  </div>
  <div class='carousel-caption'>
-  <h1>{{=T("Philippines Disaster Information System")}}<br></h1>
+  <h1>{{=settings.get_system_name()}}<br></h1>
   <p>{{=T("Improving disaster prevention, preparedness and response in Philippines.")}}</p>
   {{if not auth.is_logged_in():}}
-  <p><a href='/{{=appname}}/default/user/login' class='btn btn-custom btn-login'><i class='icon-signin'></i> {{=T("LOGIN")}} </a>
-  <a href='/{{=appname}}/default/user/register' class='btn btn-register'><i class='icon-pencil'></i> {{=T("REGISTER")}} </a></p>{{pass}}
+  <p>
+   <a href='/{{=appname}}/default/user/login' class='btn btn-custom btn-login'><i class='icon-signin'></i> {{=T("LOGIN")}} </a>
+   {{if settings.get_security_self_registration():}}
+    <a href='/{{=appname}}/default/user/register' class='btn btn-register'><i class='icon-pencil'></i> {{=T("REGISTER")}} </a>
+   {{pass}}
+  </p>{{pass}}
  </div>
 </div>
 <section id='homepage-about'>
@@ -28,13 +32,13 @@
     <p class='quote mb4'>{{=T("Donating money is the best way to provide support as relief agencies can then use this flexibly.")}}</p>
    </div>
    <div class='span4 stl'>
-    <h2><a href='/{{=appname}}/default/index/time'><i class='icon-time'></i> {{=T("Time")}}</a></li></h2>
-    <p class='quote mb4'>{{=T("Donate your Time - either remotely from home or by providing on-site support.")}}</p>		
-   </div>			
-   <div class='span4 stl'>
-    <h2><a href='/{{=appname}}/req/facility/datalist?needs.goods=True'><i class='icon-truck'></i> {{=T("Goods")}}</a></li></h2>
-    <p class='quote mb4'>{{=T("Donate goods which can be used by survivors.")}}</p>
+    <h2><a href='/{{=appname}}/cms/newsfeed/datalist?series_id$name=Request'><i class='icon-flag'></i> {{=T("Requests")}}</a></li></h2>
+    <p class='quote mb4'>{{=T("Requests for Help that have come into the Call center.")}}</p>
    </div>
+   <div class='span4 stl'>
+    <h2><a href='/{{=appname}}/cms/newsfeed/datalist?series_id$name=Offer'><i class='icon-truck'></i> {{=T("Offers")}}</a></li></h2>
+    <p class='quote mb4'>{{=T("Offers of Help that have come into the Call Center.")}}</p>		
+   </div>			
   </div>
  </div>	
 </section>
@@ -43,7 +47,7 @@
   <div class='row'>
    <div class='span6'>
     <h2><i class='icon-bookmark-empty'></i> {{=T("What we do")}}</h2>
-    <p>{{=T("This site has been set up to help people find appropriate places to donate to.")}}</p>
+    <p>{{=T("This site has been set up to match supply with demand.")}}</p>
    </div>
    <div class='span6'>
     <br />
@@ -57,16 +61,16 @@
  <div class='container'>   
   <div class='row'>
    <div class='span6'>
-    <a href='/{{=appname}}/req/organisation'>
-     <h2><i class='icon-sitemap'></i> {{=T("Latest Organization Needs")}}</h2>
+    <a href='/{{=appname}}/cms/newsfeed/datalist?series_id$name=Request'>
+     <h2><i class='icon-flag'></i> {{=T("Latest Requests")}}</h2>
     </a>
-    {{=org_reqs}}
+    {{=latest_reqs}}
    </div>
    <div class='span6'>
-    <a href='/{{=appname}}/req/facility'>
-     <h2><i class='icon-home'></i> {{=T("Latest Site Needs")}}</h2>
+    <a href='/{{=appname}}/cms/newsfeed/datalist?series_id$name=Offer'>
+     <h2><i class='icon-truck'></i> {{=T("Latest Offers")}}</h2>
     </a>
-    {{=site_reqs}}
+    {{=latest_offers}}
    </div>
   </div>  
  </div>
