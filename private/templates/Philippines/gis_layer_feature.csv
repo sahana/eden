@@ -1,2 +1,4 @@
 Name,Description,Controller,Function,Symbology,Marker,GPS Marker,Popup Label,Popup Fields,Attributes,Filter,Polygons,Style,Folder,Visible,Enabled,Cluster Threshold,Refresh
-Facilities,All Active Facilities,org,facility,OCHA,office,Building,Location,"name,organisation_id",,~.obsolete=False,,,,False,,
+Offers,,cms,newsfeed,OCHA,distribution,Car,Offer,"body,date",,~.series_id$name=Offer&~.expired=False,,,,False,,
+Requests,,cms,newsfeed,OCHA,beneficiary,Flag,Request,"body,date",,~.series_id$name=Request&~.expired=False,,,,False,,
+Sites,All Active Sites,org,facility,OCHA,office,Building,Site,"name,organisation_id",,~.obsolete=False,,,,False,,

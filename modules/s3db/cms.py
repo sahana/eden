@@ -787,6 +787,7 @@ def cms_customize_post_fields():
     s3db.cms_post_organisation.organisation_id.label = ""
 
     table = s3db.cms_post
+    table.series_id.requires = table.series_id.requires.other
     # @ToDo: deployment_setting
     #contact_field = "created_by"
     #table.created_by.represent = s3_auth_user_represent_name
@@ -809,9 +810,7 @@ def cms_customize_post_fields():
     field = table.location_id
     field.label = ""
     field.represent = s3db.gis_LocationRepresent(sep=" | ")
-    field.requires = IS_NULL_OR(
-                        IS_LOCATION_SELECTOR2(levels=levels)
-                     )
+    field.requires = IS_LOCATION_SELECTOR2(levels=levels)
     field.widget = S3LocationSelectorWidget2(levels=levels)
 
     def URLise(body):

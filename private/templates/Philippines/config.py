@@ -491,6 +491,19 @@ def render_locations(listid, resource, rfields, record, **attr):
             (table.location_id.belongs(locations))
     tally_sites = db(query).count()
 
+    table = s3db.cms_post
+    stable = db.cms_series
+    ltable = s3db.cms_post_organisation
+    base_query = (table.deleted == False) & \
+                 (ltable.post_id == table.id) & \
+                 (ltable.organisation_id == record_id)
+    req_query = (table.series_id == stable.id) & \
+                (stable.name == "Request")
+    tally_reqs = db(base_query & req_query).count()
+    offer_query = (table.series_id == stable.id) & \
+                  (stable.name == "Offer")
+    tally_offers = db(base_query & offer_query).count()
+
     if level == "L4":
         next_Lx = ""
         next_Lx_label = ""
@@ -557,6 +570,14 @@ def render_locations(listid, resource, rfields, record, **attr):
                        ),
                    DIV(P(next_Lx_label,
                          next_Lx,
+                         T("Requests"),
+                         SPAN(tally_reqs,
+                              _class="badge",
+                              ),
+                         T("Offers"),
+                         SPAN(tally_offers,
+                              _class="badge",
+                              ),
                          T("Sites"),
                          SPAN(tally_sites,
                               _class="badge",
