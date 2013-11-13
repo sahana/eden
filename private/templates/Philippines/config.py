@@ -1025,7 +1025,7 @@ def render_org_needs(listid, resource, rfields, record, **attr):
         logo = A(IMG(_src=URL(c="default", f="download", args=[logo]),
                      _class="media-object",
                      ),
-                 _href=site_url,
+                 _href=org_url,
                  _class="pull-left",
                  )
     else:
@@ -1948,6 +1948,8 @@ def customize_org_needs_fields(profile=False):
     table = s3db.req_organisation_needs
     table.modified_by.represent = s3_auth_user_represent_name
     table.modified_on.represent = datetime_represent
+    table.vol.readable = table.vol.writable = False
+    table.vol_details.readable = table.vol_details.writable = False
 
     list_fields = ["id",
                    "organisation_id",
@@ -1957,8 +1959,8 @@ def customize_org_needs_fields(profile=False):
                    "organisation_id$website",
                    "money",
                    "money_details",
-                   "vol",
-                   "vol_details",
+                   #"vol",
+                   #"vol_details",
                    "modified_on",
                    "modified_by",
                    ]
@@ -1971,7 +1973,17 @@ def customize_org_needs_fields(profile=False):
                    )
     return
 
-s3.customize_org_needs_fields = customize_org_needs_fields
+# -----------------------------------------------------------------------------
+def customize_req_organisation_needs(**attr):
+    """
+        Customize req_organisation_needs controller
+    """
+
+    customize_org_needs_fields()
+
+    return attr
+
+settings.ui.customize_req_organisation_needs = customize_req_organisation_needs
 
 # -----------------------------------------------------------------------------
 def customize_org_organisation(**attr):
