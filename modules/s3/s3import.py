@@ -4013,17 +4013,17 @@ class S3BulkImporter(object):
                     continue
                 image_source = StringIO(openFile.read())
                 # Get the id of the resource
+                query = base_query & (idfield == id)
+                record = db(query).select(limitby=(0, 1)
+                                          ).first()
                 try:
-                    query = base_query & (idfield == id)
-                    record = db(query).select(limitby=(0, 1)
-                                              ).first()
+                    record_id = record.id
                 except:
                     s3_debug("Unable to get record %s of the resource %s to attach the image file to" % (id, tablename))
                     continue
                 # Create and accept the form
                 form = SQLFORM(table, record, fields=["id", imagefield])
                 form_vars = Storage()
-                record_id = record.id
                 form_vars._formname = "%s/%s" % (tablename, record_id)
                 form_vars.id = record_id
                 source = Storage()

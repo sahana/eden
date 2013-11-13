@@ -1,6 +1,10 @@
-Organisation,Branch,Acronym,Type,Website,Twitter,Domain
-Philippine Red Cross,,PRC,Red Cross / Red Crescent,,http://www.redcross.org.ph,,redcross.org.ph
-Sahana Software Foundation,,SSF,International NGO,,http://sahanafoundation.org,,sahanafoundation.org
-International Open Source Network,,IOSN,International NGO,http://iosn.net,,iosn.net
-Humanitarian OpenStreetMap Team,,HOT,International NGO,http://hot.openstreetmap.org,,iosn.net
-The National Confederation of Cooperatives,,NATCCO,National NGO,http://www.natcco.coop,,natcco.coop
+Organisation,Acronym,Type,Website,Twitter,Domain
+CARE,,International NGO,,http://www.care.org,,care.org
+Humanitarian OpenStreetMap Team,HOT,International NGO,http://hot.openstreetmap.org,,hot.openstreetmap.org
+International Open Source Network,IOSN,International NGO,http://iosn.net,,iosn.net
+Oxfam,,International NGO,,http://www.oxfam.org.uk,,oxfam.org.uk
+Philippine Red Cross,PRC,Red Cross / Red Crescent,,http://www.redcross.org.ph,,redcross.org.ph
+Sahana Software Foundation,SSF,International NGO,,http://sahanafoundation.org,,sahanafoundation.org
+The National Confederation of Cooperatives,NATCCO,National NGO,http://www.natcco.coop,,natcco.coop
+UNICEF,,UN,,http://www.unicef.org,,unicef.org
+World Food Programme,WFP,UN,,http://www.wfp.org,,wfp.org

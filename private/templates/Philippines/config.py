@@ -189,7 +189,8 @@ settings.pr.request_gender = False
 
 # -----------------------------------------------------------------------------
 # Org
-settings.org.site_label = "Office/Shelter/Hospital"
+#settings.org.site_label = "Office/Shelter/Hospital"
+settings.org.site_label = "Site"
 
 # -----------------------------------------------------------------------------
 # Project
@@ -846,16 +847,16 @@ def render_organisations(listid, resource, rfields, record, **attr):
                           )
     else:
         money_details = ""
-    time = raw["req_organisation_needs.vol"]
-    if time:
-        time_details = record["req_organisation_needs.vol_details"]
-        time_details = P(I(_class="icon icon-time"),
-                         " ",
-                         XML(time_details),
-                         _class="main_contact_ph",
-                         )
-    else:
-        time_details = ""
+    #time = raw["req_organisation_needs.vol"]
+    #if time:
+    #    time_details = record["req_organisation_needs.vol_details"]
+    #    time_details = P(I(_class="icon icon-time"),
+    #                     " ",
+    #                    XML(time_details),
+    #                     _class="main_contact_ph",
+    #                     )
+    #else:
+    #    time_details = ""
 
     org_url = URL(c="org", f="organisation", args=[record_id, "profile"])
     if logo:
@@ -932,7 +933,7 @@ def render_organisations(listid, resource, rfields, record, **attr):
                          _class="main_contact_ph",
                          ),
                        money_details,
-                       time_details,
+                       #time_details,
                        _class="media-body",
                        ),
                    _class="media",
@@ -947,6 +948,7 @@ def render_organisations(listid, resource, rfields, record, **attr):
 def render_org_needs(listid, resource, rfields, record, **attr):
     """
         Custom dataList item renderer for Needs
+        - UNUSED
 
         @param listid: the HTML ID for this list
         @param resource: the S3Resource to render
@@ -1075,6 +1077,7 @@ s3.render_org_needs = render_org_needs
 def render_site_needs(listid, resource, rfields, record, **attr):
     """
         Custom dataList item renderer for Needs
+        - UNUSED
 
         @param listid: the HTML ID for this list
         @param resource: the S3Resource to render
@@ -1980,8 +1983,8 @@ def customize_org_organisation(**attr):
                            "website",
                            "needs.money",
                            "needs.money_details",
-                           "needs.vol",
-                           "needs.vol_details",
+                           #"needs.vol",
+                           #"needs.vol_details",
                            ]
 
             if r.method == "profile":
