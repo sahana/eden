@@ -217,6 +217,7 @@ class S3Represent(object):
                  linkto=None,
                  show_link=False,
                  multiple=False,
+                 hierarchy=False,
                  default=None,
                  none=None,
                  field_sep=" "
@@ -234,6 +235,8 @@ class S3Represent(object):
             @param options: dictionary of options to lookup the representation
                             of a value, overrides lookup and key
             @param multiple: web2py list-type (all values will be lists)
+            @param hierarchy: render a hierarchical representation, either
+                              True or a string template like "%s > %s"
             @param translate: translate all representations (using T)
             @param linkto: a URL (as string) to link representations to,
                            with "[id]" as placeholder for the key
@@ -250,6 +253,7 @@ class S3Represent(object):
         self.labels = labels
         self.options = options
         self.list_type = multiple
+        self.hierarchy = hierarchy
         self.translate = translate
         self.linkto = linkto
         self.show_link = show_link
@@ -294,7 +298,7 @@ class S3Represent(object):
         return rows
 
     # -------------------------------------------------------------------------
-    def represent_row(self, row):
+    def represent_row(self, row, prefix=None):
         """
             Represent the referenced row.
             (in foreign key representations)
@@ -322,9 +326,14 @@ class S3Represent(object):
             else:
                 v = self.none
         if self.translate and not type(v) is lazyT:
-            return current.T(v)
+            output = current.T(v)
         else:
-            return v
+            output = v
+            
+        if prefix and self.hierarchy:
+            return self.htemplate % (prefix, output)
+                
+        return output
 
     # -------------------------------------------------------------------------
     def link(self, k, v, rows=None):
@@ -561,6 +570,12 @@ class S3Represent(object):
         # External renderer?
         self.clabels = callable(labels)
 
+        # Hierarchy template
+        if isinstance(self.hierarchy, basestring):
+            self.htemplate = self.hierarchy
+        else:
+            self.htemplate = "%s > %s"
+
         self.setup = True
         return
 
@@ -587,12 +602,31 @@ class S3Represent(object):
                 items[v] = theset[v]
             else:
                 lookup[v] = True
-        if self.table is None or not lookup:
+                
+        table = self.table
+        if table is None or not lookup:
             return items
+
+        if table and self.hierarchy:
+            # Does the lookup table have a hierarchy?
+            from s3hierarchy import S3Hierarchy
+            h = S3Hierarchy(table._tablename)
+            if h.config:
+                def lookup_parent(node_id):
+                    parent = h.parent(node_id)
+                    if parent and parent not in theset:
+                        lookup[parent] = True
+                        lookup_parent(parent)
+                    return
+                for node_id in lookup.keys():
+                    lookup_parent(node_id)
+            else:
+                h = None
+        else:
+            h = None
 
         # Get the primary key
         pkey = self.key
-        table = self.table
         ogetattr = object.__getattribute__
         try:
             key = ogetattr(table, pkey)
@@ -626,10 +660,17 @@ class S3Represent(object):
             else:
                 fields = []
             rows = self.lookup_rows(key, lookup.keys(), fields=fields)
-            for row in rows:
-                k = row[key]
-                lookup.pop(k, None)
-                items[k] = theset[k] = represent_row(row)
+            if h:
+                rows = dict((row[key], row) for row in rows)
+                represent_path = self._represent_path
+                for k, row in rows.items():
+                    lookup.pop(k, None)
+                    items[k] = represent_path(k, row, rows=rows, hierarchy=h)
+            else:
+                for row in rows:
+                    k = row[key]
+                    lookup.pop(k, None)
+                    items[k] = theset[k] = represent_row(row)
 
         if lookup:
             for k in lookup:
@@ -637,6 +678,41 @@ class S3Represent(object):
 
         # Done
         return items
+
+    # -------------------------------------------------------------------------
+    def _represent_path(self, value, row, rows=None, hierarchy=None):
+        """
+            Recursive helper method to represent value as path in
+            a hierarchy.
+
+            @param value: the value
+            @param row: the row containing the value
+            @param rows: all rows from _loopup as dict
+            @param hierarchy: the S3Hierarchy instance
+        """
+
+        theset = self.theset
+
+        if value in theset:
+            return theset[value]
+            
+        represent_row = self.represent_row
+
+        prefix = None
+        parent = hierarchy.parent(value)
+        
+        if parent:
+            if parent in theset:
+                prefix = theset[parent]
+            elif parent in rows:
+                prefix = self._represent_path(parent,
+                                              rows[parent],
+                                              rows=rows,
+                                              hierarchy=hierarchy)
+
+        result = self.represent_row(row, prefix=prefix)
+        theset[value] = result
+        return result
 
 # =============================================================================
 class S3RepresentLazy(object):

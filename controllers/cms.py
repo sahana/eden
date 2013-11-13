@@ -349,7 +349,9 @@ def newsfeed():
                                       label=T("Filter by Type"),
                                       # We want translations
                                       #represent="%(name)s",
-                                      widget="multiselect",
+                                      # @ToDo: deployment_setting or introspect when vals > 3?
+                                      #widget="multiselect",
+                                      cols=2,
                                       hidden=True,
                                       ),
                       S3LocationFilter("location_id",
