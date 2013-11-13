@@ -1,3 +1,5 @@
-Series,Body,Country,L1,L2,L3,L4,Comments,Organisation,Contact,Author,Date,Attachment,Expired
-Request,Information on volunteering is available via the website: http://www.redcross.org.ph/volunteer,PH,,,,,,Philippine Red Cross,Volunteer Service Office ,,2013-11-12,,N
-Request,Volunteers for Haiyan should visit our coordination page: http://eden.sahanafoundation.org/wiki/Deployments/Philippines/Haiyan,PH,,,,,,Sahana Software Foundation,Fran Boon,,2013-11-12,,N
+Series,Module,Resource,Body,Country,L1,L2,L3,L4,Comments,Organisation,Contact,Author,Date,Attachment,Expired
+Request,,,Information on volunteering is available via the website: http://www.redcross.org.ph/volunteer,PH,,,,,,Philippine Red Cross,Volunteer Service Office ,,2013-11-12,,N
+Request,,,Volunteers for Haiyan should visit our coordination page: http://eden.sahanafoundation.org/wiki/Deployments/Philippines/Haiyan,PH,,,,,,Sahana Software Foundation,Fran Boon,,2013-11-12,,N
+,default,contact,"This site is run by <a href='http://iosenasean.net' target='_blank'>IOSN</a>."
+,default,index,"This site has been set up to match supply with demand for <a href='http://www.natcco.coop' target='_blank'>The National Confederation of Cooperatives ( NATCCO)</a>."

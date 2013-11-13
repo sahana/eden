@@ -108,6 +108,7 @@ def index():
         table = s3db.cms_post
         ltable = s3db.cms_post_module
         query = (ltable.module == module) & \
+                ((ltable.resource == None) | (ltable.resource == "index")) & \
                 (ltable.post_id == table.id) & \
                 (table.deleted != True)
         item = db(query).select(table.body,

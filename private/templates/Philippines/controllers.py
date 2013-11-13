@@ -49,6 +49,21 @@ class index(S3CustomController):
         #orderby = "date desc"
         output["latest_offers"] = latest_records(resource, layout, listid, limit, list_fields, orderby)
 
+        # What We Do
+        db = current.db
+        table = db.cms_post
+        ltable = s3db.cms_post_module
+        query = (ltable.module == "default") & \
+                (ltable.resource == "index") & \
+                (ltable.post_id == table.id) & \
+                (table.deleted != True)
+        item = db(query).select(table.body,
+                                limitby=(0, 1)).first()
+        if item:
+            output["what_we_do"] = DIV(XML(item.body))
+        else:
+            output["what_we_do"] = ""
+
         self._view(THEME, "index.html")
         return output
 
