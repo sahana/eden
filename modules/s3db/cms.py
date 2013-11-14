@@ -812,13 +812,8 @@ def cms_customize_post_fields():
     field.represent = s3db.gis_LocationRepresent(sep=" | ")
     field.requires = IS_LOCATION_SELECTOR2(levels=levels)
     field.widget = S3LocationSelectorWidget2(levels=levels)
-
-    def URLise(body):
-        if "http" in body:
-            # @ToDo:
-            pass
-        return body
-    table.body.represent = URLise
+    
+    table.body.represent = lambda body: XML(s3_URLise(body))
 
     list_fields = ["series_id",
                    "location_id",
