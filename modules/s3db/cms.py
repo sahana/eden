@@ -857,56 +857,53 @@ def cms_render_posts(listid, resource, rfields, record,
 
     item_class = "thumbnail"
 
-    # @ToDo: deployment_setting
+    # @ToDo: deployment_setting or introspect based on list_fields
     #org_field = "auth_user.organisation_id"
     org_field = "cms_post_organisation.organisation_id"
-
-    # @ToDo: deployment_setting
-    #contact_field = "cms_post.created_by"
-    contact_field = "cms_post.person_id"
 
     raw = record._row
     series = record["cms_post.series_id"]
     date = record["cms_post.date"]
     body = record["cms_post.body"]
+
     location = record["cms_post.location_id"]
     location_id = raw["cms_post.location_id"]
     location_url = URL(c="gis", f="location", args=[location_id, "profile"])
-    author = record[contact_field]
-    author_id = raw[contact_field]
+
     organisation = record[org_field]
     organisation_id = raw[org_field]
     org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
 
-    db = current.db
-    s3db = current.s3db
+    # @ToDo: deployment_setting or introspect based on list_fields
+    #person = record["cms_post.created_by"]
+    #author_id = raw["cms_post.created_by"]
+    person = record["cms_post.person_id"]
+    person_id = raw["cms_post.person_id"]
 
-    ltable = s3db.pr_person_user
-    ptable = db.pr_person
-    query = (ltable.user_id == author_id) & \
-            (ltable.pe_id == ptable.pe_id)
-    row = db(query).select(ptable.id,
-                           limitby=(0, 1)
-                           ).first()
-    if row:
-        person_url = URL(c="hrm", f="person", args=[row.id])
-    else:
-        person_url = "#"
-    author = A(author,
+    db = current.db
+
+    # If using Author
+    #s3db = current.s3db
+    #ltable = s3db.pr_person_user
+    #ptable = db.pr_person
+    #query = (ltable.user_id == author_id) & \
+    #        (ltable.pe_id == ptable.pe_id)
+    #row = db(query).select(ptable.id,
+    #                       limitby=(0, 1)
+    #                       ).first()
+    #if row:
+    #    person_url = URL(c="pr", f="person", args=[row.id])
+    #else:
+    #    person_url = "#"
+
+    person_url = URL(c="pr", f="person", args=[person_id])
+    person = A(person,
                _href=person_url,
                )
 
-    # @ToDo: deployment_setting
-    # Use Personal Avatar
-    # @ToDo: Optimise by not doing DB lookups (especially duplicate) within render, but doing these in the bulk query
-    #avatar = s3_avatar_represent(author_id,
-    #                             _class="media-object")
-    #avatar = A(avatar,
-    #           _href=person_url,
-    #           _class="pull-left",
-    #           )
-
+    # Avatar
     # Use Organisation Logo
+    # @ToDo: option for Personal Avatar (fallback if no Org Logo?)
     otable = db.org_organisation
     row = db(otable.id == organisation_id).select(otable.logo,
                                                   limitby=(0, 1)
@@ -914,7 +911,7 @@ def cms_render_posts(listid, resource, rfields, record,
     if row and row.logo:
         logo = URL(c="default", f="download", args=[row.logo])
     else:
-        logo = ""
+        logo = URL(c="static", f="img", args="blank-user.gif")
     avatar = IMG(_src=logo,
                  _height=50,
                  _width=50,
@@ -1024,7 +1021,7 @@ def cms_render_posts(listid, resource, rfields, record,
                        ),
                    DIV(avatar,
                        DIV(DIV(body,
-                               DIV(author,
+                               DIV(person,
                                    " - ",
                                    A(organisation,
                                      _href=org_url,
@@ -1057,7 +1054,7 @@ def cms_render_posts(listid, resource, rfields, record,
                        ),
                    DIV(avatar,
                        DIV(DIV(body,
-                               DIV(author,
+                               DIV(person,
                                    " - ",
                                    A(organisation,
                                      _href=org_url,

@@ -1936,6 +1936,9 @@ class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
 
 # =============================================================================
 class IS_ADD_PERSON_WIDGET(Validator):
+    """
+        Validator for S3AddPersonWidget
+    """
 
     def __init__(self,
                  error_message=None):
@@ -2144,6 +2147,11 @@ class IS_ADD_PERSON_WIDGET(Validator):
 
 # =============================================================================
 class IS_ADD_PERSON_WIDGET2(Validator):
+    """
+        Validator for S3AddPersonWidget2
+
+        @ToDo: get working human_resource_id
+    """
 
     def __init__(self,
                  error_message=None):

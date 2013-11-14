@@ -1443,10 +1443,10 @@ def send_req():
                      args = [req_id]))
 
     # Create a new send record
-    code = s3db.inv_get_shipping_code("WB",
-                                      site_id,
-                                      s3db.inv_send.send_ref
-                                      )
+    code = s3db.supply_get_shipping_code("WB",
+                                         site_id,
+                                         s3db.inv_send.send_ref
+                                         )
     send_id = sendtable.insert(send_ref = code,
                                req_ref = r_req.req_ref,
                                sender_id = auth.s3_logged_in_person(),

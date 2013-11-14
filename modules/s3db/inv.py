@@ -981,7 +981,6 @@ class S3TrackingModel(S3Model):
              "inv_kit",
              "inv_track_item",
              "inv_track_item_onaccept",
-             "inv_get_shipping_code",
              ]
 
     def model(self):
@@ -1888,8 +1887,7 @@ S3OptionsFilter({
         #---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(inv_get_shipping_code = self.inv_get_shipping_code,
-                       inv_send_controller = self.inv_send_controller,
+        return Storage(inv_send_controller = self.inv_send_controller,
                        inv_send_onaccept = self.inv_send_onaccept,
                        inv_send_process = self.inv_send_process,
                        inv_track_item_deleting = self.inv_track_item_deleting,
@@ -2050,7 +2048,7 @@ S3OptionsFilter({
         # If the send_ref is None then set it up
         record = stable[id]
         if not record.send_ref:
-            code = S3TrackingModel.inv_get_shipping_code(
+            code = current.s3db.supply_get_shipping_code(
                     current.deployment_settings.get_inv_send_shortname(),
                     record.site_id,
                     stable.send_ref,
@@ -2583,7 +2581,7 @@ S3OptionsFilter({
         record = rtable[id]
         if not record.recv_ref:
             # AR Number
-            code = S3TrackingModel.inv_get_shipping_code(
+            code = current.s3db.supply_get_shipping_code(
                     current.deployment_settings.get_inv_recv_shortname(),
                     record.site_id,
                     rtable.recv_ref,
@@ -2887,27 +2885,6 @@ S3OptionsFilter({
         # @ToDo
 
         return
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def inv_get_shipping_code(type, site_id, field):
-
-        if site_id:
-            ostable = current.s3db.org_site
-            scode = ostable[site_id].code
-            code = "%s-%s-" % (type, scode)
-        else:
-            code = "%s-###-" % (type)
-        number = 0
-        if field:
-            query = (field.like("%s%%" % code))
-            ref_row = current.db(query).select(field,
-                                               limitby=(0, 1),
-                                               orderby=~field).first()
-            if ref_row:
-                ref = ref_row(field)
-                number = int(ref[-6:])
-        return "%s%06d" % (code, number+1)
 
     # -------------------------------------------------------------------------
     @staticmethod

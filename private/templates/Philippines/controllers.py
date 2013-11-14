@@ -25,9 +25,9 @@ class index(S3CustomController):
 
         # Latest 4 Requests
         s3db = current.s3db
-        #s3db.cms_customize_post_fields()
+        s3db.req_customize_req_fields()
         listid = "latest_reqs"
-        #layout = s3db.req_render_reqs
+        layout = s3db.req_render_reqs
         limit = 4
         list_fields = s3db.get_config("req_req", "list_fields")
 
@@ -38,8 +38,9 @@ class index(S3CustomController):
         output["latest_reqs"] = latest_records(resource, layout, listid, limit, list_fields, orderby)
 
         # Latest 4 Offers
+        s3db.req_customize_commit_fields()
         listid = "latest_offers"
-        #layout = s3db.req_render_commits
+        layout = s3db.req_render_commits
         #limit = 4
 
         resource = s3db.resource("req_commit")
@@ -49,15 +50,14 @@ class index(S3CustomController):
         output["latest_offers"] = latest_records(resource, layout, listid, limit, list_fields, orderby)
 
         # What We Do
-        db = current.db
-        table = db.cms_post
+        table = s3db.cms_post
         ltable = s3db.cms_post_module
         query = (ltable.module == "default") & \
                 (ltable.resource == "index") & \
                 (ltable.post_id == table.id) & \
                 (table.deleted != True)
-        item = db(query).select(table.body,
-                                limitby=(0, 1)).first()
+        item = current.db(query).select(table.body,
+                                        limitby=(0, 1)).first()
         if item:
             output["what_we_do"] = DIV(XML(item.body))
         else:

@@ -622,6 +622,8 @@ class S3AddPersonWidget2(FormWidget):
         It relies on JS code in static/S3/s3.add_person.js
 
         @ToDo: get working in a non-Bootstrap formstyle
+        @ToDo: get working AC/validator for human_resource_id
+               - perhaps re-implement as S3SQLFormElement
     """
 
     def __init__(self,
