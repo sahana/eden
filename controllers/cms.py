@@ -77,7 +77,7 @@ def blog():
     # Post-process
     def postp(r, output):
         if r.record:
-            response.view = "cms/blog.html"
+            response.view = s3base.S3CRUD._view(r, "cms/blog.html")
         return output
     s3.postp = postp
 
@@ -216,7 +216,7 @@ def page():
         if r.record:
             output = {"item": r.record.body}
             current.menu.options = None
-            response.view = "cms/page.html"
+            response.view = s3base.S3CRUD._view(r, "cms/page.html")
             if r.record.replies:
                 ckeditor = URL(c="static", f="ckeditor", args="ckeditor.js")
                 s3.scripts.append(ckeditor)
@@ -583,7 +583,7 @@ def newsfeed():
     def postp(r, output):
         if r.interactive:
             if r.method == "datalist" and r.representation != "dl":
-                response.view = "cms/newsfeed.html"
+                response.view = s3base.S3CRUD._view(r, "cms/newsfeed.html")
         return output
     s3.postp = postp
 
