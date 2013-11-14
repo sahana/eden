@@ -122,11 +122,10 @@ class S3RequestModel(S3Model):
                                   represent = self.req_ref_represent,
                                   )
 
-        req_priority_opts = {
-            3:T("High"),
-            2:T("Medium"),
-            1:T("Low")
-        }
+        req_priority_opts = {3: T("High"),
+                             2: T("Medium"),
+                             1: T("Low")
+                             }
 
         req_types_deployed = settings.get_req_req_type()
         req_type_opts = {}
@@ -148,18 +147,18 @@ class S3RequestModel(S3Model):
         date_writable = settings.get_req_date_writable()
         requester_label = settings.get_req_requester_label()
 
-        # Comment these to use a Dropdown & not an Autocomplete
-        #if settings.get_org_site_autocomplete():
-        #    if settings.get_org_site_address_autocomplete():
-        #        site_widget = S3SiteAddressAutocompleteWidget()
-        #    else:
-        #        site_widget = S3SiteAutocompleteWidget()
-        #    site_comment = DIV(_class="tooltip",
-        #                       _title="%s|%s" % (T("Requested By Facility"),
-        #                                         T("Enter some characters to bring up a list of possible matches")))
-        #else:
-        site_widget = None
-        site_comment = None
+        # Dropdown or Autocomplete?
+        if settings.get_org_site_autocomplete():
+            if settings.get_org_site_address_autocomplete():
+                site_widget = S3SiteAddressAutocompleteWidget()
+            else:
+                site_widget = S3SiteAutocompleteWidget()
+            site_comment = DIV(_class="tooltip",
+                               _title="%s|%s" % (T("Requested By Facility"),
+                                                 T("Enter some characters to bring up a list of possible matches")))
+        else:
+            site_widget = None
+            site_comment = None
 
         # ---------------------------------------------------------------------
         # Requests
@@ -249,8 +248,7 @@ class S3RequestModel(S3Model):
                                                     label = requester_label,
                                                     empty = settings.get_req_requester_optional(),
                                                     #writable = False,
-                                                    comment = S3AddResourceLink(c="hrm",
-                                                                                f="staff",
+                                                    comment = S3AddResourceLink(c="hrm", f="staff",
                                                                                 vars = dict(child="requester_id",
                                                                                             parent="req"),
                                                                                 title=crud_strings["hrm_staff"].title_create,
@@ -445,17 +443,22 @@ class S3RequestModel(S3Model):
         fact_fields = report_fields + [(T("Requests"), "id")]
 
         # Reusable Field
-        req_id = S3ReusableField("req_id", table, sortby="date",
-                                 requires = IS_ONE_OF(db,
-                                                      "req_req.id",
-                                                      lambda id, row:
-                                                        self.req_represent(id, row,
-                                                                           show_link=False),
-                                                      orderby="req_req.date",
-                                                      sort=True),
-                                 represent = self.req_represent,
+        represent = self.req_represent
+        req_id = S3ReusableField("req_id", table,
+                                 requires = IS_NULL_OR(
+                                                IS_ONE_OF(db,
+                                                          "req_req.id",
+                                                          lambda id, row:
+                                                            represent(id, row,
+                                                                      show_link=False),
+                                                          orderby="req_req.date",
+                                                          sort=True)
+                                                ),
+                                 represent = represent,
+                                 sortby = "date",
                                  label = T("Request"),
-                                 ondelete = "CASCADE")
+                                 ondelete = "CASCADE",
+                                 )
         list_fields = ["id",
                        "date",
                        "date_required",
@@ -1412,7 +1415,7 @@ class S3RequestItemModel(S3Model):
         #
         tablename = "req_req_item"
         table = define_table(tablename,
-                             req_id(),
+                             req_id(empty=False),
                              self.supply_item_entity_id,
                              self.supply_item_id(),
                              self.supply_item_pack_id(),
@@ -1542,7 +1545,7 @@ S3OptionsFilter({
         #
         tablename = "req_req_item_category"
         table = define_table(tablename,
-                             req_id(),
+                             req_id(empty=False),
                              self.supply_item_category_id(),
                              *s3_meta_fields()
                              )
@@ -1712,8 +1715,6 @@ class S3RequestSkillModel(S3Model):
 
         T = current.T
 
-        req_id = self.req_req_id
-
         settings = current.deployment_settings
         quantities_writable = settings.get_req_skill_quantities_writable()
         use_commit = settings.get_req_use_commit()
@@ -1725,7 +1726,7 @@ class S3RequestSkillModel(S3Model):
         #
         tablename = "req_req_skill"
         table = define_table(tablename,
-                             req_id(),
+                             self.req_req_id(empty=False),
                              # Make this a Component
                              #Field("task",
                              #      readable=False,
@@ -1863,7 +1864,7 @@ class S3RequestRecurringModel(S3Model):
         #
         tablename = "req_job"
         table = self.define_table(tablename,
-                                  self.req_req_id(),
+                                  self.req_req_id(empty=False),
                                   s3.scheduler_task_id(),
                                   *s3_meta_fields())
 
@@ -2052,7 +2053,7 @@ class S3RequestTaskModel(S3Model):
         tablename = "req_task_req"
         table = self.define_table(tablename,
                                   self.project_task_id(),
-                                  self.req_req_id(),
+                                  self.req_req_id(empty=False),
                                   #self.req_req_person_id(),
                                   #self.req_req_skill_id(),
                                   *s3_meta_fields())

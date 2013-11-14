@@ -751,6 +751,34 @@ def customize_pr_person(**attr):
 settings.ui.customize_pr_person = customize_pr_person
 
 # -----------------------------------------------------------------------------
+def customize_req_commit(**attr):
+    """
+        Customize req_commit controller
+    """
+
+    # Request is mandatory
+    field = current.s3db.req_commit.req_id
+    field.requires = field.requires.other
+
+    return attr
+
+settings.ui.customize_req_commit = customize_req_commit
+
+# -----------------------------------------------------------------------------
+def customize_req_req(**attr):
+    """
+        Customize req_req controller
+    """
+
+    # Request is mandatory
+    field = current.s3db.req_commit.req_id
+    field.requires = field.requires.other
+
+    return attr
+
+settings.ui.customize_req_req = customize_req_req
+
+# -----------------------------------------------------------------------------
 def customize_survey_series(**attr):
     """
         Customize survey_series controller
