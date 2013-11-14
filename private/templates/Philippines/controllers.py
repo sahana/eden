@@ -24,27 +24,26 @@ class index(S3CustomController):
         s3.jquery_ready.append('''$('#myCarousel').carousel()''')
 
         # Latest 4 Requests
-        from s3.s3resource import S3FieldSelector
         s3db = current.s3db
-        s3db.cms_customize_post_fields()
+        #s3db.cms_customize_post_fields()
         listid = "latest_reqs"
-        layout = s3db.cms_render_posts
+        #layout = s3db.req_render_reqs
         limit = 4
-        list_fields = s3db.get_config("cms_post", "list_fields")
+        list_fields = s3db.get_config("req_req", "list_fields")
 
-        resource = s3db.resource("cms_post")
-        resource.add_filter(S3FieldSelector("series_id$name") == "Request")
+        resource = s3db.resource("req_req")
+        #resource.add_filter(S3FieldSelector("series_id$name") == "Request")
         # Order with most recent first
         orderby = "date desc"
         output["latest_reqs"] = latest_records(resource, layout, listid, limit, list_fields, orderby)
 
         # Latest 4 Offers
         listid = "latest_offers"
-        #layout = s3.render_posts # defined in config.py
+        #layout = s3db.req_render_commits
         #limit = 4
 
-        resource = s3db.resource("cms_post")
-        resource.add_filter(S3FieldSelector("series_id$name") == "Offer")
+        resource = s3db.resource("req_commit")
+        #resource.add_filter(S3FieldSelector("series_id$name") == "Offer")
         # Order with most recent first
         #orderby = "date desc"
         output["latest_offers"] = latest_records(resource, layout, listid, limit, list_fields, orderby)

@@ -1191,8 +1191,8 @@ S3OptionsFilter({
 '''S3.confirmClick('.send-btn','%s')''' % T("Are you sure you want to send this shipment?"))
 
         return output
-    s3.postp = postp    
-    
+    s3.postp = postp
+
     output = s3_rest_controller(rheader=commit_rheader)
     return output
 

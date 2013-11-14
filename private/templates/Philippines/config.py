@@ -164,12 +164,20 @@ settings.ui.summary = [#{"common": True,
 
 settings.search.filter_manager = False
 
+# Filter forms - style for Summary pages
+#def filter_formstyle(row_id, label, widget, comment, hidden=False):
+#    return DIV(label, widget, comment, 
+#               _id=row_id,
+#               _class="horiz_filter_form")
+
 # =============================================================================
 # Module Settings
 
 # -----------------------------------------------------------------------------
 # Human Resource Management
 settings.hrm.staff_label = "Contacts"
+# Uncomment to allow Staff & Volunteers to be registered without an organisation
+settings.hrm.org_required = False
 # Uncomment to allow Staff & Volunteers to be registered without an email address
 settings.hrm.email_required = False
 # Uncomment to show the Organisation name in HR represents
@@ -191,6 +199,8 @@ settings.pr.request_gender = False
 # Org
 #settings.org.site_label = "Office/Shelter/Hospital"
 settings.org.site_label = "Site"
+#settings.org.site_autocomplete = True
+#settings.org.site_address_autocomplete = True
 
 # -----------------------------------------------------------------------------
 # Project
@@ -1621,21 +1631,28 @@ def customize_org_facility_fields():
     s3db = current.s3db
     table = s3db.org_facility
     table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
-    table.modified_by.represent = s3_auth_user_represent_name
-    table.modified_on.represent = datetime_represent
+    #table.modified_by.represent = s3_auth_user_represent_name
+    #table.modified_on.represent = datetime_represent
 
     list_fields = ["name",
-                   "organisation_id",
                    "site_facility_type.facility_type_id",
+                   "organisation_id",
                    "location_id",
                    "location_id$addr_street",
                    #"modified_by",
                    #"modified_on",
                    "organisation_id$logo",
-                   "opening_times",
-                   "contact",
-                   "phone1",
+                   #"opening_times",
+                   "human_resource.person_id",
+                   #"contact",
+                   #"phone1",
                    ]
+
+    #from s3.s3validators import IS_ADD_PERSON_WIDGET2
+    #from s3.s3widgets import S3AddPersonWidget2
+    #field = s3db.hrm_human_resource_site.human_resource_id
+    #field.requires = IS_ADD_PERSON_WIDGET2()
+    #field.widget = S3AddPersonWidget2(controller="pr")
 
     crud_form = S3SQLCustomForm("name",
                                 S3SQLInlineComponentMultiSelectWidget(
@@ -1646,10 +1663,16 @@ def customize_org_facility_fields():
                                 ),
                                 "organisation_id",
                                 "location_id",
-                                "opening_times",
-                                "phone1",
-                                "contact",
-                                "website",
+                                #"opening_times",
+                                # This is too Ugly right now!
+                                #S3SQLInlineComponent(
+                                #   "human_resource_site",
+                                #    label = T("Focal Point"),
+                                #    field = ["human_resource_id"],
+                                #    multiple = False,
+                                #),
+                                #"contact",
+                                #"phone1",
                                 # This is too Ugly right now!
                                 #S3SQLInlineComponent(
                                 #   "needs",
@@ -1657,7 +1680,7 @@ def customize_org_facility_fields():
                                 #    multiple = False,
                                 #),
                                 "comments",
-    )
+                                )
 
     s3db.configure("org_facility",
                    crud_form = crud_form,
@@ -1685,6 +1708,35 @@ def customize_org_facility(**attr):
 
         if r.interactive:
             customize_org_facility_fields()
+
+            # Which levels of Hierarchy are we using?
+            hierarchy = current.gis.get_location_hierarchy()
+            levels = hierarchy.keys()
+            if len(current.deployment_settings.gis.countries) == 1:
+                levels.remove("L0")
+
+            # Filter from a Profile page?
+            # If so, then default the fields we know
+            get_vars = current.request.get_vars
+            location_id = get_vars.get("~.(location)", None)
+            organisation_id = get_vars.get("~.(organisation)", None)
+            if organisation_id:
+                org_field = table.organisation_id
+                org_field.default = organisation_id
+                org_field.readable = org_field.writable = False
+            location_field = table.location_id
+            if location_id:
+                location_field.default = location_id
+                location_field.readable = location_field.writable = False
+            else:
+                # Don't add new Locations here
+                location_field.comment = None
+                location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
+                location_field.widget = S3LocationSelectorWidget2(levels=levels,
+                                                                  show_address=True,
+                                                                  show_map=True)
+            s3.cancel = True
+
             if r.method == "datalist":
                 # Lx selection page
                 # 2-column datalist, 6 rows per page
@@ -1694,7 +1746,7 @@ def customize_org_facility(**attr):
                 from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
                 filter_widgets = [
                     S3LocationFilter("location_id",
-                                     levels=["L1", "L2", "L3", "L4"],
+                                     levels=levels,
                                      widget="multiselect",
                                      hidden=True,
                                     ),
@@ -1833,29 +1885,6 @@ def customize_org_facility(**attr):
             table.phone1.readable = table.phone1.writable = False
             table.phone2.readable = table.phone2.writable = False
             table.email.readable = table.email.writable = False
-            location_field = table.location_id
-            
-
-            # Filter from a Profile page?
-            # If so, then default the fields we know
-            get_vars = current.request.get_vars
-            location_id = get_vars.get("~.(location)", None)
-            organisation_id = get_vars.get("~.(organisation)", None)
-            if organisation_id:
-                org_field = table.organisation_id
-                org_field.default = organisation_id
-                org_field.readable = org_field.writable = False
-            if location_id:
-                location_field.default = location_id
-                location_field.readable = location_field.writable = False
-            else:
-                # Don't add new Locations here
-                location_field.comment = None
-                location_field.requires = IS_LOCATION_SELECTOR2(levels=("L1", "L2", "L3", "L4"))
-                location_field.widget = S3LocationSelectorWidget2(levels=("L1", "L2", "L3", "L4"),
-                                                                  show_address=True,
-                                                                  show_map=False)
-            s3.cancel = True
 
         return True
     s3.prep = custom_prep
@@ -2231,188 +2260,6 @@ def customize_site_needs_fields(profile=False):
 s3.customize_site_needs_fields = customize_site_needs_fields
 
 # -----------------------------------------------------------------------------
-def customize_org_resource_fields(method):
-    """
-        Customize org_resource fields for Profile widgets and 'more' popups
-    """
-
-    s3db = current.s3db
-
-    table = s3db.org_resource
-    table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
-
-    list_fields = ["organisation_id",
-                   "location_id",
-                   "parameter_id",
-                   "value",
-                   "comments",
-                   ]
-    if method in ("datalist", "profile"):
-        table.modified_by.represent = s3_auth_user_represent_name
-        table.modified_on.represent = datetime_represent
-        append = list_fields.append
-        append("modified_by")
-        append("modified_on")
-        append("organisation_id$logo")
-
-    s3db.configure("org_resource",
-                   list_fields = list_fields,
-                   )
-
-# -----------------------------------------------------------------------------
-def customize_org_resource(**attr):
-    """
-        Customize org_resource controller
-    """
-
-    s3 = current.response.s3
-    s3db = current.s3db
-    table = s3db.org_resource
-
-    # Custom PreP
-    standard_prep = s3.prep
-    def custom_prep(r):
-        # Call standard prep
-        if callable(standard_prep):
-            result = standard_prep(r)
-            if not result:
-                return False
-
-        if r.interactive or r.representation == "aadata":
-            customize_org_resource_fields(r.method)
-    
-            # Configure fields
-            #table.site_id.readable = table.site_id.readable = False
-            location_field = table.location_id
-            location_field.label = T("District")
-
-            # Filter from a Profile page?
-            # If so, then default the fields we know
-            get_vars = current.request.get_vars
-            location_id = get_vars.get("~.(location)", None)
-            organisation_id = get_vars.get("~.(organisation)", None)
-            if organisation_id:
-                org_field = table.organisation_id
-                org_field.default = organisation_id
-                org_field.readable = org_field.writable = False
-            if location_id:
-                location_field.default = location_id
-                location_field.readable = location_field.writable = False
-            else:
-                # L1s only
-                location_field.requires = IS_ONE_OF(current.db, "gis_location.id",
-                                                    S3Represent(lookup="gis_location"),
-                                                    sort = True,
-                                                    filterby = "level",
-                                                    filter_opts = ["L2"]
-                                                    )
-                # Don't add new Locations here
-                location_field.comment = None
-                # Simple dropdown
-                location_field.widget = None
-
-            # Return to List view after create/update/delete (unless done via Modal)
-            url_next = URL(c="org", f="resource")
-
-            s3db.configure("org_resource",
-                           create_next = url_next,
-                           delete_next = url_next,
-                           update_next = url_next,
-                           # Don't include a Create form in 'More' popups
-                           listadd = False if r.method=="datalist" else True,
-                           list_layout = render_resources,
-                           )
-
-            s3.cancel = True
-
-        return True
-    s3.prep = custom_prep
-
-    # Custom postp
-    standard_postp = s3.postp
-    def custom_postp(r, output):
-        if r.interactive:
-            actions = [dict(label=str(T("Open")),
-                            _class="action-btn",
-                            url=URL(c="org", f="resource",
-                                    args=["[id]", "read"]))
-                       ]
-            # All users just get "Open"
-            #db = current.db
-            #auth = current.auth
-            #has_permission = auth.s3_has_permission
-            #ownership_required = auth.permission.ownership_required
-            #s3_accessible_query = auth.s3_accessible_query
-            #if has_permission("update", table):
-            #    action = dict(label=str(T("Edit")),
-            #                  _class="action-btn",
-            #                  url=URL(c="org", f="resource",
-            #                          args=["[id]", "update"]),
-            #                  )
-            #    if ownership_required("update", table):
-            #        # Check which records can be updated
-            #        query = s3_accessible_query("update", table)
-            #        rows = db(query).select(table._id)
-            #        restrict = []
-            #        rappend = restrict.append
-            #        for row in rows:
-            #            row_id = row.get("id", None)
-            #            if row_id:
-            #                rappend(str(row_id))
-            #        action["restrict"] = restrict
-            #    actions.append(action)
-            #if has_permission("delete", table):
-            #    action = dict(label=str(T("Delete")),
-            #                  _class="action-btn",
-            #                  url=URL(c="org", f="resource",
-            #                          args=["[id]", "delete"]),
-            #                  )
-            #    if ownership_required("delete", table):
-            #        # Check which records can be deleted
-            #        query = s3_accessible_query("delete", table)
-            #        rows = db(query).select(table._id)
-            #        restrict = []
-            #        rappend = restrict.append
-            #        for row in rows:
-            #            row_id = row.get("id", None)
-            #            if row_id:
-            #                rappend(str(row_id))
-            #        action["restrict"] = restrict
-            #    actions.append(action)
-            s3.actions = actions
-            if isinstance(output, dict):
-                if "form" in output:
-                    output["form"].add_class("org_resource")
-                elif "item" in output and hasattr(output["item"], "add_class"):
-                    output["item"].add_class("org_resource")
-
-        # Call standard postp
-        if callable(standard_postp):
-            output = standard_postp(r, output)
-
-        return output
-    s3.postp = custom_postp
-
-    return attr
-
-settings.ui.customize_org_resource = customize_org_resource
-
-# -----------------------------------------------------------------------------
-def customize_org_resource_type(**attr):
-    """
-        Customize org_resource_type controller
-    """
-
-    table = current.s3db.org_resource_type
-    table.name.represent = lambda v: T(v) if v else ""
-    table.comments.label = T("Units")
-    table.comments.represent = lambda v: T(v) if v else ""
-
-    return attr
-
-settings.ui.customize_org_resource_type = customize_org_resource_type
-
-# -----------------------------------------------------------------------------
 def customize_pr_person(**attr):
     """
         Customize pr_person controller
@@ -2521,7 +2368,7 @@ def customize_pr_person(**attr):
                            #"middle_name",
                            "last_name",
                            (T("Job Title"), "human_resource.job_title_id"),
-                           (T("Office"), "human_resource.site_id"),
+                           (T("Site"), "human_resource.site_id"),
                            ]
             
             # Don't include Email/Phone for unauthenticated users
@@ -2710,11 +2557,140 @@ def customize_doc_document(**attr):
 settings.ui.customize_doc_document = customize_doc_document
 
 # -----------------------------------------------------------------------------
-# Filter forms - style for Summary pages
-def filter_formstyle(row_id, label, widget, comment, hidden=False):
-    return DIV(label, widget, comment, 
-               _id=row_id,
-               _class="horiz_filter_form")
+settings.req.requester_label = "Contact"
+
+def customize_req_req(**attr):
+    """
+        Customize req_req controller
+    """
+
+    s3 = current.response.s3
+    s3db = current.s3db
+    tablename = "req_req"
+    table = s3db.req_req
+
+    # Custom PreP
+    #standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        #if callable(standard_prep):
+        #    result = standard_prep(r)
+
+        if r.interactive or r.representation == "aadata":
+
+            from s3.s3validators import IS_ADD_PERSON_WIDGET2
+            from s3.s3widgets import S3AddPersonWidget2
+            field = table.requester_id
+            field.requires = IS_ADD_PERSON_WIDGET2()
+            field.widget = S3AddPersonWidget2(controller="hrm")
+
+            field = table.site_id
+            field.label = T("Requested for Site")
+            from s3layouts import S3AddResourceLink
+            field.comment = S3AddResourceLink(c="org", f="facility",
+                                              vars = dict(child="site_id",
+                                                          parent="req"),
+                                              title=T("Add New Site"),
+                                              )
+            # @ToDo:
+            #field.requires = IS_ADD_SITE_WIDGET()
+            #field.widget = S3AddSiteWidget(type="org_facility")
+
+            table.type.default = 9 # Other
+            table.date.label = T("Date")
+            table.purpose.label = T("Request")
+            table.purpose.required = True
+            
+            list_fields = ["date",
+                           #"priority",
+                           "site_id",
+                           #"is_template",
+                           "requester_id",
+                           "purpose",
+                           #"commit_status",
+                           #"transit_status",
+                           #"fulfil_status",
+                           #"cancel",
+                           ]
+
+            crud_form = S3SQLCustomForm(*list_fields)
+
+            s3db.configure(tablename,
+                           list_fields = list_fields,
+                           crud_form = crud_form,
+                           )
+        return True
+    s3.prep = custom_prep
+
+    # Disable postp
+    s3.postp = None
+
+    attr["hide_filter"] = False
+    return attr
+
+settings.ui.customize_req_req = customize_req_req
+
+# -----------------------------------------------------------------------------
+def customize_req_commit(**attr):
+    """
+        Customize req_commit controller
+    """
+
+    s3 = current.response.s3
+    s3db = current.s3db
+    tablename = "req_commit"
+    table = s3db.req_commit
+
+    # Custom PreP
+    #standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        #if callable(standard_prep):
+        #    result = standard_prep(r)
+
+        field = table.organisation_id
+        field.readable = True
+        field.writable = True
+
+        if r.interactive or r.representation == "aadata":
+
+            from s3.s3validators import IS_ADD_PERSON_WIDGET2
+            from s3.s3widgets import S3AddPersonWidget2
+            field = table.committer_id
+            field.requires = IS_ADD_PERSON_WIDGET2()
+            field.widget = S3AddPersonWidget2(controller="pr")
+
+            field = table.comments
+            field.label = T("Donation")
+            field.required = True
+            # @ToDo
+            field.comments = None
+
+            table.date_available.default = current.request.utcnow
+
+            list_fields = [#"req_id", # populated automatically or not at all?
+                           "date_available",
+                           "organisation_id",
+                           "committer_id",
+                           "comments",
+                           ]
+
+            crud_form = S3SQLCustomForm(*list_fields)
+
+            s3db.configure(tablename,
+                           list_fields = list_fields,
+                           crud_form = crud_form,
+                           )
+        return True
+    s3.prep = custom_prep
+
+    # Disable postp
+    s3.postp = None
+
+    attr["hide_filter"] = False
+    return attr
+
+settings.ui.customize_req_commit = customize_req_commit
 
 # =============================================================================
 # Template Modules
