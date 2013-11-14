@@ -359,89 +359,84 @@ class S3RequestModel(S3Model):
             msg_record_modified = T("Request Updated"),
             msg_record_deleted = T("Request Canceled"),
             msg_list_empty = T("No Requests"))
-        
-       # Search method
-        req_basic_search = [
-             S3SearchOptionsWidget(
-                name = "req_search_transit_status",
-                label = T("Transit Status"),
-                field = "transit_status",
-                options = req_status_opts,
-                cols = 3,
-            ),
-            S3SearchOptionsWidget(
-                name = "req_search_fulfil_status",
-                label = T("Fulfill Status"),
-                field = "fulfil_status",
-                options = req_status_opts,
-                cols = 3,
-            )
-       ]
+
+        # Which levels of Hierarchy are we using?
+        hierarchy = current.gis.get_location_hierarchy()
+        levels = hierarchy.keys()
+        if len(settings.gis.countries) == 1:
+            levels.remove("L0")
+
+        filter_widgets = [
+            #S3TextFilter(["committer_id$first_name",
+            #              "committer_id$middle_name",
+            #              "committer_id$last_name",
+            #              "site_id$name",
+            #              "comments",
+            #              "req_id$name",
+            #              "organisation_id$name"
+            #              ],
+            #             label = T("Search")
+            #             comment=T("Search for a commitment by Committer name, Request ID, Site or Organization."),
+            #             ),
+            S3OptionsFilter("transit_status",
+                            label = T("Transit Status"),
+                            options = req_status_opts,
+                            cols = 3,
+                            ),
+            S3OptionsFilter("fulfil_status",
+                            label = T("Fulfill Status"),
+                            options = req_status_opts,
+                            cols = 3,
+                            ),
+            S3LocationFilter("site_id$location_id",
+                             levels=levels,
+                             widget="multiselect",
+                             hidden=True,
+                             ),
+            S3OptionsFilter("site_id",
+                            label=T("Requested For Facility"),
+                            widget="multiselect",
+                            hidden=True,
+                            ),
+            S3OptionsFilter("created_by",
+                            label=T("Logged By"),
+                            widget="multiselect",
+                            hidden=True,
+                            ),
+            S3DateFilter("date",
+                         label=T("Date"),
+                         hide_time=True,
+                         input_labels = {"ge": "From", "le": "To"},
+                         comment=T("Search for requests made between these dates."),
+                         hidden=True,
+                         ),
+            S3DateFilter("date_required",
+                         label=T("Date Needed By"),
+                         hide_time=True,
+                         input_labels = {"ge": "From", "le": "To"},
+                         comment=T("Search for requests required between these dates."),
+                         hidden=True,
+                         ),
+            ]
+
+        if "Stock" in req_type_opts:
+            filter_widgets.insert(4, S3OptionsFilter("item_category.name",
+                                                     label = T("Item Category"),
+                                                     widget = "multiselect",
+                                                     hidden=True,
+                                                     ))
+        if len(req_type_opts) > 1:
+            filter_widgets.insert(2, S3OptionsFilter("type",
+                                                     label=T("Type"),
+                                                     cols = len(req_type_opts),
+                                                     hidden=True,
+                                                     ))
         if use_commit:
-            widget = S3SearchOptionsWidget(
-                        name = "req_search_commit_status",
-                        label = T("Commit Status"),
-                        field = "commit_status",
-                        options = req_status_opts,
-                        cols = 3,
-                    )
-            req_basic_search.insert(0, widget)
-        req_advanced_search = req_basic_search + [
-            S3SearchOptionsWidget(
-                name = "req_search_type",
-                label = T("Type"),
-                field = "type",
-                options = req_type_opts,
-                cols = 3,
-            ),
-            S3SearchOptionsWidget(
-                name = "req_search_item_category",
-                label = T("Item Category"),
-                field = "item_category.name",
-                cols = 3,
-            ),
-            S3SearchOptionsWidget(
-                name = "req_search_created_by",
-                label = T("Logged By"),
-                field = "created_by",
-                cols = 3,
-            ),
-            #S3SearchOptionsWidget(
-            #  name="req_search_L1",
-            #  field="site_id$location_id$L1",
-            #  location_level="L1",
-            #  cols = 3,
-            #),
-            #S3SearchOptionsWidget(
-            #  name="req_search_L2",
-            #  field="site_id$location_id$L2",
-            #  location_level="L2",
-            #  cols = 3,
-            #),
-            S3SearchOptionsWidget(
-                name = "req_search_L3",
-                field = "site_id$location_id$L3",
-                location_level = "L3",
-                cols = 3,
-            ),
-            S3SearchOptionsWidget(
-                name = "req_search_L4",
-                field = "site_id$location_id$L4",
-                location_level = "L4",
-                cols = 3,
-            ),
-            S3SearchOptionsWidget(
-                name = "req_search_site",
-                field = "site_id",
-                label = T("Facility"),
-           	cols = 3,
-        	),
-            S3SearchMinMaxWidget(
-        	name="req_search_date_required",
-        	method="range",
-        	label=T("Date Needed By"),
-        	field="date_required",
-         	),]
+            filter_widgets.insert(2, S3OptionsFilter("commit_status",
+                                                     label = T("Commit Status"),
+                                                     options = req_status_opts,
+                                                     cols = 3,
+                                                     ))
 
         report_fields = ["priority",
                          "site_id$organisation_id",
@@ -497,28 +492,33 @@ class S3RequestModel(S3Model):
         list_fields.append("transit_status")
         list_fields.append("fulfil_status")
         list_fields.append((T("Committed By"), "commit.site_id"))
-        
+
         self.configure(tablename,
                        onaccept = self.req_onaccept,
                        ondelete = self.req_req_ondelete,
                        deduplicate = self.req_req_duplicate,
                        listadd = False,
                        orderby = ~table.date,
-                       search_method = S3Search(simple = req_basic_search, advanced = req_advanced_search),
+                       filter_widgets = filter_widgets,
                        report_options = Storage(
-                            search=req_advanced_search,
                             rows=report_fields,
                             cols=report_fields,
                             fact=fact_fields,
                             methods=["count", "list", "sum"],
                             defaults=Storage(rows="site_id$location_id$L4",
                                              cols="priority",
-                                             fact="id",
-                                             aggregate="count")
+                                             fact="count(id)",
+                                             totals=True,
+                                             )
                             ),
                        list_fields = list_fields,
-                       extra_fields = ["req_ref", "type"]
-                      )
+                       extra_fields = ["req_ref", "type"],
+                       context = {"event": "event_id",
+                                  "location": "site_id$location_id",
+                                  "organisation": "site_id$organisation_id",
+                                  "site": "site_id",
+                                  },
+                       )
 
         # Custom Methods
         set_method("req", "req",
@@ -2169,6 +2169,7 @@ class S3CommitModel(S3Model):
         add_component = self.add_component
 
         settings = current.deployment_settings
+        req_types = settings.get_req_req_type()
         unsolicited_commit = settings.get_req_commit_without_request()
         committer_is_author = settings.get_req_committer_is_author()
         if committer_is_author:
@@ -2232,56 +2233,51 @@ class S3CommitModel(S3Model):
                                   s3_comments(),
                                   *s3_meta_fields())
 
-        # Search Method
-        commit_search = S3Search(
-            simple=(S3SearchSimpleWidget(
-                        name="commit_search_text_simple",
-                        label=T("Search"),
-                        comment=T("Search for a commitment by Committer name, Request ID, Site or Organization."),
-                        field=["committer_id$first_name",
-                               "committer_id$middle_name",
-                               "committer_id$last_name",
-                               "site_id$name",
-                               "comments",
-                               "req_id$name",
-                               "organisation_id$name"
-                               ]
-                       )),  
-            advanced=(S3SearchSimpleWidget(
-                        name="commit_search_text_advanced",
-                        label=T("Search"),
-                        comment=T("Search for a commitment by Committer name, Request ID, Site or Organization."),
-                        field=["committer_id$first_name",
-                               "committer_id$middle_name",
-                               "committer_id$last_name",
-                               "site_id$name",
-                               "comments",
-                               "req_id$name",
-                               "organisation_id$name"
-                               ]
-                        ),
-                        S3SearchSimpleWidget(
-                            name="commit_search_type",
-                            label=T("Type"),
-                            field="type"
-                        ),
-                        S3SearchMinMaxWidget(
-                            name="commit_search_date",
-                            method="range",
-                            label=T("Date"),
-                            comment=T("Search for the commitment made between these dates."),
-                            field="date"
-                        ),
-                        S3SearchMinMaxWidget(
-                            name="commit_search_date_available",
-                            method="range",
-                            label=T("Date Available"),
-                            comment=T("Search for the commitment available between these dates."),
-                            field="date_available"
-                        )
-                    )
-            )
-                           
+        # Which levels of Hierarchy are we using?
+        hierarchy = current.gis.get_location_hierarchy()
+        levels = hierarchy.keys()
+        if len(settings.gis.countries) == 1:
+            levels.remove("L0")
+
+        filter_widgets = [
+            S3TextFilter(["committer_id$first_name",
+                          "committer_id$middle_name",
+                          "committer_id$last_name",
+                          "site_id$name",
+                          "comments",
+                          "req_id$name",
+                          "organisation_id$name"
+                          ],
+                         label = T("Search"),
+                         comment=T("Search for a commitment by Committer name, Request ID, Site or Organization."),
+                         ),
+            S3LocationFilter("location_id",
+                             levels=levels,
+                             widget="multiselect",
+                             hidden=True,
+                             ),
+            S3DateFilter("date",
+                         label=T("Date"),
+                         hide_time=True,
+                         input_labels = {"ge": "From", "le": "To"},
+                         comment=T("Search for commitments made between these dates."),
+                         hidden=True,
+                         ),
+            S3DateFilter("date_available",
+                         label=T("Date Available"),
+                         hide_time=True,
+                         input_labels = {"ge": "From", "le": "To"},
+                         comment=T("Search for commitments available between these dates."),
+                         hidden=True,
+                         ),
+            ]
+        if len(req_types) > 1:
+            filter_widgets.insert(1, S3OptionsFilter("type",
+                                                     label=T("Type"),
+                                                     cols = len(req_types),
+                                                     hidden=True,
+                                                     ))
+
         # CRUD strings
         ADD_COMMIT = T("Make Commitment")
         current.response.s3.crud_strings[tablename] = Storage(
@@ -2312,11 +2308,17 @@ class S3CommitModel(S3Model):
 
         self.configure(tablename,
                        # Commitments should only be made to a specific request
-                       listadd = False,
+                       listadd = unsolicited_commit,
                        onvalidation = self.commit_onvalidation,
-                       search_method = commit_search,
                        onaccept = self.commit_onaccept,
                        ondelete = self.commit_ondelete,
+                       context = {"event": "req_id$event_id",
+                                  "location": "location_id",
+                                  "organisation": "organisation_id",
+                                  #"site": "site_id",
+                                  "site": "req_id$site_id",
+                                  },
+                       filter_widgets = filter_widgets,
                        list_fields = ["site_id",
                                       "req_id",
                                       "committer_id",
@@ -2329,7 +2331,7 @@ class S3CommitModel(S3Model):
                                       "date",
                                       "date_available",
                                       "comments",
-                                      ]
+                                      ],
                        )
 
         # Components
@@ -2403,11 +2405,24 @@ class S3CommitModel(S3Model):
 
         db = current.db
         s3db = current.s3db
-        vars = form.vars
+        form_vars = form.vars
         # @ToDo: Will this always be in vars?
-        id = vars.id
-        # Find the request
+        id = form_vars.id
+        if not id:
+            return
+
         ctable = s3db.req_commit
+
+        site_id = form_vars.get(site_id, None)
+        if site_id:
+            # Set location_id to location of site
+            stable = s3db.org_site
+            site = db(stable.site_id == site_id).select(stable.location_id,
+                                                        limitby=(0, 1)).first()
+            if site and site.location_id:
+                db(ctable.id == id).update(location_id = site.location_id)
+
+        # Find the request
         rtable = s3db.req_req
         query = (ctable.id == id) & \
                 (rtable.id == ctable.req_id)
@@ -2470,7 +2485,7 @@ class S3CommitModel(S3Model):
             # People
             ## If this is a single person commitment, then create the commit_person record automatically
             #table = s3db.req_commit_person
-            #table.insert(commit_id = vars.id,
+            #table.insert(commit_id = id,
             #             #skill_id = ???,
             #             person_id = auth.s3_logged_in_person())
             ## @ToDo: Mark Person's allocation status as 'Committed'
@@ -3777,8 +3792,11 @@ def req_customize_req_fields():
 
     table.type.default = 9 # Other
     table.date.label = T("Date")
-    table.purpose.label = T("Request")
-    table.purpose.required = True
+
+    field = table.purpose
+    field.label = T("Request")
+    field.required = True
+    field.represent = lambda body: XML(s3_URLise(body))
     
     list_fields = ["date",
                    #"priority",
@@ -3794,9 +3812,76 @@ def req_customize_req_fields():
 
     crud_form = S3SQLCustomForm(*list_fields)
 
+    # Which levels of Hierarchy are we using?
+    hierarchy = current.gis.get_location_hierarchy()
+    levels = hierarchy.keys()
+    if len(current.deployment_settings.gis.countries) == 1:
+        levels.remove("L0")
+
+    filter_widgets = [
+        #S3TextFilter(["committer_id$first_name",
+        #              "committer_id$middle_name",
+        #              "committer_id$last_name",
+        #              "site_id$name",
+        #              "comments",
+        #              "req_id$name",
+        #              "organisation_id$name"
+        #              ],
+        #             label = T("Search")
+        #             comment=T("Search for a commitment by Committer name, Request ID, Site or Organization."),
+        #             ),
+        #S3OptionsFilter("transit_status",
+        #                label = T("Transit Status"),
+        #                options = req_status_opts,
+        #                cols = 3,
+        #                ),
+        #S3OptionsFilter("fulfil_status",
+        #                label = T("Fulfill Status"),
+        #                options = req_status_opts,
+        #                cols = 3,
+        #                ),
+        S3LocationFilter("site_id$location_id",
+                         levels=levels,
+                         widget="multiselect",
+                         #hidden=True,
+                         ),
+        S3OptionsFilter("site_id",
+                        label=T("Requested For Facility"),
+                        widget="multiselect",
+                        hidden=True,
+                        ),
+        S3OptionsFilter("created_by",
+                        label=T("Logged By"),
+                        widget="multiselect",
+                        hidden=True,
+                        ),
+        S3DateFilter("date",
+                     label=T("Date"),
+                     hide_time=True,
+                     input_labels = {"ge": "From", "le": "To"},
+                     comment=T("Search for requests made between these dates."),
+                     hidden=True,
+                     ),
+        #S3DateFilter("date_required",
+        #             label=T("Date Needed By"),
+        #             hide_time=True,
+        #             input_labels = {"ge": "From", "le": "To"},
+        #             comment=T("Search for requests required between these dates."),
+        #             hidden=True,
+        #             ),
+        ]
+
+    # Return to Requests view after create/update/delete (unless done via Modal)
+    url_next = URL(c="req", f="req", args="datalist")
+
     s3db.configure(tablename,
                    crud_form = crud_form,
-                   #filter_widgets = filter_widgets,
+                   filter_widgets = filter_widgets,
+                   create_next = url_next,
+                   delete_next = url_next,
+                   update_next = url_next,
+                   # We want the Create form to be in a modal, not inline, for consistency
+                   listadd = False,
                    list_fields = list_fields,
                    list_layout = req_render_reqs,
                    )
@@ -3834,16 +3919,19 @@ def req_render_reqs(listid, resource, rfields, record,
     body = record["req_req.purpose"]
     title = ""
 
-    location = record["org_site.location_id"]
+    location = record["org_site.location_id"] or ""
     location_id = raw["org_site.location_id"]
-    location_url = URL(c="gis", f="location", args=[location_id, "profile"])
+    if location_id:
+        location_url = URL(c="gis", f="location", args=[location_id, "profile"])
+    else:
+        location_url = "#"
 
-    organisation = record["org_site.organisation_id"]
+    organisation = record["org_site.organisation_id"] or ""
     organisation_id = raw["org_site.organisation_id"]
     org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
 
-    person = record["req_req.person_id"]
-    person_id = raw["req_req.person_id"]
+    person = record["req_req.requester_id"]
+    person_id = raw["req_req.requester_id"]
     person_url = URL(c="pr", f="person", args=[person_id])
     person = A(person,
                _href=person_url,
@@ -3950,6 +4038,24 @@ def req_customize_commit_fields():
     tablename = "req_commit"
     table = s3db.req_commit
 
+    # CRUD strings
+    #ADD_COMMIT = T("Make Donation")
+    ADD_COMMIT = T("Add Donation")
+    current.response.s3.crud_strings[tablename] = Storage(
+        title_create = ADD_COMMIT,
+        title_display = T("Donation Details"),
+        title_list = T("Donations"),
+        title_update = T("Edit Donation"),
+        title_search = T("Search Donations"),
+        subtitle_create = ADD_COMMIT,
+        label_list_button = T("List Donations"),
+        label_create_button = ADD_COMMIT,
+        label_delete_button = T("Delete Donation"),
+        msg_record_created = T("Donation Added"),
+        msg_record_modified = T("Donation Updated"),
+        msg_record_deleted = T("Donation Canceled"),
+        msg_list_empty = T("No Donations"))
+
     field = table.organisation_id
     field.readable = True
     field.writable = True
@@ -3958,8 +4064,20 @@ def req_customize_commit_fields():
     field.requires = IS_ADD_PERSON_WIDGET2()
     field.widget = S3AddPersonWidget2(controller="pr")
 
+    # Which levels of Hierarchy are we using?
+    hierarchy = current.gis.get_location_hierarchy()
+    levels = hierarchy.keys()
+    if len(current.deployment_settings.gis.countries) == 1:
+        levels.remove("L0")
+
+    field = table.location_id
+    field.represent = s3db.gis_LocationRepresent(sep=" | ")
+    field.requires = IS_LOCATION_SELECTOR2(levels=levels)
+    field.widget = S3LocationSelectorWidget2(levels=levels)
+
     field = table.comments
     field.label = T("Donation")
+    field.represent = lambda body: XML(s3_URLise(body))
     field.required = True
     # @ToDo
     field.comments = None
@@ -3971,13 +4089,55 @@ def req_customize_commit_fields():
                    "organisation_id",
                    "committer_id",
                    "comments",
+                   "location_id",
                    ]
 
     crud_form = S3SQLCustomForm(*list_fields)
 
+    filter_widgets = [
+        S3TextFilter(["committer_id$first_name",
+                      "committer_id$middle_name",
+                      "committer_id$last_name",
+                      "site_id$name",
+                      "comments",
+                      "req_id$name",
+                      "organisation_id$name"
+                      ],
+                     label = T("Search"),
+                     comment=T("Search for a commitment by Committer name, Request ID, Site or Organization."),
+                     ),
+        S3LocationFilter("location_id",
+                         levels=levels,
+                         widget="multiselect",
+                         hidden=True,
+                         ),
+        #S3DateFilter("date",
+        #             label=T("Date"),
+        #             hide_time=True,
+        #             input_labels = {"ge": "From", "le": "To"},
+        #             comment=T("Search for commitments made between these dates."),
+        #             hidden=True,
+        #             ),
+        S3DateFilter("date_available",
+                     label=T("Date Available"),
+                     hide_time=True,
+                     input_labels = {"ge": "From", "le": "To"},
+                     comment=T("Search for commitments available between these dates."),
+                     hidden=True,
+                     ),
+        ]
+
+    # Return to Requests view after create/update/delete (unless done via Modal)
+    url_next = URL(c="req", f="req", args="datalist")
+
     s3db.configure(tablename,
                    crud_form = crud_form,
-                   #filter_widgets = filter_widgets,
+                   filter_widgets = filter_widgets,
+                   create_next = url_next,
+                   delete_next = url_next,
+                   update_next = url_next,
+                   # We want the Create form to be in a modal, not inline, for consistency
+                   listadd = False,
                    list_fields = list_fields,
                    list_layout = req_render_commits,
                    )
@@ -4026,8 +4186,8 @@ def req_render_commits(listid, resource, rfields, record,
     else:
         org_url = "#"
 
-    person = record["req_commit.person_id"]
-    person_id = raw["req_commit.person_id"]
+    person = record["req_commit.committer_id"]
+    person_id = raw["req_commit.committer_id"]
     person_url = URL(c="pr", f="person", args=[person_id])
     person = A(person,
                _href=person_url,

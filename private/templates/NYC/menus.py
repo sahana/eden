@@ -73,7 +73,7 @@ class S3MainMenu(default.S3MainMenu):
                icon="icon-map"),
             MM("Projects", c="project", f="project"),
             MM("Requests", c="req", f="req", m="search")(
-                MM("Fulfill Requests", f="req", m="search"),
+                MM("Fulfill Requests", f="req"),
                 MM("Request Supplies", f="req", m="create", vars={"type": 1}),
                 MM("Request People", f="req", m="create", vars={"type": 3})
             ),
@@ -436,7 +436,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Requests", f="req")(
                         M("Request Supplies", m="create", vars={"type": 1}),
                         M("Request People", m="create", vars={"type": 3}),
-                        M("Fulfill Requests", m="search"),
+                        M("Fulfill Requests"),
                         #M("List All"),
                         M("List Recurring Requests", f="req_template"),
                         #M("Search", m="search"),
