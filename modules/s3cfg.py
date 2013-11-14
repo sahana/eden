@@ -1856,6 +1856,16 @@ class S3Config(Storage):
     
     # -------------------------------------------------------------------------
     # Request Settings
+    def get_req_req_type(self):
+        """
+            The Types of Request which can be made.
+            Select one or more from:
+            * People
+            * Stock
+            * Other
+            tbc: Assets, Shelter, Food
+        """
+        return self.req.get("req_type", ["Stock", "People", "Other"])
     def get_req_type_inv_label(self):
         return current.T(self.req.get("type_inv_label", "Warehouse Stock"))
     def get_req_type_hrm_label(self):
@@ -1940,16 +1950,6 @@ class S3Config(Storage):
         return self.req.get("use_req_number", True)
     def get_req_generate_req_number(self):
         return self.req.get("generate_req_number", True)
-    def get_req_req_type(self):
-        """
-            The Types of Request which can be made.
-            Select one or more from:
-            * People
-            * Stock
-            * Other
-            tbc: Assets, Shelter, Food
-        """
-        return self.req.get("req_type", ["Stock", "People", "Other"])
     def get_req_form_name(self):
         return self.req.get("req_form_name", "Requisition Form")
     def get_req_shortname(self):

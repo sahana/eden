@@ -23,7 +23,7 @@ def index_alt():
     """
 
     # Just redirect to the list of Requests
-    redirect(URL(f="req", args=["search"]))
+    redirect(URL(f="req"))
 
 # -----------------------------------------------------------------------------
 def is_affiliated():
@@ -448,7 +448,8 @@ S3OptionsFilter({
                             ),
                             "comments",
                         )
-                    s3db.configure("req_commit", crud_form=crud_form)
+                    s3db.configure("req_commit",
+                                   crud_form=crud_form)
                     # Redirect to the Items tab after creation
                     #s3db.configure(table,
                     #               create_next = URL(c="req", f="commit",
@@ -648,7 +649,9 @@ S3.confirmClick('#commit-btn','%s')''' % T("Do you want to commit to this reques
     s3.postp = postp
 
     output = s3_rest_controller("req", "req",
-                                rheader=s3db.req_rheader)
+                                hide_filter=False,
+                                rheader=s3db.req_rheader,
+                                )
 
     return output
 
@@ -718,6 +721,7 @@ def req_item():
                     (rtable.id == ritable.req_id)
 
     # Search method
+    # @ToDo: Migrate to S3Filter
     search_method = s3db.get_config("req_req_item", "search_method")
     if not search_method:
         S3SearchOptionsWidget = s3base.S3SearchOptionsWidget
@@ -936,6 +940,7 @@ def req_skill():
                 (rtable.id == table.req_id)
 
     # Search method
+    # @ToDo: Migrate to S3Filter
     S3SearchOptionsWidget = s3base.S3SearchOptionsWidget
     req_skill_search = (
         S3SearchOptionsWidget(
@@ -1200,7 +1205,8 @@ S3OptionsFilter({
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=commit_rheader)
+    output = s3_rest_controller(hide_filter=False,
+                                rheader=commit_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -1674,6 +1680,7 @@ def fema():
                 (ritable.item_id.belongs(fema_item_ids))
 
     # Search method
+    # @ToDo: Migrate to S3Filter
     req_item_search = [
         s3base.S3SearchOptionsWidget(
             name="req_search_site",

@@ -496,23 +496,21 @@ def render_locations(listid, resource, rfields, record, **attr):
     locations.append(record_id)
     db = current.db
     s3db = current.s3db
-    table = s3db.org_site
-    query = (table.deleted == False) & \
-            (table.location_id.belongs(locations))
+    stable = s3db.org_site
+    query = (stable.deleted == False) & \
+            (stable.location_id.belongs(locations))
     tally_sites = db(query).count()
 
-    table = s3db.cms_post
-    stable = db.cms_series
-    ltable = s3db.cms_post_organisation
-    base_query = (table.deleted == False) & \
-                 (ltable.post_id == table.id) & \
-                 (ltable.organisation_id == record_id)
-    req_query = (table.series_id == stable.id) & \
-                (stable.name == "Request")
-    tally_reqs = db(base_query & req_query).count()
-    offer_query = (table.series_id == stable.id) & \
-                  (stable.name == "Offer")
-    tally_offers = db(base_query & offer_query).count()
+    table = s3db.req_req
+    query = (table.deleted == False) & \
+            (stable.site_id == table.site_id) & \
+            (stable.location_id.belongs(locations))
+    tally_reqs = db(query).count()
+
+    table = s3db.req_commit
+    query = (table.deleted == False) & \
+            (table.location_id.belongs(locations))
+    tally_commits = db(query).count()
 
     if level == "L4":
         next_Lx = ""
@@ -580,16 +578,16 @@ def render_locations(listid, resource, rfields, record, **attr):
                        ),
                    DIV(P(next_Lx_label,
                          next_Lx,
+                         T("Sites"),
+                         SPAN(tally_sites,
+                              _class="badge",
+                              ),
                          T("Requests"),
                          SPAN(tally_reqs,
                               _class="badge",
                               ),
-                         T("Offers"),
-                         SPAN(tally_offers,
-                              _class="badge",
-                              ),
-                         T("Sites"),
-                         SPAN(tally_sites,
+                         T("Donations"),
+                         SPAN(tally_commits,
                               _class="badge",
                               ),
                          _class="tally",
@@ -877,7 +875,11 @@ def render_organisations(listid, resource, rfields, record, **attr):
                           _class="main_contact_ph",
                           )
     else:
-        money_details = ""
+        # Include anyway to make cards align
+        money_details = P(I(_class="icon icon-dollar"),
+                          " ",
+                          _class="main_contact_ph",
+                          )
     #time = raw["req_organisation_needs.vol"]
     #if time:
     #    time_details = record["req_organisation_needs.vol_details"]
@@ -929,19 +931,22 @@ def render_organisations(listid, resource, rfields, record, **attr):
     # Tallies
     # NB We assume that all records are readable here
     s3db = current.s3db
-    table = s3db.org_site
-    query = (table.deleted == False) & \
-            (table.obsolete == False) & \
-            (table.organisation_id == record_id)
+    stable = s3db.org_site
+    query = (stable.deleted == False) & \
+            (stable.obsolete == False) & \
+            (stable.organisation_id == record_id)
     tally_sites = db(query).count()
 
-    table = s3db.cms_post
-    ltable = s3db.cms_post_organisation
-    base_query = (table.deleted == False) & \
-                 (ltable.post_id == table.id) & \
-                 (ltable.organisation_id == record_id)
-    #query = base_query & (table.series_id)
-    #tally_reqs = db(query).count()
+    table = s3db.req_req
+    query = (table.deleted == False) & \
+            (stable.site_id == table.site_id) & \
+            (stable.organisation_id == record_id)
+    tally_reqs = db(query).count()
+
+    table = s3db.req_commit
+    query = (table.deleted == False) & \
+            (table.organisation_id == record_id)
+    tally_commits = db(query).count()
 
     # Render the item
     item = DIV(DIV(logo,
@@ -965,6 +970,20 @@ def render_organisations(listid, resource, rfields, record, **attr):
                          ),
                        money_details,
                        #time_details,
+                       P(T("Sites"),
+                         SPAN(tally_sites,
+                              _class="badge",
+                              ),
+                         T("Requests"),
+                         SPAN(tally_reqs,
+                              _class="badge",
+                              ),
+                         T("Donations"),
+                         SPAN(tally_commits,
+                              _class="badge",
+                              ),
+                         _class="tally",
+                         ),
                        _class="media-body",
                        ),
                    _class="media",
@@ -1139,34 +1158,34 @@ def render_site_needs(listid, resource, rfields, record, **attr):
             address = addresses
     else:
         address = ""
-    contact = raw["org_facility.contact"] or ""
-    opening_times = raw["org_facility.opening_times"] or ""
+    #contact = raw["org_facility.contact"] or ""
+    #opening_times = raw["org_facility.opening_times"] or ""
     phone = raw["org_facility.phone1"] or ""
     website = raw["org_organisation.website"] or ""
     if website:
         website = A(website, _href=website)
     author = record["req_site_needs.modified_by"]
     date = record["req_site_needs.modified_on"]
-    goods = raw["req_site_needs.goods"]
-    if goods:
-        goods_details = record["req_site_needs.goods_details"]
-        goods_details = P(I(_class="icon icon-truck"),
-                          " ",
-                          XML(goods_details),
-                          _class="main_contact_ph",
-                          )
-    else:
-        goods_details = ""
-    time = raw["req_site_needs.vol"]
-    if time:
-        time_details = record["req_site_needs.vol_details"]
-        time_details = P(I(_class="icon icon-time"),
-                         " ",
-                         XML(time_details),
-                         _class="main_contact_ph",
-                         )
-    else:
-        time_details = ""
+    #goods = raw["req_site_needs.goods"]
+    #if goods:
+    #    goods_details = record["req_site_needs.goods_details"]
+    #    goods_details = P(I(_class="icon icon-truck"),
+    #                      " ",
+    #                      XML(goods_details),
+    #                      _class="main_contact_ph",
+    #                      )
+    #else:
+    #    goods_details = ""
+    #time = raw["req_site_needs.vol"]
+    #if time:
+    #    time_details = record["req_site_needs.vol_details"]
+    #    time_details = P(I(_class="icon icon-time"),
+    #                     " ",
+    #                     XML(time_details),
+    #                     _class="main_contact_ph",
+    #                     )
+    #else:
+    #    time_details = ""
 
     site_url = URL(c="org", f="facility", args=[record_id, "profile"])
     if logo:
@@ -1218,14 +1237,14 @@ def render_site_needs(listid, resource, rfields, record, **attr):
                    _class="card-header",
                    ),
                DIV(logo,
-                   DIV(goods_details,
-                       time_details,
-                       P(I(_class="icon-time"),
-                         " ",
-                         SPAN(opening_times),
-                         " ",
-                         _class="main_contact_ph",
-                         ),
+                   DIV(#goods_details,
+                       #time_details,
+                       #P(I(_class="icon-time"),
+                       #  " ",
+                       #  SPAN(opening_times),
+                       #  " ",
+                       #  _class="main_contact_ph",
+                       #  ),
                        P(I(_class="icon icon-phone"),
                          " ",
                          phone,
@@ -1271,6 +1290,12 @@ def customize_gis_location(**attr):
     # Custom PreP
     standard_prep = s3.prep
     def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+
         if r.interactive:
             s3db = current.s3db
             table = s3db.gis_location
@@ -1326,6 +1351,7 @@ def customize_gis_location(**attr):
                                ]
 
                 s3db.configure("gis_location",
+                               filter_widgets = None,
                                list_fields = list_fields,
                                list_layout = render_locations,
                                )
@@ -1379,33 +1405,32 @@ def customize_gis_location(**attr):
                 #                    show_on_map = False,
                 #                    list_layout = render_site_needs,
                 #                    )
-                render_posts = s3db.cms_render_posts
                 reqs_widget = dict(label = "Requests",
                                    title_create = "Add New Request",
                                    type = "datalist",
-                                   tablename = "cms_post",
+                                   tablename = "req_req",
                                    context = "location",
                                    default = default,
-                                   filter = S3FieldSelector("series_id$name") == "Request",
+                                   filter = S3FieldSelector("cancel") == False,
                                    icon = "icon-flag",
                                    layer = "Requests",
                                    # provided by Catalogue Layer
                                    #marker = "request",
-                                   list_layout = render_posts,
+                                   list_layout = s3db.req_render_reqs,
                                    )
-                offers_widget = dict(label = "Offers",
-                                     title_create = "Add New Offer",
-                                     type = "datalist",
-                                     tablename = "cms_post",
-                                     context = "location",
-                                     default = default,
-                                     filter = S3FieldSelector("series_id$name") == "Offer",
-                                     icon = "icon-truck",
-                                     layer = "Offers",
-                                     # provided by Catalogue Layer
-                                     #marker = "offer",
-                                     list_layout = render_posts,
-                                     )
+                commits_widget = dict(label = "Donations",
+                                      title_create = "Add New Donation",
+                                      type = "datalist",
+                                      tablename = "req_commit",
+                                      context = "location",
+                                      default = default,
+                                      filter = S3FieldSelector("cancel") == False,
+                                      icon = "icon-truck",
+                                      layer = "Donations",
+                                      # provided by Catalogue Layer
+                                      #marker = "donation",
+                                      list_layout = s3db.req_render_commits,
+                                      )
                 sites_widget = dict(label = "Sites",
                                     title_create = "Add New Site",
                                     type = "datalist",
@@ -1458,17 +1483,11 @@ def customize_gis_location(**attr):
                                                     ),
                                profile_widgets = [reqs_widget,
                                                   map_widget,
-                                                  offers_widget,
+                                                  commits_widget,
                                                   sites_widget,
                                                   #locations_widget,
                                                   ],
                                )
-
-        # Call standard prep
-        if callable(standard_prep):
-            result = standard_prep(r)
-            if not result:
-                return False
 
         return True
     s3.prep = custom_prep
@@ -1631,16 +1650,17 @@ def customize_org_facility_fields():
     s3db = current.s3db
     table = s3db.org_facility
     table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
-    #table.modified_by.represent = s3_auth_user_represent_name
-    #table.modified_on.represent = datetime_represent
+    table.modified_by.represent = s3_auth_user_represent_name
+    table.modified_on.represent = datetime_represent
+    table.comments.comment = None
 
     list_fields = ["name",
                    "site_facility_type.facility_type_id",
                    "organisation_id",
                    "location_id",
                    "location_id$addr_street",
-                   #"modified_by",
-                   #"modified_on",
+                   "modified_by",
+                   "modified_on",
                    "organisation_id$logo",
                    #"opening_times",
                    "human_resource.person_id",
@@ -1750,45 +1770,44 @@ def customize_org_facility(**attr):
                                      widget="multiselect",
                                      hidden=True,
                                     ),
-                    S3OptionsFilter(
-                        name="facility_search_type",
-                        label=T("Type"),
-                        field="site_facility_type.facility_type_id",
-                        widget="multiselect",
-                        hidden=True,
-                    ),
-                ]
+                    S3OptionsFilter(name="facility_search_type",
+                                    label=T("Type"),
+                                    field="site_facility_type.facility_type_id",
+                                    widget="multiselect",
+                                    hidden=True,
+                                    ),
+                    ]
                     
-                get_vars = current.request.get_vars
-                goods = get_vars.get("needs.goods", None)
-                vol = get_vars.get("needs.vol", None)
-                if goods:
-                    needs_fields = ["needs.goods_details"]
-                    s3.crud_strings["org_facility"].title_list = T("Sites where you can Drop-off Goods")
-                elif vol:
-                    needs_fields = ["needs.vol_details"]
-                    s3.crud_strings["org_facility"].title_list = T("Sites where you can Volunteer your time")
-                else:
-                    yesno = {True: T("Yes"), False: T("No")}
-                    needs_fields = ["needs.goods_details", "needs.vol_details"]
-                    filter_widgets.insert(0, S3OptionsFilter("needs.goods",
-                                                             label = T("Drop-off Goods"),
-                                                             options = yesno,
-                                                             multiple=False,
-                                                             widget="groupedopts",
-                                                             hidden=True,
-                                                            ))
-                    filter_widgets.insert(1, S3OptionsFilter("needs.vol",
-                                                             label = T("Volunteer Time"),
-                                                             options = yesno,
-                                                             multiple=False,
-                                                             widget="groupedopts",
-                                                             hidden=True,
-                                                            ))
+                #get_vars = current.request.get_vars
+                #goods = get_vars.get("needs.goods", None)
+                #vol = get_vars.get("needs.vol", None)
+                #if goods:
+                #    needs_fields = ["needs.goods_details"]
+                #    s3.crud_strings["org_facility"].title_list = T("Sites where you can Drop-off Goods")
+                #elif vol:
+                #    needs_fields = ["needs.vol_details"]
+                #    s3.crud_strings["org_facility"].title_list = T("Sites where you can Volunteer your time")
+                #else:
+                #    yesno = {True: T("Yes"), False: T("No")}
+                #    needs_fields = ["needs.goods_details", "needs.vol_details"]
+                #    filter_widgets.insert(0, S3OptionsFilter("needs.goods",
+                #                                             label = T("Drop-off Goods"),
+                #                                             options = yesno,
+                #                                             multiple=False,
+                #                                             widget="groupedopts",
+                #                                             hidden=True,
+                #                                             ))
+                #    filter_widgets.insert(1, S3OptionsFilter("needs.vol",
+                #                                             label = T("Volunteer Time"),
+                #                                             options = yesno,
+                #                                             multiple=False,
+                #                                             widget="groupedopts",
+                #                                             hidden=True,
+                #                                             ))
 
                 filter_widgets.insert(0, S3TextFilter(["name",
                                                        "comments",
-                                                      ] + needs_fields,
+                                                       ], #+ needs_fields,
                                                       label = T("Search")))
 
                 s3db.configure("org_facility",
@@ -1827,16 +1846,28 @@ def customize_org_facility(**attr):
                                        show_on_map = False, # Since they will show within Sites
                                        list_layout = render_contacts,
                                        )
-                needs_widget = dict(label = "Needs",
-                                    title_create = "Add New Need",
-                                    type = "datalist",
-                                    tablename = "req_site_needs",
-                                    context = "site",
-                                    icon = "icon-hand-up",
-                                    multiple = False,
-                                    show_on_map = False,
-                                    list_layout = render_site_needs,
-                                    )
+                reqs_widget = dict(label = "Requests",
+                                   title_create = "Add New Request",
+                                   type = "datalist",
+                                   tablename = "req_req",
+                                   context = "site",
+                                   filter = S3FieldSelector("cancel") == False,
+                                   icon = "icon-flag",
+                                   show_on_map = False, # Since they will show within Sites
+                                   list_layout = s3db.req_render_reqs,
+                                   )
+                commits_widget = dict(label = "Donations",
+                                      title_create = "Add New Donation",
+                                      type = "datalist",
+                                      tablename = "req_commit",
+                                      context = "site",
+                                      filter = S3FieldSelector("cancel") == False,
+                                      icon = "icon-truck",
+                                      layer = "Donations",
+                                      # provided by Catalogue Layer
+                                      #marker = "donation",
+                                      list_layout = s3db.req_render_commits,
+                                      )
 
                 if current.auth.s3_has_permission("update", table, record_id=record_id):
                     from s3.s3crud import S3CRUD
@@ -1873,8 +1904,9 @@ def customize_org_facility(**attr):
                                                     edit_btn,
                                                     _class="profile_header",
                                                     ),
-                               profile_widgets = [needs_widget,
+                               profile_widgets = [reqs_widget,
                                                   map_widget,
+                                                  commits_widget,
                                                   contacts_widget,
                                                   ],
                                )
@@ -2083,6 +2115,30 @@ def customize_org_organisation(**attr):
                                     show_on_map = False,
                                     list_layout = render_org_needs,
                                     )
+                reqs_widget = dict(label = "Requests",
+                                   title_create = "Add New Request",
+                                   type = "datalist",
+                                   tablename = "req_req",
+                                   context = "organisation",
+                                   filter = S3FieldSelector("cancel") == False,
+                                   icon = "icon-flag",
+                                   layer = "Requests",
+                                   # provided by Catalogue Layer
+                                   #marker = "request",
+                                   list_layout = s3db.req_render_reqs,
+                                   )
+                commits_widget = dict(label = "Donations",
+                                      title_create = "Add New Donation",
+                                      type = "datalist",
+                                      tablename = "req_commit",
+                                      context = "organisation",
+                                      filter = S3FieldSelector("cancel") == False,
+                                      icon = "icon-truck",
+                                      layer = "Donations",
+                                      # provided by Catalogue Layer
+                                      #marker = "donation",
+                                      list_layout = s3db.req_render_commits,
+                                      )
                 sites_widget = dict(label = "Sites",
                                     title_create = "Add New Site",
                                     type = "datalist",
@@ -2116,8 +2172,10 @@ def customize_org_organisation(**attr):
                                                     edit_btn,
                                                     _class="profile_header",
                                                     ),
-                               profile_widgets = [needs_widget,
+                               profile_widgets = [reqs_widget,
                                                   map_widget,
+                                                  commits_widget,
+                                                  needs_widget,
                                                   contacts_widget,
                                                   sites_widget,
                                                   ]
@@ -2136,13 +2194,13 @@ def customize_org_organisation(**attr):
                 # Needs page
                 get_vars = current.request.get_vars
                 money = get_vars.get("needs.money", None)
-                vol = get_vars.get("needs.vol", None)
+                #vol = get_vars.get("needs.vol", None)
                 if money:
                     needs_fields = ["needs.money_details"]
                     s3.crud_strings["org_organisation"].title_list = T("Organizations soliciting Money")
-                elif vol:
-                    needs_fields = ["needs.vol_details"]
-                    s3.crud_strings["org_organisation"].title_list = T("Organizations with remote Volunteer opportunities")
+                #elif vol:
+                #    needs_fields = ["needs.vol_details"]
+                #    s3.crud_strings["org_organisation"].title_list = T("Organizations with remote Volunteer opportunities")
                 else:
                     yesno = {True: T("Yes"), False: T("No")}
                     needs_fields = ["needs.money_details", "needs.vol_details"]
@@ -2150,18 +2208,18 @@ def customize_org_organisation(**attr):
                                                              options = yesno,
                                                              multiple=False,
                                                              hidden=True,
-                                                            ))
-                    filter_widgets.insert(1, S3OptionsFilter("needs.vol",
-                                                             options = yesno,
-                                                             multiple=False,
-                                                             hidden=True,
-                                                            ))
+                                                             ))
+                    #filter_widgets.insert(1, S3OptionsFilter("needs.vol",
+                    #                                         options = yesno,
+                    #                                         multiple=False,
+                    #                                         hidden=True,
+                    #                                         ))
 
                 filter_widgets.insert(0, S3TextFilter(["name",
                                                        "acronym",
                                                        "website",
                                                        "comments",
-                                                      ] + needs_fields,
+                                                       ] + needs_fields,
                                                       label = T("Search")))
 
                 ntable = s3db.req_organisation_needs
@@ -2557,6 +2615,7 @@ def customize_doc_document(**attr):
 settings.ui.customize_doc_document = customize_doc_document
 
 # -----------------------------------------------------------------------------
+settings.req.req_type = ["Other"]
 settings.req.requester_label = "Contact"
 # Uncomment if the User Account logging the Request is NOT normally the Requester
 settings.req.requester_is_author = False
