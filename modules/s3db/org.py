@@ -3621,8 +3621,9 @@ class org_OrganisationRepresent(S3Represent):
         """
 
         db = current.db
-        otable = current.s3db.org_organisation
-        btable = db.org_organisation_branch
+        s3db = current.s3db
+        otable = s3db.org_organisation
+        btable = s3db.org_organisation_branch
         ptable = db.org_organisation.with_alias("org_parent_organisation")
 
         left = [btable.on(btable.branch_id == otable.id),

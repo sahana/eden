@@ -5133,7 +5133,7 @@ def hrm_human_resource_controller(extra_filter=None):
     return output
 
 # =============================================================================
-def hrm_person_controller():
+def hrm_person_controller(**attr):
     """
         Persons Controller, defined in the model for use from
         multiple controllers for unified menus
@@ -5406,19 +5406,19 @@ def hrm_person_controller():
     else:
         orgname = None
 
-    output = current.rest_controller("pr", "person",
-                                     rheader=s3db.hrm_rheader,
-                                     orgname=orgname,
-                                     replace_option=T("Remove existing data before import"),
-                                     csv_template="staff",
-                                     csv_stylesheet=("hrm", "person.xsl"),
-                                     csv_extra_fields=[
-                                        dict(label="Type",
-                                             field=s3db.hrm_human_resource.type)
-                                                      ],
-                                     # Better in the native person controller:
-                                     deduplicate="",
-                                     )
+    _attr = dict(rheader=s3db.hrm_rheader,
+                 orgname=orgname,
+                 replace_option=T("Remove existing data before import"),
+                 csv_template="staff",
+                 csv_stylesheet=("hrm", "person.xsl"),
+                 csv_extra_fields=[dict(label="Type",
+                                        field=s3db.hrm_human_resource.type),
+                                  ],
+                 # Better in the native person controller:
+                 deduplicate="")
+    _attr.update(attr)
+    
+    output = current.rest_controller("pr", "person", **_attr)
     return output
 
 # =============================================================================

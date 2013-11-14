@@ -112,8 +112,6 @@ def mission():
 def human_resource():
     """
         RESTful CRUD Controller
-
-        @todo: use for imports of RDRT members (with automatic application)
     """
 
     # Tweak settings for RDRT
@@ -136,9 +134,8 @@ def human_resource():
 def person():
     """
         'Members' RESTful CRUD Controller
-        - currently used as "member profile"
-
-        @todo: replace by S3Profile page
+            - currently used as "member profile"
+            - used for Imports
     """
 
     # Tweak settings for RDRT
@@ -147,7 +144,24 @@ def person():
     settings.hrm.use_skills = True
     settings.search.filter_manager = True
 
-    return s3db.hrm_person_controller()
+    # @todo: move into HRM model
+    s3db.add_component("deploy_human_resource_application",
+                       hrm_human_resource="human_resource_id")
+
+    # Replace default title in imports:
+    retitle = lambda r: {"title": T("Import Members")} \
+                        if r.method == "import" else None
+    
+    return s3db.hrm_person_controller(replace_option=None,
+                                      csv_extra_fields=[
+                                            dict(label="Deployable",
+                                                 value="true"),
+                                            # Assume volunteer if not
+                                            # specified in CSV
+                                            dict(label="Type",
+                                                 value="volunteer"),
+                                      ],
+                                      retitle=retitle)
 
 # -----------------------------------------------------------------------------
 def application():

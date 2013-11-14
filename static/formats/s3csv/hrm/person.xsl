@@ -77,6 +77,7 @@
          Volunteer Cluster Type.........optional.....volunteer_cluster cluster_type name
          Volunteer Cluster..............optional.....volunteer_cluster cluster name
          Volunteer Cluster Position.....optional.....volunteer_cluster cluster_position name
+         Deployable.....................optional.....link to deployments module (true|false)
 
          Column headers looked up in labels.xml:
 
@@ -767,6 +768,13 @@
                         <xsl:value-of select="$OfficeName"/>
                     </xsl:attribute>
                 </reference>
+            </xsl:if>
+
+            <!-- Link to deployment module -->
+            <xsl:if test="col[@field='Deployable'] = 'true'">
+                <resource name="deploy_human_resource_application">
+                    <data field="active" value="true"/>
+                </resource>
             </xsl:if>
 
             <!-- Volunteer Cluster (voluteers only) -->
