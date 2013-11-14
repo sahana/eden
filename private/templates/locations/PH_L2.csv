@@ -63,7 +63,6 @@ Region VIII [Eastern Visayas],Leyte,83700000
 Region VIII [Eastern Visayas],Northern Samar,84800000
 Region VIII [Eastern Visayas],Samar,86000000
 Region VIII [Eastern Visayas],Southern Leyte,86400000
-Region IX [Zamboanga Peninsula],City of Isabela,99700000
 Region IX [Zamboanga Peninsula],Zamboanga Sibugay,98300000
 Region IX [Zamboanga Peninsula],Zamboanga del Norte,97200000
 Region IX [Zamboanga Peninsula],Zamboanga del Sur,97300000
@@ -76,11 +75,10 @@ Region XI [Davao Region],Compostela Valley,118200000
 Region XI [Davao Region],Davao Oriental,112500000
 Region XI [Davao Region],Davao del Norte,112300000
 Region XI [Davao Region],Davao del Sur,112400000
-Region XII [Soccsksargen],North Cotabato,124700000
-Region XII [Soccsksargen],Cotabato City,129800000
-Region XII [Soccsksargen],Sarangani,128000000
-Region XII [Soccsksargen],South Cotabato,126300000
-Region XII [Soccsksargen],Sultan Kudarat,126500000
+Region XII [SOCCSKSARGEN],North Cotabato,124700000
+Region XII [SOCCSKSARGEN],Sarangani,128000000
+Region XII [SOCCSKSARGEN],South Cotabato,126300000
+Region XII [SOCCSKSARGEN],Sultan Kudarat,126500000
 Region XIII [Caraga],Agusan del Norte,160200000
 Region XIII [Caraga],Agusan del Sur,160300000
 Region XIII [Caraga],Dinagat Islands,168500000

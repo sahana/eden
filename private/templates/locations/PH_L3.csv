@@ -122,7 +122,7 @@ Aurora,Maria Aurora,37707000
 Aurora,San Luis,37708000
 Basilan,Akbar,150708000
 Basilan,Al-Barka,150709000
-Basilan,City Of Lamitan,150702000
+Basilan,Lamitan City,150702000
 Basilan,Hadji Mohammad Ajul,150710000
 Basilan,Hadji Muhtamad,150712000
 Basilan,Lantawan,150703000
@@ -133,7 +133,7 @@ Basilan,Tuburan,150707000
 Basilan,Ungkaya Pukan,150711000
 Bataan,Abucay,30801000
 Bataan,Bagac,30802000
-Bataan,City of Balanga,30803000
+Bataan,Balanga City,30803000
 Bataan,Dinalupihan,30804000
 Bataan,Hermosa,30805000
 Bataan,Limay,30806000
@@ -1019,22 +1019,22 @@ NCR First District,San Nicolas,133904000
 NCR First District,Santa Ana,133914000
 NCR First District,Santa Cruz,133905000
 NCR First District,Tondo I / II,133901000
-NCR Fourth District,City Of Las Piñas,137601000
-NCR Fourth District,City Of Makati,137602000
-NCR Fourth District,City Of Muntinlupa,137603000
-NCR Fourth District,City Of Parañaque,137604000
+NCR Fourth District,Las Piñas,137601000
+NCR Fourth District,Makati City,137602000
+NCR Fourth District,Muntinlupa,137603000
+NCR Fourth District,Parañaque,137604000
 NCR Fourth District,Pasay City,137605000
 NCR Fourth District,Pateros,137606000
-NCR Fourth District,Taguig City,137607000
-NCR Second District,City Of Mandaluyong,137401000
-NCR Second District,City Of Marikina,137402000
-NCR Second District,City Of Pasig,137403000
-NCR Second District,City Of San Juan,137405000
+NCR Fourth District,Taguig,137607000
+NCR Second District,Mandaluyong,137401000
+NCR Second District,Marikina,137402000
+NCR Second District,Pasig City,137403000
+NCR Second District,San Juan,137405000
 NCR Second District,Quezon City,137404000
-NCR Third District,City Of Malabon,137502000
-NCR Third District,City Of Navotas,137503000
-NCR Third District,City Of Valenzuela,137504000
-NCR Third District,Kalookan City,137501000
+NCR Third District,Malabon,137502000
+NCR Third District,Navotas,137503000
+NCR Third District,Valenzuela,137504000
+NCR Third District,Caloocan City,137501000
 Negros Occidental,Bacolod City,64501000
 Negros Occidental,Bago City,64502000
 Negros Occidental,Binalbagan,64503000
