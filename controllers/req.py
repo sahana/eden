@@ -579,6 +579,13 @@ S3OptionsFilter({
                 #    )
                 s3.actions.append(
                         dict(url = URL(c="req", f="req",
+                                       args=["[id]", "copy_all"]),
+                             _class = "action-btn send-btn copy_all",
+                             label = str(T("Copy"))
+                            )
+                        )
+                s3.actions.append(
+                        dict(url = URL(c="req", f="req",
                                        args=["[id]", "commit_all", "send"]),
                              _class = "action-btn send-btn dispatch",
                              label = str(T("Send"))

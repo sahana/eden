@@ -529,6 +529,10 @@ class S3RequestModel(S3Model):
                    method="commit_all",
                    action=self.req_commit_all)
 
+        set_method("req", "req",
+                   method="copy_all",
+                   action=self.req_copy_all)
+
         # Print Forms
         set_method("req", "req",
                    method="form",
@@ -976,6 +980,75 @@ S3OptionsFilter({
                         pdf_paper_alignment = "Landscape",
                         **attr
                         )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def req_copy_all(r, **attr):
+        """
+            Custom Method to copy an existing Request
+            - creates a req with req_item records
+        """
+
+        db = current.db
+        s3db = current.s3db
+        table = s3db.req_req
+        settings = current.deployment_settings
+        now = current.request.now
+
+        record = r.record
+        req_id = record.id
+        # Make a copy of the request record
+        if settings.get_req_use_req_number():
+            code = s3db.inv_get_shipping_code(settings.get_req_shortname(),
+                                              record.site_id,
+                                              table.req_ref,
+                                              )
+        else:
+            code = None
+        if record.date_required < now:
+            date_required = now + datetime.timedelta(days=14)
+        else:
+            date_required = record.date_required
+        new_req_id = table.insert(type = record.type,
+                                  req_ref = code,
+                                  date = now,
+                                  date_required = date_required,
+                                  priority = record.priority,
+                                  site_id = record.site_id,
+                                  purpose = record.purpose,
+                                  requester_id = record.requester_id,
+                                  transport_req = record.transport_req,
+                                  security_req = record.security_req,
+                                  comments = record.comments
+                                 )
+        # Make a copy of each child record
+        if record.type == 1:
+            # Items
+            ritable = s3db.req_req_item
+            items = db(ritable.req_id == req_id).select(ritable.id,
+                                                        ritable.item_entity_id,
+                                                        ritable.item_id,
+                                                        ritable.item_pack_id,
+                                                        ritable.quantity,
+                                                        ritable.pack_value,
+                                                        ritable.currency,
+                                                        ritable.site_id,
+                                                        ritable.comments)
+            if items:
+                insert = ritable.insert
+                for item in items:
+                    insert(req_id=new_req_id,
+                           item_entity_id = item.item_entity_id,
+                           item_id = item.item_id,
+                           item_pack_id = item.item_pack_id,
+                           quantity = item.quantity,
+                           pack_value = item.pack_value,
+                           currency = item.currency,
+                           site_id = item.site_id,
+                           comments = item.comments)
+
+        redirect(URL(f="req", args=[new_req_id, "update"]))
+
 
     # -------------------------------------------------------------------------
     @staticmethod
