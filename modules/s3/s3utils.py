@@ -66,6 +66,9 @@ if DEBUG:
 else:
     _debug = lambda m: None
 
+URLSCHEMA = re.compile("((?:(())(www\.([^/?#\s]*))|((http(s)?|ftp):)"
+                       "(//([^/?#\s]*)))([^?#\s]*)(\?([^#\s]*))?(#([^\s]*))?)")
+    
 # =============================================================================
 def s3_debug(message, value=None):
     """
@@ -468,6 +471,18 @@ def s3_url_represent(url):
         return ""
     return A(url, _href=url, _target="blank")
 
+# =============================================================================
+def s3_URLise(text):
+    """
+        Convert all URLs in a text into an HTML <A> tag.
+
+        @param text: the text
+    """
+
+    output = URLSCHEMA.sub(lambda m: '<a href="%s">%s</a>' %
+                          (m.group(0), m.group(0)), text)
+    return output
+    
 # =============================================================================
 def s3_avatar_represent(id, tablename="auth_user", gravatar=False, **attr):
     """
