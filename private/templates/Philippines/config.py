@@ -776,6 +776,11 @@ def render_sites(listid, resource, rfields, record, **attr):
                      " ",
                      _class="main_contact_ph",
                      ),
+                   P(I(_class="icon-home"),
+                     " ",
+                     address,
+                     _class="main_office-add",
+                     ),
                    P(I(_class="icon-time"),
                      " ",
                      SPAN(opening_times),
@@ -787,11 +792,6 @@ def render_sites(listid, resource, rfields, record, **attr):
                      SPAN(phone),
                      " ",
                      _class="main_contact_ph",
-                     ),
-                   P(I(_class="icon-home"),
-                     " ",
-                     address,
-                     _class="main_office-add",
                      ),
                    )
 
@@ -1159,7 +1159,7 @@ def render_site_needs(listid, resource, rfields, record, **attr):
     else:
         address = ""
     #contact = raw["org_facility.contact"] or ""
-    #opening_times = raw["org_facility.opening_times"] or ""
+    opening_times = raw["org_facility.opening_times"] or ""
     phone = raw["org_facility.phone1"] or ""
     website = raw["org_organisation.website"] or ""
     if website:
@@ -1239,12 +1239,17 @@ def render_site_needs(listid, resource, rfields, record, **attr):
                DIV(logo,
                    DIV(#goods_details,
                        #time_details,
-                       #P(I(_class="icon-time"),
-                       #  " ",
-                       #  SPAN(opening_times),
-                       #  " ",
-                       #  _class="main_contact_ph",
-                       #  ),
+                       P(I(_class="icon icon-home"),
+                         " ",
+                         address,
+                         _class="main_office-add",
+                         ),
+                       P(I(_class="icon-time"),
+                         " ",
+                         SPAN(opening_times),
+                         " ",
+                         _class="main_contact_ph",
+                         ),
                        P(I(_class="icon icon-phone"),
                          " ",
                          phone,
@@ -1254,11 +1259,6 @@ def render_site_needs(listid, resource, rfields, record, **attr):
                          " ",
                          website,
                          _class="main_contact_ph",
-                         ),
-                       P(I(_class="icon icon-home"),
-                         " ",
-                         address,
-                         _class="main_office-add",
                          ),
                        P(I(_class="icon icon-user"),
                          " ",
@@ -1662,10 +1662,10 @@ def customize_org_facility_fields():
                    "modified_by",
                    "modified_on",
                    "organisation_id$logo",
-                   #"opening_times",
+                   "opening_times",
                    "human_resource.person_id",
                    #"contact",
-                   #"phone1",
+                   "phone1",
                    ]
 
     #from s3.s3validators import IS_ADD_PERSON_WIDGET2
@@ -1683,7 +1683,7 @@ def customize_org_facility_fields():
                                 ),
                                 "organisation_id",
                                 "location_id",
-                                #"opening_times",
+                                "opening_times",
                                 # This is too Ugly right now!
                                 #S3SQLInlineComponent(
                                 #   "human_resource_site",
@@ -1692,7 +1692,7 @@ def customize_org_facility_fields():
                                 #    multiple = False,
                                 #),
                                 #"contact",
-                                #"phone1",
+                                "phone1",
                                 # This is too Ugly right now!
                                 #S3SQLInlineComponent(
                                 #   "needs",
@@ -1806,6 +1806,7 @@ def customize_org_facility(**attr):
                 #                                             ))
 
                 filter_widgets.insert(0, S3TextFilter(["name",
+                                                       "code",
                                                        "comments",
                                                        ], #+ needs_fields,
                                                       label = T("Search")))
@@ -1887,6 +1888,7 @@ def customize_org_facility(**attr):
                 if org.logo:
                     logo = URL(c="default", f="download", args=[org.logo])
                 else:
+                    # @ToDo: Placeholder
                     logo = ""
                 s3db.configure("org_facility",
                                list_fields = list_fields,
@@ -1913,8 +1915,8 @@ def customize_org_facility(**attr):
 
         if r.interactive or r.representation == "aadata":
             # Configure fields
-            table.code.readable = table.code.writable = False
-            table.phone1.readable = table.phone1.writable = False
+            #table.code.readable = table.code.writable = False
+            #table.phone1.readable = table.phone1.writable = False
             table.phone2.readable = table.phone2.writable = False
             table.email.readable = table.email.writable = False
 
@@ -2300,10 +2302,10 @@ def customize_site_needs_fields(profile=False):
                    "location_id$L4",
                    "location_id$addr_street",
                    "phone1",
-                   "goods",
-                   "goods_details",
-                   "vol",
-                   "vol_details",
+                   #"goods",
+                   #"goods_details",
+                   #"vol",
+                   #"vol_details",
                    "modified_on",
                    "modified_by",
                    ]

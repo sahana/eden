@@ -4640,6 +4640,7 @@ def org_facility_controller():
         if r.representation == "plain" and \
              r.method !="search":
             # Custom Map Popup
+            T = current.T
             output = TABLE()
             append = output.append
             # Edit button
