@@ -802,7 +802,7 @@ def cms_customize_post_fields():
     # Which levels of Hierarchy are we using?
     hierarchy = current.gis.get_location_hierarchy()
     levels = hierarchy.keys()
-    if len(current.deployment_settings.gis.countries) == 1:
+    if len(current.deployment_settings.get_gis_countries()) == 1:
         levels.remove("L0")
 
     from s3.s3validators import IS_LOCATION_SELECTOR2

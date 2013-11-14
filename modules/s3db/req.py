@@ -363,7 +363,7 @@ class S3RequestModel(S3Model):
         # Which levels of Hierarchy are we using?
         hierarchy = current.gis.get_location_hierarchy()
         levels = hierarchy.keys()
-        if len(settings.gis.countries) == 1:
+        if len(settings.get_gis_countries()) == 1:
             levels.remove("L0")
 
         filter_widgets = [
@@ -2236,7 +2236,7 @@ class S3CommitModel(S3Model):
         # Which levels of Hierarchy are we using?
         hierarchy = current.gis.get_location_hierarchy()
         levels = hierarchy.keys()
-        if len(settings.gis.countries) == 1:
+        if len(settings.get_gis_countries()) == 1:
             levels.remove("L0")
 
         filter_widgets = [
@@ -3815,7 +3815,7 @@ def req_customize_req_fields():
     # Which levels of Hierarchy are we using?
     hierarchy = current.gis.get_location_hierarchy()
     levels = hierarchy.keys()
-    if len(current.deployment_settings.gis.countries) == 1:
+    if len(current.deployment_settings.get_gis_countries()) == 1:
         levels.remove("L0")
 
     filter_widgets = [
@@ -4067,7 +4067,7 @@ def req_customize_commit_fields():
     # Which levels of Hierarchy are we using?
     hierarchy = current.gis.get_location_hierarchy()
     levels = hierarchy.keys()
-    if len(current.deployment_settings.gis.countries) == 1:
+    if len(current.deployment_settings.get_gis_countries()) == 1:
         levels.remove("L0")
 
     field = table.location_id

@@ -3058,7 +3058,7 @@ class S3Resource(object):
         else:
             # job ID given
             pass
-
+        
         response = current.response
         # Flag to let onvalidation/onaccept know this is coming from a Bulk Import
         response.s3.bulk = True
@@ -3545,8 +3545,8 @@ class S3Resource(object):
             return (value, error)
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def original(table, record):
+    @classmethod
+    def original(cls, table, record, mandatory=None):
         """
             Find the original record for a possible duplicate:
                 - if the record contains a UUID, then only that UUID is used
@@ -3606,9 +3606,11 @@ class S3Resource(object):
             else:
                 query = _query
 
+        fields = cls.import_fields(table, pvalues, mandatory=mandatory)
+
         # Try to find exactly one match by non-UID unique keys
         if query is not None:
-            original = db(query).select(table.ALL, limitby=(0, 2))
+            original = db(query).select(limitby=(0, 2), *fields)
             if len(original) == 1:
                 return original.first()
 
@@ -3616,12 +3618,24 @@ class S3Resource(object):
         if UID in pvalues:
             uid = xml.import_uid(pvalues[UID])
             query = (table[UID] == uid)
-            original = db(query).select(table.ALL, limitby=(0, 1)).first()
+            original = db(query).select(limitby=(0, 1), *fields).first()
             if original:
                 return original
 
         # No match or multiple matches
         return None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def import_fields(table, data, mandatory=None):
+        
+        fnames = set(s3_all_meta_field_names())
+        fnames.add(table._id.name)
+        if mandatory:
+            fnames |= set(mandatory)
+        for fn in data:
+            fnames.add(fn)
+        return [table[fn] for fn in fnames if fn in table.fields]
 
     # -------------------------------------------------------------------------
     def readable_fields(self, subset=None):

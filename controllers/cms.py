@@ -331,7 +331,7 @@ def newsfeed():
     # Which levels of Hierarchy are we using?
     hierarchy = gis.get_location_hierarchy()
     levels = hierarchy.keys()
-    if len(settings.gis.countries) == 1:
+    if len(settings.get_gis_countries()) == 1:
         levels.remove("L0")
 
     # @ToDo: deployment_setting
