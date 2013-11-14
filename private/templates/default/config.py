@@ -457,6 +457,9 @@ settings.L10n.decimal_separator = "."
 #settings.req.type_hrm_label = "Volunteers"
 # Label for Requester
 #settings.req.requester_label = "Site Contact"
+#settings.req.requester_optional = True
+# Uncomment if the User Account logging the Request is NOT normally the Requester
+#settings.req.requester_is_author = False
 # Filter Requester as being from the Site 
 #settings.req.requester_from_site = True
 #settings.req.date_writable = False
@@ -469,8 +472,12 @@ settings.L10n.decimal_separator = "."
 #settings.req.multiple_req_items = False
 #settings.req.prompt_match = False
 #settings.req.items_ask_purpose = False
+# Uncomment to disable the Commit step in the workflow & simply move direct to Ship
 #settings.req.use_commit = False
-#settings.req.requester_optional = True
+# Uncomment to allow Donations to be made without a matching Request
+#settings.req.commit_without_request = True
+# Uncomment if the User Account logging the Commitment is NOT normally the Committer
+#settings.req.comittter_is_author = False
 # Should Requests ask whether Security is required?
 #settings.req.ask_security = True
 # Should Requests ask whether Transportation is required?

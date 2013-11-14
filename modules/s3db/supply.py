@@ -40,6 +40,7 @@ __all__ = ["S3SupplyModel",
            "supply_item_entity_status",
            "supply_ItemRepresent",
            #"supply_ItemCategoryRepresent",
+           "supply_get_shipping_code",
            ]
 
 import re
@@ -2481,5 +2482,33 @@ $('#organisation_dropdown').change(function(){
 
     output = current.rest_controller("supply", "item_entity")
     return output
+
+# -------------------------------------------------------------------------
+def supply_get_shipping_code(type, site_id, field):
+
+    db = current.db
+    if site_id:
+        table = current.s3db.org_site
+        site = db(table.site_id == site_id).select(table.code,
+                                                   limitby=(0, 1)
+                                                   ).first()
+        if site:
+            scode = site.code
+        else:
+            scode = "###"
+        code = "%s-%s-" % (type, scode)
+    else:
+        code = "%s-###-" % (type)
+    number = 0
+    if field:
+        query = (field.like("%s%%" % code))
+        ref_row = db(query).select(field,
+                                   limitby=(0, 1),
+                                   orderby=~field).first()
+        if ref_row:
+            ref = ref_row(field)
+            number = int(ref[-6:])
+
+    return "%s%06d" % (code, number+1)
 
 # END =========================================================================

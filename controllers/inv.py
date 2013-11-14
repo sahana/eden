@@ -1186,9 +1186,9 @@ def recv_process():
 
     site_id = recv_record.site_id
     # Update Receive record & lock for editing
-    code = s3db.inv_get_shipping_code(settings.get_inv_recv_shortname(),
-                                      recv_record.site_id,
-                                      s3db.inv_recv.recv_ref)
+    code = s3db.supply_get_shipping_code(settings.get_inv_recv_shortname(),
+                                         recv_record.site_id,
+                                         s3db.inv_recv.recv_ref)
     rtable[recv_id] = dict(date = request.utcnow,
                            recv_ref = code,
                            status = s3db.inv_ship_status["RECEIVED"],

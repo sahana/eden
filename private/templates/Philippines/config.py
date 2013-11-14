@@ -2558,6 +2558,12 @@ settings.ui.customize_doc_document = customize_doc_document
 
 # -----------------------------------------------------------------------------
 settings.req.requester_label = "Contact"
+# Uncomment if the User Account logging the Request is NOT normally the Requester
+settings.req.requester_is_author = False
+# Uncomment if the User Account logging the Commitment is NOT normally the Committer
+settings.req.comittter_is_author = False
+# Uncomment to allow Donations to be made without a matching Request
+settings.req.commit_without_request = True
 
 def customize_req_req(**attr):
     """
@@ -2565,9 +2571,6 @@ def customize_req_req(**attr):
     """
 
     s3 = current.response.s3
-    s3db = current.s3db
-    tablename = "req_req"
-    table = s3db.req_req
 
     # Custom PreP
     #standard_prep = s3.prep
@@ -2576,49 +2579,11 @@ def customize_req_req(**attr):
         #if callable(standard_prep):
         #    result = standard_prep(r)
 
-        if r.interactive or r.representation == "aadata":
+        if r.component_name == "commit":
+            current.s3db.req_customize_commit_fields()
+        else:
+            current.s3db.req_customize_req_fields()
 
-            from s3.s3validators import IS_ADD_PERSON_WIDGET2
-            from s3.s3widgets import S3AddPersonWidget2
-            field = table.requester_id
-            field.requires = IS_ADD_PERSON_WIDGET2()
-            field.widget = S3AddPersonWidget2(controller="hrm")
-
-            field = table.site_id
-            field.label = T("Requested for Site")
-            from s3layouts import S3AddResourceLink
-            field.comment = S3AddResourceLink(c="org", f="facility",
-                                              vars = dict(child="site_id",
-                                                          parent="req"),
-                                              title=T("Add New Site"),
-                                              )
-            # @ToDo:
-            #field.requires = IS_ADD_SITE_WIDGET()
-            #field.widget = S3AddSiteWidget(type="org_facility")
-
-            table.type.default = 9 # Other
-            table.date.label = T("Date")
-            table.purpose.label = T("Request")
-            table.purpose.required = True
-            
-            list_fields = ["date",
-                           #"priority",
-                           "site_id",
-                           #"is_template",
-                           "requester_id",
-                           "purpose",
-                           #"commit_status",
-                           #"transit_status",
-                           #"fulfil_status",
-                           #"cancel",
-                           ]
-
-            crud_form = S3SQLCustomForm(*list_fields)
-
-            s3db.configure(tablename,
-                           list_fields = list_fields,
-                           crud_form = crud_form,
-                           )
         return True
     s3.prep = custom_prep
 
@@ -2637,9 +2602,6 @@ def customize_req_commit(**attr):
     """
 
     s3 = current.response.s3
-    s3db = current.s3db
-    tablename = "req_commit"
-    table = s3db.req_commit
 
     # Custom PreP
     #standard_prep = s3.prep
@@ -2648,39 +2610,8 @@ def customize_req_commit(**attr):
         #if callable(standard_prep):
         #    result = standard_prep(r)
 
-        field = table.organisation_id
-        field.readable = True
-        field.writable = True
+        current.s3db.req_customize_commit_fields()
 
-        if r.interactive or r.representation == "aadata":
-
-            from s3.s3validators import IS_ADD_PERSON_WIDGET2
-            from s3.s3widgets import S3AddPersonWidget2
-            field = table.committer_id
-            field.requires = IS_ADD_PERSON_WIDGET2()
-            field.widget = S3AddPersonWidget2(controller="pr")
-
-            field = table.comments
-            field.label = T("Donation")
-            field.required = True
-            # @ToDo
-            field.comments = None
-
-            table.date_available.default = current.request.utcnow
-
-            list_fields = [#"req_id", # populated automatically or not at all?
-                           "date_available",
-                           "organisation_id",
-                           "committer_id",
-                           "comments",
-                           ]
-
-            crud_form = S3SQLCustomForm(*list_fields)
-
-            s3db.configure(tablename,
-                           list_fields = list_fields,
-                           crud_form = crud_form,
-                           )
         return True
     s3.prep = custom_prep
 

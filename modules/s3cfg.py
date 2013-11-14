@@ -1864,7 +1864,11 @@ class S3Config(Storage):
         return current.T(self.req.get("requester_label", "Requester"))
     def get_req_requester_optional(self):
         return self.req.get("requester_optional", False)
+    def get_req_requester_is_author(self):
+        """ Whether the User Account logging the Request is normally the Requester """
+        return self.req.get("requester_is_author", True)
     def get_req_requester_from_site(self):
+        """ Whether the Requester has to be a staff of the site making the request """
         return self.req.get("requester_from_site", False)
     def get_req_date_writable(self):
         """ Whether Request Date should be manually editable """
@@ -1906,6 +1910,14 @@ class S3Config(Storage):
             Whether there is a Commit step in Requests Management
         """
         return self.req.get("use_commit", True)
+    def get_req_commit_without_request(self):
+        """
+            Whether to allow Donations to be made without a matching Request
+        """
+        return self.req.get("commit_without_request", False)
+    def get_req_committer_is_author(self):
+        """ Whether the User Account logging the Commitment is normally the Committer """
+        return self.req.get("committer_is_author", True)
     def get_req_ask_security(self):
         """
             Should Requests ask whether Security is required?

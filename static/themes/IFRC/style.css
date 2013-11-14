@@ -340,6 +340,7 @@ div.form-container form fieldset input.errorfield {
 table.dataTable .action-btn.edit,
 table.dataTable .action-btn.read,
 table.dataTable .action-btn.send,
+table.dataTable .action-btn.copy_all,
 table.dataTable .action-btn.dispatch,
 table.dataTable .delete-btn {
     font-size: 0;
@@ -356,6 +357,9 @@ table.dataTable .action-btn.read:before {
 }
 table.dataTable .action-btn.send:before {
     content: url(img/envelope.png);
+}
+table.dataTable .action-btn.copy_all:before {
+    content: url(img/paperclip.png);
 }
 table.dataTable .action-btn.dispatch:before {
     content: url(img/truck.png);
