@@ -226,6 +226,34 @@ def alert():
                                insertable = False,
                                )
             elif r.component_name == "recipient":
+                settings.search.filter_manager = False
+                from s3.s3filter import S3TextFilter, S3OptionsFilter
+                recipient_filters = [
+                    s3base.S3TextFilter([
+                            "human_resource_id$person_id$first_name",
+                            "human_resource_id$person_id$middle_name",
+                            "human_resource_id$person_id$last_name",
+                        ],
+                        label=current.T("Name"),
+                    ),
+                    s3base.S3OptionsFilter(
+                        "human_resource_id$organisation_id",
+                        widget="multiselect",
+                        filter=True,
+                        header="",
+                        hidden=True,
+                    ),
+                ]
+                if settings.get_org_regions():
+                    recipient_filters.insert(1,
+                        s3base.S3HierarchyFilter(
+                            "human_resource_id$organisation_id$region_id",
+                            lookup="org_region",
+                            hidden=True,
+                        )
+                    )
+                s3db.configure(r.component.tablename,
+                               filter_widgets=recipient_filters)
                 if r.record.message_id:
                     s3db.configure(r.component.tablename,
                                    insertable=False,
@@ -292,7 +320,9 @@ def alert():
         return output
     s3.postp = postp
 
-    return s3_rest_controller(rheader=s3db.deploy_rheader)
+    return s3_rest_controller(rheader=s3db.deploy_rheader,
+                              hide_filter={"recipient": False,
+                                           "_default": True})
 
 # -----------------------------------------------------------------------------
 def email_inbox():
