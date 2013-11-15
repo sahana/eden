@@ -566,7 +566,8 @@ body.popup {
 }
 #popup {
     background: #fff;
-    width: 725px;
+    max-width: 725px;
+    width: 100%;
 }
 .loading {
     background: url(../../img/ajax-loader.gif) center no-repeat !important;
@@ -574,6 +575,10 @@ body.popup {
 #popup form {
     /* Form initially hidden until resized to fit modal */
     display: none;
+}
+
+#popup .control-group {
+    padding-right: 20px;
 }
 
 /* Message Flash styles */
