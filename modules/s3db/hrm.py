@@ -46,6 +46,7 @@ __all__ = ["S3HRModel",
            "hrm_training_event_controller",
            "hrm_cv",
            "hrm_configure_pr_group_membership",
+           "hrm_human_resource_onaccept",
            ]
 
 import datetime
@@ -3645,7 +3646,7 @@ def hrm_human_resource_onaccept(form):
         # e.g. coming from staff/create
         vars = form.vars
     elif "id" in form:
-        # e.g. coming from user/create or from hrm_site_onaccept
+        # e.g. coming from user/create or from hrm_site_onaccept or req_onaccept
         vars = form
     elif hasattr(form, "vars"):
         # SQLFORM e.g. ?

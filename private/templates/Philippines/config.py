@@ -2649,6 +2649,8 @@ settings.req.requester_is_author = False
 #settings.req.comittter_is_author = False
 # Uncomment to allow Donations to be made without a matching Request
 #settings.req.commit_without_request = True
+# Set the Requester as being an HR for the Site if no HR record yet & as Site contact if none yet exists
+settings.req.requester_to_site = True
 
 def customize_req_req(**attr):
     """

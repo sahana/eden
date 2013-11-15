@@ -462,6 +462,8 @@ settings.L10n.decimal_separator = "."
 #settings.req.requester_is_author = False
 # Filter Requester as being from the Site 
 #settings.req.requester_from_site = True
+# Set the Requester as being an HR for the Site if no HR record yet & as Site contact if none yet exists
+#settings.req.requester_to_site = True
 #settings.req.date_writable = False
 # Allow the status for requests to be set manually,
 # rather than just automatically from commitments and shipments

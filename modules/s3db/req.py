@@ -1349,16 +1349,19 @@ S3OptionsFilter({
     @staticmethod
     def req_onaccept(form):
         """
+            After DB I/O
         """
 
         db = current.db
         s3db = current.s3db
         request = current.request
         settings = current.deployment_settings
+        tablename = "req_req"
         table = s3db.req_req
+        form_vars = form.vars
 
-        id = form.vars.id
-        if "is_template" in form.vars and form.vars.is_template:
+        id = form_vars.id
+        if form_vars.get("is_template", None):
             is_template = True
             f = "req_template"
         else:
@@ -1377,9 +1380,56 @@ S3OptionsFilter({
                                                          )
                     db(table.id == id).update(req_ref = code)
 
-        # Configure the next page to go to based on the request type
-        tablename = "req_req"
+        if settings.get_req_requester_to_site():
+            requester_id = form_vars.get("requester_id", None)
+            if requester_id:
+                site_id = form_vars.get("site_id", None)
+                # If the requester has no HR record, then create one
+                hrtable = s3db.hrm_human_resource
+                query = (hrtable.person_id == requester_id)
+                exists = db(query).select(hrtable.id,
+                                          hrtable.organisation_id,
+                                          hrtable.site_id,
+                                          hrtable.site_contact,
+                                          limitby=(0, 1)
+                                          ).first()
+                if exists:
+                    if site_id and not exists.site_id:
+                        # Check that the Request site belongs to this Org
+                        stable = s3db.org_site
+                        site = db(stable.site_id == site_id).select(stable.organisation_id,
+                                                                    limitby=(0, 1)
+                                                                    ).first()
+                        # @ToDo: Think about branches
+                        if site and site.organisation_id == exists.organisation_id:
+                            # Set the HR record as being for this site
+                            exists.update(site_id = site_id)
+                            s3db.hrm_human_resource_onaccept(exists)
+                elif site_id:
+                    # Lookup the Org for the site
+                    stable = s3db.org_site
+                    site = db(stable.site_id == site_id).select(stable.organisation_id,
+                                                                limitby=(0, 1)
+                                                                ).first()
+                    # Is there already a site_contact for this site?
+                    ltable = s3db.hrm_human_resource_site
+                    query = (ltable.site_id == site_id) & \
+                            (ltable.site_contact == True)
+                    already = db(query).select(ltable.id,
+                                               limitby=(0, 1)
+                                               ).first()
+                    if already:
+                        site_contact = False
+                    else:
+                        site_contact = True
+                    hr_id = hrtable.insert(person_id = requester_id,
+                                           organisation_id = site.organisation_id,
+                                           site_id = site_id,
+                                           site_contact = site_contact,
+                                           )
+                    s3db.hrm_human_resource_onaccept(Storage(id=hr_id))
 
+        # Configure the next page to go to based on the request type
         if is_template:
             s3db.configure(tablename,
                            create_next = URL(c="req",
@@ -1392,8 +1442,8 @@ S3OptionsFilter({
         elif not settings.get_req_inline_forms():
             if table.type.default:
                 type = table.type.default
-            elif "type" in form.vars:
-                type = int(form.vars.type)
+            elif "type" in form_vars:
+                type = int(form_vars.type)
             else:
                 type = 1
             if type == 1 and settings.has_module("inv"):
