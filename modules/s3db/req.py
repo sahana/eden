@@ -4131,11 +4131,12 @@ def req_customize_commit_fields():
 
     field = table.organisation_id
     field.readable = True
-    field.writable = True
+    field.writable = False
 
     field = table.committer_id
-    field.requires = IS_ADD_PERSON_WIDGET2()
-    field.widget = S3AddPersonWidget2(controller="pr")
+    field.writable = False
+    #field.requires = IS_ADD_PERSON_WIDGET2()
+    #field.widget = S3AddPersonWidget2(controller="pr")
 
     # Which levels of Hierarchy are we using?
     hierarchy = current.gis.get_location_hierarchy()
@@ -4143,10 +4144,10 @@ def req_customize_commit_fields():
     if len(current.deployment_settings.get_gis_countries()) == 1:
         levels.remove("L0")
 
-    field = table.location_id
-    field.represent = s3db.gis_LocationRepresent(sep=" | ")
-    field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-    field.widget = S3LocationSelectorWidget2(levels=levels)
+    #field = table.location_id
+    #field.represent = s3db.gis_LocationRepresent(sep=" | ")
+    #field.requires = IS_LOCATION_SELECTOR2(levels=levels)
+    #field.widget = S3LocationSelectorWidget2(levels=levels)
 
     field = table.comments
     field.label = T("Donation")
@@ -4169,6 +4170,7 @@ def req_customize_commit_fields():
     user = current.auth.user
     if not user or not user.organisation_id:
         # Only a User representing an Org can commit for an Org
+        table.organisation_id.writable = False
         crud_fields = [f for f in list_fields if f != "organisation_id"]
         crud_form = S3SQLCustomForm(*crud_fields)
     else:
