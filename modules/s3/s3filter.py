@@ -909,6 +909,11 @@ class S3LocationFilter(S3FilterWidget):
         if translate:
             # Get IDs via Path to lookup name_l10n
             ids = set()
+            if joined:
+                if "$" in selector:
+                    selector = "%s.%s" % (rfield.field.tablename, selector.split("$", 1)[1])
+                else:
+                    selector = "%s.%s" % (resource.tablename, selector)
             for row in rows:
                 _row = getattr(row, "gis_location") if joined else row
                 path = _row.path
@@ -917,7 +922,7 @@ class S3LocationFilter(S3FilterWidget):
                 else:
                     # Build it
                     if joined:
-                        location_id = row[resource.tablename][selector]
+                        location_id = row[selector]
                         if location_id:
                             _row.id = location_id
                     if "id" in _row:
@@ -1380,7 +1385,11 @@ class S3OptionsFilter(S3FilterWidget):
                         for opt_value in opt_keys if opt_value]
 
         none = opts["none"]
-        opt_list.sort(key = lambda item: item[1])
+
+        try:
+            opt_list.sort(key=lambda item: item[1])
+        except:
+            opt_list.sort(key=lambda item: s3_unicode(item[1]))
         options = []
         empty = None
         for k, v in opt_list:

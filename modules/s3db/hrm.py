@@ -756,7 +756,7 @@ class S3HRModel(S3Model):
                          "location_id$L2",
                          ]
         if teams:
-            report_fields.append((teams, "group_membership.group_id"))
+            report_fields.append((T(teams), "group_membership.group_id"))
 
         if group == "volunteer":
             crud_fields += ["details.availability",
@@ -764,7 +764,7 @@ class S3HRModel(S3Model):
                             "volunteer_cluster.vol_cluster_id",
                             "volunteer_cluster.vol_cluster_position_id",
                             ]
-            report_fields += ["person_id$age_group",
+            report_fields += [(T("Age Group"), "person_id$age_group"),
                               "person_id$education.level",
                               ]
             # Needed for Age Group VirtualField to avoid extra DB calls
@@ -2244,7 +2244,7 @@ class S3HRSkillModel(S3Model):
             S3LocationFilter("person_id$location_id",
                              levels=["L1", "L2"],
                              label=T("Location"),
-                             represent="%(name)s",
+                             #represent="%(name)s",
                              widget="multiselect",
                              ),
             S3OptionsFilter("course_id",
@@ -3171,20 +3171,21 @@ class S3HRProgrammeModel(S3Model):
                                          comment=None),
                              *s3_meta_fields())
 
+        ADD_PROG = T("Add Program")
         crud_strings[tablename] = Storage(
-            title_create = T("Add Programme"),
-            title_display = T("Programme Details"),
-            title_list = T("Programmes"),
-            title_update = T("Edit Programme"),
-            title_search = T("Search Programmes"),
-            subtitle_create = T("Add Programme"),
-            label_list_button = T("List Programmes"),
-            label_create_button = T("Add New Programme"),
-            label_delete_button = T("Delete Programme"),
-            msg_record_created = T("Programme added"),
-            msg_record_modified = T("Programme updated"),
-            msg_record_deleted = T("Programme deleted"),
-            msg_list_empty = T("Currently no programmes registered"))
+            title_create = ADD_PROG,
+            title_display = T("Program Details"),
+            title_list = T("Programs"),
+            title_update = T("Edit Program"),
+            title_search = T("Search Programs"),
+            subtitle_create = ADD_PROG,
+            label_list_button = T("List Programs"),
+            label_create_button = T("Add New Program"),
+            label_delete_button = T("Delete Program"),
+            msg_record_created = T("Program added"),
+            msg_record_modified = T("Program updated"),
+            msg_record_deleted = T("Program deleted"),
+            msg_list_empty = T("Currently no programs registered"))
 
         label_create = crud_strings[tablename].label_create_button
         if is_admin:
@@ -3197,7 +3198,7 @@ class S3HRProgrammeModel(S3Model):
         represent = S3Represent(lookup=tablename)
         programme_id = S3ReusableField("programme_id", table,
                                 sortby = "name",
-                                label = T("Programme"),
+                                label = T("Program"),
                                 requires = IS_NULL_OR(
                                             IS_ONE_OF(db, "hrm_programme.id",
                                                       represent,
@@ -3207,7 +3208,7 @@ class S3HRProgrammeModel(S3Model):
                                 comment=S3AddResourceLink(f="programme",
                                                           label=label_create,
                                                           title=label_create,
-                                                          tooltip=T("Add a new programme to the catalog.")),
+                                                          tooltip=T("Add a new program to the catalog.")),
                                 ondelete = "SET NULL")
 
         self.add_component("hrm_programme_hours",
@@ -3281,7 +3282,7 @@ class S3HRProgrammeModel(S3Model):
             #                cols=3,
             #                ),
             S3OptionsFilter("programme_id",
-                            label=T("Programme"),
+                            label=T("Program"),
                             #options = self.project_task_activity_opts,
                             represent="%(name)s",
                             #widget="multiselect",
@@ -3304,7 +3305,7 @@ class S3HRProgrammeModel(S3Model):
                          "programme_id",
                          "job_title_id",
                          "training_id",
-                         "month",
+                         (T("Month"), "month"),
                          "hours",
                          "person_id$gender",
                          ]
@@ -4360,23 +4361,23 @@ def hrm_rheader(r, tabs=[],
                     tooltip = SPAN(_class="tooltip",
                                    _title="%s|%s" % \
                         (T("Active"),
-                         T("A volunteer is defined as active if they've participated in an average of 8 or more hours of Programme work or Trainings per month in the last year")),
+                         T("A volunteer is defined as active if they've participated in an average of 8 or more hours of Program work or Trainings per month in the last year")),
                                    _style="display:inline-block"
                                    )
                     active_cells = [TH("%s:" % T("Active?"), tooltip),
                                     active]
                 else:
                     active_cells = []
-                row1 = TR(TH("%s:" % T("Programme")),
+                row1 = TR(TH("%s:" % T("Program")),
                           programme,
                           *active_cells
                           )
-                row2 = TR(TH("%s:" % T("Programme Hours (Month)")),
+                row2 = TR(TH("%s:" % T("Program Hours (Month)")),
                           str(programme_hours_month),
                           TH("%s:" % T("Training Hours (Month)")),
                           str(training_hours_month)
                           )
-                row3 = TR(TH("%s:" % T("Programme Hours (Year)")),
+                row3 = TR(TH("%s:" % T("Program Hours (Year)")),
                           str(programme_hours_year),
                           TH("%s:" % T("Training Hours (Year)")),
                           str(training_hours_year)
@@ -4569,7 +4570,7 @@ def hrm_rheader(r, tabs=[],
 
     elif resourcename == "programme":
         # Tabs
-        tabs = [(T("Programme Details"), None),
+        tabs = [(T("Program Details"), None),
                 (T("Volunteer Hours"), "person")]
         rheader_tabs = s3_rheader_tabs(r, tabs)
         rheader = DIV(TABLE(
@@ -5442,7 +5443,8 @@ def hrm_training_controller():
                            insertable=False,
                            list_fields=list_fields)
             if r.method == "report":
-                s3db.configure("hrm_training", extra_fields=["date"])
+                s3db.configure("hrm_training",
+                               extra_fields=["date"])
                 table = s3db.hrm_training
                 table.year = Field.Lazy(hrm_training_year)
                 table.month = Field.Lazy(hrm_training_month)

@@ -285,7 +285,7 @@ def volunteer():
 
         widget = s3base.S3SearchOptionsWidget(
                             name="human_resource_search_programme",
-                            label=T("Programme"),
+                            label=T("Program"),
                             field="person_id$hours.programme_id",
                             cols = 2,
                             options = hrm_programme_opts

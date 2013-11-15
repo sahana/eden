@@ -1081,7 +1081,7 @@ class S3OptionsMenu(object):
                         M("List All"),
                         #M("Skill Equivalence", f="certificate_skill"),
                     ),
-                    M("Programmes", f="programme",
+                    M("Programs", f="programme",
                       check=[manager_mode, show_programmes])(
                         M("New", m="create"),
                         M("List All"),
@@ -1095,7 +1095,7 @@ class S3OptionsMenu(object):
                                        cols="month",
                                        fact="sum(hours)"),
                           check=show_programmes),
-                        M("Hours by Programme Report", f="programme_hours", m="report2",
+                        M("Hours by Program Report", f="programme_hours", m="report2",
                           vars=Storage(rows="programme_id",
                                        cols="month",
                                        fact="sum(hours)"),

@@ -2401,11 +2401,11 @@ def customize_pr_person(**attr):
                                             represent,
                                             orderby = "org_site.name")
             from s3layouts import S3AddResourceLink
-            site_field.comment = S3AddResourceLink(c="org", f="office",
+            site_field.comment = S3AddResourceLink(c="org", f="facility",
                                                    vars={"child": "site_id"},
-                                                   label=T("Add New Office"),
-                                                   title=T("Office"),
-                                                   tooltip=T("If you don't see the Office in the list, you can add a new one by clicking link 'Add New Office'."))
+                                                   label=T("Add New Site"),
+                                                   title=T("Site"),
+                                                   tooltip=T("If you don't see the Site in the list, you can add a new one by clicking link 'Add New Site'."))
 
             # Best to have no labels when only 1 field in the row
             s3db.pr_contact.value.label = ""
@@ -2417,6 +2417,7 @@ def customize_pr_person(**attr):
             hr_fields = ["organisation_id",
                          "job_title_id",
                          "site_id",
+                         "site_contact",
                          ]
             if r.method in ("create", "update"):
                 # Context from a Profile page?"
@@ -2453,6 +2454,7 @@ def customize_pr_person(**attr):
                            "last_name",
                            (T("Job Title"), "human_resource.job_title_id"),
                            (T("Site"), "human_resource.site_id"),
+                           (T("Site Contact"), "human_resource.site_contact"),
                            ]
             
             # Don't include Email/Phone for unauthenticated users

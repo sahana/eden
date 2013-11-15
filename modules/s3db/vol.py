@@ -706,7 +706,7 @@ def vol_service_record(r, **attr):
         date_represent = hrstable.date.represent
         programme = TABLE(TR(TH(T("Start Date")),
                              TH(T("End Date")),
-                             TH(T("Work on Programme")),
+                             TH(T("Work on Program")),
                              TH(T("Role")),
                              TH(T("Hours"))))
         total = 0
