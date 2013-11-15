@@ -3009,6 +3009,10 @@ class S3LocationSelectorWidget(FormWidget):
         requires = field.requires
 
         # Main Input
+        if value == "dummy":
+            # If validation fails, we may get here with no location, but with
+            # "dummy" left in the value.
+            value = None
         defaults = dict(_type = "text",
                         value = (value != None and str(value)) or "")
         attr = StringWidget._attributes(field, defaults, **attributes)
