@@ -36,11 +36,16 @@ datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
 # System Settings
 # -----------------------------------------------------------------------------
 # Authorization Settings
-# Should users be allowed to register themselves?
-#settings.security.self_registration = False # Disabled in Prod
-settings.auth.registration_requires_approval = True
-settings.auth.registration_requires_verification = False
-settings.auth.registration_requests_organisation = True
+# Users can self-register
+#settings.security.self_registration = False
+# Users need to verify their email
+settings.auth.registration_requires_verification = True
+# Users don't need to be approved
+#settings.auth.registration_requires_approval = True
+# Organisation links are either done automatically
+# - by registering with official domain of Org
+# or Manually by Call Center staff
+#settings.auth.registration_requests_organisation = True
 #settings.auth.registration_organisation_required = True
 settings.auth.registration_requests_site = False
 
@@ -60,12 +65,12 @@ settings.auth.show_utc_offset = False
 
 settings.auth.show_link = False
 
-settings.auth.record_approval = True
-settings.auth.record_approval_required_for = ["org_organisation"]
+#settings.auth.record_approval = True
+#settings.auth.record_approval_required_for = ["org_organisation"]
 
 # -----------------------------------------------------------------------------
 # Security Policy
-#settings.security.policy = 6 # Realms
+settings.security.policy = 5 # Apply Controller, Function and Table ACLs
 settings.security.map = True
 
 # Owner Entity
@@ -1648,12 +1653,30 @@ def customize_org_facility_fields():
     """
 
     s3db = current.s3db
+    tablename = "org_facility"
     table = s3db.org_facility
     table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
     table.modified_by.represent = s3_auth_user_represent_name
     table.modified_on.represent = datetime_represent
     table.comments.comment = None
     table.phone1.label = T("Phone")
+
+    # CRUD strings
+    ADD_FAC = T("Add Site")
+    current.response.s3.crud_strings[tablename] = Storage(
+        title_create = ADD_FAC,
+        title_display = T("Site Details"),
+        title_list = T("Sites"),
+        title_update = T("Edit Site"),
+        title_search = T("Search Sites"),
+        subtitle_create = ADD_FAC,
+        label_list_button = T("List Sites"),
+        label_create_button = ADD_FAC,
+        label_delete_button = T("Delete Site"),
+        msg_record_created = T("Site Added"),
+        msg_record_modified = T("Site Updated"),
+        msg_record_deleted = T("Site Canceled"),
+        msg_list_empty = T("No Sites registered"))
 
     list_fields = ["name",
                    "site_facility_type.facility_type_id",
@@ -1703,7 +1726,7 @@ def customize_org_facility_fields():
                                 "comments",
                                 )
 
-    s3db.configure("org_facility",
+    s3db.configure(tablename,
                    crud_form = crud_form,
                    list_fields = list_fields,
                    )

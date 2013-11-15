@@ -79,7 +79,7 @@
     <ul class='nav'>
      <li><a href='/{{=appname}}/req/req/create'><i class='icon-flag'></i> {{=T("Make a Request")}}</a></li>
      <li><a href='/{{=appname}}/req/req/datalist'><i class='icon-truck'></i> {{=T("Donate in Kind")}}</a></li>
-     <li><a href='/{{=appname}}/req/organisation/datalist?needs.money=True'> {{=T("Donate Money")}}</a></li>
+     <li><a href='/{{=appname}}/org/organisation/datalist?needs.money=True'><i class='icon-dollar'></i> {{=T("Donate Money")}}</a></li>
      <li class='dropdown'> <a href='#' class='dropdown-toggle disabled top-level' id='more' data-toggle='dropdown'><i class='icon-plus-sign'></i> {{=T("More")}}<b class='caret'></b></a>
       <ul class='dropdown-menu' role='menu' aria-labelledby='more'>
        <li role='menuitem'><a href='/{{=appname}}/gis/index' tabindex='-1' class='menu-item'><i class='icon-map'></i> {{=T("Map")}}</a></li>
@@ -88,7 +88,7 @@
        <li role='menuitem'><a href='/{{=appname}}/org/facility/datalist' tabindex='-1' class='menu-item'><i class='icon-home'></i> {{=T("Sites")}}</a></li>
        <li role='menuitem'><a href='/{{=appname}}/pr/person' tabindex='-1' class='menu-item'><i class='icon-contact'></i> {{=T("Contacts")}}</a></li>
        <!--<li role='menuitem'><a href='/{{=appname}}/stats/demographic' tabindex='-1' class='menu-item'><i class='icon-tasks'></i> {{=T("Demographics")}}</a></li>-->
-       <li role='menuitem'><a href='/{{=appname}}/doc/document' tabindex='-1' class='menu-item'><i class='icon-file-alt'></i> {{=T("Documents")}}</a></li>
+       <!--<li role='menuitem'><a href='/{{=appname}}/doc/document' tabindex='-1' class='menu-item'><i class='icon-file-alt'></i> {{=T("Documents")}}</a></li>-->
       </ul>
      </li>
     </ul>
@@ -99,7 +99,6 @@
        {{if auth.s3_has_role("ADMIN"):}}
        <li><a href='/{{=appname}}/admin/user'><i class='icon-cogs'></i> {{=T("Admin")}}</a></li>
        {{pass}}
-       <li><a href='/{{=appname}}/pr/person'><i class='icon-list'></i> {{=T("Contact People")}}</a></li>
        <li class='divider'></li>
        <li><a href='/{{=appname}}/default/person'><i class='icon-user'></i> {{=auth.user.email}}</a></li>
        <li><a href='/{{=appname}}/default/user/change_password'><i class='icon-lock'></i> {{=T("Change Password")}}</a></li>

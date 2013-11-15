@@ -2411,7 +2411,7 @@ class S3CommitModel(S3Model):
 
         ctable = s3db.req_commit
 
-        site_id = form_vars.get(site_id, None)
+        site_id = form_vars.get("site_id", None)
         if site_id:
             # Set location_id to location of site
             stable = s3db.org_site
@@ -3958,6 +3958,7 @@ def req_render_reqs(listid, resource, rfields, record,
                )
 
     # Edit Bar
+    T = current.T
     permit = current.auth.s3_has_permission
     table = db.req_req
     if permit("update", table, record_id=record_id):
@@ -3967,7 +3968,7 @@ def req_render_reqs(listid, resource, rfields, record,
                                vars={"refresh": listid,
                                      "record": record_id}),
                      _class="s3_modal",
-                     _title=current.T("Edit Request"),
+                     _title=T("Edit Request"),
                      )
     else:
         edit_btn = ""
@@ -3988,6 +3989,18 @@ def req_render_reqs(listid, resource, rfields, record,
     #if priority == 3:
     #    # Apply additional highlighting for High Priority
     #    item_class = "%s disaster" % item_class
+
+    commit_btn = A(I(" ", _class="icon icon-truck"),
+                   " ",
+                   T("DONATE"),
+                   _href=URL(c="req", f="commit",
+                             args=["create.popup"],
+                             vars={"req_id": record_id,
+                                   "refresh": listid},
+                             ),
+                   _class="s3_modal btn",
+                   _title=T("Donate to this Request"),
+                   )
 
     # Render the item
     item = DIV(DIV(card_label,
@@ -4014,6 +4027,9 @@ def req_render_reqs(listid, resource, rfields, record,
                                ),
                            _class="media",
                            ),
+                       DIV(commit_btn,
+                           _class="media pull-right",
+                           ),
                        _class="media-body",
                        ),
                    _class="media",
@@ -4035,6 +4051,15 @@ def req_customize_commit_fields():
     s3db = current.s3db
     tablename = "req_commit"
     table = s3db.req_commit
+
+    request = current.request
+    if "create" in request.args:
+        req_id = request.get_vars.get("req_id", None)
+        if req_id:
+            table.req_id.default = req_id
+        elif not current.deployment_settings.get_req_commit_without_request():
+            current.session.error = T("Not allowed to Donate without matching to a Request!")
+            redirect(URL(c="req", f="req", args=["datalist"]))
 
     # CRUD strings
     #ADD_COMMIT = T("Make Donation")
@@ -4091,7 +4116,13 @@ def req_customize_commit_fields():
                    #"location_id",
                    ]
 
-    crud_form = S3SQLCustomForm(*list_fields)
+    user = current.auth.user
+    if not user or not user.organisation_id:
+        # Only a User representing an Org can commit for an Org
+        crud_fields = [f for f in list_fields if f != "organisation_id"]
+        crud_form = S3SQLCustomForm(*crud_fields)
+    else:
+        crud_form = S3SQLCustomForm(*list_fields)
 
     filter_widgets = [
         S3TextFilter(["committer_id$first_name",

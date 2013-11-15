@@ -951,7 +951,6 @@ Thank you
                 self.add_membership(admin_group_id, users.first().id)
 
                 # Log them in
-                #user = utable[form.vars.id]
                 if "language" not in form.vars:
                     # Was missing from login form
                     form.vars.language = T.accepted_language
@@ -981,7 +980,6 @@ Thank you
 
                 if approved:
                     # Log them in
-                    #user = utable[form.vars.id]
                     if "language" not in form.vars:
                         # Was missing from login form
                         form.vars.language = T.accepted_language
@@ -1060,7 +1058,12 @@ Thank you
         if next == DEFAULT:
             next = settings.verify_email_next
 
-        self.s3_verify_user(user)
+        approved = self.s3_verify_user(user)
+
+        if approved:
+            # Log them in
+            user = Storage(utable._filter_fields(user, id=True))
+            self.login_user(user)
 
         if log:
             self.log_event(log % user)
@@ -1293,6 +1296,7 @@ Thank you
         #utable.reset_password_key.label = messages.label_registration_key
 
         # Organisation
+        # @ToDo: Allow Admin to see Org linkage even if Users cannot specify when they register
         req_org = deployment_settings.get_auth_registration_requests_organisation()
         if req_org:
             if pe_ids:
@@ -1800,6 +1804,15 @@ S3OptionsFilter({
                              id = user.id)
         else:
             approved = True
+            if organisation_id and not user.get("organisation_id", None):
+                # Use the whitelist
+                user["organisation_id"] = organisation_id
+                utable = self.settings.table_user
+                current.db(utable.id == user.id).update(organisation_id = organisation_id)
+                link_user_to = deployment_settings.get_auth_registration_link_user_to_default()
+                if link_user_to and not user.get("link_user_to", None):
+                    user["link_user_to"] = link_user_to
+                self.s3_link_user(user)
             self.s3_approve_user(user)
             session = current.session
             session.confirmation = self.messages.email_verified
