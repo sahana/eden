@@ -1653,6 +1653,7 @@ def customize_org_facility_fields():
     table.modified_by.represent = s3_auth_user_represent_name
     table.modified_on.represent = datetime_represent
     table.comments.comment = None
+    table.phone1.label = T("Phone")
 
     list_fields = ["name",
                    "site_facility_type.facility_type_id",
