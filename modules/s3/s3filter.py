@@ -602,6 +602,7 @@ class S3DateFilter(S3RangeFilter):
         hide_time = self.opts.get("hide_time", False)
 
         # Generate the input elements
+        T = current.T
         selector = self.selector
         _variable = self._variable
         input_class = self._input_class
@@ -641,7 +642,7 @@ class S3DateFilter(S3RangeFilter):
 
             # Append label and widget
             append(DIV(
-                    DIV(LABEL(current.T(input_labels[operator] + ":"),
+                    DIV(LABEL("%s:" % T(input_labels[operator]),
                             _for=input_id),
                         _class="range-filter-label"),
                     DIV(picker,

@@ -313,7 +313,7 @@ def ns_only(f, required=True, branches=True, updateable=True):
         not_filterby = None
         not_filter_opts = []
     else:
-        btable = db.org_organisation_branch
+        btable = current.s3db.org_organisation_branch
         rows = db(btable.deleted != True).select(btable.branch_id)
         branches = [row.branch_id for row in rows]
         not_filterby = "id"

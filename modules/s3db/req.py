@@ -2259,14 +2259,12 @@ class S3CommitModel(S3Model):
             S3DateFilter("date",
                          label=T("Date"),
                          hide_time=True,
-                         input_labels = {"ge": "From", "le": "To"},
                          comment=T("Search for commitments made between these dates."),
                          hidden=True,
                          ),
             S3DateFilter("date_available",
                          label=T("Date Available"),
                          hide_time=True,
-                         input_labels = {"ge": "From", "le": "To"},
                          comment=T("Search for commitments available between these dates."),
                          hidden=True,
                          ),
@@ -4085,11 +4083,12 @@ def req_customize_commit_fields():
     table.date_available.default = current.request.utcnow
 
     list_fields = [#"req_id", # populated automatically or not at all?
-                   "date_available",
                    "organisation_id",
                    "committer_id",
                    "comments",
-                   "location_id",
+                   "date_available",
+                   # We'd like to be able to map donations, but harder work for system
+                   #"location_id",
                    ]
 
     crud_form = S3SQLCustomForm(*list_fields)

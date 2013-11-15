@@ -76,6 +76,7 @@ __all__ = ["S3ACLWidget",
            ]
 
 import datetime
+import os
 
 try:
     import json # try stdlib (Python 2.6)
@@ -1303,7 +1304,8 @@ class S3DateWidget(FormWidget):
 
         # Need to convert value into ISO-format
         # (widget expects ISO, but value comes in custom format)
-        _format = current.deployment_settings.get_L10n_date_format()
+        settings = current.deployment_settings
+        _format = settings.get_L10n_date_format()
         v, error = IS_DATE_IN_RANGE(format=_format)(value)
         if not error:
             value = v.isoformat()
@@ -1329,6 +1331,7 @@ class S3DateWidget(FormWidget):
             selector = str(field).replace(".", "_")
 
         # Convert to Days
+        request = current.request
         now = current.request.utcnow
         past = self.past
         if past:
@@ -1353,7 +1356,7 @@ class S3DateWidget(FormWidget):
         else:
             maxDate = "+0"
 
-        current.response.s3.jquery_ready.append(
+        script = \
 '''$('#%(selector)s').datepicker('option',{
  minDate:%(past)s,
  maxDate:%(future)s,
@@ -1362,7 +1365,23 @@ class S3DateWidget(FormWidget):
         dict(selector = selector,
              past = minDate,
              future = maxDate,
-             format = format))
+             format = format)
+
+        s3 = current.response.s3
+        language = current.session.s3.language
+        if language != settings.get_L10n_default_language():
+            # Do we have a suitable locale file?
+            path = os.path.join(request.folder, "static", "scripts", "i18n", "jquery.ui.datepicker-%s.js" % language)
+            if os.path.exists(path):
+                lscript = "/%s/static/scripts/i18n/jquery.ui.datepicker-%s.js" % (request.application, language)
+                if lscript not in s3.scripts:
+                    s3.scripts.append(lscript)
+                script = '''%s
+$('#%s').datepicker('option',$.datepicker.regional['%s'])''' % (script,
+                                                                selector,
+                                                                language)
+
+        s3.jquery_ready.append(script)
 
         return TAG[""](widget, requires = field.requires)
 
@@ -1475,7 +1494,8 @@ class S3DateTimeWidget(FormWidget):
             dtformat = datetime_format
 
         # Limits
-        now = current.request.utcnow
+        request = current.request
+        now = request.utcnow
         timedelta = datetime.timedelta
         offset = S3DateTime.get_offset_value(current.session.s3.utc_offset)
 
@@ -1559,8 +1579,8 @@ class S3DateTimeWidget(FormWidget):
         # Boolean options
         getopt = lambda opt, default: opts.get(opt, default) and "true" or "false"
 
-        current.response.s3.jquery_ready.append(
-"""$('#%(selector)s').%(widget)s({
+        script = \
+'''$('#%(selector)s').%(widget)s({
  showSecond:false,
  firstDay:%(firstDOW)s,
  min%(limit)s:new Date(Date.parse('%(earliest)s')),
@@ -1578,12 +1598,12 @@ class S3DateTimeWidget(FormWidget):
  defaultValue:'%(default)s',
  onClose:%(onclose)s
 });
-var clear_button=$('<input id="%(selector)s_clear" type="button" value="clear"/>').click(function(){
+var clear_button=$('<input id="%(selector)s_clear" type="button" value="%(clear)s"/>').click(function(){
  $('#%(selector)s').val('');%(onclear)s
 });
 if($('#%(selector)s_clear').length==0){
  $('#%(selector)s').after(clear_button)
-}""" %  dict(selector=selector,
+}''' %  dict(selector=selector,
              widget=widget,
              date_format=date_format,
              time_format=time_format,
@@ -1599,10 +1619,26 @@ if($('#%(selector)s_clear').length==0){
              earliest=earliest.strftime(ISO),
              latest=latest.strftime(ISO),
              default=default,
+             clear=current.T("clear"),
              onclose=onclose,
              onclear=onclear,
              )
-        )
+
+        s3 = current.response.s3
+        language = current.session.s3.language
+        if language != settings.get_L10n_default_language():
+            # Do we have a suitable locale file?
+            path = os.path.join(request.folder, "static", "scripts", "i18n", "jquery.ui.datepicker-%s.js" % language)
+            if os.path.exists(path):
+                lscript = "/%s/static/scripts/i18n/jquery.ui.datepicker-%s.js" % (request.application, language)
+                if lscript not in s3.scripts:
+                    s3.scripts.append(lscript)
+                script = '''%s
+$('#%s').datepicker('option',$.datepicker.regional['%s'])''' % (script,
+                                                                selector,
+                                                                language)
+
+        s3.jquery_ready.append(script)
 
         return
 

@@ -468,8 +468,8 @@ class S3ReportForm(object):
                 opts["collapseTable"] = True
 
         # jQuery-ready script
-        script = """
-$("#%(widget_id)s").pivottable(%(opts)s);""" % {
+        script = '''
+$("#%(widget_id)s").pivottable(%(opts)s)''' % {
             "widget_id": widget_id,
             "opts": json.dumps(opts)
          }

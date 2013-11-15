@@ -2623,9 +2623,9 @@ settings.req.requester_label = "Contact"
 # Uncomment if the User Account logging the Request is NOT normally the Requester
 settings.req.requester_is_author = False
 # Uncomment if the User Account logging the Commitment is NOT normally the Committer
-settings.req.comittter_is_author = False
+#settings.req.comittter_is_author = False
 # Uncomment to allow Donations to be made without a matching Request
-settings.req.commit_without_request = True
+#settings.req.commit_without_request = True
 
 def customize_req_req(**attr):
     """

@@ -2113,60 +2113,52 @@ class S3HRSkillModel(S3Model):
                               _title="%s|%s" % (T("Training Event"),
                               T("Enter some characters to bring up a list of possible matches")))
 
-        training_event_search = S3Search(
-            advanced=(
-                      S3SearchSimpleWidget(
-                        name = "training_event_search_simple",
-                        label = T("Text"),
-                        comment = T("You can search by course name, venue name or event comments. You may use % as wildcard. Press 'Search' without input to list all events."),
-                        field = ["course_id$name",
-                                 "site_id$name",
-                                 "comments",
-                                ]
-                    ),
-                    # S3SearchOptionsWidget(
-                      # name="training_event_search_L1",
-                      # field="site_id$L1",
-                      # cols = 3,
-                    # ),
-                    # S3SearchOptionsWidget(
-                      # name="training_event_search_L2",
-                      # field="site_id$L2",
-                      # cols = 3,
-                    # ),
-                    S3SearchLocationWidget(
-                      name="training_event_search_map",
-                      label=T("Map"),
-                    ),
-                    S3SearchOptionsWidget(
-                      name="training_event_search_site",
-                      label=T("Facility"),
-                      field="site_id"
-                    ),
-                    S3SearchMinMaxWidget(
-                      name="training_event_search_date",
-                      method="range",
-                      label=T("Date"),
-                      field="start_date"
-                    ),
-            ))
+        # Which levels of Hierarchy are we using?
+        hierarchy = current.gis.get_location_hierarchy()
+        levels = hierarchy.keys()
+        if len(settings.get_gis_countries()) == 1:
+            levels.remove("L0")
+
+        filter_widgets = [
+            S3TextFilter(["course_id$name",
+                          "site_id$name",
+                          "comments",
+                          ],
+                         label = T("Search"),
+                         comment = T("You can search by course name, venue name or event comments. You may use % as wildcard. Press 'Search' without input to list all events."),
+                         ),
+            S3LocationFilter("site_id$location_id",
+                             levels=levels,
+                             widget="multiselect",
+                             hidden=True,
+                             ),
+            S3OptionsFilter("site_id",
+                            label=T("Site"),
+                            widget="multiselect",
+                            hidden=True,
+                            ),
+            S3DateFilter("start_date",
+                         label=T("Date"),
+                         hide_time=True,
+                         hidden=True,
+                         )
+            ]
 
         # Resource Configuration
         configure(tablename,
                   create_next = URL(f="training_event",
                                     args=["[id]", "participant"]),
-                  search_method=training_event_search,
-                  deduplicate=self.hrm_training_event_duplicate
-                )
+                  deduplicate=self.hrm_training_event_duplicate,
+                  filter_widgets = filter_widgets,
+                  )
 
         # Participants of events
         add_component("pr_person",
-                      hrm_training_event=Storage(
-                                name="participant",
-                                link="hrm_training",
-                                joinby="training_event_id",
-                                key="person_id",
-                                actuate="hide"))
+                      hrm_training_event=dict(name="participant",
+                                              link="hrm_training",
+                                              joinby="training_event_id",
+                                              key="person_id",
+                                              actuate="hide"))
 
         # =====================================================================
         # Training Participations
@@ -2244,7 +2236,7 @@ class S3HRSkillModel(S3Model):
                           "course_id$name",
                           "comments",
                           ],
-                         label = T("Text"),
+                         label = T("Search"),
                          comment = T("You can search by trainee name, course name or comments. You may use % as wildcard. Press 'Search' without input to list all trainees."),
                          _class="filter-search",
                          ),
@@ -4749,7 +4741,7 @@ def hrm_group_controller():
                                     "organisation_team.organisation_id$name",
                                     "organisation_team.organisation_id$acronym",
                                     ],
-                                   label = T("Text"),
+                                   label = T("Search"),
                                    comment = T("You can search by by group name, description or comments and by organization name or acronym. You may use % as wildcard. Press 'Search' without input to list all trainees."),
                                    _class="filter-search",
                                    ),
@@ -5479,7 +5471,7 @@ def hrm_training_event_controller():
     def prep(r):
         if r.component and \
            (r.interactive or \
-            r.representation in ("aaData", "pdf", "xls")):
+            r.representation in ("aadata", "pdf", "xls")):
 
             T = current.T
             # Use appropriate CRUD strings
@@ -5533,7 +5525,9 @@ def hrm_training_event_controller():
     s3.postp = postp
 
     output = current.rest_controller("hrm", "training_event",
-                                     rheader=hrm_rheader)
+                                     hide_filter=False,
+                                     rheader=hrm_rheader,
+                                     )
     return output
 
 # =============================================================================
@@ -5680,6 +5674,8 @@ def hrm_configure_pr_group_membership():
             return A(row.first_name,
                      _href=URL(c=controller, f="person", args=id))
 
+        # Don't create Persons here as they need to be HRMs
+        table.person_id.comment = None
         table.person_id.represent = hrm_person_represent
         list_fields = ["id",
                        (T("First Name"), "person_id"),
