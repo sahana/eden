@@ -8,9 +8,9 @@
   <li data-target='#myCarousel' data-slide-to='2'></li>-->
  </ol>
  <div class='carousel-inner'>
-  <div class='active item'><img src='/{{=appname}}/static/themes/{{=theme}}/img/haiyan.jpg' alt='' /></div>
-  <!--<div class='item'><img src='/{{=appname}}/static/themes/{{=theme}}/img/482470-car.jpg' alt='' /></div>
-  <div class='item'><img src='/{{=appname}}/static/themes/{{=theme}}/img/442014.jpg' alt='' /></div>-->
+  <div class='active item'><img src='/{{=appname}}/static/themes/{{=theme}}/img/haiyan1.jpg' alt='' /></div>
+  <div class='item'><img src='/{{=appname}}/static/themes/{{=theme}}/img/haiyan2.jpg' alt='' /></div>
+  <!--<div class='item'><img src='/{{=appname}}/static/themes/{{=theme}}/img/442014.jpg' alt='' /></div>-->
  </div>
  <div class='carousel-caption'>
   <h1>{{=settings.get_system_name()}}<br></h1>
@@ -28,14 +28,23 @@
  <div class='container'>
   <div class='row'>
    <div class='span4 stl'>
+    <div>
+     <img src='/eden/static/themes/DRMP/img/413751-circle1.png' class='img-circle home-circle-img'>
+    </div>
     <h2><a href='/{{=appname}}/req/req/create'><i class='icon-flag'></i> {{=T("Make a Request")}}</a></li></h2>
     <p class='quote mb4'>{{=T("Phone the call center to make a Request for anything, including goods or volunteers.")}}</p>
    </div>
    <div class='span4 stl'>
+    <div>
+     <img src='/eden/static/themes/DRMP/img/482470-circle1.png' class='img-circle home-circle-img'>
+    </div>
     <h2><a href='/{{=appname}}/req/req/datalist'><i class='icon-truck'></i> {{=T("Donate in Kind")}}</a></li></h2>
     <p class='quote mb4'>{{=T("Donations can be matched to Requests.")}}</p>
    </div>
    <div class='span4 first_stl'>
+    <div>
+     <img src='/eden/static/themes/DRMP/img/442014-circle1.png' class='img-circle home-circle-img'>
+    </div>
     <h2><a href='/{{=appname}}/org/organisation/datalist?needs.money=True'><i class='icon-dollar'></i> {{=T("Money")}}</a></li></h2>
     <p class='quote mb4'>{{=T("Donating money is the best way to provide support as relief agencies can then use this flexibly.")}}</p>
    </div>
