@@ -729,6 +729,7 @@ def render_sites(listid, resource, rfields, record, **attr):
     address = raw["gis_location.addr_street"] or ""
     phone = raw["org_facility.phone1"] or ""
     facility_type = record["org_site_facility_type.facility_type_id"]
+    comments = record["org_facility.comments"] or ""
     logo = raw["org_organisation.logo"]
 
     site_url = URL(c="org", f="facility", args=[site_id, "profile"])
@@ -797,6 +798,9 @@ def render_sites(listid, resource, rfields, record, **attr):
                      SPAN(phone),
                      " ",
                      _class="main_contact_ph",
+                     ),
+                   P(comments,
+                     _class="main_contact s3-truncate",
                      ),
                    )
 
@@ -1652,13 +1656,19 @@ def customize_org_facility_fields():
         Customize org_facility for Profile widgets and 'more' popups
     """
 
+    # Truncate comments fields
+    from s3.s3utils import s3_trunk8
+    s3_trunk8()
+
     s3db = current.s3db
     tablename = "org_facility"
     table = s3db.org_facility
     table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
     table.modified_by.represent = s3_auth_user_represent_name
     table.modified_on.represent = datetime_represent
-    table.comments.comment = None
+    field = table.comments
+    field.represent = lambda body: XML(s3_URLise(body))
+    field.comment = None
     table.phone1.label = T("Phone")
 
     # CRUD strings
@@ -1679,6 +1689,7 @@ def customize_org_facility_fields():
         msg_list_empty = T("No Sites registered"))
 
     list_fields = ["name",
+                   "code",
                    "site_facility_type.facility_type_id",
                    "organisation_id",
                    "location_id",
@@ -1690,6 +1701,7 @@ def customize_org_facility_fields():
                    "human_resource.person_id",
                    #"contact",
                    "phone1",
+                   "comments",
                    ]
 
     #from s3.s3validators import IS_ADD_PERSON_WIDGET2
@@ -1699,6 +1711,7 @@ def customize_org_facility_fields():
     #field.widget = S3AddPersonWidget2(controller="pr")
 
     crud_form = S3SQLCustomForm("name",
+                                "code",
                                 S3SQLInlineComponentMultiSelectWidget(
                                     "facility_type",
                                     label = T("Facility Type"),
@@ -1782,10 +1795,10 @@ def customize_org_facility(**attr):
             s3.cancel = True
 
             if r.method == "datalist":
-                # Lx selection page
+                # Site selection page
                 # 2-column datalist, 6 rows per page
-                s3.dl_pagelength = 12
-                s3.dl_rowsize = 2
+                #s3.dl_pagelength = 12
+                #s3.dl_rowsize = 2
 
                 from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
                 filter_widgets = [
@@ -1898,10 +1911,20 @@ def customize_org_facility(**attr):
                     from s3.s3crud import S3CRUD
                     crud_button = S3CRUD.crud_button
                     edit_btn = crud_button(T("Edit"),
-                                           _href=r.url(method="update"))
+                                           _href=URL(c="org", f="facility",
+                                                     args=[record_id, "update.popup"],
+                                                     vars={"refresh": "datalist"}),
+                                           _class="s3_modal",
+                                           _title=s3.crud_strings["org_facility"].title_update,
+                                           )
                 else:
                     edit_btn = ""
                 name = record.name
+                code = record.code
+                if code:
+                    name_code = "%s - %s" % (name, code)
+                else:
+                    name_code = code
                 location = table.location_id.represent(record.location_id)
                 db = current.db
                 otable = db.org_organisation
@@ -1914,6 +1937,9 @@ def customize_org_facility(**attr):
                 else:
                     # @ToDo: Placeholder
                     logo = ""
+                # Truncate comments field
+                from s3.s3utils import s3_trunk8
+                s3_trunk8()
                 s3db.configure("org_facility",
                                list_fields = list_fields,
                                profile_title = "%s : %s" % (s3.crud_strings["org_facility"].title_list, 
@@ -1925,8 +1951,20 @@ def customize_org_facility(**attr):
                                                       #_href=org_url,
                                                       ),
                                                     H2(name),
-                                                    P(org.name),
-                                                    P(location),
+                                                    P(I(_class="icon-sitemap"),
+                                                      " ",
+                                                      SPAN(org.name),
+                                                      " ",
+                                                      _class="main_contact_ph",
+                                                      ),
+                                                    P(I(_class="icon-globe"),
+                                                      " ",
+                                                      SPAN(location),
+                                                      " ",
+                                                      _class="main_contact_ph",
+                                                      ),
+                                                    P(record.comments,
+                                                      _class="s3-truncate"),
                                                     edit_btn,
                                                     _class="profile_header",
                                                     ),
@@ -2024,6 +2062,8 @@ def customize_org_facility(**attr):
     s3.postp = custom_postp
 
     attr["hide_filter"] = False
+    # @ToDo: Don't just hide but prevent building
+    #attr["rheader"] = None
     return attr
 
 settings.ui.customize_org_facility = customize_org_facility

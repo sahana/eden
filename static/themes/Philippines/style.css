@@ -1,1 +1,5 @@
 /* Local Settings */
+
+textarea.comments {
+    height: 100px;
+}

@@ -3829,6 +3829,16 @@ def req_customize_req_fields():
 
     field = table.site_id
     field.label = T("Requested for Site")
+    site_represent = s3db.org_SiteRepresent(show_link=False,
+                                            show_type=False)
+    field.represent = site_represent
+    field.requires = IS_ONE_OF(current.db, "org_site.site_id",
+                               site_represent,
+                               orderby = "org_site.name",
+                               filterby = "obsolete",
+                               filter_opts = [False],
+                               sort = True,
+                               )
     field.comment = S3AddResourceLink(c="org", f="facility",
                                       vars = dict(child="site_id",
                                                   parent="req"),
@@ -3965,7 +3975,7 @@ def req_render_reqs(listid, resource, rfields, record,
     raw = record._row
     date = record["req_req.date"]
     body = record["req_req.purpose"]
-    title = ""
+    title = record["req_req.site_id"]
 
     location = record["org_site.location_id"] or ""
     location_id = raw["org_site.location_id"]
@@ -4129,14 +4139,24 @@ def req_customize_commit_fields():
         msg_record_deleted = T("Donation Canceled"),
         msg_list_empty = T("No Donations"))
 
+    auth = current.auth
+
+    # @ToDo: deployment_setting
+    if auth.s3_has_role("EDITOR"):
+        editor = True
+    else:
+        editor = False
+
     field = table.organisation_id
     field.readable = True
-    field.writable = False
+    field.writable = True if editor else False
 
     field = table.committer_id
-    field.writable = False
-    #field.requires = IS_ADD_PERSON_WIDGET2()
-    #field.widget = S3AddPersonWidget2(controller="pr")
+    if editor:
+        field.requires = IS_ADD_PERSON_WIDGET2()
+        field.widget = S3AddPersonWidget2(controller="pr")
+    else:
+        field.writable = False
 
     # Which levels of Hierarchy are we using?
     hierarchy = current.gis.get_location_hierarchy()
@@ -4167,14 +4187,15 @@ def req_customize_commit_fields():
                    #"location_id",
                    ]
 
-    user = current.auth.user
-    if not user or not user.organisation_id:
+    if editor:
+        # Editor can select Org
+        crud_form = S3SQLCustomForm(*list_fields)
+    elif auth.user and auth.user.organisation_id:
+        crud_form = S3SQLCustomForm(*list_fields)
+    else:
         # Only a User representing an Org can commit for an Org
-        table.organisation_id.writable = False
         crud_fields = [f for f in list_fields if f != "organisation_id"]
         crud_form = S3SQLCustomForm(*crud_fields)
-    else:
-        crud_form = S3SQLCustomForm(*list_fields)
 
     filter_widgets = [
         S3TextFilter(["committer_id$first_name",
@@ -4303,7 +4324,7 @@ def req_render_commits(listid, resource, rfields, record,
 
     # Edit Bar
     permit = current.auth.s3_has_permission
-    table = db.req_commit
+    table = current.s3db.req_commit
     if permit("update", table, record_id=record_id):
         edit_btn = A(I(" ", _class="icon icon-edit"),
                      _href=URL(c="req", f="commit",

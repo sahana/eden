@@ -2037,7 +2037,9 @@ class S3CRUD(S3Method):
                     name=None,
                     _href=None,
                     _id=None,
-                    _class=None):
+                    _class=None,
+                    _title=None,
+                    ):
         """
             Generate a CRUD action button
 
@@ -2045,8 +2047,9 @@ class S3CRUD(S3Method):
             @param tablename: the name of table for CRUD string selection
             @param name: name of CRUD string for the button label
             @param _href: the target URL
-            @param _id: the HTML-ID of the link
-            @param _class: the HTML-class of the link
+            @param _id: the HTML id of the link
+            @param _class: the HTML class of the link
+            @param _title: the HTML title of the link
         """
 
         if _class is None:
@@ -2058,10 +2061,15 @@ class S3CRUD(S3Method):
             labelstr = S3CRUD.crud_string(tablename, name)
         else:
             labelstr = str(label)
-        if not _href:
-            button = A(labelstr, _id=_id, _class=_class)
-        else:
-            button = A(labelstr, _href=_href, _id=_id, _class=_class)
+        data = dict(_id=_id,
+                    _class=_class,
+                    )
+        if _href:
+            data["_href"] = _href
+        if _title:
+            data["_title"] = _title
+
+        button = A(labelstr, **data)
         return button
 
     # -------------------------------------------------------------------------

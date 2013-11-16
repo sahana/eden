@@ -3679,10 +3679,14 @@ class org_SiteRepresent(S3Represent):
     def __init__(self,
                  translate=False,
                  show_link=False,
-                 multiple=False):
+                 multiple=False,
+                 show_type=True,
+                 ):
 
-        # Need a custom lookup
-        self.lookup_rows = self.custom_lookup_rows
+        self.show_type = show_type
+        if show_type or show_link:
+            # Need a custom lookup
+            self.lookup_rows = self.custom_lookup_rows
         # Need a custom representation
         fields = ["name"]
 
@@ -3838,19 +3842,20 @@ class org_SiteRepresent(S3Represent):
         """
 
         name = row["org_site.name"]
-        instance_type = row["org_site.instance_type"]
-        facility_type = row.get("org_facility_type.name", None)
-
         if not name:
             return self.default
 
-        if facility_type:
-            # These need to be translated
-            name = "%s (%s)" % (name, current.T(facility_type))
-        else:
-            instance_type = current.auth.org_site_types.get(instance_type, None)
-            if instance_type:
-                name = "%s (%s)" % (name, instance_type)
+        if self.show_type:
+            instance_type = row["org_site.instance_type"]
+            facility_type = row.get("org_facility_type.name", None)
+
+            if facility_type:
+                # These need to be translated
+                name = "%s (%s)" % (name, current.T(facility_type))
+            else:
+                instance_type = current.auth.org_site_types.get(instance_type, None)
+                if instance_type:
+                    name = "%s (%s)" % (name, instance_type)
 
         return s3_unicode(name)
 

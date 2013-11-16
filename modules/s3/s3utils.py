@@ -254,27 +254,31 @@ def s3_trunk8(selector=None, lines=None, less=None, more=None):
     T = current.T
     
     s3 = current.response.s3
-    s3.scripts.append("/%s/static/scripts/trunk8.js" %
-                      current.request.application)
+    scripts = s3.scripts
+    script = "/%s/static/scripts/trunk8.js" % current.request.application
+    if script not in scripts:
+        scripts.append(script)
+        script = \
+"""$(document).on('click','.s3-truncate-more',function(event){
+ $(this).parent()
+        .trunk8('revert')
+        .append(' <a class="s3-truncate-less" href="#">%(less)s</a>')
+ return false
+})
+$(document).on('click','.s3-truncate-less',function(event){
+ $(this).parent().trunk8()
+ return false
+})""" % dict(less=T("less") if less is None else less)
+        s3.jquery_ready.append(script)
 
-    script = """
-$('%(selector)s').trunk8({
-  %(lines)s
-  fill: '&hellip; <a class="s3-truncate-more" href="#">%(more)s</a>'
-});
-$('.s3-truncate-more').live('click', function (event) {
-  $(this).parent()
-         .trunk8('revert')
-         .append(' <a class="s3-truncate-less" href="#">%(less)s</a>');
-  return false;
-});
-$('.s3-truncate-less').live('click', function (event) {
-  $(this).parent().trunk8();
-  return false;
-});""" % dict(selector=".s3-truncate" if selector is None else selector,
-              lines="" if lines is None else "lines: %s," % lines,
-              more=T("more") if more is None else more,
-              less=T("less") if less is None else less)
+    script = \
+"""$('%(selector)s').trunk8({
+ %(lines)s
+ fill:'&hellip; <a class="s3-truncate-more" href="#">%(more)s</a>'
+})""" % dict(selector=".s3-truncate" if selector is None else selector,
+             lines="" if lines is None else "lines:%s," % lines,
+             more=T("more") if more is None else more,
+             )
 
     s3.jquery_ready.append(script)
     return
