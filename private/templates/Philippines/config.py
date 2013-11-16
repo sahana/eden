@@ -1446,6 +1446,7 @@ def customize_gis_location(**attr):
                                     tablename = "org_facility",
                                     context = "location",
                                     default = default,
+                                    filter = S3FieldSelector("obsolete") == False,
                                     icon = "icon-home",
                                     layer = "Facilities",
                                     # provided by Catalogue Layer
@@ -1469,7 +1470,12 @@ def customize_gis_location(**attr):
                     from s3.s3crud import S3CRUD
                     crud_button = S3CRUD.crud_button
                     edit_btn = crud_button(T("Edit"),
-                                           _href=r.url(method="update"))
+                                           _href=URL(c="gis", f="location",
+                                                     args=[record_id, "update.popup"],
+                                                     vars={"refresh": "datalist"}),
+                                           _class="s3_modal",
+                                           _title=s3.crud_strings["gis_location"].title_update,
+                                           )
                 else:
                     edit_btn = ""
                 name = location.name
@@ -1857,7 +1863,9 @@ def customize_org_facility(**attr):
 
             elif r.method == "profile":
                 # Customise tables used by widgets
+                customize_hrm_human_resource_fields()
                 customize_site_needs_fields(profile=True)
+                s3db.req_customize_req_fields()
 
                 list_fields = ["name",
                                "id",
@@ -1895,7 +1903,7 @@ def customize_org_facility(**attr):
                                    list_layout = s3db.req_render_reqs,
                                    )
                 commits_widget = dict(label = "Donations",
-                                      title_create = "Add New Donation",
+                                      #title_create = "Add New Donation",
                                       type = "datalist",
                                       tablename = "req_commit",
                                       context = "site",
@@ -1936,7 +1944,7 @@ def customize_org_facility(**attr):
                     logo = URL(c="default", f="download", args=[org.logo])
                 else:
                     # @ToDo: Placeholder
-                    logo = ""
+                    logo = "#"
                 # Truncate comments field
                 from s3.s3utils import s3_trunk8
                 s3_trunk8()
@@ -1951,6 +1959,7 @@ def customize_org_facility(**attr):
                                                       #_href=org_url,
                                                       ),
                                                     H2(name),
+                                                    P(record.code),
                                                     P(I(_class="icon-sitemap"),
                                                       " ",
                                                       SPAN(org.name),
@@ -2175,9 +2184,9 @@ def customize_org_organisation(**attr):
                                     title_create = "Add New Need",
                                     type = "datalist",
                                     tablename = "req_organisation_needs",
+                                    multiple = False,
                                     context = "organisation",
                                     icon = "icon-hand-up",
-                                    multiple = False,
                                     show_on_map = False,
                                     list_layout = render_org_needs,
                                     )
@@ -2194,7 +2203,7 @@ def customize_org_organisation(**attr):
                                    list_layout = s3db.req_render_reqs,
                                    )
                 commits_widget = dict(label = "Donations",
-                                      title_create = "Add New Donation",
+                                      #title_create = "Add New Donation",
                                       type = "datalist",
                                       tablename = "req_commit",
                                       context = "organisation",
@@ -2210,6 +2219,7 @@ def customize_org_organisation(**attr):
                                     type = "datalist",
                                     tablename = "org_facility",
                                     context = "organisation",
+                                    filter = S3FieldSelector("obsolete") == False,
                                     icon = "icon-home",
                                     layer = "Facilities",
                                     # provided by Catalogue Layer
@@ -2217,11 +2227,17 @@ def customize_org_organisation(**attr):
                                     list_layout = render_sites,
                                     )
                 record = r.record
-                if current.auth.s3_has_permission("update", table, record_id=record.id):
+                record_id = record.id
+                if current.auth.s3_has_permission("update", table, record_id=record_id):
                     from s3.s3crud import S3CRUD
                     crud_button = S3CRUD.crud_button
                     edit_btn = crud_button(T("Edit"),
-                                           _href=r.url(method="update"))
+                                           _href=URL(c="org", f="organisation",
+                                                     args=[record_id, "update.popup"],
+                                                     vars={"refresh": "datalist"}),
+                                           _class="s3_modal",
+                                           _title=s3.crud_strings["org_organisation"].title_update,
+                                           )
                 else:
                     edit_btn = ""
                 s3db.configure("org_organisation",
@@ -2708,10 +2724,109 @@ def customize_req_req(**attr):
         #if callable(standard_prep):
         #    result = standard_prep(r)
 
+        s3db = current.s3db
         if r.component_name == "commit":
-            current.s3db.req_customize_commit_fields()
+            s3db.req_customize_commit_fields()
         else:
-            current.s3db.req_customize_req_fields()
+            s3db.req_customize_req_fields()
+        if r.method == "profile":
+            # Customise tables used by widgets
+            s3db.req_customize_commit_fields()
+            customize_org_facility_fields()
+
+            record = r.record
+            record_id = record.id
+            commits_widget = dict(label = "Donations",
+                                  title_create = "Add New Donation",
+                                  type = "datalist",
+                                  tablename = "req_commit",
+                                  context = "request",
+                                  default = "req_id=%s" % record_id,
+                                  filter = S3FieldSelector("cancel") == False,
+                                  icon = "icon-truck",
+                                  layer = "Donations",
+                                  # provided by Catalogue Layer
+                                  #marker = "donation",
+                                  list_layout = s3db.req_render_commits,
+                                  )
+            filter = (S3FieldSelector("obsolete") == False)
+            sites_widget = dict(label = "Sites",
+                                #title_create = "Add New Site",
+                                type = "datalist",
+                                tablename = "org_facility",
+                                multiple = False,
+                                context = "request",
+                                filter = filter,
+                                icon = "icon-home",
+                                layer = "Facilities",
+                                # provided by Catalogue Layer
+                                #marker = "office",
+                                list_layout = render_sites,
+                                )
+            if current.auth.s3_has_permission("update", r.table, record_id=record_id):
+                from s3.s3crud import S3CRUD
+                crud_button = S3CRUD.crud_button
+                edit_btn = crud_button(T("Edit"),
+                                       _href=URL(c="req", f="req",
+                                                 args=[record_id, "update.popup"],
+                                                 vars={"refresh": "datalist"}),
+                                       _class="s3_modal",
+                                       _title=s3.crud_strings["req_req"].title_update,
+                                       )
+            else:
+                edit_btn = ""
+            db = current.db
+            stable = db.org_site
+            query = (stable.site_id == record.site_id)
+            site = db(query).select(stable.name,
+                                    stable.location_id,
+                                    stable.organisation_id,
+                                    limitby=(0, 1)
+                                    ).first()
+            location = s3db.gis_LocationRepresent(sep=" | ")(site.location_id)
+            otable = db.org_organisation
+            org = db(otable.id == site.organisation_id).select(otable.name,
+                                                               otable.logo,
+                                                               limitby=(0, 1)
+                                                               ).first()
+            if org.logo:
+                logo = URL(c="default", f="download", args=[org.logo])
+            else:
+                # @ToDo: Placeholder
+                logo = "#"
+            # Truncate comments field
+            from s3.s3utils import s3_trunk8
+            s3_trunk8()
+            s3db.configure("req_req",
+                           profile_title = s3.crud_strings["req_req"].title_list,
+                           profile_header = DIV(A(IMG(_class="media-object",
+                                                          _src=logo,
+                                                          ),
+                                                      _class="pull-left",
+                                                      #_href=org_url,
+                                                      ),
+                                                H2(site.name),
+                                                P(I(_class="icon-sitemap"),
+                                                  " ",
+                                                  SPAN(org.name),
+                                                  " ",
+                                                  _class="main_contact_ph",
+                                                  ),
+                                                P(I(_class="icon-globe"),
+                                                  " ",
+                                                  SPAN(location),
+                                                  " ",
+                                                  _class="main_contact_ph",
+                                                  ),
+                                                P(record.purpose,
+                                                  _class="s3-truncate"),
+                                                edit_btn,
+                                                _class="profile_header",
+                                                ),
+                           profile_widgets = [commits_widget,
+                                              sites_widget,
+                                              ],
+                           )
 
         return True
     s3.prep = custom_prep

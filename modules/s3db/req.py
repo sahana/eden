@@ -2363,6 +2363,7 @@ class S3CommitModel(S3Model):
                        context = {"event": "req_id$event_id",
                                   "location": "location_id",
                                   "organisation": "organisation_id",
+                                  "request": "req_id",
                                   #"site": "site_id",
                                   "site": "req_id$site_id",
                                   },
@@ -3819,6 +3820,7 @@ def req_customize_req_fields():
     """
 
     T = current.T
+    db = current.db
     s3db = current.s3db
     tablename = "req_req"
     table = s3db.req_req
@@ -3832,7 +3834,7 @@ def req_customize_req_fields():
     site_represent = s3db.org_SiteRepresent(show_link=False,
                                             show_type=False)
     field.represent = site_represent
-    field.requires = IS_ONE_OF(current.db, "org_site.site_id",
+    field.requires = IS_ONE_OF(db, "org_site.site_id",
                                site_represent,
                                orderby = "org_site.name",
                                filterby = "obsolete",
@@ -3847,6 +3849,7 @@ def req_customize_req_fields():
     # @ToDo:
     #field.requires = IS_ADD_SITE_WIDGET()
     #field.widget = S3AddSiteWidget(type="org_facility")
+    db.org_site.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
 
     table.type.default = 9 # Other
     table.date.label = T("Date")
@@ -3859,6 +3862,7 @@ def req_customize_req_fields():
     list_fields = ["date",
                    #"priority",
                    "site_id",
+                   "site_id$location_id",
                    #"is_template",
                    "requester_id",
                    "purpose",
@@ -4058,7 +4062,9 @@ def req_render_reqs(listid, resource, rfields, record,
                    _href=URL(c="req", f="commit",
                              args=["create.popup"],
                              vars={"req_id": record_id,
-                                   "refresh": listid},
+                                   "refresh": listid,
+                                   "record": record_id,
+                                   },
                              ),
                    _class="s3_modal btn",
                    _title=T("Donate to this Request"),
@@ -4096,7 +4102,11 @@ def req_render_reqs(listid, resource, rfields, record,
                                ),
                            _class="media pull-left",
                            ),
-                       DIV(P(T("Donations"),
+                       DIV(P(A(T("Donations"),
+                               _href=URL(c="req", f="req",
+                                         args=[record_id, "profile"],
+                                         ),
+                               ),
                              SPAN(tally_commits,
                                   _class="badge",
                                   ),
@@ -4295,16 +4305,9 @@ def req_render_commits(listid, resource, rfields, record,
     body = record["req_commit.comments"]
     title = ""
 
-    location = record["req_commit.location_id"]
-    location_id = raw["req_commit.location_id"]
-    location_url = URL(c="gis", f="location", args=[location_id, "profile"])
-
-    organisation = record["req_commit.organisation_id"]
-    organisation_id = raw["req_commit.organisation_id"]
-    if organisation_id:
-        org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
-    else:
-        org_url = "#"
+    #location = record["req_commit.location_id"]
+    #location_id = raw["req_commit.location_id"]
+    #location_url = URL(c="gis", f="location", args=[location_id, "profile"])
 
     person = record["req_commit.committer_id"]
     person_id = raw["req_commit.committer_id"]
@@ -4313,10 +4316,16 @@ def req_render_commits(listid, resource, rfields, record,
                _href=person_url,
                )
 
-    # Avatar
-    # Use Organisation Logo
-    # @ToDo: option for Personal Avatar (fallback if no Org Logo?)
+    organisation_id = raw["req_commit.organisation_id"]
     if organisation_id:
+        organisation = record["req_commit.organisation_id"]
+        org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
+        organisation = A(organisation,
+                         _href=org_url,
+                         _class="card-organisation",
+                         )
+        # Use Organisation Logo
+        # @ToDo: option for Personal Avatar (fallback if no Org Logo?)
         db = current.db
         otable = db.org_organisation
         row = db(otable.id == organisation_id).select(otable.logo,
@@ -4326,18 +4335,27 @@ def req_render_commits(listid, resource, rfields, record,
             logo = URL(c="default", f="download", args=[row.logo])
         else:
             logo = URL(c="static", f="img", args="blank-user.gif")
+        avatar = IMG(_src=logo,
+                     _height=50,
+                     _width=50,
+                     _style="padding-right:5px;",
+                     _class="media-object")
+        avatar = A(avatar,
+                   _href=org_url,
+                   _class="pull-left",
+                   )
     else:
-        logo = URL(c="static", f="img", args="blank-user.gif")
-
-    avatar = IMG(_src=logo,
-                 _height=50,
-                 _width=50,
-                 _style="padding-right:5px;",
-                 _class="media-object")
-    avatar = A(avatar,
-               _href=org_url,
-               _class="pull-left",
-               )
+        organisation = ""
+        org_url = "#"
+        # Personal Avatar
+        avatar = s3_avatar_represent(person_id,
+                                     tablename="pr_person",
+                                     _class="media-object")
+        
+        avatar = A(avatar,
+                   _href=person_url,
+                   _class="pull-left",
+                   )
 
     # Edit Bar
     permit = current.auth.s3_has_permission
@@ -4370,11 +4388,11 @@ def req_render_commits(listid, resource, rfields, record,
 
     # Render the item
     item = DIV(DIV(card_label,
-                   SPAN(A(location,
-                          _href=location_url,
-                          ),
-                        _class="location-title",
-                        ),
+                   #SPAN(A(location,
+                   #       _href=location_url,
+                   #       ),
+                   #     _class="location-title",
+                   #     ),
                    SPAN(date,
                         _class="date-title",
                         ),
@@ -4385,10 +4403,7 @@ def req_render_commits(listid, resource, rfields, record,
                    DIV(DIV(body,
                            DIV(person,
                                " - ",
-                               A(organisation,
-                                 _href=org_url,
-                                 _class="card-organisation",
-                                 ),
+                               organisation,
                                _class="card-person",
                                ),
                            _class="media",

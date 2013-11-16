@@ -2578,6 +2578,7 @@ class S3FacilityModel(S3Model):
                   context = {"location": "location_id",
                              "organisation": "organisation_id",
                              "org_group": "organisation_id$group_membership.group_id",
+                             "request": "req.id",
                              },
                   crud_form = crud_form,
                   deduplicate = self.org_facility_duplicate,

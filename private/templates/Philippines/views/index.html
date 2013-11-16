@@ -61,13 +61,13 @@
  <div class='container'>
   <div class='row'>
    <div class='span6'>
-    <a href='/{{=appname}}/cms/newsfeed/datalist?series_id$name=Request'>
+    <a href='/{{=appname}}/req/req/datalist'>
      <h2><i class='icon-flag'></i> {{=T("Latest Requests")}}</h2>
     </a>
     {{=latest_reqs}}
    </div>
    <div class='span6'>
-    <a href='/{{=appname}}/cms/newsfeed/datalist?series_id$name=Offer'>
+    <a href='/{{=appname}}/req/commit/datalist'>
      <h2><i class='icon-truck'></i> {{=T("Latest Donations")}}</h2>
     </a>
     {{=latest_offers}}
@@ -75,3 +75,4 @@
   </div>  
  </div>
 </section>
+{{include "dataLists.html"}}

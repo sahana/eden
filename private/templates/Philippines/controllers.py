@@ -25,26 +25,27 @@ class index(S3CustomController):
 
         # Latest 4 Requests
         s3db = current.s3db
-        s3db.req_customize_req_fields()
         listid = "latest_reqs"
         layout = s3db.req_render_reqs
         limit = 4
         list_fields = s3db.get_config("req_req", "list_fields")
 
         resource = s3db.resource("req_req")
-        #resource.add_filter(S3FieldSelector("series_id$name") == "Request")
+        s3db.req_customize_req_fields()
+        from s3.s3resource import S3FieldSelector
+        resource.add_filter(S3FieldSelector("cancel") != True)
         # Order with most recent first
         orderby = "date desc"
         output["latest_reqs"] = latest_records(resource, layout, listid, limit, list_fields, orderby)
 
         # Latest 4 Offers
-        s3db.req_customize_commit_fields()
         listid = "latest_offers"
         layout = s3db.req_render_commits
         #limit = 4
 
         resource = s3db.resource("req_commit")
-        #resource.add_filter(S3FieldSelector("series_id$name") == "Offer")
+        s3db.req_customize_commit_fields()
+        resource.add_filter(S3FieldSelector("cancel") != True)
         # Order with most recent first
         #orderby = "date desc"
         output["latest_offers"] = latest_records(resource, layout, listid, limit, list_fields, orderby)

@@ -1152,11 +1152,15 @@ class S3TrackingModel(S3Model):
                                    ),
                              s3_datetime(label = T("Date Sent"),
                                          represent = "date",
-                                         writable = False),
+                                         # Not always sent straight away
+                                         #default = "now",
+                                         writable = False,
+                                         ),
                              s3_datetime("delivery_date",
                                          represent = "date",
                                          label = T("Estimated Delivery Date"),
-                                         writable = False),
+                                         writable = False,
+                                         ),
                              Field("status", "integer",
                                    requires = IS_NULL_OR(
                                                 IS_IN_SET(shipment_status)
@@ -2379,16 +2383,10 @@ S3OptionsFilter({
         db = current.db
         s3db = current.s3db
         stable = db.inv_send
-        tracktable = db.inv_track_item
-        siptable = s3db.supply_item_pack
-        rrtable = s3db.req_req
-        ritable = s3db.req_req_item
 
         session = current.session
 
-        if not auth.s3_has_permission("update",
-                                      stable,
-                                      record_id=send_id):
+        if not auth.s3_has_permission("update", stable, record_id=send_id):
             session.error = T("You do not have permission to send this shipment.")
 
         send_record = db(stable.id == send_id).select(stable.status,
@@ -2404,6 +2402,11 @@ S3OptionsFilter({
 
         if send_record.status != SHIP_STATUS_IN_PROCESS:
             session.error = T("This shipment has already been sent.")
+
+        tracktable = db.inv_track_item
+        siptable = s3db.supply_item_pack
+        rrtable = s3db.req_req
+        ritable = s3db.req_req_item
 
         # Get the track items that are part of this shipment
         query = (tracktable.send_id == send_id ) & \
