@@ -758,7 +758,7 @@ class subscriptions(S3CustomController):
         form.append(fieldset)
 
         # Script (to extract filters on submit and toggle options visibility)
-        script = """
+        script = '''
 $('#notification-options').click(function() {
   $(this).siblings().toggle();
   $(this).children().toggle();
@@ -769,7 +769,7 @@ $('#subscription-form').submit(function() {
   $('input[name="subscription-filters"]')
   .val(JSON.stringify(S3.search.getCurrentFilters($(this))));
 });
-"""
+'''
         response = current.response
         response.s3.jquery_ready.append(script)
 

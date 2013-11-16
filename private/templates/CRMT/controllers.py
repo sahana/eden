@@ -258,7 +258,7 @@ class filters(S3CustomController):
         # Script for inline-editing of filter title
         options = {"cssclass": "jeditable-input",
                    "tooltip": str(T("Click to edit"))}
-        script = """$('.jeditable').editable('%s', %s);""" % \
+        script = '''$('.jeditable').editable('%s', %s);''' % \
                  (URL(args="filters"), json.dumps(options))
         s3.jquery_ready.append(script)
         return output
