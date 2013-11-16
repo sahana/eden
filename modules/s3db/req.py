@@ -3825,14 +3825,37 @@ def req_customize_req_fields():
     tablename = "req_req"
     table = s3db.req_req
 
+    crud_fields = ["date",
+                   #"priority",
+                   "site_id",
+                   #"is_template",
+                   "requester_id",
+                   "purpose",
+                   #"commit_status",
+                   #"transit_status",
+                   #"fulfil_status",
+                   #"cancel",
+                   ]
+
+    crud_form = S3SQLCustomForm(*crud_fields)
+
+    list_fields = crud_fields + ["site_id$location_id",
+                                 "site_id$organisation_id",
+                                 "site_id$comments",
+                                 ]
+
+    requires = table.date.requires
+    table.date.requires = requires.other
+
     field = table.requester_id
     field.requires = IS_ADD_PERSON_WIDGET2()
     field.widget = S3AddPersonWidget2(controller="pr")
 
     field = table.site_id
     field.label = T("Requested for Site")
-    site_represent = s3db.org_SiteRepresent(show_link=False,
-                                            show_type=False)
+    #site_represent = s3db.org_SiteRepresent(show_link=False,
+    #                                        show_type=False)
+    site_represent = S3Represent(lookup="org_site")
     field.represent = site_represent
     field.requires = IS_ONE_OF(db, "org_site.site_id",
                                site_represent,
@@ -3858,23 +3881,6 @@ def req_customize_req_fields():
     field.label = T("Request")
     field.required = True
     field.represent = lambda body: XML(s3_URLise(body))
-
-    list_fields = ["date",
-                   #"priority",
-                   "site_id",
-                   "site_id$location_id",
-                   #"is_template",
-                   "requester_id",
-                   "purpose",
-                   #"commit_status",
-                   #"transit_status",
-                   #"fulfil_status",
-                   #"cancel",
-                   ]
-
-    crud_form = S3SQLCustomForm(*list_fields)
-
-    #list_fields = crud_fields + ["commit.id"]
 
     # Which levels of Hierarchy are we using?
     hierarchy = current.gis.get_location_hierarchy()
@@ -3983,6 +3989,8 @@ def req_render_reqs(listid, resource, rfields, record,
     body = record["req_req.purpose"]
     title = record["req_req.site_id"]
 
+    site_comments = record["org_site.comments"]
+
     location = record["org_site.location_id"] or ""
     location_id = raw["org_site.location_id"]
     if location_id:
@@ -4003,7 +4011,6 @@ def req_render_reqs(listid, resource, rfields, record,
 
     # Avatar
     # Use Organisation Logo
-    # @ToDo: option for Personal Avatar (fallback if no Org Logo?)
     db = current.db
     otable = db.org_organisation
     row = db(otable.id == organisation_id).select(otable.logo,
@@ -4011,21 +4018,30 @@ def req_render_reqs(listid, resource, rfields, record,
                                                   ).first()
     if row and row.logo:
         logo = URL(c="default", f="download", args=[row.logo])
+        avatar = IMG(_src=logo,
+                     _height=50,
+                     _width=50,
+                     _style="padding-right:5px;",
+                     _class="media-object")
+        avatar = A(avatar,
+                   _href=org_url,
+                   _class="pull-left",
+                   )
     else:
-        logo = URL(c="static", f="img", args="blank-user.gif")
-    avatar = IMG(_src=logo,
-                 _height=50,
-                 _width=50,
-                 _style="padding-right:5px;",
-                 _class="media-object")
-    avatar = A(avatar,
-               _href=org_url,
-               _class="pull-left",
-               )
+        # Personal Avatar
+        avatar = s3_avatar_represent(person_id,
+                                     tablename="pr_person",
+                                     _class="media-object")
+
+        avatar = A(avatar,
+                   _href=person_url,
+                   _class="pull-left",
+                   )
 
     # Edit Bar
     T = current.T
-    permit = current.auth.s3_has_permission
+    auth = current.auth
+    permit = auth.s3_has_permission
     table = db.req_req
     if permit("update", table, record_id=record_id):
         edit_btn = A(I(" ", _class="icon icon-edit"),
@@ -4056,26 +4072,37 @@ def req_render_reqs(listid, resource, rfields, record,
     #    # Apply additional highlighting for High Priority
     #    item_class = "%s disaster" % item_class
 
-    commit_btn = A(I(" ", _class="icon icon-truck"),
-                   " ",
-                   T("DONATE"),
-                   _href=URL(c="req", f="commit",
-                             args=["create.popup"],
-                             vars={"req_id": record_id,
-                                   "refresh": listid,
-                                   "record": record_id,
-                                   },
-                             ),
-                   _class="s3_modal btn",
-                   _title=T("Donate to this Request"),
-                   )
-
     # Tallies
     # NB We assume that all records are readable here
     table = current.s3db.req_commit
     query = (table.deleted == False) & \
             (table.req_id == record_id)
     tally_commits = db(query).count()
+
+    #if permit("create", table):
+    if auth.is_logged_in():
+        commit_url = URL(c="req", f="commit",
+                         args=["create.popup"],
+                         vars={"req_id": record_id,
+                               "refresh": listid,
+                               "record": record_id,
+                               },
+                         )
+    else:
+        next = "/%s/req/commit/create?req_id=%s" % (current.request.application,
+                                                    record_id)
+        commit_url = URL(c="default", f="user",
+                         args="login",
+                         vars={"_next": next,
+                               },
+                         )
+    commit_btn = A(I(" ", _class="icon icon-truck"),
+                   " ",
+                   T("DONATE"),
+                   _href=commit_url,
+                   _class="s3_modal btn",
+                   _title=T("Donate to this Request"),
+                   )
 
     # Render the item
     item = DIV(DIV(card_label,
@@ -4166,6 +4193,15 @@ def req_customize_commit_fields():
         msg_record_deleted = T("Donation Canceled"),
         msg_list_empty = T("No Donations"))
 
+    list_fields = [#"req_id", # populated automatically or not at all?
+                   "organisation_id",
+                   "committer_id",
+                   "comments",
+                   "date_available",
+                   # We'd like to be able to map donations, but harder for users to enter data
+                   #"location_id",
+                   ]
+
     auth = current.auth
 
     # @ToDo: deployment_setting
@@ -4173,10 +4209,6 @@ def req_customize_commit_fields():
         editor = True
     else:
         editor = False
-
-    field = table.organisation_id
-    field.readable = True
-    field.writable = True if editor else False
 
     field = table.committer_id
     if editor:
@@ -4201,26 +4233,26 @@ def req_customize_commit_fields():
     field.represent = lambda body: XML(s3_URLise(body))
     field.required = True
     # @ToDo
-    field.comments = None
+    field.comment = None
 
     table.date_available.default = current.request.utcnow
 
-    list_fields = [#"req_id", # populated automatically or not at all?
-                   "organisation_id",
-                   "committer_id",
-                   "comments",
-                   "date_available",
-                   # We'd like to be able to map donations, but harder work for system
-                   #"location_id",
-                   ]
+    field = table.organisation_id
+    field.readable = True
+    field.writable = True if editor else False
+    field.comment = S3AddResourceLink(c="org", f="organisation_id",
+                                      title=T("Add New Organization"),
+                                      )
 
     if editor:
         # Editor can select Org
         crud_form = S3SQLCustomForm(*list_fields)
     elif auth.user and auth.user.organisation_id:
+        field.default = auth.user.organisation_id
         crud_form = S3SQLCustomForm(*list_fields)
     else:
         # Only a User representing an Org can commit for an Org
+        field.default = None
         crud_fields = [f for f in list_fields if f != "organisation_id"]
         crud_form = S3SQLCustomForm(*crud_fields)
 
@@ -4346,7 +4378,6 @@ def req_render_commits(listid, resource, rfields, record,
                    )
     else:
         organisation = ""
-        org_url = "#"
         # Personal Avatar
         avatar = s3_avatar_represent(person_id,
                                      tablename="pr_person",

@@ -4,6 +4,10 @@ textarea.comments {
     height: 100px;
 }
 
+.span7 .export_xls  {
+    margin-top: -17px;
+}
+
 /* Commit Tally / Buton on Requests card */
 .media.pull-right {
     margin-top: 0;

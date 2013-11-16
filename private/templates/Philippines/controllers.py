@@ -28,10 +28,9 @@ class index(S3CustomController):
         listid = "latest_reqs"
         layout = s3db.req_render_reqs
         limit = 4
-        list_fields = s3db.get_config("req_req", "list_fields")
-
         resource = s3db.resource("req_req")
         s3db.req_customize_req_fields()
+        list_fields = s3db.get_config("req_req", "list_fields")
         from s3.s3resource import S3FieldSelector
         resource.add_filter(S3FieldSelector("cancel") != True)
         # Order with most recent first
@@ -45,6 +44,7 @@ class index(S3CustomController):
 
         resource = s3db.resource("req_commit")
         s3db.req_customize_commit_fields()
+        list_fields = s3db.get_config("req_commit", "list_fields")
         resource.add_filter(S3FieldSelector("cancel") != True)
         # Order with most recent first
         #orderby = "date desc"
@@ -62,6 +62,7 @@ class index(S3CustomController):
         if item:
             output["what_we_do"] = DIV(XML(item.body))
         else:
+            # @ToDo: Edit button for Admin
             output["what_we_do"] = ""
 
         self._view(THEME, "index.html")

@@ -191,24 +191,24 @@ class S3SupplyModel(S3Model):
         # Reusable Field
         represent = S3Represent(lookup=tablename)
         catalog_id = S3ReusableField("catalog_id", table,
-                    sortby="name",
-                    requires = IS_NULL_OR(
-                                   IS_ONE_OF( # Restrict to catalogs the user can update
-                                              db(auth.s3_accessible_query("update", table)),
-                                              "supply_catalog.id",
-                                              represent,
-                                              sort=True,
-                                              )
-                                          ),
-                    represent = represent,
-                    default = 1,
-                    label = T("Catalog"),
-                    comment=S3AddResourceLink(c="supply",
-                                              f="catalog",
-                                              label=ADD_CATALOG,
-                                              title=T("Catalog"),
-                                              tooltip=T("The list of Catalogs are maintained by the Administrators.")),
-                    ondelete = "RESTRICT")
+            sortby="name",
+            requires = IS_NULL_OR(
+                        IS_ONE_OF(db, "supply_catalog.id",
+                                  represent,
+                                  sort=True,
+                                  # Restrict to catalogs the user can update
+                                  updateable=True,
+                                  )),
+            represent = represent,
+            default = 1,
+            label = T("Catalog"),
+            comment=S3AddResourceLink(c="supply",
+                                      f="catalog",
+                                      label=ADD_CATALOG,
+                                      title=T("Catalog"),
+                                      tooltip=T("The list of Catalogs are maintained by the Administrators.")),
+            ondelete = "RESTRICT",
+            )
 
         # Categories as component of Catalogs
         add_component("supply_item_category", supply_catalog="catalog_id")
@@ -759,11 +759,10 @@ S3OptionsFilter({
         # This super entity provides a common way to provide a foreign key to supply_item
         # - it allows searching/reporting across Item types easily.
         #
-        item_types = Storage(
-                            inv_inv_item = T("Warehouse Stock"),
-                            inv_track_item = T("Order Item"),
-                            proc_plan_item = T("Planned Procurement Item"),
-                            )
+        item_types = Storage(inv_inv_item = T("Warehouse Stock"),
+                             inv_track_item = T("Order Item"),
+                             proc_plan_item = T("Planned Procurement Item"),
+                             )
 
         tablename = "supply_item_entity"
         table = self.super_entity(tablename, "item_entity_id", item_types,
@@ -790,7 +789,7 @@ S3OptionsFilter({
                              #comment = DIV(_class="tooltip",
                              #              _title="%s|%s" % (T("Item"),
                              #                                T("Enter some characters to bring up a list of possible matches")))
-                            )
+                             )
 
         # ---------------------------------------------------------------------
         # Item Search Method
