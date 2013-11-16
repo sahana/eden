@@ -3855,7 +3855,7 @@ def req_customize_req_fields():
     field.label = T("Request")
     field.required = True
     field.represent = lambda body: XML(s3_URLise(body))
-    
+
     list_fields = ["date",
                    #"priority",
                    "site_id",
@@ -3869,6 +3869,8 @@ def req_customize_req_fields():
                    ]
 
     crud_form = S3SQLCustomForm(*list_fields)
+
+    #list_fields = crud_fields + ["commit.id"]
 
     # Which levels of Hierarchy are we using?
     hierarchy = current.gis.get_location_hierarchy()
@@ -4062,6 +4064,13 @@ def req_render_reqs(listid, resource, rfields, record,
                    _title=T("Donate to this Request"),
                    )
 
+    # Tallies
+    # NB We assume that all records are readable here
+    table = current.s3db.req_commit
+    query = (table.deleted == False) & \
+            (table.req_id == record_id)
+    tally_commits = db(query).count()
+
     # Render the item
     item = DIV(DIV(card_label,
                    SPAN(A(location,
@@ -4085,9 +4094,15 @@ def req_render_reqs(listid, resource, rfields, record,
                                  ),
                                _class="card-person",
                                ),
-                           _class="media",
+                           _class="media pull-left",
                            ),
-                       DIV(commit_btn,
+                       DIV(P(T("Donations"),
+                             SPAN(tally_commits,
+                                  _class="badge",
+                                  ),
+                             _class="tally",
+                             ),
+                           commit_btn,
                            _class="media pull-right",
                            ),
                        _class="media-body",
@@ -4113,7 +4128,9 @@ def req_customize_commit_fields():
     table = s3db.req_commit
 
     request = current.request
-    if "create" in request.args:
+    args = request.args
+    if "create.popup" in args or \
+       "create" in args:
         req_id = request.get_vars.get("req_id", None)
         if req_id:
             table.req_id.default = req_id

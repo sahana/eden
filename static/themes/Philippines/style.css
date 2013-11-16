@@ -3,3 +3,8 @@
 textarea.comments {
     height: 100px;
 }
+
+/* Commit Tally / Buton on Requests card */
+.media.pull-right {
+    margin-top: 0;
+}
