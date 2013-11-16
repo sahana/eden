@@ -589,7 +589,7 @@ Thank you
                        formstyle,'captcha__row')
 
             accepted_form = False
-            if form.accepts(request.vars, session,
+            if form.accepts(request.post_vars, session,
                             formname="login", dbio=False,
                             onvalidation=onvalidation):
                 accepted_form = True
