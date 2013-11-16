@@ -149,8 +149,6 @@ settings.req.summary = True
 
 # -----------------------------------------------------------------------------
 # Organisations
-# Disable the use of Organisation Branches
-settings.org.branches = False
 settings.org.site_label = "Facility"
 # Uncomment to show the date when a Site (Facilities-only for now) was last contacted
 settings.org.site_last_contacted = True

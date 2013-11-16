@@ -10,8 +10,8 @@
 {{pass}}
 <div id='map'></div>
 <div id='list-btn-add'>
-{{try:}}{{=showadd_btn}}{{hide_listadd=True}}
-{{except:}}{{hide_listadd=False}}{{pass}}
+{{try:}}{{=showadd_btn}}{{hide_listadd = True}}
+{{except:}}{{hide_listadd = False}}{{pass}}
 </div>
 <div id='list-add'>
 {{try:}}{{=H3(addtitle)}}{{except:}}{{pass}}
@@ -27,7 +27,7 @@
 </div>
 {{pass}}
 {{except:}}{{pass}}
-{{try:}}{{ltype=list_type}}{{except:}}{{ltype="datatable"}}{{pass}}
+{{try:}}{{ltype = list_type}}{{except:}}{{ltype = "datatable"}}{{pass}}
 {{try:}}{{items = items}}
 {{if ltype == "datalist":}}
 <div id='dl-container'>
@@ -41,11 +41,8 @@
 {{except:}}{{pass}}
 </div>
 {{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}
-{{if ltype == "datalist":}}
-{{include "dataLists.html"}}
-{{else:}}
-{{include "dataTables.html"}}
-{{pass}}
+{{if ltype == "datalist":}}{{include "dataLists.html"}}
+{{else:}}{{include "dataTables.html"}}{{pass}}
 {{if r.http == "POST" or not hide_listadd:}}
 {{script = '''$('#list-add').show()
 $('#show-add-btn').hide()'''}}

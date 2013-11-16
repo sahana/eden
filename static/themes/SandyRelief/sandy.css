@@ -64,14 +64,24 @@ pre{background:#ffffff;font:13px "Courier 10 Pitch",Courier,monospace;line-heigh
 hr{background-color:#DDD;border:0;height:1px;margin:3em 0 1em;}
 a,a:active,a:visited{color:#0085bf;text-decoration:none;cursor:pointer;}a:focus,a:active:focus,a:visited:focus,a:hover,a:active:hover,a:visited:hover{color:#555555;}
 a img{border:0;}
-button,.button,.button:visited,.button:active{display:-moz-inline-stack;display:inline-block;zoom:1;*display:inline;-moz-box-shadow:0 0 0 0 #000000;-webkit-box-shadow:0 0 0 0 #000000;box-shadow:0 0 0 0 #000000;-moz-border-radius:4px;-webkit-border-radius:4px;border-radius:4px;behavior:url(../js/PIE.htc);font-family:"Open Sans","Lucida Grande","Lucida Sans",sans-serif;font-weight:normal;font-style:normal;text-transform:uppercase;letter-spacing:1px;line-height:1.2em;padding:10px 15px;text-align:center;font-weight:bold;background:#222222;color:#ffffff;border:0;text-decoration:none;text-shadow:none;cursor:pointer;-webkit-transition-property:background-color,color;-webkit-transition-duration:100ms;}button:hover,.button:hover,.button:visited:hover,.button:active:hover{background:#da521f;color:#ffffff;}
+button,
+.button,
+.button:visited,
+.button:active{display:-moz-inline-stack;display:inline-block;zoom:1;*display:inline;-moz-box-shadow:0 0 0 0 #000000;-webkit-box-shadow:0 0 0 0 #000000;box-shadow:0 0 0 0 #000000;-moz-border-radius:4px;-webkit-border-radius:4px;border-radius:4px;behavior:url(../js/PIE.htc);font-family:"Open Sans","Lucida Grande","Lucida Sans",sans-serif;font-weight:normal;font-style:normal;text-transform:uppercase;letter-spacing:1px;line-height:1.2em;padding:10px 15px;text-align:center;font-weight:bold;background:#222222;color:#ffffff;border:0;text-decoration:none;text-shadow:none;cursor:pointer;-webkit-transition-property:background-color,color;-webkit-transition-duration:100ms;}button:hover,.button:hover,.button:visited:hover,.button:active:hover{background:#da521f;color:#ffffff;}
 .is-disabled{color:#bbbbbb;}
 .is-on-tab{color:#da521f;}
-.confirmation,.information,.error,.warning{clear:left;position:absolute;top:15px;left:15px;margin-right:15px;background:#ffffff;padding:15px 45px;-moz-box-shadow:0 0 8px 0 #555555;-webkit-box-shadow:0 0 8px 0 #555555;box-shadow:0 0 8px 0 #555555;behavior:url(../js/PIE.htc);font-style:italic;font-size:15px;border-width:2px;}
-.confirmation{color:#22b573;border-color:#22b573;}
-.information{color:#222222;border-color:#ffcd67;}
-.error,.warning{color:#da521f;border-color:#da521f;}
-.fullpage{background:#EEE;}.fullpage .col1{width:100%;left:0;}
+.alert{clear:left;position:absolute;top:15px;left:15px;margin-right:15px;background:#ffffff;padding:15px 45px;-moz-box-shadow:0 0 8px 0 #555555;-webkit-box-shadow:0 0 8px 0 #555555;box-shadow:0 0 8px 0 #555555;behavior:url(../js/PIE.htc);font-style:italic;font-size:15px;border-width:2px;}
+.alert-success{color:#22b573;border-color:#22b573;}
+.alert-info{color:#222222;border-color:#ffcd67;}
+.alert-error,.alert-warning{color:#da521f;border-color:#da521f;}
+button.close {
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0);
+    border: 0 none;
+    cursor: pointer;
+    padding: 0;
+}
+.fullpage{background:#EEE;}
+.fullpage .col1{width:100%;left:0;}
 .col1,.col2,.col3{padding:0;}
 .colmask{margin-top:55px;}
 .container{width:100%;overflow:hidden;}
@@ -205,5 +215,6 @@ b.red{font-size:12px;line-height:1.2em;}
 .home-content .contact-us h1{margin:0 0 15px;line-height:1em;}
 .home-content .contact-us label{margin:15px 0 3px;display:block;}
 .home-content .contact-us input[type="submit"]{display:-moz-inline-stack;display:inline-block;zoom:1;*display:inline;-moz-box-shadow:0 0 0 0 #000000;-webkit-box-shadow:0 0 0 0 #000000;box-shadow:0 0 0 0 #000000;-moz-border-radius:4px;-webkit-border-radius:4px;border-radius:4px;behavior:url(../js/PIE.htc);font-family:"Open Sans","Lucida Grande","Lucida Sans",sans-serif;font-weight:normal;font-style:normal;text-transform:uppercase;letter-spacing:1px;line-height:1.2em;padding:10px 15px;text-align:center;font-weight:bold;background:#222222;color:#ffffff;border:0;text-decoration:none;text-shadow:none;cursor:pointer;-webkit-transition-property:background-color,color;-webkit-transition-duration:100ms;}.home-content .contact-us input[type="submit"]:hover{background:#da521f;color:#ffffff;}
+.map_home {margin:0;}
 input::-moz-focus-inner{border:0;padding:0;}
 @media screen and (max-width:720px){}@media print{body{background:none !important;font-size:10pt;} footer.entry-meta a[rel=bookmark]:link:after,footer.entry-meta a[rel=bookmark]:visited:after{content:" [" attr(href) "] ";} #page{clear:both !important;display:block !important;float:none !important;max-width:100%;position:relative !important;}}

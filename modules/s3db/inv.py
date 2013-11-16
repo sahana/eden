@@ -981,7 +981,6 @@ class S3TrackingModel(S3Model):
              "inv_kit",
              "inv_track_item",
              "inv_track_item_onaccept",
-             "inv_get_shipping_code",
              ]
 
     def model(self):
@@ -1153,11 +1152,15 @@ class S3TrackingModel(S3Model):
                                    ),
                              s3_datetime(label = T("Date Sent"),
                                          represent = "date",
-                                         writable = False),
+                                         # Not always sent straight away
+                                         #default = "now",
+                                         writable = False,
+                                         ),
                              s3_datetime("delivery_date",
                                          represent = "date",
                                          label = T("Estimated Delivery Date"),
-                                         writable = False),
+                                         writable = False,
+                                         ),
                              Field("status", "integer",
                                    requires = IS_NULL_OR(
                                                 IS_IN_SET(shipment_status)
@@ -1888,8 +1891,7 @@ S3OptionsFilter({
         #---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(inv_get_shipping_code = self.inv_get_shipping_code,
-                       inv_send_controller = self.inv_send_controller,
+        return Storage(inv_send_controller = self.inv_send_controller,
                        inv_send_onaccept = self.inv_send_onaccept,
                        inv_send_process = self.inv_send_process,
                        inv_track_item_deleting = self.inv_track_item_deleting,
@@ -2050,7 +2052,7 @@ S3OptionsFilter({
         # If the send_ref is None then set it up
         record = stable[id]
         if not record.send_ref:
-            code = S3TrackingModel.inv_get_shipping_code(
+            code = current.s3db.supply_get_shipping_code(
                     current.deployment_settings.get_inv_send_shortname(),
                     record.site_id,
                     stable.send_ref,
@@ -2381,16 +2383,10 @@ S3OptionsFilter({
         db = current.db
         s3db = current.s3db
         stable = db.inv_send
-        tracktable = db.inv_track_item
-        siptable = s3db.supply_item_pack
-        rrtable = s3db.req_req
-        ritable = s3db.req_req_item
 
         session = current.session
 
-        if not auth.s3_has_permission("update",
-                                      stable,
-                                      record_id=send_id):
+        if not auth.s3_has_permission("update", stable, record_id=send_id):
             session.error = T("You do not have permission to send this shipment.")
 
         send_record = db(stable.id == send_id).select(stable.status,
@@ -2406,6 +2402,11 @@ S3OptionsFilter({
 
         if send_record.status != SHIP_STATUS_IN_PROCESS:
             session.error = T("This shipment has already been sent.")
+
+        tracktable = db.inv_track_item
+        siptable = s3db.supply_item_pack
+        rrtable = s3db.req_req
+        ritable = s3db.req_req_item
 
         # Get the track items that are part of this shipment
         query = (tracktable.send_id == send_id ) & \
@@ -2583,7 +2584,7 @@ S3OptionsFilter({
         record = rtable[id]
         if not record.recv_ref:
             # AR Number
-            code = S3TrackingModel.inv_get_shipping_code(
+            code = current.s3db.supply_get_shipping_code(
                     current.deployment_settings.get_inv_recv_shortname(),
                     record.site_id,
                     rtable.recv_ref,
@@ -2887,27 +2888,6 @@ S3OptionsFilter({
         # @ToDo
 
         return
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def inv_get_shipping_code(type, site_id, field):
-
-        if site_id:
-            ostable = current.s3db.org_site
-            scode = ostable[site_id].code
-            code = "%s-%s-" % (type, scode)
-        else:
-            code = "%s-###-" % (type)
-        number = 0
-        if field:
-            query = (field.like("%s%%" % code))
-            ref_row = current.db(query).select(field,
-                                               limitby=(0, 1),
-                                               orderby=~field).first()
-            if ref_row:
-                ref = ref_row(field)
-                number = int(ref[-6:])
-        return "%s%06d" % (code, number+1)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3652,7 +3632,7 @@ def inv_send_rheader(r):
                                         )
                                       )
 
-                        jappend('''S3ConfirmClick("#send_process","%s")''' \
+                        jappend('''S3.confirmClick("#send_process","%s")''' \
                                    % T("Do you want to send this shipment?"))
                     #if not r.component and not r.method == "form":
                     #    ritable = s3db.req_req_item
@@ -3680,7 +3660,7 @@ def inv_send_rheader(r):
                                         _class = "action-btn"
                                         )
                                       )
-                        jappend('''S3ConfirmClick("#return_process","%s")''' \
+                        jappend('''S3.confirmClick("#return_process","%s")''' \
                             % T("Do you want to complete the return process?") )
                     else:
                         msg = T("You need to check all item quantities before you can complete the return process")
@@ -3703,7 +3683,7 @@ def inv_send_rheader(r):
                                         )
                                       )
 
-                        jappend('''S3ConfirmClick("#send_return","%s")''' \
+                        jappend('''S3.confirmClick("#send_return","%s")''' \
                             % T("Confirm that some items were returned from a delivery to beneficiaries and they will be accepted back into stock."))
                         action.append(A(T("Confirm Shipment Received"),
                                         _href = URL(f = "send",
@@ -3716,7 +3696,7 @@ def inv_send_rheader(r):
                                         )
                                       )
 
-                        jappend('''S3ConfirmClick("#send_receive","%s")''' \
+                        jappend('''S3.confirmClick("#send_receive","%s")''' \
                             % T("Confirm that the shipment has been received by a destination which will not record the shipment directly into the system and confirmed as received.") )
                     if s3_has_permission("delete",
                                          "inv_send",
@@ -3731,7 +3711,7 @@ def inv_send_rheader(r):
                                         )
                                       )
 
-                        jappend('''S3ConfirmClick("#send_cancel","%s")''' \
+                        jappend('''S3.confirmClick("#send_cancel","%s")''' \
                             % T("Do you want to cancel this sent shipment? The items will be returned to the Warehouse. This action CANNOT be undone!") )
             if not r.method == "form":
             #    msg = ""
@@ -3885,7 +3865,7 @@ def inv_recv_rheader(r):
                                               _class = "action-btn"
                                         )
                                       )
-                        recv_btn_confirm = SCRIPT("S3ConfirmClick('#recv_process', '%s')"
+                        recv_btn_confirm = SCRIPT("S3.confirmClick('#recv_process', '%s')"
                                                   % T("Do you want to receive this shipment?") )
                         rfooter.append(recv_btn_confirm)
                     else:
@@ -3907,7 +3887,7 @@ def inv_recv_rheader(r):
             #                            )
             #                         )
 
-            #            cancel_btn_confirm = SCRIPT("S3ConfirmClick('#recv_cancel', '%s')"
+            #            cancel_btn_confirm = SCRIPT("S3.confirmClick('#recv_cancel', '%s')"
             #                                         % T("Do you want to cancel this received shipment? The items will be removed from the Warehouse. This action CANNOT be undone!") )
             #            rfooter.append(cancel_btn_confirm)
             msg = ""
@@ -4393,7 +4373,7 @@ def inv_adj_rheader(r):
                                   _id = "adj_close",
                                   _class = "action-btn"
                                   )
-                    close_btn_confirm = SCRIPT("S3ConfirmClick('#adj_close', '%s')"
+                    close_btn_confirm = SCRIPT("S3.confirmClick('#adj_close', '%s')"
                                               % T("Do you want to complete & close this adjustment?") )
                     rheader.append(close_btn)
                     rheader.append(close_btn_confirm)

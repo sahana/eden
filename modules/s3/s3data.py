@@ -251,6 +251,7 @@ class S3DataTable(object):
                    '''i18n.sProcessing="%s"''' % T("Processing"),
                    '''i18n.sSearch="%s"''' % T("Search"),
                    '''i18n.sZeroRecords="%s"''' % T("No matching records found"),
+                   '''i18n.sSelectAll="%s"''' % T("Select All")
                    ]
         script = "\n".join(scripts)
 
@@ -319,7 +320,8 @@ class S3DataTable(object):
     def getConfigData():
         """
             Method to extract the configuration data from S3 globals and
-            store them as an attr variable
+            store them as an attr variable.
+            - used by Survey module
 
             @return: dictionary of attributes which can be passed into html()
 
@@ -766,6 +768,11 @@ class S3DataTable(object):
                               _id="%s_dataTable_bulkSelection" % id,
                               _name="selected",
                               _value="[%s]" % bulk_selected))
+            form.append(INPUT(_type="hidden",
+                              _id="%s_dataTable_filterURL" % id,
+                              _class="dataTable_filterURL",
+                              _name="filterURL",
+                              _value="%s" % config.ajaxUrl))
         return form
 
     # -------------------------------------------------------------------------

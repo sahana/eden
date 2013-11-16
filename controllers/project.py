@@ -654,8 +654,11 @@ def location():
                 title = s3.crud_strings["project_project"].title_display
                 # Assume authorised to see details
                 popup_url = URL(f="project", args=[project_id])
-                details_btn = A(T("Open"), _href=popup_url,
-                                _id="details-btn", _target="_blank")
+                details_btn = A(T("Open"),
+                                _href=popup_url,
+                                _class="btn",
+                                _id="details-btn",
+                                _target="_blank")
                 output = dict(item = item,
                               title = title,
                               details_btn = details_btn,

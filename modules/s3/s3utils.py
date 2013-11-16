@@ -66,6 +66,9 @@ if DEBUG:
 else:
     _debug = lambda m: None
 
+URLSCHEMA = re.compile("((?:(())(www\.([^/?#\s]*))|((http(s)?|ftp):)"
+                       "(//([^/?#\s]*)))([^?#\s]*)(\?([^#\s]*))?(#([^\s]*))?)")
+    
 # =============================================================================
 def s3_debug(message, value=None):
     """
@@ -251,27 +254,31 @@ def s3_trunk8(selector=None, lines=None, less=None, more=None):
     T = current.T
     
     s3 = current.response.s3
-    s3.scripts.append("/%s/static/scripts/trunk8.js" %
-                      current.request.application)
+    scripts = s3.scripts
+    script = "/%s/static/scripts/trunk8.js" % current.request.application
+    if script not in scripts:
+        scripts.append(script)
+        script = \
+"""$(document).on('click','.s3-truncate-more',function(event){
+ $(this).parent()
+        .trunk8('revert')
+        .append(' <a class="s3-truncate-less" href="#">%(less)s</a>')
+ return false
+})
+$(document).on('click','.s3-truncate-less',function(event){
+ $(this).parent().trunk8()
+ return false
+})""" % dict(less=T("less") if less is None else less)
+        s3.jquery_ready.append(script)
 
-    script = """
-$('%(selector)s').trunk8({
-  %(lines)s
-  fill: '&hellip; <a class="s3-truncate-more" href="#">%(more)s</a>'
-});
-$('.s3-truncate-more').live('click', function (event) {
-  $(this).parent()
-         .trunk8('revert')
-         .append(' <a class="s3-truncate-less" href="#">%(less)s</a>');
-  return false;
-});
-$('.s3-truncate-less').live('click', function (event) {
-  $(this).parent().trunk8();
-  return false;
-});""" % dict(selector=".s3-truncate" if selector is None else selector,
-              lines="" if lines is None else "lines: %s," % lines,
-              more=T("more") if more is None else more,
-              less=T("less") if less is None else less)
+    script = \
+"""$('%(selector)s').trunk8({
+ %(lines)s
+ fill:'&hellip; <a class="s3-truncate-more" href="#">%(more)s</a>'
+})""" % dict(selector=".s3-truncate" if selector is None else selector,
+             lines="" if lines is None else "lines:%s," % lines,
+             more=T("more") if more is None else more,
+             )
 
     s3.jquery_ready.append(script)
     return
@@ -468,6 +475,18 @@ def s3_url_represent(url):
         return ""
     return A(url, _href=url, _target="blank")
 
+# =============================================================================
+def s3_URLise(text):
+    """
+        Convert all URLs in a text into an HTML <A> tag.
+
+        @param text: the text
+    """
+
+    output = URLSCHEMA.sub(lambda m: '<a href="%s">%s</a>' %
+                          (m.group(0), m.group(0)), text)
+    return output
+    
 # =============================================================================
 def s3_avatar_represent(id, tablename="auth_user", gravatar=False, **attr):
     """
@@ -996,10 +1015,17 @@ def s3_orderby_fields(table, orderby, expr=False):
         elif isinstance(item, str):
             fn, direction = (item.strip().split() + ["asc"])[:2]
             tn, fn = ([tablename] + fn.split(".", 1))[-2:]
-            try:
-                f = s3db.table(tn)[fn]
-            except (AttributeError, KeyError):
-                continue
+            if tn:
+                try:
+                    f = s3db.table(tn)[fn]
+                except (AttributeError, KeyError):
+                    continue
+            else:
+                if current.response.s3.debug:
+                    raise SyntaxError('Tablename prefix required for orderby="%s"' % item)
+                else:
+                    # Ignore
+                    continue
             if expr and direction[:3] == "des":
                 f = ~f
         else:
@@ -1025,7 +1051,7 @@ def search_vars_represent(search_vars):
     try:
         search_vars = cPickle.loads(str(search_vars))
     except:
-        raise HTTP(500,"ERROR RETRIEVING THE SEARCH CRITERIA")
+        raise HTTP(500, "ERROR RETRIEVING THE SEARCH CRITERIA")
     else:
         s = "<p>"
         pat = '_'
@@ -1387,7 +1413,7 @@ class S3CustomController(object):
             current.response.view = open(view, "rb")
         except IOError:
             from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
         return
 
 # =============================================================================

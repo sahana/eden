@@ -2329,8 +2329,8 @@ class S3Resource(object):
 
         # XSLT transformation
         if tree and xmlformat is not None:
-            if DEBUG:
-                _start = datetime.datetime.now()
+            #if DEBUG:
+            #    _start = datetime.datetime.now()
             import uuid
             tfmt = xml.ISOFORMAT
             args.update(domain=manager.domain,
@@ -2401,10 +2401,8 @@ class S3Resource(object):
                               level element (off by default)
         """
 
-        define_resource = current.s3db.resource
-
-        manager = current.manager
         xml = current.xml
+        manager = current.manager
 
         if manager.show_urls:
             base_url = manager.s3.base_url
@@ -2455,6 +2453,16 @@ class S3Resource(object):
 
         format = current.auth.permission.format
         if format == "geojson":
+            if results > current.deployment_settings.get_gis_max_features():
+                headers = {"Content-Type": "application/json"}
+                message = "Too Many Records"
+                status = 509
+                raise HTTP(status,
+                           body=xml.json_message(success=False,
+                                                 statuscode=status,
+                                                 message=message),
+                           web2py_error=message,
+                           **headers)
             # Lookups per layer not per record
             if tablename == "gis_layer_shapefile":
                 # GIS Shapefile Layer
@@ -2520,6 +2528,8 @@ class S3Resource(object):
         # Add referenced resources to the tree
         #if DEBUG:
         #    _start = datetime.datetime.now()
+
+        define_resource = current.s3db.resource
 
         depth = dereference and manager.MAX_DEPTH or 0
         while reference_map and depth:
@@ -3048,7 +3058,7 @@ class S3Resource(object):
         else:
             # job ID given
             pass
-
+        
         response = current.response
         # Flag to let onvalidation/onaccept know this is coming from a Bulk Import
         response.s3.bulk = True
@@ -3535,8 +3545,8 @@ class S3Resource(object):
             return (value, error)
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def original(table, record):
+    @classmethod
+    def original(cls, table, record, mandatory=None):
         """
             Find the original record for a possible duplicate:
                 - if the record contains a UUID, then only that UUID is used
@@ -3596,9 +3606,11 @@ class S3Resource(object):
             else:
                 query = _query
 
+        fields = cls.import_fields(table, pvalues, mandatory=mandatory)
+
         # Try to find exactly one match by non-UID unique keys
         if query is not None:
-            original = db(query).select(table.ALL, limitby=(0, 2))
+            original = db(query).select(limitby=(0, 2), *fields)
             if len(original) == 1:
                 return original.first()
 
@@ -3606,12 +3618,24 @@ class S3Resource(object):
         if UID in pvalues:
             uid = xml.import_uid(pvalues[UID])
             query = (table[UID] == uid)
-            original = db(query).select(table.ALL, limitby=(0, 1)).first()
+            original = db(query).select(limitby=(0, 1), *fields).first()
             if original:
                 return original
 
         # No match or multiple matches
         return None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def import_fields(table, data, mandatory=None):
+        
+        fnames = set(s3_all_meta_field_names())
+        fnames.add(table._id.name)
+        if mandatory:
+            fnames |= set(mandatory)
+        for fn in data:
+            fnames.add(fn)
+        return [table[fn] for fn in fnames if fn in table.fields]
 
     # -------------------------------------------------------------------------
     def readable_fields(self, subset=None):
@@ -7020,17 +7044,13 @@ class S3RecordMerger(object):
         self.main = main
 
         db = current.db
-        manager = current.manager
-
         resource = self.resource
         table = resource.table
         tablename = resource.tablename
 
-        raise_error = self.raise_error
-
         # Check for master resource
         if resource.parent:
-            raise_error("Must not merge from component", SyntaxError)
+            self.raise_error("Must not merge from component", SyntaxError)
 
         # Check permissions
         auth = current.auth
@@ -7040,7 +7060,7 @@ class S3RecordMerger(object):
                     has_permission("delete", table,
                                    record_id = duplicate_id)
         if not permitted:
-            raise_error("Operation not permitted", auth.permission.error)
+            self.raise_error("Operation not permitted", auth.permission.error)
 
         # Load all models
         s3db = current.s3db

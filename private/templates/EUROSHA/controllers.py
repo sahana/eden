@@ -234,7 +234,7 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
             response.view = open(view, "rb")
         except IOError:
             from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         return dict(title = response.title,
                     cols_box = cols_box,

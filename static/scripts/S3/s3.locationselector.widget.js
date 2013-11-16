@@ -135,12 +135,11 @@ function s3_gis_locationselector_onReady() {
     }
 
     // Map Popup
-    var mapButton = Ext.get('gis_location_map-btn');
+    var mapButton = $('#gis_location_map-btn');
     if (mapButton) {
-        mapButton.on('click', function() {
+        mapButton.click(function() {
             // Find the map
-            var map_button = $('#gis_location_map-btn');
-            var map_id = map_button.attr('map');
+            var map_id = mapButton.attr('map');
             if (undefined == map_id) {
                 map_id = 'default_map';
             }

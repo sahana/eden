@@ -133,15 +133,16 @@ def _newsfeed():
     s3 = response.s3
 
     # Ensure that filtered views translate into options which update the Widget
-    if "~.series_id$name" in request.get_vars:
-        series_name = request.vars["~.series_id$name"]
+    get_vars = request.get_vars
+    if "~.series_id$name" in get_vars:
+        series_name = get_vars["~.series_id$name"]
         table = s3db.cms_series
         series = current.db(table.name == series_name).select(table.id,
                                                               limitby=(0, 1)).first()
         if series:
             series_id = str(series.id)
-            request.get_vars.pop("~.series_id$name")
-            request.get_vars["~.series_id__belongs"] = series_id
+            get_vars.pop("~.series_id$name")
+            get_vars["~.series_id__belongs"] = series_id
 
     current.deployment_settings.ui.customize_cms_post()
 
@@ -197,15 +198,16 @@ def _newsfeed():
 
     s3.dl_pagelength = 6  # 5 forces an AJAX call
 
-    if "datalist_dl_post" in request.args:
+    old_args = request.args
+    if "datalist_dl_post" in old_args:
         # DataList pagination or Ajax-deletion request
         request.args = ["datalist_f"]
         ajax = "list"
-    elif "datalist_dl_filter" in request.args:
+    elif "datalist_dl_filter" in old_args:
         # FilterForm options update request
         request.args = ["filter"]
         ajax = "filter"
-    elif "validate.json" in request.args:
+    elif "validate.json" in old_args:
         # Inline component validation request
         request.args = []
         ajax = True
@@ -234,6 +236,8 @@ def _newsfeed():
                                                            vars={}),
                                      )
 
+    request.args = old_args
+
     if ajax == "list":
         # Don't override view if this is an Ajax-deletion request
         if not "delete" in request.get_vars:
@@ -248,7 +252,7 @@ def _newsfeed():
             response.view = open(view, "rb")
         except IOError:
             from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         s3.js_global.append('''i18n.adv_search="%s"''' % T("Advanced Search"))
         s3.scripts.append("/%s/static/themes/%s/js/newsfeed.js" % (request.application, THEME))
@@ -1051,7 +1055,7 @@ class contact():
             current.response.view = open(view, "rb")
         except IOError:
             from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         title = current.T("Contact Us")
 

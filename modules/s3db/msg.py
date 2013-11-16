@@ -35,7 +35,7 @@ __all__ = ["S3ChannelModel",
            "S3RSSModel",
            "S3SMSModel",
            "S3SMSOutboundModel",
-           "S3SubscriptionModel",
+           "S3MessageSubscriptionModel",
            "S3TropoModel",
            "S3TwilioModel",
            "S3TwitterModel",
@@ -113,6 +113,7 @@ class S3ChannelModel(S3Model):
 
         # Reusable Field
         channel_id = S3ReusableField("channel_id", table,
+                                     label = T("Channel"),
                                      requires = IS_NULL_OR(
                                         IS_ONE_OF_EMPTY(db, "msg_channel.id")),
                                      represent = S3Represent(lookup=tablename),
@@ -564,6 +565,8 @@ class S3EmailModel(S3ChannelModel):
                                    requires = IS_EMAIL()
                                    ),
                              Field("raw", "text",
+                                   readable = False,
+                                   writable = False,
                                    label = T("Message Source")
                                    ),
                              Field("inbound", "boolean",
@@ -1212,7 +1215,7 @@ class S3SMSOutboundModel(S3Model):
         return dict()
 
 # =============================================================================
-class S3SubscriptionModel(S3Model):
+class S3MessageSubscriptionModel(S3Model):
     """
         Handle Subscription
         - currently this is just for Saved Searches
@@ -1502,10 +1505,10 @@ class S3TwitterModel(S3Model):
                   list_fields=["id",
                                #"priority",
                                #"category",
-                               #"location_id",
                                "body",
                                "from_address",
                                "created_on",
+                               #"location_id",
                                ],
                   )
 
@@ -1692,9 +1695,7 @@ class S3TwitterSearchModel(S3ChannelModel):
                              #      writable = False,
                              #      label = T("Priority"),
                              #      ),
-                             # @ToDo: Replace lat/lon with a mappable gis_location_id
-                             Field("location_id",
-                                   s3db.gis_location),
+                             self.gis_location_id(),
                              # Just present for Super Entity
                              Field("inbound", "boolean",
                                    default = True,
@@ -1711,12 +1712,11 @@ class S3TwitterSearchModel(S3ChannelModel):
         configure(tablename,
                   super_entity = "msg_message",
                   #orderby=~table.priority,
-                  list_fields = ["from_address",
-                                 #"lang",
-                                 "created_on",
-                                 "body",
-                                 #"category",
+                  list_fields = [#"category",
                                  #"priority",
+                                 "body",
+                                 "from_address",
+                                 "created_on",
                                  "location_id",
                                  ],
                   )

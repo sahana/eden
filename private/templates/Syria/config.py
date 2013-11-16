@@ -57,8 +57,8 @@ settings.auth.show_utc_offset = False
 
 settings.auth.show_link = False
 
-settings.auth.record_approval = True
-settings.auth.record_approval_required_for = ["org_organisation"]
+#settings.auth.record_approval = True
+#settings.auth.record_approval_required_for = ["org_organisation"]
 
 # -----------------------------------------------------------------------------
 # Security Policy
@@ -2192,11 +2192,10 @@ def customize_cms_post(**attr):
             if not result:
                 return False
 
-        if r.interactive:
+        get_vars = current.request.get_vars
+        if r.interactive and "module" not in get_vars:
             from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
             table = customize_cms_post_fields()
-
-            get_vars = current.request.get_vars
 
             field = table.series_id
             field.label = T("Type")

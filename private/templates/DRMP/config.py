@@ -127,6 +127,8 @@ settings.L10n.date_format = "%d %b %y"
 settings.L10n.decimal_separator = "."
 # Thousands separator for numbers (defaults to space)
 settings.L10n.thousands_separator = ","
+# Uncomment this to Translate CMS Series Names
+settings.L10n.translate_cms_series = True
 
 # Restrict the Location Selector to just certain countries
 settings.gis.countries = ["TL"]
@@ -190,9 +192,6 @@ settings.pr.request_gender = False
 # -----------------------------------------------------------------------------
 # Org
 settings.org.site_label = "Office"
-# Disable the use of Organisation Branches
-settings.org.branches = False
-
 
 # -----------------------------------------------------------------------------
 # Project
@@ -2355,17 +2354,16 @@ def customize_cms_post(**attr):
             utable = current.auth.settings.table_user
             utable.organisation_id.represent = s3db.org_organisation_represent
 
-            list_fields = [
-                (T("Date"), "date"),
-                (T("Disaster"), "event_post.event_id"),
-                (T("Type"), "series_id"),
-                (T("Details"), "body"),
-                (T("District"), "location_id$L1"),
-                (T("Sub-District"), "location_id$L2"),
-                (T("Suco"), "location_id$L3"),
-                (T("Author"), "created_by"),
-                (T("Organization"), "created_by$organisation_id"),
-                ]
+            list_fields = [(T("Date"), "date"),
+                           (T("Disaster"), "event_post.event_id"),
+                           (T("Type"), "series_id"),
+                           (T("Details"), "body"),
+                           (T("District"), "location_id$L1"),
+                           (T("Sub-District"), "location_id$L2"),
+                           (T("Suco"), "location_id$L3"),
+                           (T("Author"), "created_by"),
+                           (T("Organization"), "created_by$organisation_id"),
+                           ]
             s3db.configure("cms_post",
                            list_fields = list_fields,
                            )
@@ -2377,7 +2375,7 @@ def customize_cms_post(**attr):
             table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
             table.created_by.represent = s3_auth_user_represent_name
             # Used by default popups
-            series = T(table.series_id.represent(r.record.series_id))
+            series = table.series_id.represent(r.record.series_id)
             s3.crud_strings["cms_post"].title_display = "%(series)s Details" % dict(series=series)
             s3db.configure("cms_post",
                            popup_url="",

@@ -306,10 +306,6 @@ settings.hrm.use_skills = False
 # Uncomment to disable the use of HR Teams
 settings.hrm.teams = False
 
-# Organisations
-# Disable the use of Organisation Branches
-settings.org.branches = False
-
 # -----------------------------------------------------------------------------
 # Contacts
 # -----------------------------------------------------------------------------
@@ -378,11 +374,8 @@ def customize_pr_person(**attr):
             is_logged_in = current.auth.is_logged_in()
             if is_logged_in:
                 # Don't include Email/Phone for unauthenticated users
-                MOBILE = settings.get_ui_label_mobile_phone()
-                EMAIL = T("Email")
-
-                list_fields += [(MOBILE, "phone.value"),
-                                (EMAIL, "email.value"),
+                list_fields += [(settings.get_ui_label_mobile_phone(), "phone.value"),
+                                (T("Email"), "email.value"),
                                 ]
             s3db.configure(tablename,
                            list_fields = list_fields,
@@ -499,7 +492,7 @@ def customize_pr_person(**attr):
                         ),
                     S3SQLInlineComponent("contact",
                         name = "phone",
-                        label = MOBILE,
+                        label = settings.get_ui_label_mobile_phone(),
                         multiple = False,
                         fields = ["value"],
                         filterby = dict(field = "contact_method",
@@ -507,7 +500,7 @@ def customize_pr_person(**attr):
                         ),
                     S3SQLInlineComponent("contact",
                         name = "email",
-                        label = EMAIL,
+                        label = T("Email"),
                         multiple = False,
                         fields = ["value"],
                         filterby = dict(field = "contact_method",

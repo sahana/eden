@@ -98,19 +98,26 @@
      </li>
     </ul>
     <ul class='nav pull-right'>
+     <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-comment-alt'></i><b class='caret'></b></a>
+      <ul class='dropdown-menu'>
+       {{get_vars = request.get_vars}}
+       {{language = response.s3.language}}
+       {{icon = {"tet":"icon-check"}.get(language, "icon-check-empty")}}
+       {{lang_vars = dict(_language="tet")}}{{for var in get_vars:}}{{if var != "_language":}}{{lang_vars[var] = get_vars[var]}}{{pass}}{{pass}}
+       <li><a href='{{=URL(args=request.args, vars=lang_vars)}}'><i class='{{=icon}}'></i> Tetum</a></li>
+       {{icon = {"en":"icon-check"}.get(language, "icon-check-empty")}}
+       {{lang_vars = dict(_language="en")}}{{for var in get_vars:}}{{if var != "_language":}}{{lang_vars[var] = get_vars[var]}}{{pass}}{{pass}}
+       <li><a href='{{=URL(args=request.args, vars=lang_vars)}}'><i class='{{=icon}}'></i> English</a></li>
+      </ul>
+     </li>
      <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-cog'></i><b class='caret'></b></a>
-      <ul class='dropdown-menu'>{{vars=request.vars}}{{is_logged_in=auth.is_logged_in()}}
+      <ul class='dropdown-menu'>{{is_logged_in=auth.is_logged_in()}}
        {{if is_logged_in and auth.s3_has_role("ADMIN"):}}
        <li><a href='/{{=appname}}/admin/user'><i class='icon-cogs'></i> {{=T("Admin")}}</a></li>
        <li class='divider'></li>
        {{pass}}
        {{if is_logged_in:}}
        <li><a href='/{{=appname}}/default/user/profile'><i class='icon-user'></i> {{=auth.user.email}}</a></li>
-       {{pass}}
-       {{if response.s3.language == "en":}}{{tet_vars=dict(_language="tet")}}{{for var in vars:}}{{tet_vars[var]=vars[var]}}{{pass}}
-       <li><a href='{{=URL(args=request.args, vars=tet_vars)}}'><i class='icon-comment-alt'></i> Tetum</a></li>
-       {{else:}}{{en_vars=dict(_language="en")}}{{for var in vars:}}{{en_vars[var]=vars[var]}}{{pass}}
-       <li><a href='{{=URL(args=request.args, vars=en_vars)}}'><i class='icon-comment-alt'></i> English</a></li>
        {{pass}}
        {{if is_logged_in:}}
        <li><a href='/{{=appname}}/default/index/subscriptions'><i class='icon-envelope'></i> {{=T("Notifications")}}</a></li>
@@ -129,7 +136,7 @@
 <div class='container main-container'>
  <div id='alert-space'>
   {{if response.error:}}<div class='alert alert-error'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.error}}</div>{{pass}}
-  {{if response.warning:}}<div class='alert'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.warning}}</div>{{pass}}
+  {{if response.warning:}}<div class='alert alert-warning'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.warning}}</div>{{pass}}
   {{if response.information:}}<div class='alert alert-info'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.information}}</div>{{pass}}
   {{if response.confirmation:}}<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.confirmation}}</div>{{pass}}
   {{if response.flash:}}<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.flash}}</div>{{pass}}

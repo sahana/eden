@@ -637,9 +637,8 @@ class S3ProjectModel(S3Model):
                                 readable=False,
                                 writable=False)
 
-        return Storage(
-                project_project_id = lambda: dummy("project_id"),
-            )
+        return dict(project_project_id = lambda **attr: dummy("project_id"),
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -805,7 +804,7 @@ class S3ProjectModel(S3Model):
             response.view = "map.html"
             return output
         else:
-            raise HTTP(501, BADMETHOD)
+            raise HTTP(501, current.messages.BADMETHOD)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -929,7 +928,7 @@ class S3ProjectModel(S3Model):
             return output
 
         else:
-            raise HTTP(501, BADMETHOD)
+            raise HTTP(501, current.messages.BADMETHOD)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1337,7 +1336,7 @@ class S3ProjectActivityModel(S3Model):
                                 readable=False,
                                 writable=False)
 
-        return dict(project_activity_id = lambda: dummy("activity_id"),
+        return dict(project_activity_id = lambda **attr: dummy("activity_id"),
                     )
 
     # -------------------------------------------------------------------------
@@ -2997,6 +2996,17 @@ class S3ProjectLocationModel(S3Model):
         #
         return dict(project_location_id = project_location_id,
                     project_location_represent = project_location_represent,
+                    )
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+        """ Safe defaults for model-global names if module is disabled """
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable=False,
+                                writable=False)
+
+        return dict(project_location_id = lambda **attr: dummy("project_location_id"),
                     )
 
     # -------------------------------------------------------------------------
@@ -5095,7 +5105,7 @@ class S3ProjectTaskModel(S3Model):
             return output
 
         else:
-            raise HTTP(501, BADMETHOD)
+            raise HTTP(501, current.messages.BADMETHOD)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5210,7 +5220,7 @@ class S3ProjectTaskModel(S3Model):
             return output
 
         else:
-            raise HTTP(501, BADMETHOD)
+            raise HTTP(501, current.messages.BADMETHOD)
 
 # =============================================================================
 class S3ProjectTaskHRMModel(S3Model):

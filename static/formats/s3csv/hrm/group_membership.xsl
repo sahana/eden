@@ -43,12 +43,13 @@
         <s3xml>
             <!-- Groups -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('group',
-                                                                   col[@field='Team Name'])[1])]">
+                                                                       col[@field='Team Name'])[1])]">
                 <xsl:call-template name="Group"/>
             </xsl:for-each>
 
             <!-- Top-level Organisations -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('orgs', col[@field='Organisation'])[1])]">
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('orgs',
+                                                                       col[@field='Organisation'])[1])]">
                 <xsl:call-template name="Organisation">
                     <xsl:with-param name="OrgName">
                         <xsl:value-of select="col[@field='Organisation']/text()"/>
@@ -58,7 +59,9 @@
             </xsl:for-each>
 
             <!-- Branches -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('branches', concat(col[@field='Organisation'], '/', col[@field='Branch']))[1])]">
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('branches',
+                                                                       concat(col[@field='Organisation'], '/',
+                                                                              col[@field='Branch']))[1])]">
                 <xsl:call-template name="Organisation">
                     <xsl:with-param name="OrgName"></xsl:with-param>
                     <xsl:with-param name="BranchName">

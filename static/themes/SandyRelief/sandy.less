@@ -421,7 +421,7 @@ button,
 	color: @flag;
 }
 
-.confirmation, .information, .error, .warning {
+.alert {
 	clear: left;
 	position: absolute;
 	top: 15px;
@@ -435,23 +435,29 @@ button,
 	border-width: 2px;
 }
 
-.confirmation {
+.alert-success {
 	color: @confirm;
 	border-color: @confirm;
 }
 
-.information {
+.alert-info {
 	color: @body;
 	border-color: @brand;
 }
 
-.error, 
-.warning {
+.alert-error, 
+.alert-warning {
 	color: @flag;
 	border-color: @flag;
 }
 
-
+/* Copy of BootStrap Styling */
+button.close {
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0);
+    border: 0 none;
+    cursor: pointer;
+    padding: 0;
+}
 
 
 /* layout */
@@ -1345,6 +1351,10 @@ b.red {
 	input[type="submit"] {
 		.button;
 	}
+}
+
+.map_home {
+    margin: 0;
 }
 
 /******* ADVANCED *******/

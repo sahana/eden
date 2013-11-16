@@ -119,12 +119,14 @@ class S3CRUD(S3Method):
         elif method in ("datatable", "datatable_f"):
             _attr = Storage(attr)
             _attr["list_type"] = "datatable"
-            self.hide_filter = method == "datatable"
+            if method == "datatable_f":
+                self.hide_filter = False
             output = self.select(r, **_attr)
         elif method in ("datalist", "datalist_f"):
             _attr = Storage(attr)
             _attr["list_type"] = "datalist"
-            self.hide_filter = method == "datalist"
+            if method == "datalist_f":
+                self.hide_filter = False
             output = self.select(r, **_attr)
             
         elif method == "validate":
@@ -196,7 +198,7 @@ class S3CRUD(S3Method):
         insertable = _config("insertable", True)
         if not insertable:
             if native:
-                r.error(405, resource.ERROR.BAD_METHOD)
+                r.error(405, resource.ERROR.METHOD_DISABLED)
             else:
                 return dict(form=None)
 
@@ -559,6 +561,7 @@ class S3CRUD(S3Method):
                 if popup_url:
                     details_btn = A(T("Open"),
                                     _href=popup_url,
+                                    _class="btn",
                                     _id="details-btn",
                                     _target="_blank")
                     output["details_btn"] = details_btn
@@ -643,7 +646,7 @@ class S3CRUD(S3Method):
             if r.interactive:
                 return self.read(r, **attr)
             else:
-                r.error(405, resource.ERROR.BAD_METHOD)
+                r.error(405, resource.ERROR.METHOD_DISABLED)
 
         # Check permission for update
         authorised = self._permitted(method="update")
@@ -1453,41 +1456,41 @@ class S3CRUD(S3Method):
                     available_records = current.db(table._id > 0)
                 if available_records.select(table._id,
                                             limitby=(0, 1)).first():
-                    msg = DIV(self.crud_string(resource.tablename,
-                                               "msg_no_match"),
-                              _class="empty")
+                    empty = self.crud_string(resource.tablename,
+                                             "msg_no_match")
                 else:
-                    msg = DIV(self.crud_string(resource.tablename,
-                                               "msg_list_empty"),
-                              _class="empty")
+                    empty = self.crud_string(resource.tablename,
+                                             "msg_list_empty")
 
                 s3.no_formats = True
                 if r.component and "showadd_btn" in output:
                     # Hide the list and show the form by default
                     del output["showadd_btn"]
-                    msg = ""
-
-                data = msg
-
+                    empty = ""
             else:
-                # Allow customization of the datalist Ajax-URL
-                # Note: the Ajax-URL must use the .dl representation and
-                # plain.html view for pagination to work properly!
+                empty = None
+
+            # Allow customization of the datalist Ajax-URL
+            # Note: the Ajax-URL must use the .dl representation and
+            # plain.html view for pagination to work properly!
+            ajax_url = attr.get("list_ajaxurl", None)
+            if not ajax_url:
                 vars = dict([(k,v) for k, v in r.get_vars.iteritems()
                                    if k not in ("start", "limit")])
-                ajax_url = attr.get("list_ajaxurl", None)
-                if not ajax_url:
-                    ajax_url = r.url(representation="dl", vars=vars)
+                ajax_url = r.url(representation="dl", vars=vars)
                     
-                # Render the list
-                dl = datalist.html(
-                        start = start if start else 0,
-                        limit = limit if limit else numrows,
-                        pagesize = pagelength,
-                        rowsize = rowsize,
-                        ajaxurl = ajax_url
-                     )
-                data = dl
+            # Render the list (even if empty => Ajax-section is required
+            # in any case to be able to Ajax-refresh e.g. after adding
+            # new records or changing the filter)
+            dl = datalist.html(start = start if start else 0,
+                               limit = limit if limit else numrows,
+                               pagesize = pagelength,
+                               rowsize = rowsize,
+                               ajaxurl = ajax_url)
+            if empty:
+                # Insert empty message
+                dl.insert(0, DIV(empty, _class="empty"))
+            data = dl
         else:
             r.error(501, r.ERROR.BAD_FORMAT)
 
@@ -2034,7 +2037,9 @@ class S3CRUD(S3Method):
                     name=None,
                     _href=None,
                     _id=None,
-                    _class=None):
+                    _class=None,
+                    _title=None,
+                    ):
         """
             Generate a CRUD action button
 
@@ -2042,8 +2047,9 @@ class S3CRUD(S3Method):
             @param tablename: the name of table for CRUD string selection
             @param name: name of CRUD string for the button label
             @param _href: the target URL
-            @param _id: the HTML-ID of the link
-            @param _class: the HTML-class of the link
+            @param _id: the HTML id of the link
+            @param _class: the HTML class of the link
+            @param _title: the HTML title of the link
         """
 
         if _class is None:
@@ -2055,10 +2061,15 @@ class S3CRUD(S3Method):
             labelstr = S3CRUD.crud_string(tablename, name)
         else:
             labelstr = str(label)
-        if not _href:
-            button = A(labelstr, _id=_id, _class=_class)
-        else:
-            button = A(labelstr, _href=_href, _id=_id, _class=_class)
+        data = dict(_id=_id,
+                    _class=_class,
+                    )
+        if _href:
+            data["_href"] = _href
+        if _title:
+            data["_title"] = _title
+
+        button = A(labelstr, **data)
         return button
 
     # -------------------------------------------------------------------------

@@ -76,6 +76,7 @@ __all__ = ["S3ACLWidget",
            ]
 
 import datetime
+import os
 
 try:
     import json # try stdlib (Python 2.6)
@@ -622,6 +623,8 @@ class S3AddPersonWidget2(FormWidget):
         It relies on JS code in static/S3/s3.add_person.js
 
         @ToDo: get working in a non-Bootstrap formstyle
+        @ToDo: get working AC/validator for human_resource_id
+               - perhaps re-implement as S3SQLFormElement
     """
 
     def __init__(self,
@@ -1301,7 +1304,8 @@ class S3DateWidget(FormWidget):
 
         # Need to convert value into ISO-format
         # (widget expects ISO, but value comes in custom format)
-        _format = current.deployment_settings.get_L10n_date_format()
+        settings = current.deployment_settings
+        _format = settings.get_L10n_date_format()
         v, error = IS_DATE_IN_RANGE(format=_format)(value)
         if not error:
             value = v.isoformat()
@@ -1327,6 +1331,7 @@ class S3DateWidget(FormWidget):
             selector = str(field).replace(".", "_")
 
         # Convert to Days
+        request = current.request
         now = current.request.utcnow
         past = self.past
         if past:
@@ -1351,7 +1356,7 @@ class S3DateWidget(FormWidget):
         else:
             maxDate = "+0"
 
-        current.response.s3.jquery_ready.append(
+        script = \
 '''$('#%(selector)s').datepicker('option',{
  minDate:%(past)s,
  maxDate:%(future)s,
@@ -1360,7 +1365,23 @@ class S3DateWidget(FormWidget):
         dict(selector = selector,
              past = minDate,
              future = maxDate,
-             format = format))
+             format = format)
+
+        s3 = current.response.s3
+        language = current.session.s3.language
+        if language != settings.get_L10n_default_language():
+            # Do we have a suitable locale file?
+            path = os.path.join(request.folder, "static", "scripts", "i18n", "jquery.ui.datepicker-%s.js" % language)
+            if os.path.exists(path):
+                lscript = "/%s/static/scripts/i18n/jquery.ui.datepicker-%s.js" % (request.application, language)
+                if lscript not in s3.scripts:
+                    s3.scripts.append(lscript)
+                script = '''%s
+$('#%s').datepicker('option',$.datepicker.regional['%s'])''' % (script,
+                                                                selector,
+                                                                language)
+
+        s3.jquery_ready.append(script)
 
         return TAG[""](widget, requires = field.requires)
 
@@ -1473,7 +1494,8 @@ class S3DateTimeWidget(FormWidget):
             dtformat = datetime_format
 
         # Limits
-        now = current.request.utcnow
+        request = current.request
+        now = request.utcnow
         timedelta = datetime.timedelta
         offset = S3DateTime.get_offset_value(current.session.s3.utc_offset)
 
@@ -1557,8 +1579,8 @@ class S3DateTimeWidget(FormWidget):
         # Boolean options
         getopt = lambda opt, default: opts.get(opt, default) and "true" or "false"
 
-        current.response.s3.jquery_ready.append(
-"""$('#%(selector)s').%(widget)s({
+        script = \
+'''$('#%(selector)s').%(widget)s({
  showSecond:false,
  firstDay:%(firstDOW)s,
  min%(limit)s:new Date(Date.parse('%(earliest)s')),
@@ -1576,12 +1598,12 @@ class S3DateTimeWidget(FormWidget):
  defaultValue:'%(default)s',
  onClose:%(onclose)s
 });
-var clear_button=$('<input id="%(selector)s_clear" type="button" value="clear"/>').click(function(){
+var clear_button=$('<input id="%(selector)s_clear" type="button" value="%(clear)s"/>').click(function(){
  $('#%(selector)s').val('');%(onclear)s
 });
 if($('#%(selector)s_clear').length==0){
  $('#%(selector)s').after(clear_button)
-}""" %  dict(selector=selector,
+}''' %  dict(selector=selector,
              widget=widget,
              date_format=date_format,
              time_format=time_format,
@@ -1597,10 +1619,26 @@ if($('#%(selector)s_clear').length==0){
              earliest=earliest.strftime(ISO),
              latest=latest.strftime(ISO),
              default=default,
+             clear=current.T("clear"),
              onclose=onclose,
              onclear=onclear,
              )
-        )
+
+        s3 = current.response.s3
+        language = current.session.s3.language
+        if language != settings.get_L10n_default_language():
+            # Do we have a suitable locale file?
+            path = os.path.join(request.folder, "static", "scripts", "i18n", "jquery.ui.datepicker-%s.js" % language)
+            if os.path.exists(path):
+                lscript = "/%s/static/scripts/i18n/jquery.ui.datepicker-%s.js" % (request.application, language)
+                if lscript not in s3.scripts:
+                    s3.scripts.append(lscript)
+                script = '''%s
+$('#%s').datepicker('option',$.datepicker.regional['%s'])''' % (script,
+                                                                selector,
+                                                                language)
+
+        s3.jquery_ready.append(script)
 
         return
 
@@ -2971,6 +3009,10 @@ class S3LocationSelectorWidget(FormWidget):
         requires = field.requires
 
         # Main Input
+        if value == "dummy":
+            # If validation fails, we may get here with no location, but with
+            # "dummy" left in the value.
+            value = None
         defaults = dict(_type = "text",
                         value = (value != None and str(value)) or "")
         attr = StringWidget._attributes(field, defaults, **attributes)
@@ -3065,6 +3107,8 @@ class S3LocationSelectorWidget(FormWidget):
             no_map = '''S3.gis.no_map = true;\n'''
         # Should we display LatLon boxes?
         latlon_selector = settings.get_gis_latlon_selector()
+        # Should we display Postcode box?
+        postcode_selector = settings.get_gis_postcode_selector()
         # Show we display Polygons?
         polygon = self.polygon
         # Navigate Away Confirm?
@@ -3350,7 +3394,8 @@ S3.gis.tab="%s"''' % s3.gis.tab
         else:
             NAME_LABEL = T("Building Name")
         STREET_LABEL = T("Street Address")
-        POSTCODE_LABEL = settings.get_ui_label_postcode()
+        if postcode_selector:
+            POSTCODE_LABEL = settings.get_ui_label_postcode()
         LAT_LABEL = T("Latitude")
         LON_LABEL = T("Longitude")
         AUTOCOMPLETE_HELP = T("Enter some characters to bring up a list of possible matches")
@@ -3376,10 +3421,11 @@ S3.gis.tab="%s"''' % s3.gis.tab
                                      _class="text",
                                      _name="gis_location_street",
                                      _disabled="disabled")
-            postcode_widget = INPUT(value=postcode,
-                                    _id="gis_location_postcode",
-                                    _name="gis_location_postcode",
-                                    _disabled="disabled")
+            if postcode_selector:
+                postcode_widget = INPUT(value=postcode,
+                                        _id="gis_location_postcode",
+                                        _name="gis_location_postcode",
+                                        _disabled="disabled")
 
             lat_widget = S3LatLonWidget("lat",
                                         disabled=True).widget(value=lat)
@@ -3428,10 +3474,11 @@ S3.gis.tab="%s"''' % s3.gis.tab
             name_widget = INPUT(_id="gis_location_name",
                                 _name="gis_location_name")
             street_widget = TEXTAREA(_id="gis_location_street",
-                                     _class="text",
+                                     _class="text comments",
                                      _name="gis_location_street")
-            postcode_widget = INPUT(_id="gis_location_postcode",
-                                    _name="gis_location_postcode")
+            if postcode_selector:
+                postcode_widget = INPUT(_id="gis_location_postcode",
+                                        _name="gis_location_postcode")
             lat_widget = S3LatLonWidget("lat").widget()
             lon_widget = S3LatLonWidget("lon", switch_button=True).widget()
 
@@ -3525,16 +3572,19 @@ S3.gis.geocoder=true'''
             hidden = "hide"
         elif value and not postcode:
             hidden = "hide"
-        postcode_rows = DIV(TR(LABEL("%s:" % POSTCODE_LABEL), TD(),
-                               _id="gis_location_postcode_label__row",
-                               _class="%s locselect box_middle" % hidden),
-                            TR(postcode_widget, TD(),
-                               _id="gis_location_postcode__row",
-                               _class="%s locselect box_middle" % hidden),
-                            TR(INPUT(_id="gis_location_postcode_search",
-                                     _disabled="disabled"), TD(),
-                               _id="gis_location_postcode_search__row",
-                               _class="hide locselect box_middle"))
+        if postcode_selector:
+            postcode_rows = DIV(TR(LABEL("%s:" % POSTCODE_LABEL), TD(),
+                                   _id="gis_location_postcode_label__row",
+                                   _class="%s locselect box_middle" % hidden),
+                                TR(postcode_widget, TD(),
+                                   _id="gis_location_postcode__row",
+                                   _class="%s locselect box_middle" % hidden),
+                                TR(INPUT(_id="gis_location_postcode_search",
+                                         _disabled="disabled"), TD(),
+                                   _id="gis_location_postcode_search__row",
+                                   _class="hide locselect box_middle"))
+        else:
+            postcode_rows = DIV()
 
         hidden = ""
         no_latlon = ""
@@ -5150,8 +5200,6 @@ class S3SiteAddressAutocompleteWidget(FormWidget):
 class S3SliderWidget(FormWidget):
     """
         Standard Slider Widget
-
-        @author: Daniel Klischies (daniel.klischies@freenet.de)
 
         @ToDo: The range of the slider should ideally be picked up from the Validator
         @ToDo: Show the value of the slider numerically as well as simply a position

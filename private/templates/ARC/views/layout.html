@@ -66,11 +66,13 @@
    </select></div><a href='' class='submit-search'>Submit</a></form></div>-->
   </div>
   <div id='wrapper'>
-   {{if response.error:}}<div class='error'>{{=response.error}}</div>{{pass}}
-   {{if response.warning:}}<div class='warning'>{{=response.warning}}</div>{{pass}}
-   {{if response.information:}}<div class='information'>{{=response.information}}</div>{{pass}}
-   {{if response.confirmation:}}<div class='confirmation'>{{=response.confirmation}}</div>{{pass}}
-   {{if response.flash:}}<div class='confirmation'>{{=response.flash}}</div>{{pass}}
+   <div id='alert-space'>
+    {{if response.error:}}<div class='alert alert-error'>{{=response.error}}</div>{{pass}}
+    {{if response.warning:}}<div class='alert alert-warning'>{{=response.warning}}</div>{{pass}}
+    {{if response.information:}}<div class='alert alert-info'>{{=response.information}}</div>{{pass}}
+    {{if response.confirmation:}}<div class='alert alert-success'>{{=response.confirmation}}</div>{{pass}}
+    {{if response.flash:}}<div class='alert alert-success'>{{=response.flash}}</div>{{pass}}
+   </div>
    {{if current.menu.options or response.menu_left:}}
     <div id='left-col'>
      {{if current.menu.options:}}{{=current.menu.options}}{{pass}}

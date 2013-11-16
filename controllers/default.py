@@ -108,6 +108,7 @@ def index():
         table = s3db.cms_post
         ltable = s3db.cms_post_module
         query = (ltable.module == module) & \
+                ((ltable.resource == None) | (ltable.resource == "index")) & \
                 (ltable.post_id == table.id) & \
                 (table.deleted != True)
         item = db(query).select(table.body,
@@ -232,8 +233,11 @@ def index():
                                       )
             s3.jquery_ready.append(
 '''$('#manage_facility_select').change(function(){
- $('#manage_facility_btn').attr('href',S3.Ap.concat('/default/site/',$('#manage_facility_select').val()))
-})''')
+ $('#manage_facility_btn').attr('href',S3.Ap.concat('/default/site/',$('#manage_facility_select').val()))})
+$('#manage_facility_btn').click(function(){
+if ( ($('#manage_facility_btn').attr('href').toString())===S3.Ap.concat('/default/site/None') )
+{$("#manage_facility_box").append("<div class='alert alert-error'>%s</div>")
+return false}})''' % (T("Please Select a Facility")))
         else:
             manage_facility_box = ""
 
@@ -1149,33 +1153,40 @@ def contact():
         output = s3_rest_controller(prefix, resourcename)
         return output
 
-    else:
-        template = settings.get_template()
-        if template != "default":
-            # Try a Custom Page
-            controller = "applications.%s.private.templates.%s.controllers" % \
-                                (appname, template)
+    template = settings.get_template()
+    if template != "default":
+        # Try a Custom Page
+        controller = "applications.%s.private.templates.%s.controllers" % \
+                            (appname, template)
+        try:
+            exec("import %s as custom" % controller) in globals(), locals()
+        except ImportError, e:
+            # No Custom Page available, try a custom view
+            pass
+        else:
+            if "contact" in custom.__dict__:
+                output = custom.contact()()
+                return output
+
+        # Try a Custom View
+        view = os.path.join(request.folder, "private", "templates",
+                            template, "views", "contact.html")
+        if os.path.exists(view):
             try:
-                exec("import %s as custom" % controller) in globals(), locals()
-            except ImportError, e:
-                # No Custom Page available, try a custom view
-                pass
-            else:
-                if "contact" in custom.__dict__:
-                    output = custom.contact()()
-                    return output
+                # Pass view as file not str to work in compiled mode
+                response.view = open(view, "rb")
+            except IOError:
+                from gluon.http import HTTP
+                raise HTTP("404", "Unable to open Custom View: %s" % view)
 
-            view = os.path.join(request.folder, "private", "templates",
-                                template, "views", "contact.html")
-            if os.path.exists(view):
-                try:
-                    # Pass view as file not str to work in compiled mode
-                    response.view = open(view, "rb")
-                except IOError:
-                    from gluon.http import HTTP
-                    raise HTTP("404", "Unable to open Custom View: %s" % view)
+            response.title = T("Contact us")
+            return dict()
 
-                response.title = T("Contact us")
+    if settings.has_module("cms"):
+        # Use CMS
+        return s3db.cms_index("default", "contact", page_name=T("Contact Us"))
+
+    # Just use default HTML View
     return dict()
 
 # -----------------------------------------------------------------------------

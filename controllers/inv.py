@@ -676,29 +676,31 @@ def send_returns():
         @todo need to roll back commitments
     """
 
-    send_id = request.args[0]
+    try:
+        send_id = request.args[0]
+    except:
+        redirect(f="send")
+
     stable = s3db.inv_send
-    rtable = s3db.inv_recv
-    tracktable = s3db.inv_track_item
-    if not auth.s3_has_permission("update",
-                                  stable,
-                                  record_id=send_id):
+    if not auth.s3_has_permission("update", stable, record_id=send_id):
         session.error = T("You do not have permission to return this sent shipment.")
 
-    send_record = stable[send_id]
-    if send_record.status == s3db.inv_ship_status["IN_PROCESS"]:
+    send_record = db(stable.id == send_id).select(stable.status,
+                                                  limitby=(0, 1)
+                                                  ).first()
+    inv_ship_status = s3db.inv_ship_status
+    if send_record.status == inv_ship_status["IN_PROCESS"]:
         session.error = T("This shipment has not been sent - it cannot be returned because it can still be edited.")
 
     if session.error:
-        redirect(URL(c = "inv",
-                     f = "send",
-                     args = [send_id],
-                     )
-                 )
+        redirect(URL(c="inv", f="send",
+                     args=[send_id]))
+
+    rtable = s3db.inv_recv
+    tracktable = s3db.inv_track_item
 
     # Okay no error so far, change the status to Returning
-    stable[send_id] = dict(date = request.utcnow,
-                           status = s3db.inv_ship_status["RETURNING"],
+    stable[send_id] = dict(status = inv_ship_status["RETURNING"],
                            owned_by_user = None,
                            owned_by_group = ADMIN)
     recv_row = db(tracktable.send_id == send_id).select(tracktable.recv_id,
@@ -706,16 +708,15 @@ def send_returns():
     if recv_row:
         recv_id = recv_row.recv_id
         rtable[recv_id] = dict(date = request.utcnow,
-                               status = s3db.inv_ship_status["RETURNING"],
+                               status = inv_ship_status["RETURNING"],
                                owned_by_user = None,
                                owned_by_group = ADMIN)
     # Set all track items to status of returning
     db(tracktable.send_id == send_id).update(status = s3db.inv_tracking_status["RETURNING"])
     session.confirmation = T("Sent Shipment has returned, indicate how many items will be returned to Warehouse.")
 
-    redirect(URL(c = "inv",
-                 f = "send",
-                 args = [send_id, "track_item"]))
+    redirect(URL(c="inv", f="send",
+                 args=[send_id, "track_item"]))
 
 # -----------------------------------------------------------------------------
 def return_process():
@@ -728,44 +729,46 @@ def return_process():
     except:
         redirect(f="send")
 
-    invtable = s3db.inv_inv_item
     stable = s3db.inv_send
-    rtable = s3db.inv_recv
-    tracktable = s3db.inv_track_item
-    if not auth.s3_has_permission("update",
-                                  stable,
-                                  record_id=send_id):
+    if not auth.s3_has_permission("update", stable, record_id=send_id):
         session.error = T("You do not have permission to return this sent shipment.")
 
-    send_record = stable[send_id]
-    if send_record.status != s3db.inv_ship_status["RETURNING"]:
+    send_record = db(stable.id == send_id).select(stable.status,
+                                                  limitby=(0, 1)
+                                                  ).first()
+    inv_ship_status = s3db.inv_ship_status
+    if send_record.status != inv_ship_status["RETURNING"]:
         session.error = T("This shipment has not been returned.")
 
     if session.error:
-        redirect(URL(c = "inv",
-                     f = "send",
-                     args = [send_id],
-                     )
-                 )
+        redirect(URL(c="inv", f="send",
+                     args=[send_id]))
+
+    invtable = s3db.inv_inv_item
+    rtable = s3db.inv_recv
+    tracktable = s3db.inv_track_item
 
     # Okay no error so far, let's move the goods back into the warehouse
     # and then change the status to received
     # Update Receive record & lock for editing
     # Move each item to the site
-    track_rows = db(tracktable.send_id == send_id).select()
+    track_rows = db(tracktable.send_id == send_id).select(tracktable.id,
+                                                          tracktable.quantity,
+                                                          tracktable.return_quantity,
+                                                          tracktable.send_inv_item_id,
+                                                          )
     for track_item in track_rows:
         send_inv_id = track_item.send_inv_item_id
         return_qnty = track_item.return_quantity
         if return_qnty == None:
             return_qnty = 0
         # update the receive quantity in the tracking record
-        tracktable[track_item.id] = dict (recv_quantity = track_item.quantity - return_qnty)
+        tracktable[track_item.id] = dict(recv_quantity = track_item.quantity - return_qnty)
         if return_qnty:
             db(invtable.id == send_inv_id).update(quantity = invtable.quantity + return_qnty)
 
 
-    stable[send_id] = dict(date = request.utcnow,
-                           status = s3db.inv_ship_status["RECEIVED"],
+    stable[send_id] = dict(status = inv_ship_status["RECEIVED"],
                            owned_by_user = None,
                            owned_by_group = ADMIN)
     recv_row = db(tracktable.send_id == send_id).select(tracktable.recv_id,
@@ -773,7 +776,7 @@ def return_process():
     if recv_row:
         recv_id = recv_row.recv_id
         rtable[recv_id] = dict(date = request.utcnow,
-                               status = s3db.inv_ship_status["RECEIVED"],
+                               status = inv_ship_status["RECEIVED"],
                                owned_by_user = None,
                                owned_by_group = ADMIN)
 
@@ -797,29 +800,26 @@ def send_cancel():
         redirect(f="send")
 
     stable = s3db.inv_send
-    rtable = s3db.inv_recv
-    tracktable = s3db.inv_track_item
-    if not auth.s3_has_permission("delete",
-                                  stable,
-                                  record_id=send_id):
+    if not auth.s3_has_permission("delete", stable, record_id=send_id):
         session.error = T("You do not have permission to cancel this sent shipment.")
 
     send_record = db(stable.id == send_id).select(stable.status,
                                                   limitby=(0, 1)).first()
-    if send_record.status != s3db.inv_ship_status["SENT"]:
+
+    inv_ship_status = s3db.inv_ship_status
+    if send_record.status != inv_ship_status["SENT"]:
         session.error = T("This shipment has not been sent - it has NOT been canceled because can still be edited.")
 
     if session.error:
-        redirect(URL(c = "inv",
-                     f = "send",
-                     args = [send_id],
-                     )
-                 )
+        redirect(URL(c="inv", f="send",
+                     args=[send_id]))
+
+    rtable = s3db.inv_recv
+    tracktable = s3db.inv_track_item
 
     # Okay no error so far, let's delete that baby
     # Change the send and recv status to cancelled
-    db(stable.id == send_id).update(date = request.utcnow,
-                                    status = s3db.inv_ship_status["CANCEL"],
+    db(stable.id == send_id).update(status = inv_ship_status["CANCEL"],
                                     owned_by_user = None,
                                     owned_by_group = ADMIN)
     recv_row = db(tracktable.send_id == send_id).select(tracktable.recv_id,
@@ -827,7 +827,7 @@ def send_cancel():
     if recv_row:
         recv_id = recv_row.recv_id
         db(rtable.id == recv_id).update(date = request.utcnow,
-                                        status = s3db.inv_ship_status["CANCEL"],
+                                        status = inv_ship_status["CANCEL"],
                                         owned_by_user = None,
                                         owned_by_group = ADMIN)
 
@@ -836,12 +836,12 @@ def send_cancel():
     # If they are linked to a request then the in transit total will also be reduced
     # Records can only be deleted if the status is In Process (or preparing)
     # so change the status before we delete
-    db(tracktable.send_id == send_id).update(status = s3db.inv_tracking_status["IN_PROCESS"])
+    db(tracktable.send_id == send_id).update(status = inv_tracking_status["IN_PROCESS"])
     track_rows = db(tracktable.send_id == send_id).select(tracktable.id)
     for track_item in track_rows:
         s3.inv_track_item_deleting(track_item.id)
     # Now change the status to (cancelled)
-    db(tracktable.send_id == send_id).update(status = s3db.inv_tracking_status["CANCEL"])
+    db(tracktable.send_id == send_id).update(status = inv_tracking_status["CANCEL"])
 
     session.confirmation = T("Sent Shipment canceled and items returned to Warehouse")
 
@@ -853,8 +853,6 @@ def recv():
     """ RESTful CRUD controller """
 
     recvtable = s3db.inv_recv
-    tracktable = s3db.inv_track_item
-    atable = s3db.inv_adj_item
 
     # Limit site_id to sites the user has permissions for
     if settings.get_inv_shipment_name() == "order":
@@ -862,6 +860,9 @@ def recv():
     else:
         error_msg = T("You do not have permission for any facility to receive a shipment.")
     auth.permitted_facilities(table=recvtable, error_msg=error_msg)
+
+    tracktable = s3db.inv_track_item
+    atable = s3db.inv_adj_item
 
     # The inv_recv record might be created when the shipment is send and so it
     # might not have the recipient identified. If it is null then set it to
@@ -1158,48 +1159,49 @@ def recv_process():
     except:
         redirect(URL(f="recv"))
 
-    atable = s3db.inv_adj
     rtable = s3db.inv_recv
+
+    if not auth.s3_has_permission("update", rtable, record_id=recv_id):
+        session.error = T("You do not have permission to receive this shipment.")
+
+    recv_record = db(rtable.id == recv_id).select(rtable.status,
+                                                  rtable.site_id,
+                                                  limitby=(0, 1)
+                                                  ).first()
+
+    status = recv_record.status
+    inv_ship_status = s3db.inv_ship_status
+    if status == inv_ship_status["RECEIVED"]:
+        session.error = T("This shipment has already been received.")
+
+    elif status == inv_ship_status["CANCEL"]:
+        session.error = T("This shipment has already been received & subsequently canceled.")
+
+    if session.error:
+        redirect(URL(c="inv", f="recv",
+                     args=[recv_id]))
+
+    atable = s3db.inv_adj
     stable = s3db.inv_send
     tracktable = s3db.inv_track_item
     siptable = s3db.supply_item_pack
     rrtable = s3db.req_req
     ritable = s3db.req_req_item
 
-    if not auth.s3_has_permission("update",
-                                  rtable,
-                                  record_id=recv_id):
-        session.error = T("You do not have permission to receive this shipment.")
-
-    recv_record = rtable[recv_id]
-
-    if recv_record.status == s3db.inv_ship_status["RECEIVED"]:
-        session.error = T("This shipment has already been received.")
-
-    if recv_record.status == s3db.inv_ship_status["CANCEL"]:
-        session.error = T("This shipment has already been received & subsequently canceled.")
-
-    if session.error:
-        redirect(URL(c = "inv",
-                     f = "recv",
-                     args = [recv_id]))
-
-    site_id = recv_record.site_id
     # Update Receive record & lock for editing
-    code = s3db.inv_get_shipping_code(settings.get_inv_recv_shortname(),
-                                      recv_record.site_id,
-                                      s3db.inv_recv.recv_ref)
+    code = s3db.supply_get_shipping_code(settings.get_inv_recv_shortname(),
+                                         recv_record.site_id,
+                                         s3db.inv_recv.recv_ref)
     rtable[recv_id] = dict(date = request.utcnow,
                            recv_ref = code,
-                           status = s3db.inv_ship_status["RECEIVED"],
+                           status = inv_ship_status["RECEIVED"],
                            owned_by_user = None,
                            owned_by_group = ADMIN)
     send_row = db(tracktable.recv_id == recv_id).select(tracktable.send_id,
                                                         limitby=(0, 1)).first()
     if send_row:
         send_id = send_row.send_id
-        stable[send_id] = dict(date = request.utcnow,
-                               status = s3db.inv_ship_status["RECEIVED"],
+        stable[send_id] = dict(status = inv_ship_status["RECEIVED"],
                                owned_by_user = None,
                                owned_by_group = ADMIN)
     # Change the status for all track items in this shipment to Unloading
@@ -1209,16 +1211,15 @@ def recv_process():
     # Move each item to the site
     track_rows = db(tracktable.recv_id == recv_id).select()
     for track_item in track_rows:
-        row=Storage(track_item)
+        row = Storage(track_item)
         s3.inv_track_item_onaccept(Storage(vars=Storage(id=row.id),
                                            record = row,
                                            )
                                   )
 
     session.confirmation = T("Shipment Items Received")
-    redirect(URL(c = "inv",
-                 f = "recv",
-                 args = [recv_id]))
+    redirect(URL(c="inv", f="recv",
+                 args=[recv_id]))
 
 # -----------------------------------------------------------------------------
 def recv_cancel():
@@ -1234,26 +1235,25 @@ def recv_cancel():
         redirect(URL(f="recv"))
 
     rtable = s3db.inv_recv
-    stable = s3db.inv_send
-    tracktable = s3db.inv_track_item
-    inv_item_table = s3db.inv_inv_item
-    ritable = s3db.req_req_item
-    siptable = s3db.supply_item_pack
-    if not auth.s3_has_permission("delete",
-                                  rtable,
-                                  record_id=recv_id):
+    if not auth.s3_has_permission("delete", rtable, record_id=recv_id):
         session.error = T("You do not have permission to cancel this received shipment.")
 
     recv_record = db(rtable.id == recv_id).select(rtable.status,
                                                   limitby=(0, 1)).first()
 
-    if recv_record.status != s3db.inv_ship_status["RECEIVED"]:
+    inv_ship_status = s3db.inv_ship_status
+    if recv_record.status != inv_ship_status["RECEIVED"]:
         session.error = T("This shipment has not been received - it has NOT been canceled because can still be edited.")
 
     if session.error:
-        redirect(URL(c = "inv",
-                     f = "recv",
-                     args = [recv_id]))
+        redirect(URL(c="inv", f="recv",
+                     args=[recv_id]))
+
+    stable = s3db.inv_send
+    tracktable = s3db.inv_track_item
+    inv_item_table = s3db.inv_inv_item
+    ritable = s3db.req_req_item
+    siptable = s3db.supply_item_pack
 
     # Go through each item in the shipment remove them from the site store
     # and put them back in the track item record
@@ -1273,7 +1273,10 @@ def recv_cancel():
         # @todo potential problem in that the send id should be the same for all track items but is not explicitly checked
         if send_id == None and recv_item.send_id != None:
             send_id = recv_item.send_id
-    track_rows = db(tracktable.recv_id == recv_id).select()
+    track_rows = db(tracktable.recv_id == recv_id).select(tracktable.req_item_id,
+                                                          tracktable.item_pack_id,
+                                                          tracktable.recv_quantity,
+                                                          )
     for track_item in track_rows:
         # If this is linked to a request
         # then remove these items from the quantity in fulfil
@@ -1299,7 +1302,7 @@ def recv_cancel():
             s3db.req_update_status(req_id)
     # Now set the recv record to cancelled and the send record to sent
     db(rtable.id == recv_id).update(date = request.utcnow,
-                                    status = s3db.inv_ship_status["CANCEL"],
+                                    status = inv_ship_status["CANCEL"],
                                     owned_by_user = None,
                                     owned_by_group = ADMIN)
     if send_id != None:
@@ -1307,8 +1310,7 @@ def recv_cancel():
         # now cancel this record to get the stock back into their warehouse.
         # IMPORTANT reports need to locate this record otherwise it can be
         # a mechanism to circumvent the auditing of stock
-        db(stable.id == send_id).update(date = request.utcnow,
-                                        status = s3db.inv_ship_status["SENT"],
+        db(stable.id == send_id).update(status = inv_ship_status["SENT"],
                                         owned_by_user = None,
                                         owned_by_group = ADMIN)
     redirect(URL(c = "inv",
@@ -1377,7 +1379,7 @@ def track_item():
                                            (T("Source"), "supply_org_id"),
                                            (T("Remarks"), "comments"),
                                            ],
-                            orderby = "recipient_id",
+                            orderby = "inv_recv.recipient_id",
                             )
             s3.filter = (table.recv_id != None)
 
@@ -1533,8 +1535,6 @@ def adj_close():
         redirect(URL(f="adj"))
 
     atable = s3db.inv_adj
-    aitable = s3db.inv_adj_item
-    inv_item_table = s3db.inv_inv_item
 
     # Limit site_id to sites the user has permissions for
     error_msg = T("You do not have permission to adjust the stock level in this warehouse.")
@@ -1547,9 +1547,11 @@ def adj_close():
         session.error = T("This adjustment has already been closed.")
 
     if session.error:
-        redirect(URL(c = "inv",
-                     f = "adj",
-                     args = [adj_id]))
+        redirect(URL(c="inv", f="adj",
+                     args=[adj_id]))
+
+    aitable = s3db.inv_adj_item
+    inv_item_table = s3db.inv_inv_item
 
     site_id = adj_rec.site_id
     # Go through all the adj_items
@@ -1586,11 +1588,9 @@ def adj_close():
     # Go to the Inventory of the Site which has adjusted these items
     (prefix, resourcename, id) = s3db.get_instance(s3db.org_site,
                                                    site_id)
-    url = URL(c = prefix,
-              f = resourcename,
-              args = [id, "inv_item"])
-
-    redirect(url)
+    redirect(URL(c = prefix,
+                 f = resourcename,
+                 args = [id, "inv_item"]))
 
 # =============================================================================
 def recv_item_json():
@@ -1639,14 +1639,15 @@ def send_item_json():
     stable = s3db.org_site
     istable = s3db.inv_send
     ittable = s3db.inv_track_item
+    inv_ship_status = s3db.inv_ship_status
 
     istable.date.represent = lambda dt: dt[:10]
 
     query = (ittable.req_item_id == item_id) & \
             (istable.id == ittable.send_id) & \
             (istable.site_id == stable.id) & \
-            ((istable.status == s3db.inv_ship_status["SENT"]) | \
-             (istable.status == s3db.inv_ship_status["RECEIVED"])) & \
+            ((istable.status == inv_ship_status["SENT"]) | \
+             (istable.status == inv_ship_status["RECEIVED"])) & \
             (ittable.deleted == False)
     records = db(query).select(istable.id,
                                istable.date,

@@ -566,7 +566,8 @@ body.popup {
 }
 #popup {
     background: #fff;
-    width: 725px;
+    max-width: 725px;
+    width: 100%;
 }
 .loading {
     background: url(../../img/ajax-loader.gif) center no-repeat !important;
@@ -576,14 +577,12 @@ body.popup {
     display: none;
 }
 
-/* Message Flash styles */
-#_statusbar {
-    position: fixed;
-    left: 0;
-    right: 0;
-    z-index: 7000;
+#popup .control-group {
+    padding-right: 20px;
 }
-.confirmation {
+
+/* Message Flash styles */
+.alert-success {
     color: #070;
     font-weight: bold;
     text-align: center;
@@ -598,10 +597,10 @@ body.popup {
     cursor: pointer;
     clear: left; /* Added to avoid merging with breadcrumbs */
 }
-.confirmation p em {
+.alert-success p em {
     color: #070;
 }
-.error {
+.alert-error {
     color: #c00;
     font-weight: bold;
     text-align: center;
@@ -616,10 +615,10 @@ body.popup {
     cursor: pointer;
     clear: left; /* Added to avoid merging with breadcrumbs */
 }
-.error p em {
+.alert-error p em {
     color: #c00;
 }
-.information {
+.alert-info {
     color: #748d8e;
     font-weight: bold;
     text-align: center;
@@ -634,10 +633,10 @@ body.popup {
     cursor: pointer;
     clear: left; /* Added to avoid merging with breadcrumbs */
 }
-.information p em {
+.alert-info p em {
     color: #748d8e;
 }
-.warning {
+.alert-warning {
     color: #c00;
     font-weight: bold;
     text-align: center;
@@ -652,8 +651,15 @@ body.popup {
     cursor: pointer;
     clear: left; /* Added to avoid merging with breadcrumbs */
 }
-.warning p em {
+.alert-warning p em {
     color: #c00;
+}
+/* Copy of BootStrap Styling */
+button.close {
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0);
+    border: 0 none;
+    cursor: pointer;
+    padding: 0;
 }
 
 /* Throbber */

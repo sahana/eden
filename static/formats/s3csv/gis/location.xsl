@@ -36,8 +36,11 @@
          lat_max............
          lon_min............
          lon_max............
-         Elevation..........Elevation    (optional)
-         Population.........Population   (optional)
+         Elevation..........float........Elevation    (optional)
+         Start Date.........YYYY-MM-DD...Start Date   (optional)
+         End Date...........YYYY-MM-DD...End Date     (optional)
+         Population.........integer......Population   (optional)
+         Comments...........string.......Comments     (optional)
 
          Specify as many level of hierarchy as you need to ensure correct
          location within the hierarchy
@@ -75,25 +78,33 @@
     <xsl:key name="L1" match="row"
              use="concat(col[contains(
                              document('../labels.xml')/labels/column[@name='Country']/match/text(),
-                             concat('|', @field, '|'))], '/', col[@field='L1'])"/>
+                             concat('|', @field, '|'))], '/', col[@field='L1'], '/',
+                                                              col[@field='Start Date'], '/',
+                                                              col[@field='End Date'])"/>
     <xsl:key name="L2" match="row"
              use="concat(col[contains(
                              document('../labels.xml')/labels/column[@name='Country']/match/text(),
                              concat('|', @field, '|'))], '/', col[@field='L1'], '/',
-                                                              col[@field='L2'])"/>
+                                                              col[@field='L2'], '/',
+                                                              col[@field='Start Date'], '/',
+                                                              col[@field='End Date'])"/>
     <xsl:key name="L3" match="row"
              use="concat(col[contains(
                              document('../labels.xml')/labels/column[@name='Country']/match/text(),
                              concat('|', @field, '|'))], '/', col[@field='L1'], '/',
                                                               col[@field='L2'], '/',
-                                                              col[@field='L3'])"/>
+                                                              col[@field='L3'], '/',
+                                                              col[@field='Start Date'], '/',
+                                                              col[@field='End Date'])"/>
     <xsl:key name="L4" match="row"
              use="concat(col[contains(
                              document('../labels.xml')/labels/column[@name='Country']/match/text(),
                              concat('|', @field, '|'))], '/', col[@field='L1'], '/',
                                                               col[@field='L2'], '/',
                                                               col[@field='L3'], '/',
-                                                              col[@field='L4'])"/>
+                                                              col[@field='L4'], '/',
+                                                              col[@field='Start Date'], '/',
+                                                              col[@field='End Date'])"/>
 
     <xsl:key name="L5" match="row"
              use="concat(col[contains(
@@ -102,7 +113,9 @@
                                                               col[@field='L2'], '/',
                                                               col[@field='L3'], '/',
                                                               col[@field='L4'], '/',
-                                                              col[@field='L5'])"/>
+                                                              col[@field='L5'], '/',
+                                                              col[@field='Start Date'], '/',
+                                                              col[@field='End Date'])"/>
 
     <!-- ****************************************************************** -->
 
@@ -121,7 +134,9 @@
                                                                    concat(col[contains(
                                                                               document('../labels.xml')/labels/column[@name='Country']/match/text(),
                                                                               concat('|', @field, '|'))], '/',
-                                                                          col[@field='L1']))[1])]">
+                                                                          col[@field='L1'], '/',
+                                                                          col[@field='Start Date'], '/',
+                                                                          col[@field='End Date']))[1])]">
                 <xsl:call-template name="L1"/>
             </xsl:for-each>
 
@@ -131,7 +146,9 @@
                                                                               document('../labels.xml')/labels/column[@name='Country']/match/text(),
                                                                               concat('|', @field, '|'))], '/',
                                                                           col[@field='L1'], '/',
-                                                                          col[@field='L2']))[1])]">
+                                                                          col[@field='L2'], '/',
+                                                                          col[@field='Start Date'], '/',
+                                                                          col[@field='End Date']))[1])]">
                 <xsl:call-template name="L2"/>
             </xsl:for-each>
 
@@ -142,7 +159,9 @@
                                                                               concat('|', @field, '|'))], '/',
                                                                           col[@field='L1'], '/',
                                                                           col[@field='L2'], '/',
-                                                                          col[@field='L3']))[1])]">
+                                                                          col[@field='L3'], '/',
+                                                                          col[@field='Start Date'], '/',
+                                                                          col[@field='End Date']))[1])]">
                 <xsl:call-template name="L3"/>
             </xsl:for-each>
 
@@ -154,7 +173,9 @@
                                                                           col[@field='L1'], '/',
                                                                           col[@field='L2'], '/',
                                                                           col[@field='L3'], '/',
-                                                                          col[@field='L4']))[1])]">
+                                                                          col[@field='L4'], '/',
+                                                                          col[@field='Start Date'], '/',
+                                                                          col[@field='End Date']))[1])]">
                 <xsl:call-template name="L4"/>
             </xsl:for-each>
 
@@ -167,7 +188,9 @@
                                                                           col[@field='L2'], '/',
                                                                           col[@field='L3'], '/',
                                                                           col[@field='L4'], '/',
-                                                                          col[@field='L5']))[1])]">
+                                                                          col[@field='L5'], '/',
+                                                                          col[@field='Start Date'], '/',
+                                                                          col[@field='End Date']))[1])]">
                 <xsl:call-template name="L5"/>
             </xsl:for-each>
 
@@ -236,6 +259,15 @@
                             <data field="lon_min"><xsl:value-of select="col[@field='lon_min']"/></data>
                             <data field="lat_max"><xsl:value-of select="col[@field='lat_max']"/></data>
                             <data field="lon_max"><xsl:value-of select="col[@field='lon_max']"/></data>
+                        </xsl:if>
+                        <xsl:if test="col[@field='Start Date']!=''">
+                            <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
+                        </xsl:if>
+                        <xsl:if test="col[@field='End Date']!=''">
+                            <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
+                        </xsl:if>
+                        <xsl:if test="col[@field='Comments']!=''">
+                            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
                         </xsl:if>
                         <!-- Named Tags -->
                         <resource name="gis_location_tag">
@@ -341,6 +373,15 @@
                                 </xsl:if>
                             </xsl:when>
                         </xsl:choose>
+                        <xsl:if test="col[@field='Start Date']!=''">
+                            <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
+                        </xsl:if>
+                        <xsl:if test="col[@field='End Date']!=''">
+                            <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
+                        </xsl:if>
+                        <xsl:if test="col[@field='Comments']!=''">
+                            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+                        </xsl:if>
                         <xsl:if test="col[@field='Population']!=''">
                             <resource name="gis_location_tag">
                                 <data field="tag">population</data>
@@ -444,6 +485,15 @@
                                 </xsl:if>
                             </xsl:when>
                         </xsl:choose>
+                        <xsl:if test="col[@field='Start Date']!=''">
+                            <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
+                        </xsl:if>
+                        <xsl:if test="col[@field='End Date']!=''">
+                            <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
+                        </xsl:if>
+                        <xsl:if test="col[@field='Comments']!=''">
+                            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+                        </xsl:if>
                         <xsl:if test="col[@field='Population']!=''">
                             <resource name="gis_location_tag">
                                 <data field="tag">population</data>
@@ -552,6 +602,15 @@
                                 </xsl:if>
                             </xsl:when>
                         </xsl:choose>
+                        <xsl:if test="col[@field='Start Date']!=''">
+                            <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
+                        </xsl:if>
+                        <xsl:if test="col[@field='End Date']!=''">
+                            <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
+                        </xsl:if>
+                        <xsl:if test="col[@field='Comments']!=''">
+                            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+                        </xsl:if>
                         <xsl:if test="col[@field='Population']!=''">
                             <resource name="gis_location_tag">
                                 <data field="tag">population</data>
@@ -669,6 +728,15 @@
                                 </xsl:if>
                             </xsl:when>
                         </xsl:choose>
+                        <xsl:if test="col[@field='Start Date']!=''">
+                            <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
+                        </xsl:if>
+                        <xsl:if test="col[@field='End Date']!=''">
+                            <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
+                        </xsl:if>
+                        <xsl:if test="col[@field='Comments']!=''">
+                            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+                        </xsl:if>
                         <xsl:if test="col[@field='Population']!=''">
                             <resource name="gis_location_tag">
                                 <data field="tag">population</data>
@@ -795,6 +863,15 @@
                                 </xsl:if>
                             </xsl:when>
                         </xsl:choose>
+                        <xsl:if test="col[@field='Start Date']!=''">
+                            <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
+                        </xsl:if>
+                        <xsl:if test="col[@field='End Date']!=''">
+                            <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
+                        </xsl:if>
+                        <xsl:if test="col[@field='Comments']!=''">
+                            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+                        </xsl:if>
                         <xsl:if test="col[@field='Population']!=''">
                             <resource name="gis_location_tag">
                                 <data field="tag">population</data>
@@ -865,6 +942,15 @@
                 </xsl:choose>
                 <xsl:if test="col[@field='Elevation']!=''">
                     <data field="elevation"><xsl:value-of select="col[@field='Elevation']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='Start Date']!=''">
+                    <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='End Date']!=''">
+                    <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='Comments']!=''">
+                    <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
                 </xsl:if>
                 <xsl:if test="col[@field='Population']!=''">
                     <resource name="gis_location_tag">

@@ -108,6 +108,7 @@ class S3RequestManager(object):
         self.ERROR = Storage(
             BAD_RECORD = T("Record not found"),
             BAD_METHOD = T("Unsupported method"),
+            METHOD_DISABLED = T("Method disabled"),
             BAD_FORMAT = T("Unsupported data format"),
             BAD_REQUEST = T("Invalid request"),
             BAD_TEMPLATE = T("XSLT stylesheet not found"),
@@ -1656,7 +1657,7 @@ class S3Request(object):
                                                      statuscode=status,
                                                      message=message,
                                                      tree=tree),
-                       web2py_header=message,
+                       web2py_error=message,
                        **headers)
 
     # -------------------------------------------------------------------------
@@ -2188,9 +2189,16 @@ class S3Method(object):
 
         views = current.response.s3.views
         theme = current.deployment_settings.get_theme()
-        if theme != "default" and \
-           exists(join(folder, "private", "templates", theme, "views", "_%s" % default)):
-            views[default] = "../private/templates/%s/views/_%s" % (theme, default)
+        if theme != "default":
+            if "/" in default:
+                subfolder, _default = default.split("/", 1)
+            else:
+                subfolder = ""
+                _default = default
+            if exists(join(folder, "private", "templates", theme, "views", subfolder, "_%s" % _default)):
+                if subfolder:
+                    subfolder = "%s/" % subfolder
+                views[default] = "../private/templates/%s/views/%s_%s" % (theme, subfolder, _default)
 
         if r.component:
             view = "%s_%s_%s" % (r.name, r.component_name, default)

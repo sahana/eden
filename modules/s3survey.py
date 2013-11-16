@@ -981,9 +981,6 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         @ivar field: The field object from metadata table, which can be used
                      by the widget to add additional rules (such as a requires)
                      before setting up the UI when inputing data
-
-        @author: Graeme Foster (graeme at acm dot org)
-
     """
 
     def __init__(self,
@@ -1481,8 +1478,6 @@ class S3QuestionTypeTextWidget(S3QuestionTypeAbstractWidget):
 
         Available metadata for this class:
         Help message: A message to help with completing the question
-
-        @author: Graeme Foster (graeme at acm dot org)
     """
 
     def __init__(self,
@@ -1535,8 +1530,6 @@ class S3QuestionTypeStringWidget(S3QuestionTypeAbstractWidget):
         Available metadata for this class:
         Help message: A message to help with completing the question
         Length:       The number of characters
-
-        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -1575,8 +1568,6 @@ class S3QuestionTypeNumericWidget(S3QuestionTypeAbstractWidget):
                       n.   floating point
                       n.n  floating point, the number of decimal places defined
                            by the number of n's that follow the decimal point
-
-        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -1662,8 +1653,6 @@ class S3QuestionTypeDateWidget(S3QuestionTypeAbstractWidget):
 
         Available metadata for this class:
         Help message: A message to help with completing the question
-
-        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -1795,8 +1784,6 @@ class S3QuestionTypeTimeWidget(S3QuestionTypeAbstractWidget):
 
         Available metadata for this class:
         Help message: A message to help with completing the question
-
-        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -1826,8 +1813,6 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
         Help message: A message to help with completing the question
         Length:       The number of options
         #:            A number one for each option
-
-        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -2043,8 +2028,6 @@ class S3QuestionTypeOptionYNWidget(S3QuestionTypeOptionWidget):
 
         Available metadata for this class:
         Help message: A message to help with completing the question
-
-        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -2070,8 +2053,6 @@ class S3QuestionTypeOptionYNDWidget(S3QuestionTypeOptionWidget):
 
         Available metadata for this class:
         Help message: A message to help with completing the question
-
-        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -2101,8 +2082,6 @@ class S3QuestionTypeOptionOtherWidget(S3QuestionTypeOptionWidget):
         Length:       The number of options
         #:            A number one for each option
         Other:        The question type the other option should be
-
-        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -2128,8 +2107,6 @@ class S3QuestionTypeMultiOptionWidget(S3QuestionTypeOptionWidget):
 
         Available metadata for this class:
         Help message: A message to help with completing the question
-
-        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -2166,9 +2143,6 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
         Help message: A message to help with completing the question
         Parent:    Indicates which question is used to indicate the parent
                    This is used as a simplified Hierarchy.
-
-
-        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -2267,8 +2241,6 @@ class S3QuestionTypeLinkWidget(S3QuestionTypeAbstractWidget):
         Type: The type of question it really is (another question type)
         Relation: How it relates to the parent question
                   groupby: answers should be grouped by the value of the parent
-
-        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -2362,8 +2334,6 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
         columns:  An array of headings for each data column
         rows:     An array of headings for each data row
         data:     A matrix of widgets for each data cell
-
-        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -2664,8 +2634,6 @@ class S3QuestionTypeGridChildWidget(S3QuestionTypeAbstractWidget):
 
         Available metadata for this class:
         Type:     The type of question it really is (another question type)
-
-        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None

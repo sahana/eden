@@ -178,7 +178,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     #    M("List All"),
                     #    #M("Skill Equivalence", f="certificate_skill"),
                     #),
-                    #M("Programmes", f="programme",
+                    #M("Programs", f="programme",
                     #  check=[manager_mode, show_programmes])(
                     #    M("New", m="create"),
                     #    M("List All"),

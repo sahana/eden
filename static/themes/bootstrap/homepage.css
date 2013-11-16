@@ -80,7 +80,6 @@ a.btn.btn-custom.btn-login {
     text-align: center;
     color: #222222;
     position: relative;
-    word-spacing: 61px;
     line-height: 1;
 }
 
@@ -147,6 +146,8 @@ p.quote.mb4 {
 }
 
 #homepage-layer .icon-calendar,
+#homepage-layer .icon-flag,
+#homepage-layer .icon-truck,
 .icon-bullhorn,
 .icon-bookmark-empty {
     font-size: 34px;
@@ -154,7 +155,11 @@ p.quote.mb4 {
 .icon-bullhorn{
     color: #bd382e;	
 }
-#homepage-layer .icon-calendar{
+#homepage-layer .icon-calendar,
+#homepage-layer .icon-flag,
+/*#homepage-layer .icon-home, */
+#homepage-layer .icon-sitemap,
+#homepage-layer .icon-truck {
     color: #1ebaa6;	
 }
 .icon-bookmark-empty {

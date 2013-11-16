@@ -48,7 +48,7 @@
             var el = this.element;
 
             this.index = 0;
-            this.name = 's3-groupedopts-' + groupedoptsID;
+            this.name = 's3-groupedopts-' + this.id;
             if (this.menu) {
                 this.menu.remove();
             }

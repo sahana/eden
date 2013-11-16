@@ -664,6 +664,14 @@ class S3Config(Storage):
     def get_gis_marker_max_width(self):
         return self.gis.get("marker_max_width", 30)
 
+    def get_gis_max_features(self):
+        """
+            The maximum number of features to return in a Map Layer
+            - more than this will prompt the user to zoom in to load the layer
+            Lower this number to get extra performance from an overloaded server.
+        """
+        return self.gis.get("max_features", 1000)
+
     def get_gis_legend(self):
         """
             Should we display a Legend on the Map?
@@ -722,6 +730,10 @@ class S3Config(Storage):
         """
         return self.gis.get("poi_resources",
                             ["cr_shelter", "hms_hospital", "org_office"])
+
+    def get_gis_postcode_selector(self):
+        " Display Postcode form field when selecting Locations "
+        return self.gis.get("postcode_selector", True)
 
     def get_gis_print_service(self):
         """
@@ -1196,7 +1208,6 @@ class S3Config(Storage):
         return self.msg.get("max_send_retries", 9)
     
     # -------------------------------------------------------------------------
-    # Save Search and Subscription
     def get_search_max_results(self):
         """
             The maximum number of results to return in an Autocomplete Search
@@ -1414,7 +1425,7 @@ class S3Config(Storage):
     def get_hrm_vol_experience(self):
         """
             Whether to use Experience for Volunteers &, if so, which table to use
-            - options are: False, "experience" or "programme"
+            - options are: False, "experience", "programme" or "both"
         """
         return self.hrm.get("vol_experience", "programme")
 
@@ -1607,7 +1618,7 @@ class S3Config(Storage):
         """
             Whether to support Organisation branches or not
         """
-        return self.org.get("branches", True)
+        return self.org.get("branches", False)
 
     def get_org_regions(self):
         """
@@ -1700,6 +1711,27 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # Persons
+    def get_pr_age_group(self, age):
+        """
+            Function to provide the age group for an age
+        """
+        fn = self.pr.get("age_group", None)
+        if fn:
+            group = fn(age)
+        else:
+            # Default
+            if age < 18 :
+                group = "-17" # "< 18"/" < 18" don't sort correctly
+            elif age < 25 :
+                group = "18-24"
+            elif age < 40:
+                group = "25-39"
+            elif age < 60:
+                group = "40-59"
+            else:
+                group = "60+"
+        return group
+
     def get_pr_request_dob(self):
         """ Include Date of Birth in the AddPersonWidget[2] """
         return self.pr.get("request_dob", True)
@@ -1824,6 +1856,16 @@ class S3Config(Storage):
     
     # -------------------------------------------------------------------------
     # Request Settings
+    def get_req_req_type(self):
+        """
+            The Types of Request which can be made.
+            Select one or more from:
+            * People
+            * Stock
+            * Other
+            tbc: Assets, Shelter, Food
+        """
+        return self.req.get("req_type", ["Stock", "People", "Other"])
     def get_req_type_inv_label(self):
         return current.T(self.req.get("type_inv_label", "Warehouse Stock"))
     def get_req_type_hrm_label(self):
@@ -1832,8 +1874,21 @@ class S3Config(Storage):
         return current.T(self.req.get("requester_label", "Requester"))
     def get_req_requester_optional(self):
         return self.req.get("requester_optional", False)
+    def get_req_requester_is_author(self):
+        """
+            Whether the User Account logging the Request is normally the Requester
+        """
+        return self.req.get("requester_is_author", True)
     def get_req_requester_from_site(self):
+        """
+            Whether the Requester has to be a staff of the site making the Request
+        """
         return self.req.get("requester_from_site", False)
+    def get_req_requester_to_site(self):
+        """
+            Whether to set the Requester as being an HR for the Site if no HR record yet & as Site contact if none yet exists
+        """
+        return self.req.get("requester_to_site", False)
     def get_req_date_writable(self):
         """ Whether Request Date should be manually editable """
         return self.req.get("date_writable", True)
@@ -1874,6 +1929,14 @@ class S3Config(Storage):
             Whether there is a Commit step in Requests Management
         """
         return self.req.get("use_commit", True)
+    def get_req_commit_without_request(self):
+        """
+            Whether to allow Donations to be made without a matching Request
+        """
+        return self.req.get("commit_without_request", False)
+    def get_req_committer_is_author(self):
+        """ Whether the User Account logging the Commitment is normally the Committer """
+        return self.req.get("committer_is_author", True)
     def get_req_ask_security(self):
         """
             Should Requests ask whether Security is required?
@@ -1896,16 +1959,6 @@ class S3Config(Storage):
         return self.req.get("use_req_number", True)
     def get_req_generate_req_number(self):
         return self.req.get("generate_req_number", True)
-    def get_req_req_type(self):
-        """
-            The Types of Request which can be made.
-            Select one or more from:
-            * People
-            * Stock
-            * Other
-            tbc: Assets, Shelter, Food
-        """
-        return self.req.get("req_type", ["Stock", "People", "Other"])
     def get_req_form_name(self):
         return self.req.get("req_form_name", "Requisition Form")
     def get_req_shortname(self):

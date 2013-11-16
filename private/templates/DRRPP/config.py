@@ -95,6 +95,12 @@ settings.gis.display_L0 = True
 settings.gis.countries = [ "AF", "AU", "BD", "BN", "CK", "CN", "FJ", "FM", "HK", "ID", "IN", "JP", "KH", "KI", "KP", "KR", "LA", "MH", "MM", "MN", "MV", "MY", "NP", "NZ", "PG", "PH", "PK", "PW", "SB", "SG", "SL", "TH", "TL", "TO", "TV", "TW", "VN", "VU", "WS"]
 
 # =============================================================================
+# Organisation Deployment Settings
+# Enable the use of Organisation Branches
+# RMS-compatibility
+settings.org.branches = True
+
+# =============================================================================
 # Project Deployment Settings
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
 settings.project.mode_3w = True

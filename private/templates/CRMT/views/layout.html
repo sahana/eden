@@ -105,7 +105,7 @@
        <!--<li><a href='/{{=appname}}/default/user/register'><i class='icon-check'></i> {{=T("Register")}}</a></li>-->
       </ul>
      </li>
-     {{else:}}{{if request.controller == "default" and request.function == "user":}} {{else:}}
+     {{else:}}{{if request.controller == "default" and request.function == "user" or "login" in request.args:}} {{else:}}
      <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-signin'></i><b class='caret'></b></a>
       <ul class='dropdown-menu'>
       {{=auth.login()}}
@@ -114,20 +114,20 @@
      {{pass}}{{pass}}
      <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-comment-alt'></i><b class='caret'></b></a>
       <ul class='dropdown-menu'>
-       {{vars=request.vars}}
-       {{language=response.s3.language}}
-       {{icon = {"en":"icon-check"}.get(language,"icon-check-empty")}}
-       {{vars["_language"] = "en"}} 
-       <li><a href='{{=URL(args=request.args, vars=vars)}}'><i class='{{=icon}}'></i> English</a></li>
-       {{icon = {"es":"icon-check"}.get(language,"icon-check-empty")}}
-       {{vars["_language"] = "es"}}
-       <li><a href='{{=URL(args=request.args, vars=vars)}}'><i class='{{=icon}}'></i> Español</a></li>
+       {{get_vars = request.get_vars}}
+       {{language = response.s3.language}}
+       {{icon = {"en":"icon-check"}.get(language, "icon-check-empty")}}
+       {{lang_vars = dict(_language="en")}}{{for var in get_vars:}}{{if var != "_language":}}{{lang_vars[var] = get_vars[var]}}{{pass}}{{pass}}
+       <li><a href='{{=URL(args=request.args, vars=lang_vars)}}'><i class='{{=icon}}'></i> English</a></li>
+       {{icon = {"es":"icon-check"}.get(language, "icon-check-empty")}}
+       {{lang_vars = dict(_language="es")}}{{for var in get_vars:}}{{if var != "_language":}}{{lang_vars[var] = get_vars[var]}}{{pass}}{{pass}}
+       <li><a href='{{=URL(args=request.args, vars=lang_vars)}}'><i class='{{=icon}}'></i> Español</a></li>
       </ul>
      </li>
      <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-question-sign'></i><b class='caret'></b></a>
       <ul class='dropdown-menu'>
         <li><a href='/{{=appname}}/default/video'><i class='icon-youtube-play'></i> {{=T("Video Tutorials")}}</a></li>
-        <li><a href='/{{=appname}}/static/themes/CRMT/SahanaUserManual.pdf'><i class='icon-book'></i> {{=T("User Manual")}}</a></li>
+        <li><a href='http://lacrmt.sahanafoundation.org/eden/static/themes/CRMT/SahanaUserManual.pdf'><i class='icon-book'></i> {{=T("User Manual")}}</a></li>
       </ul>
      </li>
     </ul>
@@ -138,7 +138,7 @@
 <div class='container'>
  <div id='alert-space'>
   {{if response.error:}}<div class='alert alert-error'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.error}}</div>{{pass}}
-  {{if response.warning:}}<div class='alert'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.warning}}</div>{{pass}}
+  {{if response.warning:}}<div class='alert alert-warning'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.warning}}</div>{{pass}}
   {{if response.information:}}<div class='alert alert-info'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.information}}</div>{{pass}}
   {{if response.confirmation:}}<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.confirmation}}</div>{{pass}}
   {{if response.flash:}}<div class='alert alert-success'><button type='button' class='close' data-dismiss='alert'>×</button>{{=response.flash}}</div>{{pass}}

@@ -2,8 +2,6 @@
 
 """ Sahana Eden Synchronization
 
-    @author: Dominic König <dominic[at]aidiq.com>
-
     @copyright: 2009-2013 (c) Sahana Software Foundation
     @license: MIT
 

@@ -30,8 +30,8 @@
    OTHER DEALINGS IN THE SOFTWARE.
 """
 
-#import inspect
-import string
+__all__ = ["S3Parsing"]
+
 import sys
 
 from gluon import current
@@ -44,7 +44,7 @@ class S3Parsing(object):
     """
 
     # -------------------------------------------------------------------------
-    @static_method
+    @staticmethod
     def parser(function_name, message_id, **kwargs):
         """
            1st Stage Parser
@@ -87,12 +87,13 @@ class S3Parsing(object):
             % (current.request.application, template)
         __import__(module_name)
         mymodule = sys.modules[module_name]
-        S3Parsing = mymodule.S3Parsing()
+        S3Parser = mymodule.S3Parser()
 
         # Pass the message to the parser
         try:
-            fn = getattr(S3Parsing, function_name)
+            fn = getattr(S3Parser, function_name)
         except:
+            from s3utils import s3_debug
             s3_debug("Parser not found: %s" % function_name)
             return None
 
@@ -113,7 +114,7 @@ class S3Parsing(object):
         if not message:
             return None, None
 
-        words = string.split(message.body)
+        words = message.body.split(" ")
         login = False
         email = None
         password = None

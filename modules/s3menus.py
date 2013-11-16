@@ -949,7 +949,7 @@ class S3OptionsMenu(object):
                       check=[manager_mode, use_teams])(
                         M("New", m="create"),
                         M("List All"),
-                        M("Search Members", f="group_membership", m="search"),
+                        M("Search Members", f="group_membership"),
                         M("Import", f="group_membership", m="import"),
                     ),
                     M("Department Catalog", f="department",
@@ -972,9 +972,7 @@ class S3OptionsMenu(object):
                       check=manager_mode)(
                         M("New", m="create"),
                         M("List All"),
-                        M("Search", m="search"),
-                        M("Search Training Participants", f="training",
-                          m="search"),
+                        M("Search Training Participants", f="training"),
                         M("Import Participant List", f="training", m="import"),
                     ),
                     M("Training Course Catalog", f="course",
@@ -994,7 +992,7 @@ class S3OptionsMenu(object):
                         M("Staff Report", m="report"),
                         M("Expiring Staff Contracts Report",
                           vars=dict(expiring=1)),
-                        M("Training Report", f="training", m="report"),
+                        M("Training Report", f="training", m="report2"),
                     ),
                     M("Personal Profile", f="person",
                       check=personal_mode, vars=dict(mode="personal")),
@@ -1045,7 +1043,7 @@ class S3OptionsMenu(object):
                       check=[manager_mode, use_teams])(
                         M("New", m="create"),
                         M("List All"),
-                        M("Search Members", f="group_membership", m="search"),
+                        M("Search Members", f="group_membership"),
                         M("Import", f="group_membership", m="import"),
                     ),
                     M("Department Catalog", f="department",
@@ -1068,9 +1066,7 @@ class S3OptionsMenu(object):
                       check=manager_mode)(
                         M("New", m="create"),
                         M("List All"),
-                        M("Search", m="search"),
-                        M("Search Training Participants", f="training",
-                          m="search"),
+                        M("Search Training Participants", f="training"),
                         M("Import Participant List", f="training", m="import"),
                     ),
                     M("Training Course Catalog", f="course",
@@ -1085,7 +1081,7 @@ class S3OptionsMenu(object):
                         M("List All"),
                         #M("Skill Equivalence", f="certificate_skill"),
                     ),
-                    M("Programmes", f="programme",
+                    M("Programs", f="programme",
                       check=[manager_mode, show_programmes])(
                         M("New", m="create"),
                         M("List All"),
@@ -1099,12 +1095,12 @@ class S3OptionsMenu(object):
                                        cols="month",
                                        fact="sum(hours)"),
                           check=show_programmes),
-                        M("Hours by Programme Report", f="programme_hours", m="report2",
+                        M("Hours by Program Report", f="programme_hours", m="report2",
                           vars=Storage(rows="programme_id",
                                        cols="month",
                                        fact="sum(hours)"),
                           check=show_programmes),
-                        M("Training Report", f="training", m="report"),
+                        M("Training Report", f="training", m="report2"),
                     ),
                     M("My Profile", f="person",
                       check=personal_mode, vars=dict(mode="personal")),
@@ -1226,8 +1222,7 @@ class S3OptionsMenu(object):
                         #M("Search Requested Items", f="req_item", m="search"),
                     ),
                     M("Commitments", c="req", f="commit", check=use_commit)(
-                        M("List All"),
-                        M("Search", m="search"),
+                        M("List All")
                     ),
                 )
 
@@ -1465,7 +1460,7 @@ class S3OptionsMenu(object):
                         M("New", m="create"),
                         M("List All"),
                         M("Map", m="map"),
-                        M("Search", m="search"),
+                        #M("Search", m="search"),
                         M("Import", m="import")
                     ),
                     M("Facilities", f="facility")(
@@ -1710,7 +1705,6 @@ class S3OptionsMenu(object):
                         M("New", m="create"),
                         M("List All"),
                         M("List Recurring Requests", f="req_template"),
-                        M("Search", m="search"),
                         M("Map", m="map"),
                         M("Report", m="report"),
                         M("Search All Requested Items", f="req_item",
@@ -1719,8 +1713,7 @@ class S3OptionsMenu(object):
                           m="search", check=req_skills),
                     ),
                     M("Commitments", f="commit", check=use_commit)(
-                        M("List All"),
-                        M("Search", m="search"),
+                        M("List All")
                     ),
                     M("Items", c="supply", f="item")(
                         M("New", m="create"),
@@ -1860,7 +1853,7 @@ class S3OptionsMenu(object):
 
         return [
             M("Email Settings", c="msg", f="email_channel"),
-            M("Parsing Settings", c="msg", f="workflow"),
+            M("Parsing Settings", c="msg", f="parser"),
             M("RSS Settings", c="msg", f="rss_channel"),
             M("SMS Gateway Settings", c="msg", f="sms_outbound_gateway",
                 args=[1], m="update"),

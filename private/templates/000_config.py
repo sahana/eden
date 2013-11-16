@@ -179,6 +179,12 @@ settings.frontpage.rss = [
 #settings.security.audit_write = False
 #settings.security.audit_read = False
 
+# Performance Options
+# Maximum number of search results for an Autocomplete Widget
+#settings.search.max_results = 200
+# Maximum number of features for a Map Layer
+#settings.gis.max_features = 1000
+
 # =============================================================================
 # Import the settings from the Template
 # - note: invalid settings are ignored
@@ -192,6 +198,7 @@ if os.path.exists(path):
 #
 
 # e.g.
+#settings.base.system_name = T("Sahana TEST")
 #settings.base.prepopulate = ["demo"]
 #settings.base.theme = "default"
 #settings.L10n.default_language = "en"

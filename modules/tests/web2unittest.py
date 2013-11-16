@@ -273,13 +273,9 @@ class SeleniumUnitTest(Web2UnitTest):
             @param wait_time: The time in seconds to wait for confirmation to appear.
         """
 
-        if current.deployment_settings.get_ui_formstyle() == "bootstrap":
-            confirmation_class = "alert alert-success"
-        else:
-            confirmation_class = "confirmation"
         return WebDriverWait(self.browser, wait_time).until(
-                    lambda driver:
-                                driver.find_element_by_xpath("//div[@class='%s']" % confirmation_class))
+            lambda driver:
+                driver.find_element_by_xpath("//div[@class='alert alert-success']"))
 
     # -------------------------------------------------------------------------
     def getRows (self, table, data, dbcallback):

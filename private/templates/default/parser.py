@@ -35,11 +35,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3Parsing"]
+__all__ = ["S3Parser"]
 
 #import re
-import string
-import sys
 
 #import pyparsing
 try:
@@ -53,10 +51,10 @@ from gluon import current
 from gluon.tools import fetch
 
 from s3.s3fields import S3Represent
-from s3.s3utils import s3_debug, soundex
+from s3.s3utils import soundex
 
 # =============================================================================
-class S3Parsing(object):
+class S3Parser(object):
     """
        Message Parsing Template.
     """
@@ -246,7 +244,8 @@ class S3Parsing(object):
                                             lon = lon)
             elif service == "twitter":
                 # @ToDo: Use Geolocation of Tweet
-                location_id = pass
+                #location_id = 
+                pass
 
         # @ToDo: Update records inside this function with parsed data
         # @ToDo: Image
@@ -270,7 +269,7 @@ class S3Parsing(object):
                             "person", "organisation"]
 
         pkeywords = primary_keywords + contact_keywords
-        keywords = string.split(message_body)
+        keywords = message_body.split(" ")
         pquery = []
         name = ""
         for word in keywords:
@@ -537,7 +536,7 @@ class S3Parsing(object):
             reply = self._create_ireport(lat, lon, text)
         else:
             # Is this a Response to a Deployment Request?
-            words = string.split(message_body)
+            words = message_body.split(" ")
             text = ""
             reponse = ""
             report_id = None
@@ -565,7 +564,7 @@ class S3Parsing(object):
         return reply				    
 
     # -------------------------------------------------------------------------
-    @static_method
+    @staticmethod
     def _create_ireport(lat, lon, text):
         """
             Create New Incident Report
@@ -574,7 +573,7 @@ class S3Parsing(object):
         s3db = current.s3db
         rtable = s3db.irs_ireport
         gtable = s3db.gis_location
-        info = string.split(text)
+        info = text.split(" ")
         name = info[len(info) - 1]
         category = ""
         for a in range(0, len(info) - 1):
@@ -606,7 +605,7 @@ class S3Parsing(object):
         return reply
 	                    
     # -------------------------------------------------------------------------
-    @static_method
+    @staticmethod
     def _respond_drequest(message, report_id, response, text):
         """
             Parse Replies To Deployment Request
@@ -620,8 +619,11 @@ class S3Parsing(object):
         ptable = s3db.pr_person_user
         reply = None       
         
+        from_address = message.from_address
+        if "<" in from_address:
+            from_address = from_address.split("<")[1].split(">")[0]
         query = (ctable.contact_method == "EMAIL") & \
-                (ctable.value == message.from_address)
+                (ctable.value == from_address)
         responder = db(query).select(ctable.pe_id, limitby=(0, 1)).first()
         if responder:
             query = (ptable.pe_id == responder.pe_id)

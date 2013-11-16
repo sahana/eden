@@ -894,8 +894,6 @@ class GIS(object):
             the requested feature, using Materialized path for retrieving
             the children
 
-            @author: Aravind Venkatesan and Ajay Kumar Sreenivasan from NCSU
-
             This has been chosen over Modified Preorder Tree Traversal for
             greater efficiency:
             http://eden.sahanafoundation.org/wiki/HaitiGISToDo#HierarchicalTrees
@@ -2631,12 +2629,15 @@ class GIS(object):
         if countries:
             ttable = s3db.gis_location_tag
             cquery = (table.level == "L0") & \
+                     (table.end_date == None) & \
                      (ttable.location_id == ifield) & \
                      (ttable.tag == "ISO2") & \
                      (ttable.value.belongs(countries))
         else:
             # All countries
-            cquery = (table.level == "L0")
+            cquery = (table.level == "L0") & \
+                     (table.end_date == None) & \
+                     (table.deleted != True)
 
         if current.deployment_settings.get_gis_spatialdb():
             spatial = True
@@ -2717,13 +2718,17 @@ class GIS(object):
                 File.close()
 
         q1 = (table.level == "L1") & \
-             (table.deleted != True)
+             (table.deleted != True) & \
+             (table.end_date == None)
         q2 = (table.level == "L2") & \
-             (table.deleted != True)
+             (table.deleted != True) & \
+             (table.end_date == None)
         q3 = (table.level == "L3") & \
-             (table.deleted != True)
+             (table.deleted != True) & \
+             (table.end_date == None)
         q4 = (table.level == "L4") & \
-             (table.deleted != True)
+             (table.deleted != True) & \
+             (table.end_date == None)
 
         if "L1" in levels:
             if "L0" not in levels:
@@ -4087,7 +4092,8 @@ class GIS(object):
             if name is False or lat is False or lon is False or inherited is None or \
                parent is False or path is False or L0 is False or L1 is False:
                 # Get the whole feature
-                feature = db(table.id == id).select(table.name,
+                feature = db(table.id == id).select(table.id,
+                                                    table.name,
                                                     table.parent,
                                                     table.path,
                                                     table.lat,
@@ -4179,7 +4185,8 @@ class GIS(object):
                parent is False or path is False or L0 is False or L1 is False or \
                                                    L2 is False:
                 # Get the whole feature
-                feature = db(table.id == id).select(table.name,
+                feature = db(table.id == id).select(table.id,
+                                                    table.name,
                                                     table.parent,
                                                     table.path,
                                                     table.lat,
@@ -4299,7 +4306,8 @@ class GIS(object):
                parent is False or path is False or L0 is False or L1 is False or \
                                                    L2 is False or L3 is False:
                 # Get the whole feature
-                feature = db(table.id == id).select(table.name,
+                feature = db(table.id == id).select(table.id,
+                                                    table.name,
                                                     table.parent,
                                                     table.path,
                                                     table.lat,
@@ -4456,7 +4464,8 @@ class GIS(object):
                                                    L2 is False or L3 is False or \
                                                    L4 is False:
                 # Get the whole feature
-                feature = db(table.id == id).select(table.name,
+                feature = db(table.id == id).select(table.id,
+                                                    table.name,
                                                     table.parent,
                                                     table.path,
                                                     table.lat,
@@ -4648,7 +4657,8 @@ class GIS(object):
                                                    L2 is False or L3 is False or \
                                                    L4 is False or L5 is False:
                 # Get the whole feature
-                feature = db(table.id == id).select(table.name,
+                feature = db(table.id == id).select(table.id,
+                                                    table.name,
                                                     table.parent,
                                                     table.path,
                                                     table.lat,
@@ -4876,7 +4886,8 @@ class GIS(object):
                                                L2 is False or L3 is False or \
                                                L4 is False or L5 is False:
             # Get the whole feature
-            feature = db(table.id == id).select(table.name,
+            feature = db(table.id == id).select(table.id,
+                                                table.name,
                                                 table.level,
                                                 table.parent,
                                                 table.path,
@@ -5736,6 +5747,7 @@ class MAP(DIV):
                 "gis_cluster_multiple": T("There are multiple records at this location"),
                 "gis_loading": T("Loading"),
                 "gis_requires_login": T("Requires Login"),
+                "gis_too_many_features": T("There are too many features, please Zoom In"),
                 "gis_zoomin": T("Zoom In"),
                 }
 
@@ -7994,25 +8006,38 @@ class S3Map(S3Method):
             widget_id = "default_map"
 
         gis = current.gis
+        s3db = current.s3db
         tablename = self.tablename
+        prefix, name = tablename.split("_", 1)
+        ftable = s3db.gis_layer_feature
+        query = (ftable.controller == prefix) & \
+                (ftable.function == name)
+        layers = current.db(query).select(ftable.layer_id,
+                                          ftable.style_default,
+                                          )
+        if len(layers) > 1:
+            layers.exclude(lambda row: row.style_default == False)
+        if len(layers) == 1:
+            layer_id = layers.first().layer_id
+        else:
+            layer_id = None
 
-        marker_fn = current.s3db.get_config(tablename, "marker_fn")
+        marker_fn = s3db.get_config(tablename, "marker_fn")
         if marker_fn:
             # Per-feature markers added in get_location_data()
             marker = None
         else:
             # Single Marker for the layer
-            request = self.request
-            marker = gis.get_marker(request.controller,
-                                    request.function)
+            marker = gis.get_marker(prefix, name)
 
         url = URL(extension="geojson", args=None)
 
         # @ToDo: Support maps with multiple layers (Dashboards)
-        #layer_id = "search_results_%s" % widget_id
-        layer_id = "search_results"
+        #id = "search_results_%s" % widget_id
+        id = "search_results"
         feature_resources = [{"name"      : current.T("Search Results"),
-                              "id"        : layer_id,
+                              "id"        : id,
+                              "layer_id"  : layer_id,
                               "tablename" : tablename,
                               "url"       : url,
                               # We activate in callback after ensuring URL is updated for current filter status

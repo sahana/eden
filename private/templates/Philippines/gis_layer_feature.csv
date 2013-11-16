@@ -1,0 +1,4 @@
+Name,Description,Controller,Function,Symbology,Marker,GPS Marker,Popup Label,Popup Fields,Attributes,Filter,Polygons,Style,Folder,Visible,Enabled,Cluster Threshold,Refresh
+Donations,,req,commit,OCHA,distribution,Car,Offer,"organisation_id,person_id,comments,date_available",,~.cancel=False,,,,False,,
+Requests,,req,req,OCHA,beneficiary,Flag,Request,"site_id,purpose,date",,~.cancel=False,,,,False,,
+Sites,All Active Sites,org,facility,OCHA,office,Building,Site,"name,organisation_id",,~.obsolete=False,,,,False,,

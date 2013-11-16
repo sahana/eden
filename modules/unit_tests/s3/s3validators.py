@@ -44,6 +44,8 @@ class ISONEOFLazyRepresentationTests(unittest.TestCase):
     def setUp(self):
 
         s3db = current.s3db
+        current.auth.override = True
+        current.deployment_settings.org.branches = True
 
         orgs = [Storage(name="ISONEOF%s" % i,
                         acronym="IOO%s" % i)
@@ -57,7 +59,6 @@ class ISONEOFLazyRepresentationTests(unittest.TestCase):
             s3db.update_super(table, org)
             ids.append(org_id)
 
-        current.auth.override = True
         self.ids = ids
         self.orgs = orgs
 
@@ -130,6 +131,7 @@ class ISONEOFLazyRepresentationTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def tearDown(self):
 
+        current.deployment_settings.org.branches = False
         current.auth.override = False
         current.db.rollback()
 

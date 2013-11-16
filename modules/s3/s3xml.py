@@ -1048,7 +1048,7 @@ class S3XML(S3Codec):
 
                 if attributes and tablename in attributes:
                     _attr = ""
-                    attrs = attributes[tablename][id]
+                    attrs = attributes[tablename].get(id, [])
                     for a in attrs:
                         if _attr:
                             _attr = "%s,[%s]=[%s]" % (_attr, a, attrs[a])
@@ -2400,7 +2400,7 @@ class S3XML(S3Codec):
             # Make this a list of all encodings you need to support (as long as
             # they are supported by Python codecs), always starting with the most
             # likely.
-            encodings = ["utf-8", "iso-8859-1"]
+            encodings = ["utf-8-sig", "iso-8859-1"]
             e = encodings[0]
             for line in source:
                 if e:

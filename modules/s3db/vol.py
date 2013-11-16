@@ -56,6 +56,14 @@ class S3VolunteerModel(S3Model):
 
     def model(self):
 
+        T = current.T
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+
+        availability_opts = {1: T("No Restrictions"),
+                             2: T("Weekends only"),
+                             3: T("School Holidays only"),
+                             }
+
         # ---------------------------------------------------------------------
         # Volunteer Details
         # - extra details for volunteers
@@ -65,10 +73,20 @@ class S3VolunteerModel(S3Model):
                                   self.hrm_human_resource_id(ondelete = "CASCADE"),
                                   Field("active", "boolean",
                                         represent = self.vol_active_represent,
-                                        label = current.T("Active")),
+                                        label = T("Active"),
+                                        ),
+                                  Field("availability", "integer",
+                                        requires = IS_NULL_OR(
+                                                    IS_IN_SET(availability_opts)
+                                                    ),
+                                        represent = lambda opt: \
+                                            availability_opts.get(opt,
+                                                                  UNKNOWN_OPT),
+                                        label = T("Availability"),
+                                        ),
                                   *s3_meta_fields())
 
-    # =====================================================================
+    # =========================================================================
     @staticmethod
     def vol_active_represent(opt):
         """
@@ -688,7 +706,7 @@ def vol_service_record(r, **attr):
         date_represent = hrstable.date.represent
         programme = TABLE(TR(TH(T("Start Date")),
                              TH(T("End Date")),
-                             TH(T("Work on Programme")),
+                             TH(T("Work on Program")),
                              TH(T("Role")),
                              TH(T("Hours"))))
         total = 0

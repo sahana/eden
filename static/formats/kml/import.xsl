@@ -10,9 +10,7 @@
          http://schemas.opengis.net/kml/2.2.0/
          http://code.google.com/apis/kml/documentation/kmlreference.html
 
-         Version 0.2 / 2011-03-28 / by flavour
-
-         Copyright (c) 2011 Sahana Software Foundation
+         Copyright (c) 2011-13 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation

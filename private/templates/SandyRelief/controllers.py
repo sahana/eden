@@ -156,7 +156,7 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
             response.view = open(view, "rb")
         except IOError:
             from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         return dict(title = response.title,
                     item = item,
@@ -251,7 +251,7 @@ class contact():
             response.view = open(view, "rb")
         except IOError:
             from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         if request.env.request_method == "POST":
             # Processs Form

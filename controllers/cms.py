@@ -12,6 +12,8 @@ resourcename = request.function
 if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
+from datetime import timedelta
+
 # =============================================================================
 def index():
     """ Module homepage """
@@ -75,7 +77,7 @@ def blog():
     # Post-process
     def postp(r, output):
         if r.record:
-            response.view = "cms/blog.html"
+            response.view = s3base.S3CRUD._view(r, "cms/blog.html")
         return output
     s3.postp = postp
 
@@ -100,10 +102,10 @@ def post():
         if r.interactive:
             if r.method in ("create", "update"):
                 table = r.table
-                vars = request.get_vars
+                get_vars = request.get_vars
 
                 # Filter from a Profile page?"
-                series = vars.get("~.series_id$name", None)
+                series = get_vars.get("~.series_id$name", None)
                 if series:
                     # Lookup ID
                     stable = db.cms_series
@@ -116,13 +118,13 @@ def post():
                         field.readable = field.writable = False
 
                 # Context from a Profile page?"
-                location_id = vars.get("(location)", None)
+                location_id = get_vars.get("(location)", None)
                 if location_id:
                     field = table.location_id
                     field.default = location_id
                     field.readable = field.writable = False
 
-                page = vars.get("page", None)
+                page = get_vars.get("page", None)
                 if page:
                     table.name.default = page
                     table.name.readable = table.name.writable = False
@@ -134,14 +136,20 @@ def post():
                                    create_next = url,
                                    update_next = url)
 
-                _module = vars.get("module", None)
+                _module = get_vars.get("module", None)
                 if _module:
                     table.avatar.readable = table.avatar.writable = False
                     table.location_id.readable = table.location_id.writable = False
                     table.date.readable = table.date.writable = False
                     table.expired.readable = table.expired.writable = False
                     resource = request.get_vars.get("resource", None)
-                    if resource:
+                    if resource == "contact":
+                        # We're creating/updating text for a Contact page
+                        table.name.default = "Contact Page"
+                        #table.title.readable = table.title.writable = False
+                        table.replies.readable = table.replies.writable = False
+                        url = URL(c=_module, f=resource)
+                    elif resource:
                         # We're creating/updating text for a Resource Summary page
                         table.name.default = "%s Summary Page Header" % resource
                         table.title.readable = table.title.writable = False
@@ -159,7 +167,7 @@ def post():
                                    create_next = url,
                                    update_next = url)
 
-                layer_id = vars.get("layer_id", None)
+                layer_id = get_vars.get("layer_id", None)
                 if layer_id:
                     # Editing cms_post_layer
                     table.name.default = "Metadata Page for Layer %s" % layer_id
@@ -208,7 +216,7 @@ def page():
         if r.record:
             output = {"item": r.record.body}
             current.menu.options = None
-            response.view = "cms/page.html"
+            response.view = s3base.S3CRUD._view(r, "cms/page.html")
             if r.record.replies:
                 ckeditor = URL(c="static", f="ckeditor", args="ckeditor.js")
                 s3.scripts.append(ckeditor)
@@ -238,6 +246,350 @@ function comment_reply(id){
     s3.postp = postp
 
     output = s3_rest_controller("cms", "post")
+    return output
+
+# -----------------------------------------------------------------------------
+def filter_formstyle(row_id, label, widget, comment, hidden=False):
+    """
+        Custom Formstyle for FilterForm
+
+        @param row_id: HTML id for the row
+        @param label: the label
+        @param widget: the form widget
+        @param comment: the comment
+        @param hidden: whether the row should initially be hidden or not
+    """
+
+    if hidden:
+        _class = "advanced hide"
+    else:
+        _class= ""
+
+    if label:
+        return DIV(label, widget, _id=row_id, _class=_class)
+    else:
+        return DIV(widget, _id=row_id, _class=_class)
+
+# -----------------------------------------------------------------------------
+def cms_post_age(row):
+    """
+        The age of the post
+        - used for colour-coding markers of Alerts & Incidents
+    """
+
+    if hasattr(row, "cms_post"):
+        row = row.cms_post
+    try:
+        date = row.date
+    except:
+        # not available
+        return messages["NONE"]
+
+    now = request.utcnow
+    age = now - date
+    if age < timedelta(days=2):
+        return 1
+    elif age < timedelta(days=7):
+        return 2
+    else:
+        return 3
+
+# -----------------------------------------------------------------------------
+def newsfeed():
+    """
+        RESTful CRUD controller for display of posts as a filterable dataList
+    """
+
+    # Load Model
+    table = s3db.cms_post
+    title_list = T("Latest Information")
+
+    # Hide Posts linked to Modules & Expired Posts
+    FS = s3base.S3FieldSelector
+    s3.filter = (FS("post_module.module") == None) & (FS("expired") != True)
+
+    # Ensure that filtered views translate into options which update the Widget
+    get_vars = request.get_vars
+    if "~.series_id$name" in get_vars:
+        series_name = get_vars["~.series_id$name"]
+        # Disabled as can change filters dynamically
+        # @ToDo: Better Mechanism: Another field in cms_series?
+        #if series_name == "Request":
+        #    title_list = T("Latest Requests")
+        #elif series_name == "Offer":
+        #    title_list = T("Latest Offers")
+        stable = s3db.cms_series
+        series = db(stable.name == series_name).select(stable.id,
+                                                       limitby=(0, 1)).first()
+        if series:
+            series_id = str(series.id)
+            get_vars.pop("~.series_id$name")
+            get_vars["~.series_id__belongs"] = series_id
+
+    s3.crud_strings["cms_post"].title_list = title_list
+
+    # Which levels of Hierarchy are we using?
+    hierarchy = gis.get_location_hierarchy()
+    levels = hierarchy.keys()
+    if len(settings.get_gis_countries()) == 1:
+        levels.remove("L0")
+
+    # @ToDo: deployment_setting
+    #org_field = "created_by$organisation_id"
+    org_field = "post_organisation.organisation_id"
+
+    # @ToDo: deployment_setting
+    #contact_field = "created_by"
+    #table.created_by.represent = s3_auth_user_represent_name
+    contact_field = "person_id"
+
+    from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter, S3DateFilter
+    filter_widgets = [S3TextFilter(["body"],
+                                   label=T("Search"),
+                                   _class="filter-search",
+                                   #_placeholder=T("Search").upper(),
+                                   ),
+                      S3OptionsFilter("series_id",
+                                      label=T("Filter by Type"),
+                                      # We want translations
+                                      #represent="%(name)s",
+                                      # @ToDo: deployment_setting or introspect when vals > 3?
+                                      #widget="multiselect",
+                                      cols=2,
+                                      hidden=True,
+                                      ),
+                      S3LocationFilter("location_id",
+                                       label=T("Filter by Location"),
+                                       levels=levels,
+                                       widget="multiselect",
+                                       hidden=True,
+                                       ),
+                      S3OptionsFilter(org_field,
+                                      label=T("Filter by Organization"),
+                                      # Can't use this for created_by as integer, use field.represent instead
+                                      #represent="%(name)s",
+                                      widget="multiselect",
+                                      hidden=True,
+                                      ),
+                      S3DateFilter("date",
+                                   label=T("Filter by Date"),
+                                   hide_time=True,
+                                   hidden=True,
+                                   ),
+                      ]
+
+    s3db.configure("cms_post",
+                   # We could use a custom Advanced widget
+                   #filter_advanced = False,
+                   filter_formstyle = filter_formstyle,
+                   # No Submit button (done automatically)
+                   #filter_submit = (T("SEARCH"), "btn btn-primary"),
+                   filter_widgets = filter_widgets,
+                   list_layout = s3db.cms_render_posts,
+                   # Create form comes via AJAX in a Modal
+                   #insertable = False,
+                   notify_fields = [(T("Type"), "series_id"),
+                                    (T("Date"), "date"),
+                                    (T("Location"), "location_id"),
+                                    (T("Organization"), org_field),
+                                    (T("Contact"), contact_field),
+                                    (T("Description"), "body"),
+                                    ],
+                   notify_template = "notify_post",
+                   )
+
+    s3.dl_pagelength = 6  # 5 forces an AJAX call
+
+    def prep(r):
+        if r.interactive or r.representation == "aadata":
+            s3db.cms_customize_post_fields()
+
+        if r.interactive:
+            field = table.series_id
+            field.label = T("Type")
+
+            if r.method == "read":
+                # Restore the label for the Location
+                table.location_id.label = T("Location")
+            elif r.method == "create":
+                pass
+                # @ToDo: deployment_setting
+                #ADMIN = session.s3.system_roles.ADMIN
+                #if (not auth.s3_has_role(ADMIN)):
+                #    represent = S3Represent(lookup="cms_series", 
+                #                            translate=settings.get_L10n_translate_cms_series())
+                #    field.requires = IS_ONE_OF(db, 
+                #                               "cms_series.id",
+                #                               represent,
+                #                               not_filterby="name",
+                #                               not_filter_opts = ["Alert"], 
+                #                               )
+
+            refresh = get_vars.get("refresh", None)
+            if refresh == "datalist":
+                # We must be coming from the News Feed page so can change the type on-the-fly
+                field.readable = field.writable = True
+            #field.requires = field.requires.other
+            #field = table.name
+            #field.readable = field.writable = False
+            #field = table.title
+            #field.readable = field.writable = False
+            field = table.avatar
+            field.default = True
+            #field.readable = field.writable = False
+            field = table.replies
+            field.default = False
+            #field.readable = field.writable = False
+
+            field = table.body
+            field.label = T("Description")
+            # Plain text not Rich
+            from s3.s3widgets import s3_comments_widget
+            field.widget = s3_comments_widget
+            #table.comments.readable = table.comments.writable = False
+
+            #if request.controller == "default":
+            #    # Don't override card layout for News Feed/Homepage
+            #    return True
+
+            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+
+            # Filter from a Profile page?
+            # If so, then default the fields we know
+            location_id = get_vars.get("~.(location)", None)
+            if location_id:
+                table.location_id.default = location_id
+            event_id = get_vars.get("~.(event)", None)
+            if event_id:
+                crud_form = S3SQLCustomForm(
+                    "date",
+                    "series_id",
+                    "body",
+                    "location_id",
+                    S3SQLInlineComponent(
+                        "document",
+                        name = "file",
+                        label = T("Files"),
+                        fields = ["file",
+                                  #"comments",
+                                  ],
+                    ),
+                )
+                def create_onaccept(form):
+                    table = current.s3db.event_event_post
+                    table.insert(event_id=event_id,
+                                 post_id=form.vars.id)
+
+                s3db.configure("cms_post",
+                               create_onaccept = create_onaccept, 
+                               )
+            else:
+                crud_form = S3SQLCustomForm(
+                    "date",
+                    "series_id",
+                    "body",
+                    "location_id",
+                    # @ToDo: deployment_setting for Events
+                    #S3SQLInlineComponent(
+                    #    "event_post",
+                    #    #label = T("Disaster(s)"),
+                    #    label = T("Disaster"),
+                    #    multiple = False,
+                    #    fields = ["event_id"],
+                    #    orderby = "event_id$name",
+                    #),
+                    # @ToDo: deployment_setting
+                    S3SQLInlineComponent(
+                        "post_organisation",
+                        label = T("Organization"),
+                        fields = ["organisation_id"],
+                        # @ToDo: deployment_setting
+                        multiple = False,
+                    ),
+                    # @ToDo: deployment_setting
+                    "person_id",
+                    S3SQLInlineComponent(
+                        "document",
+                        name = "file",
+                        label = T("Files"),
+                        fields = ["file",
+                                  #"comments",
+                                  ],
+                    ),
+                )
+
+            # Return to List view after create/update/delete
+            # We now do all this in Popups
+            #url_next = URL(c="default", f="index", args="newsfeed")
+
+            s3db.configure("cms_post",
+                           #create_next = url_next,
+                           #delete_next = url_next,
+                           #update_next = url_next,
+                           crud_form = crud_form,
+                           # Don't include a Create form in 'More' popups
+                           listadd = False,
+                           list_layout = s3db.cms_render_posts,
+                           )
+
+            s3.cancel = True
+
+        elif r.representation == "xls":
+            table.created_by.represent = s3base.s3_auth_user_represent_name
+            #table.created_on.represent = datetime_represent
+            utable = auth.settings.table_user
+            utable.organisation_id.represent = s3db.org_organisation_represent
+
+            list_fields = [(T("Date"), "date"),
+                           #(T("Disaster"), "event_post.event_id"),
+                           (T("Type"), "series_id"),
+                           (T("Details"), "body"),
+                           ]
+            for level in levels:
+                list_fields.append((hierarchy[level], "location_id$%s" % level))
+            list_fields = + [(T("Contact"), contact_field),
+                             (T("Organization"), org_field),
+                             ]
+            s3db.configure("cms_post",
+                           list_fields = list_fields,
+                           )
+
+        elif r.representation == "plain" and \
+             r.method != "search":
+            # Map Popups
+            table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
+            table.created_by.represent = s3base.s3_auth_user_represent_name
+            # Used by default popups
+            series = table.series_id.represent(r.record.series_id)
+            s3.crud_strings["cms_post"].title_display = "%(series)s Details" % dict(series=series)
+            s3db.configure("cms_post",
+                           popup_url="",
+                           )
+            table.avatar.readable = False
+            table.body.label = ""
+            table.expired.readable = False
+            table.replies.readable = False
+            table.created_by.readable = True
+            table.created_by.label = T("Author")
+            # Used by cms_post_popup
+            #table.created_on.represent = datetime_represent
+
+        elif r.representation == "geojson":
+            r.table.age = Field.Lazy(cms_post_age)
+
+        return True
+    s3.prep = prep
+
+    def postp(r, output):
+        if r.interactive:
+            if r.method == "datalist" and r.representation != "dl":
+                response.view = s3base.S3CRUD._view(r, "cms/newsfeed.html")
+        return output
+    s3.postp = postp
+
+    output = s3_rest_controller("cms", "post",
+                                hide_filter=False,
+                                )
     return output
 
 # =============================================================================

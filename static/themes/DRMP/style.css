@@ -15,6 +15,10 @@ a.brand img{
     top: -13px;
 }
 
+#homepage-about h2 {
+    word-spacing: 61px;
+}
+
 .export_xls {
     background-image: url(img/icon-xls.png);
 }

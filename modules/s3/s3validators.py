@@ -623,7 +623,7 @@ class IS_ONE_OF_EMPTY(Validator):
                                                     instance_types=self.instance_types)
 
                 if "deleted" in table:
-                    query &= (table["deleted"] == False)
+                    query &= (table["deleted"] != True)
 
                 # Realms filter?
                 if self.realms:
@@ -834,8 +834,16 @@ class IS_ONE_OF_EMPTY(Validator):
             filter_opts_q = False
             filterby = self.filterby
             if filterby and filterby in table:
-                if self.filter_opts:
-                    filter_opts_q = table[filterby].belongs(self.filter_opts)
+                filter_opts = self.filter_opts
+                if filter_opts:
+                    if None in filter_opts:
+                        # Needs special handling (doesn't show up in 'belongs')
+                        filter_opts_q = (table[filterby] == None)
+                        filter_opts = [f for f in filter_opts if f is not None]
+                        if filter_opts:
+                            filter_opts_q |= (table[filterby].belongs(filter_opts))
+                    else:
+                        filter_opts_q = (table[filterby].belongs(filter_opts))
 
             if self.multiple:
                 if isinstance(value, list):
@@ -1928,6 +1936,9 @@ class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
 
 # =============================================================================
 class IS_ADD_PERSON_WIDGET(Validator):
+    """
+        Validator for S3AddPersonWidget
+    """
 
     def __init__(self,
                  error_message=None):
@@ -2136,6 +2147,11 @@ class IS_ADD_PERSON_WIDGET(Validator):
 
 # =============================================================================
 class IS_ADD_PERSON_WIDGET2(Validator):
+    """
+        Validator for S3AddPersonWidget2
+
+        @ToDo: get working human_resource_id
+    """
 
     def __init__(self,
                  error_message=None):
@@ -2424,8 +2440,6 @@ class IS_PROCESSED_IMAGE(Validator):
         Uses an S3ImageCropWidget to allow the user to crop/scale images and
         processes the results sent by the browser.
 
-        @author: aviraldg
-
         @param file_cb: callback that returns the file for this field
 
         @param error_message: the error message to be returned
@@ -2514,8 +2528,6 @@ class IS_PROCESSED_IMAGE(Validator):
 class IS_UTC_OFFSET(Validator):
     """
         Validates a given string value as UTC offset in the format +/-HHMM
-
-        @author: nursix
 
         @param error_message:   the error message to be returned
 
@@ -2688,8 +2700,6 @@ class IS_ACL(IS_IN_SET):
         Validator for ACLs
 
         @attention: Incomplete! Does not validate yet, but just convert.
-
-        @author: Dominic König <dominic@aidiq.com>
     """
 
     def __call__(self, value):

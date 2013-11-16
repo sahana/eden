@@ -512,10 +512,12 @@ Thank you
             @return: a login form
         """
 
-        db = current.db
         T = current.T
-
-        current.response.title = T("Login")
+        db = current.db
+        request = current.request
+        response = current.response
+        session = current.session
+        deployment_settings = current.deployment_settings
 
         utable = self.settings.table_user
         if self.settings.login_userfield:
@@ -526,10 +528,6 @@ Thank you
             username = "email"
         old_requires = utable[username].requires
         utable[username].requires = [IS_NOT_EMPTY(), IS_LOWER()]
-        request = current.request
-        response = current.response
-        session = current.session
-        deployment_settings = current.deployment_settings
         passfield = self.settings.password_field
         try:
             utable[passfield].requires[-1].min_length = 0
@@ -545,6 +543,8 @@ Thank you
             log = self.messages.login_log
 
         user = None # default
+
+        response.title = T("Login")
 
         # Do we use our own login form, or from a central source?
         formstyle = self.settings.formstyle
@@ -580,7 +580,7 @@ Thank you
                                             _name="auth_user_clientlocation",
                                             _style="display:none"),
                        "display:none", "auth_user_client_location")
-                current.response.s3.jquery_ready.append('''s3_get_client_location($('#auth_user_clientlocation'))''')
+                response.s3.jquery_ready.append('''S3.getClientLocation($('#auth_user_clientlocation'))''')
 
             captcha = self.settings.login_captcha or \
                 (self.settings.login_captcha!=False and self.settings.captcha)
@@ -589,7 +589,7 @@ Thank you
                        formstyle,'captcha__row')
 
             accepted_form = False
-            if form.accepts(request.vars, session,
+            if form.accepts(request.post_vars, session,
                             formname="login", dbio=False,
                             onvalidation=onvalidation):
                 accepted_form = True
@@ -951,7 +951,6 @@ Thank you
                 self.add_membership(admin_group_id, users.first().id)
 
                 # Log them in
-                #user = utable[form.vars.id]
                 if "language" not in form.vars:
                     # Was missing from login form
                     form.vars.language = T.accepted_language
@@ -981,7 +980,6 @@ Thank you
 
                 if approved:
                     # Log them in
-                    #user = utable[form.vars.id]
                     if "language" not in form.vars:
                         # Was missing from login form
                         form.vars.language = T.accepted_language
@@ -1060,7 +1058,12 @@ Thank you
         if next == DEFAULT:
             next = settings.verify_email_next
 
-        self.s3_verify_user(user)
+        approved = self.s3_verify_user(user)
+
+        if approved:
+            # Log them in
+            user = Storage(utable._filter_fields(user, id=True))
+            self.login_user(user)
 
         if log:
             self.log_event(log % user)
@@ -1293,6 +1296,7 @@ Thank you
         #utable.reset_password_key.label = messages.label_registration_key
 
         # Organisation
+        # @ToDo: Allow Admin to see Org linkage even if Users cannot specify when they register
         req_org = deployment_settings.get_auth_registration_requests_organisation()
         if req_org:
             if pe_ids:
@@ -1800,6 +1804,15 @@ S3OptionsFilter({
                              id = user.id)
         else:
             approved = True
+            if organisation_id and not user.get("organisation_id", None):
+                # Use the whitelist
+                user["organisation_id"] = organisation_id
+                utable = self.settings.table_user
+                current.db(utable.id == user.id).update(organisation_id = organisation_id)
+                link_user_to = deployment_settings.get_auth_registration_link_user_to_default()
+                if link_user_to and not user.get("link_user_to", None):
+                    user["link_user_to"] = link_user_to
+                self.s3_link_user(user)
             self.s3_approve_user(user)
             session = current.session
             session.confirmation = self.messages.email_verified

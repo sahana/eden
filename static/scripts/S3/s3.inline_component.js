@@ -155,6 +155,9 @@ $(function() {
                         // IE, etc: Remove 'fakepath' from filename
                         value = value.replace(/(c:\\)*fakepath\\/i, '');
                     }
+                } else
+                if (input.attr('type') == 'checkbox') {
+                    value = input.prop('checked');
                 } else {
                     cssclass = input.attr('class');
                     if (cssclass == 'generic-widget') {
@@ -330,6 +333,9 @@ $(function() {
                               .attr('name', name)
                               .css({display: ''});
                     }
+                } else
+                if (input.attr('type') == 'checkbox') {
+                    input.prop('checked', value);
                 } else {
                     input.val(value);
                     // Populate text in autocompletes
@@ -445,6 +451,9 @@ $(function() {
                     } else {
                         default_value = d.val();
                         f.val(default_value);
+                        if (f.attr('type') == 'checkbox') {
+                            f.prop('checked', d.prop('checked'));
+                        }
                     }
                     default_value = $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_default').val();
                     $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_none').val(default_value);
@@ -631,18 +640,24 @@ $(function() {
     // Submit all changed inline-rows, and then the main form
     var inline_submit_all = function(event) {
         event.preventDefault();
-        var $form = $(this);
-        var success = false;
-        $form.find('tr.inline-form.changed').each(function() {
-            var $this = $(this);
-            var formname = $this.attr('id').split('-').pop();
-            if ($this.hasClass('add-row')) {
-                success = inline_add(formname);
-            } else {
-                var rowindex = $this.data('rowindex');
-                success = inline_update(formname, rowindex);
-            }
-        });
+        var $form = $(this),
+            success = false;
+            
+        var changed = $form.find('tr.inline-form.changed');
+        if (changed.length) {
+            changed.each(function() {
+                var $this = $(this);
+                var formname = $this.attr('id').split('-').pop();
+                if ($this.hasClass('add-row')) {
+                    success = inline_add(formname);
+                } else {
+                    var rowindex = $this.data('rowindex');
+                    success = inline_update(formname, rowindex);
+                }
+            });
+        } else {
+            success = true;
+        }
         if (success) {
             $('form').unbind('submit', inline_submit_all);
             $form.submit();

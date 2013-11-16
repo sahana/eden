@@ -16,8 +16,12 @@
   <h1>{{=T("India Disaster Information System")}}<br></h1>
   <p>{{=T("Improving disaster prevention, preparedness and response in India.")}}</p>
   {{if not auth.is_logged_in():}}
-  <p><a href='/{{=appname}}/default/user/login?_next=/{{=appname}}/default/index/newsfeed' class='btn btn-custom btn-login'><i class='icon-signin'></i> {{=T("LOGIN")}} </a>
-  <a href='/{{=appname}}/default/user/register' class='btn btn-register'><i class='icon-pencil'></i> {{=T("REGISTER")}} </a></p>{{pass}}
+  <p>
+   <a href='/{{=appname}}/default/user/login' class='btn btn-custom btn-login'><i class='icon-signin'></i> {{=T("LOGIN")}} </a>
+   {{if settings.get_security_self_registration():}}
+    <a href='/{{=appname}}/default/user/register' class='btn btn-register'><i class='icon-pencil'></i> {{=T("REGISTER")}} </a>
+   {{pass}}
+  </p>{{pass}}
  </div>
 </div>
 <section id='homepage-about'>
@@ -35,8 +39,8 @@
      <img src='/{{=appname}}/static/themes/{{=theme}}/img/482470-circle1.png' class='img-circle home-circle-img'>
     </div>
     <h2>{{=T("Prepare")}}</h2>
-    <p class='quote mb4'>{{=T("Share information about your organisation, projects and resources with other Disaster Management Stakeholders in India.")}}</p>		
-   </div>			
+    <p class='quote mb4'>{{=T("Share information about your organization, projects and resources with other Disaster Management Stakeholders in India.")}}</p>		
+   </div>
    <div class='span4 stl'>
     <div>
      <img src='/{{=appname}}/static/themes/{{=theme}}/img/442014-circle1.png' class='img-circle home-circle-img'>
@@ -45,7 +49,7 @@
     <p class='quote mb4'>{{=T("Receive alerts, share incident updates and assessments about current disasters and coordinate your response activities.")}}</p>
    </div>
   </div>
- </div>	
+ </div>
 </section>
 <section id='what-they-do' class='st'>
  <div class='container'>
@@ -60,7 +64,7 @@
    <div class='span6'>
     <br /> <!--this is just temporary until we decide what actually goes here-->
     <br />
-    <img src='/{{=appname}}/static/themes/{{=theme}}/img/map_tl.png'>
+    <img src='/{{=appname}}/static/themes/{{=theme}}/img/map_in.png'>
    </div>
   </div>
  </div>

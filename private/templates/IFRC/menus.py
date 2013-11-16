@@ -58,7 +58,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Volunteers", c="vol", f="volunteer"),
                 MM("Teams", c="vol", f="group"),
                 MM("Volunteer Roles", c="vol", f="job_title"),
-                MM("Programmes", c="vol", f="programme"),
+                MM("Programs", c="vol", f="programme"),
                 #MM("Skill List", c="vol", f="skill"),
                 MM("Training Events", c="vol", f="training_event"),
                 MM("Training Courses", c="vol", f="course"),
@@ -97,7 +97,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Incident Reports", c="irs", f="ireport"),
             ),
             homepage("deploy", name="RDRT")(
-                MM("Deployments", c="deploy", f="deployment", m="summary"),
+                MM("Missions", c="deploy", f="mission", m="summary"),
                 MM("Members", c="deploy", f="human_resource", m="summary"),
             ),
         ]
@@ -291,7 +291,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       check=manager_mode)(
                         M("New", m="create"),
                         M("List All"),
-                        M("Search Members", f="group_membership", m="search"),
+                        M("Search Members", f="group_membership"),
                         M("Import", f="group_membership", m="import"),
                     ),
                     M("National Societies", c="org", 
@@ -313,7 +313,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       check=manager_mode)(
                         M("New", m="create"),
                         M("List All"),
-                        M("Search", m="search"),
+                        #M("Search", m="search"),
                         M("Import", m="import", p="create"),
                     ),
                     M("Department Catalog", c="hrm", f="department",
@@ -337,9 +337,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       check=manager_mode)(
                         M("New", m="create"),
                         M("List All"),
-                        M("Search", m="search"),
-                        M("Search Training Participants", f="training",
-                          m="search"),
+                        M("Search Training Participants", f="training"),
                         M("Import Participant List", f="training", m="import"),
                     ),
                     M("Reports", c="hrm", f="staff", m="report",
@@ -347,7 +345,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Staff Report", m="report"),
                         M("Expiring Staff Contracts Report",
                           vars=dict(expiring="1")),
-                        M("Training Report", f="training", m="report"),
+                        M("Training Report", f="training", m="report2"),
                     ),
                     M("Training Course Catalog", c="hrm", f="course",
                       check=manager_mode)(
@@ -439,14 +437,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       check=[manager_mode, use_teams])(
                         M("New", m="create"),
                         M("List All"),
-                        M("Search Members", f="group_membership", m="search"),
+                        M("Search Members", f="group_membership"),
                         M("Import", f="group_membership", m="import"),
                     ),
-                    M("Department Catalog", f="department",
-                      check=manager_mode)(
-                        M("New", m="create"),
-                        M("List All"),
-                    ),
+                    #M("Department Catalog", f="department",
+                    #  check=manager_mode)(
+                    #    M("New", m="create"),
+                    #    M("List All"),
+                    #),
                     M("Volunteer Role Catalog", f="job_title",
                       check=manager_mode)(
                         M("New", m="create"),
@@ -463,9 +461,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       check=manager_mode)(
                         M("New", m="create"),
                         M("List All"),
-                        M("Search", m="search"),
-                        M("Search Training Participants", f="training",
-                          m="search"),
+                        M("Search Training Participants", f="training"),
                         M("Import Participant List", f="training", m="import"),
                     ),
                     M("Training Course Catalog", f="course",
@@ -480,7 +476,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("List All"),
                         #M("Skill Equivalence", f="certificate_skill"),
                     ),
-                    M("Programmes", f="programme",
+                    M("Programs", f="programme",
                       check=[manager_mode, show_programmes])(
                         M("New", m="create"),
                         M("List All"),
@@ -517,12 +513,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                        cols="month",
                                        fact="sum(hours)"),
                           check=show_programmes),
-                        M("Hours by Programme Report", f="programme_hours", m="report2",
+                        M("Hours by Program Report", f="programme_hours", m="report2",
                           vars=Storage(rows="programme_id",
                                        cols="month",
                                        fact="sum(hours)"),
                           check=show_programmes),
-                        M("Training Report", f="training", m="report"),
+                        M("Training Report", f="training", m="report2"),
                     ),
                     #M("My Profile", f="person",
                     #  check=personal_mode, vars=dict(mode="personal")),
@@ -642,8 +638,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         #M("Search Requested Items", f="req_item", m="search"),
                     ),
                     M("Commitments", c="req", f="commit", check=use_commit)(
-                        M("List All"),
-                        M("Search", m="search"),
+                        M("List All")
                     ),
                 )
 
@@ -700,8 +695,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
         """ RDRT Alerting and Deployments """
 
         return M()(
-                   M("Deployments",
-                     c="deploy", f="deployment", m="summary")(
+                   M("Missions",
+                     c="deploy", f="mission", m="summary")(
                         M("New", m="create"),
                    ),
                    M("Alerts",
@@ -714,10 +709,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           c="deploy", f="email_channel",
                         ),
                    ),
-                   M("Members",
+                   M("RDRT Members",
                      c="deploy", f="human_resource", m="summary")(
-                        M("New Staff", c="hrm", f="staff", m="create"),
-                        M("New Volunteer", c="vol", f="volunteer", m="create"),
+                        M("Add Member", c="deploy", f="application", m="select"),
+                        M("Import Members", c="deploy", f="person", m="import"),
                    ),
                )
 

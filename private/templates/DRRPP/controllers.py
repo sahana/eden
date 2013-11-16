@@ -32,7 +32,7 @@ class index():
             response.view = open(view, "rb")
         except IOError:
             from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         # Show full width instead of login box if user is logged in 
         if current.auth.is_logged_in():
@@ -146,7 +146,7 @@ class register():
             response.view = open(view, "rb")
         except IOError:
             from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         T = current.T
         auth = current.auth
@@ -404,7 +404,7 @@ class contact():
             response.view = open(view, "rb")
         except IOError:
             from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         if request.env.request_method == "POST":
             # Processs Form
@@ -515,7 +515,7 @@ class about():
             response.view = open(view, "rb")
         except IOError:
             from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         response.title = T("About")
 
@@ -548,7 +548,7 @@ class admin():
                 response.view = open(view, "rb")
             except IOError:
                 from gluon.http import HTTP
-                raise HTTP("404", "Unable to open Custom View: %s" % view)
+                raise HTTP(404, "Unable to open Custom View: %s" % view)
             
             response.title = T("Administration Panel")
             
@@ -610,7 +610,7 @@ class analysis():
             response.view = open(view, "rb")
         except IOError:
             from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         response.title = T("Project Analysis")
 
@@ -636,7 +636,7 @@ class get_started():
             response.view = open(view, "rb")
         except IOError:
             from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         response.title = T("Get Started")
 
@@ -661,7 +661,7 @@ class login():
             response.view = open(view, "rb")
         except IOError:
             from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         response.title = T("Login")
 
@@ -693,7 +693,7 @@ class mypage():
                 response.view = open(view, "rb")
             except IOError:
                 from gluon.http import HTTP
-                raise HTTP("404", "Unable to open Custom View: %s" % view)
+                raise HTTP(404, "Unable to open Custom View: %s" % view)
 
             response.title = T("My Page")
 
@@ -714,9 +714,6 @@ class organisations():
 
     def __call__(self):
 
-        from gluon.storage import Storage
-        from s3 import S3FieldSelector
-
         #T = current.T
         request = current.request
         response = current.response
@@ -729,16 +726,13 @@ class organisations():
             response.view = open(view, "rb")
         except IOError:
             from gluon.http import HTTP
-            raise HTTP("404", "Unable to open Custom View: %s" % view)
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         s3 = response.s3
         s3["dataTable_sDom"] = 'ripl<"dataTable_table"t>p'
 
         tables = []
         table = request.vars.get("table", None)
-
-        # URL format breaks the REST controller conventions
-        #request.args.pop()
 
         if table is None:
             # HTML call
@@ -777,7 +771,6 @@ class organisations():
             - Filtered subset of Organisations
         """
 
-        from s3 import S3FieldSelector, s3_request
         T = current.T
 
         s3request = s3_request("org", "organisation", extension="aadata")
@@ -807,7 +800,6 @@ class organisations():
             - Filtered subset of Organisations
         """
 
-        from s3 import S3FieldSelector, s3_request
         T = current.T
 
         s3db = current.s3db
@@ -820,15 +812,14 @@ class organisations():
                                                                  "Network"]))
         s3request.resource.add_filter(f)
 
-        field_list = [
-            "id",
-            "name",
-            "acronym",
-            (T("Type"), "organisation_type_id"),
-            "year",
-            (T("Address"), "address"),
-            (T("Notes"), "comments"),
-        ]
+        field_list = ["id",
+                      "name",
+                      "acronym",
+                      (T("Type"), "organisation_type_id"),
+                      "year",
+                      (T("Address"), "address"),
+                      (T("Notes"), "comments"),
+                      ]
         return (s3request, field_list)
 
     # -------------------------------------------------------------------------
@@ -876,7 +867,6 @@ class organisations():
         table = Storage(cols=cols,
                         rows=rows,
                         #options=options,
-                        classes="dataTable display"
                         )
 
         return table

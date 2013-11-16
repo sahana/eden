@@ -212,35 +212,37 @@ def location():
         if r.interactive and not r.component:
             location_hierarchy = gis.get_location_hierarchy()
             from s3.s3filter import S3TextFilter, S3OptionsFilter#, S3LocationFilter
+            search_fields = ["name",
+                             "comments",
+                             "L0",
+                             "L1",
+                             "L2",
+                             "L3",
+                             "L4",
+                             "L5",
+                             "tag.value",
+                             ]
+            if settings.get_L10n_translate_gis_location():
+                search_fields.append("name.name_l10n")
             filter_widgets = [
-                S3TextFilter(["name",
-                              "comments",
-                              "L0",
-                              "L1",
-                              "L2",
-                              "L3",
-                              "L4",
-                              "L5",
-                              "tag.value",
-                              ],
+                S3TextFilter(search_fields,
                              label = T("Search"),
                              comment = T("To search for a location, enter the name. You may use % as wildcard. Press 'Search' without input to list all locations."),
                              _class = "filter-search",
                              ),
                 S3OptionsFilter("level",
                                 label=T("Level"),
-                                cols=3,
                                 options=location_hierarchy,
-                                hidden=True,
+                                widget="multiselect",
+                                #hidden=True,
                                 ),
                 # @ToDo: Hierarchical filter working on id
                 #S3LocationFilter("id",
-                #                 label=T("Location"),
-                #                 levels=["L0", "L1", "L2", "L3", "L4", "L5"],
-                #                 widget="multiselect",
-                #                 cols=3,
-                #                 hidden=True,
-                #                 ),
+                #                label=T("Location"),
+                #                levels=["L0", "L1", "L2", "L3"],
+                #                widget="multiselect",
+                #                #hidden=True,
+                #                ),
                 S3OptionsFilter("L0",
                                 label=COUNTRY,
                                 #widget="multiselect",
@@ -453,6 +455,7 @@ def ldata():
 
     table = s3db.gis_location
     query = (table.deleted == False) & \
+            (table.end_date == None) & \
             ((table.parent == id) | \
              (table.id == id))
     fields = [table.id,

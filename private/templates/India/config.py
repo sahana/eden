@@ -38,7 +38,7 @@ datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
 settings.auth.registration_requires_approval = True
 settings.auth.registration_requires_verification = False
 settings.auth.registration_requests_organisation = True
-settings.auth.registration_organisation_required = True
+#settings.auth.registration_organisation_required = True
 settings.auth.registration_requests_site = False
 
 # Approval emails get sent to all admins
@@ -57,8 +57,8 @@ settings.auth.show_utc_offset = False
 
 settings.auth.show_link = False
 
-settings.auth.record_approval = True
-settings.auth.record_approval_required_for = ["org_organisation"]
+#settings.auth.record_approval = True
+#settings.auth.record_approval_required_for = ["org_organisation"]
 
 # -----------------------------------------------------------------------------
 # Security Policy
@@ -101,7 +101,7 @@ settings.auth.realm_entity = drmp_realm_entity
 # Pre-Populate
 settings.base.prepopulate = ["India"]
 
-settings.base.system_name = T("India Disaster Risk Management Information System ")
+settings.base.system_name = T("India Disaster Risk Management Information System")
 settings.base.system_name_short = T("DRMIS")
 
 # -----------------------------------------------------------------------------
@@ -133,7 +133,7 @@ settings.L10n.thousands_separator = ","
 # - we want this on when running s3translate but off in normal usage as we use the English names to lookup icons in render_posts
 #settings.L10n.translate_cms_series = True
 # Uncomment this to Translate Location Names
-settings.L10n.translate_gis_location = True
+#settings.L10n.translate_gis_location = True
 
 # Restrict the Location Selector to just certain countries
 settings.gis.countries = ["IN"]
@@ -2191,11 +2191,10 @@ def customize_cms_post(**attr):
             if not result:
                 return False
 
-        if r.interactive:
+        get_vars = current.request.get_vars
+        if r.interactive and "module" not in get_vars:
             from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
             table = customize_cms_post_fields()
-
-            get_vars = current.request.get_vars
 
             field = table.series_id
             field.label = T("Type")
@@ -2638,7 +2637,7 @@ def customize_gis_location(**attr):
                 s3.dl_pagelength = 12
                 s3.dl_rowsize = 2
 
-                # Just show specific States
+                # Just show In L1s
                 s3.filter = (table.L0 == "India") & (table.level == "L1")
                 # Default 5 triggers an AJAX call, we should load all by default
                 s3.dl_pagelength = 13

@@ -1004,7 +1004,7 @@ class S3Msg(object):
     # Twitter
     # -------------------------------------------------------------------------
     @staticmethod
-    def sanitise_twitter_account(account):
+    def _sanitise_twitter_account(account):
         """
             Only keep characters that are legal for a twitter account:
             letters, digits, and _
@@ -1014,10 +1014,10 @@ class S3Msg(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def break_to_chunks(text,
-                        chunk_size=TWITTER_MAX_CHARS,
-                        suffix = TWITTER_HAS_NEXT_SUFFIX,
-                        prefix = TWITTER_HAS_PREV_PREFIX):
+    def _break_to_chunks(text,
+                         chunk_size=TWITTER_MAX_CHARS,
+                         suffix = TWITTER_HAS_NEXT_SUFFIX,
+                         prefix = TWITTER_HAS_PREV_PREFIX):
         """
             Breaks text to <=chunk_size long chunks. Tries to do this at a space.
             All chunks, except for last, end with suffix.
@@ -1121,13 +1121,13 @@ class S3Msg(object):
             return False
 
         if recipient:
-            recipient = self.sanitise_twitter_account(recipient)
+            recipient = self._sanitise_twitter_account(recipient)
             try:
                 can_dm = twitter_api.exists_friendship(recipient, twitter_account)
             except tweepy.TweepError: # recipient not found
                 return False
             if can_dm:
-                chunks = self.break_to_chunks(text, TWITTER_MAX_CHARS)
+                chunks = self._break_to_chunks(text, TWITTER_MAX_CHARS)
                 for c in chunks:
                     try:
                         # Note: send_direct_message() requires explicit kwargs (at least in tweepy 1.5)
@@ -1159,15 +1159,15 @@ class S3Msg(object):
                         s3_debug("Unable to Tweet DM")
             else:
                 prefix = "@%s " % recipient
-                chunks = self.break_to_chunks(text,
-                                              TWITTER_MAX_CHARS - len(prefix))
+                chunks = self._break_to_chunks(text,
+                                               TWITTER_MAX_CHARS - len(prefix))
                 for c in chunks:
                     try:
                         twitter_api.update_status(prefix + c)
                     except tweepy.TweepError:
                         s3_debug("Unable to Tweet @mention")
         else:
-            chunks = self.break_to_chunks(text, TWITTER_MAX_CHARS)
+            chunks = self._break_to_chunks(text, TWITTER_MAX_CHARS)
             for c in chunks:
                 try:
                     twitter_api.update_status(c)
@@ -1243,7 +1243,7 @@ class S3Msg(object):
         host = channel.server
         protocol = channel.protocol
         ssl = channel.use_ssl
-        port = channel.port
+        port = int(channel.port)
         delete = channel.delete_from_server
 
         mtable = db.msg_email
@@ -1308,11 +1308,15 @@ class S3Msg(object):
                 # Store the whole raw message
                 raw = msg.as_string()
                 # Parse out the 'Body'
-                body = msg.get_payload(0).as_string().split("\n\n")[1]
+                payload = msg.get_payload()
+                if not isinstance(payload, basestring):
+                    payload = payload[0].as_string()
+                body = payload.split("\n\n")
+                body = body[1] if len(body) > 1 else body[0]
                 # Store in DB
                 id = minsert(channel_id=channel_id,
                              from_address=sender,
-                             subject=subject,
+                             subject=subject[:78],
                              body=body,
                              raw=raw,
                              inbound=True)
@@ -1379,11 +1383,15 @@ class S3Msg(object):
                         # Store the whole raw message
                         raw = msg.as_string()
                         # Parse out the 'Body'
-                        body = msg.get_payload(0).as_string().split("\n\n")[1]
+                        payload = msg.get_payload()
+                        if not isinstance(payload, basestring):
+                            payload = payload[0].as_string()
+                        body = payload.split("\n\n")
+                        body = body[1] if len(body) > 1 else body[0]
                         # Store in DB
                         id = minsert(channel_id=channel_id,
                                      from_address=sender,
-                                     subject=subject,
+                                     subject=subject[:78],
                                      body=body,
                                      raw=raw,
                                      inbound=True)
@@ -1692,6 +1700,14 @@ class S3Msg(object):
             Fetch Results for a Twitter Search Query
         """
 
+        try:
+            import TwitterSearch
+        except ImportError:
+            error = "Unresolved dependency: TwitterSearch required for fetching results from twitter keyword queries"
+            s3_debug("s3msg", error)
+            current.session.error = error
+            redirect(URL(f="index"))
+
         db = current.db
         s3db = current.s3db
 
@@ -1721,62 +1737,58 @@ class S3Msg(object):
                                                          qtable.include_entities,
                                                          limitby=(0, 1)).first()
 
-        try:
-            import TwitterSearch
-        except ImportError:
-            error = "Unresolved dependency: TwitterSearch required for fetching results from twitter keyword queries"
-            s3_debug("s3msg", error)
-            current.session.error = error
-            redirect(URL(f="index"))
+        tso = TwitterSearch.TwitterSearchOrder()
+        tso.setKeywords(search_query.keywords.split(" "))
+        tso.setLanguage(search_query.lang)
+        # @ToDo Handle more than 100 results per page
+        # This may have to be changed upstream
+        tso.setCount(int(search_query.count))
+        tso.setIncludeEntities(search_query.include_entities)
 
         try:
-            tso = TwitterSearch.TwitterSearchOrder()
-            tso.setKeywords(search_query.keywords.split(" "))
-            tso.setLanguage(search_query.lang)
-            # @ToDo Handle more than 100 results per page
-            # This may have to be changed upstream
-            tso.setCount(int(search_query.count))
-            tso.setIncludeEntities(search_query.include_entities)
-
             ts = TwitterSearch.TwitterSearch(
                 consumer_key = settings.consumer_key,
                 consumer_secret = settings.consumer_secret,
                 access_token = settings.access_token,
                 access_token_secret = settings.access_token_secret
-             )
-
-            update_super = s3db.update_super
-            from dateutil import parser
-            for tweet in ts.searchTweetsIterable(tso):
-                user = tweet["user"]["screen_name"]
-                body = tweet["text"]
-                tweet_id = tweet["id_str"]
-                lang = tweet["lang"]
-                created_on = parser.parse(tweet["created_at"])
-                lat = None
-                lon = None
-                location_id = None
-                if tweet["coordinates"]:
-                    lat = tweet["coordinates"]["coordinates"][1]
-                    lon = tweet["coordinates"]["coordinates"][0]
-                    location_id = gtable.insert(lat=lat,
-                                                lon=lon
-                                                )
-                id = rtable.insert(from_address = user,
-                                   search_id = search_id,
-                                   body = body,
-                                   tweet_id = tweet_id,
-                                   lang = lang,
-                                   created_on = created_on,
-                                   location_id = location_id,
-                                   inbound = True,
-                                   )
-                update_super(rtable, dict(id=id))
+                )
 
         except TwitterSearch.TwitterSearchException as e:
             return(str(e))
 
-        # This is simplistic as we may well want to rerpeat the same search multiple times
+        from dateutil import parser
+
+        gtable = db.gis_location
+        # Disable validation
+        rtable.location_id.requires = None
+        update_super = s3db.update_super
+
+        for tweet in ts.searchTweetsIterable(tso):
+            user = tweet["user"]["screen_name"]
+            body = tweet["text"]
+            tweet_id = tweet["id_str"]
+            lang = tweet["lang"]
+            created_on = parser.parse(tweet["created_at"])
+            lat = None
+            lon = None
+            if tweet["coordinates"]:
+                lat = tweet["coordinates"]["coordinates"][1]
+                lon = tweet["coordinates"]["coordinates"][0]
+                location_id = gtable.insert(lat=lat, lon=lon)
+            else:
+                location_id = None
+            id = rtable.insert(from_address = user,
+                               search_id = search_id,
+                               body = body,
+                               tweet_id = tweet_id,
+                               lang = lang,
+                               created_on = created_on,
+                               inbound = True,
+                               location_id = location_id,
+                               )
+            update_super(rtable, dict(id=id))
+
+        # This is simplistic as we may well want to repeat the same search multiple times
         db(qtable.id == search_id).update(is_searched = True)
 
         return "OK"

@@ -40,6 +40,7 @@ __all__ = ["S3SupplyModel",
            "supply_item_entity_status",
            "supply_ItemRepresent",
            #"supply_ItemCategoryRepresent",
+           "supply_get_shipping_code",
            ]
 
 import re
@@ -93,6 +94,7 @@ class S3SupplyModel(S3Model):
 
         T = current.T
         db = current.db
+        auth = current.auth
         s3 = current.response.s3
         settings = current.deployment_settings
 
@@ -107,7 +109,8 @@ class S3SupplyModel(S3Model):
 
         NONE = current.messages["NONE"]
 
-        if current.auth.permission.format == "html":
+        format = auth.permission.format
+        if format == "html":
             i18n = {"in_inv": T("in Stock"),
                     "no_packs": T("No Packs for Item"),
                     }
@@ -188,24 +191,24 @@ class S3SupplyModel(S3Model):
         # Reusable Field
         represent = S3Represent(lookup=tablename)
         catalog_id = S3ReusableField("catalog_id", table,
-                    sortby="name",
-                    requires = IS_NULL_OR(
-                                   IS_ONE_OF( # Restrict to catalogs the user can update
-                                              db(current.auth.s3_accessible_query("update", table)),
-                                              "supply_catalog.id",
-                                              represent,
-                                              sort=True,
-                                              )
-                                          ),
-                    represent = represent,
-                    default = 1,
-                    label = T("Catalog"),
-                    comment=S3AddResourceLink(c="supply",
-                                              f="catalog",
-                                              label=ADD_CATALOG,
-                                              title=T("Catalog"),
-                                              tooltip=T("The list of Catalogs are maintained by the Administrators.")),
-                    ondelete = "RESTRICT")
+            sortby="name",
+            requires = IS_NULL_OR(
+                        IS_ONE_OF(db, "supply_catalog.id",
+                                  represent,
+                                  sort=True,
+                                  # Restrict to catalogs the user can update
+                                  updateable=True,
+                                  )),
+            represent = represent,
+            default = 1,
+            label = T("Catalog"),
+            comment=S3AddResourceLink(c="supply",
+                                      f="catalog",
+                                      label=ADD_CATALOG,
+                                      title=T("Catalog"),
+                                      tooltip=T("The list of Catalogs are maintained by the Administrators.")),
+            ondelete = "RESTRICT",
+            )
 
         # Categories as component of Catalogs
         add_component("supply_item_category", supply_catalog="catalog_id")
@@ -220,7 +223,13 @@ class S3SupplyModel(S3Model):
         vehicle = settings.has_module("vehicle")
 
         item_category_represent = supply_ItemCategoryRepresent()
-        item_category_represent_nocodes = supply_ItemCategoryRepresent(use_code=False)
+        item_category_represent_nocodes = \
+            supply_ItemCategoryRepresent(use_code=False)
+
+        if format == "xls":
+            parent_represent = item_category_represent_nocodes
+        else:
+            parent_represent = item_category_represent
 
         tablename = "supply_item_category"
         table = define_table(tablename,
@@ -229,7 +238,7 @@ class S3SupplyModel(S3Model):
                              Field("parent_item_category_id",
                                    "reference supply_item_category",
                                    label = T("Parent"),
-                                   represent = item_category_represent,
+                                   represent = parent_represent,
                                    ondelete = "RESTRICT",
                                    ),
                              Field("code", length=16,
@@ -750,11 +759,10 @@ S3OptionsFilter({
         # This super entity provides a common way to provide a foreign key to supply_item
         # - it allows searching/reporting across Item types easily.
         #
-        item_types = Storage(
-                            inv_inv_item = T("Warehouse Stock"),
-                            inv_track_item = T("Order Item"),
-                            proc_plan_item = T("Planned Procurement Item"),
-                            )
+        item_types = Storage(inv_inv_item = T("Warehouse Stock"),
+                             inv_track_item = T("Order Item"),
+                             proc_plan_item = T("Planned Procurement Item"),
+                             )
 
         tablename = "supply_item_entity"
         table = self.super_entity(tablename, "item_entity_id", item_types,
@@ -781,7 +789,7 @@ S3OptionsFilter({
                              #comment = DIV(_class="tooltip",
                              #              _title="%s|%s" % (T("Item"),
                              #                                T("Enter some characters to bring up a list of possible matches")))
-                            )
+                             )
 
         # ---------------------------------------------------------------------
         # Item Search Method
@@ -1706,13 +1714,13 @@ class supply_ItemCategoryRepresent(S3Represent):
         if parent:
             if use_code:
                 # Compact format
-                joiner = "-"
+                sep = "-"
             else:
-                joiner = " - "
-            name = "%s%s%s" % (name, joiner, parent)
+                sep = " - "
+            name = "%s%s%s" % (name, sep, parent)
             grandparent = row["supply_grandparent_item_category.name"]
             if grandparent:
-                name = "%s%s%s" % (name, joiner, grandparent)
+                name = "%s%s%s" % (name, sep, grandparent)
                 # Check for Great-grandparent
                 # Trade-off "all in 1 row" vs "too many joins"
                 greatgrandparent = row["supply_grandparent_item_category.parent_item_category_id"]
@@ -1743,15 +1751,15 @@ class supply_ItemCategoryRepresent(S3Represent):
                         else:
                             greatgrandparent = row["supply_item_category.name"] or row["supply_item_category.code"]
                             greatgreatgrandparent = row["supply_parent_item_category.name"] or row["supply_parent_item_category.code"]
-                        name = "%s%s%s" % (name, joiner, greatgrandparent)
+                        name = "%s%s%s" % (name, sep, greatgrandparent)
                         if greatgreatgrandparent:
-                            name = "%s%s%s" % (name, joiner, greatgreatgrandparent)
+                            name = "%s%s%s" % (name, sep, greatgreatgrandparent)
                             if use_code:
                                 greatgreatgreatgrandparent = row["supply_grandparent_item_category.code"]
                             else:
                                 greatgreatgreatgrandparent = row["supply_grandparent_item_category.name"] or row["supply_grandparent_item_category.code"]
                             if greatgreatgreatgrandparent:
-                                name = "%s%s%s" % (name, joiner, greatgreatgreatgrandparent)
+                                name = "%s%s%s" % (name, sep, greatgreatgreatgrandparent)
 
         if catalog:
             name = "%s > %s" % (catalog, name)
@@ -2214,6 +2222,11 @@ def supply_item_controller():
                 # field.default = True
                 # field.readable = field.writable = False
 
+        elif r.representation == "xls":
+            # Use full Category names in XLS output
+            s3db.supply_item.item_category_id.represent = \
+                supply_ItemCategoryRepresent(use_code=False)
+
         return True
     s3.prep = prep
 
@@ -2468,5 +2481,33 @@ $('#organisation_dropdown').change(function(){
 
     output = current.rest_controller("supply", "item_entity")
     return output
+
+# -------------------------------------------------------------------------
+def supply_get_shipping_code(type, site_id, field):
+
+    db = current.db
+    if site_id:
+        table = current.s3db.org_site
+        site = db(table.site_id == site_id).select(table.code,
+                                                   limitby=(0, 1)
+                                                   ).first()
+        if site:
+            scode = site.code
+        else:
+            scode = "###"
+        code = "%s-%s-" % (type, scode)
+    else:
+        code = "%s-###-" % (type)
+    number = 0
+    if field:
+        query = (field.like("%s%%" % code))
+        ref_row = db(query).select(field,
+                                   limitby=(0, 1),
+                                   orderby=~field).first()
+        if ref_row:
+            ref = ref_row(field)
+            number = int(ref[-6:])
+
+    return "%s%06d" % (code, number+1)
 
 # END =========================================================================

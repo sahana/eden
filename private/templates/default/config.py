@@ -325,8 +325,8 @@ settings.L10n.decimal_separator = "."
 
 # -----------------------------------------------------------------------------
 # Organisations
-# Disable the use of Organisation Branches
-#settings.org.branches = False
+# Enable the use of Organisation Branches
+#settings.org.branches = True
 # Enable the use of Organisation Regions
 #settings.org.regions = True
 # Set the length of the auto-generated org/site code the default is 10
@@ -457,8 +457,13 @@ settings.L10n.decimal_separator = "."
 #settings.req.type_hrm_label = "Volunteers"
 # Label for Requester
 #settings.req.requester_label = "Site Contact"
+#settings.req.requester_optional = True
+# Uncomment if the User Account logging the Request is NOT normally the Requester
+#settings.req.requester_is_author = False
 # Filter Requester as being from the Site 
 #settings.req.requester_from_site = True
+# Set the Requester as being an HR for the Site if no HR record yet & as Site contact if none yet exists
+#settings.req.requester_to_site = True
 #settings.req.date_writable = False
 # Allow the status for requests to be set manually,
 # rather than just automatically from commitments and shipments
@@ -469,8 +474,12 @@ settings.L10n.decimal_separator = "."
 #settings.req.multiple_req_items = False
 #settings.req.prompt_match = False
 #settings.req.items_ask_purpose = False
+# Uncomment to disable the Commit step in the workflow & simply move direct to Ship
 #settings.req.use_commit = False
-#settings.req.requester_optional = True
+# Uncomment to allow Donations to be made without a matching Request
+#settings.req.commit_without_request = True
+# Uncomment if the User Account logging the Commitment is NOT normally the Committer
+#settings.req.comittter_is_author = False
 # Should Requests ask whether Security is required?
 #settings.req.ask_security = True
 # Should Requests ask whether Transportation is required?
@@ -575,8 +584,6 @@ settings.L10n.decimal_separator = "."
 #settings.search.filter_manager = False
 # Old S3Search
 #settings.search.save_widget = False
-# Maximum number of search results for an Autocomplete Widget
-#settings.search.max_results = 200
 
 # if you want to have videos appearing in /default/video
 #settings.base.youtube_id = [dict(id = "introduction",
