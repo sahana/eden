@@ -3891,6 +3891,7 @@ def req_customize_req_fields():
                                                   parent="req"),
                                       title=T("Add New Site"),
                                       )
+    field.widget = S3SiteAutocompleteWidget()
     # @ToDo:
     #field.requires = IS_ADD_SITE_WIDGET()
     #field.widget = S3AddSiteWidget(type="org_facility")

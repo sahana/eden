@@ -996,7 +996,7 @@ class S3AutocompleteWidget(FormWidget):
                              _class="string",
                              _value=represent.encode("utf-8")),
                        DIV(_id="%s_throbber" % dummy_input,
-                           _class="throbber hide"),
+                           _class="throbber input_throbber hide"),
                        INPUT(**attr),
                        requires = field.requires
                        )
@@ -1895,7 +1895,7 @@ def S3GenericAutocompleteTemplate(post_process,
                          _class="string",
                          value=represent),
                    DIV(_id="%s_throbber" % dummy_input,
-                       _class="throbber hide"),
+                       _class="throbber input_throbber hide"),
                    INPUT(**attr),
                    requires = field.requires
                    )
@@ -2447,7 +2447,7 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
                              _class="string",
                              _value=represent.encode("utf-8")),
                        DIV(_id="%s_throbber" % dummy_input,
-                           _class="throbber hide"),
+                           _class="throbber input_throbber hide"),
                        INPUT(**attr),
                        requires = field.requires
                        )
@@ -2865,7 +2865,7 @@ class S3LocationAutocompleteWidget(FormWidget):
                              _class="string",
                              value=represent),
                        DIV(_id="%s_throbber" % dummy_input,
-                           _class="throbber hide"),
+                           _class="throbber input_throbber hide"),
                        INPUT(**attr),
                        requires = field.requires
                        )
@@ -4910,7 +4910,7 @@ class S3PersonAutocompleteWidget(FormWidget):
                              _class="string",
                              _value=represent),
                        DIV(_id="%s_throbber" % dummy_input,
-                           _class="throbber hide"),
+                           _class="throbber input_throbber hide"),
                        INPUT(hideerror=self.hideerror, **attr),
                        requires = field.requires
                        )
@@ -4999,7 +4999,7 @@ class S3PentityAutocompleteWidget(FormWidget):
                              _class="string",
                              _value=represent),
                        DIV(_id="%s_throbber" % dummy_input,
-                           _class="throbber hide"),
+                           _class="throbber input_throbber hide"),
                        INPUT(hideerror=self.hideerror, **attr),
                        requires = field.requires
                        )
@@ -5127,7 +5127,7 @@ class S3SiteAutocompleteWidget(FormWidget):
                              _class="string",
                              _value=represent),
                        DIV(_id="%s_throbber" % dummy_input,
-                           _class="throbber hide"),
+                           _class="throbber input_throbber hide"),
                        INPUT(**attr),
                        requires = field.requires
                        )
@@ -5191,7 +5191,7 @@ class S3SiteAddressAutocompleteWidget(FormWidget):
                              _class="string",
                              _value=represent),
                        DIV(_id="%s_throbber" % dummy_input,
-                           _class="throbber hide"),
+                           _class="throbber input_throbber hide"),
                        INPUT(**attr),
                        requires = field.requires
                        )
