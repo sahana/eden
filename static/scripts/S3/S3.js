@@ -77,6 +77,13 @@ S3.Utf8 = {
 };
 
 S3.addTooltips = function() {
+    // Popovers (Bootstrap themes only)
+    if (typeof($.fn.popover) != 'undefined') {
+        $('.s3-popover').popover({
+            trigger: 'hover',
+            placement: 'top'
+        });
+    }
     // Help Tooltips
     $.cluetip.defaults.cluezIndex = 9999; // Need to be able to show on top of Ext Windows
     $('.tooltip').cluetip({activation: 'hover', sticky: false, splitTitle: '|'});

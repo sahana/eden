@@ -12,3 +12,16 @@ textarea.comments {
 .media.pull-right {
     margin-top: 0;
 }
+
+#dummy_req_req_site_id,
+#req_req_site_id,
+#req_commit_organisation_id {
+    float: left;
+    margin-right: 10px;
+    /* Makes it hard to click into box! */
+    /*margin-top: -5px;*/
+}
+
+#req_commit_organisation_id {
+    width: 280px;
+}

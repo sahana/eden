@@ -204,7 +204,13 @@ settings.pr.request_gender = False
 # Org
 #settings.org.site_label = "Office/Shelter/Hospital"
 settings.org.site_label = "Site"
-#settings.org.site_autocomplete = True
+settings.org.site_autocomplete = True
+# Extra fields to show in Autocomplete Representations
+settings.org.site_autocomplete_fields = ["location_id$L1",
+                                         "location_id$L2",
+                                         "location_id$L3",
+                                         "location_id$L4",
+                                         ]
 #settings.org.site_address_autocomplete = True
 
 # -----------------------------------------------------------------------------
@@ -800,7 +806,7 @@ def render_sites(listid, resource, rfields, record, **attr):
                      _class="main_contact_ph",
                      ),
                    P(comments,
-                     _class="main_contact s3-truncate",
+                     _class="main_office-add s3-truncate",
                      ),
                    )
 
@@ -878,10 +884,12 @@ def render_organisations(listid, resource, rfields, record, **attr):
     money = raw["req_organisation_needs.money"]
     if money:
         money_details = record["req_organisation_needs.money_details"]
+        money_details = SPAN(XML(money_details),
+                             _class="s3-truncate")
         money_details = P(I(_class="icon icon-dollar"),
                           " ",
-                          XML(money_details),
-                          _class="main_contact_ph",
+                          money_details,
+                          _class="main_office-add",
                           )
     else:
         # Include anyway to make cards align
@@ -1042,7 +1050,7 @@ def render_org_needs(listid, resource, rfields, record, **attr):
         money_details = P(I(_class="icon icon-dollar"),
                           " ",
                           XML(money_details),
-                          _class="main_contact_ph",
+                          _class="main_office-add",
                           )
     else:
         money_details = ""
@@ -1052,7 +1060,7 @@ def render_org_needs(listid, resource, rfields, record, **attr):
         time_details = P(I(_class="icon icon-time"),
                          " ",
                          XML(time_details),
-                         _class="main_contact_ph",
+                         _class="main_office-add",
                          )
     else:
         time_details = ""
@@ -1108,9 +1116,7 @@ def render_org_needs(listid, resource, rfields, record, **attr):
                    _class="card-header",
                    ),
                    DIV(logo,
-                       DIV(money_details,
-                           time_details,
-                           P(I(_class="icon icon-phone"),
+                       DIV(P(I(_class="icon icon-phone"),
                              " ",
                              phone,
                              _class="main_contact_ph",
@@ -1120,6 +1126,8 @@ def render_org_needs(listid, resource, rfields, record, **attr):
                              website,
                              _class="main_office-add",
                              ),
+                           money_details,
+                           time_details,
                            _class="media-body",
                            ),
                    _class="media",
@@ -1366,9 +1374,12 @@ def customize_gis_location(**attr):
                                )
 
             elif r.method == "profile":
-        
+
                 # Customise tables used by widgets
-                #customize_cms_post_fields()
+                #customize_hrm_human_resource_fields()
+                customize_org_facility_fields()
+                s3db.req_customize_req_fields()
+                s3db.req_customize_commit_fields()
 
                 # gis_location table (Sub-Locations)
                 table.parent.represent = s3db.gis_LocationRepresent(sep=" | ")
@@ -1664,7 +1675,7 @@ def customize_org_facility_fields():
 
     # Truncate comments fields
     from s3.s3utils import s3_trunk8
-    s3_trunk8()
+    s3_trunk8(lines=2)
 
     s3db = current.s3db
     tablename = "org_facility"
@@ -1798,7 +1809,9 @@ def customize_org_facility(**attr):
                 location_field.widget = S3LocationSelectorWidget2(levels=levels,
                                                                   show_address=True,
                                                                   show_map=True)
-            s3.cancel = True
+
+            # @ToDo: Proper button if we want this & amend fucntionality for Bootstrap)
+            #s3.cancel = True
 
             if r.method == "datalist":
                 # Site selection page
@@ -1945,9 +1958,6 @@ def customize_org_facility(**attr):
                 else:
                     # @ToDo: Placeholder
                     logo = "#"
-                # Truncate comments field
-                from s3.s3utils import s3_trunk8
-                s3_trunk8()
                 s3db.configure("org_facility",
                                list_fields = list_fields,
                                profile_title = "%s : %s" % (s3.crud_strings["org_facility"].title_list, 
@@ -1959,7 +1969,7 @@ def customize_org_facility(**attr):
                                                       #_href=org_url,
                                                       ),
                                                     H2(name),
-                                                    P(record.code),
+                                                    P(record.code or ""),
                                                     P(I(_class="icon-sitemap"),
                                                       " ",
                                                       SPAN(org.name),
@@ -2079,6 +2089,10 @@ settings.ui.customize_org_facility = customize_org_facility
 
 # -----------------------------------------------------------------------------
 def customize_org_needs_fields(profile=False):
+
+    # Truncate details field(s)
+    from s3.s3utils import s3_trunk8
+    s3_trunk8(lines=2)
 
     s3db = current.s3db
     table = s3db.req_organisation_needs
@@ -2274,6 +2288,10 @@ def customize_org_organisation(**attr):
                 ]
 
                 # Needs page
+                # Truncate details field(s)
+                from s3.s3utils import s3_trunk8
+                s3_trunk8(lines=2)
+
                 get_vars = current.request.get_vars
                 money = get_vars.get("needs.money", None)
                 #vol = get_vars.get("needs.vol", None)
@@ -2501,6 +2519,9 @@ def customize_pr_person(**attr):
                         label = T("Photo"),
                         multiple = False,
                         fields = ["image"],
+                        filterby = dict(field = "profile",
+                                        options=[True]
+                                        )
                     ),
                 ]
 
@@ -2512,7 +2533,7 @@ def customize_pr_person(**attr):
                            (T("Site"), "human_resource.site_id"),
                            (T("Site Contact"), "human_resource.site_contact"),
                            ]
-            
+
             # Don't include Email/Phone for unauthenticated users
             if current.auth.is_logged_in():
                 list_fields += [(MOBILE, "phone.value"),
@@ -2541,8 +2562,11 @@ def customize_pr_person(**attr):
 
             crud_form = S3SQLCustomForm(*s3_sql_custom_fields)
 
-            # Return to List view after create/update/delete (unless done via Modal)
-            url_next = URL(c="pr", f="person")
+            if r.id and request.controller == "default":
+                url_next = URL(c="default", f="person", args=[r.id, "read"])
+            else:
+                # Return to List view after create/update/delete (unless done via Modal)
+                url_next = URL(c="pr", f="person")
 
             s3db.configure(tablename,
                            create_next = url_next,
@@ -2794,9 +2818,6 @@ def customize_req_req(**attr):
             else:
                 # @ToDo: Placeholder
                 logo = "#"
-            # Truncate comments field
-            from s3.s3utils import s3_trunk8
-            s3_trunk8()
             s3db.configure("req_req",
                            profile_title = s3.crud_strings["req_req"].title_list,
                            profile_header = DIV(A(IMG(_class="media-object",

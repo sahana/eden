@@ -113,6 +113,11 @@ def staff():
                                                                   T("The facility where this position is based."),
                                                                   #T("Enter some characters to bring up a list of possible matches")
                                                                   )))
+                #table.site_id.comment = S3AddResourceLink(c="org", f="facility",
+                #                                          vars = dict(child="site_id",
+                #                                                      parent="req"),
+                #                                          title=T("Add New Site"),
+                #                                          )
                 table.status.writable = table.status.readable = False
 
             elif r.method == "delete":

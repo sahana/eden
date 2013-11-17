@@ -999,13 +999,13 @@ S3OptionsFilter({
         req_id = record.id
         # Make a copy of the request record
         if settings.get_req_use_req_number():
-            code = s3db.inv_get_shipping_code(settings.get_req_shortname(),
+            code = s3db.supply_get_shipping_code(settings.get_req_shortname(),
                                               record.site_id,
                                               table.req_ref,
                                               )
         else:
             code = None
-        if record.date_required < now:
+        if record.date_required and record.date_required < now:
             date_required = now + datetime.timedelta(days=14)
         else:
             date_required = record.date_required
@@ -1046,6 +1046,22 @@ S3OptionsFilter({
                            currency = item.currency,
                            site_id = item.site_id,
                            comments = item.comments)
+        elif record.type == 3:
+            # People and skills
+            rstable = s3db.req_req_skill
+            skills = db(rstable.req_id == req_id).select(rstable.id,
+                                                         rstable.skill_id,
+                                                         rstable.quantity,
+                                                         rstable.site_id,
+                                                         rstable.comments)
+            if skills:
+                insert = rstable.insert
+                for skill in skills:
+                    insert(req_id = new_req_id,
+                           skill_id = skill.skill_id,
+                           quantity = skill.quantity,
+                           site_id = skill.site_id,
+                           comments = skill.comments)
 
         redirect(URL(f="req", args=[new_req_id, "update"]))
 
@@ -3405,7 +3421,9 @@ def req_req_details(row):
                                           ltable.quantity)
         if skills:
             represent = S3Represent(lookup="hrm_skill",
-                                    multiple=True)
+                                    multiple=True,
+                                    none=T("Unskilled")
+                                   )
             skills = ["%s %s" % (skill.quantity,
                                  represent(skill.skill_id)) \
                       for skill in skills]
@@ -3819,6 +3837,10 @@ def req_customize_req_fields():
         Customize req_req fields for the Home page & dataList view
     """
 
+    # Truncate purpose field
+    from s3.s3utils import s3_trunk8
+    s3_trunk8(lines=2)
+
     T = current.T
     db = current.db
     s3db = current.s3db
@@ -3869,9 +3891,10 @@ def req_customize_req_fields():
                                                   parent="req"),
                                       title=T("Add New Site"),
                                       )
-    # @ToDo:
-    #field.requires = IS_ADD_SITE_WIDGET()
-    #field.widget = S3AddSiteWidget(type="org_facility")
+    # @ToDo: postprocess to lookup default site contact
+    #script = """"""
+    #field.widget = S3SiteAutocompleteWidget(postprocess=script)
+
     db.org_site.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
 
     table.type.default = 9 # Other
@@ -3987,9 +4010,6 @@ def req_render_reqs(listid, resource, rfields, record,
     raw = record._row
     date = record["req_req.date"]
     body = record["req_req.purpose"]
-    title = record["req_req.site_id"]
-
-    site_comments = record["org_site.comments"]
 
     location = record["org_site.location_id"] or ""
     location_id = raw["org_site.location_id"]
@@ -4065,16 +4085,34 @@ def req_render_reqs(listid, resource, rfields, record,
                    _class="edit-bar fright",
                    )
 
-    card_label = TAG[""](I(_class="icon icon-request"),
-                         SPAN(" %s" % title,
+    s3db = current.s3db
+
+    site = record["req_req.site_id"]
+    site_id = raw["req_req.site_id"]
+    table = s3db.org_facility
+    facility_id = db(table.site_id == site_id).select(table.id,
+                                                      limitby=(0, 1)
+                                                      ).first().id
+    site_url = URL(c="org", f="facility",
+                   args=[facility_id, "profile"])
+    opts = dict(_href=site_url)
+    site_comments = raw["org_site.comments"] or ""
+    if site_comments:
+        opts["_class"] = "s3-popover"
+        opts["_data-toggle"] = "popover"
+        opts["_data-content"] = site_comments
+    site_link = A(site, **opts)
+    card_title = TAG[""](I(_class="icon icon-request"),
+                         SPAN(site_link,
                               _class="card-title"))
+
     #if priority == 3:
     #    # Apply additional highlighting for High Priority
     #    item_class = "%s disaster" % item_class
 
     # Tallies
     # NB We assume that all records are readable here
-    table = current.s3db.req_commit
+    table = s3db.req_commit
     query = (table.deleted == False) & \
             (table.req_id == record_id)
     tally_commits = db(query).count()
@@ -4105,7 +4143,7 @@ def req_render_reqs(listid, resource, rfields, record,
                    )
 
     # Render the item
-    item = DIV(DIV(card_label,
+    item = DIV(DIV(card_title,
                    SPAN(A(location,
                           _href=location_url,
                           ),
@@ -4118,7 +4156,8 @@ def req_render_reqs(listid, resource, rfields, record,
                    _class="card-header",
                    ),
                DIV(avatar,
-                   DIV(DIV(body,
+                   DIV(DIV(SPAN(body,
+                                _class="s3-truncate"),
                            DIV(person,
                                " - ",
                                A(organisation,
@@ -4158,6 +4197,10 @@ def req_customize_commit_fields():
     """
         Customize req_commit fields for the Home page & dataList view
     """
+
+    # Truncate comments field
+    from s3.s3utils import s3_trunk8
+    s3_trunk8(lines=2)
 
     T = current.T
     s3db = current.s3db
@@ -4431,7 +4474,8 @@ def req_render_commits(listid, resource, rfields, record,
                    _class="card-header",
                    ),
                DIV(avatar,
-                   DIV(DIV(body,
+                   DIV(DIV(SPAN(body,
+                                _class="s3-truncate"),
                            DIV(person,
                                " - ",
                                organisation,

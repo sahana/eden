@@ -204,6 +204,10 @@
     }
 
     var represent_person = function(item) {
+        if (item.label != undefined) {
+            // No Match
+            return item.label;
+        }
         var name = item.first;
         if (item.middle) {
             name += ' ' + item.middle;
@@ -215,6 +219,10 @@
     }
 
     var represent_hr = function(item) {
+        if (item.label != undefined) {
+            // No Match
+            return item.label;
+        }
         var name = item.first;
         if (item.middle) {
             name += ' ' + item.middle;
@@ -292,20 +300,17 @@
                         // New Entry
                         real_input.val('');
                     } else {
-                        var none_of_the_above = i18n.none_of_the_above;
                         data.push({
                             id: 0,
                             value: '',
-                            label: none_of_the_above,
-                            // First Name
-                            first: none_of_the_above
+                            label: i18n.none_of_the_above
                         });
                     }
                     response(data);
                 });
             },
             search: function(event, ui) {
-                throbber.removeClass('hide').removeClass('hide').show();
+                throbber.removeClass('hide').show();
                 return true;
             },
             response: function(event, ui, content) {
@@ -313,7 +318,7 @@
                 return content;
             },
             focus: function(event, ui) {
-                var name = represent_person(ui.item);
+                //var name = represent_person(ui.item);
                 return false;
             },
             select: function(event, ui) {
@@ -321,12 +326,12 @@
                 if (item.id) {
                     var name = represent_person(item);
                     dummy_input.val(name);
-                    real_input.val(item.id);
+                    real_input.val(item.id).change();
                     // Update the Form Fields
                     select_person(fieldname, item.id);
                 } else {
                     // 'None of the above' => New Entry
-                    real_input.val('');
+                    real_input.val('').change();
                 }
                 return false;
             }
@@ -340,7 +345,7 @@
         dummy_input.blur(function() {
             if (existing && existing.full_name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
-                real_input.val('');
+                real_input.val('').change();
             }
         });
     }
@@ -375,7 +380,7 @@
                     value: id,
                     full_name: full_name
                 }
-                // Already done by ac, yet gets lost for some reason
+                // Already done by ac, yet gets lost due to {} returning True
                 real_input.val(id);
                 real_input.data('existing', existing);
                 if (data.hasOwnProperty('email')) {
