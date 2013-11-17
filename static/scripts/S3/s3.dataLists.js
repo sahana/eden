@@ -46,6 +46,9 @@ function dlItemBindEvents() {
 
     // Modals
     S3.addModals();
+
+    // Tooltips
+    S3.addTooltips();
 }
 
 /*

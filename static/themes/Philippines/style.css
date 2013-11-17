@@ -12,3 +12,13 @@ textarea.comments {
 .media.pull-right {
     margin-top: 0;
 }
+
+#req_req_site_id,
+#req_commit_organisation_id {
+    float: left;
+    margin-right: 10px;
+}
+
+#req_commit_organisation_id {
+    width: 280px;
+}

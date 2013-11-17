@@ -905,12 +905,12 @@ span.tab_next_inactive a {
 
 .box_top {
    border-top: #bbb 1px solid;
-   padding-top: 10px;
+   padding-top: 8px;
 }
 
 .box_bottom {
    border-bottom: #bbb 1px solid;
-   padding-bottom: 10px;
+   padding-bottom: 8px;
 }
 
 .form-horizontal .control-group.box_top {
@@ -919,7 +919,7 @@ span.tab_next_inactive a {
 }
 
 .form-horizontal .control-group.box_bottom {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     max-width: 680px;
 }
 
