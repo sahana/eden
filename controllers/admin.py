@@ -95,7 +95,14 @@ def user():
     lappend = list_fields.append
     if len(settings.get_L10n_languages()) > 1:
         lappend("language")
-    if settings.get_auth_registration_requests_organisation():
+    isadmin=False
+    if(current.auth.user!=None):
+        checkifadmin=db(current.auth.user.id==current.s3db.auth_membership.user_id and 
+                current.s3db.auth_membership.group_id==current.s3db.auth_group.id and
+                current.s3db.auth_group.uuid=="ADMIN").select()
+        if(len(checkifadmin)>0):
+            isadmin=True
+    if settings.get_auth_registration_requests_organisation(isadmin):
         lappend("organisation_id")
     if settings.get_auth_registration_requests_organisation_group():
         lappend("org_group_id")

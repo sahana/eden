@@ -224,9 +224,9 @@ class S3Config(Storage):
         " Make the selection of Mobile Phone Mandatory during registration "
         return self.auth.get("registration_mobile_phone_mandatory", False)
 
-    def get_auth_registration_requests_organisation(self):
+    def get_auth_registration_requests_organisation(self,returnval=False):
         " Have the registration form request the Organisation "
-        return self.auth.get("registration_requests_organisation", False)
+        return self.auth.get("registration_requests_organisation", returnval)
 
     def get_auth_registration_organisation_required(self):
         " Make the selection of Organisation required during registration "
