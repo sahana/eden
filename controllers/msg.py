@@ -1406,8 +1406,8 @@ def twitter_result():
         cols=report_fields,
         fact=report_fields,
         defaults=Storage(
-            rows="minimum(created_on)",
-            cols="search_id",
+            rows="search_id",
+            cols="lang",
             totals=True,
         )
     )
