@@ -95,8 +95,12 @@ def user():
     lappend = list_fields.append
     if len(settings.get_L10n_languages()) > 1:
         lappend("language")
-    if settings.get_auth_registration_requests_organisation():
-        lappend("organisation_id")
+    if auth.s3_has_role("ADMIN"):
+        if settings.get_auth_admin_sees_organisation():
+            lappend("organisation_id")
+    else:
+        if settings.get_auth_registration_requests_organisation():
+            lappend("organisation_id")
     if settings.get_auth_registration_requests_organisation_group():
         lappend("org_group_id")
     if settings.get_auth_registration_requests_site():
