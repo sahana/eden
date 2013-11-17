@@ -1542,19 +1542,19 @@ class S3DateTimeWidget(FormWidget):
         # Update limits of another widget?
         set_min = opts.get("set_min", None)
         set_max = opts.get("set_max", None)
-        onclose = """function(selectedDate){"""
+        onclose = '''function(selectedDate){'''
         onclear = ""
         if set_min:
-            onclose += """$('#%s').%s('option','minDate',selectedDate)\n""" % \
+            onclose += '''$('#%s').%s('option','minDate',selectedDate)\n''' % \
                        (set_min, widget)
-            onclear += """$('#%s').%s('option','minDate',null)\n""" % \
+            onclear += '''$('#%s').%s('option','minDate',null)\n''' % \
                        (set_min, widget)
         if set_max:
-            onclose += """$('#%s').%s('option','maxDate',selectedDate)""" % \
+            onclose += '''$('#%s').%s('option','maxDate',selectedDate)''' % \
                        (set_max, widget)
-            onclear += """$('#%s').%s('option','minDate',null)""" % \
+            onclear += '''$('#%s').%s('option','minDate',null)''' % \
                        (set_max, widget)
-        onclose += """}"""
+        onclose += '''}'''
 
         # Translate Python format-strings
         date_format = settings.get_L10n_date_format().replace("%Y", "yy") \
@@ -5067,7 +5067,7 @@ class S3SelectChosenWidget(OptionsWidget):
         s3.scripts.append("/%s/static/scripts/%s" % (current.request.application,
                                                      script))
         # @ToDo: Can we not determine a # selector? (faster)
-        script = """$('[name="%s"]').chosen();""" % field.name
+        script = '''$('[name="%s"]').chosen();''' % field.name
         s3.jquery_ready.append(script)
         return OptionsWidget.widget(field, value, **attributes)
 

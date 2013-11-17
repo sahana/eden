@@ -1044,10 +1044,7 @@ class S3Model(object):
 
             if row:
                 # Update the super-entity record
-                try:
-                    db(s._id == skey).update(**data)
-                except:
-                    continue
+                db(s._id == skey).update(**data)
                 super_keys[key] = skey
                 data[key] = skey
                 form = Storage(vars=data)
