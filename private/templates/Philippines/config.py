@@ -1368,9 +1368,12 @@ def customize_gis_location(**attr):
                                )
 
             elif r.method == "profile":
-        
+
                 # Customise tables used by widgets
-                #customize_cms_post_fields()
+                #customize_hrm_human_resource_fields()
+                customize_org_facility_fields()
+                s3db.req_customize_req_fields()
+                s3db.req_customize_commit_fields()
 
                 # gis_location table (Sub-Locations)
                 table.parent.represent = s3db.gis_LocationRepresent(sep=" | ")

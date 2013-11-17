@@ -57,13 +57,39 @@ class index(S3CustomController):
                 (ltable.resource == "index") & \
                 (ltable.post_id == table.id) & \
                 (table.deleted != True)
-        item = current.db(query).select(table.body,
+        item = current.db(query).select(table.id,
+                                        table.body,
                                         limitby=(0, 1)).first()
         if item:
-            output["what_we_do"] = DIV(XML(item.body))
+            what_we_do = DIV(XML(item.body))
+            if current.auth.s3_has_role("ADMIN"):
+                if s3.crud.formstyle == "bootstrap":
+                    _class = "btn"
+                else:
+                    _class = "action-btn"
+                what_we_do.append(A(current.T("Edit"),
+                                    _href=URL(c="cms", f="post",
+                                              args=[item.id, "update"],
+                                              vars={"module": "default",
+                                                    "resource": "index",
+                                                    }),
+                                    _class="%s cms-edit" % _class))
         else:
-            # @ToDo: Edit button for Admin
-            output["what_we_do"] = ""
+            what_we_do = DIV()
+            if current.auth.s3_has_role("ADMIN"):
+                if s3.crud.formstyle == "bootstrap":
+                    _class = "btn"
+                else:
+                    _class = "action-btn"
+                what_we_do.append(A(current.T("Edit"),
+                                    _href=URL(c="cms", f="post",
+                                              args=["create"],
+                                              vars={"module": "default",
+                                                    "resource": "index",
+                                                    }),
+                                    _class="%s cms-edit" % _class))
+
+        output["what_we_do"] = what_we_do
 
         self._view(THEME, "index.html")
         return output
