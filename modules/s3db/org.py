@@ -1923,7 +1923,7 @@ class S3SiteModel(S3Model):
                                         default=False,
                                         readable=False,
                                         writable=False),
-                                  Field("comments"),
+                                  Field("comments", "text"),
                                   *s3_ownerstamp())
 
         # ---------------------------------------------------------------------

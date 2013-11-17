@@ -1431,7 +1431,7 @@ def customize_gis_location(**attr):
                                    tablename = "req_req",
                                    context = "location",
                                    default = default,
-                                   filter = S3FieldSelector("cancel") == False,
+                                   filter = S3FieldSelector("req_status").belongs(0, 1),
                                    icon = "icon-flag",
                                    layer = "Requests",
                                    # provided by Catalogue Layer
@@ -1910,7 +1910,7 @@ def customize_org_facility(**attr):
                                    type = "datalist",
                                    tablename = "req_req",
                                    context = "site",
-                                   filter = S3FieldSelector("cancel") == False,
+                                   filter = S3FieldSelector("req_status").belongs(0, 1),
                                    icon = "icon-flag",
                                    show_on_map = False, # Since they will show within Sites
                                    list_layout = s3db.req_render_reqs,
@@ -2209,7 +2209,7 @@ def customize_org_organisation(**attr):
                                    type = "datalist",
                                    tablename = "req_req",
                                    context = "organisation",
-                                   filter = S3FieldSelector("cancel") == False,
+                                   filter = ("req_status").belongs(0, 1),
                                    icon = "icon-flag",
                                    layer = "Requests",
                                    # provided by Catalogue Layer
@@ -2753,7 +2753,9 @@ def customize_req_req(**attr):
             s3db.req_customize_commit_fields()
         else:
             s3db.req_customize_req_fields()
-        if r.method == "profile":
+        if r.method in ("datalist", "datalist.dl"):
+            s3.filter = (r.table.req_status.belongs(0, 1))
+        elif r.method == "profile":
             # Customise tables used by widgets
             s3db.req_customize_commit_fields()
             customize_org_facility_fields()
@@ -2876,6 +2878,9 @@ def customize_req_commit(**attr):
         #    result = standard_prep(r)
 
         current.s3db.req_customize_commit_fields()
+
+        if r.method in ("datalist", "datalist.dl"):
+            s3.filter = (r.table.cancel != True)
 
         return True
     s3.prep = custom_prep

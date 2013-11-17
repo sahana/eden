@@ -81,7 +81,7 @@ S3.addTooltips = function() {
     if (typeof($.fn.popover) != 'undefined') {
         $('.s3-popover').popover({
             trigger: 'hover',
-            placement: 'top'
+            placement: 'left'
         });
     }
     // Help Tooltips
