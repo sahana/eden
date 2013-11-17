@@ -498,6 +498,21 @@ div.dl {
     clear: left;
 }
 
+/* Cards */
+.card_1_line,
+.card_manylines {
+    font-size: 12px;
+    padding-top: 4px;
+    color: #666;
+    padding-bottom: 2px;
+}
+.card_1_line {
+    height: 14px; /* Height needs to be same with or without contents */
+    margin-bottom: 0;
+    text-overflow: none;
+    overflow: hidden;
+}
+
 /* Display view */
 .item-container {
     width: 100%;

@@ -151,15 +151,17 @@ div.card-header.profile-head {
 }*/
 
 /* Contact Details */
+.person_pos {
+    font: 13px 'Helvetica Neue',Arial,sans-serif;
+    padding: 0;
+    display: inline-block;
+    margin-bottom: 3px;
+}
+
 .person_pos strong {
     font: bold 13px 'Helvetica Neue',Arial,sans-serif;
     color: #333333;
     padding: 0 4px 0 0;
-}
-
-.main_contact_ph span{
-    margin-right: 10px;
-    margin-left: 2px;
 }
 
 .person_pos,
@@ -172,28 +174,19 @@ div.card-header.profile-head {
 }
 
 .main_contact_ph,
-.main_contact_email,
-.main_office-add,
+.main_contact_email, /* @ToDo: Replace with .card_1_line */
+.main_office-add, /* @ToDo: Replace with .card_many_lines */
 .main_contact {
+    font-size: 12px;
+    padding-top: 4px;
+    color: #666;
+    padding-bottom: 2px;
     height: 14px; /* Height needs to be same with or without contents */
-    font-size: 12px;
-    padding-top: 4px;
-    color: #666;
-    padding-bottom: 2px;
 }
 
-.main_office-comment {
-    font-size: 12px;
-    padding-top: 4px;
-    color: #666;
-    padding-bottom: 2px;
-}
-
-.person_pos {
-    font: 13px 'Helvetica Neue',Arial,sans-serif;
-    padding: 0;
-    display: inline-block;
-    margin-bottom: 3px;
+.main_contact_ph span{
+    margin-right: 10px;
+    margin-left: 2px;
 }
 
 .card-holder .thumbnail {

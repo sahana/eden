@@ -1846,7 +1846,11 @@ class S3HRSkillModel(S3Model):
             msg_list_empty = T("Currently no Skills registered"))
 
         configure("hrm_competency",
-                  deduplicate=self.hrm_competency_duplicate)
+                  deduplicate = self.hrm_competency_duplicate,
+                  context = {"person": "person_id",
+                             #"organisation": "organisation_id",
+                             },
+                  )
 
         # =====================================================================
         # Skill Provisions
@@ -3117,6 +3121,12 @@ class S3HRExperienceModel(S3Model):
             msg_record_deleted = T("Professional Experience deleted"),
             msg_no_match = T("No Professional Experience found"),
             msg_list_empty = T("Currently no Professional Experience entered"))
+
+        self.configure("hrm_experience",
+                       context = {"person": "person_id",
+                                  "organisation": "organisation_id",
+                                  },
+                       )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -4845,6 +4855,12 @@ def hrm_human_resource_controller(extra_filter=None):
         if method in ("form", "lookup"):
             return True
         elif method == "profile":
+            # Configure Widgets
+            s3db.pr_address
+            list_fields = s3db.get_config("pr_address",
+                                          "list_fields")
+            list_fields.append("comments")
+
             db = current.db
             table = r.table
             record = r.record
@@ -4861,71 +4877,64 @@ def hrm_human_resource_controller(extra_filter=None):
             comments = r.table.organisation_id.represent(record.organisation_id)
             if record.job_title_id:
                 comments = "%s, %s" % (r.table.job_title_id.represent(record.job_title_id), comments)
-            #ctable = s3db.pr_contact
-            #ctable.contact_method.readable = False
-            #ctable.priority.readable = False
-            #ctable.value.label = ""
             contacts_widget = dict(label = "Contacts",
                                    title_create = "Add New Contact",
-                                   #type = "datatable",
                                    type = "datalist",
                                    tablename = "pr_contact",
-                                   #context = "event",
+                                   orderby = "priority asc",
+                                   #context = "person",
                                    #default = default,
                                    filter = S3FieldSelector("pe_id") == pe_id,
                                    icon = "icon-phone",
-                                   #list_layout = render_contacts,
+                                   # Default renderer:
+                                   #list_layout = s3db.pr_render_contacts,
                                    )
             address_widget = dict(label = "Address",
                                   title_create = "Add New Address",
-                                  #type = "datatable",
                                   type = "datalist",
                                   tablename = "pr_address",
-                                  #context = "event",
+                                  #context = "person",
                                   #default = default,
                                   filter = S3FieldSelector("pe_id") == pe_id,
                                   icon = "icon-home",
-                                  #list_layout = render_address,
+                                  # Default renderer:
+                                  #list_layout = s3db.pr_render_address,
                                   )
             skills_widget = dict(label = "Skills",
                                  title_create = "Add New Skill",
-                                 #type = "datatable",
                                  type = "datalist",
                                  tablename = "hrm_competency",
-                                 #context = "event",
+                                 context = "person",
                                  #default = default,
-                                 filter = S3FieldSelector("person_id") == person_id,
+                                 #filter = S3FieldSelector("person_id") == person_id,
                                  icon = "icon-comment-alt",
                                  #list_layout = render_skills,
                                  )
             training_widget = dict(label = "Trainings",
                                    title_create = "Add New Training",
-                                   #type = "datatable",
                                    type = "datalist",
                                    tablename = "hrm_training",
-                                   #context = "event",
+                                   context = "person",
                                    #default = default,
-                                   filter = S3FieldSelector("person_id") == person_id,
+                                   #filter = S3FieldSelector("person_id") == person_id,
                                    icon = "icon-truck",
                                    #list_layout = render_training,
                                    )
             experience_widget = dict(label = "Experience",
                                      title_create = "Add New Experience",
-                                     #type = "datatable",
                                      type = "datalist",
                                      tablename = "hrm_experience",
-                                     #context = "event",
+                                     context = "person",
                                      #default = default,
-                                     filter = S3FieldSelector("person_id") == person_id,
+                                     #filter = S3FieldSelector("person_id") == person_id,
                                      icon = "icon-truck",
                                      #list_layout = render_training,
                                      )
             docs_widget = dict(label = "Documents",
                                title_create = "Add New Document",
-                               #type = "datatable",
                                type = "datalist",
                                tablename = "doc_document",
-                               #context = "event",
+                               #context = "person",
                                #default = default,
                                filter = S3FieldSelector("doc_id") == record.doc_id,
                                icon = "icon-paperclip",

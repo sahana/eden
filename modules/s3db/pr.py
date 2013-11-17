@@ -82,6 +82,8 @@ __all__ = ["S3PersonEntity",
            "pr_image_modify",
            "pr_image_resize",
            "pr_image_format",
+           #"pr_render_address",
+           #"pr_render_contacts",
            ]
 
 import os
@@ -1728,7 +1730,11 @@ class S3ContactModel(S3Model):
                                "contact_method",
                                "value",
                                "priority",
-                               ])
+                               # Used by list_layout & anyway it's useful
+                               "comments",
+                               ],
+                  list_layout = pr_render_contacts,
+                  )
 
         # ---------------------------------------------------------------------
         # Emergency Contact Information
@@ -1890,20 +1896,31 @@ class S3AddressModel(S3Model):
             msg_record_deleted = T("Address deleted"),
             msg_list_empty = T("There is no address for this person yet. Add new address."))
 
+        # Which levels of Hierarchy are we using?
+        hierarchy = current.gis.get_location_hierarchy()
+        levels = hierarchy.keys()
+        if len(settings.get_gis_countries()) == 1:
+            levels.remove("L0")
+        # Display in reverse order, like Addresses
+        levels.reverse()
+
+        list_fields = ["id",
+                       "type",
+                       (T("Address"), "location_id$addr_street"),
+                       ]
+        if settings.get_gis_postcode_selector():
+            list_fields.append((settings.get_ui_label_postcode(),
+                                "location_id$addr_postcode"))
+        for level in levels:
+            list_fields.append("location_id$%s" % level)
+
         # Resource configuration
         self.configure(tablename,
-                       onaccept=self.pr_address_onaccept,
-                       deduplicate=self.pr_address_deduplicate,
-                       list_fields = ["id",
-                                      "type",
-                                      (T("Address"), "location_id$addr_street"),
-                                      (settings.get_ui_label_postcode(), "location_id$addr_postcode"),
-                                      #"location_id$L4",
-                                      "location_id$L3",
-                                      "location_id$L2",
-                                      "location_id$L1",
-                                      (messages.COUNTRY, "location_id$L0"),
-                                      ])
+                       onaccept = self.pr_address_onaccept,
+                       deduplicate = self.pr_address_deduplicate,
+                       list_fields = list_fields,
+                       list_layout = pr_render_address,
+                       )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -5769,5 +5786,214 @@ def pr_image_format(image_file,
                            image_name,
                            original_name,
                            to_format = to_format)
+
+# =============================================================================
+def pr_render_address(listid, resource, rfields, record, 
+                      type = None,
+                      **attr):
+    """
+        Custom dataList item renderer for Addresses on the HRM Profile
+
+        @param listid: the HTML ID for this list
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+        @param attr: additional HTML attributes for the item
+    """
+
+    pkey = "pr_address.id"
+
+    # Construct the item ID
+    if pkey in record:
+        record_id = record[pkey]
+        item_id = "%s-%s" % (listid, record_id)
+    else:
+        # template
+        item_id = "%s-[id]" % listid
+
+    item_class = "thumbnail"
+
+    raw = record._row
+    title = record["pr_address.type"]
+    comments = raw["pr_address.comments"] or ""
+
+    addr_street = raw["gis_location.addr_street"] or ""
+    addr_postcode = raw["gis_location.addr_postcode"] or ""
+    if addr_postcode:
+        addr_postcode = P(SPAN(addr_postcode),
+                          " ",
+                          _class="card_1_line",
+                          )
+    locations = []
+    for level in ("L5", "L4", "L3", "L2", "L1", "L0"):
+        l = raw.get("gis_location.%s" % level, None)
+        if l:
+            locations.append(l)
+    if len(locations):
+        location = " | ".join(locations)
+        location = P(SPAN(location),
+                     " ",
+                     _class="card_1_line",
+                     )
+    else:
+        location = ""
+
+    # Edit Bar
+    permit = current.auth.s3_has_permission
+    table = current.s3db.pr_address
+    if permit("update", table, record_id=record_id):
+        edit_btn = A(I(" ", _class="icon icon-edit"),
+                     _href=URL(c="pr", f="address",
+                               args=[record_id, "update.popup"],
+                               vars={"refresh": listid,
+                                     "record": record_id}),
+                     _class="s3_modal",
+                     _title=current.T("Edit Address"),
+                     )
+    else:
+        edit_btn = ""
+    if permit("delete", table, record_id=record_id):
+        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+                       _class="dl-item-delete",
+                       )
+    else:
+        delete_btn = ""
+    edit_bar = DIV(edit_btn,
+                   delete_btn,
+                   _class="edit-bar fright",
+                   )
+
+    # Render the item
+    item = DIV(DIV(I(_class="icon"),
+                   SPAN(" %s" % title,
+                        _class="card-title"),
+                   edit_bar,
+                   _class="card-header",
+                   ),
+               DIV(DIV(DIV(P(I(_class="icon-home"),
+                             " ",
+                             SPAN(addr_street),
+                             " ",
+                             _class="card_1_line",
+                             ),
+                           addr_postcode,
+                           location,
+                           P(SPAN(comments),
+                             " ",
+                             _class="card_manylines",
+                             ),
+                           _class="media",
+                           ),
+                       _class="media-body",
+                       ),
+                   _class="media",
+                   ),
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
+
+# =============================================================================
+def pr_render_contacts(listid, resource, rfields, record, 
+                       type = None,
+                       **attr):
+    """
+        Custom dataList item renderer for Contacts on the HRM Profile
+
+        @param listid: the HTML ID for this list
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+        @param attr: additional HTML attributes for the item
+    """
+
+    pkey = "pr_contact.id"
+
+    # Construct the item ID
+    if pkey in record:
+        record_id = record[pkey]
+        item_id = "%s-%s" % (listid, record_id)
+    else:
+        # template
+        item_id = "%s-[id]" % listid
+
+    item_class = "thumbnail"
+
+    raw = record._row
+    title = record["pr_contact.contact_method"]
+    contact_method = raw["pr_contact.contact_method"]
+    value = record["pr_contact.value"]
+    comments = raw["pr_contact.comments"] or ""
+
+    # Edit Bar
+    permit = current.auth.s3_has_permission
+    table = current.s3db.pr_contact
+    if permit("update", table, record_id=record_id):
+        edit_btn = A(I(" ", _class="icon icon-edit"),
+                     _href=URL(c="pr", f="contact",
+                               args=[record_id, "update.popup"],
+                               vars={"refresh": listid,
+                                     "record": record_id}),
+                     _class="s3_modal",
+                     _title=current.T("Edit Contact"),
+                     )
+    else:
+        edit_btn = ""
+    if permit("delete", table, record_id=record_id):
+        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+                       _class="dl-item-delete",
+                       )
+    else:
+        delete_btn = ""
+    edit_bar = DIV(edit_btn,
+                   delete_btn,
+                   _class="edit-bar fright",
+                   )
+
+    if contact_method in("SMS", "HOME_PHONE", "WORK_PHONE"):
+        icon = "phone"
+    elif contact_method == "EMAIL":
+        icon = "envelope-alt"
+    elif contact_method == "SKYPE":
+        icon = "skype"
+    elif contact_method == "FACEBOOK":
+        icon = "facebook"
+    elif contact_method == "TWITTER":
+        icon = "twitter"
+    elif contact_method == "RADIO":
+        icon = "microphone"
+    elif contact_method == "RSS":
+        icon = "rss"
+    else:
+        icon = "circle"
+    # Render the item
+    item = DIV(DIV(I(_class="icon"),
+                   SPAN(" %s" % title,
+                        _class="card-title"),
+                   edit_bar,
+                   _class="card-header",
+                   ),
+               DIV(DIV(DIV(P(I(_class="icon-%s" % icon),
+                             " ",
+                             SPAN(value),
+                             " ",
+                             _class="card_1_line",
+                             ),
+                           P(SPAN(comments),
+                             " ",
+                             _class="card_manylines",
+                             ),
+                           _class="media",
+                           ),
+                       _class="media-body",
+                       ),
+                   _class="media",
+                   ),
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
 
 # END =========================================================================
