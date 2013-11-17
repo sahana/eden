@@ -33,7 +33,7 @@
                 name: dummy_input.val()
             };
         } else {
-            var existing = {};
+            var existing;
         }
         real_input.data('existing', existing);
         // Have the URL editable after setup
@@ -146,6 +146,11 @@
             if (existing && existing.name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
+                if (create.length) {
+                    // Open popup to create new entry
+                    // @ToDo: prepopulate name field
+                    create.click();
+                }
             }
         });
     };
@@ -173,7 +178,7 @@
                 name: dummy_input.val()
             };
         } else {
-            var existing = {};
+            var existing;
         }
         real_input.data('existing', existing);
         // Have the URL editable after setup
@@ -276,6 +281,11 @@
             if (existing && existing.name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
+                if (create.length) {
+                    // Open popup to create new entry
+                    // @ToDo: prepopulate name field
+                    create.click();
+                }
             }
         });
     };
@@ -288,24 +298,53 @@
             // No Match
             return item.label;
         }
-        var name = item.name;
+        if (item.name) {
+            var name = item.name;
+        } else {
+            // Site contents
+            var name = ''
+        }
         if (item.L5) {
-            name += ', ' + item.L5;
+            if (name) {
+                name += ', ' + item.L5;
+            } else {
+                name = item.L5;
+            }
         }
         if (item.L4) {
-            name += ', ' + item.L4;
+            if (name) {
+                name += ', ' + item.L4;
+            } else {
+                name = item.L4;
+            }
         }
         if (item.L3) {
-            name += ', ' + item.L3;
+            if (name) {
+                name += ', ' + item.L3;
+            } else {
+                name = item.L3;
+            }
         }
         if (item.L2) {
-            name += ', ' + item.L2;
+            if (name) {
+                name += ', ' + item.L2;
+            } else {
+                name = item.L2;
+            }
         }
         if (item.L1) {
-            name += ', ' + item.L1;
+            if (name) {
+                name += ', ' + item.L1;
+            } else {
+                name = item.L1;
+            }
         }
         if (item.L0) {
-            name += ', ' + item.L0;
+            if (name) {
+                name += ', ' + item.L0;
+            } else {
+                name = item.L0;
+            }
         }
         return name;
     }
@@ -336,7 +375,7 @@
                 name: dummy_input.val()
             };
         } else {
-            var existing = {};
+            var existing;
         }
         real_input.data('existing', existing);
         // Have the URL editable after setup
@@ -436,6 +475,11 @@
             if (existing && existing.name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
+                if (create.length) {
+                    // Open popup to create new entry
+                    // @ToDo: prepopulate name field
+                    create.click();
+                }
             }
         });
     };
@@ -484,7 +528,7 @@
                 name: dummy_input.val()
             };
         } else {
-            var existing = {};
+            var existing;
         }
         real_input.data('existing', existing);
         // Have the URL editable after setup
@@ -582,6 +626,11 @@
             if (existing && existing.name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
+                if (create.length) {
+                    // Open popup to create new entry
+                    // @ToDo: prepopulate name field
+                    create.click();
+                }
             }
         });
     };
@@ -610,7 +659,7 @@
                 name: dummy_input.val()
             };
         } else {
-            var existing = {};
+            var existing;
         }
         real_input.data('existing', existing);
         // Have the URL editable after setup
@@ -716,6 +765,11 @@
             if (existing && existing.name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
+                if (create.length) {
+                    // Open popup to create new entry
+                    // @ToDo: prepopulate name field
+                    create.click();
+                }
             }
         });
     };
@@ -785,7 +839,7 @@
                 name: dummy_input.val()
             };
         } else {
-            var existing = {};
+            var existing;
         }
         real_input.data('existing', existing);
         // Have the URL editable after setup
@@ -883,6 +937,11 @@
             if (existing && existing.name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
+                if (create.length) {
+                    // Open popup to create new entry
+                    // @ToDo: prepopulate name field
+                    create.click();
+                }
             }
         });
     };
@@ -896,6 +955,15 @@
             return item.label;
         }
         var name = item.name;
+        var address = item.address;
+        if (address) {
+            name += ' (' + address + ')';
+        }
+        var location = item.location;
+        if (location) {
+            location = represent_location(location);
+            name += ' (' + location + ')';
+        }
         var org = item.org;
         var instance_type = item.instance_type;
         if (org || instance_type) {
@@ -924,7 +992,7 @@
             return;
         }
 
-        var url = S3.Ap.concat('/org/site/search_ac.json?field=name&filter=~');
+        var url = S3.Ap.concat('/org/site/search_ac.json?filter=~');
 
         var real_input = $('#' + input);
         // Bootstrap overides .hide :/
@@ -937,7 +1005,7 @@
                 name: dummy_input.val()
             };
         } else {
-            var existing = {};
+            var existing;
         }
         real_input.data('existing', existing);
         // Have the URL editable after setup (e.g. to Filter by Organisation)
@@ -1010,7 +1078,7 @@
             select: function(event, ui) {
                 var item = ui.item;
                 if (item.id) {
-                    dummy_input.val(ui.item.name);
+                    dummy_input.val(item.name);
                     real_input.val(item.id).change();
                 } else {
                     // No Match & no ability to create new
@@ -1033,7 +1101,12 @@
         dummy_input.blur(function() {
             if (existing && existing.name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
-                real_input.val('');
+                real_input.val('').change();
+                if (create.length) {
+                    // Open popup to create new entry
+                    // @ToDo: prepopulate name field
+                    create.click();
+                }
             }
         });
     };
@@ -1050,7 +1123,7 @@
             return;
         }
 
-        var url = S3.Ap.concat('/org/site/search_address_ac?field=name&filter=~');
+        var url = S3.Ap.concat('/org/site/search_address_ac?filter=~');
 
         var real_input = $('#' + input);
         // Have the URL editable after setup (e.g. to Filter by Organisation)
@@ -1110,25 +1183,20 @@
                 });
             },
             search: function(event, ui) {
-                //dummy_input.hide();
                 throbber.removeClass('hide').show();
                 return true;
             },
             response: function(event, ui, content) {
                 throbber.hide();
-                //dummy_input.show();
                 return content;
             },
             focus: function(event, ui) {
-                var name = ui.item.name || '';
-                //dummy_input.val(name);
                 return false;
             },
             select: function(event, ui) {
                 var item = ui.item;
                 if (item.id) {
-                    var name = represent_site(item);
-                    dummy_input.val(name);
+                    dummy_input.val(item.name);
                     real_input.val(item.id).change();
                 } else {
                     // No Match & no ability to create new
@@ -1139,7 +1207,6 @@
                     // postprocess has to be able to handle the 'no match' option
                     eval(postprocess);
                 }
-                data.accept = true;
                 return false;
             }
         })
@@ -1153,6 +1220,11 @@
             if (existing && existing.name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
+                if (create.length) {
+                    // Open popup to create new entry
+                    // @ToDo: prepopulate name field
+                    create.click();
+                }
             }
         });
     };

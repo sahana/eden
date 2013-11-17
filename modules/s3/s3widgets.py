@@ -5772,7 +5772,7 @@ def search_ac(r, **attr):
 
     # JQueryUI Autocomplete uses "term" instead of "value"
     # (old JQuery Autocomplete uses "q" instead of "value")
-    value = _vars.value or _vars.term or _vars.q or None
+    value = _vars.term or _vars.value or _vars.q or None
 
     # We want to do case-insensitive searches
     # (default anyway on MySQL/SQLite, but not PostgreSQL)
@@ -5792,9 +5792,10 @@ def search_ac(r, **attr):
 
         # Default fields to return
         fields = ["id", fieldname]
-        if resource.tablename == "org_site":
-            # Simpler to provide an exception case than write a whole new class
-            fields.append("instance_type")
+        # Now using custom method
+        #if resource.tablename == "org_site":
+        #    # Simpler to provide an exception case than write a whole new class
+        #    fields.append("instance_type")
 
         filter = _vars.filter
         if filter == "~":

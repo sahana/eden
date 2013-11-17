@@ -204,7 +204,13 @@ settings.pr.request_gender = False
 # Org
 #settings.org.site_label = "Office/Shelter/Hospital"
 settings.org.site_label = "Site"
-#settings.org.site_autocomplete = True
+settings.org.site_autocomplete = True
+# Extra fields to show in Autocomplete Representations
+settings.org.site_autocomplete_fields = ["location_id$L1",
+                                         "location_id$L2",
+                                         "location_id$L3",
+                                         "location_id$L4",
+                                         ]
 #settings.org.site_address_autocomplete = True
 
 # -----------------------------------------------------------------------------

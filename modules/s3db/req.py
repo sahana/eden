@@ -3891,10 +3891,10 @@ def req_customize_req_fields():
                                                   parent="req"),
                                       title=T("Add New Site"),
                                       )
-    field.widget = S3SiteAutocompleteWidget()
-    # @ToDo:
-    #field.requires = IS_ADD_SITE_WIDGET()
-    #field.widget = S3AddSiteWidget(type="org_facility")
+    # @ToDo: postprocess to lookup default site contact
+    #script = """"""
+    #field.widget = S3SiteAutocompleteWidget(postprocess=script)
+
     db.org_site.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
 
     table.type.default = 9 # Other

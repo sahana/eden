@@ -18,7 +18,8 @@ textarea.comments {
 #req_commit_organisation_id {
     float: left;
     margin-right: 10px;
-    margin-top: -5px;
+    /* Makes it hard to click into box! */
+    /*margin-top: -5px;*/
 }
 
 #req_commit_organisation_id {

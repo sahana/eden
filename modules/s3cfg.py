@@ -1650,6 +1650,12 @@ class S3Config(Storage):
         """
         return self.org.get("site_autocomplete", False)
 
+    def get_org_site_autocomplete_fields(self):
+        """
+            Which extra fields should be returned in S3SiteAutocompleteWidget
+        """
+        return self.org.get("site_autocomplete_fields", ["instance_type"])
+
     def get_org_site_address_autocomplete(self):
         """
             Whether site_id Autocomplete fields should search Address fields as well as name

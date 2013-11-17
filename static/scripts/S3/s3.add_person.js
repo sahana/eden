@@ -380,7 +380,7 @@
                     value: id,
                     full_name: full_name
                 }
-                // Already done by ac, yet gets lost for some reason
+                // Already done by ac, yet gets lost due to {} returning True
                 real_input.val(id);
                 real_input.data('existing', existing);
                 if (data.hasOwnProperty('email')) {

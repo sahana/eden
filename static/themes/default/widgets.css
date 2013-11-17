@@ -522,6 +522,7 @@ ul.ui-autocomplete {
 }
 
 /* Required Field indicator */
+.error,
 .req {
     color: red;
     font-weight: bold;
