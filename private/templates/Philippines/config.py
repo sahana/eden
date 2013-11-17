@@ -806,7 +806,7 @@ def render_sites(listid, resource, rfields, record, **attr):
                      _class="main_contact_ph",
                      ),
                    P(comments,
-                     _class="main_office-add s3-truncate",
+                     _class="main_office-comment s3-truncate",
                      ),
                    )
 

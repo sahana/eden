@@ -182,6 +182,13 @@ div.card-header.profile-head {
     padding-bottom: 2px;
 }
 
+.main_office-comment {
+    font-size: 12px;
+    padding-top: 4px;
+    color: #666;
+    padding-bottom: 2px;
+}
+
 .person_pos {
     font: 13px 'Helvetica Neue',Arial,sans-serif;
     padding: 0;
