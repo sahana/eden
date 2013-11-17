@@ -3001,7 +3001,8 @@ class S3LocationSelectorWidget(FormWidget):
         location_selector_loaded = s3.gis.location_selector_loaded
         # @ToDo: Don't insert JS snippets when location_selector already loaded
 
-        appname = current.request.application
+        request = current.request
+        appname = request.application
 
         locations = s3db.gis_location
         ctable = s3db.gis_config
@@ -3016,6 +3017,12 @@ class S3LocationSelectorWidget(FormWidget):
         defaults = dict(_type = "text",
                         value = (value != None and str(value)) or "")
         attr = StringWidget._attributes(field, defaults, **attributes)
+        if request.controller == "appadmin":
+            # Don't use this widget in appadmin
+            return TAG[""](INPUT(**attr),
+                           requires=IS_NULL_OR(IS_LOCATION()),
+                           )
+
         # Hide the real field
         attr["_class"] = "hide"
 
@@ -4115,6 +4122,12 @@ class S3LocationSelectorWidget2(FormWidget):
         defaults = dict(_type = "text",
                         value = (value != None and str(value)) or "")
         attr = StringWidget._attributes(field, defaults, **attributes)
+
+        if request.controller == "appadmin":
+            # Don't use this widget in appadmin
+            return TAG[""](INPUT(**attr),
+                           requires=IS_NULL_OR(IS_LOCATION()),
+                           )
 
         # Parent INPUT field, will be hidden
         parent_input = INPUT(_name="parent",

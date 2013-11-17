@@ -53,20 +53,10 @@ from gluon.storage import Storage
 from ..s3 import *
 from s3layouts import S3AddResourceLink
 
-REQ_STATUS_NONE       = 0
-REQ_STATUS_PARTIAL    = 1
-REQ_STATUS_COMPLETE   = 2
-
-T = current.T
-req_status_opts = { REQ_STATUS_NONE:     SPAN(T("None"),
-                                              _class = "req_status_none"),
-                    REQ_STATUS_PARTIAL:  SPAN(T("Partial"),
-                                              _class = "req_status_partial"),
-                    REQ_STATUS_COMPLETE: SPAN(T("Complete"),
-                                              _class = "req_status_complete")
-                   }
-
-rn_label = T("%(REQ)s Number") % dict(REQ=current.deployment_settings.get_req_shortname())
+REQ_STATUS_NONE     = 0
+REQ_STATUS_PARTIAL  = 1
+REQ_STATUS_COMPLETE = 2
+REQ_STATUS_CANCEL = 3
 
 # =============================================================================
 class S3RequestModel(S3Model):
@@ -110,10 +100,19 @@ class S3RequestModel(S3Model):
 
         req_status_writable = settings.get_req_status_writable()
 
+        req_status_opts = {REQ_STATUS_NONE:     SPAN(T("None"),
+                                                     _class = "req_status_none"),
+                           REQ_STATUS_PARTIAL:  SPAN(T("Partial"),
+                                                     _class = "req_status_partial"),
+                           REQ_STATUS_COMPLETE: SPAN(T("Complete"),
+                                                     _class = "req_status_complete"),
+                           }
+
         req_status = S3ReusableField("req_status", "integer",
                                      label = T("Request Status"),
-                                     requires = IS_NULL_OR(IS_IN_SET(req_status_opts,
-                                                                     zero = None)),
+                                     requires = IS_NULL_OR(
+                                                    IS_IN_SET(req_status_opts,
+                                                              zero = None)),
                                      represent = lambda opt: \
                                         req_status_opts.get(opt, UNKNOWN_OPT),
                                      default = REQ_STATUS_NONE,
@@ -121,7 +120,8 @@ class S3RequestModel(S3Model):
                                      )
 
         req_ref = S3ReusableField("req_ref", "string",
-                                  label = rn_label,
+                                  label = T("%(REQ)s Number") % #
+                                    dict(REQ=settings.get_req_shortname()),
                                   writable = False,
                                   represent = self.req_ref_represent,
                                   )
@@ -305,6 +305,12 @@ class S3RequestModel(S3Model):
                                             # (Definitely not in Create forms)
                                             #default = auth.s3_logged_in_person()
                                             ),
+                                  # Simple Status
+                                  # - currently just enabled in customize_req_fields() workflow
+                                  req_status(readable = False,
+                                             writable = False,
+                                             ),
+                                  # Detailed Status
                                   req_status("commit_status",
                                              readable = use_commit,
                                              writable = req_status_writable and use_commit,
@@ -879,11 +885,11 @@ S3OptionsFilter({
                      _href = URL(c = "req",
                                  f = "req",
                                  args = [id]),
-                     _title = T("Go to Request"))
+                     _title = current.T("Go to Request"))
         else:
             return req
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def req_commit_status_represent(opt):
         """
@@ -893,12 +899,13 @@ S3OptionsFilter({
         if opt == REQ_STATUS_COMPLETE:
             # Include the Site Name of the Committer if we can
             # @ToDo: figure out how!
-            return SPAN(T("Complete"),
+            return SPAN(current.T("Complete"),
                         _class = "req_status_complete")
         else:
-            return req_status_opts.get(opt, current.messages.UNKNOWN_OPT)
+            return current.s3db.req_status_opts.get(opt,
+                                                    current.messages.UNKNOWN_OPT)
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def req_ref_represent(value, show_link=True, pdf=False):
         """
@@ -928,7 +935,7 @@ S3OptionsFilter({
 
         return current.messages["NONE"]
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def req_form(r, **attr):
         """
@@ -1074,6 +1081,7 @@ S3OptionsFilter({
             - creates a commit with commit_items for each req_item
         """
 
+        T = current.T
         db = current.db
         s3db = current.s3db
         table = s3db.req_commit
@@ -1192,6 +1200,7 @@ S3OptionsFilter({
             s3_has_permission = current.auth.s3_has_permission
             if settings.has_module("req") and \
                s3_has_permission("read", "req_req", c="req"):
+                T = current.T
                 tabs = [(T("Requests"), "req")]
                 if s3_has_permission("read", "req_req",
                                      c=current.request.controller,
@@ -1242,8 +1251,8 @@ S3OptionsFilter({
                                                        location_r.lon,
                                                        req_location_r.lat,
                                                        req_location_r.lon,)
-            output["rheader"][0].append(TR(TH( T("Distance from %s:") % site_name),
-                                           TD( T("%.1f km") % distance)
+            output["rheader"][0].append(TR(TH(T("Distance from %s:") % site_name),
+                                           TD(T("%.1f km") % distance)
                                            ))
         except:
             pass
@@ -1395,6 +1404,33 @@ S3OptionsFilter({
                                                          table.req_ref,
                                                          )
                     db(table.id == id).update(req_ref = code)
+
+        req_status = form_vars.get("req_status", None)
+        if req_status is not None:
+            # Translate Simple Status
+            req_status = int(req_status)
+            if req_status == REQ_STATUS_PARTIAL:
+                # read current status
+                record = db(table.id == id).select(table.commit_status,
+                                                   table.fulfil_status,
+                                                   limitby=(0, 1)
+                                                   ).first()
+                data = dict(cancel = False)
+                if record.commit_status != REQ_STATUS_COMPLETE:
+                    data["commit_status"] = REQ_STATUS_PARTIAL
+                if record.fulfil_status == REQ_STATUS_COMPLETE:
+                    data["fulfil_status"] = REQ_STATUS_PARTIAL
+                db(table.id == id).update(**data)
+            elif req_status == REQ_STATUS_COMPLETE:
+                db(table.id == id).update(fulfil_status = REQ_STATUS_COMPLETE,
+                                          cancel = False,
+                                          )
+            elif req_status == REQ_STATUS_CANCEL:
+                db(table.id == id).update(cancel = True)
+            elif req_status == REQ_STATUS_NONE:
+                db(table.id == id).update(commit_status = REQ_STATUS_NONE,
+                                          fulfil_status = REQ_STATUS_NONE,
+                                          cancel = False)
 
         if settings.get_req_requester_to_site():
             requester_id = form_vars.get("requester_id", None)
@@ -2493,6 +2529,7 @@ class S3CommitModel(S3Model):
                 (rtable.id == ctable.req_id)
         req = db(query).select(rtable.id,
                                rtable.type,
+                               rtable.req_status,
                                rtable.commit_status,
                                limitby=(0, 1)).first()
         if not req:
@@ -2604,10 +2641,16 @@ class S3CommitModel(S3Model):
 
         elif type == 9:
             # Other
+            # Assume Partial not Complete
+            # @ToDo: Provide a way for the committer to specify this
+            data = {}
             if req.commit_status == REQ_STATUS_NONE:
-                # Assume Complete not partial
-                # @ToDo: Provide a way for the committer to specify this
-                db(rtable.id == req_id).update(commit_status=REQ_STATUS_COMPLETE)
+                data["commit_status"] = REQ_STATUS_PARTIAL
+            if req.req_status == REQ_STATUS_NONE:
+                # Show as 'Responded'
+                data["req_status"] = REQ_STATUS_PARTIAL
+            if data:
+                db(rtable.id == req_id).update(**data)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3422,7 +3465,7 @@ def req_req_details(row):
         if skills:
             represent = S3Represent(lookup="hrm_skill",
                                     multiple=True,
-                                    none=T("Unskilled")
+                                    none=current.T("Unskilled")
                                    )
             skills = ["%s %s" % (skill.quantity,
                                  represent(skill.skill_id)) \
@@ -3528,7 +3571,8 @@ def req_rheader(r, check_page=False):
                     db = current.db
                     stable = s3db.org_site
                 if settings.get_req_show_quantity_transit() and not is_template:
-                    transit_status = req_status_opts.get(record.transit_status, "")
+                    transit_status = s3db.req_status_opts.get(record.transit_status,
+                                                              "")
                     try:
                         if site_id and \
                            record.transit_status in [REQ_STATUS_PARTIAL, REQ_STATUS_COMPLETE] and \
@@ -3627,6 +3671,7 @@ def req_match():
         requests as a tab for a site.
     """
 
+    T = current.T
     s3db = current.s3db
     s3 = current.response.s3
     request = current.request
@@ -3646,16 +3691,15 @@ def req_match():
     site_id = current.db(table.id == id).select(table.site_id,
                                                 limitby=(0, 1)
                                                 ).first().site_id
-    actions = [
-            dict(url = URL(c = "req",
-                           f = "req",
-                           args = ["[id]", "check"],
-                           vars = {"site_id": site_id}
-                           ),
-                 _class = "action-btn",
-                 label = str(T("Check")),
-                 )
-            ]
+    actions = [dict(url = URL(c = "req",
+                              f = "req",
+                              args = ["[id]", "check"],
+                              vars = {"site_id": site_id}
+                              ),
+                    _class = "action-btn",
+                    label = str(T("Check")),
+                    )
+               ]
     if settings.get_req_use_commit():
         actions.append(
             dict(url = URL(c = "req",
@@ -3720,7 +3764,6 @@ def req_match():
     s3.postp = postp
 
     output = current.rest_controller("req", "req", rheader=rheader)
-
     return output
 
 # =============================================================================
@@ -3853,11 +3896,20 @@ def req_customize_req_fields():
                    #"is_template",
                    "requester_id",
                    "purpose",
-                   #"commit_status",
-                   #"transit_status",
-                   #"fulfil_status",
-                   #"cancel",
                    ]
+
+    request = current.request
+    args = request.args
+    if "update.popup" in args or \
+       "update" in args:
+        field = table.req_status
+        field.writable = True
+        field.requires = IS_IN_SET({REQ_STATUS_NONE:     T("Open"),
+                                    REQ_STATUS_PARTIAL:  T("Responded"),
+                                    REQ_STATUS_COMPLETE: T("Resolved"),
+                                    REQ_STATUS_CANCEL:   T("Cancelled"),
+                                    })
+        crud_fields.append("req_status")
 
     crud_form = S3SQLCustomForm(*crud_fields)
 
@@ -3891,9 +3943,6 @@ def req_customize_req_fields():
                                                   parent="req"),
                                       title=T("Add New Site"),
                                       )
-    # @ToDo: postprocess to lookup default site contact
-    #script = """"""
-    #field.widget = S3SiteAutocompleteWidget(postprocess=script)
 
     db.org_site.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
 
@@ -3925,12 +3974,12 @@ def req_customize_req_fields():
         #             ),
         #S3OptionsFilter("transit_status",
         #                label = T("Transit Status"),
-        #                options = req_status_opts,
+        #                options = s3db.req_status_opts,
         #                cols = 3,
         #                ),
         #S3OptionsFilter("fulfil_status",
         #                label = T("Fulfill Status"),
-        #                options = req_status_opts,
+        #                options = s3db.req_status_opts,
         #                cols = 3,
         #                ),
         S3LocationFilter("site_id$location_id",
@@ -4207,6 +4256,15 @@ def req_customize_commit_fields():
     tablename = "req_commit"
     table = s3db.req_commit
 
+    list_fields = [#"req_id", # populated automatically or not at all?
+                   "organisation_id",
+                   "committer_id",
+                   "comments",
+                   "date_available",
+                   # We'd like to be able to map donations, but harder for users to enter data
+                   #"location_id",
+                   ]
+
     request = current.request
     args = request.args
     if "create.popup" in args or \
@@ -4217,6 +4275,9 @@ def req_customize_commit_fields():
         elif not current.deployment_settings.get_req_commit_without_request():
             current.session.error = T("Not allowed to Donate without matching to a Request!")
             redirect(URL(c="req", f="req", args=["datalist"]))
+    elif "update.popup" in args or \
+         "update" in args:
+        list_fields.append("cancel")
 
     # CRUD strings
     #ADD_COMMIT = T("Make Donation")
@@ -4235,15 +4296,6 @@ def req_customize_commit_fields():
         msg_record_modified = T("Donation Updated"),
         msg_record_deleted = T("Donation Canceled"),
         msg_list_empty = T("No Donations"))
-
-    list_fields = [#"req_id", # populated automatically or not at all?
-                   "organisation_id",
-                   "committer_id",
-                   "comments",
-                   "date_available",
-                   # We'd like to be able to map donations, but harder for users to enter data
-                   #"location_id",
-                   ]
 
     auth = current.auth
 

@@ -146,6 +146,7 @@
             if (existing && existing.name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
+                // @ToDo: Something better!
                 if (create.length) {
                     // Open popup to create new entry
                     // @ToDo: prepopulate name field
@@ -281,6 +282,7 @@
             if (existing && existing.name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
+                // @ToDo: Something better!
                 if (create.length) {
                     // Open popup to create new entry
                     // @ToDo: prepopulate name field
@@ -475,6 +477,7 @@
             if (existing && existing.name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
+                // @ToDo: Something better!
                 if (create.length) {
                     // Open popup to create new entry
                     // @ToDo: prepopulate name field
@@ -626,6 +629,7 @@
             if (existing && existing.name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
+                // @ToDo: Something better!
                 if (create.length) {
                     // Open popup to create new entry
                     // @ToDo: prepopulate name field
@@ -765,6 +769,7 @@
             if (existing && existing.name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
+                // @ToDo: Something better!
                 if (create.length) {
                     // Open popup to create new entry
                     // @ToDo: prepopulate name field
@@ -937,6 +942,7 @@
             if (existing && existing.name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
+                // @ToDo: Something better!
                 if (create.length) {
                     // Open popup to create new entry
                     // @ToDo: prepopulate name field
@@ -1102,6 +1108,7 @@
             if (existing && existing.name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
+                // @ToDo: Something better!
                 if (create.length) {
                     // Open popup to create new entry
                     // @ToDo: prepopulate name field
@@ -1220,6 +1227,7 @@
             if (existing && existing.name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
+                // @ToDo: Something better!
                 if (create.length) {
                     // Open popup to create new entry
                     // @ToDo: prepopulate name field
