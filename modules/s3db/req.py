@@ -999,13 +999,13 @@ S3OptionsFilter({
         req_id = record.id
         # Make a copy of the request record
         if settings.get_req_use_req_number():
-            code = s3db.inv_get_shipping_code(settings.get_req_shortname(),
+            code = s3db.supply_get_shipping_code(settings.get_req_shortname(),
                                               record.site_id,
                                               table.req_ref,
                                               )
         else:
             code = None
-        if record.date_required < now:
+        if record.date_required and record.date_required < now:
             date_required = now + datetime.timedelta(days=14)
         else:
             date_required = record.date_required
@@ -1046,6 +1046,22 @@ S3OptionsFilter({
                            currency = item.currency,
                            site_id = item.site_id,
                            comments = item.comments)
+        elif record.type == 3:
+            # People and skills
+            rstable = s3db.req_req_skill
+            skills = db(rstable.req_id == req_id).select(rstable.id,
+                                                         rstable.skill_id,
+                                                         rstable.quantity,
+                                                         rstable.site_id,
+                                                         rstable.comments)
+            if skills:
+                insert = rstable.insert
+                for skill in skills:
+                    insert(req_id = new_req_id,
+                           skill_id = skill.skill_id,
+                           quantity = skill.quantity,
+                           site_id = skill.site_id,
+                           comments = skill.comments)
 
         redirect(URL(f="req", args=[new_req_id, "update"]))
 
@@ -3405,7 +3421,9 @@ def req_req_details(row):
                                           ltable.quantity)
         if skills:
             represent = S3Represent(lookup="hrm_skill",
-                                    multiple=True)
+                                    multiple=True,
+                                    none=T("Unskilled")
+                                   )
             skills = ["%s %s" % (skill.quantity,
                                  represent(skill.skill_id)) \
                       for skill in skills]
