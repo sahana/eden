@@ -889,7 +889,7 @@ def render_organisations(listid, resource, rfields, record, **attr):
         money_details = P(I(_class="icon icon-dollar"),
                           " ",
                           money_details,
-                          _class="main_office-add",
+                          _class="main_office-comment",
                           )
     else:
         # Include anyway to make cards align
@@ -1050,7 +1050,7 @@ def render_org_needs(listid, resource, rfields, record, **attr):
         money_details = P(I(_class="icon icon-dollar"),
                           " ",
                           XML(money_details),
-                          _class="main_office-add",
+                          _class="main_office-comment",
                           )
     else:
         money_details = ""
@@ -1060,7 +1060,7 @@ def render_org_needs(listid, resource, rfields, record, **attr):
         time_details = P(I(_class="icon icon-time"),
                          " ",
                          XML(time_details),
-                         _class="main_office-add",
+                         _class="main_office-comment",
                          )
     else:
         time_details = ""
@@ -1124,7 +1124,7 @@ def render_org_needs(listid, resource, rfields, record, **attr):
                            P(I(_class="icon icon-map"),
                              " ",
                              website,
-                             _class="main_office-add",
+                             _class="main_contact_ph",
                              ),
                            money_details,
                            time_details,
