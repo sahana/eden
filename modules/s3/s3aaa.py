@@ -1297,7 +1297,14 @@ Thank you
 
         # Organisation
         # @ToDo: Allow Admin to see Org linkage even if Users cannot specify when they register
-        req_org = deployment_settings.get_auth_registration_requests_organisation()
+        isadmin=False
+        if(current.auth.user!=None):
+            checkifadmin=db(current.auth.user.id==current.s3db.auth_membership.user_id and 
+                    current.s3db.auth_membership.group_id==current.s3db.auth_group.id and
+                    current.s3db.auth_group.uuid=="ADMIN").select()
+            if(len(checkifadmin)>0):
+                isadmin=True
+        req_org = deployment_settings.get_auth_registration_requests_organisation(isadmin)
         if req_org:
             if pe_ids:
                 # Filter orgs to just those belonging to the Org Admin's Org
