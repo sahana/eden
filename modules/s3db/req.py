@@ -612,6 +612,7 @@ class S3RequestModel(S3Model):
              - main module & components (sites & events)
         """
 
+        T = current.T
         db = current.db
         s3 = current.response.s3
         settings = current.deployment_settings

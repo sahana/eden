@@ -1337,7 +1337,13 @@ def deploy_application(r, **attr):
             # Page load
             resource.configure(deletable = False)
 
-            dt.defaultActionButtons(resource)
+            #dt.defaultActionButtons(resource)
+            profile_url = URL(f = "human_resource",
+                              args = ["[id]", "profile"])
+            S3CRUD.action_buttons(r,
+                                  deletable = False,
+                                  read_url = profile_url,
+                                  update_url = profile_url)
             response.s3.no_formats = True
 
             # Data table (items)

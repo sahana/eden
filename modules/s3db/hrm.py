@@ -4922,7 +4922,10 @@ def hrm_human_resource_controller(extra_filter=None):
             list_fields = s3db.get_config("pr_address",
                                           "list_fields")
             list_fields.append("comments")
-            s3db.hrm_training # Load normal model
+            # Load normal model
+            # Show Date without Time
+            s3db.hrm_training.date.represent = lambda d: \
+                S3DateTime.date_represent(d, utc=True)
             s3db.configure("hrm_training",
                            list_fields = ["course_id",
                                           "training_event_id$site_id",
@@ -5192,7 +5195,18 @@ def hrm_human_resource_controller(extra_filter=None):
                 s3.jquery_ready.append(
 '''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
 
-                S3CRUD.action_buttons(r, deletable=settings.get_hrm_deletable())
+                if current.request.controller == "deploy":
+                    # Open Profile page
+                    read_url = URL(args = ["[id]", "profile"])
+                    update_url = URL(args = ["[id]", "profile"])
+                else:
+                    # Standard CRUD buttons
+                    read_url = None
+                    update_url = None
+                S3CRUD.action_buttons(r,
+                                      deletable = settings.get_hrm_deletable(),
+                                      read_url = read_url,
+                                      update_url = update_url)
                 if "msg" in settings.modules and \
                    current.auth.permission.has_permission("update",
                                                           c="hrm",
@@ -5912,8 +5926,8 @@ def hrm_render_competencies(listid, resource, rfields, record,
 
 # =============================================================================
 def hrm_render_experience(listid, resource, rfields, record, 
-                            type = None,
-                            **attr):
+                          type = None,
+                          **attr):
     """
         Custom dataList item renderer for Experience on the HRM Profile
 
