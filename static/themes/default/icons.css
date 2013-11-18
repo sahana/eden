@@ -25,6 +25,12 @@
 }
 
 /* General */
+.icon-calendar:before {
+  content: "\f073";
+}
+.icon-certificate:before {
+  content: "\f0a3";
+}
 .icon-check:before {
   content: "\f046";
 }
