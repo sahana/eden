@@ -18,10 +18,12 @@ function s3_popup_refresh_main_form() {
             var record = $_GET['record'];
             if (record !== undefined) {
                 // reload a single item
-                self.parent.dlAjaxReloadItem(refresh, record);
+                selector.datalist('ajaxReloadItem', record)
+//                 self.parent.dlAjaxReloadItem(refresh, record);
             } else {
                 // reload the whole list
-                self.parent.dlAjaxReload(refresh);
+                selector.datalist('ajaxReload');
+//                 self.parent.dlAjaxReload(refresh);
             }
         }
         // Also update the layer on the Maps (if any)

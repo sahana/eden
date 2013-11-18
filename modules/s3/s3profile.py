@@ -318,15 +318,14 @@ class S3Profile(S3CRUD):
         ajaxurl = r.url(vars={"update": widget["index"]},
                         representation="dl")
         data = datalist.html(ajaxurl=ajaxurl,
-                             pagesize=pagesize
+                             pagesize=pagesize,
+                             empty = P(I(_class="icon-folder-open-alt"),
+                                       BR(),
+                                       S3CRUD.crud_string(tablename,
+                                                          "msg_no_match"),
+                                       _class="empty_card-holder"
+                                      ),
                              )
-        if numrows == 0:
-            msg = P(I(_class="icon-folder-open-alt"),
-                    BR(),
-                    S3CRUD.crud_string(tablename,
-                                       "msg_no_match"),
-                    _class="empty_card-holder")
-            data.insert(1, msg)
 
         if representation == "dl":
             # This is an Ajax-request, so we don't need the wrapper
