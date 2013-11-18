@@ -344,44 +344,57 @@ class S3Profile(S3CRUD):
         create = ""
         insert = widget.get("insert", True)
         if insert and current.auth.s3_has_permission("create", table):
-            # If this is a multiple=False component and we already have a record, we should disable
-            # @ToDo: Introspect instead of configure?
-            multiple = widget.get("multiple", True)
-            if numrows and not multiple:
-                pass
+            #if r.tablename = "org_organisation":
+                # @ToDo: Special check for creating resources on Organisation profile
+            if filter:
+                vars = filter.serialize_url(filter)
             else:
-                #if r.tablename = "org_organisation":
-                    # @ToDo: Special check for creating resources on Organisation profile
-                if filter:
-                    vars = filter.serialize_url(filter)
+                vars = Storage()
+            vars.refresh = listid
+            if context:
+                filters = context.serialize_url(resource)
+                for f in filters:
+                    vars[f] = filters[f]
+            default = widget.get("default", None)
+            if default:
+                k, v = default.split("=", 1)
+                vars[k] = v
+            title_create = widget.get("title_create", None)
+            if title_create:
+                title_create = T(title_create)
+            else:
+                title_create = S3CRUD.crud_string(tablename, "title_create")
+            c, f = tablename.split("_", 1)
+            c = widget.get("create_controller", c)
+            f = widget.get("create_function", f)
+            add_url = URL(c=c, f=f, args=["create.popup"], vars=vars)
+            if callable(insert):
+                create = insert(r, title_create, add_url)
+            else:
+                create = A(I(_class="icon icon-plus-sign small-add"),
+                           _href=add_url,
+                           _class="s3_modal",
+                           _title=title_create,
+                          )
+            multiple = widget.get("multiple", True)
+            if not multiple and hasattr(create, "update"):
+                # If this is a multiple=False widget and we already
+                # have a record, we hide the create-button
+                if numrows:
+                    create.update(_style="display:none;")
                 else:
-                    vars = Storage()
-                vars.refresh = listid
-                if context:
-                    filters = context.serialize_url(resource)
-                    for f in filters:
-                        vars[f] = filters[f]
-                default = widget.get("default", None)
-                if default:
-                    k, v = default.split("=", 1)
-                    vars[k] = v
-                title_create = widget.get("title_create", None)
-                if title_create:
-                    title_create = T(title_create)
-                else:
-                    title_create = S3CRUD.crud_string(tablename, "title_create")
-                c, f = tablename.split("_", 1)
-                c = widget.get("create_controller", c)
-                f = widget.get("create_function", f)
-                add_url = URL(c=c, f=f, args=["create.popup"], vars=vars)
-                if callable(insert):
-                    create = insert(r, title_create, add_url)
-                else:
-                    create = A(I(_class="icon icon-plus-sign small-add"),
-                            _href=add_url,
-                            _class="s3_modal",
-                            _title=title_create,
-                            )
+                    create.update(_style="display:block;")
+                # Script to hide/unhide the create-button on Ajax
+                # list updates
+                createid = create["_id"]
+                if not createid:
+                    createid = "%s-add-button" % listid
+                    create.update(_id=createid)
+                script = '''
+$('#%(listid)s').on('listUpdate', function() {
+ $('#%(createid)s').css({display: $(this).datalist('getTotalItems') ? 'none' : 'block'});
+});''' % dict(listid=listid, createid=createid)
+                current.response.s3.jquery_ready.append(script)
 
         if pagesize and numrows > pagesize:
             # Button to display the rest of the records in a Modal

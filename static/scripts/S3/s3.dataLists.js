@@ -59,7 +59,7 @@
             this._bindEvents();
 
             // Fire initial update event
-            $datalist.trigger('update.dl');
+            $datalist.trigger('listUpdate');
             
             return;
         },
@@ -310,7 +310,7 @@
                     dl._bindItemEvents();
 
                     // Fire update event
-                    $datalist.trigger('update.dl');
+                    $datalist.trigger('listUpdate');
                 },
                 'error': function(request, status, error) {
                     if (error == 'UNAUTHORIZED') {
@@ -464,7 +464,7 @@
                     }
 
                     // 8. Fire update event
-                    $datalist.trigger('update.dl');
+                    $datalist.trigger('listUpdate');
                 },
                 'error': function(request, status, error) {
                     var msg;
@@ -513,6 +513,18 @@
             }
         },
 
+        getTotalItems: function() {
+            
+            var $datalist = $(this.element);
+            var pagination = $datalist.find('input.dl-pagination');
+            if (!pagination.length) {
+                return $datalist.find('.dl-item').length;
+            }
+            var $pagination0 = $(pagination[0]);
+            var dl_data = JSON.parse($pagination0.val());
+            return dl_data['totalitems'];
+        },
+        
         _bindItemEvents: function() {
             // Bind events in list items
 
