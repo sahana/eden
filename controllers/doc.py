@@ -25,6 +25,13 @@ def document():
     def prep(r):
         # Location Filter
         s3db.gis_location_filter(r)
+
+        if r.method in ("create", "create.popup"):
+            # Coming from Profile page
+            doc_id = request.get_vars.get("~.doc_id", None)
+            if doc_id:
+                s3db.doc_document.doc_id.default = doc_id
+
         return True
     s3.prep = prep
 
@@ -127,6 +134,13 @@ def image():
     def prep(r):
         # Location Filter
         s3db.gis_location_filter(r)
+
+        if r.method in ("create", "create.popup"):
+            # Coming from Profile page
+            doc_id = request.get_vars.get("~.doc_id", None)
+            if doc_id:
+                s3db.doc_image.doc_id.default = doc_id
+
         return True
     s3.prep = prep
 

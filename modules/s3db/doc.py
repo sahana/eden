@@ -183,11 +183,16 @@ class S3DocumentLibrary(S3Model):
             ondelete = None
 
         configure(tablename,
+                  context = {"human_resource": "doc_id",
+                             "organisation": "organisation_id",
+                             "person": "person_id",
+                             "site": "doc_id",
+                             },
+                  deduplicate = self.document_duplicate,
+                  onaccept = onaccept,
+                  ondelete = ondelete,
+                  onvalidation = self.document_onvalidation,
                   super_entity = "stats_source",
-                  deduplicate=self.document_duplicate,
-                  onvalidation=self.document_onvalidation,
-                  onaccept=onaccept,
-                  ondelete=ondelete,
                   )
 
         # ---------------------------------------------------------------------

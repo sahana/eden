@@ -829,6 +829,7 @@ class S3PersonModel(S3Model):
         table.age_group = Field.Lazy(self.pr_person_age_group)
 
         # Search method
+        # @ToDo: Deprecate
         pr_person_search = S3Search(
             name="person_search_simple",
             label=T("Name and/or ID"),
@@ -863,7 +864,9 @@ class S3PersonModel(S3Model):
 
         # Resource configuration
         self.configure(tablename,
-                       super_entity = ("pr_pentity", "sit_trackable"),
+                       crud_form = crud_form,
+                       deduplicate = self.person_deduplicate,
+                       extra = "last_name",
                        list_fields = ["id",
                                       "first_name",
                                       "middle_name",
@@ -873,13 +876,12 @@ class S3PersonModel(S3Model):
                                       (T("Age"), "age"),
                                       (messages.ORGANISATION, "human_resource.organisation_id"),
                                       ],
-                       crud_form = crud_form,
-                       onaccept = self.pr_person_onaccept,
-                       search_method = pr_person_search,
-                       deduplicate = self.person_deduplicate,
                        main = "first_name",
-                       extra = "last_name",
+                       onaccept = self.pr_person_onaccept,
                        realm_components = ["presence"],
+                       # @ToDo: Deprecate
+                       search_method = pr_person_search,
+                       super_entity = ("pr_pentity", "sit_trackable"),
                        )
 
         person_id_comment = pr_person_comment(

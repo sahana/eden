@@ -47,6 +47,9 @@ __all__ = ["S3HRModel",
            "hrm_cv",
            "hrm_configure_pr_group_membership",
            "hrm_human_resource_onaccept",
+           #"hrm_render_skills",
+           #"hrm_render_trainings",
+           #"hrm_render_experience",
            ]
 
 import datetime
@@ -1847,7 +1850,8 @@ class S3HRSkillModel(S3Model):
 
         configure("hrm_competency",
                   deduplicate = self.hrm_competency_duplicate,
-                  context = {"person": "person_id",
+                  context = {"human_resource": "person_id.human_resource",
+                             "person": "person_id",
                              #"organisation": "organisation_id",
                              },
                   )
@@ -2293,15 +2297,20 @@ class S3HRSkillModel(S3Model):
 
         # Resource Configuration
         configure(tablename,
-                  onaccept=hrm_training_onaccept,
-                  ondelete=hrm_training_onaccept,
-                  deduplicate=self.hrm_training_duplicate,
-                  filter_widgets=filter_widgets,
-                  report_options=report_options,
+                  context = {"human_resource": "person_id.human_resource$id",
+                             "person": "person_id",
+                             #"organisation": "organisation_id",
+                             },
+                  deduplicate = self.hrm_training_duplicate,
+                  filter_widgets = filter_widgets,
                   list_fields = ["course_id",
                                  "date",
                                  "hours",
-                                 ]
+                                 ],
+                  list_layout = hrm_render_trainings,
+                  onaccept = hrm_training_onaccept,
+                  ondelete = hrm_training_onaccept,
+                  report_options = report_options,
                   )
 
         # =====================================================================
@@ -3123,7 +3132,8 @@ class S3HRExperienceModel(S3Model):
             msg_list_empty = T("Currently no Professional Experience entered"))
 
         self.configure("hrm_experience",
-                       context = {"person": "person_id",
+                       context = {"human_resource": "person_id.human_resource$id",
+                                  "person": "person_id",
                                   "organisation": "organisation_id",
                                   },
                        )
@@ -4882,7 +4892,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                    type = "datalist",
                                    tablename = "pr_contact",
                                    orderby = "priority asc",
-                                   #context = "person",
+                                   #context = "human_resource",
                                    #default = default,
                                    filter = S3FieldSelector("pe_id") == pe_id,
                                    icon = "icon-phone",
@@ -4893,7 +4903,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                   title_create = "Add New Address",
                                   type = "datalist",
                                   tablename = "pr_address",
-                                  #context = "person",
+                                  #context = "human_resource",
                                   #default = default,
                                   filter = S3FieldSelector("pe_id") == pe_id,
                                   icon = "icon-home",
@@ -4904,39 +4914,42 @@ def hrm_human_resource_controller(extra_filter=None):
                                  title_create = "Add New Skill",
                                  type = "datalist",
                                  tablename = "hrm_competency",
-                                 context = "person",
+                                 context = "human_resource",
                                  #default = default,
                                  #filter = S3FieldSelector("person_id") == person_id,
                                  icon = "icon-comment-alt",
-                                 #list_layout = render_skills,
+                                 # Default renderer:
+                                 #list_layout = hrm_render_skills,
                                  )
-            training_widget = dict(label = "Trainings",
-                                   title_create = "Add New Training",
-                                   type = "datalist",
-                                   tablename = "hrm_training",
-                                   context = "person",
-                                   #default = default,
-                                   #filter = S3FieldSelector("person_id") == person_id,
-                                   icon = "icon-truck",
-                                   #list_layout = render_training,
-                                   )
+            trainings_widget = dict(label = "Trainings",
+                                    title_create = "Add New Training",
+                                    type = "datalist",
+                                    tablename = "hrm_training",
+                                    context = "human_resource",
+                                    #default = default,
+                                    #filter = S3FieldSelector("person_id") == person_id,
+                                    icon = "icon-wrench",
+                                    # Default renderer:
+                                    #list_layout = hrm_render_training,
+                                    )
             experience_widget = dict(label = "Experience",
                                      title_create = "Add New Experience",
                                      type = "datalist",
                                      tablename = "hrm_experience",
-                                     context = "person",
+                                     context = "human_resource",
                                      #default = default,
                                      #filter = S3FieldSelector("person_id") == person_id,
                                      icon = "icon-truck",
-                                     #list_layout = render_training,
+                                     # Default renderer:
+                                     #list_layout = hrm_render_experience,
                                      )
             docs_widget = dict(label = "Documents",
                                title_create = "Add New Document",
                                type = "datalist",
                                tablename = "doc_document",
-                               #context = "person",
+                               context = "human_resource",
                                #default = default,
-                               filter = S3FieldSelector("doc_id") == record.doc_id,
+                               #filter = S3FieldSelector("doc_id") == record.doc_id,
                                icon = "icon-paperclip",
                                #list_layout = render_docs,
                                )
@@ -4956,7 +4969,7 @@ def hrm_human_resource_controller(extra_filter=None):
                            profile_widgets = [contacts_widget,
                                               address_widget,
                                               skills_widget,
-                                              training_widget,
+                                              trainings_widget,
                                               experience_widget,
                                               docs_widget,
                                               ])
@@ -5713,5 +5726,107 @@ def hrm_configure_pr_group_membership():
     s3db.configure("pr_group_membership",
                    list_fields=list_fields,
                    orderby=orderby)
+
+# =============================================================================
+def hrm_render_trainings(listid, resource, rfields, record, 
+                         type = None,
+                         **attr):
+    """
+        Custom dataList item renderer for Trainings on the HRM Profile
+
+        @param listid: the HTML ID for this list
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+        @param attr: additional HTML attributes for the item
+    """
+
+    pkey = "hrm_training.id"
+
+    # Construct the item ID
+    if pkey in record:
+        record_id = record[pkey]
+        item_id = "%s-%s" % (listid, record_id)
+    else:
+        # template
+        item_id = "%s-[id]" % listid
+
+    item_class = "thumbnail"
+
+    raw = record._row
+    title = record["pr_contact.contact_method"]
+    contact_method = raw["pr_contact.contact_method"]
+    value = record["pr_contact.value"]
+    comments = raw["pr_contact.comments"] or ""
+
+    # Edit Bar
+    permit = current.auth.s3_has_permission
+    table = current.s3db.pr_contact
+    if permit("update", table, record_id=record_id):
+        edit_btn = A(I(" ", _class="icon icon-edit"),
+                     _href=URL(c="pr", f="contact",
+                               args=[record_id, "update.popup"],
+                               vars={"refresh": listid,
+                                     "record": record_id}),
+                     _class="s3_modal",
+                     _title=current.T("Edit Contact"),
+                     )
+    else:
+        edit_btn = ""
+    if permit("delete", table, record_id=record_id):
+        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+                       _class="dl-item-delete",
+                       )
+    else:
+        delete_btn = ""
+    edit_bar = DIV(edit_btn,
+                   delete_btn,
+                   _class="edit-bar fright",
+                   )
+
+    if contact_method in("SMS", "HOME_PHONE", "WORK_PHONE"):
+        icon = "phone"
+    elif contact_method == "EMAIL":
+        icon = "envelope-alt"
+    elif contact_method == "SKYPE":
+        icon = "skype"
+    elif contact_method == "FACEBOOK":
+        icon = "facebook"
+    elif contact_method == "TWITTER":
+        icon = "twitter"
+    elif contact_method == "RADIO":
+        icon = "microphone"
+    elif contact_method == "RSS":
+        icon = "rss"
+    else:
+        icon = "circle"
+    # Render the item
+    item = DIV(DIV(I(_class="icon"),
+                   SPAN(" %s" % title,
+                        _class="card-title"),
+                   edit_bar,
+                   _class="card-header",
+                   ),
+               DIV(DIV(DIV(P(I(_class="icon-%s" % icon),
+                             " ",
+                             SPAN(value),
+                             " ",
+                             _class="card_1_line",
+                             ),
+                           P(SPAN(comments),
+                             " ",
+                             _class="card_manylines",
+                             ),
+                           _class="media",
+                           ),
+                       _class="media-body",
+                       ),
+                   _class="media",
+                   ),
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
 
 # END =========================================================================
