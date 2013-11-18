@@ -1889,6 +1889,9 @@ class S3SiteModel(S3Model):
         T = current.T
         auth = current.auth
 
+        add_component = self.add_component
+        set_method = self.set_method
+
         # =====================================================================
         # Site / Facility (ICS terminology)
         #
@@ -1952,17 +1955,22 @@ class S3SiteModel(S3Model):
                                   )
 
         # Custom Method for S3SiteAutocompleteWidget
-        self.set_method("org", "site",
-                        method="search_ac",
-                        action=self.site_search_ac)
+        set_method("org", "site",
+                   method="search_ac",
+                   action=self.site_search_ac)
 
         # Custom Method for S3SiteAddressAutocompleteWidget
-        self.set_method("org", "site",
-                        method="search_address_ac",
-                        action=self.site_search_address_ac)
+        set_method("org", "site",
+                   method="search_address_ac",
+                   action=self.site_search_address_ac)
+
+        # Custom Method for S3AddPersonWidget2
+        # @ToDo: One for HRMs
+        set_method("org", "site",
+                   method="site_contact_person",
+                   action=self.site_contact_person)
 
         # Components
-        add_component = self.add_component
 
         # Facility Types
         # Format for S3SQLInlineComponentCheckbox
@@ -2151,6 +2159,38 @@ class S3SiteModel(S3Model):
             # If no new permutation of replacement characters has been found
             if p == len(wildcard_posn):
                 return None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def site_contact_person(r, **attr):
+        """
+            JSON lookup method for S3AddPersonWidget2
+        """
+
+        site_id = r.id
+        if not site_id:
+            output = current.xml.json_message(False, 400, "No id provided!")
+            raise HTTP(400, body=output)
+
+        db = current.db
+        s3db = current.s3db
+        ltable = s3db.hrm_human_resource_site
+        htable = db.hrm_human_resource
+        query = (ltable.site_id == site_id) & \
+                (ltable.site_contact == True) & \
+                (ltable.human_resource_id == htable.id)
+        person = db(query).select(htable.person_id,
+                                  limitby=(0, 1)).first()
+
+        if person:
+            fake = Storage(id = person.person_id,
+                           tablename = "org_site",
+                           )
+            return s3db.pr_person_lookup(fake, **attr)
+        else:
+            current.response.headers["Content-Type"] = "application/json"
+            output = json.dumps(None)
+            return output
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4670,6 +4710,7 @@ def org_facility_controller():
     db = current.db
     s3db = current.s3db
     s3 = current.response.s3
+    request = current.request
 
     # Pre-processor
     def prep(r):
@@ -4740,6 +4781,10 @@ def org_facility_controller():
             elif r.id:
                 field = r.table.obsolete
                 field.readable = field.writable = True
+            elif r.method in ("create", "create.popup"):
+                name = request.get_vars.get("name", None)
+                if name:
+                    r.table.name.default = name
 
         elif r.representation == "geojson":
             # Load these models now as they'll be needed when we encode
@@ -4860,7 +4905,7 @@ def org_facility_controller():
         return output
     s3.postp = postp
 
-    if "map" in current.request.args:
+    if "map" in request.args:
         # S3Map has migrated
         hide_filter = False
     else:

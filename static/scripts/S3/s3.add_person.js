@@ -59,16 +59,22 @@
 
         var value = real_input.val();
         if (value) {
-            // Update form: disable the fields by default
+            // Update form
+            // Disable the fields by default
             disable_person_fields(fieldname);
             // Hide the cancel button
             $(selector + '_edit_bar .icon-remove').hide();
         } else {
-            // Create form: Enable the Autocomplete
+            // Create form
+            // Enable the Autocomplete
             enable_autocomplete(fieldname);
             // Hide the edit button
             $(selector + '_edit_bar .icon-edit').hide();
         }
+
+        // Attach the hook to be able to lookup site contact
+        real_input.data('lookup_contact', lookup_contact);
+
         // Show the edit bar
         $(selector + '_edit_bar').removeClass('hide').show();
 
@@ -318,7 +324,6 @@
                 return content;
             },
             focus: function(event, ui) {
-                //var name = represent_person(ui.item);
                 return false;
             },
             select: function(event, ui) {
@@ -375,57 +380,111 @@
                 }
                 var full_name = names.join(' ');
                 name_input.val(full_name); */
+
+                // Already done by ac, yet gets lost due to {} returning True
+                real_input.val(id);
+
                 var full_name = name_input.val();
                 var existing = {
                     value: id,
                     full_name: full_name
                 }
-                // Already done by ac, yet gets lost due to {} returning True
-                real_input.val(id);
                 real_input.data('existing', existing);
-                if (data.hasOwnProperty('email')) {
-                    var email = data['email'];
-                    $(selector + '_email').val(email);
-                    existing['email'] = email;
-                }
-                if (data.hasOwnProperty('mobile_phone')) {
-                    var mobile_phone = data['mobile_phone'];
-                    $(selector + '_mobile_phone').val(mobile_phone);
-                    existing['mobile_phone'] = mobile_phone;
-                }
-                if (data.hasOwnProperty('home_phone')) {
-                    var home_phone = data['home_phone'];
-                    $(selector + '_home_phone').val(home_phone);
-                    existing['home_phone'] = home_phone;
-                }
-                if (data.hasOwnProperty('gender')) {
-                    var gender = data['gender'];
-                    $(selector + '_gender').val(gender);
-                    existing['gender'] = gender;
-                }
-                if (data.hasOwnProperty('date_of_birth')) {
-                    var date_of_birth = data['date_of_birth'];
-                    $(selector + '_date_of_birth').val(date_of_birth);
-                    existing['date_of_birth'] = date_of_birth;
-                }
-                if (data.hasOwnProperty('occupation')) {
-                    var occupation = data['occupation'];
-                    $(selector + '_occupation').val(occupation);
-                    existing['occupation'] = occupation;
-                }
-                if (data.hasOwnProperty('organisation_id')) {
-                    var organisation_id = data['organisation_id'];
-                    $(selector + '_organisation_id').val(organisation_id);
-                    existing['organisation_id'] = organisation_id;
-                }
-
-                disable_person_fields(fieldname);
+                process_reponse(data, fieldname);
 
             } catch(e) {
                 real_input.val('');
                 clear_person_fields(fieldname);
             }
         });
+    }
+
+    // Lookup the Site Contact Person for a Site
+    // Up to the calling function (external) as to whether this is only done
+    // when fieldname is currently empty or not
+    var lookup_contact = function(fieldname, site_id) {
+        var selector = '#' + fieldname;
+        var name_input = $(selector + '_full_name');
+        name_input.prop('disabled', false).val('');
+        clear_person_fields(fieldname);
+        var real_input = $(selector);
+        var url = S3.Ap.concat('/org/site/' + site_id + '/site_contact_person');
+        $.getJSONS3(url, function(data) {
+            try {
+                var names = [];
+                if (data.hasOwnProperty('first_name')) {
+                    names.push(data['first_name']);
+                }
+                if (data.hasOwnProperty('middle_name')) {
+                    names.push(data['middle_name']);
+                }
+                if (data.hasOwnProperty('last_name')) {
+                    names.push(data['last_name']);
+                }
+                var full_name = names.join(' ');
+                name_input.val(full_name);
+
+                var id = data['id'];
+                real_input.val(id);
+
+                var existing = {
+                    value: id,
+                    full_name: full_name
+                }
+                real_input.data('existing', existing);
+                process_reponse(data, fieldname, id);
+            } catch(e) {
+                real_input.val('');
+                $(selector + '_full_name').prop('disabled', false).val('');
+                clear_person_fields(fieldname);
+            }
+        });
+    }
+
+    // Process the response from pr_person_lookup, hrm_lookup or site_contact_person
+    var process_reponse = function(data, fieldname) {
+
+        var selector = '#' + fieldname;
+        var real_input = $(selector);
+        var existing = real_input.data('existing');
+
+        if (data.hasOwnProperty('email')) {
+            var email = data['email'];
+            $(selector + '_email').val(email);
+            existing['email'] = email;
+        }
+        if (data.hasOwnProperty('mobile_phone')) {
+            var mobile_phone = data['mobile_phone'];
+            $(selector + '_mobile_phone').val(mobile_phone);
+            existing['mobile_phone'] = mobile_phone;
+        }
+        if (data.hasOwnProperty('home_phone')) {
+            var home_phone = data['home_phone'];
+            $(selector + '_home_phone').val(home_phone);
+            existing['home_phone'] = home_phone;
+        }
+        if (data.hasOwnProperty('gender')) {
+            var gender = data['gender'];
+            $(selector + '_gender').val(gender);
+            existing['gender'] = gender;
+        }
+        if (data.hasOwnProperty('date_of_birth')) {
+            var date_of_birth = data['date_of_birth'];
+            $(selector + '_date_of_birth').val(date_of_birth);
+            existing['date_of_birth'] = date_of_birth;
+        }
+        if (data.hasOwnProperty('occupation')) {
+            var occupation = data['occupation'];
+            $(selector + '_occupation').val(occupation);
+            existing['occupation'] = occupation;
+        }
+        if (data.hasOwnProperty('organisation_id')) {
+            var organisation_id = data['organisation_id'];
+            $(selector + '_organisation_id').val(organisation_id);
+            existing['organisation_id'] = organisation_id;
+        }
+
+        disable_person_fields(fieldname);
     }
 
 }());

@@ -845,6 +845,7 @@ S3OptionsFilter({
         if not r.component or r.component.name =="req":
             default_type = current.db.req_req.type.default
             if default_type:
+                T = current.T
                 req_submit_button = {1:T("Save and add Items"),
                                      3:T("Save and add People")}
                 current.manager.s3.crud.submit_button = req_submit_button[default_type]
@@ -3919,6 +3920,20 @@ def req_customize_req_fields():
                                  "site_id$comments",
                                  ]
 
+    # If the Requester is blank, then lookup default Site Contact
+    script = \
+'''$('#req_req_site_id').change(function(){
+ var site_id=$(this).val()
+ if(site_id){
+  var fieldname='req_req_requester_id'
+  var selector='#'+fieldname
+  var real_input=$(selector)
+  if(!real_input.val()&&!$('#req_req_requester_id_full_name').val()){
+   lookup_contact=real_input.data('lookup_contact')
+   lookup_contact(fieldname,site_id)
+}}})'''
+    current.response.s3.jquery_ready.append(script)
+
     requires = table.date.requires
     table.date.requires = requires.other
 
@@ -4140,21 +4155,26 @@ def req_render_reqs(listid, resource, rfields, record,
     site = record["req_req.site_id"]
     site_id = raw["req_req.site_id"]
     table = s3db.org_facility
-    facility_id = db(table.site_id == site_id).select(table.id,
-                                                      limitby=(0, 1)
-                                                      ).first().id
-    site_url = URL(c="org", f="facility",
-                   args=[facility_id, "profile"])
-    opts = dict(_href=site_url)
-    site_comments = raw["org_site.comments"] or ""
-    if site_comments:
-        opts["_class"] = "s3-popover"
-        opts["_data-toggle"] = "popover"
-        opts["_data-content"] = site_comments
-    site_link = A(site, **opts)
-    card_title = TAG[""](I(_class="icon icon-request"),
-                         SPAN(site_link,
-                              _class="card-title"))
+    facility = db(table.site_id == site_id).select(table.id,
+                                                   limitby=(0, 1)
+                                                   ).first()
+    if facility:
+        site_url = URL(c="org", f="facility",
+                       args=[facility.id, "profile"])
+        opts = dict(_href=site_url)
+        site_comments = raw["org_site.comments"] or ""
+        if site_comments:
+            opts["_class"] = "s3-popover"
+            opts["_data-toggle"] = "popover"
+            opts["_data-content"] = site_comments
+        site_link = A(site, **opts)
+        card_title = TAG[""](I(_class="icon icon-request"),
+                             SPAN(site_link,
+                                  _class="card-title"))
+    else:
+        card_title = TAG[""](I(_class="icon icon-request"),
+                             SPAN(" ",
+                                  _class="card-title"))
 
     #if priority == 3:
     #    # Apply additional highlighting for High Priority

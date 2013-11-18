@@ -1050,8 +1050,13 @@
                         // New Entry?
                         if (create.length) {
                             // Open popup to create new entry
-                            // @ToDo: prepopulate name field
+                            // Prepopulate name field
+                            var old_url = create.attr('href');
+                            var new_url = old_url + '&name=' + dummy_input.val();
+                            create.attr('href', new_url);
                             create.click();
+                            // Restore URL
+                            create.attr('href', old_url);
                         } else {
                             // No link to create new (e.g. no permission to do so)
                             data.push({
@@ -1111,7 +1116,7 @@
                 // @ToDo: Something better!
                 if (create.length) {
                     // Open popup to create new entry
-                    // @ToDo: prepopulate name field
+                    // @ToDo: Prepopulate name field
                     create.click();
                 }
             }

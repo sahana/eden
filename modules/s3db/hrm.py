@@ -1080,7 +1080,7 @@ class S3HRModel(S3Model):
         request_gender = settings.get_pr_request_gender()
         home_phone = settings.get_pr_request_home_phone()
 
-        htable = r.table
+        htable = db.hrm_human_resource
         ptable = db.pr_person
         ctable = s3db.pr_contact
         fields = [htable.organisation_id,

@@ -684,6 +684,7 @@ class S3PersonModel(S3Model):
              "pr_gender",
              "pr_gender_opts",
              "pr_person_id",
+             "pr_person_lookup",
              "pr_person_represent",
              ]
 
@@ -961,6 +962,7 @@ class S3PersonModel(S3Model):
         return dict(pr_gender = pr_gender,
                     pr_gender_opts = pr_gender_opts,
                     pr_person_id = person_id,
+                    pr_person_lookup = self.pr_person_lookup,
                     pr_person_represent = person_represent,
                     )
 
@@ -1278,6 +1280,8 @@ class S3PersonModel(S3Model):
             output = current.xml.json_message(False, 400, "No id provided!")
             raise HTTP(400, body=output)
 
+        tablename = r.tablename
+
         db = current.db
         s3db = current.s3db
         settings = current.deployment_settings
@@ -1285,7 +1289,7 @@ class S3PersonModel(S3Model):
         request_gender = settings.get_pr_request_gender()
         home_phone = settings.get_pr_request_home_phone()
 
-        ptable = r.table
+        ptable = db.pr_person
         ctable = s3db.pr_contact
         fields = [ptable.pe_id,
                   # We have these already from the search_ac
@@ -1293,6 +1297,12 @@ class S3PersonModel(S3Model):
                   #ptable.middle_name,
                   #ptable.last_name,
                   ]
+        if tablename == "org_site":
+            # Coming from site_contact_person()
+            fields += [ptable.first_name,
+                       ptable.middle_name,
+                       ptable.last_name,
+                       ]
 
         left = None
         if request_dob:
@@ -1312,9 +1322,10 @@ class S3PersonModel(S3Model):
             row = row["pr_person"]
         else:
             occupation = None
-        #first_name = row.first_name
-        #middle_name = row.middle_name
-        #last_name = row.last_name
+        if tablename == "org_site":
+            first_name = row.first_name
+            middle_name = row.middle_name
+            last_name = row.last_name
         if request_dob:
             date_of_birth = row.date_of_birth
         else:
@@ -1358,12 +1369,14 @@ class S3PersonModel(S3Model):
 
         # Minimal flattened structure
         item = {}
-        #if first_name:
-        #    item["first_name"] = first_name
-        #if middle_name:
-        #    item["middle_name"] = middle_name
-        #if last_name:
-        #    item["last_name"] = last_name
+        if tablename == "org_site":
+            item["id"] = id
+            if first_name:
+                item["first_name"] = first_name
+            if middle_name:
+                item["middle_name"] = middle_name
+            if last_name:
+                item["last_name"] = last_name
         if email:
             item["email"] = email
         if mobile_phone:

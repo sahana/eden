@@ -343,6 +343,7 @@ var S3EnableNavigateAwayConfirm = function() {
         ).done(function(data, status) {
             S3.hideAlerts();
             this.tryCount = 0;
+            // @ToDo: support drop-in replacement functions by calling .done()
             if (s.success) {
                 // Calling function's success callback
                 s.success(data, status);
@@ -366,6 +367,7 @@ var S3EnableNavigateAwayConfirm = function() {
                 return;
             }
             if (jqXHR.status == 500) {
+                // @ToDo: Can we find & show the ticket URL?
                 S3.showAlert(i18n.ajax_500, 'error');
             } else {
                 S3.showAlert(i18n.ajax_dwn, 'error');

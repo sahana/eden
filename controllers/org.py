@@ -68,13 +68,14 @@ def site():
         RESTful CRUD controller
         - used by S3SiteAutocompleteWidget/S3SiteAddressAutocompleteWidget
           which doesn't yet support filtering to just updateable sites
+        - used by site_contact_person()
         - used by S3OptionsFilter (e.g. Asset Log)
     """
 
     # Pre-processor
     def prep(r):
         if r.representation != "json" and \
-           r.method not in ("search_ac", "search_address_ac"):
+           r.method not in ("search_ac", "search_address_ac", "site_contact_person"):
             return False
 
         # Location Filter
