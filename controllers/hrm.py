@@ -486,17 +486,16 @@ def training_event():
 def experience():
     """ Experience Controller """
 
-    mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
-
-    output = s3_rest_controller()
-    return output
+    table = s3db.hrm_human_resource
+    s3.filter = ((table.type == 1) & \
+                 (s3db.hrm_experience.person_id == table.person_id))
+    return s3db.hrm_experience_controller()
 
 # -----------------------------------------------------------------------------
 def competency():
-    """ RESTful CRUD controller used to allow searching for people by Skill"""
+    """
+        RESTful CRUD controller used to allow searching for people by Skill
+    """
 
     table = s3db.hrm_human_resource
     s3.filter = ((table.type == 1) & \

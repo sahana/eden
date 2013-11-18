@@ -4171,6 +4171,8 @@ def customize_doc_document(**attr):
 
             # Force added docs to have a name
             table.name.requires = IS_NOT_EMPTY()
+            table.organisation_id.readable = True
+            table.organisation_id.writable = True
 
             list_fields = ["name",
                            "file",
