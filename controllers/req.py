@@ -1739,4 +1739,135 @@ def site_needs():
 
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
+def site_contact():
+    """
+        Custom function to find an appropriate default contact for a site.
+
+        Called from req/req/create when the user selects a site, to prefill the
+        contact (requester) with the default contact.  The default contact is,
+        for preference, the first person in hrm_human_resource_site for the
+        given site with site_contact set to true, else just the first person
+        hrm_human_resource_site for the given site even without site_contact
+        set to true.
+
+        See:
+        static/scripts/S3/s3.req_create_site_contact_default.js
+    """
+
+    # @ToDo: Use S3-style db queries rather than Web2py queries.
+    # Others are disinvited from fixing this -- I want it as a Learning
+    # Experience.  U already know how, so just chill, K?
+
+    site_id = request.args(0)
+    if not site_id:
+        output = current.xml.json_message(False, 400, "No site id provided")
+        raise HTTP(400, body=output)
+
+    db = current.db
+    s3db = current.s3db
+    htable = s3db.hrm_human_resource
+    stable = s3db.hrm_human_resource_site
+    ptable = s3db.pr_person
+    ctable = s3db.pr_contact
+
+    query = (stable.site_id == site_id) & \
+            (stable.human_resource_id == htable.id) & \
+            (htable.person_id == ptable.id)
+
+    # Contact methods shown in req/req/create, and the keys we'll use in sending
+    # the data over to the JS side, for consistency with S3HRModel.hrm_lookup().
+    contact_methods = {"SMS" : "mobile_phone", "EMAIL" : "email"}
+
+    # Not everyone has all contact methods.  We don't require that they have contact methods
+    # specified at the moment, but this can be changed to require at least one
+    # if users want that.
+    left = ctable.on((ptable.pe_id == ctable.pe_id) & \
+                     ctable.contact_method.belongs(contact_methods.keys()))
+
+    # Sort to the front the people with site_contact set to True, and within
+    # each site_contact value, order by when people became associated with the
+    # site (i.e. by their id in in hrm_human_resource_site). The reason for
+    # ordering by when they were associated with the site is that the first
+    # person in is more likely to be someone with authority.  In any case,
+    # falling back to someone without site_contact set is just a...fallback...
+    # and among those with site_contact set, we could take any. People can have
+    # more than one contact record for a given contact method. We'll only take
+    # the first of each method, so want to sort the same method together within
+    # each person's records. If a person has no contact records, their value
+    # for contact_method will be NULL, and they'll have only one record in the
+    # results. For now, we'll just take the first contact of each type, but an
+    # alternative would be to first sort by priority, in case the user has used
+    # that to set preferences within one type.
+    #
+    # Turns out SQLite does not do a stable sort, so orderby on > 1 criterion
+    # is useless. In fact, SQL ORDER BY does not say anything about doing a
+    # stable sort, so DBMS companies are free not to do it.
+    #
+    # Instead, just order by the site_contact, as that's the one we most need
+    # to have sorted, so we can use the first record to determine which person
+    # we'll send. The remaining filtering can be done without sorting, so it's
+    # likely better not to do this anyway. Left in as a cautionary tale.
+    #orderby = ctable.contact_method | \
+    #          stable.id | \
+    #          ~stable.site_contact
+    orderby = ~stable.site_contact
+
+    # Include fields we'll need for the req/req/create form and fields that
+    # appear in the orderby.
+    fields = (stable.id,
+              stable.site_contact,
+              ptable.id,
+              ptable.pe_id,
+              ptable.first_name,
+              ptable.middle_name,
+              ptable.last_name,
+              ctable.id,
+              ctable.contact_method,
+              ctable.value,
+            )
+
+    records = db(query).select(*fields,
+                               **{"left":left,
+                                  "orderby":orderby,
+                                 }
+                              )
+
+    if not records:
+        # No-one is associated with this site.
+        return json.dumps({})
+
+    # The first person in the results is the one we want.
+    first_record = records[0]
+    person_id = first_record.pr_person.id
+
+    # Package up the surviving records as expected by
+    # s3.req_create_site_contact_default.js.
+    contact_person = {}
+    # Get their data other than contact info.
+    # @ToDo: Need to use the same id as S3AddPersonAutocompleteWidget2, either
+    # pr_person.id or pr_person.pe_id.
+    contact_person["id"] = first_record.pr_person.id
+    contact_person["full_name"] = s3_fullname(first_record)
+
+    # Use only contacts for the first person, and only the first of each type
+    # of contact. Since we were unable to order by multiple criteria in a stable
+    # manner, the results are not grouped by person or within person by contact
+    # method. We don't need to sort on person -- we can filter the records for
+    # the selected person as we go. And we can save the first instance of each
+    # contact method we encounter.
+    contact_methods_seen = []
+    for record in records:
+        if record.pr_person.id == person_id:
+            pr_contact_record = record.pr_contact
+            if pr_contact_record:
+                contact_method = record.pr_contact.contact_method
+                if contact_method and contact_method not in contact_methods_seen:
+                    contact_methods_seen.append(contact_method)
+                    js_key = contact_methods[contact_method]
+                    contact_person[js_key] = pr_contact_record.value
+
+    response.headers["Content-Type"] = "application/json"
+    return json.dumps(contact_person)
+
 # END =========================================================================

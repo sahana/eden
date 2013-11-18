@@ -3888,6 +3888,7 @@ def req_customize_req_fields():
 
     T = current.T
     db = current.db
+    s3 = current.response.s3
     s3db = current.s3db
     tablename = "req_req"
     table = s3db.req_req
@@ -4029,6 +4030,10 @@ def req_customize_req_fields():
         #             ),
         ]
 
+    # Update requester to be site contact when site is changed.
+    s3.scripts.append("/%s/static/scripts/S3/s3.req_create_site_contact_default.js" %
+                      current.request.application)
+    
     # Return to Requests view after create/update/delete (unless done via Modal)
     url_next = URL(c="req", f="req", args="datalist")
 
