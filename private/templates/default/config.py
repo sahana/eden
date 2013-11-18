@@ -81,6 +81,8 @@ settings.base.guided_tour = True
 #settings.auth.registration_organisation_group_required = True
 # Uncomment this to request the Site when a user registers
 #settings.auth.registration_requests_site = True
+# Uncomment this to allow Admin to see Organisations in user Admin even if the Registration doesn't request this
+#settings.auth.admin_sees_organisation = True
 # Uncomment to set the default role UUIDs assigned to newly-registered users
 # This is a dictionary of lists, where the key is the realm that the list of roles applies to
 # The key 0 implies not realm restricted

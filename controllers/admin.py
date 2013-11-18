@@ -98,9 +98,8 @@ def user():
     if auth.s3_has_role("ADMIN"):
         if settings.get_auth_admin_sees_organisation():
             lappend("organisation_id")
-    else:
-        if settings.get_auth_registration_requests_organisation():
-            lappend("organisation_id")
+    elif settings.get_auth_registration_requests_organisation():
+        lappend("organisation_id")
     if settings.get_auth_registration_requests_organisation_group():
         lappend("org_group_id")
     if settings.get_auth_registration_requests_site():

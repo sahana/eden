@@ -48,6 +48,8 @@ settings.auth.registration_requires_verification = True
 #settings.auth.registration_requests_organisation = True
 #settings.auth.registration_organisation_required = True
 settings.auth.registration_requests_site = False
+# Uncomment this to allow Admin to see Organisations in user Admin even if the Registration doesn't request this
+settings.auth.admin_sees_organisation = True
 
 # Approval emails get sent to all admins
 settings.mail.approver = "ADMIN"
