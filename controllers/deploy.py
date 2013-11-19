@@ -109,6 +109,13 @@ def mission():
                               rheader=s3db.deploy_rheader)
 
 # =============================================================================
+def response_message():
+    """ RESTful CRUD Controller """
+
+    return s3_rest_controller("deploy", "response",
+                              custom_crud_buttons = {"list_btn": None})
+    
+# =============================================================================
 def human_resource():
     """
         RESTful CRUD Controller
