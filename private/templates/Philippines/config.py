@@ -2212,7 +2212,7 @@ def customize_org_organisation(**attr):
                                    type = "datalist",
                                    tablename = "req_req",
                                    context = "organisation",
-                                   filter = ("req_status").belongs([0, 1]),
+                                   filter = S3FieldSelector("req_status").belongs([0, 1]),
                                    icon = "icon-flag",
                                    layer = "Requests",
                                    # provided by Catalogue Layer
