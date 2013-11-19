@@ -112,6 +112,12 @@ def mission():
 def response_message():
     """ RESTful CRUD Controller """
 
+    def prep(r):
+        if r.record:
+            s3.cancel = r.url(method="read")
+        return True
+    s3.prep = prep
+
     return s3_rest_controller("deploy", "response",
                               custom_crud_buttons = {"list_btn": None})
     

@@ -49,6 +49,7 @@ except ImportError:
 from gluon import *
 
 from ..s3 import *
+from s3layouts import S3AddResourceLink
 
 # =============================================================================
 class S3DeploymentModel(S3Model):
@@ -607,11 +608,20 @@ class S3DeploymentAlertModel(S3Model):
         # Responses to Alerts
         #
         tablename = "deploy_response"
+        
+        title = T("Member")
+        comment = DIV(_class="tooltip",
+                      _title="%s|%s" % (title,
+                                        T("Enter some characters to bring up "
+                                          "a list of possible matches")))
+
         table = define_table(tablename,
-                             self.deploy_mission_id(),
+                             self.deploy_mission_id(writable=False),
                              self.hrm_human_resource_id(empty=False,
-                                                        label=T("Member")),
-                             message_id(label=T("Message")),
+                                                        label=title,
+                                                        comment=comment),
+                             message_id(label=T("Message"),
+                                        writable=False),
                              *s3_meta_fields())
 
         crud_form = S3SQLCustomForm(
@@ -626,7 +636,7 @@ class S3DeploymentAlertModel(S3Model):
         configure(tablename,
                   context = {"mission": "mission_id"},
                   crud_form = crud_form,
-                  editable = False,
+                  #editable = False,
                   insertable = False,
                   )
 
@@ -635,6 +645,7 @@ class S3DeploymentAlertModel(S3Model):
         crud_strings[tablename] = Storage(
             title_display = T("Response Message"),
             title_list = T("Response Messages"),
+            title_update = T("Edit Response Details"),
             title_search = T("Search Response Messages"),
             label_list_button = T("All Response Messages"),
             label_delete_button = T("Delete Message"),
@@ -1737,7 +1748,7 @@ def deploy_response_select_mission(r, **attr):
     dt_id = "datatable"
 
     # Bulk actions
-    dt_bulk_actions = [(T("Link to Response"), "select")]
+    dt_bulk_actions = [(T("Link to Mission"), "select")]
 
     if r.representation == "html":
         # Page load
