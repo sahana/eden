@@ -962,10 +962,6 @@ class S3Config(Storage):
         """
         return self.ui.get("auth_user_represent", "email")
 
-    def get_ui_autocomplete(self):
-        """ Currently Unused """
-        return self.ui.get("autocomplete", False)
-
     def get_ui_confirm(self):
         """
             For Delete actions
@@ -1619,6 +1615,12 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # Organisation
+    def get_org_autocomplete(self):
+        """
+            Whether organisation_id fields should use an Autocomplete instead of a dropdown
+        """
+        return self.org.get("autocomplete", False)
+
     def get_org_branches(self):
         """
             Whether to support Organisation branches or not

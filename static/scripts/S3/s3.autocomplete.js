@@ -158,7 +158,7 @@
 
     /**
      * S3GenericAutocompleteTemplate
-     * - used by S3LocationAutocompleteWidget and S3OrganisationAutocompleteWidget
+     * - not currently used
      */
     S3.autocomplete.generic = function(url, input, postprocess, delay, min_length) {
         var dummy = 'dummy_' + input;
@@ -237,6 +237,10 @@
                     response(data);
                 });
             },
+            search: function(event, ui) {
+                throbber.removeClass('hide').show();
+                return true;
+            },
             response: function(event, ui, content) {
                 throbber.hide();
                 return content;
@@ -259,22 +263,22 @@
                     // postprocess has to be able to handle the 'no match' option
                     eval(postprocess);
                 }
-                //data.accept = true;
                 return false;
             }
         })
         .data('ui-autocomplete')._renderItem = function(ul, item) {
-            var label = '';
-            if (item.id == 0) {
+            if (item.label) {
                 // No Match
-                label = item.label;
-            }
-            else {
-                var context = '';
-                if (item.context != null && item.context != '') {
-                    context = ' - ' + item.context;
+                var label = item.label;
+            } else if (item.matchString) {
+                // back-ends upgraded like org_search_ac
+                var label = item.matchString + '<b>' + item.nextString + '</b>'
+                if (item.context) {
+                    label += ' - ' + item.context;
                 }
-                label = item.matchString + '<b>' + item.nextString + '</b>' + context;
+            } else {
+                // Legacy AC
+                var label = item.name;
             }
             return $('<li>').data('item.autocomplete', item)
                             .append('<a>' + label + '</a>')
@@ -948,6 +952,180 @@
                 if (create.length) {
                     // Open popup to create new entry
                     // @ToDo: prepopulate name field
+                    create.click();
+                }
+            }
+        });
+    };
+
+    /*
+     * Represent an Organisation
+     */
+    var represent_org = function(item) {
+        if (item.label != undefined) {
+            // No Match
+            return item.label;
+        }
+        if (item.matchString) {
+            // org_search_ac
+            // http://eden.sahanafoundation.org/ticket/1412
+            if (item.match == 'acronym') {
+                var label = item.name;
+                if (item.parent) {
+                    label = item.parent + ' > ' + label;
+                }
+                label += ' - ' + item.matchString + '<b>' + item.nextString + '</b>';
+            } else {
+                // Name match
+                var label = item.matchString + '<b>' + item.nextString + '</b>';
+                if (item.parent) {
+                    label = item.parent + ' > ' + label;
+                } else if (item.acronym) {
+                    label += ' - ' + item.acronym;
+                }
+            }
+        } else {
+            // Non org_search_ac (no cases yet)
+            var label = item.name;
+            if (item.parent) {
+                label = item.parent + ' > ' + item.name;
+            } else if (item.acronym) {
+                label += ' (' + item.acronym + ')';
+            }
+        }
+        return label;
+    }
+
+    /**
+     * S3OrganisationAutocompleteWidget
+     */
+    S3.autocomplete.org = function(input, postprocess, delay, min_length) {
+        var dummy = 'dummy_' + input;
+        var dummy_input = $('#' + dummy);
+
+        if (dummy_input == 'undefined') {
+            return;
+        }
+
+        var url = S3.Ap.concat('/org/organisation/search_ac.json');
+
+        var real_input = $('#' + input);
+        // Bootstrap overides .hide :/
+        real_input.hide();
+        var value = real_input.val();
+        if (value) {
+            // Store existing data in case of cancel
+            var existing = {
+                value: value,
+                name: dummy_input.val()
+            };
+        } else {
+            var existing;
+        }
+        real_input.data('existing', existing);
+        // Have the URL editable after setup (e.g. to Filter by Organisation)
+        real_input.data('url', url);
+        if (real_input.parent().hasClass('controls')) {
+            // Bootstrap
+            var create = real_input.next().find('.s3_add_resource_link');
+        } else {
+            // Other Theme
+            var create = real_input.parent().next().find('.s3_add_resource_link');
+        }
+
+        var throbber = $('#' + dummy + '_throbber');
+
+        // Optional args
+        if (delay == 'undefined') {
+            delay = 450;
+        }
+        if (min_length == 'undefined') {
+            min_length = 2;
+        }
+        dummy_input.autocomplete({
+            delay: delay,
+            minLength: min_length,
+            source: function(request, response) {
+                // Patch the source so that we can handle No Matches
+                $.ajax({
+                    url: real_input.data('url'),
+                    data: {
+                        term: request.term
+                    }
+                }).done(function (data) {
+                    if (data.length == 0) {
+                        // No Match
+                        real_input.val('').change();
+                        // New Entry?
+                        if (create.length) {
+                            // Open popup to create new entry
+                            // Prepopulate name field
+                            var old_url = create.attr('href');
+                            var new_url = old_url + '&name=' + dummy_input.val();
+                            create.attr('href', new_url);
+                            create.click();
+                            // Restore URL
+                            create.attr('href', old_url);
+                        } else {
+                            // No link to create new (e.g. no permission to do so)
+                            data.push({
+                                id: 0,
+                                value: '',
+                                label: i18n.no_matching_records
+                            });
+                        }
+                    } else {
+                        data.push({
+                            id: 0,
+                            value: '',
+                            label: i18n.none_of_the_above
+                        });
+                    }
+                    response(data);
+                });
+            },
+            search: function(event, ui) {
+                throbber.removeClass('hide').show();
+                return true;
+            },
+            response: function(event, ui, content) {
+                throbber.hide();
+                return content;
+            },
+            focus: function(event, ui) {
+                return false;
+            },
+            select: function(event, ui) {
+                var item = ui.item;
+                if (item.id) {
+                    dummy_input.val(item.name);
+                    real_input.val(item.id).change();
+                } else {
+                    // No Match & no ability to create new
+                    dummy_input.val('');
+                    real_input.val('').change();
+                }
+                if (postprocess) {
+                    // postprocess has to be able to handle the 'no match' option
+                    eval(postprocess);
+                }
+                return false;
+            }
+        })
+        .data('ui-autocomplete')._renderItem = function(ul, item) {
+            var label = represent_org(item);
+            return $('<li>').data('item.autocomplete', item)
+                            .append('<a>' + label + '</a>')
+                            .appendTo(ul);
+        };
+        dummy_input.blur(function() {
+            if (existing && existing.name != dummy_input.val()) {
+                // New Entry - without letting AC complete (e.g. tab out)
+                real_input.val('').change();
+                // @ToDo: Something better!
+                if (create.length) {
+                    // Open popup to create new entry
+                    // @ToDo: Prepopulate name field
                     create.click();
                 }
             }

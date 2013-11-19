@@ -4365,6 +4365,9 @@ def req_customize_commit_fields():
     field.comment = S3AddResourceLink(c="org", f="organisation_id",
                                       title=T("Add New Organization"),
                                       )
+    if current.deployment_settings.get_org_autocomplete():
+        # Enable if there are many Orgs
+        field.widget = S3OrganisationAutocompleteWidget()
 
     if editor:
         # Editor can select Org
