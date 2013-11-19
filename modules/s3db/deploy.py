@@ -611,12 +611,21 @@ class S3DeploymentAlertModel(S3Model):
                              self.deploy_mission_id(),
                              self.hrm_human_resource_id(empty=False,
                                                         label=T("Member")),
-                             message_id(),
+                             message_id(label=T("Message")),
                              *s3_meta_fields())
+
+        crud_form = S3SQLCustomForm(
+                        "mission_id",
+                        "human_resource_id",
+                        "message_id",
+                        # @todo:
+                        #S3SQLInlineComponent("document"),
+                    )
 
         # Table Configuration
         configure(tablename,
                   context = {"mission": "mission_id"},
+                  crud_form = crud_form,
                   editable = False,
                   insertable = False,
                   )
@@ -912,9 +921,9 @@ def deploy_render_profile_toolbox(resource,
                      _title=crud_string(tablename, "title_update"))
         toolbox.append(edit_btn)
     elif open_url:
-        open_btn = A(I(" ", _class="icon icon-read"),
+        open_btn = A(I(" ", _class="icon icon-open"),
                      _href=open_url,
-                     _title=crud_string(tablename, "title_read"))
+                     _title=crud_string(tablename, "title_display"))
         toolbox.append(open_btn)
 
     if has_permission("delete", table, record_id=record_id):
@@ -1552,7 +1561,7 @@ def deploy_alert_select_recipients(r, **attr):
         # Page load
         resource.configure(deletable = False)
 
-        dt.defaultActionButtons(resource)
+        #dt.defaultActionButtons(resource)
         response.s3.no_formats = True
 
         # Data table (items)

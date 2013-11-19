@@ -278,19 +278,23 @@ def alert():
 
     def postp(r, output):
         if r.component:
-            if r.component_name == "recipient":
-                # Open should open the member profile, not the link
+            if r.component_name == "select":
                 s3.actions = [dict(label=str(READ),
                                    _class="action-btn read",
-                                   url=URL(f="person",
-                                           vars={"human_resource.id":"[id]"}))]
+                                   url=URL(f="human_resource",
+                                           args=["[id]", "profile"]))]
+            if r.component_name == "recipient":
+                # Open should open the member profile, not the link
+                # @todo: this doesn't work!
+                s3.actions = [dict(label=str(READ),
+                                   _class="action-btn read",
+                                   url=URL(f="human_resource",
+                                           args=["[id]", "profile"]))]
                 if not r.record.message_id:
                     # Delete should remove the Link, not the Member
                     s3.actions.append(dict(label=str(DELETE),
                                            _class="delete-btn",
                                            url=URL(f="alert",
-
-
                                                    args=[r.id,
                                                          "recipient",
                                                          "[id]",

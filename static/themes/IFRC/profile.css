@@ -159,7 +159,7 @@ div.media a.pull-left img.media-object {
 }
 
 .icon.icon-search,
-.icon.icon-read,
+.icon.icon-open,
 .icon.icon-edit,
 .icon.icon-remove-sign {
     color: #999;
@@ -176,9 +176,12 @@ div.media a.pull-left img.media-object {
     color: #E74C3C;
 }
 
-.icon.icon-search,
-.icon.icon-read {
+.icon.icon-search {
     background: url(img/magnifier.png) no-repeat;
+}
+
+.icon.icon-open {
+    background: url(img/file.png) no-repeat;
 }
 
 .icon.icon-edit {
