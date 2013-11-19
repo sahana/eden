@@ -1778,7 +1778,7 @@ class S3FilterForm(object):
                 row_id = None
                 label_id = None
             if label:
-                label = LABEL("%s :" % label, _id=label_id, _for=widget_id)
+                label = LABEL("%s:" % label, _id=label_id, _for=widget_id)
             else:
                 label = ""
             if not comment:

@@ -1934,7 +1934,7 @@ def customize_org_facility(**attr):
                 if current.auth.s3_has_permission("update", table, record_id=record_id):
                     from s3.s3crud import S3CRUD
                     crud_button = S3CRUD.crud_button
-                    edit_btn = crud_button(T("Edit"),
+                    edit_btn = A(I(_class = "icon icon-edit"),
                                            _href=URL(c="org", f="facility",
                                                      args=[record_id, "update.popup"],
                                                      vars={"refresh": "datalist"}),
@@ -1956,7 +1956,7 @@ def customize_org_facility(**attr):
                 org = db(query).select(otable.name,
                                        otable.logo,
                                        limitby=(0, 1)).first()
-                if org.logo:
+                if  org and org.logo:
                     logo = URL(c="default", f="download", args=[org.logo])
                 else:
                     # @ToDo: Placeholder
@@ -1965,17 +1965,15 @@ def customize_org_facility(**attr):
                                list_fields = list_fields,
                                profile_title = "%s : %s" % (s3.crud_strings["org_facility"].title_list, 
                                                             name),
-                               profile_header = DIV(A(IMG(_class="media-object",
-                                                          _src=logo,
-                                                          ),
-                                                      _class="pull-left",
-                                                      #_href=org_url,
+                               profile_header = DIV(edit_btn,
+                                                    IMG(_class="media-object",
+                                                        _src=logo,
                                                       ),
                                                     H2(name),
-                                                    P(record.code or ""),
+                                                    record.code and P(record.code) or "",
                                                     P(I(_class="icon-sitemap"),
                                                       " ",
-                                                      SPAN(org.name),
+                                                      SPAN(org and org.name or current.messages.NONE),
                                                       " ",
                                                       _class="card_1_line",
                                                       ),
@@ -1987,7 +1985,6 @@ def customize_org_facility(**attr):
                                                       ),
                                                     P(record.comments,
                                                       _class="s3-truncate"),
-                                                    edit_btn,
                                                     _class="profile_header",
                                                     ),
                                profile_widgets = [reqs_widget,
@@ -2212,7 +2209,7 @@ def customize_org_organisation(**attr):
                                    type = "datalist",
                                    tablename = "req_req",
                                    context = "organisation",
-                                   filter = ("req_status").belongs([0, 1]),
+                                   #filter = s3db.req_req.req_status.belongs([0, 1]),
                                    icon = "icon-flag",
                                    layer = "Requests",
                                    # provided by Catalogue Layer
@@ -2246,9 +2243,9 @@ def customize_org_organisation(**attr):
                 record = r.record
                 record_id = record.id
                 if current.auth.s3_has_permission("update", table, record_id=record_id):
-                    from s3.s3crud import S3CRUD
-                    crud_button = S3CRUD.crud_button
-                    edit_btn = crud_button(T("Edit"),
+                    #from s3.s3crud import S3CRUD
+                    #crud_button = S3CRUD.crud_button
+                    edit_btn = A(I(_class = "icon icon-edit"),
                                            _href=URL(c="org", f="organisation",
                                                      args=[record_id, "update.popup"],
                                                      vars={"refresh": "datalist"}),
@@ -2260,15 +2257,12 @@ def customize_org_organisation(**attr):
                 s3db.configure("org_organisation",
                                profile_title = "%s : %s" % (s3.crud_strings["org_organisation"].title_list, 
                                                             record.name),
-                               profile_header = DIV(A(IMG(_class="media-object",
+                               profile_header = DIV(edit_btn,
+                                                    IMG(_class="media-object",
                                                           _src=URL(c="default", f="download",
                                                                    args=[record.logo]),
-                                                          ),
-                                                      _class="pull-left",
-                                                      #_href=org_url,
-                                                      ),
+                                                        ),
                                                     H2(record.name),
-                                                    edit_btn,
                                                     _class="profile_header",
                                                     ),
                                profile_widgets = [reqs_widget,
@@ -2818,11 +2812,12 @@ def customize_req_req(**attr):
                                                                otable.logo,
                                                                limitby=(0, 1)
                                                                ).first()
-            if org.logo:
+            if org and org.logo:
                 logo = URL(c="default", f="download", args=[org.logo])
             else:
                 # @ToDo: Placeholder
                 logo = "#"
+                
             s3db.configure("req_req",
                            profile_title = s3.crud_strings["req_req"].title_list,
                            profile_header = DIV(A(IMG(_class="media-object",
@@ -2834,7 +2829,7 @@ def customize_req_req(**attr):
                                                 H2(site.name),
                                                 P(I(_class="icon-sitemap"),
                                                   " ",
-                                                  SPAN(org.name),
+                                                  SPAN(org and org.name or current.messages.NONE),
                                                   " ",
                                                   _class="card_1_line",
                                                   ),

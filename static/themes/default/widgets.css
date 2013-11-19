@@ -930,7 +930,7 @@ span.tab_next_inactive a {
 }
 
 .form-horizontal .control-group.box_top {
-    margin-bottom: 0;
+    margin: 15px 0 0;
     max-width: 680px;
 }
 
