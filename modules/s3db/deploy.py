@@ -144,6 +144,7 @@ class S3DeploymentModel(S3Model):
                             title_create="New Alert",
                             type="datalist",
                             list_fields = ["created_on",
+                                           "mission_id",
                                            "subject",
                                            "body",
                                            ],
@@ -280,7 +281,10 @@ class S3DeploymentModel(S3Model):
             msg_list_empty = T("No Missions currently registered"))
 
         # Reusable field
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup=tablename,
+                                linkto=URL(f="mission",
+                                           args=["[id]", "profile"]),
+                                show_link=True)
         mission_id = S3ReusableField("mission_id", table,
                                      requires = IS_ONE_OF(db,
                                                           "deploy_mission.id",
@@ -604,8 +608,22 @@ class S3DeploymentAlertModel(S3Model):
         # Table Configuration
         configure(tablename,
                   context = {"mission": "mission_id"},
+                  insertable = False,
+                  editable = False,
                   )
                   
+        # CRUD Strings
+        NO_MESSAGES = T("No Messages found")
+        crud_strings[tablename] = Storage(
+            title_display = T("Response Message"),
+            title_list = T("Response Messages"),
+            title_search = T("Search Response Messages"),
+            label_list_button = T("All Response Messages"),
+            label_delete_button = T("Delete Message"),
+            msg_record_deleted = T("Message deleted"),
+            msg_no_match = NO_MESSAGES,
+            msg_list_empty = NO_MESSAGES)
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
@@ -735,14 +753,11 @@ def deploy_rheader(r, tabs=[], profile=False):
                ]
         if unsent:
             # Insert tab to select recipients
-            tabs.insert(1, (T("Select"), "select"))
+            tabs.insert(1, (T("Select Recipients"), "select"))
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
         rheader = DIV(TABLE(TR(TH("%s: " % table.mission_id.label),
-                               A(table.mission_id.represent(record.mission_id),
-                                 _href=URL(f="mission",
-                                           args=[record.mission_id, "profile"])
-                               ),
+                               table.mission_id.represent(record.mission_id),
                                send_button,
                                ),
                             TR(TH("%s: " % table.subject.label),
@@ -858,14 +873,18 @@ def deploy_render_profile_data(record,
     return items
 
 # =============================================================================
-def deploy_render_profile_toolbox(resource, record_id, update_url):
+def deploy_render_profile_toolbox(resource,
+                                  record_id,
+                                  update_url=None,
+                                  open_url=None):
     """
         DRY Helper method to render a toolbox with Edit/Delete action
         buttons in datalist cards.
 
         @param resource: the S3Resource
         @param record_id: the record ID
-        @param update_url: the update URL
+        @param update_url: the update URL (for edit in popup)
+        @param open_url: alternatively, an open URL (for edit in new page)
     """
 
     has_permission = current.auth.s3_has_permission
@@ -883,6 +902,11 @@ def deploy_render_profile_toolbox(resource, record_id, update_url):
                      _class="s3_modal",
                      _title=crud_string(tablename, "title_update"))
         toolbox.append(edit_btn)
+    elif open_url:
+        open_btn = A(I(" ", _class="icon icon-read"),
+                     _href=open_url,
+                     _title=crud_string(tablename, "title_read"))
+        toolbox.append(open_btn)
 
     if has_permission("delete", table, record_id=record_id):
         delete_btn = A(I(" ", _class="icon icon-remove-sign"),
@@ -971,7 +995,7 @@ def deploy_render_alert(listid,
             recipients.extend(none)
         recipients = TAG[""](recipients[:-1])
     else:
-        recipients = current.messages["NONE"]
+        recipients = current.T("No Recipients Selected")
 
     item_class = "thumbnail"
 
@@ -980,13 +1004,9 @@ def deploy_render_alert(listid,
     body = record["deploy_alert.body"]
 
     # Toolbox
-    toolbox = deploy_render_profile_toolbox(resource, record_id, None)
-    no_recipients = True
-    if no_recipients:
-        send_btn = A(I(" ", _class="icon icon-search"),
-                     #_class="dl-item-custom",
-                     _title=current.T("Select Recipients"))
-        toolbox.append(send_btn)
+    open_url = URL(f="alert", args=[record_id])
+    toolbox = deploy_render_profile_toolbox(resource, record_id,
+                                            open_url=open_url)
 
     # Render the item
     item = DIV(DIV(A(IMG(_class="media-object",
@@ -1071,7 +1091,7 @@ def deploy_render_response(listid,
                                     vars={"member_id": human_resource_id}),
                           _class="action-lnk")
 
-    profile_url = URL(f="human_resource", args=[human_resource_id])
+    profile_url = URL(f="human_resource", args=[human_resource_id, "profile"])
     profile_title = current.T("Open Member Profile (in a new tab)")
 
     person = A(record["hrm_human_resource.person_id"],
@@ -1089,7 +1109,10 @@ def deploy_render_response(listid,
                                                          #columns=columns)
 
     # Toolbox
-    toolbox = deploy_render_profile_toolbox(resource, record_id, None)
+    open_url = URL(f="response_message",
+                   args=[record_id, "read"])
+    toolbox = deploy_render_profile_toolbox(resource, record_id,
+                                            open_url=open_url)
 
     # Render the item
     item = DIV(DIV(A(IMG(_class="media-object",
@@ -1170,7 +1193,8 @@ def deploy_render_human_resource_assignment(listid,
     update_url = URL(c="deploy", f="human_resource_assignment",
                      args=[record_id, "update.popup"],
                      vars={"refresh": listid, "record": record_id})
-    toolbox = deploy_render_profile_toolbox(resource, record_id, update_url)
+    toolbox = deploy_render_profile_toolbox(resource, record_id,
+                                            update_url=update_url)
 
     # Render the item
     item = DIV(DIV(A(IMG(_class="media-object",
