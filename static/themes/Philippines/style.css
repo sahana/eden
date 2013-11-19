@@ -1,5 +1,45 @@
 /* Local Settings */
 
+/* Home Page */
+@font-face {
+font-family: NeoSans;
+src: url("../../fonts/NeoSans.otf") format("opentype");
+}
+
+div.carousel-caption {
+    margin-left: 0px;
+}
+
+div.carousel-caption h1,
+div.carousel-caption p
+ {
+    margin: 0;
+    font-family: NeoSans;
+    font-weight: normal;
+    color: #444444;
+    /*color: white;
+    text-shadow: 2px 2px 1px black;*/
+}
+
+#homepage-about {
+    background-position: 50% 0;
+    border: none;
+    padding: 0;
+}
+
+#homepage-about h2 {
+    margin-top: 23px;
+}
+
+/* Data List Filter Form */
+#datalist-filter-form .w2p_fl > label {
+    margin-right: 5px;
+    text-align: right;
+    width: 100px;
+}
+
+/* Forms */
+
 textarea.comments {
     height: 100px;
 }
@@ -8,7 +48,7 @@ textarea.comments {
     margin-top: -17px;
 }
 
-/* Commit Tally / Buton on Requests card */
+/* Commit Tally / Button on Requests card */
 .media.pull-right {
     margin-top: 0;
 }
