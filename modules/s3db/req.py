@@ -4049,9 +4049,7 @@ def req_customize_req_fields():
     return table
     
 # =============================================================================
-def req_render_reqs(listid, resource, rfields, record, 
-                    type = None,
-                    **attr):
+def req_render_reqs(listid, resource, rfields, record, **attr):
     """
         Custom dataList item renderer for Requests on the Home page & dataList view
 
@@ -4432,9 +4430,7 @@ def req_customize_commit_fields():
     return table
     
 # =============================================================================
-def req_render_commits(listid, resource, rfields, record, 
-                       type = None,
-                       **attr):
+def req_render_commits(listid, resource, rfields, record, **attr):
     """
         Custom dataList item renderer for Commits on the Home page & dataList view
 

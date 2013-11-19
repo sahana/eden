@@ -32,6 +32,7 @@ __all__ = ["S3DeploymentModel",
            "deploy_rheader",
            "deploy_application",
            "deploy_alert_select_recipients",
+           "deploy_response_select_mission",
            ]
 
 try:
@@ -234,20 +235,27 @@ class S3DeploymentModel(S3Model):
                             },
                   ],
                   filter_widgets = [
-                      S3TextFilter(["name", "code", "event_type"],
-                                   label=T("Search")),
-                      S3LocationFilter("location_id",
-                                       label=T("Country"),
-                                       widget="multiselect",
-                                       levels=["L0"],
-                                       hidden=True),
-                      S3OptionsFilter("event_type_id",
-                                      widget="multiselect",
-                                      hidden=True),
-                      S3OptionsFilter("status",
-                                      options=mission_status_opts,
-                                      hidden=True),
-                  ],
+                    S3TextFilter(["name",
+                                  "code",
+                                  "event_type",
+                                  ],
+                                 label=T("Search")
+                                 ),
+                    S3LocationFilter("location_id",
+                                     label=T("Country"),
+                                     widget="multiselect",
+                                     levels=["L0"],
+                                     hidden=True
+                                     ),
+                    S3OptionsFilter("event_type_id",
+                                    widget="multiselect",
+                                    hidden=True
+                                    ),
+                    S3OptionsFilter("status",
+                                    options=mission_status_opts,
+                                    hidden=True
+                                    ),
+                    ],
                   orderby="deploy_mission.created_on desc",
                   delete_next=URL(c="deploy", f="mission", args="summary"),
                   )
@@ -338,9 +346,9 @@ class S3DeploymentModel(S3Model):
                   )
 
         # ---------------------------------------------------------------------
-        # Application of human resources (= agreement that an HR is
-        # generally available for assignments, can come with certain
-        # restrictions)
+        # Application of human resources
+        # - agreement that an HR is generally available for assignments
+        # - can come with certain restrictions
         #
         # @ToDo: Better Name. human_resource_member perhaps.
         #
@@ -354,8 +362,8 @@ class S3DeploymentModel(S3Model):
                              *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        # Assignment of human resources (= actual assignment of an HR to
-        # a mission)
+        # Assignment of human resources
+        # - actual assignment of an HR to a mission
         #
         tablename = "deploy_human_resource_assignment"
         table = define_table(tablename,
@@ -474,7 +482,8 @@ class S3DeploymentAlertModel(S3Model):
         message_id = self.msg_message_id
 
         # ---------------------------------------------------------------------
-        # Alert (also the PE representing its Recipients)
+        # Alert
+        # - also the PE representing its Recipients
         #
         tablename = "deploy_alert"
         table = define_table(tablename,
@@ -550,8 +559,8 @@ class S3DeploymentAlertModel(S3Model):
 
         # Custom method to send alerts
         set_method("deploy", "alert",
-                   method="send",
-                   action=self.deploy_alert_send)
+                   method = "send",
+                   action = self.deploy_alert_send)
 
         # Reusable field
         represent = S3Represent(lookup=tablename)
@@ -605,7 +614,7 @@ class S3DeploymentAlertModel(S3Model):
         configure(tablename,
                   context = {"mission": "mission_id"},
                   )
-                  
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
@@ -893,11 +902,7 @@ def deploy_render_profile_toolbox(resource, record_id, update_url):
     return toolbox
 
 # =============================================================================
-def deploy_render_alert(listid,
-                        resource,
-                        rfields,
-                        record,
-                        **attr):
+def deploy_render_alert(listid, resource, rfields, record, **attr):
     """
         Item renderer for data list of alerts
 
@@ -1016,11 +1021,7 @@ def deploy_render_alert(listid,
     return item
 
 # =============================================================================
-def deploy_render_response(listid,
-                           resource,
-                           rfields,
-                           record,
-                           **attr):
+def deploy_render_response(listid, resource, rfields, record, **attr):
     """
         Item renderer for data list of responses
 
@@ -1121,10 +1122,7 @@ def deploy_render_response(listid,
     return item
 
 # =============================================================================
-def deploy_render_human_resource_assignment(listid,
-                                            resource,
-                                            rfields,
-                                            record,
+def deploy_render_human_resource_assignment(listid, resource, rfields, record, 
                                             **attr):
     """
         Item renderer for data list of deployed human resources
@@ -1480,19 +1478,19 @@ def deploy_alert_select_recipients(r, **attr):
                 if hr_id in skip:
                     continue
                 rtable.insert(alert_id=alert_id,
-                                human_resource_id=human_resource_id)
+                              human_resource_id=human_resource_id)
                 added += 1
         if not selected:
             response.warning = T("No Recipients Selected!")
         else:
             response.confirmation = T("%(number)s Recipients added to Alert") % \
                                      dict(number=added)
-            
+
     get_vars = r.get_vars or {}
     settings = current.deployment_settings
     resource = s3db.resource("hrm_human_resource",
                              filter=member_query, vars=r.get_vars)
-    
+
     # Filter widgets
     filter_widgets = deploy_member_filter()
 
@@ -1557,7 +1555,6 @@ def deploy_alert_select_recipients(r, **attr):
                                   args=["filter.options"],
                                   vars={})
 
-            #from s3filter import S3FilterForm
             get_config = resource.get_config
             filter_clear = get_config("filter_clear", True)
             filter_formstyle = get_config("filter_formstyle", None)
@@ -1586,6 +1583,189 @@ def deploy_alert_select_recipients(r, **attr):
                       list_filter_form=ff)
 
         # Maintain RHeader for consistency
+        if attr.get("rheader"):
+            rheader = attr["rheader"](r)
+            if rheader:
+                output["rheader"] = rheader
+
+        response.view = "list_filter.html"
+        return output
+
+    elif r.representation == "aadata":
+        # Ajax refresh
+        if "sEcho" in get_vars:
+            echo = int(get_vars.sEcho)
+        else:
+            echo = None
+        items = dt.json(totalrows,
+                        filteredrows,
+                        dt_id,
+                        echo,
+                        dt_bulk_actions=dt_bulk_actions)
+        response.headers["Content-Type"] = "application/json"
+        return items
+
+    else:
+        r.error(501, resource.ERROR.BAD_FORMAT)
+
+# =============================================================================
+def deploy_response_select_mission(r, **attr):
+    """
+        Custom method to Link a Response to a Mission &/or Human Resource
+    """
+
+    message_id = r.id
+    if r.representation not in ("html", "aadata") or not message_id or not r.component:
+        r.error(405, r.ERROR.BAD_METHOD)
+
+    T = current.T
+    s3db = current.s3db
+
+    response = current.response
+    mission_query = S3FieldSelector("mission.status") == 2
+
+    if r.http == "POST":
+
+        added = 0
+        post_vars = r.post_vars
+        if all([n in post_vars for n in ("select", "selected", "mode")]):
+            selected = post_vars.selected
+            if selected:
+                selected = selected.split(",")
+            else:
+                selected = []
+
+            db = current.db
+            # Handle exclusion filter
+            if post_vars.mode == "Exclusive":
+                if "filterURL" in post_vars:
+                    filters = S3URLQuery.parse_url(post_vars.filterURL)
+                else:
+                    filters = None
+                query = mission_query & \
+                        (~(S3FieldSelector("id").belongs(selected)))
+
+                mission = s3db.resource("deploy_mission",
+                                        filter=query, vars=filters)
+                rows = mission.select(["id"], as_rows=True)
+                selected = [str(row.id) for row in rows]
+
+            rtable = s3db.deploy_response
+            query = (rtable.message_id == message_id) & \
+                    (rtable.mission_id.belongs(selected)) & \
+                    (rtable.deleted != True)
+            rows = db(query).select(rtable.mission_id)
+            skip = set(row.mission_id for row in rows)
+
+            for mission_id in selected:
+                try:
+                    m_id = int(mission_id.strip())
+                except ValueError:
+                    continue
+                if m_id in skip:
+                    continue
+                rtable.insert(message_id=message_id,
+                              mission_id=mission_id)
+                added += 1
+        if not selected:
+            response.warning = T("No Mission Selected!")
+        else:
+            response.confirmation = T("Response linked to Mission")
+
+    get_vars = r.get_vars or {}
+    settings = current.deployment_settings
+    resource = s3db.resource("deploy_mission",
+                             filter=mission_query, vars=r.get_vars)
+
+    # Filter widgets
+    filter_widgets = s3db.get_config("deploy_mission", "filter_widgets")
+
+    # List fields
+    list_fields = s3db.get_config("deploy_mission", "list_fields")
+
+    # Data table
+    totalrows = resource.count()
+    if "iDisplayLength" in get_vars:
+        display_length = int(get_vars["iDisplayLength"])
+    else:
+        display_length = 25
+    limit = 4 * display_length
+    filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
+    resource.add_filter(filter)
+    data = resource.select(list_fields,
+                           start=0,
+                           limit=limit,
+                           orderby=orderby,
+                           left=left,
+                           count=True,
+                           represent=True)
+
+    filteredrows = data["numrows"]
+    dt = S3DataTable(data["rfields"], data["rows"])
+    dt_id = "datatable"
+
+    # Bulk actions
+    dt_bulk_actions = [(T("Link to Response"), "select")]
+
+    if r.representation == "html":
+        # Page load
+        resource.configure(deletable = False)
+
+        dt.defaultActionButtons(resource)
+        response.s3.no_formats = True
+
+        # Data table (items)
+        items = dt.html(totalrows,
+                        filteredrows,
+                        dt_id,
+                        dt_displayLength=display_length,
+                        dt_ajax_url=r.url(representation="aadata"),
+                        dt_bFilter="false",
+                        dt_pagination="true",
+                        dt_bulk_actions=dt_bulk_actions,
+                        )
+
+        # Filter form
+        if filter_widgets:
+
+            # Where to retrieve filtered data from:
+            _vars = resource.crud._remove_filters(r.get_vars)
+            filter_submit_url = r.url(vars=_vars)
+
+            # Where to retrieve updated filter options from:
+            filter_ajax_url = URL(f="mission",
+                                  args=["filter.options"],
+                                  vars={})
+
+            get_config = resource.get_config
+            filter_clear = get_config("filter_clear", True)
+            filter_formstyle = get_config("filter_formstyle", None)
+            filter_submit = get_config("filter_submit", True)
+            filter_form = S3FilterForm(filter_widgets,
+                                       clear=filter_clear,
+                                       formstyle=filter_formstyle,
+                                       submit=filter_submit,
+                                       ajax=True,
+                                       url=filter_submit_url,
+                                       ajaxurl=filter_ajax_url,
+                                       _class="filter-form",
+                                       _id="datatable-filter-form",
+                                       )
+            fresource = current.s3db.resource(resource.tablename)
+            alias = resource.alias if r.component else None
+            ff = filter_form.html(fresource,
+                                  r.get_vars,
+                                  target="datatable",
+                                  alias=alias)
+        else:
+            ff = ""
+
+        output = dict(items=items,
+                      title=T("Select Mission"),
+                      list_filter_form=ff)
+
+        # Maintain RHeader for consistency
+        # @ToDo: Add ability to select Member here too if not auto-detected
         if attr.get("rheader"):
             rheader = attr["rheader"](r)
             if rheader:

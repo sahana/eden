@@ -37,7 +37,6 @@ __all__ = ["S3ACLWidget",
            "S3AddPersonWidget",
            "S3AddPersonWidget2",
            "S3AutocompleteWidget",
-           "S3AutocompleteOrAddWidget",
            "S3BooleanWidget",
            "S3ColorPickerWidget",
            "S3DateWidget",
@@ -199,6 +198,8 @@ class S3ACLWidget(CheckboxesWidget):
 class S3AddObjectWidget(FormWidget):
     """
         This widget displays an inline form loaded via AJAX on demand.
+
+        UNUSED
 
         In the browser:
             A load request must made to this widget to enable it.
@@ -997,30 +998,6 @@ class S3AutocompleteWidget(FormWidget):
                            _class="throbber input_throbber hide"),
                        INPUT(**attr),
                        requires = field.requires
-                       )
-
-# =============================================================================
-class S3AutocompleteOrAddWidget(FormWidget):
-    """
-        This widget searches for or adds an object. It contains:
-
-        - an autocomplete field which can be used to search for an existing object.
-        - an add widget which is used to add an object.
-            It fills the field with that object after successful addition
-    """
-    def __init__(self,
-                 autocomplete_widget,
-                 add_widget
-                ):
-
-        self.autocomplete_widget = autocomplete_widget
-        self.add_widget = add_widget
-
-    def __call__(self, field, value, **attributes):
-        return TAG[""](# this does the input field
-                       self.autocomplete_widget(field, value, **attributes),
-                       # this can fill it if it isn't autocompleted
-                       self.add_widget(field, value, **attributes)
                        )
 
 # =============================================================================

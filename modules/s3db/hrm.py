@@ -640,6 +640,10 @@ class S3HRModel(S3Model):
             add_component("hrm_job_title_human_resource",
                           hrm_human_resource="human_resource_id")
 
+        # Deploy (RDRT)
+        add_component("deploy_human_resource_application",
+                      hrm_human_resource="human_resource_id")
+
         # Availability
         #add_component("hrm_availability",
         #              hrm_human_resource="human_resource_id")
@@ -5842,9 +5846,7 @@ def hrm_configure_pr_group_membership():
                    orderby=orderby)
 
 # =============================================================================
-def hrm_render_competencies(listid, resource, rfields, record, 
-                            type = None,
-                            **attr):
+def hrm_render_competencies(listid, resource, rfields, record, **attr):
     """
         Custom dataList item renderer for Skills on the HRM Profile
 
@@ -5946,9 +5948,7 @@ def hrm_render_competencies(listid, resource, rfields, record,
     return item
 
 # =============================================================================
-def hrm_render_experience(listid, resource, rfields, record, 
-                          type = None,
-                          **attr):
+def hrm_render_experience(listid, resource, rfields, record, **attr):
     """
         Custom dataList item renderer for Experience on the HRM Profile
 
@@ -6112,9 +6112,7 @@ def hrm_render_experience(listid, resource, rfields, record,
     return item
 
 # =============================================================================
-def hrm_render_trainings(listid, resource, rfields, record, 
-                         type = None,
-                         **attr):
+def hrm_render_trainings(listid, resource, rfields, record, **attr):
     """
         Custom dataList item renderer for Trainings on the HRM Profile
 
