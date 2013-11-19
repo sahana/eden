@@ -3916,6 +3916,8 @@ def req_customize_req_fields():
     crud_form = S3SQLCustomForm(*crud_fields)
 
     list_fields = crud_fields + ["site_id$location_id",
+                                 "site_id$location_id$level",
+                                 "site_id$location_id$parent",
                                  "site_id$organisation_id",
                                  "site_id$comments",
                                  ]
@@ -4077,7 +4079,11 @@ def req_render_reqs(listid, resource, rfields, record,
     body = record["req_req.purpose"]
 
     location = record["org_site.location_id"] or ""
-    location_id = raw["org_site.location_id"]
+    level = raw["gis_location.level"]
+    if level:
+        location_id = raw["org_site.location_id"]
+    else:
+        location_id = raw["gis_location.parent"]
     if location_id:
         location_url = URL(c="gis", f="location", args=[location_id, "profile"])
     else:

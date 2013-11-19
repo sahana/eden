@@ -731,9 +731,13 @@ def render_sites(listid, resource, rfields, record, **attr):
     organisation = record["org_facility.organisation_id"]
     organisation_id = raw["org_facility.organisation_id"]
     location = record["org_facility.location_id"]
-    #location_id = raw["org_facility.location_id"]
-    #location_url = URL(c="gis", f="location",
-    #                   args=[location_id, "profile"])
+    level = raw["gis_location.level"]
+    if level:
+        location_id = raw["org_facility.location_id"]
+    else:
+        location_id = raw["gis_location.parent"]
+    location_url = URL(c="gis", f="location",
+                       args=[location_id, "profile"])
     address = raw["gis_location.addr_street"] or ""
     phone = raw["org_facility.phone1"] or ""
     facility_type = record["org_site_facility_type.facility_type_id"]
@@ -817,10 +821,9 @@ def render_sites(listid, resource, rfields, record, **attr):
                           ),
                         _class="card-title",
                         ),
-                   SPAN(#A(location,
-                        #  _href=location_url,
-                        #  ),
-                        location,
+                   SPAN(A(location,
+                          _href=location_url,
+                          ),
                         _class="location-title",
                         ),
                    SPAN(date,
@@ -1476,20 +1479,18 @@ def customize_gis_location(**attr):
                     loc = db(gtable.id == record_id).select(gtable.wkt,
                                                             limitby=(0, 1)
                                                             ).first()
-                    if loc:
+                    if loc and loc.wkt:
                         from s3.codecs.svg import S3SVG
                         S3SVG.write_file(filename, loc.wkt)
 
                 if current.auth.s3_has_permission("update", table, record_id=record_id):
-                    from s3.s3crud import S3CRUD
-                    crud_button = S3CRUD.crud_button
-                    edit_btn = crud_button(T("Edit"),
-                                           _href=URL(c="gis", f="location",
-                                                     args=[record_id, "update.popup"],
-                                                     vars={"refresh": "datalist"}),
-                                           _class="s3_modal",
-                                           _title=s3.crud_strings["gis_location"].title_update,
-                                           )
+                    edit_btn = A(I(_class="icon icon-edit"),
+                                 _href=URL(c="gis", f="location",
+                                           args=[record_id, "update.popup"],
+                                           vars={"refresh": "datalist"}),
+                                 _class="s3_modal",
+                                 _title=s3.crud_strings["gis_location"].title_update,
+                                 )
                 else:
                     edit_btn = ""
                 name = location.name
@@ -1497,7 +1498,8 @@ def customize_gis_location(**attr):
                                list_fields = list_fields,
                                profile_title = "%s : %s" % (s3.crud_strings["gis_location"].title_list, 
                                                             name),
-                               profile_header = DIV(A(IMG(_class="media-object",
+                               profile_header = DIV(edit_btn,
+                                                    A(IMG(_class="media-object",
                                                           _src=URL(c="static",
                                                                    f="cache",
                                                                    args=["svg", filename],
@@ -1507,7 +1509,6 @@ def customize_gis_location(**attr):
                                                       #_href=location_url,
                                                       ),
                                                     H2(name),
-                                                    edit_btn,
                                                     _class="profile_header",
                                                     ),
                                profile_widgets = [reqs_widget,
@@ -1714,6 +1715,8 @@ def customize_org_facility_fields():
                    "organisation_id",
                    "location_id",
                    "location_id$addr_street",
+                   "location_id$level",
+                   "location_id$parent",
                    "modified_by",
                    "modified_on",
                    "organisation_id$logo",
@@ -1932,15 +1935,13 @@ def customize_org_facility(**attr):
                                       )
 
                 if current.auth.s3_has_permission("update", table, record_id=record_id):
-                    from s3.s3crud import S3CRUD
-                    crud_button = S3CRUD.crud_button
-                    edit_btn = crud_button(T("Edit"),
-                                           _href=URL(c="org", f="facility",
-                                                     args=[record_id, "update.popup"],
-                                                     vars={"refresh": "datalist"}),
-                                           _class="s3_modal",
-                                           _title=s3.crud_strings["org_facility"].title_update,
-                                           )
+                    edit_btn = A(I(_class = "icon icon-edit"),
+                                 _href=URL(c="org", f="facility",
+                                           args=[record_id, "update.popup"],
+                                           vars={"refresh": "datalist"}),
+                                 _class="s3_modal",
+                                 _title=s3.crud_strings["org_facility"].title_update,
+                                 )
                 else:
                     edit_btn = ""
                 name = record.name
@@ -1950,13 +1951,14 @@ def customize_org_facility(**attr):
                 else:
                     name_code = code
                 location = table.location_id.represent(record.location_id)
+                organisation_id = record.organisation_id
                 db = current.db
                 otable = db.org_organisation
-                query = (otable.id == record.organisation_id)
+                query = (otable.id == organisation_id)
                 org = db(query).select(otable.name,
                                        otable.logo,
                                        limitby=(0, 1)).first()
-                if org.logo:
+                if org and org.logo:
                     logo = URL(c="default", f="download", args=[org.logo])
                 else:
                     # @ToDo: Placeholder
@@ -1965,17 +1967,15 @@ def customize_org_facility(**attr):
                                list_fields = list_fields,
                                profile_title = "%s : %s" % (s3.crud_strings["org_facility"].title_list, 
                                                             name),
-                               profile_header = DIV(A(IMG(_class="media-object",
-                                                          _src=logo,
-                                                          ),
-                                                      _class="pull-left",
-                                                      #_href=org_url,
+                               profile_header = DIV(edit_btn,
+                                                    IMG(_class="media-object",
+                                                        _src=logo,
                                                       ),
                                                     H2(name),
-                                                    P(record.code or ""),
+                                                    record.code and P(record.code) or "",
                                                     P(I(_class="icon-sitemap"),
                                                       " ",
-                                                      SPAN(org.name),
+                                                      SPAN(org and org.name or current.messages.NONE),
                                                       " ",
                                                       _class="card_1_line",
                                                       ),
@@ -1987,7 +1987,6 @@ def customize_org_facility(**attr):
                                                       ),
                                                     P(record.comments,
                                                       _class="s3-truncate"),
-                                                    edit_btn,
                                                     _class="profile_header",
                                                     ),
                                profile_widgets = [reqs_widget,
@@ -2212,7 +2211,7 @@ def customize_org_organisation(**attr):
                                    type = "datalist",
                                    tablename = "req_req",
                                    context = "organisation",
-                                   filter = ("req_status").belongs([0, 1]),
+                                   filter = S3FieldSelector("req_status").belongs([0, 1]),
                                    icon = "icon-flag",
                                    layer = "Requests",
                                    # provided by Catalogue Layer
@@ -2246,29 +2245,24 @@ def customize_org_organisation(**attr):
                 record = r.record
                 record_id = record.id
                 if current.auth.s3_has_permission("update", table, record_id=record_id):
-                    from s3.s3crud import S3CRUD
-                    crud_button = S3CRUD.crud_button
-                    edit_btn = crud_button(T("Edit"),
-                                           _href=URL(c="org", f="organisation",
-                                                     args=[record_id, "update.popup"],
-                                                     vars={"refresh": "datalist"}),
-                                           _class="s3_modal",
-                                           _title=s3.crud_strings["org_organisation"].title_update,
-                                           )
+                    edit_btn = A(I(_class = "icon icon-edit"),
+                                 _href=URL(c="org", f="organisation",
+                                           args=[record_id, "update.popup"],
+                                           vars={"refresh": "datalist"}),
+                                 _class="s3_modal",
+                                 _title=s3.crud_strings["org_organisation"].title_update,
+                                 )
                 else:
                     edit_btn = ""
                 s3db.configure("org_organisation",
                                profile_title = "%s : %s" % (s3.crud_strings["org_organisation"].title_list, 
                                                             record.name),
-                               profile_header = DIV(A(IMG(_class="media-object",
+                               profile_header = DIV(edit_btn,
+                                                    IMG(_class="media-object",
                                                           _src=URL(c="default", f="download",
                                                                    args=[record.logo]),
-                                                          ),
-                                                      _class="pull-left",
-                                                      #_href=org_url,
-                                                      ),
+                                                        ),
                                                     H2(record.name),
-                                                    edit_btn,
                                                     _class="profile_header",
                                                     ),
                                profile_widgets = [reqs_widget,
@@ -2793,15 +2787,13 @@ def customize_req_req(**attr):
                                 list_layout = render_sites,
                                 )
             if current.auth.s3_has_permission("update", r.table, record_id=record_id):
-                from s3.s3crud import S3CRUD
-                crud_button = S3CRUD.crud_button
-                edit_btn = crud_button(T("Edit"),
-                                       _href=URL(c="req", f="req",
-                                                 args=[record_id, "update.popup"],
-                                                 vars={"refresh": "datalist"}),
-                                       _class="s3_modal",
-                                       _title=s3.crud_strings["req_req"].title_update,
-                                       )
+                edit_btn = A(I(_class = "icon icon-edit"),
+                             _href=URL(c="req", f="req",
+                                       args=[record_id, "update.popup"],
+                                       vars={"refresh": "datalist"}),
+                             _class="s3_modal",
+                             _title=s3.crud_strings["req_req"].title_update,
+                             )
             else:
                 edit_btn = ""
             db = current.db
@@ -2818,14 +2810,16 @@ def customize_req_req(**attr):
                                                                otable.logo,
                                                                limitby=(0, 1)
                                                                ).first()
-            if org.logo:
+            if org and org.logo:
                 logo = URL(c="default", f="download", args=[org.logo])
             else:
                 # @ToDo: Placeholder
                 logo = "#"
+                
             s3db.configure("req_req",
                            profile_title = s3.crud_strings["req_req"].title_list,
-                           profile_header = DIV(A(IMG(_class="media-object",
+                           profile_header = DIV(edit_btn,
+                                                A(IMG(_class="media-object",
                                                           _src=logo,
                                                           ),
                                                       _class="pull-left",
@@ -2834,7 +2828,7 @@ def customize_req_req(**attr):
                                                 H2(site.name),
                                                 P(I(_class="icon-sitemap"),
                                                   " ",
-                                                  SPAN(org.name),
+                                                  SPAN(org and org.name or current.messages.NONE),
                                                   " ",
                                                   _class="card_1_line",
                                                   ),
@@ -2846,7 +2840,6 @@ def customize_req_req(**attr):
                                                   ),
                                                 P(record.purpose,
                                                   _class="s3-truncate"),
-                                                edit_btn,
                                                 _class="profile_header",
                                                 ),
                            profile_widgets = [commits_widget,
