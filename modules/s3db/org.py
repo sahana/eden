@@ -784,6 +784,7 @@ class S3OrganisationModel(S3Model):
             output = []
             append = output.append
             for row in rows:
+                acronym = ""
                 if use_branches:
                     _row = row[table]
                 else:
@@ -797,12 +798,28 @@ class S3OrganisationModel(S3Model):
                     else:
                         parent = None
                 if not parent:
-                    acronym = _row.acronym
-                    if acronym:
-                        name = "%s (%s)" % (name, acronym)
+                    if _row.acronym:
+                        acronym = _row.acronym
+                        name = "%s - (%s)" % (name, acronym)
+                # Determine if input is org hit or acronym hit
+                orgNameHit = _row.name[:len(value)].lower() == value
+                if orgNameHit:
+                    nextString = _row.name[len(value):]
+                    context = acronym 
+                    matchString = _row.name[:len(value)]
+                else:
+                    nextString = acronym[len(value):]
+                    context =  _row.name
+                    matchString = _row.acronym[:len(value)]
+                # Remove context if matchString is 100% hit
+                removeContext = nextString == ""
+                if removeContext:
+                    context = ""
                 record = dict(id = _row.id,
                               name = name,
-                              )
+                              matchString = matchString,
+                              nextString = nextString,
+                              context =  context)
                 append(record)
             output = jsons(output)
 

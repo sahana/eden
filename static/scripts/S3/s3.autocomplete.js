@@ -237,10 +237,6 @@
                     response(data);
                 });
             },
-            search: function(event, ui) {
-                throbber.removeClass('hide').show();
-                return true;
-            },
             response: function(event, ui, content) {
                 throbber.hide();
                 return content;
@@ -268,11 +264,17 @@
             }
         })
         .data('ui-autocomplete')._renderItem = function(ul, item) {
-            if (item.label) {
+            var label = '';
+            if (item.id == 0) {
                 // No Match
-                var label = item.label;
-            } else {
-                var label = item.name;
+                label = item.label;
+            }
+            else {
+                var context = '';
+                if (item.context != null && item.context != '') {
+                    context = ' - ' + item.context;
+                }
+                label = item.matchString + '<b>' + item.nextString + '</b>' + context;
             }
             return $('<li>').data('item.autocomplete', item)
                             .append('<a>' + label + '</a>')
