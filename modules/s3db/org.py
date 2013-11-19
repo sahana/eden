@@ -325,16 +325,12 @@ class S3OrganisationModel(S3Model):
             msg_record_deleted=T("Organization deleted"),
             msg_list_empty=T("No Organizations currently registered"))
 
-        # @ToDo: Deployment_setting
-        organisation_dropdown_not_ac = True
-        if organisation_dropdown_not_ac:
-            help = T("If you don't see the Organization in the list, you can add a new one by clicking link 'Add Organization'.")
-            widget = None
-        else:
+        if settings.get_org_autocomplete():
             help = T("Enter some characters to bring up a list of possible matches")
-            widget = S3OrganisationAutocompleteWidget()
-        #else:
-        #    widget = SQLFORM.widgets.options.widget
+            org_widget = S3OrganisationAutocompleteWidget()
+        else:
+            help = T("If you don't see the Organization in the list, you can add a new one by clicking link 'Add Organization'.")
+            org_widget = None
 
         organisation_comment = S3AddResourceLink(c="org", f="organisation",
                                                  label=ADD_ORGANIZATION,
@@ -360,7 +356,7 @@ class S3OrganisationModel(S3Model):
                                           label=ORGANISATION,
                                           comment=organisation_comment,
                                           ondelete="RESTRICT",
-                                          widget = widget,
+                                          widget = org_widget,
                                           )
 
         utablename = auth.settings.table_user_name
@@ -743,22 +739,16 @@ class S3OrganisationModel(S3Model):
         # (default anyway on MySQL/SQLite, but not PostgreSQL)
         value = value.lower().strip()
 
-        filter = _vars.filter
+        if not value:
+            output = current.xml.json_message(False, 400,
+                            "Missing options! Require: filter & value")
+            raise HTTP(400, body=output)
 
-        if filter and value:
-
-            if filter == "~":
-                query = (S3FieldSelector("organisation.name").lower().like(value + "%")) | \
-                        (S3FieldSelector("organisation.acronym").lower().like(value + "%"))
-                if use_branches:
-                    query |= (S3FieldSelector("parent.name").lower().like(value + "%")) | \
-                             (S3FieldSelector("parent.acronym").lower().like(value + "%"))
-
-            else:
-                output = current.xml.json_message(False, 400,
-                                "Unsupported filter! Supported filters: ~")
-                raise HTTP(400, body=output)
-
+        query = (S3FieldSelector("organisation.name").lower().like(value + "%")) | \
+                (S3FieldSelector("organisation.acronym").lower().like(value + "%"))
+        if use_branches:
+            query |= (S3FieldSelector("parent.name").lower().like(value + "%")) | \
+                     (S3FieldSelector("parent.acronym").lower().like(value + "%"))
         resource.add_filter(query)
 
         MAX_SEARCH_RESULTS = settings.get_search_max_results()
@@ -772,7 +762,10 @@ class S3OrganisationModel(S3Model):
             field2 = table.acronym
 
             # Fields to return
-            fields = ["id", "name", "acronym"]
+            fields = ["id",
+                      "name",
+                      "acronym",
+                      ]
             if use_branches:
                 fields.append("parent.name")
 
@@ -784,25 +777,38 @@ class S3OrganisationModel(S3Model):
             output = []
             append = output.append
             for row in rows:
+                acronym = ""
                 if use_branches:
                     _row = row[table]
                 else:
                     _row = row
                 name = _row.name
-                parent = None
-                if "org_parent_organisation" in row:
-                    parent = object.__getattribute__(row, "org_parent_organisation")
-                    if parent.name is not None:
-                        name = "%s > %s" % (parent.name, name)
-                    else:
-                        parent = None
-                if not parent:
-                    acronym = _row.acronym
-                    if acronym:
-                        name = "%s (%s)" % (name, acronym)
+                acronym = _row.acronym
                 record = dict(id = _row.id,
                               name = name,
                               )
+                if acronym:
+                    record["acronym"] = acronym
+                if "org_parent_organisation" in row:
+                    parent = object.__getattribute__(row, "org_parent_organisation")
+                    if parent.name is not None:
+                        record["parent"] = parent.name
+
+                # Determine if input is org hit or acronym hit
+                value_len = len(value)
+                orgNameHit = name[:value_len].lower() == value
+                if orgNameHit:
+                    nextString = name[value_len:]
+                    if nextString != "":
+                        record["matchString"] = name[:value_len]
+                        record["nextString"] = nextString
+                else:
+                    nextString = acronym[value_len:]
+                    if nextString != "":
+                        record["matchString"] = acronym[:value_len]
+                        record["nextString"] = nextString
+                        record["match"] = "acronym"
+
                 append(record)
             output = jsons(output)
 
@@ -2219,20 +2225,12 @@ class S3SiteModel(S3Model):
         # (default anyway on MySQL/SQLite, but not PostgreSQL)
         value = value.lower().strip()
 
-        filter = _vars.get("filter", None)
-
-        if filter and value:
-            if filter == "~":
-                query = (S3FieldSelector("name").lower().like(value + "%"))
-            else:
-                output = current.xml.json_message(False, 400,
-                                "Unsupported filter! Supported filters: ~")
-                raise HTTP(400, body=output)
-        else:
+        if not value:
             output = current.xml.json_message(False, 400,
                             "Missing options! Require: filter & value")
             raise HTTP(400, body=output)
 
+        query = (S3FieldSelector("name").lower().like(value + "%"))
         resource.add_filter(query)
 
         settings = current.deployment_settings
@@ -2447,6 +2445,11 @@ class S3FacilityModel(S3Model):
 
         NONE = current.messages["NONE"]
 
+        if settings.get_org_autocomplete():
+            org_widget = S3OrganisationAutocompleteWidget(default_from_profile=True)
+        else:
+            org_widget = None
+
         # ---------------------------------------------------------------------
         # Facility Types (generic)
         #
@@ -2521,10 +2524,7 @@ class S3FacilityModel(S3Model):
                                    represent = lambda v: v or NONE,
                                    label=T("Code"),
                                    ),
-                             self.org_organisation_id(
-                                #widget=S3OrganisationAutocompleteWidget(
-                                            #default_from_profile=True)
-                                ),
+                             self.org_organisation_id(widget=org_widget),
                              self.gis_location_id(),
                              Field("opening_times",
                                    represent = lambda v: v or NONE,
@@ -3108,6 +3108,11 @@ class S3OfficeModel(S3Model):
         define_table = self.define_table
         super_link = self.super_link
 
+        if settings.get_org_autocomplete():
+            org_widget = S3OrganisationAutocompleteWidget(default_from_profile=True)
+        else:
+            org_widget = None
+
         # ---------------------------------------------------------------------
         # Office Types
         #
@@ -3181,9 +3186,9 @@ class S3OfficeModel(S3Model):
                                    # @ToDo: Deployment Setting to add validator to make these unique
                                    ),
                              self.org_organisation_id(
-                                 #widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
                                  requires = org_organisation_requires(required=True,
                                                                       updateable=True),
+                                 widget = org_widget,
                                  ),
                              office_type_id(
                                             #readable = False,

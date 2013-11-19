@@ -327,6 +327,8 @@ settings.L10n.decimal_separator = "."
 
 # -----------------------------------------------------------------------------
 # Organisations
+# Uncomment to use an Autocomplete for Organisation lookup fields
+#settings.org.autocomplete = True
 # Enable the use of Organisation Branches
 #settings.org.branches = True
 # Enable the use of Organisation Regions

@@ -1561,6 +1561,11 @@ class S3SurveySeriesModel(S3Model):
 
         set_method = self.set_method
 
+        if current.deployment_settings.get_org_autocomplete():
+            org_widget = S3OrganisationAutocompleteWidget(default_from_profile=True)
+        else:
+            org_widget = None
+
         # ---------------------------------------------------------------------
         # The survey_series table is used to hold all uses of a template
         #
@@ -1595,7 +1600,7 @@ class S3SurveySeriesModel(S3Model):
                                  self.survey_template_id(empty=False,
                                                          ondelete="RESTRICT"),
                                  person_id(),
-                                 organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile=True)),
+                                 organisation_id(widget = org_widget),
                                  Field("logo", "string", default="", length=512),
                                  Field("language", "string", default="en", length=8),
                                  Field("start_date", "date",

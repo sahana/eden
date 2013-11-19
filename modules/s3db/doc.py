@@ -71,6 +71,11 @@ class S3DocumentLibrary(S3Model):
         super_key = self.super_key
         super_link = self.super_link
 
+        if settings.get_org_autocomplete():
+            org_widget = S3OrganisationAutocompleteWidget(default_from_profile=True)
+        else:
+            org_widget = None
+
         # ---------------------------------------------------------------------
         # Document-referencing entities
         #
@@ -146,7 +151,7 @@ class S3DocumentLibrary(S3Model):
                                 # Enable when-required
                                 readable = False,
                                 writable = False,
-                                widget = S3OrganisationAutocompleteWidget(default_from_profile=True)
+                                widget = org_widget,
                                 ),
                              s3_date(label = T("Date Published")),
                              # @ToDo: Move location to link table
@@ -251,9 +256,7 @@ class S3DocumentLibrary(S3Model):
                                    represent = lambda opt: \
                                     doc_image_type_opts.get(opt, UNKNOWN_OPT)),
                              person_id(label=T("Author")),
-                             organisation_id(
-                                widget = S3OrganisationAutocompleteWidget(default_from_profile=True)
-                                ),
+                             organisation_id(widget = org_widget),
                              s3_date(label = T("Date Taken")),
                              # @ToDo: Move location to link table
                              location_id(),

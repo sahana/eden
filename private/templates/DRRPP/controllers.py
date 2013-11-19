@@ -157,7 +157,7 @@ class register():
         table.language.default = T.accepted_language
 
         # Combo box for Organisation
-        table.organisation_id.widget = S3OrganisationAutocompleteWidget(new_items=True)
+        table.organisation_id.widget = S3OrganisationAutocompleteWidget()
         table.organisation_id.requires = IS_COMBO_BOX("org_organisation",
                                                       current.s3db.org_organisation_id.attr.requires)
 

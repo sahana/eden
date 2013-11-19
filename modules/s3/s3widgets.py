@@ -939,7 +939,6 @@ class S3AutocompleteWidget(FormWidget):
                  fieldname = "name",
                  filter = "",       # REST filter
                  link_filter = "",
-                 #new_items = False, # Whether to make this a combo box
                  post_process = "",
                  delay = 450,       # milliseconds
                  min_length = 2):   # Increase this for large deployments
@@ -949,7 +948,6 @@ class S3AutocompleteWidget(FormWidget):
         self.fieldname = fieldname
         self.filter = filter
         self.link_filter = link_filter
-        #self.new_items = new_items
         self.post_process = post_process
         self.delay = delay
         self.min_length = min_length
@@ -1843,10 +1841,9 @@ def S3GenericAutocompleteTemplate(post_process,
                                   field,
                                   value,
                                   attributes,
-                                  source,
+                                  source = None,
                                   transform_value = lambda value: value,
-                                  new_items = False,    # Allow new items
-                                  tablename = None,     # Needed if new_items=True
+                                  tablename = None, # Allow variations
                                   ):
     """
         Renders a SELECT as an INPUT field with AJAX Autocomplete
@@ -1883,7 +1880,19 @@ def S3GenericAutocompleteTemplate(post_process,
     else:
         represent = ""
 
-    script = '''S3.autocomplete.generic('%(url)s','%(input)s',"%(postprocess)s",%(delay)s,%(min_length)s)''' % \
+    if tablename == "org_organisation":
+        # S3OrganisationAutocompleteWidget
+        script = \
+'''S3.autocomplete.org('%(input)s',"%(postprocess)s",%(delay)s,%(min_length)s)''' % \
+            dict(input = real_input,
+                 postprocess = post_process,
+                 delay = delay,
+                 min_length = min_length,
+                 )
+    else:
+        # Currently unused
+        script = \
+'''S3.autocomplete.generic('%(url)s','%(input)s',"%(postprocess)s",%(delay)s,%(min_length)s)''' % \
             dict(url = source,
                  input = real_input,
                  postprocess = post_process,
@@ -4770,14 +4779,13 @@ class S3OrganisationAutocompleteWidget(FormWidget):
     def __init__(self,
                  post_process = "",
                  default_from_profile = False,
-                 new_items = False, # Whether to make this a combo box
                  delay = 450,       # milliseconds
                  min_length = 2):   # Increase this for large deployments
 
         self.post_process = post_process
         self.delay = delay
         self.min_length = min_length
-        self.new_items = new_items
+        self.tablename = "org_organisation"
         self.default_from_profile = default_from_profile
 
     def __call__(self, field, value, **attributes):
@@ -4789,20 +4797,15 @@ class S3OrganisationAutocompleteWidget(FormWidget):
                     value = auth.user.organisation_id
             return value
 
-        return S3GenericAutocompleteTemplate(
-            self.post_process,
-            self.delay,
-            self.min_length,
-            field,
-            value,
-            attributes,
-            transform_value = transform_value,
-            new_items = self.new_items,
-            tablename = "org_organisation",
-            source = URL(c="org", f="org_search",
-                         args="search_ac",
-                         vars={"filter":"~"})
-        )
+        return S3GenericAutocompleteTemplate(self.post_process,
+                                             self.delay,
+                                             self.min_length,
+                                             field,
+                                             value,
+                                             attributes,
+                                             transform_value = transform_value,
+                                             tablename = "org_organisation",
+                                             )
 
 # =============================================================================
 class S3OrganisationHierarchyWidget(OptionsWidget):

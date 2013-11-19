@@ -75,6 +75,11 @@ class S3MembersModel(S3Model):
         else:
             filter_opts = (None,)
 
+        if settings.get_org_autocomplete():
+            org_widget = S3OrganisationAutocompleteWidget(default_from_profile=True)
+        else:
+            org_widget = None
+
         # ---------------------------------------------------------------------
         # Membership Types
         #
@@ -134,10 +139,11 @@ class S3MembersModel(S3Model):
         #
         tablename = "member_membership"
         table = define_table(tablename,
-                             organisation_id(#widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
-                                             requires = self.org_organisation_requires(updateable=True),
-                                             widget = None,
-                                             empty=False),
+                             organisation_id(
+                                empty = False,
+                                requires = self.org_organisation_requires(updateable=True),
+                                widget = org_widget,
+                                ),
                              Field("code",
                                    #readable=False,
                                    #writable=False,

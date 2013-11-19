@@ -923,8 +923,8 @@ span.toggle-text i {
     background-color: white;
     margin-left: 50px;
     margin-top: -20px;
-    padding-right: 10px;
-    width: 110px;
+    padding: 0 10px;
+    width: auto;
 }
 
 /*
