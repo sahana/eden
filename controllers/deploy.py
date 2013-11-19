@@ -445,6 +445,17 @@ def email_channel():
         return True
     s3.prep = prep
 
+    def postp(r, output):
+        if r.interactive and isinstance(output, dict) and \
+           not s3task._is_alive():
+            poll_btn = A(T("Poll"),
+                         _class="action-btn",
+                         _href=URL(args=[r.id, "poll"])
+                         )
+            output["rheader"] = poll_btn
+        return output
+    s3.postp = postp
+
     return s3_rest_controller("msg")
 
 # END =========================================================================
