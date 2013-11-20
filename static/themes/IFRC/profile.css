@@ -127,6 +127,9 @@ div.media a.pull-left img.media-object {
     margin-left: 40px;
     margin-bottom: 2px;
 }
+.profile-data {
+    margin-top: 6px;
+}
 .profile-data-label{
     font: 11px "Helvetica Neue", Arial, sans-serif;
     color: #999;
@@ -207,4 +210,10 @@ div.media a.pull-left img.media-object {
     float: right;
     margin-top: 6px;
     margin-right: 6px;
+}
+
+.message-body {
+    padding: 2px;
+    border: 1px dotted #afafaf;
+    white-space: pre-wrap;
 }

@@ -167,6 +167,7 @@ class S3DeploymentModel(S3Model):
                                     "human_resource_id$person_id",
                                     "human_resource_id$organisation_id",
                                     "message_id$body",
+                                    "message_id$from_address",
                                ],
                                tablename = "deploy_response",
                                context = "mission",
@@ -1048,7 +1049,7 @@ def deploy_render_alert(listid, resource, rfields, record, **attr):
                                _class="card-category"),
                            _class="media-heading"),
                        DIV(created_on, _class="card-subtitle"),
-                       DIV(body, _class="alert-message-body s3-truncate"),
+                       DIV(body, _class="message-body s3-truncate"),
                        _class="media-body",
                    ),
                    _class="media",
@@ -1091,30 +1092,75 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
 
     # Member deployed?
     # @todo: bulk lookup instead of per-card
-    table = current.s3db.deploy_human_resource_assignment
-    query = (table.mission_id == mission_id) & \
-            (table.human_resource_id == human_resource_id) & \
-            (table.deleted != True)
-    row = current.db(query).select(table.id, limitby=(0, 1)).first()
-    if row:
-        deploy_action = A(I(" ", _class="icon icon-deployed"),
-                          SPAN(T("Member Deployed"), _class="card-action"),
-                          _class="action-lnk")
+    if human_resource_id:
+        table = current.s3db.deploy_human_resource_assignment
+        query = (table.mission_id == mission_id) & \
+                (table.human_resource_id == human_resource_id) & \
+                (table.deleted != True)
+        row = current.db(query).select(table.id, limitby=(0, 1)).first()
+        if row:
+            deploy_action = A(I(" ", _class="icon icon-deployed"),
+                              SPAN(T("Member Deployed"), _class="card-action"),
+                              _class="action-lnk"
+                             )
+        else:
+            deploy_action = A(I(" ", _class="icon icon-deploy"),
+                              SPAN(T("Deploy this Member"),
+                                   _class="card-action"),
+                              _href=URL(f="mission",
+                                        args=[mission_id,
+                                              "human_resource_assignment",
+                                              "create"
+                                             ],
+                                        vars={"member_id": human_resource_id}),
+                              _class="action-lnk"
+                             )
     else:
-        deploy_action = A(I(" ", _class="icon icon-deploy"),
-                          SPAN(T("Deploy this Member"), _class="card-action"),
-                          _href=URL(f="mission",
-                                    args=[mission_id,
-                                          "human_resource_assignment",
-                                          "create"
-                                         ],
-                                    vars={"member_id": human_resource_id}),
-                          _class="action-lnk")
+        deploy_action = ""
+
+    # Number of previous deployments and average rating
+    # @todo: bulk lookup instead of per-card
+    if human_resource_id:
+        table = current.s3db.deploy_human_resource_assignment
+        query = (table.human_resource_id == human_resource_id) & \
+                (table.deleted != True)
+        dcount = table.id.count()
+        avgrat = table.rating.avg()
+        row = current.db(query).select(dcount, avgrat).first()
+        if row:
+            dcount = row[dcount]
+            avgrat = row[avgrat]
+        else:
+            dcount = 0
+            avgrat = None
+    else:
+        dcount = avgrat = "?"
+
+    dcount_id = "profile-data-dcount-%s" % record_id
+    avgrat_id = "profile-data-avgrat-%s" % record_id
+    dinfo = DIV(LABEL("%s:" % T("Previous Deployments"),
+                      _for=dcount_id,
+                      _class="profile-data-label"),
+                SPAN(dcount,
+                     _id=dcount_id,
+                     _class="profile-data-value"),
+                LABEL("%s:" % T("Average Rating"),
+                      _for=avgrat_id,
+                      _class="profile-data-label"),
+                SPAN(avgrat,
+                     _id=avgrat_id,
+                     _class="profile-data-value"),
+                _class="profile-data")
 
     profile_url = URL(f="human_resource", args=[human_resource_id, "profile"])
     profile_title = current.T("Open Member Profile (in a new tab)")
 
-    person = A(record["hrm_human_resource.person_id"],
+    if human_resource_id:
+        person_id = record["hrm_human_resource.person_id"]
+    else:
+        person_id = "%s (%s)" % \
+                    (T("Unknown"), record["msg_message.from_address"])
+    person = A(person_id,
                _href=profile_url,
                _target="_blank",
                _title=profile_title)
@@ -1150,7 +1196,8 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
                                _class="card-category"),
                            _class="media-heading"),
                        DIV(created_on, _class="card-subtitle"),
-                       DIV(message, _class="response-message-body s3-truncate"),
+                       DIV(message, _class="message-body s3-truncate"),
+                       dinfo,
                        DIV(deploy_action,
                            _class="card-actions",
                        ),
