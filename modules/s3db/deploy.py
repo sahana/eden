@@ -1048,7 +1048,7 @@ def deploy_render_alert(listid, resource, rfields, record, **attr):
                                _class="card-category"),
                            _class="media-heading"),
                        DIV(created_on, _class="card-subtitle"),
-                       DIV(body, _class="alert-message-body s3-truncate"),
+                       DIV(body, _class="message-body s3-truncate"),
                        _class="media-body",
                    ),
                    _class="media",
@@ -1111,6 +1111,37 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
                                     vars={"member_id": human_resource_id}),
                           _class="action-lnk")
 
+    # Number of previous deployments and average rating
+    # @todo: bulk lookup instead of per-card
+    table = current.s3db.deploy_human_resource_assignment
+    query = (table.human_resource_id == human_resource_id) & \
+            (table.deleted != True)
+    dcount = table.id.count()
+    avgrat = table.rating.avg()
+    row = current.db(query).select(dcount, avgrat).first()
+    if row:
+        dcount = row[dcount]
+        avgrat = row[avgrat]
+    else:
+        dcount = 0
+        avgrat = None
+
+    dcount_id = "profile-data-dcount-%s" % record_id
+    avgrat_id = "profile-data-avgrat-%s" % record_id
+    dinfo = DIV(LABEL("%s:" % T("Previous Deployments"),
+                      _for=dcount_id,
+                      _class="profile-data-label"),
+                SPAN(dcount,
+                     _id=dcount_id,
+                     _class="profile-data-value"),
+                LABEL("%s:" % T("Average Rating"),
+                      _for=avgrat_id,
+                      _class="profile-data-label"),
+                SPAN(avgrat,
+                     _id=avgrat_id,
+                     _class="profile-data-value"),
+                _class="profile-data")
+
     profile_url = URL(f="human_resource", args=[human_resource_id, "profile"])
     profile_title = current.T("Open Member Profile (in a new tab)")
 
@@ -1150,7 +1181,8 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
                                _class="card-category"),
                            _class="media-heading"),
                        DIV(created_on, _class="card-subtitle"),
-                       DIV(message, _class="response-message-body s3-truncate"),
+                       DIV(message, _class="message-body s3-truncate"),
+                       dinfo,
                        DIV(deploy_action,
                            _class="card-actions",
                        ),
