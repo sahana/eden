@@ -294,7 +294,7 @@ S3.trunk8 = function(selector, lines, more) {
     $(selector).trunk8(settings);
     // Attach to any new items after Ajax-listUpdate (dataLists)
     $('.dl').on('listUpdate', function() {
-        $(selector).each(function() {
+        $(this).find(selector).each(function() {
             if (this.trunk8 === undefined) {
                 $(this).trunk8(settings);
             }
