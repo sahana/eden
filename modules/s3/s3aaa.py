@@ -5672,16 +5672,14 @@ class S3Permission(object):
                       or list of applicable ACLs
         """
 
-        db = current.db
-        table = self.table
-
-        gtable = self.auth.settings.table_group
-
         if not self.use_cacls:
             # We do not use ACLs at all (allow all)
             return None
         else:
             acls = Storage()
+
+        db = current.db
+        table = self.table
 
         c = c or self.controller
         f = f or self.function
@@ -5744,9 +5742,6 @@ class S3Permission(object):
 
         ALL = (self.ALL, self.ALL)
         NONE = (self.NONE, self.NONE)
-
-        atn = table._tablename
-        gtn = gtable._tablename
 
         use_facls = self.use_facls
         def rule_type(r):
