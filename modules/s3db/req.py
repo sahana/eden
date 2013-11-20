@@ -2274,6 +2274,7 @@ class S3CommitModel(S3Model):
 
         settings = current.deployment_settings
         req_types = settings.get_req_req_type()
+        commit_value = settings.get_req_commit_value()
         unsolicited_commit = settings.get_req_commit_without_request()
         committer_is_author = settings.get_req_committer_is_author()
         if committer_is_author:
@@ -2283,27 +2284,37 @@ class S3CommitModel(S3Model):
             site_default = None
             committer_default = None
 
+        # Dropdown or Autocomplete?
+        if settings.get_org_site_autocomplete():
+            if settings.get_org_site_address_autocomplete():
+                site_widget = S3SiteAddressAutocompleteWidget()
+            else:
+                site_widget = S3SiteAutocompleteWidget()
+            site_comment = DIV(_class="tooltip",
+                               _title="%s|%s" % (T("From Facility"),
+                                                 T("Enter some characters to bring up a list of possible matches")))
+        else:
+            site_widget = None
+            site_comment = None
+
         # ---------------------------------------------------------------------
         # Commitments (Pledges)
         tablename = "req_commit"
         table = self.define_table(tablename,
                                   self.super_link("site_id", "org_site",
-                                                  label = T("From Facility"),
+                                                  comment = site_comment,
                                                   default = site_default,
+                                                  label = T("From Facility"),
                                                   # Non-Item Requests make False in the prep
-                                                  writable = True,
                                                   readable = True,
-                                                  # Comment these to use a Dropdown & not an Autocomplete
-                                                  #widget = S3SiteAutocompleteWidget(),
-                                                  #comment = DIV(_class="tooltip",
-                                                  #              _title="%s|%s" % (T("From Facility"),
-                                                  #                                T("Enter some characters to bring up a list of possible matches"))),
-                                                  represent = self.org_site_represent
+                                                  writable = True,
+                                                  represent = self.org_site_represent,
+                                                  widget = site_widget,
                                                   ),
                                   self.gis_location_id(
                                         # Used for reporting on where Donations originated
-                                        readable=False,
-                                        writable=False
+                                        readable = False,
+                                        writable = False
                                         ),
                                   # Non-Item Requests make True in the prep
                                   self.org_organisation_id(
@@ -2316,24 +2327,36 @@ class S3CommitModel(S3Model):
                                     ),
                                   Field("type", "integer",
                                         # These are copied automatically from the Req
-                                        readable=False,
-                                        writable=False),
+                                        readable = False,
+                                        writable = False,
+                                        ),
                                   s3_datetime(default = "now",
-                                              represent="date",
+                                              represent = "date",
                                               ),
                                   s3_datetime("date_available",
-                                              represent="date",
-                                              label = T("Date Available")),
+                                              label = T("Date Available"),
+                                              represent = "date",
+                                              ),
                                   self.pr_person_id("committer_id",
                                     default = committer_default,
                                     label = T("Committed By"),
                                     comment = self.pr_person_comment(child="committer_id")),
+                                  # @ToDo: Calculate this from line items in Item Commits
+                                  Field("value", "double",
+                                        label = T("Estimated Value"),
+                                        readable = commit_value,
+                                        writable = commit_value,
+                                        ),
+                                  # @ToDo: Move this into a Currency Widget for the value field
+                                  s3_currency(readable = commit_value,
+                                              writable = commit_value,
+                                              ),
                                   Field("cancel", "boolean",
+                                        default = False,
                                         label = T("Cancel"),
-                                        # Workflow in-progress
-                                        readable=False,
-                                        writable=False,
-                                        default = False),
+                                        readable = False,
+                                        writable = False,
+                                        ),
                                   s3_comments(),
                                   *s3_meta_fields())
 
@@ -4278,6 +4301,7 @@ def req_customize_commit_fields():
 
     T = current.T
     s3db = current.s3db
+    settings = current.deployment_settings
     tablename = "req_commit"
     table = s3db.req_commit
 
@@ -4290,6 +4314,11 @@ def req_customize_commit_fields():
                    #"location_id",
                    ]
 
+    if settings.get_req_commit_value():
+        list_fields += ["value",
+                        "currency",
+                        ]
+
     request = current.request
     args = request.args
     if "create.popup" in args or \
@@ -4297,7 +4326,7 @@ def req_customize_commit_fields():
         req_id = request.get_vars.get("req_id", None)
         if req_id:
             table.req_id.default = req_id
-        elif not current.deployment_settings.get_req_commit_without_request():
+        elif not settings.get_req_commit_without_request():
             current.session.error = T("Not allowed to Donate without matching to a Request!")
             redirect(URL(c="req", f="req", args=["datalist"]))
     elif "update.popup" in args or \
@@ -4359,23 +4388,25 @@ def req_customize_commit_fields():
 
     field = table.organisation_id
     field.readable = True
-    field.writable = True if editor else False
     field.comment = S3AddResourceLink(c="org", f="organisation_id",
                                       title=T("Add New Organization"),
                                       )
-    if current.deployment_settings.get_org_autocomplete():
+    if settings.get_org_autocomplete():
         # Enable if there are many Orgs
         field.widget = S3OrganisationAutocompleteWidget()
 
     if editor:
         # Editor can select Org
+        field.writable = True
         crud_form = S3SQLCustomForm(*list_fields)
     elif auth.user and auth.user.organisation_id:
         field.default = auth.user.organisation_id
+        field.writable = False
         crud_form = S3SQLCustomForm(*list_fields)
     else:
         # Only a User representing an Org can commit for an Org
         field.default = None
+        field.writable = False
         crud_fields = [f for f in list_fields if f != "organisation_id"]
         crud_form = S3SQLCustomForm(*crud_fields)
 
@@ -4477,6 +4508,8 @@ def req_render_commits(listid, resource, rfields, record, **attr):
                          _href=org_url,
                          _class="card-organisation",
                          )
+        organisation = TAG[""](" - ",
+                               organisation)
         # Use Organisation Logo
         # @ToDo: option for Personal Avatar (fallback if no Org Logo?)
         db = current.db
@@ -4555,7 +4588,6 @@ def req_render_commits(listid, resource, rfields, record, **attr):
                    DIV(DIV(SPAN(body,
                                 _class="s3-truncate"),
                            DIV(person,
-                               " - ",
                                organisation,
                                _class="card-person",
                                ),

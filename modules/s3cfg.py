@@ -1942,6 +1942,11 @@ class S3Config(Storage):
             Whether there is a Commit step in Requests Management
         """
         return self.req.get("use_commit", True)
+    def get_req_commit_value(self):
+        """
+            Whether Donations should have a Value field
+        """
+        return self.req.get("commit_value", False)
     def get_req_commit_without_request(self):
         """
             Whether to allow Donations to be made without a matching Request

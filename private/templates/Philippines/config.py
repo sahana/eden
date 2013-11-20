@@ -97,11 +97,12 @@ settings.ui.formstyle = "bootstrap"
 # L10n (Localization) settings
 settings.L10n.languages = OrderedDict([
     ("en", "English"),
+#    ("tl", "Tagalog"),
 ])
 # Default Language
 settings.L10n.default_language = "en"
 # Default timezone for users
-settings.L10n.utc_offset = "UTC +0700"
+settings.L10n.utc_offset = "UTC +0800"
 # Unsortable 'pretty' date format
 settings.L10n.date_format = "%d %b %y"
 # Number formats (defaults to ISO 31-0)
@@ -131,11 +132,13 @@ settings.gis.legend = "float"
 # -----------------------------------------------------------------------------
 # Finance settings
 settings.fin.currencies = {
-    "CHF" : T("Swiss Francs"),
-    "EUR" : T("Euros"),
-    "GBP" : T("Great British Pounds"),
+    "PHP" : T("Philippine Pesos"),
+    #"EUR" : T("Euros"),
+    #"GBP" : T("Great British Pounds"),
+    #"CHF" : T("Swiss Francs"),
     "USD" : T("United States Dollars"),
 }
+settings.fin.currency_default = "PHP"
 
 # -----------------------------------------------------------------------------
 # Enable this for a UN-style deployment
@@ -2724,6 +2727,8 @@ settings.req.req_type = ["Other"]
 settings.req.requester_label = "Contact"
 # Uncomment if the User Account logging the Request is NOT normally the Requester
 settings.req.requester_is_author = False
+# Uncomment to have Donations include a 'Value' field
+settings.req.commit_value = True
 # Uncomment if the User Account logging the Commitment is NOT normally the Committer
 #settings.req.comittter_is_author = False
 # Uncomment to allow Donations to be made without a matching Request
