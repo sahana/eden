@@ -2860,6 +2860,7 @@ def customize_gis_location(**attr):
         return True
     s3.prep = custom_prep
 
+    attr["hide_filter"] = True
     return attr
 
 settings.ui.customize_gis_location = customize_gis_location
