@@ -588,7 +588,7 @@ settings.L10n.decimal_separator = "."
 # Modules menu is defined in modules/eden/menu.py
 settings.modules = OrderedDict([
     # Core modules which shouldn't be disabled
-    ("report",Storage(
+    ("bug",Storage(
         name_nice= T("Bugs"), #Name that would be present in the menu bar.
         restricted="True",    
         module_type= 8 )),    #It will appear at this position in the menu bar.
