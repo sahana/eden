@@ -119,6 +119,9 @@
                 if (item.id) {
                     dummy_input.val(item[fieldname]);
                     real_input.val(item.id).change();
+                    // Update existing, so blur does not remove
+                    // the selection again:
+                    existing = {value: item.id, name: item[fieldname]};
                 } else {
                     // No Match & no ability to create new
                     dummy_input.val('');
@@ -254,6 +257,9 @@
                 if (id) {
                     dummy_input.val(item.name);
                     real_input.val(id).change();
+                    // Update existing, so blur does not remove
+                    // the selection again:
+                    existing = {value: item.id, name: item.name};
                 } else {
                     // No Match & no ability to create new
                     dummy_input.val('');
@@ -461,6 +467,9 @@
                 if (item.id) {
                     dummy_input.val(ui.item.name);
                     real_input.val(item.id).change();
+                    // Update existing, so blur does not remove
+                    // the selection again:
+                    existing = {value: item.id, name: ui.item.name};
                 } else {
                     // No Match & no ability to create new
                     dummy_input.val('');
@@ -613,6 +622,9 @@
                     var name = represent(item);
                     dummy_input.val(name);
                     real_input.val(item.id).change();
+                    // Update existing, so blur does not remove
+                    // the selection again:
+                    existing = {value: item.id, name: name};
                 } else {
                     // No Match & no ability to create new
                     dummy_input.val('');
@@ -748,6 +760,9 @@
                 if (item.id) {
                     dummy_input.val(item.name);
                     real_input.val(item.id).change();
+                    // Update existing, so blur does not remove
+                    // the selection again:
+                    existing = {value: item.id, name: item.name};
                 } else {
                     // No Match & no ability to create new
                     dummy_input.val('');
@@ -926,6 +941,9 @@
                     var name = represent_person(item);
                     dummy_input.val(name);
                     real_input.val(item.id).change();
+                    // Update existing, so blur does not remove
+                    // the selection again:
+                    existing = {value: item.id, name: name};
                 } else {
                     // No Match & no ability to create new
                     dummy_input.val('');
@@ -1100,6 +1118,9 @@
                 if (item.id) {
                     dummy_input.val(item.name);
                     real_input.val(item.id).change();
+                    // Update existing, so blur does not remove
+                    // the selection again:
+                    existing = {value: item.id, name: item.name};
                 } else {
                     // No Match & no ability to create new
                     dummy_input.val('');
@@ -1271,6 +1292,9 @@
                 if (item.id) {
                     dummy_input.val(item.name);
                     real_input.val(item.id).change();
+                    // Update existing, so blur does not remove
+                    // the selection again:
+                    existing = {value: item.id, name: item.name};
                 } else {
                     // No Match & no ability to create new
                     dummy_input.val('');
@@ -1390,6 +1414,9 @@
                 if (item.id) {
                     dummy_input.val(item.name);
                     real_input.val(item.id).change();
+                    // Update existing, so blur does not remove
+                    // the selection again:
+                    existing = {value: item.id, name: item.name};
                 } else {
                     // No Match & no ability to create new
                     dummy_input.val('');
