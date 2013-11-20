@@ -616,7 +616,7 @@ class S3DeploymentAlertModel(S3Model):
                                           "a list of possible matches")))
 
         table = define_table(tablename,
-                             self.deploy_mission_id(writable=False),
+                             self.deploy_mission_id(),
                              self.hrm_human_resource_id(empty=False,
                                                         label=title,
                                                         comment=comment),
@@ -1129,10 +1129,11 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
                                                          #columns=columns)
 
     # Toolbox
-    open_url = URL(f="response_message",
-                   args=[record_id, "read"])
+    update_url = URL(f="response_message",
+                     args=[record_id, "update.popup"],
+                     vars={"refresh": listid, "record": record_id})
     toolbox = deploy_render_profile_toolbox(resource, record_id,
-                                            open_url=open_url)
+                                            update_url=update_url)
 
     # Render the item
     item = DIV(DIV(A(IMG(_class="media-object",

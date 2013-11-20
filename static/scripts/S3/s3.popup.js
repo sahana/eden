@@ -6,7 +6,10 @@ function s3_popup_refresh_main_form() {
     // The Get parameters
     var $_GET = getQueryParams(document.location.search);
 
-    // Update Form?
+    // Is this a modal that is to refresh a datatable/datalist/map?
+    // => must specify ?refresh=list_id in the popup-URL, and for
+    //    datalists (optionally) &record_id=record_id in order to just
+    //    refresh this one record
     var refresh = $_GET['refresh'];
     if (typeof refresh != 'undefined') {
         // Update DataList/DataTable
@@ -19,11 +22,9 @@ function s3_popup_refresh_main_form() {
             if (record !== undefined) {
                 // reload a single item
                 selector.datalist('ajaxReloadItem', record)
-//                 self.parent.dlAjaxReloadItem(refresh, record);
             } else {
                 // reload the whole list
                 selector.datalist('ajaxReload');
-//                 self.parent.dlAjaxReload(refresh);
             }
         }
         // Also update the layer on the Maps (if any)
@@ -59,7 +60,9 @@ function s3_popup_refresh_main_form() {
         return;
     }
 
-    // Create form (e.g. S3AddResourceLink)
+    // Modal opened from a form (e.g. S3AddResourceLink)?
+    // => update the respective form field (=the caller)
+
     var level = $_GET['level'];
     if (typeof level != 'undefined') {
         // Location Selector
@@ -68,15 +71,23 @@ function s3_popup_refresh_main_form() {
     }
 
     var caller = $_GET['caller'];
-    s3_debug('caller', caller);
+    if (caller === undefined) {
+        // Any following code is there to update the caller, so pointless
+        // to continue beyond this point without it. (Note: you may also
+        // end up here if you forgot to specify the refresh target for a
+        // datatable/datalist modal, see top of this script).
+        s3_debug('Neither calling element nor refresh-target specified in popup URL!');
+        self.parent.S3.popup_remove();
+        return;
+    } else {
+        s3_debug('Caller: ', caller);
+    }
 
     var person_id = $_GET['person_id'];
     if (typeof person_id != 'undefined') {
         // Person Selector
-        if (typeof caller != 'undefined') {
-            var field = self.parent.$('#' + caller);
-            field.val(person_id).change();
-        }
+        var field = self.parent.$('#' + caller);
+        field.val(person_id).change();
         self.parent.S3.popup_remove();
         return;
     }
@@ -275,13 +286,15 @@ function s3_popup_refresh_main_form() {
 // Function to get the URL parameters
 function getQueryParams(qs) {
     // We want all the vars, i.e. after the ?
-    qs = qs.split('?')[1];
-    var pairs = qs.split('&');
     var params = {};
-    var check = [];
-    for (var i=0; i < pairs.length; i++) {
-        check = pairs[i].split('=');
-        params[decodeURIComponent(check[0])] = decodeURIComponent(check[1]);
+    qs = qs.substring(1);
+    if (qs) {
+        var pairs = qs.split('&');
+        var check = [];
+        for (var i=0; i < pairs.length; i++) {
+            check = pairs[i].split('=');
+            params[decodeURIComponent(check[0])] = decodeURIComponent(check[1]);
+        }
     }
     return params;
 }
