@@ -203,7 +203,11 @@
                     if (item_data.length) {
                         item.replaceWith(item_data);
                     }
+                    // Bind item events
                     dl._bindItemEvents();
+                    
+                    // Fire update event
+                    $datalist.trigger('listUpdate');
                 },
                 'error': function(request, status, error) {
                     if (error == 'UNAUTHORIZED') {
