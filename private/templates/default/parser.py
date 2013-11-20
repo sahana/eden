@@ -51,6 +51,7 @@ from gluon import current
 from gluon.tools import fetch
 
 from s3.s3fields import S3Represent
+from s3.s3parser import S3Parsing
 from s3.s3utils import soundex
 
 # =============================================================================
@@ -610,35 +611,18 @@ class S3Parser(object):
         """
             Parse Replies To Deployment Request
         """
-        
-        db = current.db
-        s3db = current.s3db
-        rtable = s3db.irs_ireport_human_resource
-        htable = db.hrm_human_resource
-        ctable = db.pr_contact
-        ptable = s3db.pr_person_user
-        reply = None       
-        
-        from_address = message.from_address
-        if "<" in from_address:
-            from_address = from_address.split("<")[1].split(">")[0]
-        query = (ctable.contact_method == "EMAIL") & \
-                (ctable.value == from_address)
-        responder = db(query).select(ctable.pe_id, limitby=(0, 1)).first()
-        if responder:
-            query = (ptable.pe_id == responder.pe_id)
-            human_resource = db(query).select(ptable.id,
-                                              limitby=(0, 1)).first()
-            
-            if human_resource:
-                query = (htable.person_id == human_resource.id)
-                person = db(query).select(htable.id, limitby=(0, 1)).first()
-                if person:
-                    query = (rtable.ireport_id == report_id) & \
-                            (rtable.human_resource_id == person.id)
-                    db(query).update(reply=text,
+
+        # Can we identify the Human Resource?
+        hr_id = S3Parsing().lookup_human_resource(message.from_address)
+        if hr_id:
+            rtable = current.s3db.irs_ireport_human_resource
+            query = (rtable.ireport_id == report_id) & \
+                    (rtable.human_resource_id == hr_id)
+            current.db(query).update(reply=text,
                                      response=response)
-                    reply = "Response Logged in the Report (Id: %d )" % report_id
+            reply = "Response Logged in the Report (Id: %d )" % report_id
+        else:
+            reply = None
 
         return reply
 

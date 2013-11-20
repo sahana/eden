@@ -162,4 +162,58 @@ class S3Parsing(object):
 
         return email
 
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def lookup_person(address):
+        """
+            Lookup a Person from an Email Address
+        """
+
+        s3db = current.s3db
+
+        if "<" in address:
+            address = address.split("<")[1].split(">")[0]
+        ptable = s3db.pr_person
+        ctable = s3db.pr_contact
+        query = (ctable.value == address) & \
+                (ctable.contact_method == "EMAIL") & \
+                (ctable.pe_id == ptable.pe_id) & \
+                (ptable.deleted == False) & \
+                (ctable.deleted == False)
+        possibles = current.db(query).select(ptable.id,
+                                             limitby=(0, 2))
+        if len(possibles) == 1:
+            return possibles.first().id
+
+        return None
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def lookup_human_resource(address):
+        """
+            Lookup a Human Resource from an Email Address
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        if "<" in address:
+            address = address.split("<")[1].split(">")[0]
+        hrtable = s3db.hrm_human_resource
+        ptable = db.pr_person
+        ctable = s3db.pr_contact
+        query = (ctable.value == address) & \
+                (ctable.contact_method == "EMAIL") & \
+                (ctable.pe_id == ptable.pe_id) & \
+                (ptable.id == hrtable.person_id) & \
+                (ctable.deleted == False) & \
+                (ptable.deleted == False) & \
+                (hrtable.deleted == False)
+        possibles = db(query).select(hrtable.id,
+                                     limitby=(0, 2))
+        if len(possibles) == 1:
+            return possibles.first().id
+
+        return None
+
 # END =========================================================================

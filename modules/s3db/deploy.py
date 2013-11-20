@@ -1569,7 +1569,8 @@ def deploy_alert_select_recipients(r, **attr):
                 if hr_id in skip:
                     continue
                 rtable.insert(alert_id=alert_id,
-                              human_resource_id=human_resource_id)
+                              human_resource_id=human_resource_id,
+                              )
                 added += 1
         if not selected:
             response.warning = T("No Recipients Selected!")
@@ -1717,7 +1718,6 @@ def deploy_response_select_mission(r, **attr):
 
     if r.http == "POST":
 
-        added = 0
         post_vars = r.post_vars
         if all([n in post_vars for n in ("select", "selected", "mode")]):
             selected = post_vars.selected
@@ -1755,9 +1755,10 @@ def deploy_response_select_mission(r, **attr):
                     continue
                 if m_id in skip:
                     continue
-                rtable.insert(message_id=message_id,
-                              mission_id=mission_id)
-                added += 1
+                rtable.insert(message_id = message_id,
+                              mission_id = mission_id,
+                              #hrm_human_resource_id = hr_id,
+                              )
         if not selected:
             response.warning = T("No Mission Selected!")
         else:
@@ -1857,8 +1858,22 @@ def deploy_response_select_mission(r, **attr):
 
         # Add RHeader
         record = r.record
+        # Can we identify the Member?
+        from ..s3.s3parser import S3Parsing
+        from_address = record.from_address
+        hr_id = S3Parsing().lookup_human_resource(from_address)
+        if hr_id:
+            from_address = A(from_address,
+                             _href=URL(c="deploy", f="human_resource",
+                                       args=[hr_id, "profile"],
+                                       )
+                             )
+        else:
+            # @ToDo: S3HumanResourceAutocompleteWidget
+            pass
+        # @ToDo: Add Reply button
         rheader = DIV(TABLE(TR(TH("%s: " % T("From")),
-                               record.from_address,
+                               from_address,
                                ),
                             TR(TH("%s: " % T("Date")),
                                record.created_on,
@@ -1871,8 +1886,6 @@ def deploy_response_select_mission(r, **attr):
                             ),
                             record.body,
                             )
-        # If HR auto-detected
-        # @ToDo: Add Reply button
         output["rheader"] = rheader
 
         response.view = "list_filter.html"
