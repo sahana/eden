@@ -1840,12 +1840,25 @@ def deploy_response_select_mission(r, **attr):
                       title=T("Select Mission"),
                       list_filter_form=ff)
 
-        # Maintain RHeader for consistency
-        # @ToDo: Add ability to select Member here too if not auto-detected
-        if attr.get("rheader"):
-            rheader = attr["rheader"](r)
-            if rheader:
-                output["rheader"] = rheader
+        # Add RHeader
+        record = r.record
+        rheader = DIV(TABLE(TR(TH("%s: " % T("From")),
+                               record.from_address,
+                               ),
+                            TR(TH("%s: " % T("Date")),
+                               record.created_on,
+                               ),
+                            TR(TH("%s: " % T("Subject")),
+                               record.subject,
+                               ),
+                            TR(TH("%s: " % T("Message Text")),
+                               ),
+                            ),
+                            record.body,
+                            )
+        # If HR auto-detected
+        # @ToDo: Add Reply button
+        output["rheader"] = rheader
 
         response.view = "list_filter.html"
         return output
