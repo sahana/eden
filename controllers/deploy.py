@@ -69,7 +69,7 @@ def mission():
                 represent = lambda d: \
                             s3base.S3DateTime.datetime_represent(d, utc=True)
                 s3db.deploy_alert.modified_on.represent = represent
-                s3db.deploy_response.modified_on.represent = represent
+                s3db.deploy_response.created_on.represent = represent
                 s3base.s3_trunk8(lines=1)
         else:
             # All other workflows return to the summary page
