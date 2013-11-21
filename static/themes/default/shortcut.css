@@ -94,3 +94,7 @@
 .ltr {
     direction: ltr;
 }
+/* A section which isn't translated so should always appear RTL (e.g. Local Names) */
+.rtl {
+    direction: rtl;
+}
