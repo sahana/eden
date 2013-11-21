@@ -89,3 +89,8 @@ textarea.comments {
 .red {
     color: red;
 }
+
+/* Libya-specific (Vol) */
+#pr_person_date_of_birth {
+    width: 160px;
+}
