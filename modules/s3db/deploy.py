@@ -1771,6 +1771,9 @@ def deploy_response_select_mission(r, **attr):
         display_length = 25
     limit = 4 * display_length
     filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
+    if not orderby:
+        # Most recent missions on top
+        orderby = "created_on desc"
     resource.add_filter(filter)
     data = resource.select(list_fields,
                            start=0,
