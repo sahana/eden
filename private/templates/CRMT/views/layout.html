@@ -26,13 +26,6 @@
 {{# <link rel="apple-touch-icon" href="/=appname/static/favicon.png" /> }}
 {{# All JavaScript at the bottom, except for Modernizr which enables HTML5 elements & feature detects }}{{# This kills the map in IE8: VML.js }}
 {{#<script src="/=appname/static/scripts/modernizr.min.js"></script>}}
-<style type="text/css">
-{{if s3.rtl:}}
- div{direction:rtl;}
-{{else:}}
- body{direction:ltr;}
-{{pass}}
-</style>
 {{for sheet in s3.external_stylesheets:}}
  <link href="{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}

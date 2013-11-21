@@ -553,8 +553,13 @@ label.ui-corner-all {
 label.ui-corner-all span {
     position: relative;
     top: 5px;
-    left: 10px;
     font-size: 12px;
+}
+body.ltr label.ui-corner-all span {
+    left: 10px;
+}
+body.rtl label.ui-corner-all span {
+    right: 10px;
 }
 
 .ui-widget-header {
