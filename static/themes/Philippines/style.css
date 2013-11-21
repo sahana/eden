@@ -66,9 +66,26 @@ textarea.comments {
     width: 280px;
 }
 
+#sub_defaultstatus_defaultstatus_i_facility_status_edit_none,
+#sub_defaultstatus_defaultstatus_i_facility_status_edit_0,
+#sub_defaultstatus_defaultstatus_i_power_supply_type_edit_none,
+#sub_defaultstatus_defaultstatus_i_power_supply_type_edit_0 {
+    width: 160px;
+}
+
 .date-title,
 .location-title,
 .card-holder .location-title {
     margin-left: 0;
     padding-left: 5px;
+}
+
+.green {
+    color: green;
+}
+.amber {
+    color: orange;
+}
+.red {
+    color: red;
 }

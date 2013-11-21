@@ -760,6 +760,50 @@ def render_sites(listid, resource, rfields, record, **attr):
         logo = DIV(IMG(_class="media-object"),
                    _class="pull-left")
 
+    facility_status = raw["org_site_status.facility_status"] or ""
+    if facility_status:
+        if facility_status == 1:
+            icon = "thumbs-up-alt"
+            colour = "green"
+        elif facility_status == 2:
+            icon = "thumbs-down-alt"
+            colour = "amber"
+        elif facility_status == 3:
+            icon = "reply-all"
+            colour = "red"
+        elif facility_status == 4:
+            icon = "remove"
+            colour = "red"
+        elif facility_status == 99:
+            icon = "question"
+            colour = ""
+        facility_status = P(#I(_class="icon-%s" % icon),
+                            #" ",
+                            SPAN("%s: %s" % (T("Status"), record["org_site_status.facility_status"])),
+                            " ",
+                            _class="card_1_line %s" % colour,
+                            )
+    power_supply_type = raw["org_site_status.power_supply_type"] or ""
+    if power_supply_type:
+        if power_supply_type == 1:
+            icon = "thumbs-up-alt"
+            colour = "green"
+        elif power_supply_type == 2:
+            icon = "cogs"
+            colour = "amber"
+        elif power_supply_type == 98:
+            icon = "question"
+            colour = "amber"
+        elif power_supply_type == 99:
+            icon = "remove"
+            colour = "red"
+        power_supply_type = P(#I(_class="icon-%s" % icon),
+                              #" ",
+                              SPAN("%s: %s" % (T("Power"), record["org_site_status.power_supply_type"])),
+                              " ",
+                              _class="card_1_line %s" % colour,
+                              )
+
     # Edit Bar
     permit = current.auth.s3_has_permission
     table = current.db.org_facility
@@ -814,6 +858,8 @@ def render_sites(listid, resource, rfields, record, **attr):
                      " ",
                      _class="card_1_line",
                      ),
+                   facility_status,
+                   power_supply_type,
                    P(comments,
                      _class="card_manylines s3-truncate",
                      ),
@@ -1727,6 +1773,8 @@ def customize_org_facility_fields():
                    "human_resource.person_id",
                    #"contact",
                    "phone1",
+                   "status.facility_status",
+                   "status.power_supply_type",
                    "comments",
                    ]
 
@@ -1762,6 +1810,11 @@ def customize_org_facility_fields():
                                 #    label = T("Needs"),
                                 #    multiple = False,
                                 #),
+                                S3SQLInlineComponent(
+                                    "status",
+                                    label = T("Status"),
+                                    multiple = False,
+                                ),
                                 "comments",
                                 )
 
