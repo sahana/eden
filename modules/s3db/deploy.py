@@ -145,8 +145,9 @@ class S3DeploymentModel(S3Model):
                                      _class="action-btn profile-add-btn"),
                             title_create="New Alert",
                             type="datalist",
-                            list_fields = ["created_on",
+                            list_fields = ["modified_on",
                                            "mission_id",
+                                           "message_id",
                                            "subject",
                                            "body",
                                            ],
@@ -535,7 +536,7 @@ class S3DeploymentAlertModel(S3Model):
         crud_form = S3SQLCustomForm("mission_id",
                                     "subject",
                                     "body",
-                                    "created_on",
+                                    "modified_on",
                                     )
 
         # Table Configuration
@@ -975,6 +976,9 @@ def deploy_render_alert(listid, resource, rfields, record, **attr):
         record_id = None
         item_id = "%s-[id]" % listid
 
+    row = record["_row"]
+    sent = True if row["deploy_alert.message_id"] else False
+
     # Recipients, aggregated by region
     s3db = current.s3db
     rtable = s3db.deploy_alert_recipient
@@ -1026,7 +1030,13 @@ def deploy_render_alert(listid, resource, rfields, record, **attr):
 
     item_class = "thumbnail"
 
-    created_on = record["deploy_alert.created_on"]
+    modified_on = record["deploy_alert.modified_on"]
+    if sent:
+        status = SPAN(I(_class="icon icon-sent"),
+                      T("sent"), _class="alert-status")
+    else:
+        status = SPAN(I(_class="icon icon-unsent"),
+                      T("not sent"), _class="red alert-status")
     subject = record["deploy_alert.subject"]
     body = record["deploy_alert.body"]
 
@@ -1049,7 +1059,7 @@ def deploy_render_alert(listid, resource, rfields, record, **attr):
                                recipients,
                                _class="card-category"),
                            _class="media-heading"),
-                       DIV(created_on, _class="card-subtitle"),
+                       DIV(modified_on, status, _class="card-subtitle"),
                        DIV(body, _class="message-body s3-truncate"),
                        _class="media-body",
                    ),

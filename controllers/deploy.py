@@ -68,8 +68,8 @@ def mission():
             if not r.component and r.method == "profile":
                 represent = lambda d: \
                             s3base.S3DateTime.datetime_represent(d, utc=True)
-                s3db.deploy_alert.created_on.represent = represent
-                s3db.deploy_response.created_on.represent = represent
+                s3db.deploy_alert.modified_on.represent = represent
+                s3db.deploy_response.modified_on.represent = represent
                 s3base.s3_trunk8(lines=1)
         else:
             # All other workflows return to the summary page
@@ -268,9 +268,9 @@ def alert():
 
             # Hide label for single field in InlineComponent
             #s3db.deploy_alert_recipient.human_resource_id.label = ""
-            created_on = r.table.created_on
+            created_on = r.table.modified_on
             created_on.readable = True
-            created_on.label = T("Date Created")
+            created_on.label = T("Date")
             created_on.represent = lambda d: \
                                    s3base.S3DateTime.date_represent(d, utc=True)
         return True
