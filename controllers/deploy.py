@@ -189,6 +189,10 @@ def human_resource_assignment():
     """ RESTful CRUD Controller """
 
     def prep(r):
+        if r.record:
+            table = r.resource.table
+            table.mission_id.writable = False
+            table.human_resource_id.writable = False
         if r.representation == "popup":
             r.resource.configure(insertable=False)
         return True
