@@ -1729,6 +1729,11 @@ def deploy_response_select_mission(r, **attr):
                                         mission_id = mission_id,
                                         human_resource_id = human_resource_id,
                                         )
+            #mission = XML(A(T("Mission"),
+            #                _href=URL(c="deploy", f="mission",
+            #                          args=[mission_id, "profile"])))
+            #current.session.confirmation = T("Response linked to %(mission)s") % \
+            #                                    dict(mission=mission)
             current.session.confirmation = T("Response linked to Mission")
             redirect(URL(c="deploy", f="email_inbox"))
 
@@ -1763,9 +1768,6 @@ def deploy_response_select_mission(r, **attr):
     filteredrows = data["numrows"]
     dt = S3DataTable(data["rfields"], data["rows"])
     dt_id = "datatable"
-
-    # Bulk actions
-    #dt_bulk_actions = [(T("Link to Mission"), "select")]
 
     if r.representation == "html":
         # Page load
@@ -1847,12 +1849,46 @@ def deploy_response_select_mission(r, **attr):
                                        args=[hr_id, "profile"],
                                        )
                              )
+            row = ""
         else:
-            # @ToDo: S3HumanResourceAutocompleteWidget
-            # @ToDo: post_process to add hr_id to Action Button URLs
-            pass
+            id = "deploy_response_human_resource_id__row"
+            # @ToDo: deployment_setting for 'Member' label
+            title = T("Select Member")
+            label = "%s:" % title
+            field = s3db.deploy_response.human_resource_id
+            # @ToDo: Get fancier & auto-click if there is just a single Mission
+            script = \
+'''S3.update_links=function(){
+ var value=$('#deploy_response_human_resource_id').val()
+ if(value){
+  $('.action-btn.link').each(function(){
+   var url=this.href
+   var posn=url.indexOf('&hr_id=')
+   if(posn>0){
+    url=url.split('&hr_id=')[0]+'&hr_id='+value
+   }else{
+    url+='&hr_id='+value
+   }
+   $(this).attr('href',url)
+   })}}
+'''
+            s3.js_global.append(script)
+            post_process = '''S3.update_links()'''
+            widget = S3HumanResourceAutocompleteWidget(post_process=post_process)
+            widget = widget(field, None)
+            comment = DIV(_class="tooltip",
+                          _title="%s|%s" % (title,
+                                            T("Enter some characters to bring up "
+                                              "a list of possible matches")))
+            # @ToDo: Handle non-callable formstyles
+            row = s3.crud.formstyle(id, label, widget, comment)
+            if isinstance(row, tuple):
+                row = TAG[""](row[0],
+                              row[1],
+                              )
         # @ToDo: Add Reply button
-        rheader = DIV(TABLE(TR(TH("%s: " % T("From")),
+        rheader = DIV(row,
+                      TABLE(TR(TH("%s: " % T("From")),
                                from_address,
                                ),
                             TR(TH("%s: " % T("Date")),
