@@ -1,5 +1,12 @@
 @charset "UTF-8";
 
+body.ltr {
+    direction: ltr;
+}
+body.rtl div {
+    direction: rtl;
+}
+
 /* Form Layout Styles */
 form label {
     cursor: pointer;
