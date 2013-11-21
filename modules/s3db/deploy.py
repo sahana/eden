@@ -1707,7 +1707,7 @@ def deploy_response_select_mission(r, **attr):
         Custom method to Link a Response to a Mission &/or Human Resource
     """
 
-    message_id = r.id
+    message_id = r.record.message_id if r.record else None
     if r.representation not in ("html", "aadata") or not message_id or not r.component:
         r.error(405, r.ERROR.BAD_METHOD)
 
@@ -1723,14 +1723,19 @@ def deploy_response_select_mission(r, **attr):
         human_resource_id = get_vars.get("hr_id", None)
         if not human_resource_id:
             # @ToDo: deployment_setting for 'Member' label
-            response.warning = T("No Member Selected!")
+            current.session.warning = T("No Member Selected!")
+            # Can still link to the mission, member can be set
+            # manually in the mission profile
+            s3db.deploy_response.insert(message_id = message_id,
+                                        mission_id = mission_id,
+                                       )
         else:
             s3db.deploy_response.insert(message_id = message_id,
                                         mission_id = mission_id,
                                         human_resource_id = human_resource_id,
-                                        )
-            current.session.confirmation = T("Response linked to Mission")
-            redirect(URL(c="deploy", f="email_inbox"))
+                                       )
+        current.session.confirmation = T("Response linked to Mission")
+        redirect(URL(c="deploy", f="email_inbox"))
 
     settings = current.deployment_settings
     resource = s3db.resource("deploy_mission",
@@ -1785,7 +1790,7 @@ def deploy_response_select_mission(r, **attr):
         s3.actions = [dict(label=str(T("Link to Mission")),
                            _class="action-btn link",
                            url=URL(f="email_inbox",
-                                   args=[message_id, "select"],
+                                   args=[r.id, "select"],
                                    vars=action_vars,
                                    )),
                       ]
