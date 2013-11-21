@@ -610,6 +610,7 @@ class S3DeploymentAlertModel(S3Model):
         #
         tablename = "deploy_response"
         
+        # @ToDo: deployment_setting for label
         title = T("Member")
         comment = DIV(_class="tooltip",
                       _title="%s|%s" % (title,
@@ -1716,55 +1717,21 @@ def deploy_response_select_mission(r, **attr):
     response = current.response
     mission_query = S3FieldSelector("mission.status") == 2
 
-    if r.http == "POST":
-
-        post_vars = r.post_vars
-        if all([n in post_vars for n in ("select", "selected", "mode")]):
-            selected = post_vars.selected
-            if selected:
-                selected = selected.split(",")
-            else:
-                selected = []
-
-            db = current.db
-            # Handle exclusion filter
-            if post_vars.mode == "Exclusive":
-                if "filterURL" in post_vars:
-                    filters = S3URLQuery.parse_url(post_vars.filterURL)
-                else:
-                    filters = None
-                query = mission_query & \
-                        (~(S3FieldSelector("id").belongs(selected)))
-
-                mission = s3db.resource("deploy_mission",
-                                        filter=query, vars=filters)
-                rows = mission.select(["id"], as_rows=True)
-                selected = [str(row.id) for row in rows]
-
-            rtable = s3db.deploy_response
-            query = (rtable.message_id == message_id) & \
-                    (rtable.mission_id.belongs(selected)) & \
-                    (rtable.deleted != True)
-            rows = db(query).select(rtable.mission_id)
-            skip = set(row.mission_id for row in rows)
-
-            for mission_id in selected:
-                try:
-                    m_id = int(mission_id.strip())
-                except ValueError:
-                    continue
-                if m_id in skip:
-                    continue
-                rtable.insert(message_id = message_id,
-                              mission_id = mission_id,
-                              #hrm_human_resource_id = hr_id,
-                              )
-        if not selected:
-            response.warning = T("No Mission Selected!")
-        else:
-            response.confirmation = T("Response linked to Mission")
-
     get_vars = r.get_vars or {}
+    mission_id = get_vars.get("mission_id", None)
+    if mission_id:
+        human_resource_id = get_vars.get("hr_id", None)
+        if not human_resource_id:
+            # @ToDo: deployment_setting for 'Member' label
+            response.warning = T("No Member Selected!")
+        else:
+            s3db.deploy_response.insert(message_id = message_id,
+                                        mission_id = mission_id,
+                                        human_resource_id = human_resource_id,
+                                        )
+            current.session.confirmation = T("Response linked to Mission")
+            redirect(URL(c="deploy", f="email_inbox"))
+
     settings = current.deployment_settings
     resource = s3db.resource("deploy_mission",
                              filter=mission_query, vars=r.get_vars)
@@ -1774,6 +1741,7 @@ def deploy_response_select_mission(r, **attr):
 
     # List fields
     list_fields = s3db.get_config("deploy_mission", "list_fields")
+    list_fields.insert(0, "id")
 
     # Data table
     totalrows = resource.count()
@@ -1797,14 +1765,31 @@ def deploy_response_select_mission(r, **attr):
     dt_id = "datatable"
 
     # Bulk actions
-    dt_bulk_actions = [(T("Link to Mission"), "select")]
+    #dt_bulk_actions = [(T("Link to Mission"), "select")]
 
     if r.representation == "html":
         # Page load
         resource.configure(deletable = False)
 
-        dt.defaultActionButtons(resource)
-        response.s3.no_formats = True
+        record = r.record
+        action_vars = dict(mission_id="[id]")
+
+        # Can we identify the Member?
+        from ..s3.s3parser import S3Parsing
+        from_address = record.from_address
+        hr_id = S3Parsing().lookup_human_resource(from_address)
+        if hr_id:
+            action_vars["hr_id"] = hr_id
+
+        s3 = response.s3
+        s3.actions = [dict(label=str(T("Link to Mission")),
+                           _class="action-btn link",
+                           url=URL(f="email_inbox",
+                                   args=[message_id, "select"],
+                                   vars=action_vars,
+                                   )),
+                      ]
+        s3.no_formats = True
 
         # Data table (items)
         items = dt.html(totalrows,
@@ -1814,7 +1799,6 @@ def deploy_response_select_mission(r, **attr):
                         dt_ajax_url=r.url(representation="aadata"),
                         dt_bFilter="false",
                         dt_pagination="true",
-                        dt_bulk_actions=dt_bulk_actions,
                         )
 
         # Filter form
@@ -1857,11 +1841,6 @@ def deploy_response_select_mission(r, **attr):
                       list_filter_form=ff)
 
         # Add RHeader
-        record = r.record
-        # Can we identify the Member?
-        from ..s3.s3parser import S3Parsing
-        from_address = record.from_address
-        hr_id = S3Parsing().lookup_human_resource(from_address)
         if hr_id:
             from_address = A(from_address,
                              _href=URL(c="deploy", f="human_resource",
@@ -1870,6 +1849,7 @@ def deploy_response_select_mission(r, **attr):
                              )
         else:
             # @ToDo: S3HumanResourceAutocompleteWidget
+            # @ToDo: post_process to add hr_id to Action Button URLs
             pass
         # @ToDo: Add Reply button
         rheader = DIV(TABLE(TR(TH("%s: " % T("From")),

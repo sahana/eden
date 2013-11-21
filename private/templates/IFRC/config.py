@@ -88,7 +88,6 @@ def ifrc_realm_entity(table, row):
                             pr_note = PID,
                             hrm_human_resource = SID,
                             inv_recv = SID,
-                            inv_recv_item = "req_id",
                             inv_send = SID,
                             inv_track_item = "track_org_id",
                             inv_adj_item = "adj_id",

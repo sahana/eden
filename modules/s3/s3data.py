@@ -155,7 +155,7 @@ class S3DataTable(object):
              **attr
              ):
         """
-            Method to render the data into html
+            Method to render the dataTable into html
 
             @param totalrows: The total rows in the unfiltered query.
             @param filteredrows: The total rows in the filtered query.
@@ -756,7 +756,7 @@ class S3DataTable(object):
                               _name="cache",
                               _value=jsons(cache)))
         # If we have bulk actions then add the hidden fields
-        if config.bulkActions:
+        if bulkActions:
             form.append(INPUT(_type="hidden",
                               _id="%s_dataTable_bulkMode" % id,
                               _name="mode",
