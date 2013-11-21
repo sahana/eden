@@ -249,25 +249,31 @@ def location():
                                 cols=5,
                                 hidden=True,
                                 ),
-                S3OptionsFilter("L1",
-                                label=location_hierarchy["L1"],
-                                #widget="multiselect",
-                                cols=5,
-                                hidden=True,
-                                ),
-                S3OptionsFilter("L2",
-                                label=location_hierarchy["L2"],
-                                #widget="multiselect",
-                                cols=5,
-                                hidden=True,
-                                ),
-                S3OptionsFilter("L3",
-                                label=location_hierarchy["L3"],
-                                #widget="multiselect",
-                                cols=5,
-                                hidden=True,
-                                ),
                 ]
+            L1 = location_hierarchy.get("L1", None)
+            if L1:
+                filter_widgets.append(S3OptionsFilter("L1",
+                                                      label=L1,
+                                                      #widget="multiselect",
+                                                      cols=5,
+                                                      hidden=True,
+                                                      ))
+            L2 = location_hierarchy.get("L2", None)
+            if L2:
+                filter_widgets.append(S3OptionsFilter("L2",
+                                                      label=L2,
+                                                      #widget="multiselect",
+                                                      cols=5,
+                                                      hidden=True,
+                                                      ))
+            L3 = location_hierarchy.get("L3", None)
+            if L3:
+                filter_widgets.append(S3OptionsFilter("L3",
+                                                      label=L3,
+                                                      #widget="multiselect",
+                                                      cols=5,
+                                                      hidden=True,
+                                                      ))
 
             s3db.configure(tablename,
                            filter_widgets=filter_widgets,
