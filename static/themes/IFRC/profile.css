@@ -206,6 +206,18 @@ div.media a.pull-left img.media-object {
     background-position: 0 0;
 }
 
+.icon.icon-sent,
+.icon.icon-unsent {
+    margin-right: 4px;
+    background: url(img/deploy.png) no-repeat;
+}
+.icon.icon-unsent {
+    background-position: -28px 0;
+}
+.icon.icon-sent {
+    background-position: 0 0;
+}
+
 .profile-add-btn {
     float: right;
     margin-top: 6px;
@@ -216,4 +228,8 @@ div.media a.pull-left img.media-object {
     padding: 2px;
     border: 1px dotted #afafaf;
     white-space: pre-wrap;
+}
+
+.alert-status {
+    padding-left: 20px;
 }
