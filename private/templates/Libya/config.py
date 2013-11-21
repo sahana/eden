@@ -194,6 +194,8 @@ settings.hrm.email_required = False
 settings.hrm.show_organisation = True
 # Uncomment to disable Staff experience
 settings.hrm.staff_experience = False
+# Uncomment to disable Volunteer experience
+settings.hrm.vol_experience = False
 # Uncomment to disable the use of HR Credentials
 settings.hrm.use_credentials = False
 # Uncomment to disable the use of HR Skills
@@ -760,6 +762,50 @@ def render_sites(listid, resource, rfields, record, **attr):
         logo = DIV(IMG(_class="media-object"),
                    _class="pull-left")
 
+    facility_status = raw["org_site_status.facility_status"] or ""
+    if facility_status:
+        if facility_status == 1:
+            icon = "thumbs-up-alt"
+            colour = "green"
+        elif facility_status == 2:
+            icon = "thumbs-down-alt"
+            colour = "amber"
+        elif facility_status == 3:
+            icon = "reply-all"
+            colour = "red"
+        elif facility_status == 4:
+            icon = "remove"
+            colour = "red"
+        elif facility_status == 99:
+            icon = "question"
+            colour = ""
+        facility_status = P(#I(_class="icon-%s" % icon),
+                            #" ",
+                            SPAN("%s: %s" % (T("Status"), record["org_site_status.facility_status"])),
+                            " ",
+                            _class="card_1_line %s" % colour,
+                            )
+    power_supply_type = raw["org_site_status.power_supply_type"] or ""
+    if power_supply_type:
+        if power_supply_type == 1:
+            icon = "thumbs-up-alt"
+            colour = "green"
+        elif power_supply_type == 2:
+            icon = "cogs"
+            colour = "amber"
+        elif power_supply_type == 98:
+            icon = "question"
+            colour = "amber"
+        elif power_supply_type == 99:
+            icon = "remove"
+            colour = "red"
+        power_supply_type = P(#I(_class="icon-%s" % icon),
+                              #" ",
+                              SPAN("%s: %s" % (T("Power"), record["org_site_status.power_supply_type"])),
+                              " ",
+                              _class="card_1_line %s" % colour,
+                              )
+
     # Edit Bar
     permit = current.auth.s3_has_permission
     table = current.db.org_facility
@@ -814,6 +860,8 @@ def render_sites(listid, resource, rfields, record, **attr):
                      " ",
                      _class="card_1_line",
                      ),
+                   facility_status,
+                   power_supply_type,
                    P(comments,
                      _class="card_manylines s3-truncate",
                      ),
@@ -1542,6 +1590,16 @@ def customize_hrm_human_resource_fields():
     #table.modified_by.represent = s3_auth_user_represent_name
     table.modified_on.represent = datetime_represent
 
+    if current.request.controller == "vol":
+        settings.pr.request_dob = True
+        settings.pr.request_gender = True
+
+        from s3.s3validators import IS_ADD_PERSON_WIDGET2
+        from s3.s3widgets import S3AddPersonWidget2
+        field = table.person_id
+        field.requires = IS_ADD_PERSON_WIDGET2()
+        field.widget = S3AddPersonWidget2(controller="vol")
+
     list_fields = ["person_id",
                    "person_id$pe_id",
                    "organisation_id",
@@ -1576,8 +1634,8 @@ def customize_hrm_human_resource(**attr):
             if not result:
                 return False
 
+        customize_hrm_human_resource_fields()
         if r.method == "datalist":
-            customize_hrm_human_resource_fields()
             current.s3db.configure("hrm_human_resource",
                                    # Don't include a Create form in 'More' popups
                                    listadd = False,
@@ -1727,6 +1785,8 @@ def customize_org_facility_fields():
                    "human_resource.person_id",
                    #"contact",
                    "phone1",
+                   "status.facility_status",
+                   "status.power_supply_type",
                    "comments",
                    ]
 
@@ -1762,6 +1822,11 @@ def customize_org_facility_fields():
                                 #    label = T("Needs"),
                                 #    multiple = False,
                                 #),
+                                S3SQLInlineComponent(
+                                    "status",
+                                    label = T("Status"),
+                                    multiple = False,
+                                ),
                                 "comments",
                                 )
 
@@ -2424,7 +2489,6 @@ def customize_pr_person(**attr):
     """
 
     s3db = current.s3db
-    request = current.request
     s3 = current.response.s3
 
     tablename = "pr_person"
@@ -2433,11 +2497,13 @@ def customize_pr_person(**attr):
     # Custom PreP
     standard_prep = s3.prep
     def custom_prep(r):
-        # Call standard prep
-        if callable(standard_prep):
-            result = standard_prep(r)
-            if not result:
-                return False
+        controller = r.controller
+        if controller == "pr":
+            # Call standard prep for 'contacts' view but not 'vol' view
+            if callable(standard_prep):
+                result = standard_prep(r)
+                if not result:
+                    return False
 
         if r.method == "validate":
             # Can't validate image without the file
@@ -2445,7 +2511,29 @@ def customize_pr_person(**attr):
             image_field.requires = None
 
         if r.interactive or r.representation == "aadata":
-            if request.controller != "default":
+            if controller == "vol":
+                # CRUD Strings
+                ADD_CONTACT = T("Add New Volunteer")
+                s3.crud_strings[tablename] = Storage(
+                    title_create = T("Add Volunteer"),
+                    title_display = T("Volunteer Details"),
+                    title_list = T("Volunteer Directory"),
+                    title_update = T("Edit Volunteer Details"),
+                    title_search = T("Search Volunteers"),
+                    subtitle_create = ADD_CONTACT,
+                    label_list_button = T("List Volunteers"),
+                    label_create_button = ADD_CONTACT,
+                    label_delete_button = T("Delete Volunteer"),
+                    msg_record_created = T("Volunteer added"),
+                    msg_record_modified = T("Volunteer details updated"),
+                    msg_record_deleted = T("Volunteer deleted"),
+                    msg_list_empty = T("No Volunteers currently registered"))
+                field = s3db.pr_person_details.place_of_birth
+                field.label = ""
+                field.readable = field.writable = True
+                from gluon.sqlhtml import StringWidget
+                s3db.hrm_competency.comments.widget = StringWidget().widget
+            elif controller != "default":
                 # CRUD Strings
                 ADD_CONTACT = T("Add New Contact")
                 s3.crud_strings[tablename] = Storage(
@@ -2495,7 +2583,7 @@ def customize_pr_person(**attr):
                          ]
             if r.method in ("create", "update"):
                 # Context from a Profile page?"
-                organisation_id = request.get_vars.get("(organisation)", None)
+                organisation_id = r.get_vars.get("(organisation)", None)
                 if organisation_id:
                     field = s3db.hrm_human_resource.organisation_id
                     field.default = organisation_id
@@ -2504,34 +2592,52 @@ def customize_pr_person(**attr):
 
             s3_sql_custom_fields = [
                     "first_name",
-                    #"middle_name",
+                    "middle_name",
                     "last_name",
+                    "gender",
+                    "date_of_birth",
                     S3SQLInlineComponent(
-                        "human_resource",
-                        name = "human_resource",
-                        label = "",
+                        "person_details",
+                        name = "person_details",
+                        label = T("Place of Birth"),
                         multiple = False,
-                        fields = hr_fields,
+                        fields = ["place_of_birth"],
                     ),
                     S3SQLInlineComponent(
-                        "image",
-                        name = "image",
-                        label = T("Photo"),
-                        multiple = False,
-                        fields = ["image"],
-                        filterby = dict(field = "profile",
-                                        options=[True]
-                                        )
+                        "competency",
+                        name = "competency",
+                        label = T("Skills"),
+                        fields = ["skill_id",
+                                  "comments",
+                                  ],
                     ),
+                    #S3SQLInlineComponent(
+                    #    "human_resource",
+                    #    name = "human_resource",
+                    #    label = "",
+                    #    multiple = False,
+                    #    fields = hr_fields,
+                    #),
+                    #S3SQLInlineComponent(
+                    #    "image",
+                    #    name = "image",
+                    #    label = T("Photo"),
+                    #    multiple = False,
+                    #    fields = ["image"],
+                    #    filterby = dict(field = "profile",
+                    #                    options=[True]
+                    #                    )
+                    #),
+                    "comments",
                 ]
 
-            list_fields = [(current.messages.ORGANISATION, "human_resource.organisation_id"),
+            list_fields = [#(current.messages.ORGANISATION, "human_resource.organisation_id"),
                            "first_name",
-                           #"middle_name",
+                           "middle_name",
                            "last_name",
-                           (T("Job Title"), "human_resource.job_title_id"),
-                           (T("Site"), "human_resource.site_id"),
-                           (T("Site Contact"), "human_resource.site_contact"),
+                           #(T("Job Title"), "human_resource.job_title_id"),
+                           #(T("Site"), "human_resource.site_id"),
+                           #(T("Site Contact"), "human_resource.site_contact"),
                            ]
 
             # Don't include Email/Phone for unauthenticated users
@@ -2539,7 +2645,7 @@ def customize_pr_person(**attr):
                 list_fields += [(MOBILE, "phone.value"),
                                 (EMAIL, "email.value"),
                                 ]
-                s3_sql_custom_fields.insert(3,
+                s3_sql_custom_fields.insert(6,
                                             S3SQLInlineComponent(
                                             "contact",
                                             name = "phone",
@@ -2549,7 +2655,7 @@ def customize_pr_person(**attr):
                                             filterby = dict(field = "contact_method",
                                                             options = "SMS")),
                                             )
-                s3_sql_custom_fields.insert(3,
+                s3_sql_custom_fields.insert(6,
                                             S3SQLInlineComponent(
                                             "contact",
                                             name = "email",
@@ -2562,11 +2668,11 @@ def customize_pr_person(**attr):
 
             crud_form = S3SQLCustomForm(*s3_sql_custom_fields)
 
-            if r.id and request.controller == "default":
+            if r.id and controller == "default":
                 url_next = URL(c="default", f="person", args=[r.id, "read"])
             else:
                 # Return to List view after create/update/delete (unless done via Modal)
-                url_next = URL(c="pr", f="person")
+                url_next = URL(c=controller, f="person")
 
             s3db.configure(tablename,
                            create_next = url_next,
@@ -2588,7 +2694,7 @@ def customize_pr_person(**attr):
             #iappend('''i18n.job_title="%s"''' % T("Job Title"))
             #i18n = '''\n'''.join(i18n)
             #s3.js_global.append(i18n)
-            #s3.scripts.append('/%s/static/themes/DRMP/js/contacts.js' % request.application)
+            #s3.scripts.append('/%s/static/themes/DRMP/js/contacts.js' % r.application)
 
         return True
     s3.prep = custom_prep
@@ -2604,51 +2710,9 @@ def customize_pr_person(**attr):
             output["rheader"] = ""
             actions = [dict(label=str(T("Open")),
                             _class="action-btn",
-                            url=URL(c="pr", f="person",
+                            url=URL(c=r.controller, f="person",
                                     args=["[id]", "read"]))
                        ]
-            # All users just get "Open"
-            #db = current.db
-            #auth = current.auth
-            #has_permission = auth.s3_has_permission
-            #ownership_required = auth.permission.ownership_required
-            #s3_accessible_query = auth.s3_accessible_query
-            #if has_permission("update", table):
-            #    action = dict(label=str(T("Edit")),
-            #                  _class="action-btn",
-            #                  url=URL(c="pr", f="person",
-            #                          args=["[id]", "update"]),
-            #                  )
-            #    if ownership_required("update", table):
-            #        # Check which records can be updated
-            #        query = s3_accessible_query("update", table)
-            #        rows = db(query).select(table._id)
-            #        restrict = []
-            #        rappend = restrict.append
-            #        for row in rows:
-            #            row_id = row.get("id", None)
-            #            if row_id:
-            #                rappend(str(row_id))
-            #        action["restrict"] = restrict
-            #    actions.append(action)
-            #if has_permission("delete", table):
-            #    action = dict(label=str(T("Delete")),
-            #                  _class="action-btn",
-            #                  url=URL(c="pr", f="person",
-            #                          args=["[id]", "delete"]),
-            #                  )
-            #    if ownership_required("delete", table):
-            #        # Check which records can be deleted
-            #        query = s3_accessible_query("delete", table)
-            #        rows = db(query).select(table._id)
-            #        restrict = []
-            #        rappend = restrict.append
-            #        for row in rows:
-            #            row_id = row.get("id", None)
-            #            if row_id:
-            #                rappend(str(row_id))
-            #        action["restrict"] = restrict
-            #    actions.append(action)
             s3.actions = actions
             if "form" in output:
                 output["form"].add_class("pr_person")
@@ -2958,6 +3022,12 @@ settings.modules = OrderedDict([
     # All modules below here should be possible to disable safely
     ("hrm", Storage(
         name_nice = "Contacts",
+        #description = "Human Resources Management",
+        restricted = True,
+        module_type = None,
+    )),
+    ("vol", Storage(
+        name_nice = "Volunteers",
         #description = "Human Resources Management",
         restricted = True,
         module_type = None,

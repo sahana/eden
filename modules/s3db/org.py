@@ -2035,10 +2035,12 @@ class S3SiteModel(S3Model):
                       org_site=dict(joinby="site_id",
                                     multiple=False))
 
-        # Details
-        add_component("org_site_details",
-                      org_site=dict(joinby="site_id",
+        # Status
+        add_component("org_site_status",
+                      org_site=dict(name="status",
+                                    joinby="site_id",
                                     multiple=False))
+
         self.configure(tablename,
                        onaccept=self.org_site_onaccept,
                        context = {"location": "location_id",
@@ -2049,7 +2051,7 @@ class S3SiteModel(S3Model):
                                     "code",
                                     "instance_type",
                                     "name",
-                                    "organistion_id",
+                                    "organisation_id",
                                     "location_id"]
                        )
 
@@ -2361,7 +2363,7 @@ class S3SiteModel(S3Model):
 class S3SiteDetailsModel(S3Model):
     """ Extra optional details for Sites """
 
-    names = ["org_site_details",
+    names = ["org_site_status",
              "org_site_org_group",
              ]
 
@@ -2375,34 +2377,77 @@ class S3SiteDetailsModel(S3Model):
         settings = current.deployment_settings
         last_contacted = settings.get_org_site_last_contacted()
 
+        messages = current.messages
+        NONE = messages["NONE"]
+        UNKNOWN_OPT = messages.UNKNOWN_OPT
+
+        facility_status_opts = {
+            1: T("Normal"),
+            2: T("Compromised"),
+            3: T("Evacuating"),
+            4: T("Closed"),
+            99: T("No Response"),
+        }
+
+        power_supply_type_opts = {
+            1: T("Grid"),
+            2: T("Generator"),
+            98: T("Other"),
+            99: T("None"),
+        }
+
         # ---------------------------------------------------------------------
-        # Details
-        tablename = "org_site_details"
+        # Site Status
+        #
+        tablename = "org_site_status"
         table = define_table(tablename,
                              # Component not instance
                              super_link("site_id", "org_site"),
+                             Field("facility_status", "integer",
+                                   requires = IS_NULL_OR(
+                                                IS_IN_SET(facility_status_opts)),
+                                   label = T("Facility Status"),
+                                   represent = lambda opt: \
+                                    NONE if opt is None else \
+                                        facility_status_opts.get(opt,
+                                                                 UNKNOWN_OPT)),
+                             s3_date("date_reopening",
+                                     label = T("Estimated Reopening Date"),
+                                     readable = False,
+                                     writable = False,
+                                     ),
+                             Field("power_supply_type", "integer",
+                                   label = T("Power Supply Type"),
+                                   requires = IS_NULL_OR(
+                                                IS_IN_SET(power_supply_type_opts,
+                                                          zero=None)),
+                                   represent = lambda opt: \
+                                    NONE if opt is None else \
+                                        power_supply_type_opts.get(opt,
+                                                                   UNKNOWN_OPT)),
                              s3_date("last_contacted",
+                                     label = T("Last Contacted"),
                                      readable = last_contacted,
                                      writable = last_contacted,
-                                     label = T("Last Contacted")),
+                                     ),
                              *s3_meta_fields())
 
         # CRUD Strings
         site_label = settings.get_org_site_label()
-        ADD_DETAILS = T("Add %(site_label)s Details") % site_label
+        ADD_DETAILS = T("Add %(site_label)s Status") % site_label
         current.response.s3.crud_strings[tablename] = Storage(
             title_create = ADD_DETAILS,
-            title_display = T("%(site_label)s Details") % site_label,
-            title_list = T("%(site_label)s Details") % site_label,
-            title_update = T("Edit %(site_label)s Details") % site_label,
-            title_search = T("Search %(site_label)s Details") % site_label,
-            subtitle_create = T("Add New %(site_label)s Details") % site_label,
-            label_list_button = T("List %(site_label)s Details") % site_label,
+            title_display = T("%(site_label)s Status") % site_label,
+            title_list = T("%(site_label)s Status") % site_label,
+            title_update = T("Edit %(site_label)s Status") % site_label,
+            title_search = T("Search %(site_label)s Status") % site_label,
+            subtitle_create = T("Add New %(site_label)s Status") % site_label,
+            label_list_button = T("List %(site_label)s Status") % site_label,
             label_create_button = ADD_DETAILS,
-            msg_record_created = T("%(site_label)s Details added") % site_label,
-            msg_record_modified = T("%(site_label)s Details updated") % site_label,
-            msg_record_deleted = T("%(site_label)s Details deleted") % site_label,
-            msg_list_empty = T("There are no details for this %(site_label)s yet. Add %(site_label)s Details.") % site_label
+            msg_record_created = T("%(site_label)s Status added") % site_label,
+            msg_record_modified = T("%(site_label)s Status updated") % site_label,
+            msg_record_deleted = T("%(site_label)s Status deleted") % site_label,
+            msg_list_empty = T("There is no status for this %(site_label)s yet. Add %(site_label)s Status.") % site_label
             )
 
         # ---------------------------------------------------------------------
@@ -2681,7 +2726,7 @@ class S3FacilityModel(S3Model):
                                     "phone2",
                                     "email",
                                     "website",
-                                    "site_details.last_contacted",
+                                    #"status.last_contacted",
                                     "obsolete",
                                     "comments",
                                     )

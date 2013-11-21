@@ -2588,6 +2588,12 @@ class S3PersonDetailsModel(S3Model):
                                                                         T("Nationality of the person."))),
                                         represent = lambda code: \
                                             gis.get_country(code, key_type="code") or UNKNOWN_OPT),
+                                  Field("place_of_birth",
+                                        label = T("Place of Birth"),
+                                        # Enable as-required in template
+                                        readable = False,
+                                        writable = False,
+                                        ),
                                   pr_marital_status(),
                                   Field("religion", length=128,
                                         label = T("Religion"),
