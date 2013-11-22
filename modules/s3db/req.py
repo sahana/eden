@@ -4029,7 +4029,7 @@ def req_customize_req_fields():
                          #hidden=True,
                          ),
         S3OptionsFilter("site_id",
-                        label=T("Requested For Facility"),
+                        label=T("Requested For Site"),
                         widget="multiselect",
                         hidden=True,
                         ),
