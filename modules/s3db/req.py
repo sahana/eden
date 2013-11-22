@@ -4002,17 +4002,16 @@ def req_customize_req_fields():
         levels.remove("L0")
 
     filter_widgets = [
-        #S3TextFilter(["committer_id$first_name",
-        #              "committer_id$middle_name",
-        #              "committer_id$last_name",
-        #              "site_id$name",
-        #              "comments",
-        #              "req_id$name",
-        #              "organisation_id$name"
-        #              ],
-        #             label = T("Search")
-        #             comment=T("Search for a commitment by Committer name, Request ID, Site or Organization."),
-        #             ),
+        S3TextFilter(["requester_id$first_name",
+                      "requester_id$middle_name",
+                      "requester_id$last_name",
+                      "site_id$name",
+                      "purpose",
+                      #"comments",
+                      ],
+                     label = T("Search"),
+                     comment=T("Search for a request by Site name, Requester name or free text."),
+                     ),
         #S3OptionsFilter("transit_status",
         #                label = T("Transit Status"),
         #                options = s3db.req_status_opts,
