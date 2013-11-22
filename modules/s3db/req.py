@@ -4033,11 +4033,6 @@ def req_customize_req_fields():
                         widget="multiselect",
                         hidden=True,
                         ),
-        S3OptionsFilter("created_by",
-                        label=T("Logged By"),
-                        widget="multiselect",
-                        hidden=True,
-                        ),
         S3DateFilter("date",
                      label=T("Date"),
                      hide_time=True,
@@ -4053,6 +4048,13 @@ def req_customize_req_fields():
         #             hidden=True,
         #             ),
         ]
+    # @ToDo: deployment_setting
+    if current.auth.s3_has_role("EDITOR"):
+        filter_widgets.insert(-1, S3OptionsFilter("created_by",
+                                                  label=T("Logged By"),
+                                                  widget="multiselect",
+                                                  hidden=True,
+                                                  ))
 
     # Return to Requests view after create/update/delete (unless done via Modal)
     url_next = URL(c="req", f="req", args="datalist")
@@ -4363,6 +4365,7 @@ def req_customize_commit_fields():
     if editor:
         field.requires = IS_ADD_PERSON_WIDGET2()
         field.widget = S3AddPersonWidget2(controller="pr")
+        field.default = None
     else:
         field.writable = False
 
