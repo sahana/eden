@@ -4219,6 +4219,7 @@ def req_render_reqs(listid, resource, rfields, record, **attr):
 
     #if permit("create", table):
     if auth.is_logged_in():
+        _class="s3_modal btn"
         commit_url = URL(c="req", f="commit",
                          args=["create.popup"],
                          vars={"req_id": record_id,
@@ -4227,6 +4228,7 @@ def req_render_reqs(listid, resource, rfields, record, **attr):
                                },
                          )
     else:
+        _class="btn"
         next = "/%s/req/commit/create?req_id=%s" % (current.request.application,
                                                     record_id)
         commit_url = URL(c="default", f="user",
@@ -4238,7 +4240,7 @@ def req_render_reqs(listid, resource, rfields, record, **attr):
                    " ",
                    T("DONATE"),
                    _href=commit_url,
-                   _class="s3_modal btn",
+                   _class=_class,
                    _title=T("Donate to this Request"),
                    )
 
