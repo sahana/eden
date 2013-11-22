@@ -119,6 +119,34 @@
         });
     }
 
+    /**
+     * Check that Widget is ready
+     * - used to fire functions from outside
+     */
+    S3.addPersonWidgetReady = function(fieldname) {
+        var dfd = new jQuery.Deferred();
+
+        var selector = '#' + fieldname;
+        var real_input = $(selector);
+
+        // Test every half-second
+        setTimeout(function working() {
+            if (real_input.data('lookup_contact') != undefined) {
+                dfd.resolve('loaded');
+            } else if (dfd.state() === 'pending') {
+                // Notify progress
+                dfd.notify('waiting for Widget to setup...');
+                // Loop
+                setTimeout(working, 500);
+            } else {
+                // Failed!?
+            }
+        }, 1);
+
+        // Return the Promise so caller can't change the Deferred
+        return dfd.promise();
+    };
+
     var enable_person_fields = function(fieldname) {
         var selector = '#' + fieldname;
         $(selector + '_organisation_id').prop('disabled', false);

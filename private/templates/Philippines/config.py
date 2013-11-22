@@ -926,7 +926,7 @@ def render_organisations(listid, resource, rfields, record, **attr):
         # template
         item_id = "%s-[id]" % listid
 
-    item_class = "thumbnail span6"
+    item_class = "thumbnail span6" # span6 for 2 cols
 
     raw = record._row
     name = record["org_organisation.name"]
@@ -1088,7 +1088,7 @@ def render_org_needs(listid, resource, rfields, record, **attr):
         # template
         item_id = "%s-[id]" % listid
 
-    item_class = "thumbnail span6"
+    item_class = "thumbnail"
 
     raw = record._row
     logo = raw["org_organisation.logo"]
@@ -1217,7 +1217,7 @@ def render_site_needs(listid, resource, rfields, record, **attr):
         # template
         item_id = "%s-[id]" % listid
 
-    item_class = "thumbnail span6"
+    item_class = "thumbnail"
 
     raw = record._row
     logo = raw["org_organisation.logo"]
