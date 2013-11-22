@@ -224,12 +224,6 @@ div.media a.pull-left img.media-object {
     margin-right: 6px;
 }
 
-.message-body {
-    padding: 2px;
-    border: 1px dotted #afafaf;
-    white-space: pre-wrap;
-}
-
 .alert-status {
     padding-left: 20px;
 }

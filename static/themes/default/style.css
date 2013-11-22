@@ -178,3 +178,8 @@ textarea:focus {
     font-size: large;
     overflow: auto;
 }
+.message-body {
+    padding: 2px;
+    border: 1px dotted #afafaf;
+    white-space: pre-wrap;
+}

@@ -781,14 +781,15 @@ def deploy_rheader(r, tabs=[], profile=False):
         recipients = db(query).count()
 
         unsent = not r.record.message_id
-        if recipients and unsent:
-            send_button = S3CRUD.crud_button(T("Send Alert"),
-                                             _href=URL(c="deploy", f="alert",
-                                                       args=[alert_id, "send"]),
-                                             #_id="send-alert-btn",
-                                             )
-        else:
-            send_button = ""
+        if unsent:
+            send_button = BUTTON(T("Send Alert"), _class="alert-send-btn")
+            if recipients:
+                send_button.update(_onclick="window.location.href='%s';" %
+                                            URL(c="deploy",
+                                                f="alert",
+                                                args=[alert_id, "send"]))
+            else:
+                send_button.update(_disabled="disabled")
 
         # Tabs
         tabs = [(T("Message"), None),
@@ -808,7 +809,7 @@ def deploy_rheader(r, tabs=[], profile=False):
                             TR(TH("%s: " % table.subject.label),
                                record.subject
                                ),
-                            ), rheader_tabs)
+                            ), rheader_tabs, _class="alert-rheader")
 
     elif resourcename == "mission":
 

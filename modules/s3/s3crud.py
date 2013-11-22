@@ -1178,12 +1178,6 @@ class S3CRUD(S3Method):
         if not linkto:
             linkto = self._linkto(r)
 
-        # Truncate long texts
-        if r.interactive or representation == "aadata":
-            for f in self.table:
-                if str(f.type) == "text" and not f.represent:
-                    f.represent = self.truncate
-
         session = current.session
 
         left = []
@@ -1612,12 +1606,6 @@ class S3CRUD(S3Method):
             fields.insert(0, table[table.fields[0]])
         if list_fields[0] != table.fields[0]:
             list_fields.insert(0, table.fields[0])
-
-        # Truncate long texts
-        if r.interactive or r.representation == "aadata":
-            for f in self.table:
-                if str(f.type) == "text" and not f.represent:
-                    f.represent = self.truncate
 
         left = []
         distinct = False
@@ -2125,29 +2113,6 @@ class S3CRUD(S3Method):
                                                 dict(date = record.modified_on)
 
         return output
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def truncate(text, length=48, nice=True):
-        """
-            Nice truncating of text
-
-            @param text: the text
-            @param length: the desired maximum length of the output
-            @param nice: don't truncate in the middle of a word
-        """
-
-        if text is None:
-            return ""
-
-        if len(text) > length:
-            l = length - 3
-            if nice:
-                return "%s..." % text[:l].rsplit(" ", 1)[0][:l]
-            else:
-                return "%s..." % text[:l]
-        else:
-            return text
 
     # -------------------------------------------------------------------------
     def render_buttons(self, r, buttons, record_id=None, **attr):

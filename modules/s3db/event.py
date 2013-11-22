@@ -531,7 +531,7 @@ class S3IncidentModel(S3Model):
                                              autodelete=False))
 
         # Human Resources
-        add_component("event_human_resource", event_event="event_id")
+        add_component("event_human_resource", event_incident="incident_id")
         add_component("hrm_human_resource",
                       event_incident=Storage(link="event_human_resource",
                                              joinby="incident_id",

@@ -369,3 +369,20 @@ span.tab_next_active {
 .ui-multiselect-filter input {
     width: auto;
 }
+
+.message-body {
+    padding: 2px;
+    border: 1px dotted #afafaf;
+    white-space: pre-wrap;
+}
+button.alert-send-btn {
+    vertical-align: bottom;
+    height: 25px;
+}
+button.alert-send-btn:enabled {
+    color: red;
+}
+.alert-rheader td,
+.alert-rheader th {
+    vertical-align: middle;
+}

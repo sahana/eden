@@ -66,9 +66,14 @@ def repository():
                     s3task.configure_tasktable_crud(
                         function="sync_synchronize",
                         args = [r.id],
-                        vars = dict(user_id = auth.user is not None and auth.user.id or 0),
+                        vars = dict(user_id = auth.user.id if auth.user else 0),
                         period = 600, # seconds, so 10 mins
                         )
+                elif r.component.alias == "log" and r.component_id:
+                    table = r.component.table
+                    table.message.represent = lambda msg: \
+                                                DIV(s3base.s3_strip_markup(msg),
+                                                    _class="message-body")
                 s3.cancel = URL(c="sync", f="repository",
                                 args=[str(r.id), r.component.alias])
         return True
@@ -132,6 +137,13 @@ def log():
         list_btn = URL(c="sync", f="log", vars=request.get_vars)
 
     list_btn = A(T("List all Entries"), _href=list_btn, _class="action-btn")
+
+    def prep(r):
+        if r.record:
+            r.table.message.represent = lambda msg: DIV(s3base.s3_strip_markup(msg),
+                                                         _class="message-body")
+        return True
+    s3.prep = prep
 
     output = s3_rest_controller("sync", "log",
                                 subtitle=None,

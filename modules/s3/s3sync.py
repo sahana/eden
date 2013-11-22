@@ -31,6 +31,7 @@ import sys
 import urllib, urllib2
 import datetime
 import time
+import traceback
 
 try:
     from lxml import etree
@@ -483,7 +484,7 @@ class S3Sync(S3Method):
                                          onconflict=onconflict)
         except IOError:
             current.auth.permission.fail()
-        except SyntaxError:
+        except Exception, e:
             e = sys.exc_info()[1]
             r.error(400, e)
 
@@ -1077,6 +1078,17 @@ class S3SyncRepository(object):
                 result = log.FATAL
                 message = "%s" % e
                 output = xml.json_message(False, 400, message)
+            except Exception, e:
+                # If we end up here, an uncaught error during import
+                # has occured which indicates a code defect! We log it
+                # and continue here, however - in order to maintain a
+                # valid sync status, so that developers can restart
+                # the process more easily after fixing the defect.
+                result = log.FATAL
+                message = "Uncaught Exception During Import: %s" % \
+                          traceback.format_exc()
+                output = xml.json_message(False, 500, sys.exc_info()[1])
+                
             mtime = resource.mtime
 
             # Log all validation errors
