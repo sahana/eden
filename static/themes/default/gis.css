@@ -5,12 +5,7 @@
     position: relative;
     /* Allow legendPanel to slide out */
     overflow: hidden;
-}
-body.ltr .map_wrapper {
     clear: right;
-}
-body.rtl .map_wrapper {
-    clear: left;
 }
 /* Allow LayerTree to Scroll */
 .gis_west .x-panel-body {
@@ -109,12 +104,7 @@ form .map_loader {
 .map_legend_div {
     position: absolute;
     bottom: 0;
-}
-body.ltr .map_legend_div {
     right: 0;
-}
-body.rtl .map_legend_div {
-    left: 0;
 }
 
 .map_legend_div.fullscreen {
@@ -131,12 +121,7 @@ body.rtl .map_legend_div {
     max-width: 800px;
     max-height: 500px;
     overflow-y: auto;
-}
-body.ltr .map_legend_panel {
     border-right: none;
-}
-body.rtl .map_legend_panel {
-    border-left: none;
 }
 .map_legend_panel  .x-panel-header-noborder {
     border: none;
@@ -151,8 +136,6 @@ body.rtl .map_legend_panel {
     font-style: normal;
     text-decoration: inherit;
     -webkit-font-smoothing: antialiased;
-}
-body.ltr .map_legend_tab {
     float: left;
     border-radius: 3px 0 3px 3px;
     border-right: none;
@@ -161,16 +144,6 @@ body.ltr .map_legend_tab {
     margin-left: -12px;
     padding-left: 2px;
     padding-right: 3px;
-}
-body.rtl .map_legend_tab {
-    float: right;
-    border-radius: 3px 3px 3px 0;
-    border-left: none;
-    border-left-width: 0;
-    margin-right: -12px;
-    margin-left: -6px;
-    padding-left: 3px;
-    padding-right: 2px;
 }
 .map_legend_tab:before {
     text-decoration: inherit;
@@ -233,13 +206,8 @@ body.rtl .map_legend_tab {
     width: auto;
     cursor: pointer;
     visibility: visible;
-}
-body.rtl .map_save_button {
     float: right;
     /*margin-right: 10px;*/
-}
-body.ltr .map_save_button {
-    float: left;
 }
 .map_save_name {
     font-weight: bold;
@@ -250,12 +218,7 @@ body.ltr .map_save_button {
 .map_save_panel input {
     width: 150px;
     margin-top: 1px;
-}
-body.ltr .map_save_panel input {
     margin-right: 5px;
-}
-body.rtl .map_save_panel input {
-    margin-left: 5px;
 }
 .map_save_panel input.checkbox {
     width: 10px;

@@ -3794,12 +3794,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     // Legend Panel as floating DIV
     var addLegendPanel = function(map, legendPanel) {
         var map_id = map.s3.id;
-        if ($('body').hasClass('rtl')) {
-            var start = 'left';
-        } else {
-            var start = 'right';
-        }
-        var div = '<div class="map_legend_div"><div class="map_legend_tab ' + start + '"></div><div class="map_legend_panel"></div></div>';
+        var div = '<div class="map_legend_div"><div class="map_legend_tab right"></div><div class="map_legend_panel"></div></div>';
         $('#' + map_id).append(div);
         var legendPanel = new GeoExt.LegendPanel({
             title: i18n.gis_legend,
@@ -3814,7 +3809,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 
         // Show/Hide Legend when clicking on Tab 
         $('#' + map_id + ' .map_legend_tab').click(function() {
-            if ($(this).hasClass(start)) {
+            if ($(this).hasClass('right')) {
                 hideLegend(map);
             } else {
                 showLegend(map);
@@ -3824,35 +3819,19 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     var hideLegend = function(map) {
         var map_id = map.s3.id;
         var outerWidth = $('#' + map_id + ' .map_legend_panel').outerWidth();
-        if ($('body').hasClass('rtl')){
-            $('#' + map_id + ' .map_legend_div').animate({
-                marginLeft: '-' + outerWidth + 'px'
-            });
-            $('#' + map_id + ' .map_legend_tab').removeClass('left')
-                                                .addClass('right');
-        } else {
-            $('#' + map_id + ' .map_legend_div').animate({
-                marginRight: '-' + outerWidth + 'px'
-            });
-            $('#' + map_id + ' .map_legend_tab').removeClass('right')
-                                                .addClass('left');
-        }
+        $('#' + map_id + ' .map_legend_div').animate({
+            marginRight: '-' + outerWidth + 'px'
+        });
+        $('#' + map_id + ' .map_legend_tab').removeClass('right')
+                                            .addClass('left');
     };
     var showLegend = function(map) {
         var map_id = map.s3.id;
-        if ($('body').hasClass('rtl')){
-            $('#' + map_id + ' .map_legend_div').animate({
-                marginLeft: 0
-            });
-            $('#' + map_id + ' .map_legend_tab').removeClass('right')
-                                                .addClass('left');
-        } else {
-            $('#' + map_id + ' .map_legend_div').animate({
-                marginRight: 0
-            });
-            $('#' + map_id + ' .map_legend_tab').removeClass('left')
-                                                .addClass('right');
-        }
+        $('#' + map_id + ' .map_legend_div').animate({
+            marginRight: 0
+        });
+        $('#' + map_id + ' .map_legend_tab').removeClass('left')
+                                            .addClass('right');
     };
 
     // Navigation History
