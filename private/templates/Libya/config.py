@@ -464,8 +464,8 @@ def render_locations(listid, resource, rfields, record, **attr):
     level = raw["gis_location.level"]
     L1 = raw["gis_location.L1"]
     L2 = raw["gis_location.L2"]
-    L3 = raw["gis_location.L3"]
-    L4 = raw["gis_location.L4"]
+    #L3 = raw["gis_location.L3"]
+    #L4 = raw["gis_location.L4"]
     location_url = URL(c="gis", f="location",
                        args=[record_id, "profile"])
 
@@ -473,10 +473,10 @@ def render_locations(listid, resource, rfields, record, **attr):
         represent = name
     if level == "L2":
         represent = "%s (%s)" % (name, L1)
-    elif level == "L3":
-        represent = "%s (%s, %s)" % (name, L2, L1)
-    elif level == "L4":
-        represent = "%s (%s, %s, %s)" % (name, L3, L2, L1)
+    #elif level == "L3":
+    #    represent = "%s (%s, %s)" % (name, L2, L1)
+    #elif level == "L4":
+    #    represent = "%s (%s, %s, %s)" % (name, L3, L2, L1)
     else:
         # L0 or specific
         represent = name
@@ -536,16 +536,16 @@ def render_locations(listid, resource, rfields, record, **attr):
     else:
         if level == "L0":
             next_Lx = "L1"
-            next_Lx_label = "Regions"
+            next_Lx_label = "Districts"
         if level == "L1":
             next_Lx = "L2"
-            next_Lx_label = "Provinces"
-        elif level == "L2":
-            next_Lx = "L3"
-            next_Lx_label = "Municipalities / Cities"
-        elif level == "L3":
-            next_Lx = "L4"
-            next_Lx_label = "Barangays"
+            next_Lx_label = "Cities and Towns"
+        #elif level == "L2":
+        #    next_Lx = "L3"
+        #    next_Lx_label = "Municipalities / Cities"
+        #elif level == "L3":
+        #    next_Lx = "L4"
+        #    next_Lx_label = "Barangays"
         table = db.gis_location
         query = (table.deleted == False) & \
                 (table.level == next_Lx) & \
@@ -1385,42 +1385,26 @@ def customize_gis_location(**attr):
                 if not level:
                     # Just show PH L1s
                     level = "L1"
-                    s3.filter = (table.L0 == "Philippines") & (table.level == "L1")
+                    s3.filter = (table.L0 == "Libya") & (table.level == "L1")
 
                 parent = current.request.get_vars.get("~.parent", None)
                 if level == "L1":
-                    s3.crud_strings["gis_location"].title_list = T("Regions")
+                    s3.crud_strings["gis_location"].title_list = T("Districts")
                 elif level == "L2":
                     if parent:
                         parent = db(table.id == parent).select(table.name,
                                                                limitby=(0, 1)
                                                                ).first().name
-                        s3.crud_strings["gis_location"].title_list = T("Provinces in %s") % parent
+                        s3.crud_strings["gis_location"].title_list = T("Cities and Towns in %s") % parent
                     else:
-                        s3.crud_strings["gis_location"].title_list = T("Provinces")
-                elif level == "L3":
-                    if parent:
-                        parent = db(table.id == parent).select(table.name,
-                                                               limitby=(0, 1)
-                                                               ).first().name
-                        s3.crud_strings["gis_location"].title_list = T("Municipalities and Cities in %s") % parent
-                    else:
-                        s3.crud_strings["gis_location"].title_list = T("Municipalities and Cities")
-                elif level == "L4":
-                    if parent:
-                        parent = db(table.id == parent).select(table.name,
-                                                               limitby=(0, 1)
-                                                               ).first().name
-                        s3.crud_strings["gis_location"].title_list = T("Barangays in %s") % parent
-                    else:
-                        s3.crud_strings["gis_location"].title_list = T("Barangays")
+                        s3.crud_strings["gis_location"].title_list = T("Cities and Towns")
 
                 list_fields = ["name",
                                "level",
                                "L1",
                                "L2",
-                               "L3",
-                               "L4",
+                               #"L3",
+                               #"L4",
                                ]
 
                 s3db.configure("gis_location",
