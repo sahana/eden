@@ -2033,7 +2033,8 @@ class S3GroupedOptionsWidget(FormWidget):
             options = options.items()
         none = self.none
         exclude = ("",) if none is not None else ("", None)
-        options = [(s3_unicode(k) if k is not None else none, s3_unicode(v))
+        options = [(s3_unicode(k) if k is not None else none,
+                    v.flatten() if hasattr(v, "flatten") else s3_unicode(v))
                    for k, v in options if k not in exclude]
 
         # No options available?
