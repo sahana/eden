@@ -43,6 +43,7 @@ class S3DocumentLibrary(S3Model):
 
     names = ["doc_entity",
              "doc_document",
+             "doc_document_id",
              "doc_image",
              ]
 
@@ -81,6 +82,7 @@ class S3DocumentLibrary(S3Model):
         #
         entity_types = Storage(asset_asset=T("Asset"),
                                cms_post=T("Post"),
+                               deploy_mission=T("Mission"),
                                irs_ireport=T("Incident Report"),
                                project_project=T("Project"),
                                project_activity=T("Project Activity"),
@@ -212,6 +214,17 @@ class S3DocumentLibrary(S3Model):
                   super_entity = "stats_source",
                   )
 
+        # Reusable field
+        represent = S3Represent(lookup=tablename)
+        document_id = S3ReusableField("document_id", table,
+                                      requires = IS_ONE_OF(db,
+                                                           "doc_document.id",
+                                                           represent),
+                                      represent = represent,
+                                      label = T("Document"),
+                                      ondelete = "CASCADE",
+                                     )
+
         # ---------------------------------------------------------------------
         # Images
         #
@@ -296,13 +309,15 @@ class S3DocumentLibrary(S3Model):
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3
         #
-        return Storage()
+        return Storage(doc_document_id=document_id)
 
     # -------------------------------------------------------------------------
     def defaults(self):
         """ Safe defaults if the module is disabled """
-
-        return Storage()
+        
+        document_id = S3ReusableField("document_id", "integer",
+                                      readable=False, writable=False)
+        return Storage(doc_document_id=document_id)
 
     # -------------------------------------------------------------------------
     @staticmethod

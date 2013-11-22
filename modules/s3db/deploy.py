@@ -193,6 +193,7 @@ class S3DeploymentModel(S3Model):
                                      "start_date",
                                      "end_date",
                                      "role_type_id",
+                                     "rating",
                                  ],
                                  tablename = "deploy_human_resource_assignment",
                                  context = "mission",
@@ -296,6 +297,7 @@ class S3DeploymentModel(S3Model):
                                 linkto=URL(f="mission",
                                            args=["[id]", "profile"]),
                                 show_link=True)
+                                
         mission_id = S3ReusableField("mission_id", table,
                                      requires = IS_ONE_OF(db,
                                                           "deploy_mission.id",
@@ -305,6 +307,16 @@ class S3DeploymentModel(S3Model):
                                      ondelete = "CASCADE",
                                      )
 
+        # ---------------------------------------------------------------------
+        # Link table to link documents to missions, responses or assignments
+        #
+        tablename = "deploy_mission_document"
+        table = define_table(tablename,
+                             mission_id(),
+                             self.msg_message_id(),
+                             self.doc_document_id(),
+                            )
+                            
         # ---------------------------------------------------------------------
         # Role Type ('Sector' in RDRT)
         # - used to classify Assignments & Trainings
@@ -1291,6 +1303,7 @@ def deploy_render_human_resource_assignment(listid, resource, rfields, record,
                        render("deploy_human_resource_assignment.start_date",
                               "deploy_human_resource_assignment.end_date",
                               "deploy_human_resource_assignment.role_type_id",
+                              "deploy_human_resource_assignment.rating",
                        ),
                        _class="media-body",
                    ),
