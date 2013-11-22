@@ -57,6 +57,7 @@ class S3DeploymentModel(S3Model):
     names = ["deploy_event_type",
              "deploy_mission",
              "deploy_mission_id",
+             "deploy_mission_document",
              "deploy_role_type",
              "deploy_human_resource_application",
              "deploy_human_resource_assignment",
