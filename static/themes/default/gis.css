@@ -5,7 +5,12 @@
     position: relative;
     /* Allow legendPanel to slide out */
     overflow: hidden;
+}
+body.ltr .map_wrapper {
     clear: right;
+}
+body.rtl .map_wrapper {
+    clear: left;
 }
 /* Allow LayerTree to Scroll */
 .gis_west .x-panel-body {
@@ -32,6 +37,7 @@ form .map_loader {
 }
 .map_home .gis_fullscreen_map-btn {
     font-weight: bold;
+    float: left; /* Needed for RTL */
     padding-left: 8px;
 }
 .gis_print_map-btn {
@@ -103,7 +109,12 @@ form .map_loader {
 .map_legend_div {
     position: absolute;
     bottom: 0;
+}
+body.ltr .map_legend_div {
     right: 0;
+}
+body.rtl .map_legend_div {
+    left: 0;
 }
 
 .map_legend_div.fullscreen {
@@ -113,7 +124,6 @@ form .map_loader {
 .map_legend_panel {
     background-color: #FBFBFB;
     border: solid;
-    border-right: none;
     border-radius: 5px 0 0 5px;
     padding: 1px;
     margin: 0 0 20px; /* Ref'd in hideLegend & showLegend in gis.js */
@@ -122,27 +132,45 @@ form .map_loader {
     max-height: 500px;
     overflow-y: auto;
 }
+body.ltr .map_legend_panel {
+    border-right: none;
+}
+body.rtl .map_legend_panel {
+    border-left: none;
+}
 .map_legend_panel  .x-panel-header-noborder {
     border: none;
 }
 .map_legend_tab {
-    float: left;
     background-color: #FBFBFB;
     border: solid;
-    border-right: none;
     border-width: 2px;
-    border-right-width: 0;
-    border-radius: 3px 0 3px 3px;
-    margin-right: -6px;
-    margin-left: -12px;
     margin-top: 5px;
-    padding-left: 2px;
-    padding-right: 3px;
     font-family: FontAwesome;
     font-weight: normal;
     font-style: normal;
     text-decoration: inherit;
     -webkit-font-smoothing: antialiased;
+}
+body.ltr .map_legend_tab {
+    float: left;
+    border-radius: 3px 0 3px 3px;
+    border-right: none;
+    border-right-width: 0;
+    margin-right: -6px;
+    margin-left: -12px;
+    padding-left: 2px;
+    padding-right: 3px;
+}
+body.rtl .map_legend_tab {
+    float: right;
+    border-radius: 3px 3px 3px 0;
+    border-left: none;
+    border-left-width: 0;
+    margin-right: -12px;
+    margin-left: -6px;
+    padding-left: 3px;
+    padding-right: 2px;
 }
 .map_legend_tab:before {
     text-decoration: inherit;
@@ -200,13 +228,18 @@ form .map_loader {
 .map_save_button {
     background-color: #FBFBFB;
     padding: 5px;
-    /*margin-right: 10px;*/
     border: solid;
     border-radius: 5px 5px 5px 5px;
-    float: right;
     width: auto;
     cursor: pointer;
     visibility: visible;
+}
+body.rtl .map_save_button {
+    float: right;
+    /*margin-right: 10px;*/
+}
+body.ltr .map_save_button {
+    float: left;
 }
 .map_save_name {
     font-weight: bold;
@@ -217,7 +250,12 @@ form .map_loader {
 .map_save_panel input {
     width: 150px;
     margin-top: 1px;
+}
+body.ltr .map_save_panel input {
     margin-right: 5px;
+}
+body.rtl .map_save_panel input {
+    margin-left: 5px;
 }
 .map_save_panel input.checkbox {
     width: 10px;

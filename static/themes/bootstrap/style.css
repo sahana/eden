@@ -239,7 +239,9 @@ form.form-horizontal.project_project {
     font-weight: bold;
     padding-top: 0;
 }
-
+body.rtl .form-horizontal .control-label {
+    float: right;
+}
 .form-container .tooltip {
     margin-top: 4px;
 }
