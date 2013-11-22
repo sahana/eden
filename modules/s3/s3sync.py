@@ -484,7 +484,7 @@ class S3Sync(S3Method):
                                          onconflict=onconflict)
         except IOError:
             current.auth.permission.fail()
-        except Exception, e:
+        except SyntaxError:
             e = sys.exc_info()[1]
             r.error(400, e)
 
