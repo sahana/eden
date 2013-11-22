@@ -344,7 +344,7 @@ def render_contacts(listid, resource, rfields, record, **attr):
         title_update = ""
     # Deletions failing due to Integrity Errors
     #if permit("delete", table, record_id=person_id):
-    #    delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+    #    delete_btn = A(I(" ", _class="icon icon-trash"),
     #                   _class="dl-item-delete",
     #                   )
     #else:
@@ -494,7 +494,7 @@ def render_locations(listid, resource, rfields, record, **attr):
     # else:
         # edit_btn = ""
     # if permit("delete", table, record_id=record_id):
-        # delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+        # delete_btn = A(I(" ", _class="icon icon-trash"),
                        # _class="dl-item-delete",
                       # )
     # else:
@@ -673,7 +673,7 @@ def render_locations_profile(listid, resource, rfields, record, **attr):
     # else:
         # edit_btn = ""
     # if permit("delete", table, record_id=record_id):
-        # delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+        # delete_btn = A(I(" ", _class="icon icon-trash"),
                        # _class="dl-item-delete",
                        # )
     # else:
@@ -824,7 +824,7 @@ def render_sites(listid, resource, rfields, record, **attr):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+        delete_btn = A(I(" ", _class="icon icon-trash"),
                        _class="dl-item-delete",
                        )
     else:
@@ -989,7 +989,7 @@ def render_organisations(listid, resource, rfields, record, **attr):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+        delete_btn = A(I(" ", _class="icon icon-trash"),
                        _class="dl-item-delete",
                       )
     else:
@@ -1146,7 +1146,7 @@ def render_org_needs(listid, resource, rfields, record, **attr):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+        delete_btn = A(I(" ", _class="icon icon-trash"),
                        _class="dl-item-delete",
                       )
     else:
@@ -1284,7 +1284,7 @@ def render_site_needs(listid, resource, rfields, record, **attr):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+        delete_btn = A(I(" ", _class="icon icon-trash"),
                        _class="dl-item-delete",
                       )
     else:

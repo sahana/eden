@@ -88,6 +88,9 @@
 .icon-time:before {
   content: "\f017";
 }
+.icon-trash:before {
+  content: "\f014";
+}
 .icon-truck:before {
   content: "\f0d1";
 }

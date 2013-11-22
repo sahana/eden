@@ -4089,15 +4089,16 @@ function(status){s3_debug(status)})''' % site_id
     url_next = URL(c="req", f="req", args="datalist")
 
     s3db.configure(tablename,
-                   crud_form = crud_form,
-                   filter_widgets = filter_widgets,
                    create_next = url_next,
+                   crud_form = crud_form,
                    delete_next = url_next,
-                   update_next = url_next,
+                   filter_formstyle = filter_formstyle,
+                   filter_widgets = filter_widgets,
                    # We want the Create form to be in a modal, not inline, for consistency
                    listadd = False,
                    list_fields = list_fields,
                    list_layout = req_render_reqs,
+                   update_next = url_next,
                    )
 
     return table
@@ -4198,7 +4199,7 @@ def req_render_reqs(listid, resource, rfields, record, **attr):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+        delete_btn = A(I(" ", _class="icon icon-trash"),
                        _class="dl-item-delete",
                        )
     else:
@@ -4481,15 +4482,16 @@ def req_customize_commit_fields():
     url_next = URL(c="req", f="req", args="datalist")
 
     s3db.configure(tablename,
-                   crud_form = crud_form,
-                   filter_widgets = filter_widgets,
                    create_next = url_next,
+                   crud_form = crud_form,
                    delete_next = url_next,
-                   update_next = url_next,
+                   filter_formstyle = filter_formstyle,
+                   filter_widgets = filter_widgets,
                    # We want the Create form to be in a modal, not inline, for consistency
                    listadd = False,
                    list_fields = list_fields,
                    list_layout = req_render_commits,
+                   update_next = url_next,
                    )
 
     return table
@@ -4591,7 +4593,7 @@ def req_render_commits(listid, resource, rfields, record, **attr):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+        delete_btn = A(I(" ", _class="icon icon-trash"),
                        _class="dl-item-delete",
                        )
     else:
@@ -4637,5 +4639,43 @@ def req_render_commits(listid, resource, rfields, record, **attr):
                )
 
     return item
+
+# -----------------------------------------------------------------------------
+def filter_formstyle(row_id, label, widget, comment, hidden=False):
+    """
+        Custom Formstyle for FilterForm
+
+        @param row_id: HTML id for the row
+        @param label: the label
+        @param widget: the form widget
+        @param comment: the comment
+        @param hidden: whether the row should initially be hidden or not
+    """
+
+    if hidden:
+        _class = "advanced hide"
+    else:
+        _class= ""
+
+    if not label:
+        label = ""
+
+    if comment:
+        if current.response.s3.rtl:
+            dir = "fleft"
+        else:
+            dir = "fright"
+        comment = DIV(_class = "tooltip %s" % dir,
+                      _title = "%s|%s" % (label[0][:-1], comment),
+                      )
+    else:
+        comment = ""
+
+    return DIV(label,
+               widget,
+               comment,
+               _id=row_id,
+               _class=_class,
+               )
 
 # END =========================================================================
