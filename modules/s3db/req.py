@@ -228,11 +228,12 @@ class S3RequestModel(S3Model):
                                   #      label = T("Neighborhood")),
                                   # Donations: What will the Items be used for?; People: Task Details
                                   s3_comments("purpose",
-                                              label=T("Purpose"),
+                                              comment = "",
+                                              label = T("Purpose"),
                                               # Only-needed for summary mode (unused)
                                               #represent = self.req_purpose_represent,
                                               represent = s3_string_represent,
-                                              comment=""),
+                                              ),
                                   Field("is_template", "boolean",
                                         label = T("Recurring Request?"),
                                         represent = s3_yes_no_represent,
@@ -3903,6 +3904,7 @@ def req_add_from_template(req_id):
 def req_customize_req_fields():
     """
         Customize req_req fields for the Home page & dataList view
+        - this assumes Simple Requests (i.e. type 'Other')
     """
 
     # Truncate purpose field
@@ -3992,7 +3994,7 @@ def req_customize_req_fields():
 
     field = table.purpose
     field.label = T("Request")
-    field.required = True
+    field.requires = IS_NOT_EMPTY(error_message=T("Please enter details of the Request"))
     field.represent = lambda body: XML(s3_URLise(body))
 
     # Which levels of Hierarchy are we using?
