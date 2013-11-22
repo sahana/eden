@@ -1411,7 +1411,9 @@ class S3HRSiteModel(S3Model):
 
         if item.tablename == "hrm_human_resource_site":
             data = item.data
-            hr = "human_resource_id" in data and data.human_resource_id
+            human_resource_id = data.get("human_resource_id", None)
+            if not human_resource_id:
+                return
 
             table = item.table
             query = (table.human_resource_id == human_resource_id)

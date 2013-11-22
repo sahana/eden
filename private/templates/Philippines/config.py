@@ -1888,9 +1888,21 @@ def customize_org_facility(**attr):
                                      widget="multiselect",
                                      hidden=True,
                                     ),
-                    S3OptionsFilter(name="facility_search_type",
+                    S3OptionsFilter(name="type",
                                     label=T("Type"),
                                     field="site_facility_type.facility_type_id",
+                                    widget="multiselect",
+                                    hidden=True,
+                                    ),
+                    S3OptionsFilter(name="status",
+                                    label=T("Status"),
+                                    field="status.facility_status",
+                                    widget="multiselect",
+                                    hidden=True,
+                                    ),
+                    S3OptionsFilter(name="power",
+                                    label=T("Power Supply"),
+                                    field="status.power_supply_type",
                                     widget="multiselect",
                                     hidden=True,
                                     ),
@@ -2058,6 +2070,10 @@ def customize_org_facility(**attr):
             #table.phone1.readable = table.phone1.writable = False
             table.phone2.readable = table.phone2.writable = False
             table.email.readable = table.email.writable = False
+
+        elif r.representation == "geojson":
+            # Don't represent facility_status, but just show integers
+            s3db.org_site_status.facility_status.represent = None
 
         return True
     s3.prep = custom_prep

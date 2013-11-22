@@ -4888,8 +4888,8 @@ def org_facility_controller():
 
             site_id = r.record.site_id
 
-            if settings.has_module("req"):
-                # Open/High/Medium priority Requests
+            if current.deployment_settings.has_module("req"):
+                # Open High/Medium priority Requests
                 rtable = s3db.req_req
                 query = (rtable.site_id == site_id) & \
                         (rtable.fulfil_status != 2) & \
