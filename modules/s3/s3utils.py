@@ -733,9 +733,9 @@ def s3_include_ext():
     scripts_append(locale)
 
     if xtheme:
-        s3.jquery_ready.append('''$('style:first').after("%s").after("%s")''' % (xtheme, main_css))
+        s3.jquery_ready.append('''$('link:first').after("%s").after("%s")''' % (xtheme, main_css))
     else:
-        s3.jquery_ready.append('''$('style:first').after("%s")''' % main_css)
+        s3.jquery_ready.append('''$('link:first').after("%s")''' % main_css)
     s3.ext_included = True
 
 # =============================================================================
