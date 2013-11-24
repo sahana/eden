@@ -1501,7 +1501,8 @@ def customize_gis_location(**attr):
                                       default = default,
                                       filter = S3FieldSelector("cancel") == False,
                                       icon = "icon-truck",
-                                      layer = "Donations",
+                                      show_on_map = False,
+                                      #layer = "Donations",
                                       # provided by Catalogue Layer
                                       #marker = "donation",
                                       list_layout = s3db.req_render_commits,
@@ -1996,7 +1997,8 @@ def customize_org_facility(**attr):
                                       context = "site",
                                       filter = S3FieldSelector("cancel") == False,
                                       icon = "icon-truck",
-                                      layer = "Donations",
+                                      show_on_map = False,
+                                      #layer = "Donations",
                                       # provided by Catalogue Layer
                                       #marker = "donation",
                                       list_layout = s3db.req_render_commits,
@@ -2297,7 +2299,8 @@ def customize_org_organisation(**attr):
                                       context = "organisation",
                                       filter = S3FieldSelector("cancel") == False,
                                       icon = "icon-truck",
-                                      layer = "Donations",
+                                      show_on_map = False,
+                                      #layer = "Donations",
                                       # provided by Catalogue Layer
                                       #marker = "donation",
                                       list_layout = s3db.req_render_commits,
@@ -2841,7 +2844,8 @@ def customize_req_req(**attr):
                                   default = "req_id=%s" % record_id,
                                   filter = S3FieldSelector("cancel") == False,
                                   icon = "icon-truck",
-                                  layer = "Donations",
+                                  show_on_map = False,
+                                  #layer = "Donations",
                                   # provided by Catalogue Layer
                                   #marker = "donation",
                                   list_layout = s3db.req_render_commits,
