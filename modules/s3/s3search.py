@@ -1481,12 +1481,6 @@ i18n.edit_saved_search="%s"
             limit = None
             left = None
 
-        # Truncate long texts
-        if r.interactive or representation == "aadata":
-            for f in table:
-                if str(f.type) == "text" and not f.represent:
-                    f.represent = self.truncate
-
         # Get the results
         if not orderby:
             orderby = fields[0]

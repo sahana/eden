@@ -5477,7 +5477,7 @@ def hrm_person_controller(**attr):
 
             resource = r.resource
             if mode is not None:
-                resource.build_query(id=s3_logged_in_person())
+                resource.build_query(id=auth.s3_logged_in_person())
             elif r.method not in ("deduplicate", "search_ac"):
                 if not r.id and not hr_id:
                     # pre-action redirect => must retain prior errors
