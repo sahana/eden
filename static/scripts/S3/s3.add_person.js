@@ -180,15 +180,8 @@
         // Enable the Autocomplete
         enable_autocomplete(fieldname);
         // Enable all the fields & clear their values
-        $(selector).val('');
-        $(selector + '_organisation_id').prop('disabled', false).val('').change();
         $(selector + '_full_name').prop('disabled', false).val('');
-        $(selector + '_gender').prop('disabled', false).val('');
-        $(selector + '_date_of_birth').prop('disabled', false).val('');
-        $(selector + '_occupation').prop('disabled', false).val('');
-        $(selector + '_mobile_phone').prop('disabled', false).val('');
-        $(selector + '_home_phone').prop('disabled', false).val('');
-        $(selector + '_email').prop('disabled', false).val('');
+        clear_person_fields(fieldname);
         // Hide the edit button
         $(selector + '_edit_bar .icon-edit').hide();
         // Show the cancel button
@@ -224,7 +217,8 @@
 
     var clear_person_fields = function(fieldname) {
         var selector = '#' + fieldname;
-        // Clear all values & Enable Fields
+        // Clear values & Enable Fields except for full name, as select_person
+        // should retain the name that the user selected via autocomplete.
         $(selector).val('');
         $(selector + '_organisation_id').prop('disabled', false).val('');
         $(selector + '_gender').prop('disabled', false).val('');
