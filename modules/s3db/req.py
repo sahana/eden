@@ -2140,7 +2140,9 @@ class S3RequestSummaryModel(S3Model):
         #
         tablename = "req_organisation_needs"
         table = define_table(tablename,
-                             self.org_organisation_id(),
+                             self.org_organisation_id(
+                                 requires = self.org_organisation_requires(required=True),
+                                 ),
                              Field("money", "boolean",
                                    label = T("Soliciting Cash Donations?"),
                                    represent = s3_yes_no_represent,

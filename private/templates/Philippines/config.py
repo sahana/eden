@@ -2177,6 +2177,15 @@ def customize_org_needs_fields(profile=False):
     table.vol.readable = table.vol.writable = False
     table.vol_details.readable = table.vol_details.writable = False
 
+    # Toggle visibility of the _details fields when their associated boolean
+    # option is changed.
+    s3.jquery_ready.append(
+"""
+$('#req_organisation_needs_money').change(function() {
+ $('#req_organisation_needs_money_details__row').toggle($(this).prop('checked'));
+}).change();
+""")
+
     list_fields = ["id",
                    "organisation_id",
                    # @ToDo: Are these better displayed elsewhere in Profile view?
