@@ -68,7 +68,7 @@ class index(S3CustomController):
         return output
 
 # =============================================================================
-class contact():
+class contact(S3CustomController):
     """
         Custom page
     """
