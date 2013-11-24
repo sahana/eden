@@ -10,4 +10,19 @@
 
 from gluon import current
 
-current.selenium_tests = []
+current.selenium_tests = [
+                          "CreateOrganisation",
+                          "CreateOffice",
+                          "CreateStaff",
+                          "CreateStaffJobTitle",
+                          "CreateStaffCertificate",
+                          "SearchStaff",
+                          "StaffReport",
+                          "CreateStaffTraining",
+                          "AddStaffParticipants",
+                          "AddStaffToOffice",
+                          "CreateCatalog",
+                          "CreateCategory",
+                          "CreateFacility",
+                          "AddStaffToOrganisation", 
+                          ]
