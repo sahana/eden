@@ -205,6 +205,8 @@ settings.L10n.thousands_separator = ","
 settings.L10n.date_format = T("%d-%b-%y")
 # Make last name in person/user records mandatory
 settings.L10n.mandatory_lastname = True
+# Uncomment this to Translate Layer Names
+settings.L10n.translate_gis_layer = True
 # Translate Location Names
 settings.L10n.translate_gis_location = True
 

@@ -82,7 +82,7 @@ from s3fields import s3_all_meta_field_names
 from s3rest import S3Method
 from s3track import S3Trackable
 from s3track import S3Trackable
-from s3utils import s3_debug, s3_fullname, s3_fullname_bulk, s3_has_foreign_key, s3_include_ext
+from s3utils import s3_debug, s3_fullname, s3_fullname_bulk, s3_has_foreign_key, s3_include_ext, s3_unicode
 
 DEBUG = False
 if DEBUG:
@@ -6818,7 +6818,7 @@ class Layer(object):
             # All OK - add SubLayer
             record["visible"] = _config.visible or str(layer_id) in visible
             if base and _config.base:
-                # name can't conflict with OSM/WMS/ArcREST layers
+                # var name can't conflict with OSM/WMS/ArcREST layers
                 record["_base"] = True
                 base = False
             else:
@@ -6890,7 +6890,10 @@ class Layer(object):
             # Ensure all attributes available (even if Null)
             self.__dict__.update(record)
             del record
-            self.safe_name = re.sub('[\\"]', "", self.name)
+            if current.deployment_settings.get_L10n_translate_gis_layer():
+                self.safe_name = re.sub('[\\"]', "", s3_unicode(current.T(self.name)))
+            else:
+                self.safe_name = re.sub('[\\"]', "", self.name)
 
             if tablename not in ("gis_layer_arcrest",
                                  "gis_layer_coordinate",

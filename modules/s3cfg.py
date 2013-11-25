@@ -880,6 +880,11 @@ class S3Config(Storage):
             Whether to translate CMS Series names
         """
         return self.L10n.get("translate_cms_series", False)
+    def get_L10n_translate_gis_layer(self):
+        """
+            Whether to translate Layer names
+        """
+        return self.L10n.get("translate_gis_layer", False)
     def get_L10n_translate_gis_location(self):
         """
             Whether to translate Location names
