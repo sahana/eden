@@ -29,6 +29,7 @@
 
 __all__ = ["S3ChannelModel",
            "S3MessageModel",
+           "S3MessageAttachmentModel",
            "S3EmailModel",
            "S3MCommonsModel",
            "S3ParsingModel",
@@ -402,9 +403,13 @@ class S3MessageModel(S3Model):
                                      represent = message_represent,
                                      ondelete = "RESTRICT")
 
+        self.add_component("msg_attachment",
+                           msg_message="message_id")
+
         # ---------------------------------------------------------------------
         # Outbound Messages
-        # ---------------------------------------------------------------------
+        #
+
         # Show only the supported messaging methods
         MSG_CONTACT_OPTS = current.msg.MSG_CONTACT_OPTS
 
@@ -471,6 +476,31 @@ class S3MessageModel(S3Model):
         return dict(msg_message_id = message_id,
                     msg_message_represent = message_represent,
                     )
+
+# =============================================================================
+class S3MessageAttachmentModel(S3Model):
+    """
+        Message Attachments
+        - link table between msg_message & doc_document
+    """
+
+    names = ["msg_attachment",
+             ]
+
+    def model(self):
+
+        # ---------------------------------------------------------------------
+        #
+        tablename = "msg_attachment"
+        table = self.define_table(tablename,
+                                  # FK not instance
+                                  self.msg_message_id(),
+                                  self.doc_document_id(),
+                                  *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        return dict()
 
 # =============================================================================
 class S3EmailModel(S3ChannelModel):

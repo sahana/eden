@@ -1,14 +1,9 @@
 # -*- coding: utf-8 -*-
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 
-""" Message Parsing API
+""" Message Parsing
 
-    API to parse Inbound Messages.
-
-    Message Parsing subroutines are defined here.
-    These subroutines define different sets of parsing rules.
-    Imported by private/templates/<template>
-    where <template> is the "default" template by default.
+    Template-specific Message Parsers are defined here.
 
     @copyright: 2013 (c) Sahana Software Foundation
     @license: MIT
@@ -102,6 +97,27 @@ class S3Parser(object):
 
         table = s3db.deploy_response
         table.insert(**data)
+
+        # Are there any attachments?
+        atable = s3db.msg_attachment
+        atts = db(atable.message_id == message_id).select(atable.document_id)
+        if atts:
+            dtable = db.doc_document
+            ltable = s3db.deploy_mission_document
+            if hr_id:
+                # Set documents to the Member's doc_id
+                hrtable = db.hrm_human_resource
+                doc_id = db(hrtable.id == hr_id).select(hrtable.doc_id,
+                                                        limitby=(0, 1)
+                                                        ).first().doc_id
+            for row in atts:
+                # Link to Mission
+                document_id = row.document_id
+                ltable.insert(mission_id = mission_id,
+                              message_id = message_id,
+                              document_id = document_id)
+                if hr_id:
+                    db(dtable.id == document_id).update(doc_id = doc_id)
 
         # @ToDo: Reply?
         reply = None

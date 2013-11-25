@@ -1,14 +1,9 @@
 # -*- coding: utf-8 -*-
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 
-""" Message Parsing API
+""" Message Parsing
 
-    API to parse Inbound Messages.
-
-    Message Parsing subroutines are defined here.
-    These subroutines define different sets of parsing rules.
-    Imported by private/templates/<template>
-    where <template> is the "default" template by default.
+    Template-specific Message Parsers are defined here.
 
     @copyright: 2012-13 (c) Sahana Software Foundation
     @license: MIT

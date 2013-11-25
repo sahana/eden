@@ -265,6 +265,8 @@ def alert():
                                    )
             else:
                 s3db.configure(r.tablename,
+                               create_next=URL(f="alert",
+                                               args=["[id]", "select"]),
                                deletable = False,
                                # @ToDo: restrict in postp to change this action button
                                #editable = False,

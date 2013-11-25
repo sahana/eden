@@ -159,19 +159,20 @@ class S3DeploymentModel(S3Model):
                             pagesize = 10,
                             )
 
-        response_widget = dict(label="Responses",
-                               insert=False,
-                               type="datalist",
-                               list_fields = [
-                                    "created_on",
-                                    "mission_id",
-                                    "human_resource_id$id",
-                                    "human_resource_id$person_id",
-                                    "human_resource_id$organisation_id",
-                                    "message_id$body",
-                                    "message_id$from_address",
-                               ],
+        list_fields = ["created_on",
+                       "mission_id",
+                       "human_resource_id$id",
+                       "human_resource_id$person_id",
+                       "human_resource_id$organisation_id",
+                       "message_id$body",
+                       "message_id$from_address",
+                       "message_id$attachment.document_id$file",
+                       ]
+        response_widget = dict(label = "Responses",
+                               insert = False,
+                               type = "datalist",
                                tablename = "deploy_response",
+                               list_fields = list_fields,
                                context = "mission",
                                colspan = 2,
                                list_layout = deploy_render_response,
@@ -790,6 +791,8 @@ def deploy_rheader(r, tabs=[], profile=False):
                                                 args=[alert_id, "send"]))
             else:
                 send_button.update(_disabled="disabled")
+        else:
+            send_button = ""
 
         # Tabs
         tabs = [(T("Message"), None),
@@ -1112,8 +1115,11 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
     item_class = "thumbnail"
 
     row = record["_row"]
+    raw = record._row
     human_resource_id = row["hrm_human_resource.id"]
     mission_id = row["deploy_response.mission_id"]
+
+    db = current.db
 
     # Member deployed?
     # @todo: bulk lookup instead of per-card
@@ -1122,7 +1128,7 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
         query = (table.mission_id == mission_id) & \
                 (table.human_resource_id == human_resource_id) & \
                 (table.deleted != True)
-        row = current.db(query).select(table.id, limitby=(0, 1)).first()
+        row = db(query).select(table.id, limitby=(0, 1)).first()
         if row:
             deploy_action = A(I(" ", _class="icon icon-deployed"),
                               SPAN(T("Member Deployed"), _class="card-action"),
@@ -1139,7 +1145,7 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
                                              ],
                                         vars={"member_id": human_resource_id}),
                               _class="action-lnk"
-                             )
+                              )
     else:
         deploy_action = ""
 
@@ -1151,7 +1157,7 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
                 (table.deleted != True)
         dcount = table.id.count()
         avgrat = table.rating.avg()
-        row = current.db(query).select(dcount, avgrat).first()
+        row = db(query).select(dcount, avgrat).first()
         if row:
             dcount = row[dcount]
             avgrat = row[avgrat]
@@ -1175,7 +1181,8 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
                 SPAN(avgrat,
                      _id=avgrat_id,
                      _class="profile-data-value"),
-                _class="profile-data")
+                _class="profile-data",
+                )
 
     profile_url = URL(f="human_resource", args=[human_resource_id, "profile"])
     profile_title = current.T("Open Member Profile (in a new tab)")
@@ -1199,6 +1206,42 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
                                                          #fields=fields,
                                                          #columns=columns)
 
+    # Dropdown of available documents
+    documents = raw["doc_document.file"]
+    if documents:
+        if not isinstance(documents, list):
+            documents = [documents]
+        doc_list = UL(_class="dropdown-menu",
+                      _role="menu",
+                      )
+        retrieve = db.doc_document.file.retrieve
+        for doc in documents:
+            try:
+                doc_name = retrieve(doc)[0]
+            except (IOError, TypeError):
+                doc_name = current.messages["NONE"]
+            doc_url = URL(c="default", f="download",
+                          args=[doc])
+            doc_item = LI(A(I(_class="icon-file"),
+                            " ",
+                            doc_name,
+                            _href=doc_url,
+                            ),
+                          _role="menuitem",
+                          )
+            doc_list.append(doc_item)
+        docs = DIV(A(I(_class="icon-paper-clip"),
+                     SPAN(_class="caret"),
+                     _class="btn dropdown-toggle",
+                     _href="#",
+                     **{"_data-toggle": "dropdown"}
+                     ),
+                   doc_list,
+                   _class="btn-group attachments dropdown pull-right",
+                   )
+    else:
+        docs = ""
+
     # Toolbox
     update_url = URL(f="response_message",
                      args=[record_id, "update.popup"],
@@ -1213,26 +1256,28 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
                                   args=["IFRC", "img", "email.png"]),
                          ),
                          _class="pull-left",
-                   ),
+                         ),
                    toolbox,
                    DIV(DIV(DIV(person,
                                _class="card-title"),
                            DIV(organisation,
                                _class="card-category"),
-                           _class="media-heading"),
+                           _class="media-heading",
+                           ),
                        DIV(created_on, _class="card-subtitle"),
                        DIV(message, _class="message-body s3-truncate"),
+                       docs,
                        dinfo,
                        DIV(deploy_action,
                            _class="card-actions",
-                       ),
+                           ),
                        _class="media-body",
-                   ),
+                       ),
                    _class="media",
-               ),
+                   ),
                _class=item_class,
                _id=item_id,
-           )
+               )
 
     return item
 
@@ -1737,28 +1782,56 @@ def deploy_response_select_mission(r, **attr):
         r.error(405, r.ERROR.BAD_METHOD)
 
     T = current.T
+    db = current.db
     s3db = current.s3db
 
+    atable = s3db.msg_attachment
+    dtable = db.doc_document
+    query = (atable.message_id == message_id) & \
+            (atable.document_id == dtable.id)
+    atts = db(query).select(dtable.id,
+                            dtable.file,
+                            dtable.name,
+                            )
+        
     response = current.response
     mission_query = S3FieldSelector("mission.status") == 2
 
     get_vars = r.get_vars or {}
     mission_id = get_vars.get("mission_id", None)
     if mission_id:
-        human_resource_id = get_vars.get("hr_id", None)
-        if not human_resource_id:
+        hr_id = get_vars.get("hr_id", None)
+        if not hr_id:
             # @ToDo: deployment_setting for 'Member' label
             current.session.warning = T("No Member Selected!")
             # Can still link to the mission, member can be set
             # manually in the mission profile
             s3db.deploy_response.insert(message_id = message_id,
                                         mission_id = mission_id,
-                                       )
+                                        )
         else:
             s3db.deploy_response.insert(message_id = message_id,
                                         mission_id = mission_id,
-                                        human_resource_id = human_resource_id,
-                                       )
+                                        human_resource_id = hr_id,
+                                        )
+        # Are there any attachments?
+        if atts:
+            ltable = s3db.deploy_mission_document
+            if hr_id:
+                # Set documents to the Member's doc_id
+                hrtable = s3db.hrm_human_resource
+                doc_id = db(hrtable.id == hr_id).select(hrtable.doc_id,
+                                                        limitby=(0, 1)
+                                                        ).first().doc_id
+            for a in atts:
+                # Link to Mission
+                document_id = a.id
+                ltable.insert(mission_id = mission_id,
+                              message_id = message_id,
+                              document_id = document_id)
+                if hr_id:
+                    db(dtable.id == document_id).update(doc_id = doc_id)
+
         #mission = XML(A(T("Mission"),
         #                _href=URL(c="deploy", f="mission",
         #                          args=[mission_id, "profile"])))
@@ -1919,6 +1992,17 @@ def deploy_response_select_mission(r, **attr):
                 row = TAG[""](row[0],
                               row[1],
                               )
+        # Any attachments?
+        if atts:
+            attachments = TABLE(TR(TH("%s: " % T("Attachments"))))
+            for a in atts:
+                url = URL(c="default", f="download",
+                          args=a.file)
+                attachments.append(TR(TD(A(I(" ", _class="icon icon-paperclip"),
+                                           a.name,
+                                           _href=url))))
+        else:
+            attachments = ""
         # @ToDo: Add Reply button
         rheader = DIV(row,
                       TABLE(TR(TH("%s: " % T("From")),
@@ -1934,6 +2018,7 @@ def deploy_response_select_mission(r, **attr):
                                ),
                             ),
                             record.body,
+                            attachments,
                             )
         output["rheader"] = rheader
 

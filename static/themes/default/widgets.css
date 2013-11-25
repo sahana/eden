@@ -1318,6 +1318,11 @@ table.report .pt-cell-zoom.opened {
     box-sizing: content-box;
 }
 
+td .icon {
+    /* Override profile.css */
+    margin-top: 0;
+}
+
 .resizable-textarea .grippie {
     /*-moz-border-bottom-colors: none;
     -moz-border-image: none;

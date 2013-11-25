@@ -309,7 +309,7 @@ class S3DocumentLibrary(S3Model):
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3
         #
-        return Storage(doc_document_id=document_id)
+        return dict(doc_document_id=document_id)
 
     # -------------------------------------------------------------------------
     def defaults(self):
@@ -317,7 +317,7 @@ class S3DocumentLibrary(S3Model):
         
         document_id = S3ReusableField("document_id", "integer",
                                       readable=False, writable=False)
-        return Storage(doc_document_id=document_id)
+        return dict(doc_document_id=document_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -450,15 +450,15 @@ class S3DocumentLibrary(S3Model):
     @staticmethod
     def document_onaccept(form):        
         
-        vars = form.vars
-        doc = vars.file
+        form_vars = form.vars
+        doc = form_vars.file
        
         table = current.db.doc_document
 
         document = json.dumps(dict(filename=doc,
-                                  name=table.file.retrieve(doc)[0],
-                                  id=vars.id,
-                                  ))
+                                   name=table.file.retrieve(doc)[0],
+                                   id=form_vars.id,
+                                   ))
 
         current.s3task.async("document_create_index",
                              args = [document])
@@ -476,8 +476,8 @@ class S3DocumentLibrary(S3Model):
                                                limitby=(0, 1)).first()
 
         document = json.dumps(dict(filename=record.file,
-                                  id=row.id,
-                                 ))
+                                   id=row.id,
+                                   ))
         
         current.s3task.async("document_delete_index",
                              args = [document])   
@@ -524,7 +524,6 @@ def doc_checksum(docstr):
 
     converted = hashlib.sha1(docstr).hexdigest()
     return converted
-
 
 # =============================================================================
 def doc_render_documents(listid, resource, rfields, record, 
@@ -603,7 +602,7 @@ def doc_render_documents(listid, resource, rfields, record,
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+        delete_btn = A(I(" ", _class="icon icon-trash"),
                        _class="dl-item-delete",
                        )
     else:

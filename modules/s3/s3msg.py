@@ -41,9 +41,15 @@ __all__ = ["S3Msg",
 
 import base64
 import datetime
+import os
 import string
 import urllib
 import urllib2
+
+try:
+    from cStringIO import StringIO    # Faster, where available
+except:
+    from StringIO import StringIO
 
 try:
     import json # try stdlib (Python 2.6)
@@ -169,7 +175,7 @@ class S3Msg(object):
                 clean = "%s%s" % (default_country_code, clean)
             else:
                 clean = "%s%s" % (default_country_code,
-                                  string.lstrip(clean, "0"))
+                                  clean.lstrip("0"))
 
         return clean
 
@@ -813,7 +819,7 @@ class S3Msg(object):
         text = ""
 
         s3db = current.s3db
-        words = string.split(message)
+        words = message.split(" ")
         if "http://maps.google.com/?q" in words[0]:
             # Parse OpenGeoSMS
             pwords = words[0].split("?q=")[1].split(",")
@@ -965,7 +971,7 @@ class S3Msg(object):
                                        ("token", tropo_token_messaging),
                                        ("outgoing", "1"),
                                        ("row_id", row_id)
-                                      ])
+                                       ])
             xml = urllib2.urlopen("%s?%s" % (base_url, params)).read()
             # Parse Response (actual message is sent as a response to the POST which will happen in parallel)
             #root = etree.fromstring(xml)
@@ -1201,9 +1207,7 @@ class S3Msg(object):
     def poll_email(channel_id):
         """
             This is a simple mailbox polling script for the Messaging Module.
-            It is called from the scheduler.
-            @param username: email address of the email source to read from.
-            This uniquely identifies one inbound email task.
+            It is normally called from the scheduler.
 
             @ToDo: Handle MIME attachments
                    http://docs.python.org/2/library/email-examples.html
@@ -1237,7 +1241,9 @@ class S3Msg(object):
         if not channel:
             return "No Such Email Channel: %s" % channel_id
 
-        import socket, email
+        import email
+        import mimetypes
+        import socket
 
         username = channel.username
         password = channel.password
@@ -1251,12 +1257,75 @@ class S3Msg(object):
         minsert = mtable.insert
         stable = db.msg_channel_status
         sinsert = stable.insert
+        atable = s3db.msg_attachment
+        ainsert = atable.insert
+        dtable = db.doc_document
+        dinsert = dtable.insert
+        store = dtable.file.store
+        update_super = s3db.update_super
         # Is this channel connected to a parser?
         parser = s3db.msg_parser_enabled(channel_id)
         if parser:
             ptable = db.msg_parsing_status
             pinsert = ptable.insert
 
+        # ---------------------------------------------------------------------
+        def parse_email(message):
+            """
+                Helper to parse the mail
+            """
+
+            # Create a Message object
+            msg = email.message_from_string(message)
+            # Parse the Headers
+            sender = msg["from"]
+            subject = msg.get("subject", "")
+            # Store the whole raw message
+            raw = msg.as_string()
+            # Parse out the 'Body'
+            # Look for Attachments
+            attachments = []
+            # http://docs.python.org/2/library/email-examples.html
+            body = ""
+            for part in msg.walk():
+                if part.get_content_maintype() == "multipart":
+                    # multipart/* are just containers
+                    continue
+                filename = part.get_filename()
+                if not filename:
+                    # Assume this is the Message Body (plain text or HTML)
+                    if not body:
+                        # Plain text will come first
+                        body = part.get_payload(decode=True)
+                    continue
+                attachments.append((filename, part.get_payload(decode=True)))
+
+            # Store in DB
+            id = minsert(channel_id=channel_id,
+                         from_address=sender,
+                         subject=subject[:78],
+                         body=body,
+                         raw=raw,
+                         inbound=True)
+            record = dict(id=id)
+            update_super(mtable, record)
+            message_id = record["message_id"]
+            for a in attachments:
+                filename = a[0]
+                fp = StringIO()
+                fp.write(a[1])
+                newfilename = store(fp, filename)
+                fp.close()
+                document_id = dinsert(name=filename,
+                                      file=newfilename)
+                update_super(dtable, dict(id=document_id))
+                ainsert(message_id=message_id,
+                        document_id=document_id)
+            if parser:
+                pinsert(message_id=message_id,
+                        channel_id=channel_id)
+
+        dellist = []
         if protocol == "pop3":
             import poplib
             # http://docs.python.org/library/poplib.html
@@ -1289,44 +1358,12 @@ class S3Msg(object):
                             status=error)
                     return error
 
-            dellist = []
             mblist = p.list()[1]
-            update_super = s3db.update_super
             for item in mblist:
                 number, octets = item.split(" ")
                 # Retrieve the message (storing it in a list of lines)
                 lines = p.retr(number)[1]
-                # Create an e-mail object representing the message
-                msg = email.message_from_string("\n".join(lines))
-                # @ToDo: DRY with IMAP & work on robustness
-                # Parse out the 'From' Header
-                sender = msg["from"]
-                # Parse out the 'Subject' Header
-                if "subject" in msg:
-                    subject = msg["subject"]
-                else:
-                    subject = ""
-                # Store the whole raw message
-                raw = msg.as_string()
-                # Parse out the 'Body'
-                payload = msg.get_payload()
-                if not isinstance(payload, basestring):
-                    payload = payload[0].as_string()
-                body = payload.split("\n\n")
-                body = body[1] if len(body) > 1 else body[0]
-                # Store in DB
-                id = minsert(channel_id=channel_id,
-                             from_address=sender,
-                             subject=subject[:78],
-                             body=body,
-                             raw=raw,
-                             inbound=True)
-                record = dict(id=id)
-                update_super(mtable, record)
-                if parser:
-                    pinsert(message_id=record["message_id"],
-                            channel_id=channel_id)
-
+                parse_email("\n".join(lines))
                 if delete:
                     # Add it to the list of messages to delete later
                     dellist.append(number)
@@ -1362,49 +1399,19 @@ class S3Msg(object):
                 db.commit()
                 return error
 
-            dellist = []
             # Select inbox
             M.select()
             # Search for Messages to Download
             typ, data = M.search(None, "ALL")
-            update_super = s3db.update_super
-
-            for num in data[0].split():
-                typ, msg_data = M.fetch(num, "(RFC822)")
+            mblist = data[0].split()
+            for number in mblist:
+                typ, msg_data = M.fetch(number, "(RFC822)")
                 for response_part in msg_data:
                     if isinstance(response_part, tuple):
-                        msg = email.message_from_string(response_part[1])
-                        # Parse out the 'From' Header
-                        sender = msg["from"]
-                        # Parse out the 'Subject' Header
-                        if "subject" in msg:
-                            subject = msg["subject"]
-                        else:
-                            subject = ""
-                        # Store the whole raw message
-                        raw = msg.as_string()
-                        # Parse out the 'Body'
-                        payload = msg.get_payload()
-                        if not isinstance(payload, basestring):
-                            payload = payload[0].as_string()
-                        body = payload.split("\n\n")
-                        body = body[1] if len(body) > 1 else body[0]
-                        # Store in DB
-                        id = minsert(channel_id=channel_id,
-                                     from_address=sender,
-                                     subject=subject[:78],
-                                     body=body,
-                                     raw=raw,
-                                     inbound=True)
-                        record = dict(id=id)
-                        update_super(mtable, record)
-                        if parser:
-                            pinsert(message_id=record["message_id"],
-                                    channel_id=channel_id)
-
+                        parse_email(response_part[1])
                         if delete:
                             # Add it to the list of messages to delete later
-                            dellist.append(num)
+                            dellist.append(number)
             # Iterate over the list of messages to delete
             for number in dellist:
                 typ, response = M.store(number, "+FLAGS", r"(\Deleted)")
