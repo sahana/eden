@@ -757,7 +757,7 @@ S3OptionsFilter({
  'msgNoRecords':'%s',
  'optional':true,
 })''' % T("No contacts yet defined for this site"))
-                    table.site_id.comment = A(T("Set as default Site"),
+                    table.site_id.comment = A(current.T("Set as default Site"),
                                       _id="req_req_site_id_link",
                                       _target="_blank",
                                       _href=URL(c="default",
@@ -820,7 +820,7 @@ S3OptionsFilter({
  'msgNoRecords':'%s',
  'optional':true,
 })''' % T("No contacts yet defined for this site"))
-                    table.site_id.comment = A(T("Set as default Site"),
+                    table.site_id.comment = A(current.T("Set as default Site"),
                                       _id="req_req_site_id_link",
                                       _target="_blank",
                                       _href=URL(c="default",
