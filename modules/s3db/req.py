@@ -745,6 +745,7 @@ S3OptionsFilter({
 
                 # @ToDo: Fix for human_resource_id -> person_id
                 if settings.get_req_requester_from_site():
+                    T = current.T
                     # Filter the list of Contacts to those for the site
                     table.requester_id.widget = None
                     jquery_ready.append('''
@@ -757,7 +758,7 @@ S3OptionsFilter({
  'msgNoRecords':'%s',
  'optional':true,
 })''' % T("No contacts yet defined for this site"))
-                    table.site_id.comment = A(current.T("Set as default Site"),
+                    table.site_id.comment = A(T("Set as default Site"),
                                       _id="req_req_site_id_link",
                                       _target="_blank",
                                       _href=URL(c="default",
@@ -808,6 +809,7 @@ S3OptionsFilter({
 
                 # @ToDo: Fix for human_resource_id -> person_id
                 if settings.get_req_requester_from_site():
+                    T = current.T
                     # Filter the list of Contacts to those for the site
                     table.requester_id.widget = None
                     current.response.s3.jquery_ready.append('''
@@ -820,7 +822,7 @@ S3OptionsFilter({
  'msgNoRecords':'%s',
  'optional':true,
 })''' % T("No contacts yet defined for this site"))
-                    table.site_id.comment = A(current.T("Set as default Site"),
+                    table.site_id.comment = A(T("Set as default Site"),
                                       _id="req_req_site_id_link",
                                       _target="_blank",
                                       _href=URL(c="default",
