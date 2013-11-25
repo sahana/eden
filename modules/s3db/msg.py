@@ -1630,6 +1630,11 @@ class S3TwitterSearchModel(S3ChannelModel):
                                                  _title="%s|%s" % (T("Entity Information"),
                                                                    T("This is required if analyzing with KeyGraph."))),
                                    ),
+                             Field("include_to_map", "boolean",
+                                    default = True,
+                                    label = T("Include on Map?"),
+                                    represent = s3_yes_no_represent,
+                                    ),
                              # @ToDo: Rename or even move to Component Table
                              Field("is_processed", "boolean",
                                    default = False,
@@ -1720,8 +1725,6 @@ class S3TwitterSearchModel(S3ChannelModel):
                                  "location_id",
                                  ],
                   )
-
-        self.gis_location_id = S3ReusableField("location_id",table)
 
         # ---------------------------------------------------------------------
         return dict()

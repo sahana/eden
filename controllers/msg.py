@@ -1274,6 +1274,9 @@ def twitter_search():
     table.is_searched.writable = False
     table.is_processed.readable = False
     table.is_searched.readable = False
+    entity_id = ""
+    gtable = s3db.gis_layer_feature
+    keyword_str = ""
 
     # @ToDo: I'm sure there will be other language oddities to fix
     langs = settings.get_L10n_languages().keys()
@@ -1302,13 +1305,48 @@ def twitter_search():
         msg_record_created = T("Query added"),
         msg_record_deleted = T("Query deleted"),
         msg_list_empty = T("No Query currently defined"),
-        msg_record_modified = T("Query updated")
+        msg_record_modified  = T("Query updated")
         )
 
     if request.post_vars.get("search_after_save"):
         url_after_save = URL(f="twitter_result")
     else:
         url_after_save = None
+
+
+    if request.post_vars.get("include_to_map"):
+        etable = s3db.gis_layer_entity
+        layer_id = etable.insert(deleted = False,
+                      instance_type = "Feature Layer",
+                      name = request.post_vars.get("keywords"),
+                      description = "Twitter"
+                      )
+
+        entity_id = gtable.insert(name = request.post_vars.get("keywords"),
+                      description = "Twitter",
+                      controller = "msg",
+                      function = "twitter_result",
+                      popup_label = "Tweet",
+                      popup_fields = "body",
+                      dir = "Twitter",
+                      opacity = 1.0,
+                      refresh = 900,
+                      cluster_distance = 20,
+                      cluster_threshold = 2,
+                      mci = 2,
+                      layer_id = layer_id,
+                      )
+
+        uuid_entity = db(gtable.id == entity_id).select(gtable.uuid,limitby=(0,1)).first()
+        db(etable.id == layer_id).update(uuid = uuid_entity.uuid)
+
+        glayertable = s3db.gis_layer_config
+        glayer_id = glayertable.insert(layer_id = layer_id,config_id = 2, enabled = 'Yes',visible = 'Yes', base = 'No', uuid = uuid_entity.uuid)
+
+        symtable = s3db.gis_layer_symbology
+        symtable.insert(layer_id = layer_id,symbology_id = 3,marker_id = 42)
+
+    keyword_str = request.post_vars.get("keywords")
 
     s3db.configure(tablename,
                    listadd=True,
@@ -1346,6 +1384,11 @@ def twitter_search():
 
             restrict_k = [str(record.id) for record in records]
 
+            search_id_db = db(rtable.keywords == keyword_str).select(rtable.id,limitby=(0,1)).first()
+
+            if search_id_db:
+                db(gtable.name == keyword_str).update(filter = "~.search_id="+str(search_id_db.id))
+
             # @ToDo: Make these S3Methods rather than additional controllers
             s3.actions += [dict(label=str(T("Search")),
                                 _class="action-btn",
@@ -1380,7 +1423,7 @@ def twitter_result():
         msg_list_empty = T("No Tweets Available."),
         )
 
-    from s3.s3filter import S3DateFilter, S3TextFilter
+    from s3.s3filter import S3DateFilter, S3TextFilter, S3OptionsFilter
 
     filter_widgets = [
         S3DateFilter("created_on",
@@ -1393,7 +1436,13 @@ def twitter_result():
                      label=T("Tweeted By"),
                      _class="tweeter-filter-class",
                      comment=T("Filter Tweets by who tweeted them"),
-                     )
+                     ),
+        S3OptionsFilter("search_id",
+                        represent="%(keywords)s",
+                        _class="twitter-keyword-class",
+                        widget="multiselect",
+                        comment=T("Filter by Search Keyword"),
+                        )
         ]
 
     s3db.configure(tablename,
