@@ -239,7 +239,9 @@ form.form-horizontal.project_project {
     font-weight: bold;
     padding-top: 0;
 }
-
+body.rtl .form-horizontal .control-label {
+    float: right;
+}
 .form-container .tooltip {
     margin-top: 4px;
 }
@@ -255,7 +257,7 @@ form.form-horizontal.project_project {
     border-top: none;
     padding-bottom: none;
     width: 220px;
-    margin-top: -15px;
+    margin-top: -18px;
     margin-bottom: -24px;
     margin-left: -18px;
     margin-right: -15px;
@@ -553,8 +555,13 @@ label.ui-corner-all {
 label.ui-corner-all span {
     position: relative;
     top: 5px;
-    left: 10px;
     font-size: 12px;
+}
+body.ltr label.ui-corner-all span {
+    left: 10px;
+}
+body.rtl label.ui-corner-all span {
+    right: 10px;
 }
 
 .ui-widget-header {
@@ -883,6 +890,12 @@ span.toggle-text i {
     margin-right: 5px;
 }
 
+/* Contacts Page */
+.form-container #pr_person_sub_human_resourcehuman_resource__label {
+    /* Hide the colon */
+    display: none;
+}
+
 /* Throbber */
 /* Used by Autocompletes, map popups, map toolbar, dropdown widgets */
 .throbber,
@@ -917,8 +930,8 @@ span.toggle-text i {
     background-color: white;
     margin-left: 50px;
     margin-top: -20px;
-    padding-right: 10px;
-    width: 110px;
+    padding: 0 10px;
+    width: auto;
 }
 
 /*

@@ -39,6 +39,8 @@ __all__ = ["S3Parser"]
 
 from gluon import current
 
+from s3.s3parser import S3Parsing
+
 # =============================================================================
 class S3Parser(object):
     """
@@ -94,24 +96,9 @@ class S3Parser(object):
                     )
 
         # Can we identify the Member?
-        from_address = message.from_address
-        if "<" in from_address:
-            from_address = from_address.split("<")[1].split(">")[0]
-        atable = s3db.deploy_human_resource_application
-        hrtable = db.hrm_human_resource
-        ptable = db.pr_person
-        ctable = s3db.pr_contact
-        query = (ctable.value == from_address) & \
-                (ctable.contact_method == "EMAIL") & \
-                (ctable.pe_id == ptable.pe_id) & \
-                (ptable.id == hrtable.person_id) & \
-                (atable.human_resource_id == hrtable.id) & \
-                (atable.active == True) & \
-                (ctable.deleted == False)
-        possibles = db(query).select(hrtable.id,
-                                     limitby=(0, 2))
-        if len(possibles) == 1:
-            data["human_resource_id"] = possibles.first().id
+        hr_id = S3Parsing().lookup_human_resource(message.from_address)
+        if hr_id:
+            data["human_resource_id"] = hr_id
 
         table = s3db.deploy_response
         table.insert(**data)

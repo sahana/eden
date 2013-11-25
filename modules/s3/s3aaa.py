@@ -1297,7 +1297,10 @@ Thank you
 
         # Organisation
         # @ToDo: Allow Admin to see Org linkage even if Users cannot specify when they register
-        req_org = deployment_settings.get_auth_registration_requests_organisation()
+        if current.auth.s3_has_role("ADMIN"):         
+            req_org = deployment_settings.get_auth_admin_sees_organisation()
+        else:
+            req_org = deployment_settings.get_auth_registration_requests_organisation()
         if req_org:
             if pe_ids:
                 # Filter orgs to just those belonging to the Org Admin's Org
@@ -5669,16 +5672,14 @@ class S3Permission(object):
                       or list of applicable ACLs
         """
 
-        db = current.db
-        table = self.table
-
-        gtable = self.auth.settings.table_group
-
         if not self.use_cacls:
             # We do not use ACLs at all (allow all)
             return None
         else:
             acls = Storage()
+
+        db = current.db
+        table = self.table
 
         c = c or self.controller
         f = f or self.function
@@ -5741,9 +5742,6 @@ class S3Permission(object):
 
         ALL = (self.ALL, self.ALL)
         NONE = (self.NONE, self.NONE)
-
-        atn = table._tablename
-        gtn = gtable._tablename
 
         use_facls = self.use_facls
         def rule_type(r):

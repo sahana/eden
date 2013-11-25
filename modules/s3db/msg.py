@@ -489,6 +489,7 @@ class S3EmailModel(S3ChannelModel):
 
         T = current.T
 
+        add_component = self.add_component
         configure = self.configure
         define_table = self.define_table
         set_method = self.set_method
@@ -581,6 +582,18 @@ class S3EmailModel(S3ChannelModel):
         configure(tablename,
                   super_entity = "msg_message",
                   )
+
+        # Components
+        add_component("deploy_response",
+                      msg_email="message_id")
+
+        # Used to link to custom tab deploy_response_select_mission
+        add_component("deploy_mission",
+                      msg_email=dict(name="select",
+                                     link="deploy_response",
+                                     joinby="message_id",
+                                     key="mission_id",
+                                     autodelete=False))
 
         # ---------------------------------------------------------------------
         return dict()

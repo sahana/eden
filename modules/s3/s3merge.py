@@ -711,7 +711,7 @@ class S3Merge(S3Method):
                 #inp = widgets.upload.widget(field, value,
                                             #download_url=download_url, **attr)
         elif field.widget:
-            if isinstance(field.widget, S3LocationSelectorWidget):
+            if isinstance(field.widget, (S3LocationSelectorWidget, S3LocationSelectorWidget2)):
                 # Workaround - location selector does not support
                 # renaming of the fields => switch to dropdown
                 level = None

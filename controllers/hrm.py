@@ -113,6 +113,11 @@ def staff():
                                                                   T("The facility where this position is based."),
                                                                   #T("Enter some characters to bring up a list of possible matches")
                                                                   )))
+                #table.site_id.comment = S3AddResourceLink(c="org", f="facility",
+                #                                          vars = dict(child="site_id",
+                #                                                      parent="req"),
+                #                                          title=T("Add New Site"),
+                #                                          )
                 table.status.writable = table.status.readable = False
 
             elif r.method == "delete":
@@ -481,17 +486,16 @@ def training_event():
 def experience():
     """ Experience Controller """
 
-    mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
-
-    output = s3_rest_controller()
-    return output
+    table = s3db.hrm_human_resource
+    s3.filter = ((table.type == 1) & \
+                 (s3db.hrm_experience.person_id == table.person_id))
+    return s3db.hrm_experience_controller()
 
 # -----------------------------------------------------------------------------
 def competency():
-    """ RESTful CRUD controller used to allow searching for people by Skill"""
+    """
+        RESTful CRUD controller used to allow searching for people by Skill
+    """
 
     table = s3db.hrm_human_resource
     s3.filter = ((table.type == 1) & \

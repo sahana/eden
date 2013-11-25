@@ -9,23 +9,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 <link rel="shortcut icon" href="/{{=appname}}/static/themes/{{=response.s3.theme}}/favicon.ico" type="image/x-icon" />
 <style type="text/css">
-{{if s3.rtl:}}
- div{direction:rtl;}
-{{else:}}
- body{direction:ltr;}
-{{pass}}
 {{if request.get_vars.background:}}
- html>body {background:{{=request.get_vars.background}};}
+ html>body{background:{{=request.get_vars.background}};}
 {{pass}}
 {{if request.get_vars.header == "hide":}}
-div#header-banner {
-    background: #568AAB;
-    height: 20px;
-    border-bottom: 1px solid white;
-}
-div#header-top-menu {
-    margin-top: 0;
-}
+div#header-banner{background:#568AAB;height:20px;border-bottom:1px solid white;}
+div#header-top-menu{margin-top:0;}
 {{pass}}
 </style>
 {{for sheet in s3.external_stylesheets:}}

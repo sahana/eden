@@ -81,6 +81,8 @@ settings.base.guided_tour = True
 #settings.auth.registration_organisation_group_required = True
 # Uncomment this to request the Site when a user registers
 #settings.auth.registration_requests_site = True
+# Uncomment this to allow Admin to see Organisations in user Admin even if the Registration doesn't request this
+#settings.auth.admin_sees_organisation = True
 # Uncomment to set the default role UUIDs assigned to newly-registered users
 # This is a dictionary of lists, where the key is the realm that the list of roles applies to
 # The key 0 implies not realm restricted
@@ -325,6 +327,8 @@ settings.L10n.decimal_separator = "."
 
 # -----------------------------------------------------------------------------
 # Organisations
+# Uncomment to use an Autocomplete for Organisation lookup fields
+#settings.org.autocomplete = True
 # Enable the use of Organisation Branches
 #settings.org.branches = True
 # Enable the use of Organisation Regions
@@ -337,6 +341,8 @@ settings.L10n.decimal_separator = "."
 #settings.org.site_last_contacted = True
 # Uncomment to use an Autocomplete for Site lookup fields
 #settings.org.site_autocomplete = True
+# Extra fields to show in Autocomplete Representations
+#settings.org.site_autocomplete_fields = ["instance_type", "location_id$L1", "organisation_id$name"]
 # Uncomment to have Site Autocompletes search within Address fields
 #settings.org.site_address_autocomplete = True
 # Uncomment to hide inv & req tabs from Sites
@@ -476,6 +482,8 @@ settings.L10n.decimal_separator = "."
 #settings.req.items_ask_purpose = False
 # Uncomment to disable the Commit step in the workflow & simply move direct to Ship
 #settings.req.use_commit = False
+# Uncomment to have Donations include a 'Value' field
+#settings.req.commit_value = True
 # Uncomment to allow Donations to be made without a matching Request
 #settings.req.commit_without_request = True
 # Uncomment if the User Account logging the Commitment is NOT normally the Committer

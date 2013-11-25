@@ -206,7 +206,6 @@ function s3_gis_autocomplete(level) {
                 });
             },
             search: function(event, ui) {
-                dummy_input.hide();
                 throbber.removeClass('hide').show();
                 // Wipe the existing ID so that update forms can change the values to new ones
                 real_input.val('');
@@ -214,11 +213,12 @@ function s3_gis_autocomplete(level) {
             },
             response: function(event, ui, content) {
                 throbber.hide();
-                dummy_input.show();
                 return content;
             },
             focus: function(event, ui) {
-                dummy_input.val(ui.item.name);
+                if (ui.item.id) {
+                    dummy_input.val(ui.item.name);
+                }
                 return false;
             },
             select: function(event, ui) {
@@ -236,9 +236,8 @@ function s3_gis_autocomplete(level) {
                     s3_gis_autocomplete(parseInt(item.level.replace('L', ''), 10) + 1);
                 } else {
                     // No matching results
-                    dummy_input.val('');
-                    real_input.val('')
-                              .change();
+                    //dummy_input.val('');
+                    real_input.val('').change();
                 }
                 return false;
             }
@@ -286,7 +285,6 @@ function s3_gis_autocomplete_search() {
                 });
             },
             search: function(event, ui) {
-                dummy_input.hide();
                 throbber.removeClass('hide').show();
                 // Hide the Select Button
                 $('#gis_location_search_select-btn').hide();
@@ -294,11 +292,12 @@ function s3_gis_autocomplete_search() {
             },
             response: function(event, ui, content) {
                 throbber.hide();
-                dummy_input.show();
                 return content;
             },
             focus: function(event, ui) {
-                dummy_input.val(ui.item.name);
+                if (ui.item.id) {
+                    dummy_input.val(ui.item.name);
+                }
                 return false;
             },
             select: function(event, ui) {

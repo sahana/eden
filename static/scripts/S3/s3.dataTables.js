@@ -331,7 +331,6 @@
                 var row = $(this).closest('tr');
                 togglePairActions(t);
                 setSelectionClass(t, row, posn);
-                
             });
         }
     }
@@ -674,7 +673,6 @@
         }
         if (tableConfig['bulkActions']) {
             tableColumns[tableConfig['bulkCol']] = {
-                // @ToDo: i18n
                 'sTitle': '<div id="bulk_select_options"><input id="modeSelectionAll" type="checkbox">' + i18n.sSelectAll + '</input></div>',
                 'bSortable': false
             };
@@ -700,11 +698,13 @@
             };
         }
 
-        /* Code to calculate the bulk action buttons
+        /*
+           Code to calculate the bulk action buttons
 
            They will actually be placed on the dataTable inside the fnHeaderCallback
            It is necessary to do this inside of the callback because the dataTable().fnDraw
-           that these buttons trigger will remove the onClick binding. */
+           that these buttons trigger will remove the onClick binding.
+        */
         if (tableConfig['bulkActions']) {
             var bulk_submit = '';
             for (var i=0, iLen=tableConfig['bulkActions'].length; i < iLen; i++) {

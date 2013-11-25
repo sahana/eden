@@ -68,7 +68,7 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
-from gluon.dal import Row, Rows
+from gluon.dal import Row
 from gluon.storage import Storage
 
 from ..s3 import *
@@ -325,16 +325,12 @@ class S3OrganisationModel(S3Model):
             msg_record_deleted=T("Organization deleted"),
             msg_list_empty=T("No Organizations currently registered"))
 
-        # @ToDo: Deployment_setting
-        organisation_dropdown_not_ac = True
-        if organisation_dropdown_not_ac:
-            help = T("If you don't see the Organization in the list, you can add a new one by clicking link 'Add Organization'.")
-            widget = None
-        else:
+        if settings.get_org_autocomplete():
             help = T("Enter some characters to bring up a list of possible matches")
-            widget = S3OrganisationAutocompleteWidget()
-        #else:
-        #    widget = SQLFORM.widgets.options.widget
+            org_widget = S3OrganisationAutocompleteWidget()
+        else:
+            help = T("If you don't see the Organization in the list, you can add a new one by clicking link 'Add Organization'.")
+            org_widget = None
 
         organisation_comment = S3AddResourceLink(c="org", f="organisation",
                                                  label=ADD_ORGANIZATION,
@@ -360,7 +356,7 @@ class S3OrganisationModel(S3Model):
                                           label=ORGANISATION,
                                           comment=organisation_comment,
                                           ondelete="RESTRICT",
-                                          widget = widget,
+                                          widget = org_widget,
                                           )
 
         utablename = auth.settings.table_user_name
@@ -743,22 +739,16 @@ class S3OrganisationModel(S3Model):
         # (default anyway on MySQL/SQLite, but not PostgreSQL)
         value = value.lower().strip()
 
-        filter = _vars.filter
+        if not value:
+            output = current.xml.json_message(False, 400,
+                            "Missing options! Require: filter & value")
+            raise HTTP(400, body=output)
 
-        if filter and value:
-
-            if filter == "~":
-                query = (S3FieldSelector("organisation.name").lower().like(value + "%")) | \
-                        (S3FieldSelector("organisation.acronym").lower().like(value + "%"))
-                if use_branches:
-                    query |= (S3FieldSelector("parent.name").lower().like(value + "%")) | \
-                             (S3FieldSelector("parent.acronym").lower().like(value + "%"))
-
-            else:
-                output = current.xml.json_message(False, 400,
-                                "Unsupported filter! Supported filters: ~")
-                raise HTTP(400, body=output)
-
+        query = (S3FieldSelector("organisation.name").lower().like(value + "%")) | \
+                (S3FieldSelector("organisation.acronym").lower().like(value + "%"))
+        if use_branches:
+            query |= (S3FieldSelector("parent.name").lower().like(value + "%")) | \
+                     (S3FieldSelector("parent.acronym").lower().like(value + "%"))
         resource.add_filter(query)
 
         MAX_SEARCH_RESULTS = settings.get_search_max_results()
@@ -772,7 +762,10 @@ class S3OrganisationModel(S3Model):
             field2 = table.acronym
 
             # Fields to return
-            fields = ["id", "name", "acronym"]
+            fields = ["id",
+                      "name",
+                      "acronym",
+                      ]
             if use_branches:
                 fields.append("parent.name")
 
@@ -784,25 +777,38 @@ class S3OrganisationModel(S3Model):
             output = []
             append = output.append
             for row in rows:
+                acronym = ""
                 if use_branches:
                     _row = row[table]
                 else:
                     _row = row
                 name = _row.name
-                parent = None
-                if "org_parent_organisation" in row:
-                    parent = object.__getattribute__(row, "org_parent_organisation")
-                    if parent.name is not None:
-                        name = "%s > %s" % (parent.name, name)
-                    else:
-                        parent = None
-                if not parent:
-                    acronym = _row.acronym
-                    if acronym:
-                        name = "%s (%s)" % (name, acronym)
+                acronym = _row.acronym
                 record = dict(id = _row.id,
                               name = name,
                               )
+                if acronym:
+                    record["acronym"] = acronym
+                if "org_parent_organisation" in row:
+                    parent = object.__getattribute__(row, "org_parent_organisation")
+                    if parent.name is not None:
+                        record["parent"] = parent.name
+
+                # Determine if input is org hit or acronym hit
+                value_len = len(value)
+                orgNameHit = name[:value_len].lower() == value
+                if orgNameHit:
+                    nextString = name[value_len:]
+                    if nextString != "":
+                        record["matchString"] = name[:value_len]
+                        record["nextString"] = nextString
+                else:
+                    nextString = acronym[value_len:]
+                    if nextString != "":
+                        record["matchString"] = acronym[:value_len]
+                        record["nextString"] = nextString
+                        record["match"] = "acronym"
+
                 append(record)
             output = jsons(output)
 
@@ -1889,6 +1895,9 @@ class S3SiteModel(S3Model):
         T = current.T
         auth = current.auth
 
+        add_component = self.add_component
+        set_method = self.set_method
+
         # =====================================================================
         # Site / Facility (ICS terminology)
         #
@@ -1923,6 +1932,7 @@ class S3SiteModel(S3Model):
                                         default=False,
                                         readable=False,
                                         writable=False),
+                                  Field("comments", "text"),
                                   *s3_ownerstamp())
 
         # ---------------------------------------------------------------------
@@ -1950,13 +1960,23 @@ class S3SiteModel(S3Model):
                                   comment=comment
                                   )
 
+        # Custom Method for S3SiteAutocompleteWidget
+        set_method("org", "site",
+                   method="search_ac",
+                   action=self.site_search_ac)
+
         # Custom Method for S3SiteAddressAutocompleteWidget
-        self.set_method("org", "site",
-                        method="search_address_ac",
-                        action=self.site_search_address_ac)
+        set_method("org", "site",
+                   method="search_address_ac",
+                   action=self.site_search_address_ac)
+
+        # Custom Method for S3AddPersonWidget2
+        # @ToDo: One for HRMs
+        set_method("org", "site",
+                   method="site_contact_person",
+                   action=self.site_contact_person)
 
         # Components
-        add_component = self.add_component
 
         # Facility Types
         # Format for S3SQLInlineComponentCheckbox
@@ -2015,10 +2035,12 @@ class S3SiteModel(S3Model):
                       org_site=dict(joinby="site_id",
                                     multiple=False))
 
-        # Details
-        add_component("org_site_details",
-                      org_site=dict(joinby="site_id",
+        # Status
+        add_component("org_site_status",
+                      org_site=dict(name="status",
+                                    joinby="site_id",
                                     multiple=False))
+
         self.configure(tablename,
                        onaccept=self.org_site_onaccept,
                        context = {"location": "location_id",
@@ -2029,7 +2051,7 @@ class S3SiteModel(S3Model):
                                     "code",
                                     "instance_type",
                                     "name",
-                                    "organistion_id",
+                                    "organisation_id",
                                     "location_id"]
                        )
 
@@ -2148,6 +2170,117 @@ class S3SiteModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def site_contact_person(r, **attr):
+        """
+            JSON lookup method for S3AddPersonWidget2
+        """
+
+        site_id = r.id
+        if not site_id:
+            output = current.xml.json_message(False, 400, "No id provided!")
+            raise HTTP(400, body=output)
+
+        db = current.db
+        s3db = current.s3db
+        ltable = s3db.hrm_human_resource_site
+        htable = db.hrm_human_resource
+        query = (ltable.site_id == site_id) & \
+                (ltable.site_contact == True) & \
+                (ltable.human_resource_id == htable.id)
+        person = db(query).select(htable.person_id,
+                                  limitby=(0, 1)).first()
+
+        if person:
+            fake = Storage(id = person.person_id,
+                           tablename = "org_site",
+                           )
+            return s3db.pr_person_lookup(fake, **attr)
+        else:
+            current.response.headers["Content-Type"] = "application/json"
+            output = json.dumps(None)
+            return output
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def site_search_ac(r, **attr):
+        """
+            JSON search method for S3SiteAutocompleteWidget
+
+            @param r: the S3Request
+            @param attr: request attributes
+        """
+
+        response = current.response
+        resource = r.resource
+
+        # Query comes in pre-filtered to accessible & deletion_status
+        # Respect response.s3.filter
+        resource.add_filter(response.s3.filter)
+
+        _vars = current.request.get_vars
+
+        # JQueryUI Autocomplete uses "term" instead of "value"
+        # (old JQuery Autocomplete uses "q" instead of "value")
+        value = _vars.term or _vars.value or _vars.q or None
+
+        # We want to do case-insensitive searches
+        # (default anyway on MySQL/SQLite, but not PostgreSQL)
+        value = value.lower().strip()
+
+        if not value:
+            output = current.xml.json_message(False, 400,
+                            "Missing options! Require: filter & value")
+            raise HTTP(400, body=output)
+
+        query = (S3FieldSelector("name").lower().like(value + "%"))
+        resource.add_filter(query)
+
+        settings = current.deployment_settings
+        MAX_SEARCH_RESULTS = settings.get_search_max_results()
+        limit = int(_vars.limit or MAX_SEARCH_RESULTS)
+        if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
+            output = jsons([dict(id="",
+                                 name="Search results are over %d. Please input more characters." \
+                                 % MAX_SEARCH_RESULTS)])
+        else:
+            s3db = current.s3db
+
+            # Fields to return
+            fields = ["site_id",
+                      "name",
+                      ]
+
+            fields += settings.get_org_site_autocomplete_fields()
+
+            rows = resource.select(fields,
+                                   start=0,
+                                   limit=limit,
+                                   orderby="name",
+                                   as_rows=True)
+            output = []
+            append = output.append
+            for row in rows:
+                instance_type = row.get("org_site.instance_type", None)
+                location = row.get("gis_location", None)
+                org = row.get("org_organisation.name", None)
+                row = row.org_site
+                record = dict(id = row.site_id,
+                              name = row.name,
+                              )
+                if instance_type:
+                    record["instance_type"] = instance_type
+                if location:
+                    record["location"] = location
+                if org:
+                    record["org"] = org
+                append(record)
+            output = jsons(output)
+
+        response.headers["Content-Type"] = "application/json"
+        return output
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def site_search_address_ac(r, **attr):
         """
             JSON search method for S3SiteAddressAutocompleteWidget
@@ -2158,7 +2291,6 @@ class S3SiteModel(S3Model):
 
         response = current.response
         resource = r.resource
-        table = resource.table
 
         # Query comes in pre-filtered to accessible & deletion_status
         # Respect response.s3.filter
@@ -2175,18 +2307,20 @@ class S3SiteModel(S3Model):
         # (default anyway on MySQL/SQLite, but not PostgreSQL)
         value = value.lower().strip()
 
-        filter = _vars.filter
+        filter = _vars.get("filter", None)
 
         if filter and value:
-
             if filter == "~":
                 query = (S3FieldSelector("name").lower().like(value + "%")) | \
                         (S3FieldSelector("location_id$address").lower().like(value + "%"))
-
             else:
                 output = current.xml.json_message(False, 400,
                                 "Unsupported filter! Supported filters: ~")
                 raise HTTP(400, body=output)
+        else:
+            output = current.xml.json_message(False, 400,
+                            "Missing options! Require: filter & value")
+            raise HTTP(400, body=output)
 
         resource.add_filter(query)
 
@@ -2200,21 +2334,25 @@ class S3SiteModel(S3Model):
             s3db = current.s3db
 
             # Fields to return
-            fields = ["site_id", "name", "location_id$address"]
-            rows = resource.select([f.name for f in fields],
+            fields = ["site_id",
+                      "name",
+                      "location_id$address",
+                      ]
+            rows = resource.select(fields,
                                    start=0,
                                    limit=limit,
-                                   orderby=field,
+                                   orderby="name",
                                    as_rows=True)
             output = []
             append = output.append
             for row in rows:
                 address = row.gis_location.address
+                row = row.org_site
+                record = dict(id = row.site_id,
+                              name = row.name,
+                              )
                 if address:
-                    name = "%s, %s" % (row.org_site.name, address)
-                else:
-                    name = row.org_site.name
-                record = dict(id = row.org_site.site_id, name = name)
+                    record["address"] = address
                 append(record)
             output = jsons(output)
 
@@ -2225,7 +2363,7 @@ class S3SiteModel(S3Model):
 class S3SiteDetailsModel(S3Model):
     """ Extra optional details for Sites """
 
-    names = ["org_site_details",
+    names = ["org_site_status",
              "org_site_org_group",
              ]
 
@@ -2239,34 +2377,77 @@ class S3SiteDetailsModel(S3Model):
         settings = current.deployment_settings
         last_contacted = settings.get_org_site_last_contacted()
 
+        messages = current.messages
+        NONE = messages["NONE"]
+        UNKNOWN_OPT = messages.UNKNOWN_OPT
+
+        facility_status_opts = {
+            1: T("Normal"),
+            2: T("Compromised"),
+            3: T("Evacuating"),
+            4: T("Closed"),
+            99: T("No Response"),
+        }
+
+        power_supply_type_opts = {
+            1: T("Grid"),
+            2: T("Generator"),
+            98: T("Other"),
+            99: T("None"),
+        }
+
         # ---------------------------------------------------------------------
-        # Details
-        tablename = "org_site_details"
+        # Site Status
+        #
+        tablename = "org_site_status"
         table = define_table(tablename,
                              # Component not instance
                              super_link("site_id", "org_site"),
+                             Field("facility_status", "integer",
+                                   requires = IS_NULL_OR(
+                                                IS_IN_SET(facility_status_opts)),
+                                   label = T("Facility Status"),
+                                   represent = lambda opt: \
+                                    NONE if opt is None else \
+                                        facility_status_opts.get(opt,
+                                                                 UNKNOWN_OPT)),
+                             s3_date("date_reopening",
+                                     label = T("Estimated Reopening Date"),
+                                     readable = False,
+                                     writable = False,
+                                     ),
+                             Field("power_supply_type", "integer",
+                                   label = T("Power Supply Type"),
+                                   requires = IS_NULL_OR(
+                                                IS_IN_SET(power_supply_type_opts,
+                                                          zero=None)),
+                                   represent = lambda opt: \
+                                    NONE if opt is None else \
+                                        power_supply_type_opts.get(opt,
+                                                                   UNKNOWN_OPT)),
                              s3_date("last_contacted",
+                                     label = T("Last Contacted"),
                                      readable = last_contacted,
                                      writable = last_contacted,
-                                     label = T("Last Contacted")),
+                                     ),
                              *s3_meta_fields())
 
         # CRUD Strings
         site_label = settings.get_org_site_label()
-        ADD_DETAILS = T("Add %(site_label)s Details") % site_label
+        ADD_DETAILS = T("Add %(site_label)s Status") % site_label
         current.response.s3.crud_strings[tablename] = Storage(
             title_create = ADD_DETAILS,
-            title_display = T("%(site_label)s Details") % site_label,
-            title_list = T("%(site_label)s Details") % site_label,
-            title_update = T("Edit %(site_label)s Details") % site_label,
-            title_search = T("Search %(site_label)s Details") % site_label,
-            subtitle_create = T("Add New %(site_label)s Details") % site_label,
-            label_list_button = T("List %(site_label)s Details") % site_label,
+            title_display = T("%(site_label)s Status") % site_label,
+            title_list = T("%(site_label)s Status") % site_label,
+            title_update = T("Edit %(site_label)s Status") % site_label,
+            title_search = T("Search %(site_label)s Status") % site_label,
+            subtitle_create = T("Add New %(site_label)s Status") % site_label,
+            label_list_button = T("List %(site_label)s Status") % site_label,
             label_create_button = ADD_DETAILS,
-            msg_record_created = T("%(site_label)s Details added") % site_label,
-            msg_record_modified = T("%(site_label)s Details updated") % site_label,
-            msg_record_deleted = T("%(site_label)s Details deleted") % site_label,
-            msg_list_empty = T("There are no details for this %(site_label)s yet. Add %(site_label)s Details.") % site_label
+            msg_record_created = T("%(site_label)s Status added") % site_label,
+            msg_record_modified = T("%(site_label)s Status updated") % site_label,
+            msg_record_deleted = T("%(site_label)s Status deleted") % site_label,
+            msg_list_empty = T("There is no status for this %(site_label)s yet. Add %(site_label)s Status.") % site_label
             )
 
         # ---------------------------------------------------------------------
@@ -2308,6 +2489,11 @@ class S3FacilityModel(S3Model):
         super_link = self.super_link
 
         NONE = current.messages["NONE"]
+
+        if settings.get_org_autocomplete():
+            org_widget = S3OrganisationAutocompleteWidget(default_from_profile=True)
+        else:
+            org_widget = None
 
         # ---------------------------------------------------------------------
         # Facility Types (generic)
@@ -2383,10 +2569,7 @@ class S3FacilityModel(S3Model):
                                    represent = lambda v: v or NONE,
                                    label=T("Code"),
                                    ),
-                             self.org_organisation_id(
-                                #widget=S3OrganisationAutocompleteWidget(
-                                            #default_from_profile=True)
-                                ),
+                             self.org_organisation_id(widget=org_widget),
                              self.gis_location_id(),
                              Field("opening_times",
                                    represent = lambda v: v or NONE,
@@ -2543,7 +2726,7 @@ class S3FacilityModel(S3Model):
                                     "phone2",
                                     "email",
                                     "website",
-                                    "site_details.last_contacted",
+                                    #"status.last_contacted",
                                     "obsolete",
                                     "comments",
                                     )
@@ -2970,6 +3153,11 @@ class S3OfficeModel(S3Model):
         define_table = self.define_table
         super_link = self.super_link
 
+        if settings.get_org_autocomplete():
+            org_widget = S3OrganisationAutocompleteWidget(default_from_profile=True)
+        else:
+            org_widget = None
+
         # ---------------------------------------------------------------------
         # Office Types
         #
@@ -3043,9 +3231,9 @@ class S3OfficeModel(S3Model):
                                    # @ToDo: Deployment Setting to add validator to make these unique
                                    ),
                              self.org_organisation_id(
-                                 #widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
                                  requires = org_organisation_requires(required=True,
                                                                       updateable=True),
+                                 widget = org_widget,
                                  ),
                              office_type_id(
                                             #readable = False,
@@ -4572,6 +4760,7 @@ def org_facility_controller():
     db = current.db
     s3db = current.s3db
     s3 = current.response.s3
+    request = current.request
 
     # Pre-processor
     def prep(r):
@@ -4642,6 +4831,10 @@ def org_facility_controller():
             elif r.id:
                 field = r.table.obsolete
                 field.readable = field.writable = True
+            elif r.method in ("create", "create.popup"):
+                name = request.get_vars.get("name", None)
+                if name:
+                    r.table.name.default = name
 
         elif r.representation == "geojson":
             # Load these models now as they'll be needed when we encode
@@ -4695,8 +4888,8 @@ def org_facility_controller():
 
             site_id = r.record.site_id
 
-            if settings.has_module("req"):
-                # Open/High/Medium priority Requests
+            if current.deployment_settings.has_module("req"):
+                # Open High/Medium priority Requests
                 rtable = s3db.req_req
                 query = (rtable.site_id == site_id) & \
                         (rtable.fulfil_status != 2) & \
@@ -4762,7 +4955,7 @@ def org_facility_controller():
         return output
     s3.postp = postp
 
-    if "map" in current.request.args:
+    if "map" in request.args:
         # S3Map has migrated
         hide_filter = False
     else:

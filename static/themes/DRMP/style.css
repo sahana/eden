@@ -47,10 +47,6 @@ a.brand img{
 }
 
 /* Contacts Page */
-.form-container #pr_person_sub_human_resourcehuman_resource__label {
-    /* Hide the colon */
-    display: none;
-}
 
 /* Adjust Field Widths to match Titles/Data */
 #sub_human_resourcehuman_resource_human_resourcehuman_resource_i_organisation_id_edit_none {

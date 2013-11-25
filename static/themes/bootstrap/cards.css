@@ -115,19 +115,21 @@ a h5.media-heading:hover {
 }
 
 .icon.icon-edit,
+.icon.icon-trash,
 .icon.icon-remove-sign {
     color: #999;
     padding-left: 2px;
 }
 
-.icon.icon-edit:hover,
-.icon.icon-remove-sign:hover {
+.icon.icon-edit:hover {
     color: #0095fe;
     text-decoration: none;
 }
 
+.icon.icon-trash:hover,
 .icon.icon-remove-sign:hover {
     color: #E74C3C;
+    text-decoration: none;
 }
 
 /* Used by Updates & Selection but not Profile */

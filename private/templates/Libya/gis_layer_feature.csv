@@ -1,0 +1,6 @@
+Name,Description,Controller,Function,Symbology,Marker,GPS Marker,Popup Label,Popup Fields,Attributes,Filter,Polygons,Site,Style,Folder,Visible,Enabled,Cluster Threshold,Refresh
+Donations,,req,commit,OCHA,distribution,Car,Donation,"organisation_id,person_id,comments,date_available",,~.cancel=False,,,,,False,,
+Requests,,req,req,OCHA,beneficiary,Flag,Request,"site_id,purpose,date",,"~.req_status=0,1",,True,,,False,,
+Hospitals,All Hospitals,org,facility,OCHA,hospital,Building,Hospital,"name",,"facility_type.name=Hospital",,,,,False,,
+Mosques,All Mosques,org,facility,OCHA,mosque,Building,Mosque,"name",,"facility_type.name=Mosque",,,,,False,,
+Sites,All Active Sites,org,facility,OCHA,office,Building,Site,"name,organisation_id",,~.obsolete=False,,,,,False,,

@@ -48,13 +48,12 @@ except KeyError:
 try:
     resources = [ os.environ["sync_resources_1"] ]
 except KeyError:
-    resources = [
-                # Include all non-component resources
-                "pr_person",
-                "org_organisation",
-                "org_office",
-                "req_req"
-            ]
+    resources = [# Include all non-component resources
+                 "pr_person",
+                 "org_organisation",
+                 "org_office",
+                 "req_req"
+                 ]
 else:
     for i in range(2, 500):
         try:
@@ -100,10 +99,10 @@ if site_type == "active":
 
     if not repository_id:
         raise RuntimeError("Cannot register or update peer repository")
-    else:
-        success = s3base.S3Sync().request_registration(repository)
-        if not success:
-            print >>sys.stderr, "Could not auto-register repository, please register manually"
+    #else:
+    #    success = s3base.S3Sync().request_registration(repository)
+    #    if not success:
+    #        print >>sys.stderr, "Could not auto-register repository, please register manually"
 
     # Resources
     sync_policies = s3base.S3ImportItem.POLICY

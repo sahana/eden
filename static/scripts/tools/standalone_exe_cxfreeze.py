@@ -52,8 +52,7 @@ buildOptions = dict(
             'geos.dll',
             'geos_c.dll'
             ],
-        #packages = contributed_modules + ['tweepy', 'PIL', 'pytz', 'lxml', 'serial', 'dateutil', 'reportlab', 'xlwt', 'shapely'],
-        packages = contributed_modules + ['PIL', 'pytz', 'lxml', 'serial', 'dateutil', 'reportlab', 'xlwt', 'shapely'],
+        packages = contributed_modules + ['PIL', 'pytz', 'lxml', 'dateutil', 'reportlab', 'xlwt', 'shapely'], # 'tweepy', 'serial'
         )
 
 setup(

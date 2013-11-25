@@ -287,9 +287,12 @@ $(function() {
 
         inline_remove_errors(formname);
 
-        // Hide the current read row, show all other read rows for this field
+        // Show all read rows for this field
         $('#sub-' + formname + ' .read-row').removeClass('hide');
-        $('#read-row-' + rowname).addClass('hide');
+        // Hide the current read row, unless it's an Image
+        if (formname != 'imageimage') {
+            $('#read-row-' + rowname).addClass('hide');
+        };
 
         // Populate the edit row with the data for this rowindex
         var data = inline_deserialize(formname);

@@ -724,6 +724,13 @@ def email_channel():
                                 url = URL(args = ["[id]", "disable"]),
                                 restrict = restrict_d),
                            ]
+            if not s3task._is_alive():
+                # No Scheduler Running
+                s3.actions += [dict(label=str(T("Poll")),
+                                    _class="action-btn",
+                                    url = URL(args = ["[id]", "poll"]),
+                                    restrict = restrict_d)
+                               ]
         return output
     s3.postp = postp
 
@@ -796,6 +803,13 @@ def mcommons_channel():
                                 url = URL(args = ["[id]", "disable"]),
                                 restrict = restrict_d),
                            ]
+            if not s3task._is_alive():
+                # No Scheduler Running
+                s3.actions += [dict(label=str(T("Poll")),
+                                    _class="action-btn",
+                                    url = URL(args = ["[id]", "poll"]),
+                                    restrict = restrict_d)
+                               ]
         return output
     s3.postp = postp
 
@@ -865,6 +879,13 @@ def rss_channel():
                                 url = URL(args = ["[id]", "disable"]),
                                 restrict = restrict_d),
                            ]
+            if not s3task._is_alive():
+                # No Scheduler Running
+                s3.actions += [dict(label=str(T("Poll")),
+                                    _class="action-btn",
+                                    url = URL(args = ["[id]", "poll"]),
+                                    restrict = restrict_d)
+                               ]
         return output
     s3.postp = postp
 
@@ -933,6 +954,13 @@ def twilio_channel():
                                 url = URL(args = ["[id]", "disable"]),
                                 restrict = restrict_d),
                            ]
+            if not s3task._is_alive():
+                # No Scheduler Running
+                s3.actions += [dict(label=str(T("Poll")),
+                                    _class="action-btn",
+                                    url = URL(args = ["[id]", "poll"]),
+                                    restrict = restrict_d)
+                               ]
         return output
     s3.postp = postp
 
@@ -1198,6 +1226,13 @@ def twitter_channel():
                                 url = URL(args = ["[id]", "disable"]),
                                 restrict = restrict_d),
                            ]
+            if not s3task._is_alive():
+                # No Scheduler Running
+                s3.actions += [dict(label=str(T("Poll")),
+                                    _class="action-btn",
+                                    url = URL(args = ["[id]", "poll"]),
+                                    restrict = restrict_d)
+                               ]
 
             #if isinstance(output, dict):
             #    if r.http == "GET" and r.method in ("create", "update"):
@@ -1445,11 +1480,28 @@ def twitter_result():
                         )
         ]
 
+    report_fields = ["search_id",
+                     "created_on",
+                     "lang",
+                     ]
+
+    report_options = Storage(
+        rows=report_fields,
+        cols=report_fields,
+        fact=report_fields,
+        defaults=Storage(
+            rows="search_id",
+            cols="lang",
+            totals=True,
+        )
+    )
+
     s3db.configure(tablename,
-                   deletable = False,
-                   editable = False,
-                   insertable = False,
-                   filter_widgets = filter_widgets,
+                   deletable=False,
+                   editable=False,
+                   insertable=False,
+                   filter_widgets=filter_widgets,
+                   report_options=report_options,
                    )
 
     return s3_rest_controller(hide_filter=False)
@@ -1577,6 +1629,13 @@ def parser():
                                 url = URL(args = ["[id]", "disable"]),
                                 restrict = restrict_d),
                            ]
+            if not s3task._is_alive():
+                # No Scheduler Running
+                s3.actions += [dict(label=str(T("Parse")),
+                                    _class="action-btn",
+                                    url = URL(args = ["[id]", "parse"]),
+                                    restrict = restrict_d)
+                               ]
 
         return output
     s3.postp = postp

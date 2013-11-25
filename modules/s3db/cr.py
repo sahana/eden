@@ -59,6 +59,11 @@ class S3CampDataModel(S3Model):
         super_link = self.super_link
         NAME = T("Name")
 
+        if settings.get_org_autocomplete():
+            org_widget = S3OrganisationAutocompleteWidget(default_from_profile=True)
+        else:
+            org_widget = None
+
         # -------------------------------------------------------------------------
         # Shelter types
         # e.g. NGO-operated, Government evacuation center, School, Hospital -- see Agasti opt_camp_type.)
@@ -212,7 +217,7 @@ class S3CampDataModel(S3Model):
                                    label = T("Shelter Name")
                                    ),
                              self.org_organisation_id(
-                                widget = S3OrganisationAutocompleteWidget(default_from_profile=True)
+                                widget = org_widget,
                              ),
                              shelter_type_id(),          # e.g. NGO-operated, Government evacuation center, School, Hospital -- see Agasti opt_camp_type.)
                              shelter_service_id(),       # e.g. medical, housing, food, ...

@@ -9,10 +9,16 @@
     -moz-box-shadow: 0 -1px 3px #d7d7d6;
     -webkit-box-shadow: 0 -1px 3px #d7d7d6;
     box-shadow: 0 -1px 3px #d7d7d6;
+    padding: 10px
 }
+
+.profile_header img.media-object {
+    float: left;
+    padding-right: 10px;
+}
+
 .profile_header h2 {
-    height: 40px;
-    padding: 20px;
+    padding: 10px;
     margin: 0;
     font-size: 25px;
     color: #666;
@@ -22,8 +28,8 @@
     font-style: normal;
 }
 
-.profile_header img.media-object {
-    padding: 18px 10px 18px 5px;
+.profile_header .icon-edit {
+    float: right;
 }
 
 @media (max-width: 480px) {
@@ -151,15 +157,17 @@ div.card-header.profile-head {
 }*/
 
 /* Contact Details */
+.person_pos {
+    font: 13px 'Helvetica Neue',Arial,sans-serif;
+    padding: 0;
+    display: inline-block;
+    margin-bottom: 3px;
+}
+
 .person_pos strong {
     font: bold 13px 'Helvetica Neue',Arial,sans-serif;
     color: #333333;
     padding: 0 4px 0 0;
-}
-
-.main_contact_ph span{
-    margin-right: 10px;
-    margin-left: 2px;
 }
 
 .person_pos,
@@ -172,21 +180,19 @@ div.card-header.profile-head {
 }
 
 .main_contact_ph,
-.main_contact_email,
-.main_office-add,
+.main_contact_email, /* @ToDo: Replace with .card_1_line */
+.main_office-add, /* @ToDo: Replace with .card_many_lines */
 .main_contact {
-    height: 14px; /* Height needs to be same with or without contents */
     font-size: 12px;
     padding-top: 4px;
     color: #666;
     padding-bottom: 2px;
+    height: 14px; /* Height needs to be same with or without contents */
 }
 
-.person_pos {
-    font: 13px 'Helvetica Neue',Arial,sans-serif;
-    padding: 0;
-    display: inline-block;
-    margin-bottom: 3px;
+.main_contact_ph span{
+    margin-right: 10px;
+    margin-left: 2px;
 }
 
 .card-holder .thumbnail {

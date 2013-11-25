@@ -143,7 +143,7 @@ def post():
                     table.date.readable = table.date.writable = False
                     table.expired.readable = table.expired.writable = False
                     resource = request.get_vars.get("resource", None)
-                    if resource == "contact":
+                    if resource in ("contact", "index"):
                         # We're creating/updating text for a Contact page
                         table.name.default = "Contact Page"
                         #table.title.readable = table.title.writable = False

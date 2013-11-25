@@ -383,6 +383,7 @@ def volunteer():
                     label = LABEL(label, label and sep, _for=field_id,
                                   _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
                     row_id = field_id + SQLFORM.ID_ROW_SUFFIX
+                    # @ToDo: Bootstrap support
                     programme = s3_formstyle(row_id, label, widget,
                                              field.comment)
                     try:
@@ -985,13 +986,10 @@ def training_event():
 def experience():
     """ Experience Controller """
 
-    mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
-
-    output = s3_rest_controller()
-    return output
+    table = s3db.hrm_human_resource
+    s3.filter = ((table.type == 2) & \
+                 (s3db.hrm_experience.person_id == table.person_id))
+    return s3db.hrm_experience_controller()
 
 # -----------------------------------------------------------------------------
 def competency():

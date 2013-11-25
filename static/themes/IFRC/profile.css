@@ -127,6 +127,9 @@ div.media a.pull-left img.media-object {
     margin-left: 40px;
     margin-bottom: 2px;
 }
+.profile-data {
+    margin-top: 6px;
+}
 .profile-data-label{
     font: 11px "Helvetica Neue", Arial, sans-serif;
     color: #999;
@@ -158,19 +161,13 @@ div.media a.pull-left img.media-object {
     vertical-align: text-top;
 }
 
+.icon.icon-search,
+.icon.icon-open,
 .icon.icon-edit,
 .icon.icon-remove-sign {
     color: #999;
     padding-left: 2px;
     margin-right: 4px;
-}
-
-.icon.icon-edit {
-    background: url(img/pencil.png) no-repeat;
-}
-
-.icon.icon-remove-sign {
-    background: url(img/trashbin.png) no-repeat;
 }
 
 .icon.icon-edit:hover {
@@ -180,6 +177,22 @@ div.media a.pull-left img.media-object {
 
 .icon.icon-remove-sign:hover {
     color: #E74C3C;
+}
+
+.icon.icon-search {
+    background: url(img/magnifier.png) no-repeat;
+}
+
+.icon.icon-open {
+    background: url(img/file.png) no-repeat;
+}
+
+.icon.icon-edit {
+    background: url(img/pencil.png) no-repeat;
+}
+
+.icon.icon-remove-sign {
+    background: url(img/trashbin.png) no-repeat;
 }
 
 .icon.icon-deploy,
@@ -193,8 +206,24 @@ div.media a.pull-left img.media-object {
     background-position: 0 0;
 }
 
+.icon.icon-sent,
+.icon.icon-unsent {
+    margin-right: 4px;
+    background: url(img/deploy.png) no-repeat;
+}
+.icon.icon-unsent {
+    background-position: -28px 0;
+}
+.icon.icon-sent {
+    background-position: 0 0;
+}
+
 .profile-add-btn {
     float: right;
     margin-top: 6px;
     margin-right: 6px;
+}
+
+.alert-status {
+    padding-left: 20px;
 }

@@ -926,7 +926,7 @@ class S3Request(object):
 
         # Enforce primary record ID
         if not self.id and self.representation == "html":
-            if self.component or self.method in ("read", "update"):
+            if self.component or self.method in ("read", "profile", "update"):
                 count = self.resource.count()
                 if self.vars is not None and count == 1:
                     self.resource.load()

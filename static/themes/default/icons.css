@@ -1,0 +1,145 @@
+@charset "UTF-8";
+
+@font-face {
+  font-family: 'FontAwesome';
+  src: url('../../fonts/fontawesome-webfont.eot?v=3.2.1');
+  src: url('../../fonts/fontawesome-webfont.eot?#iefix&v=3.2.1') format('embedded-opentype'), url('../../fonts/fontawesome-webfont.woff?v=3.2.1') format('woff'), url('../../fonts/fontawesome-webfont.ttf?v=3.2.1') format('truetype'), url('../../fonts/fontawesome-webfont.svg#fontawesomeregular?v=3.2.1') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+[class^="icon-"],
+[class*=" icon-"] {
+  font-family: FontAwesome;
+  font-weight: normal;
+  font-style: normal;
+  text-decoration: inherit;
+  -webkit-font-smoothing: antialiased;
+  *margin-right: .3em;
+}
+[class^="icon-"]:before,
+[class*=" icon-"]:before {
+  text-decoration: inherit;
+  display: inline-block;
+  speak: none;
+}
+
+/* General */
+.icon-calendar:before {
+  content: "\f073";
+}
+.icon-certificate:before {
+  content: "\f0a3";
+}
+.icon-check:before {
+  content: "\f046";
+}
+.icon-check-empty:before {
+  content: "\f096";
+}
+.icon-circle:before {
+  content: "\f111";
+}
+.icon-cog:before {
+  content: "\f013";
+}
+.icon-cogs:before {
+  content: "\f085";
+}
+.icon-comment-alt:before {
+  content: "\f0e5";
+}
+.icon-external-link:before {
+  content: "\f08e";
+}
+.icon-file-alt:before {
+  content: "\f016";
+}
+.icon-filter:before {
+  content: "\f0b0";
+}
+.icon-flag:before {
+  content: "\f024";
+}
+.icon-fullscreen:before {
+  content: "\f0b2";
+}
+.icon-list:before {
+  content: "\f03a";
+}
+.icon-lock:before {
+  content: "\f023";
+}
+.icon-off:before {
+  content: "\f011";
+}
+.icon-paperclip:before {
+  content: "\f0c6";
+}
+.icon-plus-sign:before {
+  content: "\f055";
+}
+.icon-signin:before {
+  content: "\f090";
+}
+.icon-tasks:before {
+  content: "\f0ae";
+}
+.icon-time:before {
+  content: "\f017";
+}
+.icon-trash:before {
+  content: "\f014";
+}
+.icon-truck:before {
+  content: "\f0d1";
+}
+.icon-wrench:before {
+  content: "\f0ad";
+}
+
+/* Orgs & People */
+.icon-home:before {
+  content: "\f015";
+}
+.icon-sitemap:before {
+  content: "\f0e8";
+}
+.icon-user:before {
+  content: "\f007";
+}
+
+/* Map */
+.icon-map-marker:before {
+  content: "\f041";
+}
+.icon-globe:before {
+  content: "\f0ac";
+}
+
+/* Contacts */
+.icon-envelope-alt:before {
+  content: "\f003";
+}
+.icon-facebook:before {
+  content: "\f09a";
+}
+.icon-microphone:before {
+  content: "\f130";
+}
+.icon-phone:before {
+  content: "\f095";
+}
+.icon-rss:before {
+  content: "\f09e";
+}
+.icon-skype:before {
+  content: "\f17e";
+}
+.icon-twitter:before {
+  content: "\f099";
+}
+
+
+
+

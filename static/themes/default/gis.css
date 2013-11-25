@@ -32,6 +32,7 @@ form .map_loader {
 }
 .map_home .gis_fullscreen_map-btn {
     font-weight: bold;
+    float: left; /* Needed for RTL */
     padding-left: 8px;
 }
 .gis_print_map-btn {
@@ -113,7 +114,6 @@ form .map_loader {
 .map_legend_panel {
     background-color: #FBFBFB;
     border: solid;
-    border-right: none;
     border-radius: 5px 0 0 5px;
     padding: 1px;
     margin: 0 0 20px; /* Ref'd in hideLegend & showLegend in gis.js */
@@ -121,28 +121,29 @@ form .map_loader {
     max-width: 800px;
     max-height: 500px;
     overflow-y: auto;
+    border-right: none;
 }
 .map_legend_panel  .x-panel-header-noborder {
     border: none;
 }
 .map_legend_tab {
-    float: left;
     background-color: #FBFBFB;
     border: solid;
-    border-right: none;
     border-width: 2px;
-    border-right-width: 0;
-    border-radius: 3px 0 3px 3px;
-    margin-right: -6px;
-    margin-left: -12px;
     margin-top: 5px;
-    padding-left: 2px;
-    padding-right: 3px;
     font-family: FontAwesome;
     font-weight: normal;
     font-style: normal;
     text-decoration: inherit;
     -webkit-font-smoothing: antialiased;
+    float: left;
+    border-radius: 3px 0 3px 3px;
+    border-right: none;
+    border-right-width: 0;
+    margin-right: -6px;
+    margin-left: -12px;
+    padding-left: 2px;
+    padding-right: 3px;
 }
 .map_legend_tab:before {
     text-decoration: inherit;
@@ -200,13 +201,13 @@ form .map_loader {
 .map_save_button {
     background-color: #FBFBFB;
     padding: 5px;
-    /*margin-right: 10px;*/
     border: solid;
     border-radius: 5px 5px 5px 5px;
-    float: right;
     width: auto;
     cursor: pointer;
     visibility: visible;
+    float: right;
+    /*margin-right: 10px;*/
 }
 .map_save_name {
     font-weight: bold;

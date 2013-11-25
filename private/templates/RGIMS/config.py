@@ -47,6 +47,30 @@ settings.fin.currency_default = "PHP"
 settings.security.policy = 6 # Warehouse-specific restrictions
 settings.security.map = True
 
+def rgims_realm_entity(table, row):
+    """
+        Assign a Realm Entity to records
+    """
+
+    tablename = table._tablename
+    if tablename not in ("inv_recv", "inv_send"):
+        # Normal lookup
+        return 0
+
+    # For these tables we need to assign the site_id's realm not organisation_id's
+    db = current.db
+    stable = db.org_site
+    record = db(stable.site_id == row.site_id).select(stable.realm_entity,
+                                                      limitby=(0, 1)
+                                                      ).first()
+    if record:
+        return record.realm_entity
+
+    # Normal lookup
+    return 0
+
+settings.auth.realm_entity = rgims_realm_entity
+
 # Enable this for a UN-style deployment
 settings.ui.cluster = True
 # Enable this to use the label 'Camp' instead of 'Shelter'

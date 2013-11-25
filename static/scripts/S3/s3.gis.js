@@ -5266,35 +5266,42 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             // Style Features according to rules in JSON style (currently Feature, Shapefile or Theme Layer)
             // Needs to be uniquely instantiated
             var rules = [];
-            var prop, filter, rule, symbolizer, title, value,
-                externalGraphic, graphicHeight, graphicWidth,
-                graphicXOffset, graphicYOffset,
+            var prop, rule, symbolizer, value,
+                elseFilter, externalGraphic, graphicHeight,
+                graphicWidth, graphicXOffset, graphicYOffset,
                 fill, fillOpacity, size, strokeOpacity, strokeWidth;
             $.each(style, function(index, elem) {
-                if (undefined != elem.prop) {
-                    prop = elem.prop;
+                var options = {};
+                if (undefined != elem.fallback) {
+                    // Fallback Rule
+                    options.title = elem.fallback;
+                    elsefilter = options.elseFilter = true;
                 } else {
-                    // Default (e.g. for Theme/Stats Layers)
-                    prop = 'value';
-                }
-                if (undefined != elem.cat) {
-                    // Category-based style
-                    value = elem.cat;
-                    title = elem.label || value;
-                    filter = new OpenLayers.Filter.Comparison({
-                        type: OpenLayers.Filter.Comparison.EQUAL_TO,
-                        property: prop,
-                        value: value
-                    });
-                } else {
-                    // Range-based Style
-                    title = elem.label || (elem.low + '-' + elem.high);
-                    filter = new OpenLayers.Filter.Comparison({
-                        type: OpenLayers.Filter.Comparison.BETWEEN,
-                        property: prop,
-                        lowerBoundary: elem.low,
-                        upperBoundary: elem.high
-                    });
+                    if (undefined != elem.prop) {
+                        prop = elem.prop;
+                    } else {
+                        // Default (e.g. for Theme/Stats Layers)
+                        prop = 'value';
+                    }
+                    if (undefined != elem.cat) {
+                        // Category-based style
+                        value = elem.cat;
+                        options.title = elem.label || value;
+                        options.filter = new OpenLayers.Filter.Comparison({
+                            type: OpenLayers.Filter.Comparison.EQUAL_TO,
+                            property: prop,
+                            value: value
+                        });
+                    } else {
+                        // Range-based Style
+                        options.title = elem.label || (elem.low + '-' + elem.high);
+                        options.filter = new OpenLayers.Filter.Comparison({
+                            type: OpenLayers.Filter.Comparison.BETWEEN,
+                            property: prop,
+                            lowerBoundary: elem.low,
+                            upperBoundary: elem.high
+                        });
+                    }
                 }
                 if (undefined != elem.externalGraphic) {
                     externalGraphic = S3.Ap.concat('/static/' + elem.externalGraphic);
@@ -5345,27 +5352,25 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 } else {
                     strokeWidth = 2;
                 }
-                rule = new OpenLayers.Rule({
-                    filter: filter,
-                    symbolizer: {
-                        externalGraphic: externalGraphic,
-                        fillColor: fill, // Used for Legend on LineStrings
-                        fillOpacity: fillOpacity,
-                        strokeColor: fill,
-                        strokeOpacity: strokeOpacity,
-                        strokeWidth: strokeWidth,
-                        graphicName: graphic,
-                        graphicHeight: graphicHeight,
-                        graphicWidth: graphicWidth,
-                        graphicXOffset: graphicXOffset,
-                        graphicYOffset: graphicYOffset,
-                        pointRadius: size
-                    },
-                    title: title
-                });
+                options.symbolizer = {
+                    externalGraphic: externalGraphic,
+                    fillColor: fill, // Used for Legend on LineStrings
+                    fillOpacity: fillOpacity,
+                    strokeColor: fill,
+                    strokeOpacity: strokeOpacity,
+                    strokeWidth: strokeWidth,
+                    graphicName: graphic,
+                    graphicHeight: graphicHeight,
+                    graphicWidth: graphicWidth,
+                    graphicXOffset: graphicXOffset,
+                    graphicYOffset: graphicYOffset,
+                    pointRadius: size
+                }
+
+                rule = new OpenLayers.Rule(options);
                 rules.push(rule);
             });
-            if (layer.cluster_threshold != 0) {
+            if (!elseFilter && (layer.cluster_threshold != 0)) {
                 // Default Rule (e.g. for Clusters)
                 rule = new OpenLayers.Rule({
                     elseFilter: true,

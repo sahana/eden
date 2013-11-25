@@ -68,7 +68,7 @@ def mission():
             if not r.component and r.method == "profile":
                 represent = lambda d: \
                             s3base.S3DateTime.datetime_represent(d, utc=True)
-                s3db.deploy_alert.created_on.represent = represent
+                s3db.deploy_alert.modified_on.represent = represent
                 s3db.deploy_response.created_on.represent = represent
                 s3base.s3_trunk8(lines=1)
         else:
@@ -109,6 +109,13 @@ def mission():
                               rheader=s3db.deploy_rheader)
 
 # =============================================================================
+def response_message():
+    """ RESTful CRUD Controller """
+
+    return s3_rest_controller("deploy", "response",
+                              custom_crud_buttons = {"list_btn": None})
+    
+# =============================================================================
 def human_resource():
     """
         RESTful CRUD Controller
@@ -118,11 +125,6 @@ def human_resource():
     settings.hrm.staff_experience = True
     settings.hrm.use_skills = True
     settings.search.filter_manager = True
-
-    # Add application component
-    # @todo: move into HRM model
-    s3db.add_component("deploy_human_resource_application",
-                       hrm_human_resource="human_resource_id")
 
     q = s3base.S3FieldSelector("human_resource_application.active") == True
     output = s3db.hrm_human_resource_controller(extra_filter=q)
@@ -143,10 +145,6 @@ def person():
     settings.hrm.vol_experience = "experience"
     settings.hrm.use_skills = True
     settings.search.filter_manager = True
-
-    # @todo: move into HRM model
-    s3db.add_component("deploy_human_resource_application",
-                       hrm_human_resource="human_resource_id")
 
     # Replace default title in imports:
     retitle = lambda r: {"title": T("Import Members")} \
@@ -191,6 +189,10 @@ def human_resource_assignment():
     """ RESTful CRUD Controller """
 
     def prep(r):
+        if r.record:
+            table = r.resource.table
+            table.mission_id.writable = False
+            table.human_resource_id.writable = False
         if r.representation == "popup":
             r.resource.configure(insertable=False)
         return True
@@ -207,11 +209,6 @@ def alert():
     settings.hrm.use_skills = True
     settings.search.filter_manager = True
     
-    # Add application component
-    # @todo: move into HRM model
-    s3db.add_component("deploy_human_resource_application",
-                       hrm_human_resource="human_resource_id")
-
     def prep(r):
         if r.component:
             if r.component.alias == "select":
@@ -275,9 +272,9 @@ def alert():
 
             # Hide label for single field in InlineComponent
             #s3db.deploy_alert_recipient.human_resource_id.label = ""
-            created_on = r.table.created_on
+            created_on = r.table.modified_on
             created_on.readable = True
-            created_on.label = T("Date Created")
+            created_on.label = T("Date")
             created_on.represent = lambda d: \
                                    s3base.S3DateTime.date_represent(d, utc=True)
         return True
@@ -285,19 +282,23 @@ def alert():
 
     def postp(r, output):
         if r.component:
-            if r.component_name == "recipient":
-                # Open should open the member profile, not the link
+            if r.component_name == "select":
                 s3.actions = [dict(label=str(READ),
                                    _class="action-btn read",
-                                   url=URL(f="person",
-                                           vars={"human_resource.id":"[id]"}))]
+                                   url=URL(f="human_resource",
+                                           args=["[id]", "profile"]))]
+            if r.component_name == "recipient":
+                # Open should open the member profile, not the link
+                # @todo: this doesn't work!
+                s3.actions = [dict(label=str(READ),
+                                   _class="action-btn read",
+                                   url=URL(f="human_resource",
+                                           args=["[id]", "profile"]))]
                 if not r.record.message_id:
                     # Delete should remove the Link, not the Member
                     s3.actions.append(dict(label=str(DELETE),
                                            _class="delete-btn",
                                            url=URL(f="alert",
-
-
                                                    args=[r.id,
                                                          "recipient",
                                                          "[id]",
@@ -348,21 +349,14 @@ def email_inbox():
     table.channel_id.readable = False
     table.to_address.readable = False
 
-    s3db.add_component("deploy_response",
-                       msg_email="message_id")
-
     from s3.s3resource import S3FieldSelector
     s3.filter = (S3FieldSelector("response.id") == None) & \
                 (S3FieldSelector("inbound") == True)
 
     s3db.configure(tablename,
-                   insertable=False,
-                   editable=False)
-
-    s3db.set_method("msg", "email",
-                    method="link",
-                    action=link_response
-                    )
+                   editable = False,
+                   insertable = False,
+                   )
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
@@ -375,6 +369,15 @@ def email_inbox():
         msg_list_empty = T("No Messages currently in InBox")
     )
 
+    def prep(r):
+        if r.component and r.component.alias == "select":
+            if not r.method:
+                r.method = "select"
+            if r.method == "select":
+                r.custom_action = s3db.deploy_response_select_mission
+        return True
+    s3.prep = prep
+
     def postp(r, output):
         if r.interactive:
             # Normal Action Buttons
@@ -383,76 +386,13 @@ def email_inbox():
             s3.actions += [dict(label=str(T("Link to Mission")),
                                 _class="action-btn link",
                                 url=URL(f="email_inbox",
-                                        args=["[id]", "link"])),
+                                        args=["[id]", "select"])),
                            ]
 
         return output
     s3.postp = postp
 
     return s3_rest_controller("msg", "email")
-
-# -----------------------------------------------------------------------------
-def link_response(r, **attr):
-    """
-        Manually link an email to a Mission
-    """
-
-    if r.http == "POST":
-        session.confirmation = T("Message Linked")
-        redirect(URL(f="email_inbox"))
-
-    formstyle = s3.crud.formstyle
-    if not callable(formstyle):
-        # Unsupported
-        raise
-
-    form = DIV()
-    message_id = r.record.message_id
-    htable = s3db.hrm_human_resource
-    ptable = db.pr_person
-    ctable = s3db.pr_contact
-    query = (ctable.contact_method == "EMAIL") & \
-            (ctable.value == r.record.from_address) & \
-            (ctable.pe_id == ptable.pe_id) & \
-            (ptable.id == htable.person_id)
-    hr = db(query).select(htable.id,
-                          limitby=(0, 1)).first()
-    if hr:
-        # Show read-only view
-        pass
-    else:
-        # @ToDo: Search based on Name?
-        if not hr:
-            # Select HR
-            pass
-
-    comment = None
-    # Show Dropdown for Missions
-    id = "mission_id"
-    label = T("Mission")
-    widget = SELECT()
-    row = formstyle(id, label, widget, comment, hidden=False)
-    form.append(row)
-
-    # Show Message
-    id = "subject"
-    label = T("Subject")
-    widget = INPUT(_value=r.record.subject,
-                   _readonly=True)
-    row = formstyle(id, label, widget, comment, hidden=False)
-    form.append(row)
-    id = "body"
-    label = T("Message")
-    widget = TEXTAREA(_value=r.record.body,
-                      _readonly=True)
-    row = formstyle(id, label, widget, comment, hidden=False)
-    form.append(row)
-
-    output = dict(title=T("Link Response to Mission"),
-                  form=form,
-                  )
-    response.view = "deploy/link_response.html"
-    return output
 
 # -----------------------------------------------------------------------------
 def email_channel():
@@ -512,6 +452,17 @@ def email_channel():
 
         return True
     s3.prep = prep
+
+    def postp(r, output):
+        if r.interactive and isinstance(output, dict) and \
+           not s3task._is_alive():
+            poll_btn = A(T("Poll"),
+                         _class="action-btn",
+                         _href=URL(args=[r.id, "poll"])
+                         )
+            output["rheader"] = poll_btn
+        return output
+    s3.postp = postp
 
     return s3_rest_controller("msg")
 

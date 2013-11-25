@@ -6,12 +6,12 @@
 {{for script in s3.js_global:}}
  {{=XML(script)}}
 {{pass}}
-{{if s3.jquery_ready:}}
 $(document).ready(function(){
+ {{if s3.rtl:}}$('body').addClass('rtl')
+ {{else:}}$('body').addClass('ltr'){{pass}}
  {{for script in s3.jquery_ready:}}
   {{=XML(script)}}
  {{pass}}
 })
-{{pass}}
 {{if settings.get_google_analytics_tracking_id():}}var _gaq=[['_setAccount','{{=settings.get_google_analytics_tracking_id()}}'],['_trackPageview']];(function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];g.src='//www.google-analytics.com/ga.js';s.parentNode.insertBefore(g,s)}(document,'script')){{pass}}
 //]]></script>

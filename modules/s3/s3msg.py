@@ -1040,6 +1040,7 @@ class S3Msg(object):
                 current_prefix = prefix # from now on, we want a prefix
 
     # -------------------------------------------------------------------------
+    @staticmethod
     def get_twitter_api(channel_id=None):
         """
             Initialize Twitter API
@@ -1644,7 +1645,7 @@ class S3Msg(object):
         inbox_table = s3db.msg_twitter
 
         # Get the latest updated post time to use it as since_id
-        recent_time = inbox_table.posted_at.max()
+        recent_time = inbox_table.created_on.max()
 
         try:
             if recent_time:

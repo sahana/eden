@@ -743,6 +743,10 @@ class S3CMS(S3Method):
         ADMIN = auth.s3_has_role(ADMIN)
         if _item:
             if ADMIN:
+                if current.response.s3.crud.formstyle == "bootstrap":
+                    _class = "btn"
+                else:
+                    _class = "action-btn"
                 item = DIV(XML(_item.body),
                            A(current.T("Edit"),
                              _href=URL(c="cms", f="post",
@@ -750,16 +754,20 @@ class S3CMS(S3Method):
                                        vars={"module": module,
                                              "resource": resource
                                              }),
-                             _class="action-btn cms-edit"))
+                             _class="%s cms-edit" % _class))
             else:
                 item = XML(_item.body)
         elif ADMIN:
+            if current.response.s3.crud.formstyle == "bootstrap":
+                _class = "btn"
+            else:
+                _class = "action-btn"
             item = A(current.T("Edit"),
                      _href=URL(c="cms", f="post", args="create",
                                vars={"module": module,
                                      "resource": resource
                                      }),
-                     _class="action-btn")
+                     _class="%s cms-edit" % _class)
         else:
             item = ""
 

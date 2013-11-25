@@ -223,10 +223,15 @@ class S3Config(Storage):
     def get_auth_registration_mobile_phone_mandatory(self):
         " Make the selection of Mobile Phone Mandatory during registration "
         return self.auth.get("registration_mobile_phone_mandatory", False)
-
+    
     def get_auth_registration_requests_organisation(self):
         " Have the registration form request the Organisation "
         return self.auth.get("registration_requests_organisation", False)
+
+    def get_auth_admin_sees_organisation(self):
+        " See Organisations in User Admin"
+        return self.auth.get("admin_sees_organisation",
+                             self.get_auth_registration_requests_organisation())
 
     def get_auth_registration_organisation_required(self):
         " Make the selection of Organisation required during registration "
@@ -957,10 +962,6 @@ class S3Config(Storage):
         """
         return self.ui.get("auth_user_represent", "email")
 
-    def get_ui_autocomplete(self):
-        """ Currently Unused """
-        return self.ui.get("autocomplete", False)
-
     def get_ui_confirm(self):
         """
             For Delete actions
@@ -1614,6 +1615,12 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # Organisation
+    def get_org_autocomplete(self):
+        """
+            Whether organisation_id fields should use an Autocomplete instead of a dropdown
+        """
+        return self.org.get("autocomplete", False)
+
     def get_org_branches(self):
         """
             Whether to support Organisation branches or not
@@ -1649,6 +1656,12 @@ class S3Config(Storage):
             Whether site_id fields should use an Autocomplete instead of a dropdown
         """
         return self.org.get("site_autocomplete", False)
+
+    def get_org_site_autocomplete_fields(self):
+        """
+            Which extra fields should be returned in S3SiteAutocompleteWidget
+        """
+        return self.org.get("site_autocomplete_fields", ["instance_type"])
 
     def get_org_site_address_autocomplete(self):
         """
@@ -1929,6 +1942,11 @@ class S3Config(Storage):
             Whether there is a Commit step in Requests Management
         """
         return self.req.get("use_commit", True)
+    def get_req_commit_value(self):
+        """
+            Whether Donations should have a Value field
+        """
+        return self.req.get("commit_value", False)
     def get_req_commit_without_request(self):
         """
             Whether to allow Donations to be made without a matching Request

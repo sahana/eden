@@ -241,7 +241,7 @@ class S3CRUD(S3Method):
                 output["title_list"] = crud_string(tablename, "title_list")
 
                 # Buttons
-                buttons = self.insert_buttons(r, "list")
+                buttons = self.render_buttons(r, ["list"], **attr)
                 if buttons:
                     output["buttons"] = buttons
 
@@ -512,8 +512,10 @@ class S3CRUD(S3Method):
                 output["caller"] = caller
 
             # Buttons
-            buttons = self.insert_buttons(r, "edit", "delete", "list", "summary",
-                                          record_id=record_id)
+            buttons = self.render_buttons(r,
+                                          ["edit", "delete", "list", "summary"],
+                                          record_id=record_id,
+                                          **attr)
             if buttons:
                 output["buttons"] = buttons
 
@@ -728,8 +730,10 @@ class S3CRUD(S3Method):
                 output["title"] = ""
 
             # Add delete and list buttons
-            buttons = self.insert_buttons(r, "delete",
-                                          record_id=record_id)
+            buttons = self.render_buttons(r,
+                                          ["delete"],
+                                          record_id=record_id,
+                                          **attr)
             if buttons:
                 output["buttons"] = buttons
 
@@ -981,7 +985,7 @@ class S3CRUD(S3Method):
 
                 elif addbtn:
                     # Add an action-button linked to the create view
-                    buttons = self.insert_buttons(r, "add")
+                    buttons = self.render_buttons(r, ["add"], **attr)
                     if buttons:
                         output["buttons"] = buttons
 
@@ -1173,12 +1177,6 @@ class S3CRUD(S3Method):
         # Linkto
         if not linkto:
             linkto = self._linkto(r)
-
-        # Truncate long texts
-        if r.interactive or representation == "aadata":
-            for f in self.table:
-                if str(f.type) == "text" and not f.represent:
-                    f.represent = self.truncate
 
         session = current.session
 
@@ -1609,12 +1607,6 @@ class S3CRUD(S3Method):
         if list_fields[0] != table.fields[0]:
             list_fields.insert(0, table.fields[0])
 
-        # Truncate long texts
-        if r.interactive or r.representation == "aadata":
-            for f in self.table:
-                if str(f.type) == "text" and not f.represent:
-                    f.represent = self.truncate
-
         left = []
         distinct = False
 
@@ -2032,14 +2024,14 @@ class S3CRUD(S3Method):
     # Utility functions
     # -------------------------------------------------------------------------
     @staticmethod
-    def crud_button(label,
+    def crud_button(label=None,
                     tablename=None,
                     name=None,
                     _href=None,
                     _id=None,
                     _class=None,
                     _title=None,
-                    ):
+                    **attr):
         """
             Generate a CRUD action button
 
@@ -2050,26 +2042,41 @@ class S3CRUD(S3Method):
             @param _id: the HTML id of the link
             @param _class: the HTML class of the link
             @param _title: the HTML title of the link
+
+            @keyword custom: custom CRUD button (just add classes)
         """
 
-        if _class is None:
-            if current.response.s3.crud.formstyle == "bootstrap":
-                _class="btn btn-primary"
-            else:
-                _class="action-btn"
+        bootstrap = current.response.s3.crud.formstyle == "bootstrap"
+
+        # Custom button?
+        if "custom" in attr:
+            custom = attr["custom"]
+            if custom is None:
+                custom = ""
+            elif bootstrap and hasattr(custom, "add_class"):
+                custom.add_class("btn btn-primary")
+            return custom
+
+        # Default class
+        if _class is None and not bootstrap:
+            _class = "action-btn"
+
+        # Default label
         if name:
             labelstr = S3CRUD.crud_string(tablename, name)
         else:
             labelstr = str(label)
-        data = dict(_id=_id,
-                    _class=_class,
-                    )
-        if _href:
-            data["_href"] = _href
-        if _title:
-            data["_title"] = _title
 
-        button = A(labelstr, **data)
+        # Button
+        button = A(labelstr, _id=_id, _class=_class)
+        if _href:
+            button.update(_href=_href)
+        if _title:
+            button.update(_title=_title)
+
+        # Additional classes?
+        if bootstrap:
+            button.add_class("btn btn-primary")
         return button
 
     # -------------------------------------------------------------------------
@@ -2108,116 +2115,117 @@ class S3CRUD(S3Method):
         return output
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def truncate(text, length=48, nice=True):
+    def render_buttons(self, r, buttons, record_id=None, **attr):
         """
-            Nice truncating of text
-
-            @param text: the text
-            @param length: the desired maximum length of the output
-            @param nice: don't truncate in the middle of a word
-        """
-
-        if text is None:
-            return ""
-
-        if len(text) > length:
-            l = length - 3
-            if nice:
-                return "%s..." % text[:l].rsplit(" ", 1)[0][:l]
-            else:
-                return "%s..." % text[:l]
-        else:
-            return text
-
-    # -------------------------------------------------------------------------
-    def insert_buttons(self, r, *buttons, **attr):
-        """
-            Insert resource action buttons
+            Render CRUD buttons
 
             @param r: the S3Request
-            @param buttons: button names ("add", "edit", "delete", "list")
-            @keyword record_id: the record ID
+            @param buttons: list of button names, any of:
+                            "add", "edit", "delete", "list", "summary"
+            @param record_id: the record ID
+            @param attr: the controller attributes
+
+            @return: a dict of buttons for the view
         """
 
-        output = dict()
+        output = {}
+        custom_crud_buttons = attr.get("custom_crud_buttons", {})
 
         tablename = self.tablename
         representation = r.representation
 
-        record_id = attr.get("record_id", None)
-
-        remove_filters = lambda get_vars: dict([(k, get_vars[k])
-                                            for k in get_vars if "." not in k])
-
-        # Button labels
-        crud_string = self.crud_string
-        ADD = crud_string(tablename, "label_create_button")
-        #EDIT = current.T("Edit")
-        EDIT = current.messages.UPDATE
-        DELETE = crud_string(tablename, "label_delete_button")
-        LIST = crud_string(tablename, "label_list_button")
-
-        # Button URLs
         url = r.url
-        href_add = url(method="create", representation=representation)
-        href_edit = url(method="update", representation=representation)
-        href_delete = url(method="delete", representation=representation)
-        href_list = url(method="", vars=remove_filters(r.get_vars))
-
-        # Table CRUD configuration
+        
+        remove_filters = self._remove_filters
+        crud_string = self.crud_string
         config = self._config
-        insertable = config("insertable", True)
-        editable = config("editable", True)
-        deletable = config("deletable", True)
+        crud_button = self.crud_button
 
         # Add button
-        if "add" in buttons:
+        if "add" in buttons and config("insertable", True):
+            ADD_BTN = "add_btn"
             authorised = self._permitted(method="create")
-            if authorised and href_add and insertable:
-                add_btn = self.crud_button(ADD, _href=href_add, _id="add-btn")
-                output["add_btn"] = add_btn
+            if authorised:
+                if ADD_BTN in custom_crud_buttons:
+                    btn = crud_button(custom=custom_crud_buttons[ADD_BTN])
+                else:
+                    label = crud_string(tablename, "label_create_button")
+                    _href = url(method="create",
+                                representation=representation)
+                    btn = crud_button(label=label,
+                                      _href=_href,
+                                      _id="add-btn")
+                output[ADD_BTN] = btn
 
         # List button
         if "list" in buttons:
+            LIST_BTN = "list_btn"
             if not r.component or r.multiple:
-                list_btn = self.crud_button(LIST,
-                                            _href=href_list, _id="list-btn")
-                output["list_btn"] = list_btn
+                if LIST_BTN in custom_crud_buttons:
+                    btn = crud_button(custom=custom_crud_buttons[LIST_BTN])
+                else:
+                    label = crud_string(tablename, "label_list_button")
+                    _href = url(method="",
+                                id=0,
+                                vars=remove_filters(r.get_vars),
+                                representation=representation)
+                    btn = crud_button(label=label,
+                                      _href=_href,
+                                      _id="list-btn")
+                output[LIST_BTN] = btn
 
         # Summary button
         if "summary" in buttons:
+            SUMMARY_BTN = "summary_btn"
             if not r.component or r.multiple:
-                summary_btn = self.crud_button(crud_string(tablename, "title_list"),
-                                               _href = url(method="summary",
-                                                           id=0,
-                                                           vars=remove_filters(r.get_vars)), 
-                                               _id="summary-btn")
-                output["summary_btn"] = summary_btn
+                if SUMMARY_BTN in custom_crud_buttons:
+                    btn = crud_button(custom=custom_crud_buttons[SUMMARY_BTN])
+                else:
+                    label = crud_string(tablename, "label_list_button")
+                    _href = url(method="summary",
+                                id=0,
+                                vars=remove_filters(r.get_vars),
+                                representation=representation)
+                    btn = crud_button(label=label,
+                                      _href=_href,
+                                      _id="summary-btn")
+                output[SUMMARY_BTN] = btn
 
         if not record_id:
             return output
 
         # Edit button
-        if "edit" in buttons:
+        if "edit" in buttons and config("editable", True):
+            EDIT_BTN = "edit_btn"
             authorised = self._permitted(method="update")
-            if authorised and href_edit and editable and r.method != "update":
-                edit_btn = self.crud_button(EDIT, _href=href_edit,
-                                            _id="edit-btn")
-                output["edit_btn"] = edit_btn
-
-        # Delete button
-        if "delete" in buttons:
-            authorised = self._permitted(method="delete")
-            if authorised and href_delete and deletable:
-                if current.response.s3.crud.formstyle == "bootstrap":
-                    _class="btn btn-primary delete-btn"
+            if authorised:
+                if EDIT_BTN in custom_crud_buttons:
+                    btn = crud_button(custom=custom_crud_buttons[EDIT_BTN])
                 else:
-                    _class="delete-btn"
-                delete_btn = self.crud_button(DELETE, _href=href_delete,
-                                              _id="delete-btn",
-                                              _class=_class)
-                output["delete_btn"] = delete_btn
+                    label = current.messages.UPDATE
+                    _href = url(method="update",
+                                representation=representation)
+                    btn = crud_button(label=label,
+                                      _href=_href,
+                                      _id="edit-btn")
+                output[EDIT_BTN] = btn
+                
+        # Delete button
+        if "delete" in buttons and config("deletable", True):
+            DELETE_BTN = "delete_btn"
+            authorised = self._permitted(method="delete")
+            if authorised:
+                if DELETE_BTN in custom_crud_buttons:
+                    btn = crud_button(custom=custom_crud_buttons[DELETE_BTN])
+                else:
+                    label = crud_string(tablename, "label_delete_button")
+                    _href = url(method="delete",
+                                representation=representation)
+                    btn = crud_button(label=label,
+                                      _href=_href,
+                                      _id="delete-btn",
+                                      _class="delete-btn")
+                output[DELETE_BTN] = btn
 
         return output
 

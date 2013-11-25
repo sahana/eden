@@ -878,7 +878,8 @@ S3.search = {};
             target_data = targets[target_id];
             t = $('#' + target_id);
             if (t.hasClass('dl')) {
-                dlAjaxReload(target_id, target_data['queries']);
+                t.datalist('ajaxReload', target_data['queries']);
+//                 dlAjaxReload(target_id, target_data['queries']);
             } else if (t.hasClass('dataTable')) {
                 var dt = t.dataTable();
                 // Refresh Data
@@ -1412,7 +1413,8 @@ S3.search = {};
                 if (!t.is(':visible')) {
                     continue;
                 } else if (t.hasClass('dl')) {
-                    dlAjaxReload(target_id, queries);
+                    t.datalist('ajaxReload', queries);
+//                     dlAjaxReload(target_id, queries);
                 } else if (t.hasClass('dataTable')) {
                     var dt = t.dataTable();
                     dt.fnReloadAjax(dt_ajaxurl[target_id]);

@@ -223,9 +223,12 @@ def address():
 
     # CRUD pre-process
     def prep(r):
-        controller = request.get_vars.get("controller", "pr")
-        person_id = request.get_vars.get("person", None)
-        if person_id and controller:
+        get_vars = request.get_vars
+        person_id = get_vars.get("person", None)
+        if person_id:
+            # Currently no other options available, but we could create hrm
+            # & vol specific versions
+            controller = get_vars.get("controller", "pr")
             s3db.configure("pr_address",
                             create_next=URL(c=controller,
                                             f="person",
@@ -236,10 +239,17 @@ def address():
                             )
             if r.method == "create":
                 table = s3db.pr_person
-                query = (table.id == person_id)
-                pe_id = db(query).select(table.pe_id,
-                                         limitby=(0, 1)).first().pe_id
+                pe_id = db(table.id == person_id).select(table.pe_id,
+                                                         limitby=(0, 1)
+                                                         ).first().pe_id
                 s3db.pr_address.pe_id.default = pe_id
+
+        elif r.method in ("create", "create.popup"):
+            # Coming from Profile page
+            pe_id = get_vars.get("~.pe_id", None)
+            if pe_id:
+                s3db.pr_address.pe_id.default = pe_id
+
         return True
     s3.prep = prep
 
@@ -255,23 +265,33 @@ def contact():
 
     # CRUD pre-process
     def prep(r):
-        controller = request.get_vars.get("controller", "pr")
-        person_id = request.get_vars.get("person", None)
+        get_vars = request.get_vars
+        person_id = get_vars.get("person", None)
         if person_id:
+            # Currently no other options available, but we could create hrm
+            # & vol specific versions
+            controller = get_vars.get("controller", "pr")
             s3db.configure("pr_contact",
-                            create_next=URL(c=controller,
-                                            f="person",
-                                            args=[person_id, "contacts"]),
-                            update_next=URL(c=controller,
-                                            f="person",
-                                            args=[person_id, "contacts"])
-                            )
+                           create_next=URL(c=controller,
+                                           f="person",
+                                           args=[person_id, "contacts"]),
+                           update_next=URL(c=controller,
+                                           f="person",
+                                           args=[person_id, "contacts"])
+                           )
             if r.method == "create":
                 table = s3db.pr_person
-                query = (table.id == person_id)
-                pe_id = db(query).select(table.pe_id,
-                                         limitby=(0, 1)).first().pe_id
+                pe_id = db(table.id == person_id).select(table.pe_id,
+                                                         limitby=(0, 1)
+                                                         ).first().pe_id
                 s3db.pr_contact.pe_id.default = pe_id
+
+        elif r.method in ("create", "create.popup"):
+            # Coming from Profile page
+            pe_id = get_vars.get("~.pe_id", None)
+            if pe_id:
+                s3db.pr_contact.pe_id.default = pe_id
+
         return True
     s3.prep = prep
 

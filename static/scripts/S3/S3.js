@@ -77,6 +77,13 @@ S3.Utf8 = {
 };
 
 S3.addTooltips = function() {
+    // Popovers (Bootstrap themes only)
+    if (typeof($.fn.popover) != 'undefined') {
+        $('.s3-popover').popover({
+            trigger: 'hover',
+            placement: 'left'
+        });
+    }
     // Help Tooltips
     $.cluetip.defaults.cluezIndex = 9999; // Need to be able to show on top of Ext Windows
     $('.tooltip').cluetip({activation: 'hover', sticky: false, splitTitle: '|'});
@@ -276,6 +283,26 @@ S3.confirmClick = function(ElementID, Message) {
 };
 
 // ============================================================================
+S3.trunk8 = function(selector, lines, more) {
+    // Line-truncation, see s3utils.s3_trunk8
+    var settings = {
+        fill: '&hellip; <a class="s3-truncate-more" href="#">' + more + '</a>'
+    };
+    if (lines) {
+        settings['lines'] = lines;
+    }
+    $(selector).trunk8(settings);
+    // Attach to any new items after Ajax-listUpdate (dataLists)
+    $('.dl').on('listUpdate', function() {
+        $(this).find(selector).each(function() {
+            if (this.trunk8 === undefined) {
+                $(this).trunk8(settings);
+            }
+        });
+    });
+};
+
+// ============================================================================
 // Code to warn on exit without saving
 var S3SetNavigateAwayConfirm = function() {
     window.onbeforeunload = function() {
@@ -336,6 +363,7 @@ var S3EnableNavigateAwayConfirm = function() {
         ).done(function(data, status) {
             S3.hideAlerts();
             this.tryCount = 0;
+            // @ToDo: support drop-in replacement functions by calling .done()
             if (s.success) {
                 // Calling function's success callback
                 s.success(data, status);
@@ -359,6 +387,7 @@ var S3EnableNavigateAwayConfirm = function() {
                 return;
             }
             if (jqXHR.status == 500) {
+                // @ToDo: Can we find & show the ticket URL?
                 S3.showAlert(i18n.ajax_500, 'error');
             } else {
                 S3.showAlert(i18n.ajax_dwn, 'error');

@@ -1,0 +1,40 @@
+@charset "UTF-8";
+
+/* Replace Text with Icons */
+table.dataTable .action-btn.edit,
+table.dataTable .action-btn.read,
+table.dataTable .action-btn.send,
+table.dataTable .action-btn.copy_all,
+table.dataTable .action-btn.dispatch,
+table.dataTable .delete-btn {
+    font-size: 0;
+    line-height: 0;
+    margin: 0;
+    padding: 0;
+}
+table.dataTable .delete-btn:before {
+    content: url(img/trashbin.png);
+}
+table.dataTable .action-btn.edit:before,
+table.dataTable .action-btn.read:before {
+    content: url(img/pencil.png);
+}
+table.dataTable .action-btn.send:before {
+    content: url(img/envelope.png);
+}
+table.dataTable .action-btn.copy_all:before {
+    content: url(img/paperclip.png);
+}
+table.dataTable .action-btn.dispatch:before {
+    content: url(img/truck.png);
+}
+table.dataTable .action-btn.link {
+    font-family: FontAwesome;
+    -webkit-font-smoothing: antialiased;
+    *margin-right: .3em;
+}
+table.dataTable .action-btn.link:before {
+    /* icon-link */
+    content: "\f0c1";
+    speak: none;
+}

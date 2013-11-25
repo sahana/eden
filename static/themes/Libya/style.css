@@ -1,0 +1,96 @@
+/* Local Settings */
+
+/* Home Page */
+@font-face {
+font-family: NeoSans;
+src: url("../../fonts/NeoSans.otf") format("opentype");
+}
+
+div.carousel-caption {
+    margin-left: 0px;
+}
+
+div.carousel-caption h1,
+div.carousel-caption p
+ {
+    margin: 0;
+    font-family: NeoSans;
+    font-weight: normal;
+    color: #444444;
+    /*color: white;
+    text-shadow: 2px 2px 1px black;*/
+}
+
+#homepage-about {
+    background-position: 50% 0;
+    border: none;
+    padding: 0;
+}
+
+#homepage-about h2 {
+    margin-top: 23px;
+}
+
+/* Data List Filter Form */
+#datalist-filter-form .w2p_fl > label {
+    margin-right: 5px;
+    text-align: right;
+    width: 100px;
+}
+
+/* Forms */
+
+textarea.comments {
+    height: 100px;
+}
+
+.span7 .export_xls  {
+    margin-top: -17px;
+}
+
+/* Commit Tally / Button on Requests card */
+.media.pull-right {
+    margin-top: 0;
+}
+
+#dummy_req_req_site_id,
+#req_req_site_id,
+#req_commit_organisation_id {
+    float: left;
+    margin-right: 10px;
+    /* Makes it hard to click into box! */
+    /*margin-top: -5px;*/
+}
+
+#req_commit_organisation_id {
+    width: 280px;
+}
+
+#sub_defaultstatus_defaultstatus_i_facility_status_edit_none,
+#sub_defaultstatus_defaultstatus_i_facility_status_edit_0,
+#sub_defaultstatus_defaultstatus_i_power_supply_type_edit_none,
+#sub_defaultstatus_defaultstatus_i_power_supply_type_edit_0 {
+    width: 160px;
+}
+
+.date-title,
+.location-title,
+.card-holder .location-title {
+    margin-left: 0;
+    padding-left: 5px;
+}
+
+.green {
+    color: green;
+}
+.amber {
+    color: orange;
+}
+.red {
+    color: red;
+}
+
+/* Libya-specific (Vol) */
+#pr_person_date_of_birth {
+    width: 160px;
+}

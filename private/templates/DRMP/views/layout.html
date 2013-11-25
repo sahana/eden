@@ -30,13 +30,6 @@
 {{# <link rel="apple-touch-icon" href="/=appname/static/favicon.png" /> }}
 {{# All JavaScript at the bottom, except for Modernizr which enables HTML5 elements & feature detects }}{{# This kills the map in IE8: VML.js }}
 {{#<script src="/=appname/static/scripts/modernizr.min.js"></script>}}
-<style type="text/css">
-{{if s3.rtl:}}
- div{direction:rtl;}
-{{else:}}
- body{direction:ltr;}
-{{pass}}
-</style>
 {{for sheet in s3.external_stylesheets:}}
  <link href="{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
@@ -98,8 +91,8 @@
      </li>
     </ul>
     <ul class='nav pull-right'>
-     <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-comment-alt'></i><b class='caret'></b></a>
-      <ul class='dropdown-menu'>
+     <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-cog'></i><b class='caret'></b></a>
+      <ul class='dropdown-menu'>{{is_logged_in=auth.is_logged_in()}}
        {{get_vars = request.get_vars}}
        {{language = response.s3.language}}
        {{icon = {"tet":"icon-check"}.get(language, "icon-check-empty")}}
@@ -108,10 +101,7 @@
        {{icon = {"en":"icon-check"}.get(language, "icon-check-empty")}}
        {{lang_vars = dict(_language="en")}}{{for var in get_vars:}}{{if var != "_language":}}{{lang_vars[var] = get_vars[var]}}{{pass}}{{pass}}
        <li><a href='{{=URL(args=request.args, vars=lang_vars)}}'><i class='{{=icon}}'></i> English</a></li>
-      </ul>
-     </li>
-     <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-cog'></i><b class='caret'></b></a>
-      <ul class='dropdown-menu'>{{is_logged_in=auth.is_logged_in()}}
+       <li class='divider'></li>
        {{if is_logged_in and auth.s3_has_role("ADMIN"):}}
        <li><a href='/{{=appname}}/admin/user'><i class='icon-cogs'></i> {{=T("Admin")}}</a></li>
        <li class='divider'></li>

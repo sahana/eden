@@ -1037,17 +1037,14 @@ class S3Model(object):
             # Do we already have a super-record?
             skey = ogetattr(_record, key)
             if skey:
-                query = s[key] == skey
+                query = (s[key] == skey)
                 row = db(query).select(s._id, limitby=(0, 1)).first()
             else:
                 row = None
 
             if row:
                 # Update the super-entity record
-                try:
-                    db(s._id == skey).update(**data)
-                except:
-                    continue
+                db(s._id == skey).update(**data)
                 super_keys[key] = skey
                 data[key] = skey
                 form = Storage(vars=data)
