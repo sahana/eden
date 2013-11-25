@@ -4189,23 +4189,15 @@ def req_render_reqs(listid, resource, rfields, record, **attr):
     # Edit Bar
     T = current.T
     auth = current.auth
+    s3 = current.response.s3
     permit = auth.s3_has_permission
     table = db.req_req
     if permit("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="req", f="req",
-                               args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
-                                     "record": record_id}),
-                     _class="s3_modal",
-                     _title=T("Edit Request"),
-                     )
+        edit_btn = S3CRUD.dl_edit_button(table=table, id=record_id, refresh=listid)
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
-                       _class="dl-item-delete",
-                       )
+        delete_btn = S3CRUD.dl_delete_button(table=table)
     else:
         delete_btn = ""
     edit_bar = DIV(edit_btn,
@@ -4586,20 +4578,11 @@ def req_render_commits(listid, resource, rfields, record, **attr):
     permit = current.auth.s3_has_permission
     table = current.s3db.req_commit
     if permit("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="req", f="commit",
-                               args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
-                                     "record": record_id}),
-                     _class="s3_modal",
-                     _title=current.T("Edit Donation"),
-                     )
+        edit_btn = S3CRUD.dl_edit_button(table=table, id=record_id, refresh=listid)
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
-                       _class="dl-item-delete",
-                       )
+        delete_btn = S3CRUD.dl_delete_button(table=table)
     else:
         delete_btn = ""
     edit_bar = DIV(edit_btn,

@@ -2080,6 +2080,94 @@ class S3CRUD(S3Method):
         return button
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def dl_edit_button(c=None, f=None, table=None, id=None, refresh=None, tooltip=None, vars={}):
+        """
+            Custom edit button for datalist item thumbnails on cards
+    
+            Provide either c and f -or- table.
+            @param c: controller / module
+            @param f: function / resource
+            @param table: either Table object or table name
+    
+            @param id: id of record to edit
+            @param refresh: value of refresh var, typically the listid (HTML id
+                   property of the containing list) or "datalist" -- if not
+                   "datalist", then "record": id is also included in vars
+            @param tooltip: may be specified if c_f is not a table, or an
+                   alternate tooltip is wanted
+            @param vars: any extra vars besides record and refresh.
+        """
+        tablename = None
+        if c and f:
+            tablename = "%s_%s" % (c, f)
+        elif table:
+            try:
+                tablename = table._tablename
+            except:
+                tablename = table
+            try:
+                c, f = tablename.split("_", 1)
+            except:
+                pass
+        if not (tablename and c and f and (id > 0)):
+            return None  # won't get here with valid arg
+
+        if refresh:
+            vars["refresh"] = refresh
+        if refresh != "datalist":
+            vars["record"] = id
+        if not tooltip:
+            try:
+                tooltip = current.response.s3.crud_strings[tablename].title_update
+            except:
+                tooltip = T("Edit record")
+
+        btn = A(I(" ", _class="icon icon-edit"),
+                _href=URL(c=c, f=f,
+                          args=[id, "update.popup"],
+                          vars=vars),
+                _class="s3_modal",
+                _title=tooltip,
+               )
+        return btn
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def dl_delete_button(c=None, f=None, table=None, tooltip=None):
+        """
+            Custom delete button for datalist item thumbnails on cards
+    
+            Provide either c and f -or- table.
+            @param c: controller / module
+            @param f: function / resource
+            @param table: either Table object or table name
+            @param tooltip: may be specified if c_f is not a table, or an
+                   alternate tooltip is wanted
+        """
+        if c and f:
+            tablename = "%s_%s" % (c, f)
+        elif table:
+            try:
+                tablename = table._tablename
+            except:
+                tablename = table
+        if not tablename:
+            return None  # won't get here with valid args
+
+        if not tooltip:
+            try:
+                tooltip = current.response.s3.crud_strings[tablename].title_update
+            except:
+                tooltip = T("Edit record")
+
+        btn = A(I(" ", _class="icon icon-trash"),
+                _class="dl-item-delete",
+                _title=tooltip,
+               )
+        return btn
+
+    # -------------------------------------------------------------------------
     def last_update(self):
         """
             Get the last update meta-data
