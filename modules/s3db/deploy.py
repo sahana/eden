@@ -317,7 +317,7 @@ class S3DeploymentModel(S3Model):
                              mission_id(),
                              self.msg_message_id(),
                              self.doc_document_id(),
-                            )
+                             *s3_meta_fields())
                             
         # ---------------------------------------------------------------------
         # Role Type ('Sector' in RDRT)
@@ -655,6 +655,7 @@ class S3DeploymentAlertModel(S3Model):
                   crud_form = crud_form,
                   #editable = False,
                   insertable = False,
+                  update_onaccept = self.deploy_response_update_onaccept,
                   )
 
         # CRUD Strings
@@ -754,6 +755,60 @@ class S3DeploymentAlertModel(S3Model):
         current.session.confirmation = T("Alert Sent")
         redirect(next_url)
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def deploy_response_update_onaccept(form):
+        """
+            Update the doc_id in all attachments (doc_document) to the
+            hrm_human_resource the response is linked to.
+
+            @param form: the form
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        data = form.vars
+        if not data or "id" not in data:
+            return
+
+        # Get message ID and human resource ID
+        if "human_resource_id" not in data or "message_id" not in data:
+            rtable = s3db.deploy_response
+            response = db(rtable.id == data.id) \
+                         .select(rtable.human_resource_id,
+                                 rtable.message_id,
+                                 limitby=(0, 1)).first()
+            if not response:
+                return
+            human_resource_id = response.human_resource_id
+            message_id = response.message_id
+        else:
+            human_resource_id = data.human_resource_id
+            message_id = data.message_id
+
+        # Update doc_id in all attachments (if any)
+        dtable = s3db.doc_document
+        ltable = s3db.deploy_mission_document
+        query = (ltable.message_id == response.message_id) & \
+                (dtable.id == ltable.document_id) & \
+                (ltable.deleted == False) & \
+                (dtable.deleted == False)
+        print query
+        attachments = db(query).select(dtable.id)
+        print attachments
+        if attachments:
+            # Get the doc_id from the hrm_human_resource
+            doc_id = None
+            if human_resource_id:
+                htable = s3db.hrm_human_resource
+                hr = db(htable.id == human_resource_id) \
+                       .select(htable.doc_id, limitby=(0, 1)).first()
+                if hr:
+                    doc_id = hr.doc_id
+            db(dtable.id.belongs(attachments)).update(doc_id=doc_id)
+        return
+            
 # =============================================================================
 def deploy_rheader(r, tabs=[], profile=False):
     """ Deployment Resource Headers """
