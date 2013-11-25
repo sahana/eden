@@ -126,6 +126,10 @@ def human_resource():
     settings.hrm.use_skills = True
     settings.search.filter_manager = True
 
+    # Add deploy_alert_recipient as component so that we filter by it
+    s3db.add_component("deploy_alert_recipient",
+                       hrm_human_resource = "human_resource_id")
+
     q = s3base.S3FieldSelector("human_resource_application.active") == True
     output = s3db.hrm_human_resource_controller(extra_filter=q)
     if isinstance(output, dict) and "title" in output:
@@ -291,11 +295,11 @@ def alert():
                                            args=["[id]", "profile"]))]
             if r.component_name == "recipient":
                 # Open should open the member profile, not the link
-                # @todo: this doesn't work!
                 s3.actions = [dict(label=str(READ),
                                    _class="action-btn read",
                                    url=URL(f="human_resource",
-                                           args=["[id]", "profile"]))]
+                                           args=["profile"],
+                                           vars={"alert_recipient.id": "[id]"}))]
                 if not r.record.message_id:
                     # Delete should remove the Link, not the Member
                     s3.actions.append(dict(label=str(DELETE),
