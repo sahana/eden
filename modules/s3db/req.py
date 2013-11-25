@@ -697,7 +697,7 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
             Function to be called from REST prep functions
              - to add req_item & req_skill components as inline forms
         """
-
+        T = current.T
         s3db = current.s3db
         table = s3db.req_req
 
