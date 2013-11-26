@@ -1471,7 +1471,7 @@ def twitter_result():
                      label=T("Tweeted By"),
                      _class="tweeter-filter-class",
                      comment=T("Filter Tweets by who tweeted them"),
-                     ),
+                     )
         ]
 
     report_fields = ["search_id",
