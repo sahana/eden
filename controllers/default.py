@@ -648,6 +648,9 @@ def person():
             tablename = "pr_person"
             table = s3db[tablename]
 
+            # Users can not delete their own person record
+            r.resource.configure(deletable=False)
+
             s3.crud_strings[tablename].update(
                 title_display = T("Personal Profile"),
                 title_update = T("Personal Profile"))
