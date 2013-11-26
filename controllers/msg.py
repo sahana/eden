@@ -1340,7 +1340,7 @@ def twitter_search():
         msg_record_created = T("Query added"),
         msg_record_deleted = T("Query deleted"),
         msg_list_empty = T("No Query currently defined"),
-        msg_record_modified  = T("Query updated")
+        msg_record_modified = T("Query updated")
         )
 
     if request.post_vars.get("search_after_save"):
@@ -1458,7 +1458,7 @@ def twitter_result():
         msg_list_empty = T("No Tweets Available."),
         )
 
-    from s3.s3filter import S3DateFilter, S3TextFilter, S3OptionsFilter
+    from s3.s3filter import S3DateFilter, S3TextFilter
 
     filter_widgets = [
         S3DateFilter("created_on",
@@ -1472,12 +1472,6 @@ def twitter_result():
                      _class="tweeter-filter-class",
                      comment=T("Filter Tweets by who tweeted them"),
                      ),
-        S3OptionsFilter("search_id",
-                        represent="%(keywords)s",
-                        _class="twitter-keyword-class",
-                        widget="multiselect",
-                        comment=T("Filter by Search Keyword"),
-                        )
         ]
 
     report_fields = ["search_id",
