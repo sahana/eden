@@ -1730,7 +1730,6 @@ class S3Msg(object):
         qtable = s3db.msg_twitter_search
         rtable = db.msg_twitter_result
         mtable = db.msg_message
-        gtable = s3db.gis_location
         search_query = db(qtable.id == search_id).select(qtable.id,
                                                          qtable.keywords,
                                                          qtable.lang,
@@ -1753,7 +1752,6 @@ class S3Msg(object):
                 access_token = settings.access_token,
                 access_token_secret = settings.access_token_secret
                 )
-
         except TwitterSearch.TwitterSearchException as e:
             return(str(e))
 
