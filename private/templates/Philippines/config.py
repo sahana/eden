@@ -20,6 +20,7 @@ from s3.s3utils import S3DateTime, s3_auth_user_represent_name, s3_avatar_repres
 from s3.s3validators import IS_INT_AMOUNT, IS_LOCATION_SELECTOR2, IS_ONE_OF
 from s3.s3widgets import S3LocationSelectorWidget2
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
+from s3.s3crud import S3CRUD
 
 T = current.T
 s3 = current.response.s3
@@ -323,30 +324,28 @@ def render_contacts(listid, resource, rfields, record, **attr):
     permit = current.auth.s3_has_permission
     table = db.pr_person
     if permit("update", table, record_id=person_id):
-        vars = {"refresh": listid,
-                "record": record_id,
-                }
         f = current.request.function
+        vars = {}
         if f == "organisation" and organisation_id:
             vars["(organisation)"] = organisation_id
-        edit_url = URL(c="hrm", f="person",
-                       args=[person_id, "update.popup"],
-                       vars=vars)
         title_update = current.response.s3.crud_strings.hrm_human_resource.title_update
-        edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=edit_url,
-                     _class="s3_modal",
-                     _title=title_update,
-                     )
+        edit_btn = S3CRUD.dl_edit_button(c="hrm", f="person", id=person_id,
+                                         refresh=listid, tooltip=title_update, vars=vars)
+        edit_url = edit_btn["_href"]
     else:
         edit_btn = ""
         edit_url = "#"
         title_update = ""
     # Deletions failing due to Integrity Errors
+    # @ToDo: Does button generation based on class=dl-item-delete properly
+    # handle the case where the request resource and the resource the delete
+    # should act on are not the same? It's not a problem to omit the delete
+    # button here, as deleting a person's hrm_human_resource record is an
+    # uncommon operation, and should not be done casually from some other
+    # resource's profile page.
     #if permit("delete", table, record_id=person_id):
-    #    delete_btn = A(I(" ", _class="icon icon-trash"),
-    #                   _class="dl-item-delete",
-    #                   )
+    #    tooltip = current.response.s3.crud_strings.hrm_human_resource.title_update
+    #    delete_btn = S3CRUD.dl_delete_button(c="hrm", f="person", tooltip=tooltip)
     #else:
     delete_btn = ""
     edit_bar = DIV(edit_btn,
@@ -483,20 +482,11 @@ def render_locations(listid, resource, rfields, record, **attr):
     # permit = current.auth.s3_has_permission
     # table = current.db.gis_location
     # if permit("update", table, record_id=record_id):
-        # edit_btn = A(I(" ", _class="icon icon-edit"),
-                     # _href=URL(c="gis", f="location",
-                               # args=[record_id, "update.popup"],
-                               # vars={"refresh": listid,
-                                     # "record": record_id}),
-                     # _class="s3_modal",
-                     # _title=current.response.s3.crud_strings.gis_location.title_update,
-                     # )
+        # edit_btn = S3CRUD.dl_edit_button(table=table, id=record_id, refresh=listid)
     # else:
         # edit_btn = ""
     # if permit("delete", table, record_id=record_id):
-        # delete_btn = A(I(" ", _class="icon icon-trash"),
-                       # _class="dl-item-delete",
-                      # )
+        # delete_btn = S3CRUD.dl_delete_button(table=table)
     # else:
         # delete_btn = ""
     # edit_bar = DIV(edit_btn,
@@ -657,25 +647,14 @@ def render_locations_profile(listid, resource, rfields, record, **attr):
     # permit = current.auth.s3_has_permission
     # table = current.db.gis_location
     # if permit("update", table, record_id=record_id):
-        # vars = {"refresh": listid,
-                # "record": record_id,
-                # }
         # f = current.request.function
         # if f == "organisation" and organisation_id:
             # vars["(organisation)"] = organisation_id
-        # edit_btn = A(I(" ", _class="icon icon-edit"),
-                     # _href=URL(c="gis", f="location",
-                               # args=[record_id, "update.popup"],
-                               # vars=vars),
-                     # _class="s3_modal",
-                     # _title=current.response.s3.crud_strings.gis_location.title_update,
-                     # )
+        # edit_btn = S3CRUD.dl_edit_button(table=table, id=record_id, refresh=listid, vars=vars)
     # else:
         # edit_btn = ""
     # if permit("delete", table, record_id=record_id):
-        # delete_btn = A(I(" ", _class="icon icon-trash"),
-                       # _class="dl-item-delete",
-                       # )
+        # delete_btn = S3CRUD.dl_delete_button(table=table)
     # else:
         # delete_btn = ""
     # edit_bar = DIV(edit_btn,
@@ -808,25 +787,15 @@ def render_sites(listid, resource, rfields, record, **attr):
     permit = current.auth.s3_has_permission
     table = current.db.org_facility
     if permit("update", table, record_id=record_id):
-        vars = {"refresh": listid,
-                "record": record_id,
-                }
         f = current.request.function
+        vars = {}
         if f == "organisation" and organisation_id:
             vars["(organisation)"] = organisation_id
-        edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="org", f="facility",
-                               args=[record_id, "update.popup"],
-                               vars=vars),
-                     _class="s3_modal",
-                     _title=current.response.s3.crud_strings.org_facility.title_update,
-                     )
+        edit_btn = S3CRUD.dl_edit_button(table=table, id=record_id, refresh=listid, vars=vars)
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
-                       _class="dl-item-delete",
-                       )
+        delete_btn = S3CRUD.dl_delete_button(table=table)
     else:
         delete_btn = ""
     edit_bar = DIV(edit_btn,
@@ -978,20 +947,11 @@ def render_organisations(listid, resource, rfields, record, **attr):
     permit = current.auth.s3_has_permission
     table = db.org_organisation
     if permit("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="org", f="organisation",
-                               args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
-                                     "record": record_id}),
-                     _class="s3_modal",
-                     _title=current.response.s3.crud_strings.org_organisation.title_update,
-                     )
+        edit_btn = S3CRUD.dl_edit_button(table=table, id=record_id, refresh=listid)
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
-                       _class="dl-item-delete",
-                      )
+        delete_btn = S3CRUD.dl_delete_button(table=table)
     else:
         delete_btn = ""
     edit_bar = DIV(edit_btn,
@@ -1135,20 +1095,11 @@ def render_org_needs(listid, resource, rfields, record, **attr):
     permit = current.auth.s3_has_permission
     table = current.db.req_organisation_needs
     if permit("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="req", f="organisation_needs",
-                               args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
-                                     "record": record_id}),
-                     _class="s3_modal",
-                     _title=current.response.s3.crud_strings.req_organisation_needs.title_update,
-                     )
+        edit_btn = S3CRUD.dl_edit_button(table=table, id=record_id, refresh=listid)
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
-                       _class="dl-item-delete",
-                      )
+        delete_btn = S3CRUD.dl_delete_button(table=table)
     else:
         delete_btn = ""
     edit_bar = DIV(edit_btn,
@@ -1273,20 +1224,11 @@ def render_site_needs(listid, resource, rfields, record, **attr):
     permit = current.auth.s3_has_permission
     table = current.db.req_site_needs
     if permit("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
-                     _href=URL(c="req", f="site_needs",
-                               args=[record_id, "update.popup"],
-                               vars={"refresh": listid,
-                                     "record": record_id}),
-                     _class="s3_modal",
-                     _title=current.response.s3.crud_strings.req_site_needs.title_update,
-                     )
+        edit_btn = S3CRUD.dl_edit_button(table=table, id=record_id, refresh=listid)
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
-                       _class="dl-item-delete",
-                      )
+        delete_btn = S3CRUD.dl_delete_button(table=table)
     else:
         delete_btn = ""
     edit_bar = DIV(edit_btn,
@@ -1534,13 +1476,7 @@ def customize_gis_location(**attr):
                         S3SVG.write_file(filename, loc.wkt)
 
                 if current.auth.s3_has_permission("update", table, record_id=record_id):
-                    edit_btn = A(I(_class="icon icon-edit"),
-                                 _href=URL(c="gis", f="location",
-                                           args=[record_id, "update.popup"],
-                                           vars={"refresh": "datalist"}),
-                                 _class="s3_modal",
-                                 _title=s3.crud_strings["gis_location"].title_update,
-                                 )
+                    edit_btn = S3CRUD.dl_edit_button(table=table, id=record_id, refresh="datalist")
                 else:
                     edit_btn = ""
                 name = location.name
@@ -2176,6 +2112,15 @@ def customize_org_needs_fields(profile=False):
     table.modified_on.represent = datetime_represent
     table.vol.readable = table.vol.writable = False
     table.vol_details.readable = table.vol_details.writable = False
+
+    # Toggle visibility of the _details fields when their associated boolean
+    # option is changed.
+    s3.jquery_ready.append(
+"""
+$('#req_organisation_needs_money').change(function() {
+ $('#req_organisation_needs_money_details__row').toggle($(this).prop('checked'));
+}).change();
+""")
 
     list_fields = ["id",
                    "organisation_id",
@@ -2823,12 +2768,13 @@ def customize_req_req(**attr):
         #    result = standard_prep(r)
 
         s3db = current.s3db
+        table = r.table
         if r.component_name == "commit":
             s3db.req_customize_commit_fields()
         else:
             s3db.req_customize_req_fields()
         if r.method in ("datalist", "datalist.dl"):
-            s3.filter = (r.table.req_status.belongs([0, 1]))
+            s3.filter = (table.req_status.belongs([0, 1]))
         elif r.method == "profile":
             # Customise tables used by widgets
             s3db.req_customize_commit_fields()
@@ -2864,14 +2810,8 @@ def customize_req_req(**attr):
                                 #marker = "office",
                                 list_layout = render_sites,
                                 )
-            if current.auth.s3_has_permission("update", r.table, record_id=record_id):
-                edit_btn = A(I(_class = "icon icon-edit"),
-                             _href=URL(c="req", f="req",
-                                       args=[record_id, "update.popup"],
-                                       vars={"refresh": "datalist"}),
-                             _class="s3_modal",
-                             _title=s3.crud_strings["req_req"].title_update,
-                             )
+            if current.auth.s3_has_permission("update", table, record_id=record_id):
+                edit_btn = S3CRUD.dl_edit_button(table=table, id=record_id, refresh="datalist")
             else:
                 edit_btn = ""
             db = current.db
@@ -2893,9 +2833,10 @@ def customize_req_req(**attr):
             else:
                 # @ToDo: Placeholder
                 logo = "#"
-                
-            s3db.configure("req_req",
-                           profile_title = s3.crud_strings["req_req"].title_list,
+
+            tablename = table._tablename
+            s3db.configure(tablename,
+                           profile_title = s3.crud_strings[tablename].title_list,
                            profile_header = DIV(edit_btn,
                                                 A(IMG(_class="media-object",
                                                           _src=logo,

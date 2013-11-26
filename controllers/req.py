@@ -1703,15 +1703,21 @@ def organisation_needs():
     """
 
     def prep(r):
-        if r.interactive and r.method == "create":
-            # Filter from a Profile page?
-            # If so, then default the fields we know
-            organisation_id = request.get_vars.get("~.(organisation)", None)
-            if organisation_id:
+        if r.interactive:
+            if r.method == "create":
+                # Filter from a Profile page?
+                # If so, then default the fields we know
+                organisation_id = request.get_vars.get("~.(organisation)", None)
+                if organisation_id:
+                    field = s3db.req_organisation_needs.organisation_id
+                    field.default = organisation_id
+                    field.readable = False
+                    field.writable = False
+            elif r.method == "update":
+                # Don't allow changing the org in an existing needs record.
                 field = s3db.req_organisation_needs.organisation_id
-                field.default = organisation_id
-                field.readable = False
                 field.writable = False
+                field.comment = None
         return True
     s3.prep = prep
 
