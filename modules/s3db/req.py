@@ -4157,7 +4157,7 @@ def req_render_reqs(listid, resource, rfields, record, **attr):
                )
 
     # Avatar
-    # Use Organisation Logo
+    # Try Organisation Logo
     db = current.db
     otable = db.org_organisation
     row = db(otable.id == organisation_id).select(otable.logo,

@@ -1609,14 +1609,27 @@ class S3Msg(object):
             ptable = db.msg_parsing_status
             pinsert = ptable.insert
 
-        import gluon.contrib.feedparser as feedparser
+        import feedparser
+        # http://pythonhosted.org/feedparser
         d = feedparser.parse(channel.url)
+        utcfromtimestamp = datetime.datetime.utcfromtimestamp
+        from time import mktime
         for entry in d.entries:
-            # @ToDo: Date of Post?
+            content = entry.get("content", None)
+            if content:
+                content = content[0].value
+            else:
+                content = entry.get("description", None)
             id = minsert(channel_id = channel_id,
                          title = entry.title,
-                         from_address = entry.link,
-                         body = entry.description)
+                         from_address = entry.get("link", None),
+                         body = content,
+                         author = entry.get("author", None),
+                         created_on = utcfromtimestamp(mktime(entry.published_parsed)),
+                         tags = entry.get("tags", None),
+                         # @ToDo: Enclosures
+                         # @ToDo: geo
+                         )
             record = dict(id=id)
             update_super(mtable, record)
             if parser:

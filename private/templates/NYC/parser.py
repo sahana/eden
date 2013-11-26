@@ -53,25 +53,76 @@ class S3Parser(object):
                    - place post into the relevant series_id
         """
 
+        db = current.db
         s3db = current.s3db
         table = s3db.msg_rss
-        record = current.db(table.message_id == message.message_id).select(table.title,
-                                                                           limitby=(0, 1)
-                                                                           ).first()
+        record = db(table.message_id == message.message_id).select(table.title,
+                                                                   table.from_address,
+                                                                   table.body,
+                                                                   table.created_on,
+                                                                   table.tags,
+                                                                   table.author,
+                                                                   limitby=(0, 1)
+                                                                   ).first()
         if not record:
             return
 
+        body = record.body or record.title
+        author = record.author
+        if author:
+            ptable = s3db.pr_person
+            # https://code.google.com/p/python-nameparser/
+            from nameparser import HumanName
+            name = HumanName(author)
+            first_name = name.first
+            middle_name = name.middle
+            last_name = name.last
+            query = (ptable.first_name == first_name) & \
+                    (ptable.middle_name == middle_name) & \
+                    (ptable.last_name == last_name)
+            exists = db(query).select(ptable.id,
+                                      limitby=(0, 1)
+                                      ).first()
+            if exists:
+                person_id = exists.id
+            else:
+                person_id = ptable.insert(first_name = first_name,
+                                          middle_name = middle_name,
+                                          last_name = last_name)
+        else:
+            person_id = None
+
+        tags = record.tags
+        url = record.from_address
+
         table = s3db.cms_post
         post_id = table.insert(title = record.title,
-                               body = message.body,
+                               body = body,
+                               created_on = record.created_on,
+                               person_id = person_id,
                                )
         record = dict(id=post_id)
         s3db.update_super(table, record)
-        url = message.from_address
+
         if url:
             s3db.doc_document.insert(doc_id = record["doc_id"],
                                      url = url,
                                      )
+
+        if tags:
+            ttable = db.cms_tag
+            ltable = db.cms_tag_post
+            for t in tags:
+                tag = db(ttable.name == t).select(ttable.id,
+                                                  limitby=(0, 1),
+                                                  ).first()
+                if tag:
+                    tag_id = tag.id
+                else:
+                    tag_id = ttable.insert(name = t)
+                ltable.insert(post_id = post_id,
+                              tag_id = tag_id,
+                              )
 
         # No Reply
         return

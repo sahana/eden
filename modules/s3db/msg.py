@@ -1046,11 +1046,23 @@ class S3RSSModel(S3ChannelModel):
                              # Instance
                              super_link("message_id", "msg_message"),
                              self.msg_channel_id(),
-                             Field("title"), # Subject?
+                             Field("title",
+                                   label = T("Title"),
+                                   ),
                              Field("body", "text",
-                                   label = T("Description")),
+                                   label = T("Content"),
+                                   ),
                              Field("from_address",
-                                   label = T("Link")),
+                                   label = T("Link"),
+                                   ),
+                             # http://pythonhosted.org/feedparser/reference-feed-author_detail.html
+                             Field("author",
+                                   label = T("Author"),
+                                   ),
+                             # http://pythonhosted.org/feedparser/reference-entry-tags.html
+                             Field("tags", "list:string",
+                                   label = T("Tags"),
+                                   ),
                              # Just present for Super Entity
                              Field("inbound", "boolean",
                                    default = True,
@@ -1060,7 +1072,7 @@ class S3RSSModel(S3ChannelModel):
                              *s3_meta_fields())
 
         table.created_on.readable = True
-        table.created_on.label = T("Posted on")
+        table.created_on.label = T("Published on")
         table.created_on.represent = lambda dt: \
             S3DateTime.datetime_represent(dt, utc=True)
 

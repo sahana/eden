@@ -426,14 +426,16 @@ class S3ContentModel(S3Model):
            Resource Summary page or Map Layer
         """
 
-        vars = current.request.get_vars
-        module = vars.get("module", None)
+        db = current.db
+        s3db = current.s3db
+        form_vars = form.vars
+        post_id = form_vars.id
+        get_vars = current.request.get_vars
+        module = get_vars.get("module", None)
         if module:
-            post_id = form.vars.id
-            db = current.db
             table = db.cms_post_module
             query = (table.module == module)
-            resource = vars.get("resource", None)
+            resource = get_vars.get("resource", None)
             if resource:
                 # Resource Summary page
                 query &= (table.resource == resource)
@@ -448,18 +450,33 @@ class S3ContentModel(S3Model):
                              resource=resource,
                              )
 
-        layer_id = vars.get("layer_id", None)
+        layer_id = get_vars.get("layer_id", None)
         if layer_id:
-            post_id = form.vars.id
-            table = current.s3db.cms_post_layer
+            table = s3db.cms_post_layer
             query = (table.layer_id == layer_id)
-            result = current.db(query).update(post_id=post_id)
+            result = db(query).update(post_id=post_id)
             if not result:
                 table.insert(post_id=post_id,
                              layer_id=layer_id,
                              )
 
-        return
+        # Read record
+        table = db.cms_post
+        record = db(table.id == post_id).select(table.person_id,
+                                                table.created_by,
+                                                limitby=(0, 1)
+                                                ).first()
+        if record.created_by and not record.person_id:
+            # Set from Author
+            ptable = s3db.pr_person
+            putable = s3db.pr_person_user
+            query = (putable.user_id == record.created_by) & \
+                    (putable.pe_id == ptable.pe_id)
+            person = db(query).select(ptable.id,
+                                      limitby=(0, 1)
+                                      ).first()
+            if person:
+                db(table.id == post_id).update(person_id=person_id)
 
 # =============================================================================
 class S3ContentMapModel(S3Model):
@@ -878,58 +895,74 @@ def cms_render_posts(listid, resource, rfields, record,
     location_id = raw["cms_post.location_id"]
     location_url = URL(c="gis", f="location", args=[location_id, "profile"])
 
-    organisation = record[org_field]
-    organisation_id = raw[org_field]
-    org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
-
-    # @ToDo: deployment_setting or introspect based on list_fields
-    #person = record["cms_post.created_by"]
-    #author_id = raw["cms_post.created_by"]
-    person = record["cms_post.person_id"]
     person_id = raw["cms_post.person_id"]
+    if person_id:
+        person = record["cms_post.person_id"]
+        person_url = URL(c="pr", f="person", args=[person_id])
+        person = A(person,
+                   _href=person_url,
+                   )
+    else:
+        person = ""
 
+    avatar = ""
     db = current.db
 
-    # If using Author
-    #s3db = current.s3db
-    #ltable = s3db.pr_person_user
-    #ptable = db.pr_person
-    #query = (ltable.user_id == author_id) & \
-    #        (ltable.pe_id == ptable.pe_id)
-    #row = db(query).select(ptable.id,
-    #                       limitby=(0, 1)
-    #                       ).first()
-    #if row:
-    #    person_url = URL(c="pr", f="person", args=[row.id])
-    #else:
-    #    person_url = "#"
+    organisation_id = raw[org_field]
+    if organisation_id:
+        organisation = record[org_field]
+        org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
+        organisation = A(organisation,
+                         _href=org_url,
+                         _class="card-organisation",
+                         )
 
-    person_url = URL(c="pr", f="person", args=[person_id])
-    person = A(person,
-               _href=person_url,
-               )
-
-    # Avatar
-    # Use Organisation Logo
-    # @ToDo: option for Personal Avatar (fallback if no Org Logo?)
-    otable = db.org_organisation
-    row = db(otable.id == organisation_id).select(otable.logo,
-                                                  limitby=(0, 1)
-                                                  ).first()
-    if row and row.logo:
-        logo = URL(c="default", f="download", args=[row.logo])
+        # Avatar
+        # Try Organisation Logo
+        otable = db.org_organisation
+        row = db(otable.id == organisation_id).select(otable.logo,
+                                                      limitby=(0, 1)
+                                                      ).first()
+        if row and row.logo:
+            logo = URL(c="default", f="download", args=[row.logo])
+            avatar = IMG(_src=logo,
+                         _height=50,
+                         _width=50,
+                         _style="padding-right:5px;",
+                         _class="media-object")
+            avatar = A(avatar,
+                       _href=org_url,
+                       _class="pull-left",
+                       )
     else:
-        logo = URL(c="static", f="img", args="blank-user.gif")
-    avatar = IMG(_src=logo,
-                 _height=50,
-                 _width=50,
-                 _style="padding-right:5px;",
-                 _class="media-object")
-    avatar = A(avatar,
-               _href=org_url,
-               _class="pull-left",
-               )
+        organisation = ""
 
+    if not avatar and person_id:
+        # Personal Avatar
+        avatar = s3_avatar_represent(person_id,
+                                     tablename="pr_person",
+                                     _class="media-object")
+
+        avatar = A(avatar,
+                   _href=person_url,
+                   _class="pull-left",
+                   )
+
+    if person and organisation:
+        card_person = DIV(person,
+                          " - ",
+                          organisation,
+                          _class="card-person",
+                          )
+    elif person:
+        card_person = DIV(person,
+                          _class="card-person",
+                          )
+    elif organisation:
+        card_person = DIV(organisation,
+                          _class="card-person",
+                          )
+    
     T = current.T
     translate = current.deployment_settings.get_L10n_translate_cms_series()
     if translate:
@@ -1029,14 +1062,7 @@ def cms_render_posts(listid, resource, rfields, record,
                        ),
                    DIV(avatar,
                        DIV(DIV(body,
-                               DIV(person,
-                                   " - ",
-                                   A(organisation,
-                                     _href=org_url,
-                                     _class="card-organisation",
-                                     ),
-                                   _class="card-person",
-                                   ),
+                               card_person,
                                _class="media",
                                ),
                            _class="media-body",
@@ -1062,14 +1088,7 @@ def cms_render_posts(listid, resource, rfields, record,
                        ),
                    DIV(avatar,
                        DIV(DIV(body,
-                               DIV(person,
-                                   " - ",
-                                   A(organisation,
-                                     _href=org_url,
-                                     _class="card-organisation",
-                                     ),
-                                   _class="card-person",
-                                   ),
+                               card_person,
                                _class="media",
                                ),
                            _class="media-body",
