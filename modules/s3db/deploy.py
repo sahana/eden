@@ -1176,10 +1176,9 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
 
     item_class = "thumbnail"
 
-    row = record["_row"]
     raw = record._row
     human_resource_id = raw["hrm_human_resource.id"]
-    mission_id = row["deploy_response.mission_id"]
+    mission_id = raw["deploy_response.mission_id"]
 
     db = current.db
 
