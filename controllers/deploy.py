@@ -49,22 +49,23 @@ def mission():
                                delete_next=next_url)
             s3.cancel = next_url
             if r.component_name == "human_resource_assignment":
-                get_vars = r.get_vars
-                if "member_id" in get_vars:
+                member_id = r.get_vars.get("member_id", None)
+                if member_id and str(member_id).isdigit():
                     # Deploy-this-member action
-                    member_id = get_vars["member_id"]
-                    if str(member_id).isdigit():
-                        # Check if this member exists, otherwise ignore
-                        htable = s3db.hrm_human_resource
-                        query = (htable.id == member_id) & \
-                                (htable.deleted != True)
-                        row = db(query).select(htable.id, limitby=(0, 1)).first()
-                        if row:
-                            field = s3db.deploy_human_resource_assignment \
-                                        .human_resource_id
-                            field.default = row.id
-                            field.writable = False
-                            field.comment = None
+                    htable = s3db.hrm_human_resource
+                    query = (htable.id == member_id) & \
+                            (htable.deleted != True)
+                    row = db(query).select(htable.id, limitby=(0, 1)).first()
+                    if row:
+                        field = s3db.deploy_human_resource_assignment \
+                                    .human_resource_id
+                        field.default = row.id
+                        field.writable = False
+                        field.comment = None
+                elif r.method == "create":
+                    atable = s3db.deploy_human_resource_assignment
+                    atable.end_date.writable = atable.end_date.readable = False
+                    atable.rating.writable = atable.rating.readable = False
             if not r.component and r.method == "profile":
                 represent = lambda d: \
                             s3base.S3DateTime.datetime_represent(d, utc=True)

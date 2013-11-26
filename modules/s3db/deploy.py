@@ -388,18 +388,25 @@ class S3DeploymentModel(S3Model):
         #
         tablename = "deploy_human_resource_assignment"
         table = define_table(tablename,
-                             super_link("doc_id", "doc_entity"),
                              mission_id(),
                              self.hrm_human_resource_id(empty=False,
                                                         label=T("Member")),
                              role_type_id(),
-                             s3_date("start_date",
-                                     label = T("Start Date")),
+                             # Use hrm_experience
+                             # rest of fields may not be filled-out, but are in attachments
+                             s3_date("start_date", # Only field visible when deploying from Mission profile
+                                     label = T("Start Date"),
+                                     ),
                              s3_date("end_date",
-                                     label = T("End Date")),
-                             Field("rating", "double",
-                                   label=T("Rating"),
-                                   default=0.0),
+                                     label = T("End Date"),
+                                     ),
+                             # Use hrm_appraisal 'Upload Appraisal' Action button in Assignment card
+                             # Averaged in response cards
+                             Field("rating", "integer",
+                                   label = T("Rating"),
+                                   requires = IS_INT_IN_RANGE(0, 5),
+                                   default = 0,
+                                   ),
                              *s3_meta_fields())
 
         # Table configuration
@@ -1391,7 +1398,7 @@ def deploy_render_human_resource_assignment(listid, resource, rfields, record,
     row = record["_row"]
     human_resource_id = row["hrm_human_resource.id"]
 
-    profile_url = URL(f="human_resource", args=[human_resource_id])
+    profile_url = URL(f="human_resource", args=[human_resource_id, "profile"])
     profile_title = current.T("Open Member Profile (in a new tab)")
     
     person = A(record["hrm_human_resource.person_id"],
