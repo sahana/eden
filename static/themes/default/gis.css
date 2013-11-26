@@ -32,8 +32,10 @@ form .map_loader {
 }
 .map_home .gis_fullscreen_map-btn {
     font-weight: bold;
-    float: left; /* Needed for RTL */
     padding-left: 8px;
+}
+body.rtl .map_home .gis_fullscreen_map-btn {
+    float: left;
 }
 .gis_print_map-btn {
     font-weight: bold;
