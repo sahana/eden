@@ -1617,7 +1617,7 @@ class S3TwitterSearchModel(S3ChannelModel):
         configure = self.configure
         define_table = self.define_table
         set_method = self.set_method
-        s3db = current.s3db
+        s3db = self.s3db
         # ---------------------------------------------------------------------
         # Twitter Search Query
         #
