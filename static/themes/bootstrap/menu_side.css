@@ -7,3 +7,15 @@
     /* Override Bootstrap */
     margin: 0;
 }
+
+/* Layout changes when using a side menu */
+.colmask {
+    margin-top: 0;
+}
+
+.col1 .alert.alert-error,
+.col1 .alert.alert-info,
+.col1 .alert.alert-warning,
+.col1 .alert.alert-success {
+    margin-top: 0;
+}

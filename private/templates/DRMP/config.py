@@ -2346,6 +2346,7 @@ def customize_cms_post(**attr):
                            list_layout = render_posts,
                            )
 
+            # Breaks bootstrap formstyle & doesn't work well as just 'True'
             s3.cancel = True
         elif r.representation == "xls":
             table = r.table

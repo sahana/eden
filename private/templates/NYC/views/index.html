@@ -51,23 +51,25 @@
  <div class='container'>   
   <div class='row'>
    <div class='span4'>
-    <a href='/{{=appname}}/default/index/newsfeed?~.series_id$name=Event'>
-     <h2><i class='icon-calendar'></i> {{=T("Latest Events")}}</h2>
-    </a>
-    {{=events}}
-   </div>
-   <div class='span4'>
     <div class='updates'>
      <h2>Updates</h2>
      {{=filter_form}}
      {{=updates}}
     </div>
    </div>
-   <div class='span4'>
+  </div>
+  <div class='row'>
+   <div class='span6'>
+    <a href='/{{=appname}}/default/index/newsfeed?~.series_id$name=Event'>
+     <h2><i class='icon-calendar'></i> {{=T("Latest Events")}}</h2>
+    </a>
+    {{=latest_events}}
+   </div>
+   <div class='span6'>
     <a href='/{{=appname}}/req/req'>
      <h2><i class='icon-bullhorn'></i> {{=T("Latest Requests")}}</h2>
     </a>
-    {{=requests}}
+    {{=latest_reqs}}
    </div>
   </div>  
  </div>

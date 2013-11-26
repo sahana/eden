@@ -32,6 +32,8 @@ settings.base.theme = "NYC"
 settings.ui.formstyle_row = "bootstrap"
 settings.ui.formstyle = "bootstrap"
 
+settings.msg.parser = "NYC"
+
 # Uncomment to Hide the language toolbar
 settings.L10n.display_toolbar = False
 # Default timezone for users
@@ -101,6 +103,9 @@ settings.ui.label_attachments = "Media"
 
 # Uncomment to disable checking that LatLons are within boundaries of their parent
 #settings.gis.check_within_parent_boundaries = False
+
+# Uncomment to show created_by/modified_by using Names not Emails
+settings.ui.auth_user_represent = "name"
 
 # -----------------------------------------------------------------------------
 # Audit
@@ -827,48 +832,6 @@ def customize_project_project(**attr):
     return attr
 
 settings.ui.customize_project_project = customize_project_project
-
-# -----------------------------------------------------------------------------
-# Uncomment to show created_by/modified_by using Names not Emails
-settings.ui.auth_user_represent = "name"
-
-# -----------------------------------------------------------------------------
-# Formstyle
-def formstyle_row(id, label, widget, comment, hidden=False):
-    if hidden:
-        hide = "hide"
-    else:
-        hide = ""
-    row = TR(TD(DIV(label,
-                    _id=id + "1",
-                    _class="w2p_fl %s" % hide),
-                DIV(widget,
-                    _id=id,
-                    _class="w2p_fw %s" % hide),
-                DIV(comment,
-                    _id=id, 
-                    _class="w2p_fc %s" % hide),
-                ))
-    return row
-
-def form_style(self, xfields):
-    """
-        @ToDo: Requires further changes to code to use
-        - Adding a formstyle_row setting to use for indivdual rows
-        Use new Web2Py formstyle to generate form using DIVs & CSS
-        CSS can then be used to create MUCH more flexible form designs:
-        - Labels above vs. labels to left
-        - Multiple Columns 
-    """
-    form = DIV()
-
-    for id, a, b, c, in xfields:
-        form.append(formstyle_row(id, a, b, c))
-
-    return form
-
-settings.ui.formstyle_row = formstyle_row
-settings.ui.formstyle = formstyle_row
 
 # -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them

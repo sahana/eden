@@ -4320,6 +4320,7 @@ class S3LocationSelectorWidget2(FormWidget):
                                    _value=""),
                             _id=id)
             #comment = T("Select this %(location)s") % dict(location = label)
+            comment = ""
             throbber = DIV(_id="%s__throbber" % id,
                            _class="throbber hide"
                            )

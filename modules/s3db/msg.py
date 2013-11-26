@@ -82,6 +82,7 @@ class S3ChannelModel(S3Model):
                                 # @ToDo:
                                 #msg_facebook_channel = T("Facebook"),
                                 msg_mcommons_channel = T("Mobile Commons (Inbound)"),
+                                msg_rss_channel = T("RSS Feed"),
                                 msg_sms_modem_channel = T("SMS Modem"),
                                 msg_sms_webapi_channel = T("SMS WebAPI (Outbound)"),
                                 msg_sms_smtp_channel = T("SMS via SMTP (Outbound)"),
@@ -1000,13 +1001,15 @@ class S3RSSModel(S3ChannelModel):
 
         define_table = self.define_table
         set_method = self.set_method
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # RSS Settings for an account
         #
         tablename = "msg_rss_channel"
         table = define_table(tablename,
-                             self.super_link("channel_id", "msg_channel"),
+                             # Instance
+                             super_link("channel_id", "msg_channel"),
                              Field("name",
                                    length = 255,
                                    unique = True),
@@ -1040,7 +1043,9 @@ class S3RSSModel(S3ChannelModel):
         #
         tablename = "msg_rss"
         table = define_table(tablename,
-                             self.super_link("message_id", "msg_message"),
+                             # Instance
+                             super_link("message_id", "msg_message"),
+                             self.msg_channel_id(),
                              Field("title"), # Subject?
                              Field("body", "text",
                                    label = T("Description")),
@@ -1055,7 +1060,7 @@ class S3RSSModel(S3ChannelModel):
                              *s3_meta_fields())
 
         table.created_on.readable = True
-        table.created_on.label = T("Tweeted on")
+        table.created_on.label = T("Posted on")
         table.created_on.represent = lambda dt: \
             S3DateTime.datetime_represent(dt, utc=True)
 

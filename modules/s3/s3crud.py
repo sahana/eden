@@ -1485,9 +1485,9 @@ class S3CRUD(S3Method):
                                pagesize = pagelength,
                                rowsize = rowsize,
                                ajaxurl = ajax_url)
-            if empty:
-                # Insert empty message
-                dl.insert(0, DIV(empty, _class="empty"))
+            #if empty:
+            #    # Insert empty message
+            #    dl.insert(0, DIV(empty, _class="empty"))
             data = dl
         else:
             r.error(501, r.ERROR.BAD_FORMAT)

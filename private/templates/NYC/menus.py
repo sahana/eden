@@ -67,7 +67,7 @@ class S3MainMenu(default.S3MainMenu):
         """ Custom Modules Menu """
 
         return [
-            MM("News Feed", c="cms", f="newsfeed",
+            MM("News Feed", c="cms", f="newsfeed", args="datalist",
                icon="icon-updates"),
             MM("Map", c="gis", f="index",
                icon="icon-map"),

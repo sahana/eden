@@ -1610,7 +1610,7 @@ class S3Msg(object):
             pinsert = ptable.insert
 
         import gluon.contrib.feedparser as feedparser
-        d = feedparser.parse(url)
+        d = feedparser.parse(channel.url)
         for entry in d.entries:
             # @ToDo: Date of Post?
             id = minsert(channel_id = channel_id,

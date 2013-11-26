@@ -532,7 +532,7 @@ def newsfeed():
                            list_layout = s3db.cms_render_posts,
                            )
 
-            s3.cancel = True
+            #s3.cancel = True
 
         elif r.representation == "xls":
             table.created_by.represent = s3base.s3_auth_user_represent_name
@@ -583,6 +583,8 @@ def newsfeed():
     def postp(r, output):
         if r.interactive:
             if r.method == "datalist" and r.representation != "dl":
+                # Hide side menu
+                current.menu.options = None
                 response.view = s3base.S3CRUD._view(r, "cms/newsfeed.html")
         return output
     s3.postp = postp

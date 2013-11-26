@@ -1,4 +1,5 @@
 "uid","role"," description","controller","function","table","uacl","oacl","entity","Notes"
+"ANONYMOUS","Anonymous",,"cms","newsfeed",,"READ",,"any",
 "ANONYMOUS","Anonymous",,"gis",,,"READ",,"any",
 "ANONYMOUS","Anonymous",,"gis","layer_arcrest",,"READ",,"any",
 "ANONYMOUS","Anonymous",,"gis","layer_bing",,"READ",,"any",

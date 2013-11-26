@@ -252,7 +252,7 @@ body.rtl .form-horizontal .control-label {
     margin-bottom: -12px;
 }
 
-/* CRMT not DRMP */
+/* Don't apply if s3.cancel=True */
 #submit_record__row.form-actions {
     background: none;
     border-top: none;
