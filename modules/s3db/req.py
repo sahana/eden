@@ -698,6 +698,7 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
              - to add req_item & req_skill components as inline forms
         """
 
+        T = current.T
         s3db = current.s3db
         table = s3db.req_req
 
@@ -745,7 +746,6 @@ S3OptionsFilter({
 
                 # @ToDo: Fix for human_resource_id -> person_id
                 if settings.get_req_requester_from_site():
-                    T = current.T
                     # Filter the list of Contacts to those for the site
                     table.requester_id.widget = None
                     jquery_ready.append('''
@@ -809,7 +809,6 @@ S3OptionsFilter({
 
                 # @ToDo: Fix for human_resource_id -> person_id
                 if settings.get_req_requester_from_site():
-                    T = current.T
                     # Filter the list of Contacts to those for the site
                     table.requester_id.widget = None
                     current.response.s3.jquery_ready.append('''

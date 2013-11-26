@@ -24,11 +24,13 @@ settings = current.deployment_settings
 # Pre-Populate
 settings.base.prepopulate = ["NYC"]
 
-settings.base.system_name = "NYC Prepared"
-settings.base.system_name_short = "NYC Prepared"
+settings.base.system_name = T("NYC Prepared")
+settings.base.system_name_short = T("NYC Prepared")
 
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "NYC"
+settings.ui.formstyle_row = "bootstrap"
+settings.ui.formstyle = "bootstrap"
 
 # Uncomment to Hide the language toolbar
 settings.L10n.display_toolbar = False
@@ -97,8 +99,27 @@ settings.security.policy = 5 # Controller, Function & Table ACLs
 settings.ui.update_label = "Edit"
 settings.ui.label_attachments = "Media"
 
-# Uncomment to disable that LatLons are within boundaries of their parent
-settings.gis.check_within_parent_boundaries = False
+# Uncomment to disable checking that LatLons are within boundaries of their parent
+#settings.gis.check_within_parent_boundaries = False
+
+# -----------------------------------------------------------------------------
+# Audit
+def audit_write(method, tablename, form, record, representation):
+    if not current.auth.user:
+        # Don't include prepop
+        return False
+    if tablename in ("cms_post",
+                     "org_facility",
+                     "org_organisation",
+                     "req_req",
+                     ):
+        # Perform normal Audit
+        return True
+    else:
+        # Don't Audit non user-visible resources
+        return False
+
+settings.security.audit_write = audit_write
 
 # -----------------------------------------------------------------------------
 # Inventory Management

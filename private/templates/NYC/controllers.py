@@ -17,7 +17,7 @@ from gluon.storage import Storage
 from s3.s3crud import S3CRUD
 from s3.s3filter import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter, S3FilterForm
 from s3.s3resource import S3FieldSelector
-from s3.s3utils import s3_avatar_represent, S3CustomController
+from s3.s3utils import s3_auth_user_represent_name, s3_avatar_represent, S3CustomController
 
 THEME = "NYC"
 
@@ -29,6 +29,7 @@ class index(S3CustomController):
 
         output = {}
 
+        T = current.T
         request = current.request
         s3 = current.response.s3
 
@@ -47,7 +48,6 @@ class index(S3CustomController):
         register_div = None
         if AUTHENTICATED not in roles:
             # This user isn't yet logged-in
-            T = current.T
             if request.cookies.has_key("registered"):
                 # This browser has logged-in before
                 registered = True
@@ -96,7 +96,7 @@ $('#login-btn').click(function(){
         # Latest 4 Events and Requests
         s3db = current.s3db
         layout = s3.render_posts
-        listid = "news_datalist"
+        listid = "event_datalist"
         limit = 4
         list_fields = ["series_id",
                        "location_id",
@@ -116,223 +116,112 @@ $('#login-btn').click(function(){
         orderby = "date"
         output["events"] = latest_records(resource, layout, listid, limit, list_fields, orderby)
 
+        listid = "req_datalist"
         resource = s3db.resource("cms_post")
         resource.add_filter(S3FieldSelector("series_id$name") == "Request")
         # Order with most recent Request first
         orderby = "date desc"
         output["requests"] = latest_records(resource, layout, listid, limit, list_fields, orderby)
 
+        # Site Activity Log
+        resource = s3db.resource("s3_audit")
+        resource.add_filter(S3FieldSelector("~.method") != "delete")
+        orderby = "s3_audit.timestmp desc"
+        list_fields = ["id",
+                       "method",
+                       "user_id",
+                       "tablename",
+                       "record_id",
+                       ]
+        #current.deployment_settings.ui.customize_s3_audit()
+        db = current.db
+        db.s3_audit.user_id.represent = s3_auth_user_represent_name
+        listid = "log"
+        datalist, numrows, ids = resource.datalist(fields=list_fields,
+                                                   start=None,
+                                                   limit=4,
+                                                   listid=listid,
+                                                   orderby=orderby,
+                                                   layout=s3.render_log)
+
+        # Placeholder
+        filter_form = DIV(_class="filter_form")
+        if numrows == 0:
+            # Empty table or just no match?
+            from s3.s3crud import S3CRUD
+            table = resource.table
+            if "deleted" in table:
+                available_records = db(table.deleted != True)
+            else:
+                available_records = db(table._id > 0)
+            if available_records.select(table._id,
+                                        limitby=(0, 1)).first():
+                msg = DIV(S3CRUD.crud_string(resource.tablename,
+                                             "msg_no_match"),
+                          _class="empty")
+            else:
+                msg = DIV(S3CRUD.crud_string(resource.tablename,
+                                             "msg_list_empty"),
+                          _class="empty")
+            data = msg
+        else:
+            # Render the list
+            ajaxurl = URL(c="default", f="audit", args="datalist_f.dl")
+            popup_url = URL(c="default", f="audit", args="datalist.popup")
+            dl = datalist.html(ajaxurl=ajaxurl,
+                               pagesize=4,
+                               popup_url=popup_url,
+                               popup_title=T("Updates"),
+                               )
+            data = dl
+
+            if is_logged_in and org_group_id:
+                # Add a Filter
+                filter_widgets = [S3OptionsFilter("user_id$org_group_id",
+                                                  label = "",
+                                                  # Can't just use "" as this is then omitted from rendering
+                                                  options = {"*": T("All"),
+                                                             org_group_id: T("My Community"),
+                                                             },
+                                                  multiple = False,
+                                                  ),
+                                  ]
+
+                filter_submit_url = URL(c="default", f="index")
+                filter_ajax_url = URL(c="default", f="audit", args=["filter.options"])
+                filter_form = S3FilterForm(filter_widgets,
+                                           filter_manager = False,
+                                           formstyle = filter_formstyle,
+                                           clear = False,
+                                           submit = True,
+                                           ajax = True,
+                                           url = filter_submit_url,
+                                           ajaxurl = filter_ajax_url,
+                                           _class = "filter-form",
+                                           _id = "%s-filter-form" % listid
+                                           )
+                filter_form = filter_form.html(resource,
+                                               request.get_vars,
+                                               target=listid,
+                                               )
+
+        output["updates"] = data
+        output["filter_form"] = filter_form
+
+        # Add JavaScript
+        appname = request.application
+        debug = s3.debug
+        scripts_append = s3.scripts.append
+        if debug:
+            # Infinite Scroll doesn't make sense here, but currently required by dataLists.js
+            scripts_append("/%s/static/scripts/jquery.infinitescroll.js" % appname)
+            scripts_append("/%s/static/scripts/jquery.viewport.js" % appname)
+            scripts_append("/%s/static/scripts/S3/s3.dataLists.js" % appname)
+        else:
+            scripts_append("/%s/static/scripts/S3/s3.dataLists.min.js" % appname)
+
         self._view(THEME, "index.html")
         return output
-
-# =============================================================================
-class datalist():
-    """ Alternate URL for News Feed page """
-
-    def __call__(self):
-
-        return _newsfeed()
-
-# =============================================================================
-class datalist_dl_post():
-    """ AJAX URL for CMS Posts (for News Feed page) """
-
-    def __call__(self):
-
-        return _newsfeed()
-
-# =============================================================================
-class datalist_dl_filter():
-    """ AJAX URL for CMS Posts Filter Form (for News Feed page) """
-
-    def __call__(self):
-
-        return _newsfeed()
-
-# =============================================================================
-class login():
-    """ Custom Login page """
-
-    def __call__(self):
-
-        return _login()
-
-# =============================================================================
-class newsfeed():
-    """ Newsfeed page """
-
-    def __call__(self):
-
-        return _newsfeed()
-
-# =============================================================================
-class validate():
-    """ Alternate URL for News Feed page """
-
-    def __call__(self):
-
-        return _newsfeed()
-
-# =============================================================================
-def _newsfeed():
-    """
-        Custom Page
-        - Filterable DataList of CMS Posts & a DataList of Events
-    """
-
-    #if not current.auth.is_logged_in():
-    #    current.auth.permission.fail()
-
-    T = current.T
-    s3db = current.s3db
-    request = current.request
-    response = current.response
-    s3 = response.s3
-
-    # Ensure that filtered views translate into options which update the Widget
-    if "~.series_id$name" in request.get_vars:
-        series_name = request.vars["~.series_id$name"]
-        table = s3db.cms_series
-        series = current.db(table.name == series_name).select(table.id,
-                                                              limitby=(0, 1)).first()
-        if series:
-            series_id = str(series.id)
-            request.get_vars.pop("~.series_id$name")
-            request.get_vars["~.series_id__belongs"] = series_id
-
-    current.deployment_settings.ui.customize_cms_post()
-
-    list_layout = s3.render_posts
-
-    filter_widgets = [S3TextFilter(["body"],
-                                   label="",
-                                   _class="filter-search",
-                                   #_placeholder=T("Search").upper(),
-                                   ),
-                      S3OptionsFilter("series_id",
-                                      label=T("Filter by Type"),
-                                      represent="%(name)s",
-                                      widget="multiselect",
-                                      hidden=True,
-                                      ),
-                      S3LocationFilter("location_id",
-                                       label=T("Filter by Location"),
-                                       levels=["L1", "L2", "L3"],
-                                       widget="multiselect",
-                                       hidden=True,
-                                       ),
-                      S3OptionsFilter("created_by$organisation_id",
-                                      label=T("Filter by Organization"),
-                                      # Can't use this for integers, use field.represent instead
-                                      #represent="%(name)s",
-                                      widget="multiselect",
-                                      hidden=True,
-                                      ),
-                      S3DateFilter("created_on",
-                                   label=T("Filter by Date"),
-                                   hide_time=True,
-                                   hidden=True,
-                                   ),
-                      ]
-
-    s3db.configure("cms_post",
-                   # We use a custom Advanced widget
-                   filter_advanced = False,
-                   filter_formstyle = filter_formstyle,
-                   filter_submit = (T("SEARCH"), "btn btn-primary"),
-                   filter_widgets = filter_widgets,
-                   list_layout = list_layout,
-                   # Create form comes via AJAX in a Modal
-                   insertable = False,
-                   notify_fields = [(T("Type"), "series_id"),
-                                    (T("Date"), "date"),
-                                    (T("Location"), "location_id"),
-                                    (T("Description"), "body"),
-                                   ],
-                   notify_template = "notify_post",
-                   )
-
-    s3.dl_pagelength = 6  # 5 forces an AJAX call
-
-    old_args = request.args
-    if "datalist_dl_post" in old_args:
-        # DataList pagination or Ajax-deletion request
-        request.args = ["datalist_f"]
-        ajax = "list"
-    elif "datalist_dl_filter" in old_args:
-        # FilterForm options update request
-        request.args = ["filter"]
-        ajax = "filter"
-    elif "validate.json" in old_args:
-        # Inline component validation request
-        request.args = []
-        ajax = True
-    elif current.auth.permission.format == "msg":
-        # Subscription lookup request
-        request.args = []
-        ajax = True
-    else:
-        # Default
-        request.args = ["datalist_f"]
-        ajax = None
-
-    def prep(r):
-        if ajax == "list":
-            r.representation = "dl"
-        elif ajax == "filter":
-            r.representation = "json"
-        return True
-    s3.prep = prep
-
-    output = current.rest_controller("cms", "post",
-                                     list_ajaxurl = URL(f="index",
-                                                        args="datalist_dl_post"),
-                                     filter_ajax_url = URL(f="index",
-                                                           args="datalist_dl_filter",
-                                                           vars={}))
-
-    request.args = old_args
-
-    if ajax == "list":
-        # Don't override view if this is an Ajax-deletion request
-        if not "delete" in request.get_vars:
-            response.view = "plain.html"
-    elif not ajax:
-        # Set Title & View after REST Controller, in order to override
-        output["title"] = T("News Feed")
-        view = path.join(request.folder, "private", "templates",
-                         THEME, "views", "newsfeed.html")
-        try:
-            # Pass view as file not str to work in compiled mode
-            response.view = open(view, "rb")
-        except IOError:
-            from gluon.http import HTTP
-            raise HTTP(404, "Unable to open Custom View: %s" % view)
-
-        scripts = []
-        sappend = scripts.append
-        # Style the Search TextFilter widget
-        sappend('''$('#post-cms_post_body-text-filter__row').addClass('input-append').append('<span class="add-on"><i class="icon-search"></i></span>')''')
-        # Button to toggle Advanced Form
-        sappend('''$('#list-filter').append('<a class="accordion-toggle"><i class="icon-reorder"></i> %s</a>')''' % T("Advanced Search"))
-        # Toggle doesn't work directly when removing 'hide' & requires a 2nd click to open without this
-        sappend('''$('.accordion-toggle').click(function(){var a=$('.advanced');if(a.hasClass('hide')){a.removeClass('hide').show()}else{a.toggle()}})''')
-        s3.jquery_ready.append('''\n'''.join(scripts))
-        
-        # Latest 5 Disasters
-        # resource = s3db.resource("event_event")
-        # layout = render_events
-        # listid = "event_datalist"
-        # limit = 5
-        # orderby = "zero_hour desc"
-        # list_fields = ["name",
-                       # "event_type_id$name",
-                       # "zero_hour",
-                       # "closed",
-                       # ]
-        # output["disasters"] = latest_records(resource, layout, listid, limit, list_fields, orderby)
-
-    return output
 
 # =============================================================================
 def latest_records(resource, layout, listid, limit, list_fields, orderby):
