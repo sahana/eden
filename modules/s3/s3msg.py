@@ -1585,16 +1585,16 @@ class S3Msg(object):
     @staticmethod
     def poll_rss(channel_id):
         """
-            Fetches all messages from a subscribed RSS Feed
-
-            @ToDo: Fetch only new messages - use timestamp?
+            Fetches all new messages from a subscribed RSS Feed
         """
 
         db = current.db
         s3db = current.s3db
         table = s3db.msg_rss_channel
         query = (table.channel_id == channel_id)
-        channel = db(query).select(table.url,
+        channel = db(query).select(table.date,
+                                   table.etag,
+                                   table.url,
                                    limitby=(0, 1)).first()
         if not channel:
             return "No Such RSS Channel: %s" % channel_id
@@ -1609,17 +1609,36 @@ class S3Msg(object):
             ptable = db.msg_parsing_status
             pinsert = ptable.insert
 
-        import feedparser
         # http://pythonhosted.org/feedparser
-        d = feedparser.parse(channel.url)
+        import feedparser
+        if channel.etag:
+            # http://pythonhosted.org/feedparser/http-etag.html
+            d = feedparser.parse(channel.url, etag=channel.etag)
+        elif channel.date:
+            d = feedparser.parse(channel.url, modified=channel.date.utctimetuple())
+        else:
+            # We've not polled this feed before
+            d = feedparser.parse(channel.url)
+        now = current.request.utcnow
+        data = dict(date=now)
+        if d.etag:
+            data["etag"] = d.etag
+        db(query).update(**data)
         utcfromtimestamp = datetime.datetime.utcfromtimestamp
-        from time import mktime
+        from time import mktime, struct_time
         for entry in d.entries:
             content = entry.get("content", None)
             if content:
                 content = content[0].value
             else:
                 content = entry.get("description", None)
+            # Consider using dateutil.parser.parse(entry.get("published"))
+            # http://www.deadlybloodyserious.com/2007/09/feedparser-v-django/
+            date_published = entry.get("published_parsed", entry.get("updated_parsed"))
+            if isinstance(date_published, struct_time):
+                date_published = utcfromtimestamp(mktime(date_published))
+            else:
+                date_published = now
             tags = entry.get("tags", None)
             if tags:
                 tags = [t.term for t in tags]
@@ -1628,7 +1647,7 @@ class S3Msg(object):
                          from_address = entry.get("link", None),
                          body = content,
                          author = entry.get("author", None),
-                         created_on = utcfromtimestamp(mktime(entry.published_parsed)),
+                         created_on = date_published,
                          tags = tags,
                          # @ToDo: Enclosures
                          # @ToDo: geo

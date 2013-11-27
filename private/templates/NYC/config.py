@@ -128,6 +128,8 @@ settings.security.audit_write = audit_write
 
 # -----------------------------------------------------------------------------
 # CMS
+# Uncomment to use Rich Text editor in Newsfeed
+settings.cms.richtext = True
 # Uncomment to show tags in Newsfeed
 settings.cms.show_tags = True
 

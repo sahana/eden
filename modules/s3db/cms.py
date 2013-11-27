@@ -913,6 +913,7 @@ def cms_customize_post_fields():
     """
 
     s3db = current.s3db
+    settings = current.deployment_settings
 
     # Hide Labels when just 1 column in inline form
     s3db.doc_document.file.label = ""
@@ -952,8 +953,11 @@ def cms_customize_post_fields():
     field.represent = s3db.gis_LocationRepresent(sep=" | ")
     field.requires = IS_LOCATION_SELECTOR2(levels=levels)
     field.widget = S3LocationSelectorWidget2(levels=levels)
-    
-    table.body.represent = lambda body: XML(s3_URLise(body))
+
+    if settings.get_cms_richtext():
+        table.body.represent = lambda body: XML(body)
+    else:
+        table.body.represent = lambda body: XML(s3_URLise(body))
 
     list_fields = ["series_id",
                    "location_id",
@@ -965,7 +969,7 @@ def cms_customize_post_fields():
                    #"event_post.event_id",
                    ]
 
-    if current.deployment_settings.get_cms_show_tags():
+    if settings.get_cms_show_tags():
         list_fields.append("tag.name")
         s3 = current.response.s3
         if s3.debug:

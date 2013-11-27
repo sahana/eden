@@ -1386,6 +1386,12 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # CMS: Content Management System
     #
+    def get_cms_richtext(self):
+        """
+            Whether to use RichText editor in News feed
+        """
+        return self.cms.get("richtext", False)
+
     def get_cms_show_tags(self):
         """
             Whether to show Tags in News Feed

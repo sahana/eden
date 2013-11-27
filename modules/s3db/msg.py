@@ -1010,15 +1010,27 @@ class S3RSSModel(S3ChannelModel):
         table = define_table(tablename,
                              # Instance
                              super_link("channel_id", "msg_channel"),
-                             Field("name",
-                                   length = 255,
-                                   unique = True),
-                             Field("description"),
+                             Field("name", length=255, unique=True,
+                                   label = T("Name"),
+                                   ),
+                             Field("description",
+                                   label = T("Description"),
+                                   ),
                              Field("enabled", "boolean",
                                    label = T("Enabled?"),
                                    represent = s3_yes_no_represent,
                                    ),
-                             Field("url"),
+                             Field("url",
+                                   label = T("URL"),
+                                   requires = IS_URL(),
+                                   ),
+                             s3_datetime(label = T("Last Polled"),
+                                         writable = False
+                                         ),
+                             Field("etag",
+                                   label = T("ETag"),
+                                   writable = False
+                                   ),
                              *s3_meta_fields())
 
         self.configure(tablename,
