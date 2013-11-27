@@ -340,6 +340,8 @@ class S3Profile(S3CRUD):
         if icon:
             icon = TAG[""](I(_class=icon), " ")
 
+        s3 = current.response.s3
+
         # Permission to create new items?
         create = ""
         insert = widget.get("insert", True)
@@ -370,12 +372,18 @@ class S3Profile(S3CRUD):
             add_url = URL(c=c, f=f, args=["create.popup"], vars=vars)
             if callable(insert):
                 create = insert(r, title_create, add_url)
-            else:
+            elif s3.crud.formstyle == "bootstrap":
                 create = A(I(_class="icon icon-plus-sign small-add"),
                            _href=add_url,
                            _class="s3_modal",
                            _title=title_create,
-                          )
+                           )
+            else:
+                create = A(title_create,
+                           _href=add_url,
+                           _class="action-btn s3_modal",
+                           )
+
             multiple = widget.get("multiple", True)
             if not multiple and hasattr(create, "update"):
                 # If this is a multiple=False widget and we already
@@ -394,7 +402,7 @@ class S3Profile(S3CRUD):
 $('#%(listid)s').on('listUpdate', function() {
  $('#%(createid)s').css({display: $(this).datalist('getTotalItems') ? 'none' : 'block'});
 });''' % dict(listid=listid, createid=createid)
-                current.response.s3.jquery_ready.append(script)
+                s3.jquery_ready.append(script)
 
         if pagesize and numrows > pagesize:
             # Button to display the rest of the records in a Modal
