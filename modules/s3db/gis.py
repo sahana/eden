@@ -4910,7 +4910,7 @@ class gis_LocationRepresent(S3Represent):
                    (row.inherited == False) and \
                    (row.lat is not None) and \
                    (row.lon is not None):
-                    represent = self.lat_lon_represent(row)
+                    represent = self.lat_lon_dms_represent(row)
                 if row.parent:
                     if row.path:
                         path = row.path
