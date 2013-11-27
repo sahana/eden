@@ -1081,7 +1081,10 @@ def programme():
     s3.prep = prep
 
     output = s3_rest_controller("hrm", resourcename,
-                                rheader=s3db.hrm_rheader)
+                                rheader=s3db.hrm_rheader,
+                                csv_stylesheet = ("hrm", "programme.xsl"),
+                                csv_template = ("hrm", "programme")
+                                )
     return output
 
 # -----------------------------------------------------------------------------
