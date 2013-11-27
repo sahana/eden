@@ -31,6 +31,7 @@ __all__ = ["S3ContentModel",
            "S3ContentMapModel",
            "S3ContentOrgModel",
            #"S3ContentOrgGroupModel",
+           "S3ContentUserModel",
            "cms_index",
            "cms_rheader",
            "cms_customize_post_fields",
@@ -250,12 +251,14 @@ class S3ContentModel(S3Model):
 
         add_component("cms_post_module", cms_post="post_id")
 
-        add_component("cms_tag",
-                      cms_post=Storage(name="tag",
-                                       link="cms_tag_post",
-                                       joinby="post_id",
-                                       key="tag_id",
-                                       actuate="hide"))
+        add_component("cms_post_user", cms_post=dict(name="bookmark",
+                                                     joinby="post_id"))
+
+        add_component("cms_tag", cms_post=dict(name="tag",
+                                               link="cms_tag_post",
+                                               joinby="post_id",
+                                               key="tag_id",
+                                               actuate="hide"))
 
         add_component("cms_post_organisation",
                       cms_post=dict(joinby="post_id",
@@ -267,11 +270,10 @@ class S3ContentModel(S3Model):
         add_component("event_event_post", cms_post="post_id")
 
         # For Profile to filter appropriately
-        add_component("event_event",
-                      cms_post=Storage(link="event_event_post",
-                                       joinby="post_id",
-                                       key="event_id",
-                                       actuate="hide"))
+        add_component("event_event", cms_post=dict(link="event_event_post",
+                                                   joinby="post_id",
+                                                   key="event_id",
+                                                   actuate="hide"))
 
         # Custom Methods
         set_method("cms", "post",
@@ -281,6 +283,14 @@ class S3ContentModel(S3Model):
         set_method("cms", "post",
                    method="remove_tag",
                    action=self.cms_remove_tag)
+
+        set_method("cms", "post",
+                   method="add_bookmark",
+                   action=self.cms_add_bookmark)
+
+        set_method("cms", "post",
+                   method="remove_bookmark",
+                   action=self.cms_remove_bookmark)
 
         # ---------------------------------------------------------------------
         # Modules/Resources <> Posts link table
@@ -593,6 +603,79 @@ class S3ContentModel(S3Model):
         current.response.headers["Content-Type"] = "application/json"
         return output
 
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def cms_add_bookmark(r, **attr):
+        """
+            Bookmark a Post
+
+            S3Method for interactive requests
+        """
+
+        post_id = r.id
+        user = current.auth.user
+        user_id = user and user.id
+        if not post_id or not user_id:
+            raise HTTP(501, current.messages.BADMETHOD)
+
+        db = current.db
+        ltable = db.cms_post_user
+        query = (ltable.post_id == post_id) & \
+                (ltable.user_id == user_id)
+        exists = db(query).select(ltable.id,
+                                  ltable.deleted,
+                                  ltable.deleted_fk,
+                                  limitby=(0, 1)
+                                  ).first()
+        if exists:
+            link_id = exists.id
+            if exists.deleted:
+                if exists.deleted_fk:
+                    data = json.loads(exists.deleted_fk)
+                    data["deleted"] = False
+                else:
+                    data = dict(deleted=False)
+                db(ltable.id == link_id).update(**data)
+        else:
+            link_id = ltable.insert(post_id = post_id,
+                                    user_id = user_id,
+                                    )
+
+        output = current.xml.json_message(True, 200, "Bookmark Added")
+        current.response.headers["Content-Type"] = "application/json"
+        return output
+
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def cms_remove_bookmark(r, **attr):
+        """
+            Remove a Bookmark for a Post
+
+            S3Method for interactive requests
+        """
+
+        post_id = r.id
+        user = current.auth.user
+        user_id = user and user.id
+        if not post_id or not user_id:
+            raise HTTP(501, current.messages.BADMETHOD)
+
+        db = current.db
+        ltable = db.cms_post_user
+        query = (ltable.post_id == post_id) & \
+                (ltable.user_id == user_id)
+        exists = db(query).select(ltable.id,
+                                  ltable.deleted,
+                                  limitby=(0, 1)
+                                  ).first()
+        if exists and not exists.deleted:
+            resource = current.s3db.resource("cms_post_user", exists.id)
+            resource.delete()
+
+        output = current.xml.json_message(True, 200, "Bookmark Removed")
+        current.response.headers["Content-Type"] = "application/json"
+        return output
+
 # =============================================================================
 class S3ContentMapModel(S3Model):
     """
@@ -663,6 +746,31 @@ class S3ContentOrgGroupModel(S3Model):
                                   self.cms_post_id(empty=False),
                                   self.org_group_id(empty=False),
                                   *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return dict()
+
+# =============================================================================
+class S3ContentUserModel(S3Model):
+    """
+        Link Posts to Users to allow Users to Bookmark posts
+    """
+
+    names = ["cms_post_user",
+             ]
+
+    def model(self):
+
+        # ---------------------------------------------------------------------
+        # Users <> Posts link table
+        #
+        tablename = "cms_post_user"
+        self.define_table(tablename,
+                          self.cms_post_id(empty=False),
+                          Field("user_id", current.auth.settings.table_user),
+                          *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

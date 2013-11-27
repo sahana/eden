@@ -1386,6 +1386,12 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # CMS: Content Management System
     #
+    def get_cms_bookmarks(self):
+        """
+            Whether to allow users to bookmark Posts in News feed
+        """
+        return self.cms.get("bookmarks", False)
+
     def get_cms_richtext(self):
         """
             Whether to use RichText editor in News feed

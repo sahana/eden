@@ -319,6 +319,8 @@ settings.L10n.decimal_separator = "."
 
 # -----------------------------------------------------------------------------
 # CMS
+# Uncomment to use Bookmarks in Newsfeed
+#settings.cms.bookmarks = True
 # Uncomment to use Rich Text editor in Newsfeed
 #settings.cms.richtext = True
 # Uncomment to show tags in Newsfeed
