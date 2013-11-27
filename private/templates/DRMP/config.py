@@ -2723,7 +2723,7 @@ def customize_gis_location(**attr):
         
                 # Customise tables used by widgets
                 customize_cms_post_fields()
-                customize_org_resource_fields("profile")
+                s3db.org_customize_org_resource_fields("profile")
                 customize_project_project_fields()
 
                 # gis_location table (Sub-Locations)
@@ -3215,7 +3215,7 @@ def customize_org_organisation(**attr):
                 customize_cms_post_fields()
                 customize_hrm_human_resource_fields()
                 customize_org_office_fields()
-                customize_org_resource_fields("profile")
+                s3db.org_customize_org_resource_fields("profile")
                 customize_project_project_fields()
 
                 contacts_widget = dict(label = "Contacts",
@@ -3406,35 +3406,6 @@ def customize_org_organisation(**attr):
 settings.ui.customize_org_organisation = customize_org_organisation
 
 # -----------------------------------------------------------------------------
-def customize_org_resource_fields(method):
-    """
-        Customize org_resource fields for Profile widgets and 'more' popups
-    """
-
-    s3db = current.s3db
-
-    table = s3db.org_resource
-    table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
-
-    list_fields = ["organisation_id",
-                   "location_id",
-                   "parameter_id",
-                   "value",
-                   "comments",
-                   ]
-    if method in ("datalist", "profile"):
-        table.modified_by.represent = s3_auth_user_represent_name
-        table.modified_on.represent = datetime_represent
-        append = list_fields.append
-        append("modified_by")
-        append("modified_on")
-        append("organisation_id$logo")
-
-    s3db.configure("org_resource",
-                   list_fields = list_fields,
-                   )
-
-# -----------------------------------------------------------------------------
 def customize_org_resource(**attr):
     """
         Customize org_resource controller
@@ -3454,7 +3425,7 @@ def customize_org_resource(**attr):
                 return False
 
         if r.interactive or r.representation == "aadata":
-            customize_org_resource_fields(r.method)
+            s3db.org_customize_org_resource_fields(r.method)
     
             # Configure fields
             #table.site_id.readable = table.site_id.readable = False

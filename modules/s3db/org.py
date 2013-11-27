@@ -57,6 +57,8 @@ __all__ = ["S3OrganisationModel",
            "org_update_affiliations",
            "org_OrganisationRepresent",
            "org_SiteRepresent",
+           "org_customize_org_resource_fields",
+           "org_render_org_resources",
            ]
 
 try:
@@ -1252,6 +1254,8 @@ class S3OrganisationResourceModel(S3Model):
         #
         tablename = "org_resource"
         table = self.define_table(tablename,
+                                  # Instance
+                                  super_link("data_id", "stats_data"),
                                   self.org_organisation_id(ondelete="CASCADE"),
                                   # Add this when deprecating S3OfficeSummaryModel
                                   # self.super_link("site_id", "org_site",
@@ -1267,8 +1271,6 @@ class S3OrganisationResourceModel(S3Model):
                                                   # represent = self.org_site_represent,
                                                   # ),
                                   self.gis_location_id(),
-                                  # Instance
-                                  super_link("data_id", "stats_data"),
                                   # This is a component, so needs to be a super_link
                                   # - can't override field name, ondelete or requires
                                   super_link("parameter_id", "stats_parameter",
@@ -1310,10 +1312,11 @@ class S3OrganisationResourceModel(S3Model):
             msg_list_empty=T("No Resources in Inventory"))
 
         configure(tablename,
-                  super_entity = "stats_data",
                   context = {"location": "location_id",
                              "organisation": "organisation_id",
                              },
+                  list_layout = org_render_org_resources,
+                  super_entity = "stats_data",
                   )
 
         # Pass names back to global scope (s3.*)
@@ -5200,5 +5203,158 @@ def org_site_update_affiliations(record):
             s3db.pr_add_affiliation(o_pe_id, s_pe_id, role=SITES,
                                     role_type=OU)
     return
+
+# -----------------------------------------------------------------------------
+def org_customize_org_resource_fields(method):
+    """
+        Customize org_resource fields for Profile widgets and 'more' popups
+    """
+
+    s3db = current.s3db
+
+    table = s3db.org_resource
+    table.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
+
+    list_fields = ["organisation_id",
+                   "location_id",
+                   "parameter_id",
+                   "value",
+                   "comments",
+                   ]
+
+    if method in ("datalist", "profile"):
+        table.modified_by.represent = s3_auth_user_represent_name
+        table.modified_on.represent = lambda dt: \
+                                S3DateTime.datetime_represent(dt, utc=True)
+        list_fields += ["modified_by",
+                        "modified_on",
+                        "organisation_id$logo",
+                        ]
+
+    s3db.configure("org_resource",
+                   list_fields = list_fields,
+                   )
+
+# =============================================================================
+def org_render_org_resources(listid, resource, rfields, record, **attr):
+    """
+        Custom dataList item renderer for Resources on the Profile pages
+
+        @param listid: the HTML ID for this list
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+        @param attr: additional HTML attributes for the item
+    """
+
+    pkey = "org_resource.id"
+
+    # Construct the item ID
+    if pkey in record:
+        record_id = record[pkey]
+        item_id = "%s-%s" % (listid, record_id)
+    else:
+        # template
+        item_id = "%s-[id]" % listid
+
+    item_class = "thumbnail"
+
+    raw = record._row
+    author = record["org_resource.modified_by"]
+    date = record["org_resource.modified_on"]
+    quantity = record["org_resource.value"]
+    resource_type = record["org_resource.parameter_id"]
+    body = "%s %s" % (quantity, T(resource_type))
+    comments = raw["org_resource.comments"]
+    organisation = record["org_resource.organisation_id"]
+    organisation_id = raw["org_resource.organisation_id"]
+    location = record["org_resource.location_id"]
+    location_id = raw["org_resource.location_id"]
+    location_url = URL(c="gis", f="location",
+                       args=[location_id, "profile"])
+    logo = raw["org_organisation.logo"]
+
+    org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
+    if logo:
+        logo = A(IMG(_src=URL(c="default", f="download", args=[logo]),
+                     _class="media-object",
+                     ),
+                 _href=org_url,
+                 _class="pull-left",
+                 )
+    else:
+        logo = DIV(IMG(_class="media-object"),
+                   _class="pull-left")
+
+    # Edit Bar
+    permit = current.auth.s3_has_permission
+    table = current.db.org_resource
+    if permit("update", table, record_id=record_id):
+        vars = {"refresh": listid,
+                "record": record_id,
+                }
+        f = current.request.function
+        if f == "organisation" and organisation_id:
+            vars["(organisation)"] = organisation_id
+        elif f == "location" and location_id:
+            vars["(location)"] = location_id
+        edit_btn = A(I(" ", _class="icon icon-edit"),
+                     _href=URL(c="org", f="resource",
+                               args=[record_id, "update.popup"],
+                               vars=vars),
+                     _class="s3_modal",
+                     _title=current.response.s3.crud_strings.org_resource.title_update,
+                     )
+    else:
+        edit_btn = ""
+    if permit("delete", table, record_id=record_id):
+        delete_btn = A(I(" ", _class="icon icon-trash"),
+                       _class="dl-item-delete",
+                       )
+    else:
+        delete_btn = ""
+    edit_bar = DIV(edit_btn,
+                   delete_btn,
+                   _class="edit-bar fright",
+                   )
+
+    # Render the item
+    avatar = logo
+    body = TAG[""](body, BR(), comments)
+
+    item = DIV(DIV(SPAN(" ", _class="card-title"),
+                   SPAN(A(location,
+                          _href=location_url,
+                          ),
+                        _class="location-title",
+                        ),
+                   SPAN(date,
+                        _class="date-title",
+                        ),
+                   edit_bar,
+                   _class="card-header",
+                   ),
+               DIV(avatar,
+                   DIV(DIV(body,
+                           DIV(author,
+                               " - ",
+                               A(organisation,
+                                 _href=org_url,
+                                 _class="card-organisation",
+                                 ),
+                               _class="card-person",
+                               ),
+                           _class="media",
+                           ),
+                       _class="media-body",
+                       ),
+                   _class="media",
+                   ),
+               #docs,
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
 
 # END =========================================================================
