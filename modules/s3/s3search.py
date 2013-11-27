@@ -43,7 +43,6 @@ except ImportError:
 
 from gluon import *
 from gluon.html import BUTTON
-from gluon.serializers import json as jsons
 from gluon.sqlhtml import MultipleOptionsWidget
 from gluon.storage import Storage
 

@@ -67,11 +67,11 @@ you can use the generic selector below, but it's slower:
 .icon-event,
 .icon-incident,
 .icon-map,
+.icon-news,
 .icon-plan,
 .icon-project,
 .icon-report,
-.icon-training_material,
-.icon-updates {
+.icon-training_material {
     font-family: 'DRMP';
     speak: none;
     font-style: normal;
@@ -145,6 +145,9 @@ you can use the generic selector below, but it's slower:
 .icon-map:before {
     content: "\79";
 }
+.icon-news:before {
+    content: "\71";
+}
 .icon-plan:before {
     content: "\74";
 }
@@ -156,9 +159,6 @@ you can use the generic selector below, but it's slower:
 }
 .icon-training_material:before {
     content: "\77";
-}
-.icon-updates:before {
-    content: "\71";
 }
 /*
 .icon-alert-dark:before {
@@ -214,6 +214,7 @@ you can use the generic selector below, but it's slower:
 .card-header .icon-assessment,
 .card-header .icon-incident, 
 .card-header .icon-offer,
+.card-header .icon-news,
 .card-header .icon-plan,
 .card-header .icon-request,
 .card-header .icon-report,

@@ -51,29 +51,30 @@ class S3Config(Storage):
         self.auth = Storage()
         self.auth.email_domains = []
         self.base = Storage()
+        self.cap = Storage()
+        self.cms = Storage()
         self.database = Storage()
+        self.fin = Storage()
         # @ToDo: Move to self.ui
         self.frontpage = Storage()
         self.frontpage.rss = []
-        self.fin = Storage()
-        self.L10n = Storage()
-        self.mail = Storage()
-        self.msg = Storage()
-        self.search = Storage()
-        self.security = Storage()
-        self.ui = Storage()
-        self.cap = Storage()
         self.gis = Storage()
+        self.hms = Storage()
         self.hrm = Storage()
         self.inv = Storage()
         self.irs = Storage()
+        self.L10n = Storage()
+        self.mail = Storage()
+        self.msg = Storage()
         self.org = Storage()
         self.pr = Storage()
         self.proc = Storage()
         self.project = Storage()
         self.req = Storage()
         self.supply = Storage()
-        self.hms = Storage()
+        self.search = Storage()
+        self.security = Storage()
+        self.ui = Storage()
 
     # -------------------------------------------------------------------------
     # Template
@@ -108,6 +109,25 @@ class S3Config(Storage):
             - specified as <themefolder>/xtheme-<filename>.css
         """
         return self.base.get("xtheme", None)
+
+    # -------------------------------------------------------------------------
+    def has_module(self, module_name):
+        """
+            List of Active Modules
+        """
+        if not self.modules:
+            # Provide a minimal list of core modules
+            _modules = [
+                "default",      # Default
+                "admin",        # Admin
+                "gis",          # GIS
+                "pr",           # Person Registry
+                "org"           # Organization Registry
+            ]
+        else:
+            _modules = self.modules
+
+        return module_name in _modules
 
     # -------------------------------------------------------------------------
     def is_cd_version(self):
@@ -792,26 +812,24 @@ class S3Config(Storage):
         return self.L10n.get("display_toolbar", True)
 
     def get_L10n_languages(self):
-        return self.L10n.get("languages",
-                             OrderedDict([
-                                ("ar", "العربية"),
-                                ("zh-cn", "中文 (简体)"),
-                                ("zh-tw", "中文 (繁體)"),
-                                ("en", "English"),
-                                ("fr", "Français"),
-                                ("de", "Deutsch"),
-                                ("el", "ελληνικά"),
-                                ("it", "Italiano"),
-                                ("ja", "日本語"),
-                                ("ko", "한국어"),
-                                ("pt", "Português"),
-                                ("pt-br", "Português (Brasil)"),
-                                ("ru", "русский"),
-                                ("es", "Español"),
-                                ("tl", "Tagalog"),
-                                ("ur", "اردو"),
-                                ("vi", "Tiếng Việt"),
-                            ]))
+        return self.L10n.get("languages", OrderedDict([("ar", "العربية"),
+                                                       ("zh-cn", "中文 (简体)"),
+                                                       ("zh-tw", "中文 (繁體)"),
+                                                       ("en", "English"),
+                                                       ("fr", "Français"),
+                                                       ("de", "Deutsch"),
+                                                       ("el", "ελληνικά"),
+                                                       ("es", "Español"),
+                                                       ("it", "Italiano"),
+                                                       ("ja", "日本語"),
+                                                       ("ko", "한국어"),
+                                                       ("pt", "Português"),
+                                                       ("pt-br", "Português (Brasil)"),
+                                                       ("ru", "русский"),
+                                                       ("tl", "Tagalog"),
+                                                       ("ur", "اردو"),
+                                                       ("vi", "Tiếng Việt"),
+                                                       ]))
     def get_L10n_languages_readonly(self):
         return self.L10n.get("languages_readonly", True)
 
@@ -880,11 +898,13 @@ class S3Config(Storage):
             Whether to translate CMS Series names
         """
         return self.L10n.get("translate_cms_series", False)
+
     def get_L10n_translate_gis_layer(self):
         """
             Whether to translate Layer names
         """
         return self.L10n.get("translate_gis_layer", False)
+
     def get_L10n_translate_gis_location(self):
         """
             Whether to translate Location names
@@ -926,6 +946,7 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # UI Settings
+    #
     @staticmethod
     def default_formstyle(id, label, widget, comment, hidden=False):
         """
@@ -1124,12 +1145,23 @@ class S3Config(Storage):
 
     # =========================================================================
     # Messaging
+    #
+    def get_msg_max_send_retries(self):
+        """
+            Maximum number of retries to send a message before
+            it is regarded as permanently failing; set to None
+            to retry forever.
+        """
+        return self.msg.get("max_send_retries", 9)
+    
     # -------------------------------------------------------------------------
     # Mail settings
     def get_mail_server(self):
         return self.mail.get("server", "127.0.0.1:25")
+
     def get_mail_server_login(self):
         return self.mail.get("login", False)
+
     def get_mail_server_tls(self):
         """
             Does the Mail Server use TLS?
@@ -1203,16 +1235,9 @@ class S3Config(Storage):
         """
         return self.msg.get("notify_renderer", None)
 
-    # -------------------------------------------------------------------------
-    # Outbox settings
-    def get_msg_max_send_retries(self):
-        """
-            Maximum number of retries to send a message before
-            it is regarded as permanently failing; set to None
-            to retry forever.
-        """
-        return self.msg.get("max_send_retries", 9)
-    
+    # =========================================================================
+    # Search
+
     # -------------------------------------------------------------------------
     def get_search_max_results(self):
         """
@@ -1260,7 +1285,8 @@ class S3Config(Storage):
     # Modules
 
     # -------------------------------------------------------------------------
-    # CAP
+    # CAP: Common Alerting Protocol
+    #
     def get_cap_identifier_prefix(self):
         """
             Prefix to be prepended to identifiers of CAP alerts
@@ -1333,15 +1359,13 @@ class S3Config(Storage):
                 http://www.i18nguy.com/unicode/language-identifiers.html
         """
 
-        return self.cap.get("languages",
-                             OrderedDict([
-                                ("ar", "العربية"),
-                                ("en", "English"),
-                                ("fr", "Français"),
-                                ("pt", "Português"),
-                                ("ru", "русский"),
-                                ("es", "Español")
-                            ]))
+        return self.cap.get("languages", OrderedDict([("ar", "العربية"),
+                                                      ("en", "English"),
+                                                      ("es", "Español"),
+                                                      ("fr", "Français"),
+                                                      ("pt", "Português"),
+                                                      ("ru", "русский"),
+                                                      ]))
 
     def get_cap_priorities(self):
         """
@@ -1354,13 +1378,32 @@ class S3Config(Storage):
                         ]) """
         T = current.T
         return self.cap.get("priorities", [
-                                            ("Urgent", T("Urgent"), "Immediate", "Extreme", "Observed", "red"),
-                                            ("High", T("High"), "Expected", "Severe", "Observed", "orange"),
-                                            ("Low", T("Low"), "Expected", "Moderate", "Observed", "green")
-                                          ])
+                ("Urgent", T("Urgent"), "Immediate", "Extreme", "Observed", "red"),
+                ("High", T("High"), "Expected", "Severe", "Observed", "orange"),
+                ("Low", T("Low"), "Expected", "Moderate", "Observed", "green")
+                ])
+
+    # -------------------------------------------------------------------------
+    # CMS: Content Management System
+    #
+    def get_cms_show_tags(self):
+        """
+            Whether to show Tags in News Feed
+        """
+        return self.cms.get("show_tags", False)
+
+    # -------------------------------------------------------------------------
+    # Hospital Registry
+    #
+    def get_hms_track_ctc(self):
+        return self.hms.get("track_ctc", False)
+
+    def get_hms_activity_reports(self):
+        return self.hms.get("activity_reports", False)
 
     # -------------------------------------------------------------------------
     # Human Resource Management
+    #
     def get_hrm_staff_label(self):
         """
             Label for 'Staff'
@@ -1547,13 +1590,12 @@ class S3Config(Storage):
             Item Statuses which can also be Sent Shipment Types
         """
         T = current.T
-        return self.inv.get("item_status", {
-                0: current.messages["NONE"],
-                1: T("Dump"),
-                2: T("Sale"),
-                3: T("Reject"),
-                4: T("Surplus")
-           })
+        return self.inv.get("item_status", {0: current.messages["NONE"],
+                                            1: T("Dump"),
+                                            2: T("Sale"),
+                                            3: T("Reject"),
+                                            4: T("Surplus")
+                                            })
 
     def get_inv_shipment_name(self):
         """
@@ -1569,17 +1611,16 @@ class S3Config(Storage):
             Shipment types which are common to both Send & Receive
         """
         return self.inv.get("shipment_types", {
-                0 : current.messages["NONE"],
-                11: current.T("Internal Shipment"),
-            })
+                                0 : current.messages["NONE"],
+                                11: current.T("Internal Shipment"),
+                                })
 
     def get_inv_send_types(self):
         """
             Shipment types which are just for Send
         """
-        return self.inv.get("send_types", {
-                21: current.T("Distribution"),
-            })
+        return self.inv.get("send_types", {21: current.T("Distribution"),
+                                           })
 
     def get_inv_send_type_default(self):
         """
@@ -1592,34 +1633,39 @@ class S3Config(Storage):
             Shipment types which are just for Receive
         """
         T = current.T
-        return self.inv.get("recv_types", {
-                #31: T("Other Warehouse"), Same as Internal Shipment
-                32: T("Donation"),
-                #33: T("Foreign Donation"),
-                34: T("Purchase"),
-           })
+        return self.inv.get("recv_types", {#31: T("Other Warehouse"), Same as Internal Shipment
+                                           32: T("Donation"),
+                                           #33: T("Foreign Donation"),
+                                           34: T("Purchase"),
+                                           })
 
     def get_inv_send_form_name(self):
         return self.inv.get("send_form_name", "Waybill")
+
     def get_inv_send_ref_field_name(self):
         return self.inv.get("send_ref_field_name", "Waybill Number")
+
     def get_inv_send_shortname(self):
         return self.inv.get("send_shortname", "WB")
+
     def get_inv_recv_form_name(self):
         return self.inv.get("recv_form_name", "Goods Received Note")
+
     def get_inv_recv_shortname(self):
         return self.inv.get("recv_shortname", "GRN")
 
     # -------------------------------------------------------------------------
     # IRS
+    #
     def get_irs_vehicle(self):
         """
-            Use Vehicles to respond to Incident Reports
+            Use Vehicles to respond to Incident Reports?
         """
         return self.irs.get("vehicle", False)
 
     # -------------------------------------------------------------------------
     # Organisation
+    #
     def get_org_autocomplete(self):
         """
             Whether organisation_id fields should use an Autocomplete instead of a dropdown
@@ -1729,6 +1775,7 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # Persons
+    #
     def get_pr_age_group(self, age):
         """
             Function to provide the age group for an age
@@ -1779,13 +1826,16 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # Proc
+    #
     def get_proc_form_name(self):
         return self.proc.get("form_name", "Purchase Order")
+
     def get_proc_shortname(self):
         return self.proc.get("form_name", "PO")
 
     # -------------------------------------------------------------------------
     # Projects
+    #
     def get_project_mode_3w(self):
         """
             Enable 3W mode in the projects module
@@ -1873,7 +1923,8 @@ class S3Config(Storage):
         return self.project.get("organisation_lead_role", 1)
     
     # -------------------------------------------------------------------------
-    # Request Settings
+    # Requests Management Settings
+    #
     def get_req_req_type(self):
         """
             The Types of Request which can be made.
@@ -1884,145 +1935,150 @@ class S3Config(Storage):
             tbc: Assets, Shelter, Food
         """
         return self.req.get("req_type", ["Stock", "People", "Other"])
+
     def get_req_type_inv_label(self):
         return current.T(self.req.get("type_inv_label", "Warehouse Stock"))
+
     def get_req_type_hrm_label(self):
         return current.T(self.req.get("type_hrm_label", "People"))
+
     def get_req_requester_label(self):
         return current.T(self.req.get("requester_label", "Requester"))
+
     def get_req_requester_optional(self):
         return self.req.get("requester_optional", False)
+
     def get_req_requester_is_author(self):
         """
             Whether the User Account logging the Request is normally the Requester
         """
         return self.req.get("requester_is_author", True)
+
     def get_req_requester_from_site(self):
         """
             Whether the Requester has to be a staff of the site making the Request
         """
         return self.req.get("requester_from_site", False)
+
     def get_req_requester_to_site(self):
         """
             Whether to set the Requester as being an HR for the Site if no HR record yet & as Site contact if none yet exists
         """
         return self.req.get("requester_to_site", False)
+
     def get_req_date_writable(self):
         """ Whether Request Date should be manually editable """
         return self.req.get("date_writable", True)
+
     def get_req_status_writable(self):
         """ Whether Request Status should be manually editable """
         return self.req.get("status_writable", True)
+
     def get_req_item_quantities_writable(self):
         """ Whether Item Quantities should be manually editable """
         return self.req.get("item_quantities_writable", False)
+
     def get_req_skill_quantities_writable(self):
         """ Whether People Quantities should be manually editable """
         return self.req.get("skill_quantities_writable", False)
+
     def get_req_multiple_req_items(self):
         """
             Can a Request have multiple line items?
             - e.g. ICS says that each request should be just for items of a single Type
         """
         return self.req.get("multiple_req_items", True)
+
     def get_req_show_quantity_transit(self):
         return self.req.get("show_quantity_transit", True)
+
     def get_req_inline_forms(self):
         """
             Whether Requests module should use inline forms for Items
         """
         return self.req.get("inline_forms", True)
+
     def get_req_prompt_match(self):
         """
             Whether a Requester is prompted to match each line item in an Item request
         """
         return self.req.get("prompt_match", True)
+
     def get_req_summary(self):
         """
             Whether to use Summary Needs for Sites (Office/Facility currently):
         """
         return self.req.get("summary", False)
+
     def get_req_use_commit(self):
         """
             Whether there is a Commit step in Requests Management
         """
         return self.req.get("use_commit", True)
+
     def get_req_commit_value(self):
         """
             Whether Donations should have a Value field
         """
         return self.req.get("commit_value", False)
+
     def get_req_commit_without_request(self):
         """
             Whether to allow Donations to be made without a matching Request
         """
         return self.req.get("commit_without_request", False)
+
     def get_req_committer_is_author(self):
         """ Whether the User Account logging the Commitment is normally the Committer """
         return self.req.get("committer_is_author", True)
+
     def get_req_ask_security(self):
         """
             Should Requests ask whether Security is required?
         """
         return self.req.get("ask_security", False)
+
     def get_req_ask_transport(self):
         """
             Should Requests ask whether Transportation is required?
         """
         return self.req.get("ask_transport", False)
+
     def get_req_items_ask_purpose(self):
         """
             Should Requests for Items ask for Purpose?
         """
         return self.req.get("items_ask_purpose", True)
+
     def get_req_req_crud_strings(self, type = None):
         return self.req.get("req_crud_strings") and \
                self.req.req_crud_strings.get(type, None)
+
     def get_req_use_req_number(self):
         return self.req.get("use_req_number", True)
+
     def get_req_generate_req_number(self):
         return self.req.get("generate_req_number", True)
+
     def get_req_form_name(self):
         return self.req.get("req_form_name", "Requisition Form")
+
     def get_req_shortname(self):
         return self.req.get("req_shortname", "REQ")
+
     def get_req_restrict_on_complete(self):
         """
             To restrict adding new commits to the Completed commits.
         """
         return self.req.get("req_restrict_on_complete", False)
-    
 
     # -------------------------------------------------------------------------
     # Supply
+    #
     def get_supply_catalog_default(self):
         return self.inv.get("catalog_default", "Default")
+
     def get_supply_use_alt_name(self):
         return self.supply.get("use_alt_name", True)
-
-    # -------------------------------------------------------------------------
-    # Hospital Registry
-    def get_hms_track_ctc(self):
-        return self.hms.get("track_ctc", False)
-
-    def get_hms_activity_reports(self):
-        return self.hms.get("activity_reports", False)
-
-    # -------------------------------------------------------------------------
-    # Active modules list
-    def has_module(self, module_name):
-        if not self.modules:
-            # Provide a minimal list of core modules
-            _modules = [
-                "default",      # Default
-                "admin",        # Admin
-                "gis",          # GIS
-                "pr",           # Person Registry
-                "org"           # Organization Registry
-            ]
-        else:
-            _modules = self.modules
-
-        return module_name in _modules
 
 # END =========================================================================

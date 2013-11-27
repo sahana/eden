@@ -1620,13 +1620,16 @@ class S3Msg(object):
                 content = content[0].value
             else:
                 content = entry.get("description", None)
+            tags = entry.get("tags", None)
+            if tags:
+                tags = [t.term for t in tags]
             id = minsert(channel_id = channel_id,
                          title = entry.title,
                          from_address = entry.get("link", None),
                          body = content,
                          author = entry.get("author", None),
                          created_on = utcfromtimestamp(mktime(entry.published_parsed)),
-                         tags = entry.get("tags", None),
+                         tags = tags,
                          # @ToDo: Enclosures
                          # @ToDo: geo
                          )

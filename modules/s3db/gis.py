@@ -924,10 +924,9 @@ class S3LocationModel(S3Model):
         MAX_SEARCH_RESULTS = current.deployment_settings.get_search_max_results()
         if (not limit or limit > MAX_SEARCH_RESULTS) and \
            resource.count() > MAX_SEARCH_RESULTS:
-            from gluon.serializers import json as jsons
-            output = jsons([dict(id="",
-                                 name="Search results are over %d. Please input more characters." \
-                                    % MAX_SEARCH_RESULTS)])
+            output = json.dumps([dict(id="",
+                                      name="Search results are over %d. Please input more characters." \
+                                          % MAX_SEARCH_RESULTS)])
 
         elif loc_select:
             # LocationSelector

@@ -95,11 +95,18 @@ class S3Parser(object):
         tags = record.tags
         url = record.from_address
 
-        table = s3db.cms_post
+        # Default to 'News' series
+        table = s3db.cms_series
+        series_id = db(table.name == "News").select(table.id,
+                                                    limitby=(0, 1)
+                                                    ).first().id
+
+        table = db.cms_post
         post_id = table.insert(title = record.title,
                                body = body,
                                created_on = record.created_on,
                                person_id = person_id,
+                               series_id = series_id,
                                )
         record = dict(id=post_id)
         s3db.update_super(table, record)

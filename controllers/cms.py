@@ -60,6 +60,12 @@ def series():
     return s3_rest_controller(rheader=s3db.cms_rheader)
 
 # -----------------------------------------------------------------------------
+def tag():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def blog():
     """
         RESTful CRUD controller for display of a series of posts as a full-page

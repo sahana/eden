@@ -350,14 +350,16 @@ def dojs(dogis = False, warnings = True):
             pass
         shutil.move(outputFilename, "../S3")
 
-    #for filename in ("spectrum",):
+    #for filename in ("spectrum",
+    #                 "tag-it",
+    #                 ):
     #    print "Compressing %s.js" % filename
     #    in_f = os.path.join("..", filename + ".js")
     #    out_f = os.path.join("..", filename + ".min.js")
     #    with open(in_f, "r") as inp:
     #        with open(out_f, "w") as out:
     #            out.write(minimize(inp.read()))
-        
+
     if dogis:
         sourceDirectoryOpenLayers = "../gis/openlayers/lib"
         sourceDirectoryOpenLayersExten = "../gis"

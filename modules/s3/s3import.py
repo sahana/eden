@@ -62,7 +62,6 @@ except ImportError:
     raise
 
 from gluon import *
-from gluon.serializers import json as jsons
 from gluon.storage import Storage, Messages
 from gluon.tools import callback, fetch
 

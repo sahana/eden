@@ -123,13 +123,13 @@ settings.base.guided_tour = True
 #    ("fr", "Français"),
 #    ("de", "Deutsch"),
 #    ("el", "ελληνικά"),
+#    ("es", "Español"),
 #    ("it", "Italiano"),
 #    ("ja", "日本語"),
 #    ("ko", "한국어"),
 #    ("pt", "Português"),
 #    ("pt-br", "Português (Brasil)"),
 #    ("ru", "русский"),
-#    ("es", "Español"),
 #    ("tl", "Tagalog"),
 #    ("ur", "اردو"),
 #    ("vi", "Tiếng Việt"),
@@ -316,6 +316,11 @@ settings.L10n.decimal_separator = "."
 #settings.ui.export_formats = ["kml", "pdf", "rss", "xls", "xml"]
 # Uncomment to include an Interim Save button on CRUD forms
 #settings.ui.interim_save = True
+
+# -----------------------------------------------------------------------------
+# CMS
+# Uncomment to show tags in Newsfeed
+#settings.cms.show_tags = True
 
 # -----------------------------------------------------------------------------
 # Persons

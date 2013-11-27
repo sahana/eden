@@ -743,7 +743,7 @@ class S3OrganisationModel(S3Model):
 
         if not value:
             output = current.xml.json_message(False, 400,
-                            "Missing options! Require: filter & value")
+                            "Missing option! Require value")
             raise HTTP(400, body=output)
 
         query = (S3FieldSelector("organisation.name").lower().like(value + "%")) | \
@@ -756,9 +756,9 @@ class S3OrganisationModel(S3Model):
         MAX_SEARCH_RESULTS = settings.get_search_max_results()
         limit = int(_vars.limit or MAX_SEARCH_RESULTS)
         if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-            output = jsons([dict(id="",
-                                 name="Search results are over %d. Please input more characters." \
-                                 % MAX_SEARCH_RESULTS)])
+            output = json.dumps([dict(id="",
+                                      name="Search results are over %d. Please input more characters." \
+                                          % MAX_SEARCH_RESULTS)])
         else:
             field = table.name
             field2 = table.acronym
@@ -812,7 +812,7 @@ class S3OrganisationModel(S3Model):
                         record["match"] = "acronym"
 
                 append(record)
-            output = jsons(output)
+            output = json.dumps(output)
 
         response.headers["Content-Type"] = "application/json"
         return output
@@ -2232,7 +2232,7 @@ class S3SiteModel(S3Model):
 
         if not value:
             output = current.xml.json_message(False, 400,
-                            "Missing options! Require: filter & value")
+                            "Missing option! Require value")
             raise HTTP(400, body=output)
 
         query = (S3FieldSelector("name").lower().like(value + "%"))
@@ -2242,9 +2242,9 @@ class S3SiteModel(S3Model):
         MAX_SEARCH_RESULTS = settings.get_search_max_results()
         limit = int(_vars.limit or MAX_SEARCH_RESULTS)
         if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-            output = jsons([dict(id="",
-                                 name="Search results are over %d. Please input more characters." \
-                                 % MAX_SEARCH_RESULTS)])
+            output = json.dumps([dict(id="",
+                                      name="Search results are over %d. Please input more characters." \
+                                          % MAX_SEARCH_RESULTS)])
         else:
             s3db = current.s3db
 
@@ -2277,7 +2277,7 @@ class S3SiteModel(S3Model):
                 if org:
                     record["org"] = org
                 append(record)
-            output = jsons(output)
+            output = json.dumps(output)
 
         response.headers["Content-Type"] = "application/json"
         return output
@@ -2310,7 +2310,7 @@ class S3SiteModel(S3Model):
         # (default anyway on MySQL/SQLite, but not PostgreSQL)
         value = value.lower().strip()
 
-        filter = _vars.get("filter", None)
+        filter = _vars.get("filter", "~")
 
         if filter and value:
             if filter == "~":
@@ -2330,9 +2330,9 @@ class S3SiteModel(S3Model):
         MAX_SEARCH_RESULTS = current.deployment_settings.get_search_max_results()
         limit = int(_vars.limit or MAX_SEARCH_RESULTS)
         if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-            output = jsons([dict(id="",
-                                 name="Search results are over %d. Please input more characters." \
-                                 % MAX_SEARCH_RESULTS)])
+            output = json.dumps([dict(id="",
+                                      name="Search results are over %d. Please input more characters." \
+                                          % MAX_SEARCH_RESULTS)])
         else:
             s3db = current.s3db
 
@@ -2357,7 +2357,7 @@ class S3SiteModel(S3Model):
                 if address:
                     record["address"] = address
                 append(record)
-            output = jsons(output)
+            output = json.dumps(output)
 
         response.headers["Content-Type"] = "application/json"
         return output

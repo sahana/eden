@@ -5761,8 +5761,6 @@ def search_ac(r, **attr):
         @param attr: request attributes
     """
 
-    output = None
-
     _vars = current.request.get_vars
 
     # JQueryUI Autocomplete uses "term" instead of "value"
@@ -5773,125 +5771,124 @@ def search_ac(r, **attr):
     # (default anyway on MySQL/SQLite, but not PostgreSQL)
     value = value.lower().strip()
 
-    if _vars.field and _vars.filter and value:
-        
-        s3db = current.s3db
-        resource = r.resource
-        table = resource.table
+    fieldname = _vars.get("field", "name")
+    fieldname = str.lower(fieldname)
+    filter = _vars.get("filter", "~")
 
-        limit = int(_vars.limit or 0)
+    s3db = current.s3db
+    resource = r.resource
+    table = resource.table
 
-        from s3resource import S3FieldSelector
-        fieldname = str.lower(_vars.field)
-        field = S3FieldSelector(fieldname)
+    limit = int(_vars.limit or 0)
 
-        # Default fields to return
-        fields = ["id", fieldname]
-        # Now using custom method
-        #if resource.tablename == "org_site":
-        #    # Simpler to provide an exception case than write a whole new class
-        #    fields.append("instance_type")
+    from s3resource import S3FieldSelector
+    field = S3FieldSelector(fieldname)
 
-        filter = _vars.filter
-        if filter == "~":
-            # Normal single-field Autocomplete
-            query = (field.lower().like(value + "%"))
+    # Default fields to return
+    fields = ["id", fieldname]
+    # Now using custom method
+    #if resource.tablename == "org_site":
+    #    # Simpler to provide an exception case than write a whole new class
+    #    fields.append("instance_type")
 
-        elif filter == "=":
-            if field.type.split(" ")[0] in \
-                ["reference", "id", "float", "integer"]:
-                # Numeric, e.g. Organizations' offices_by_org
-                query = (field == value)
-            else:
-                # Text
-                query = (field.lower() == value)
+    if filter == "~":
+        # Normal single-field Autocomplete
+        query = (field.lower().like(value + "%"))
 
-        elif filter == "<":
-            query = (field < value)
-
-        elif filter == ">":
-            query = (field > value)
-
+    elif filter == "=":
+        if field.type.split(" ")[0] in \
+            ["reference", "id", "float", "integer"]:
+            # Numeric, e.g. Organizations' offices_by_org
+            query = (field == value)
         else:
-            output = current.xml.json_message(
-                        False,
-                        400,
-                        "Unsupported filter! Supported filters: ~, =, <, >")
-            raise HTTP(400, body=output)
+            # Text
+            query = (field.lower() == value)
 
-        # Exclude records which are already linked:
-        #      ?link=<linktablename>.<leftkey>.<id>.<rkey>.<fkey>
-        # e.g. ?link=project_organisation.organisation_id.5.project_id.id
-        if "link" in _vars:
-            try:
-                link, lkey, _id, rkey, fkey = _vars.link.split(".")
-                linktable = s3db[link]
-                fq = (linktable[rkey] == table[fkey]) & \
-                     (linktable[lkey] == _id)
-                linked = current.db(fq).select(table._id)
-                pkey = S3FieldSelector("id")
-                exclude = (~(pkey.belongs([r[table._id.name]
-                                           for r in linked])))
-            except Exception, e:
-                pass # ignore
-            else:
-                query &= exclude
+    elif filter == "<":
+        query = (field < value)
 
-        # Select only or exclude template records:
-        # to only select templates:
-        #           ?template=<fieldname>.<value>,
-        #      e.g. ?template=template.true
-        # to exclude templates:
-        #           ?template=~<fieldname>.<value>
-        #      e.g. ?template=~template.true
-        if "template" in _vars:
-            try:
-                flag, val = _vars.template.split(".", 1)
-                if flag[0] == "~":
-                    exclude = True
-                    flag = flag[1:]
-                else:
-                    exclude = False
-                ffield = table[flag]
-            except:
-                pass # ignore
-            else:
-                if str(ffield.type) == "boolean":
-                    if val.lower() == "true":
-                        val = True
-                    else:
-                        val = False
-                if exclude:
-                    templates = (ffield != val)
-                else:
-                    templates = (ffield == val)
-                resource.add_filter(templates)
-
-        resource.add_filter(query)
-
-        if filter == "~":
-            MAX_SEARCH_RESULTS = current.deployment_settings.get_search_max_results()
-            if (not limit or limit > MAX_SEARCH_RESULTS) and \
-               resource.count() > MAX_SEARCH_RESULTS:
-                output = jsons([dict(id="",
-                                     name="Search results are over %d. Please input more characters." \
-                                     % MAX_SEARCH_RESULTS)])
-
-        if output is None:
-            output = S3Exporter().json(resource,
-                                       start=0,
-                                       limit=limit,
-                                       fields=fields,
-                                       orderby=field)
-        current.response.headers["Content-Type"] = "application/json"
+    elif filter == ">":
+        query = (field > value)
 
     else:
-        output = current.xml.json_message(
-                    False,
-                    400,
-                    "Missing options! Require: field, filter & value")
+        output = current.xml.json_message(False, 400,
+                    "Unsupported filter! Supported filters: ~, =, <, >")
         raise HTTP(400, body=output)
 
-    return output
+    # Exclude records which are already linked:
+    #      ?link=<linktablename>.<leftkey>.<id>.<rkey>.<fkey>
+    # e.g. ?link=project_organisation.organisation_id.5.project_id.id
+    if "link" in _vars:
+        try:
+            link, lkey, _id, rkey, fkey = _vars.link.split(".")
+            linktable = s3db[link]
+            fq = (linktable[rkey] == table[fkey]) & \
+                 (linktable[lkey] == _id)
+            linked = current.db(fq).select(table._id)
+            pkey = S3FieldSelector("id")
+            exclude = (~(pkey.belongs([r[table._id.name]
+                                       for r in linked])))
+        except Exception, e:
+            pass # ignore
+        else:
+            query &= exclude
+
+    # Select only or exclude template records:
+    # to only select templates:
+    #           ?template=<fieldname>.<value>,
+    #      e.g. ?template=template.true
+    # to exclude templates:
+    #           ?template=~<fieldname>.<value>
+    #      e.g. ?template=~template.true
+    if "template" in _vars:
+        try:
+            flag, val = _vars.template.split(".", 1)
+            if flag[0] == "~":
+                exclude = True
+                flag = flag[1:]
+            else:
+                exclude = False
+            ffield = table[flag]
+        except:
+            pass # ignore
+        else:
+            if str(ffield.type) == "boolean":
+                if val.lower() == "true":
+                    val = True
+                else:
+                    val = False
+            if exclude:
+                templates = (ffield != val)
+            else:
+                templates = (ffield == val)
+            resource.add_filter(templates)
+
+    resource.add_filter(query)
+
+    output = None
+    if filter == "~":
+        MAX_SEARCH_RESULTS = current.deployment_settings.get_search_max_results()
+        if (not limit or limit > MAX_SEARCH_RESULTS) and \
+           resource.count() > MAX_SEARCH_RESULTS:
+            output = [dict(id="",
+                           name="Search results are over %d. Please input more characters." \
+                               % MAX_SEARCH_RESULTS)]
+
+    if output is None:
+        rows = resource.select(fields,
+                               start=0,
+                               limit=limit,
+                               orderby=field,
+                               as_rows=True)
+        output = []
+        append = output.append
+        for row in rows:
+            record = dict(id = row.id,
+                          label = row[fieldname],
+                          )
+            append(record)
+
+    current.response.headers["Content-Type"] = "application/json"
+    return json.dumps(output)
 
 # END =========================================================================

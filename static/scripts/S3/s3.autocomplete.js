@@ -20,7 +20,7 @@
             return;
         }
 
-        var url = S3.Ap.concat('/', module, '/', resourcename, '/search_ac.json?filter=~&field=', fieldname);
+        var url = S3.Ap.concat('/', module, '/', resourcename, '/search_ac.json?field=', fieldname);
 
         var real_input = $('#' + input);
         // Bootstrap overrides .hide :/
@@ -89,14 +89,12 @@
                             // No link to create new (e.g. no permission to do so)
                             data.push({
                                 id: 0,
-                                value: '',
                                 label: i18n.no_matching_records
                             });
                         //}
                     } else {
                         data.push({
                             id: 0,
-                            value: '',
                             label: i18n.none_of_the_above
                         });
                     }
@@ -117,11 +115,12 @@
             select: function(event, ui) {
                 var item = ui.item;
                 if (item.id) {
-                    dummy_input.val(item[fieldname]);
+                    dummy_input.val(item.label);
                     real_input.val(item.id).change();
                     // Update existing, so blur does not remove
                     // the selection again:
-                    existing = {value: item.id, name: item[fieldname]};
+                    existing = {value: item.id,
+                                label: item.label};
                 } else {
                     // No Match & no ability to create new
                     dummy_input.val('');
@@ -135,18 +134,12 @@
             }
         })
         .data('ui-autocomplete')._renderItem = function(ul, item) {
-            if (item.label) {
-                // No Match
-                var label = item.label;
-            } else {
-                var label = item[fieldname];
-            }
             return $('<li>').data('item.autocomplete', item)
-                            .append('<a>' + label + '</a>')
+                            .append('<a>' + item.label + '</a>')
                             .appendTo(ul);
         };
         dummy_input.blur(function() {
-            if (existing && existing.name != dummy_input.val()) {
+            if (existing && existing.label != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
                 // @ToDo: Something better!
@@ -1199,7 +1192,7 @@
             return;
         }
 
-        var url = S3.Ap.concat('/org/site/search_ac.json?filter=~');
+        var url = S3.Ap.concat('/org/site/search_ac.json');
 
         var real_input = $('#' + input);
         // Bootstrap overides .hide :/
@@ -1339,7 +1332,7 @@
             return;
         }
 
-        var url = S3.Ap.concat('/org/site/search_address_ac?filter=~');
+        var url = S3.Ap.concat('/org/site/search_address_ac');
 
         var real_input = $('#' + input);
         // Have the URL editable after setup (e.g. to Filter by Organisation)
