@@ -1741,6 +1741,10 @@ class S3TwitterSearchModel(S3ChannelModel):
                    method="keygraph",
                    action=self.twitter_keygraph)
 
+        set_method("msg", "twitter_result",
+                   method="timeline",
+                   action=self.twitter_timeline)
+
         # ---------------------------------------------------------------------
         # Twitter Search Results
         #
@@ -1828,6 +1832,95 @@ class S3TwitterSearchModel(S3ChannelModel):
         # @ToDo: Link to results
         redirect(URL(f="twitter_result"))
 
+# =============================================================================
+    @staticmethod
+    def twitter_timeline(r, **attr):
+        """
+            Display the Tweets on a Simile Timeline
+
+            http://www.simile-widgets.org/wiki/Reference_Documentation_for_Timeline
+        """
+
+        if r.representation == "html" and r.name == "twitter_result":
+            response = current.response
+            s3 = response.s3
+            appname = r.application
+
+            # Add core Simile Code
+            s3.scripts.append("/%s/static/scripts/simile/timeline/timeline-api.js" % appname)
+
+            # Add our control script
+            if s3.debug:
+                s3.scripts.append("/%s/static/scripts/S3/s3.timeline.js" % appname)
+            else:
+                s3.scripts.append("/%s/static/scripts/S3/s3.timeline.min.js" % appname)
+
+            # Add our data
+            # @ToDo: Make this the initial data & then collect extra via REST with a stylesheet
+            # add in JS using S3.timeline.eventSource.addMany(events) where events is a []
+            if r.record:
+                # Single record
+                rows = [r.record]
+            else:
+                # Multiple records
+                # @ToDo: Load all records & sort to closest in time
+                # http://stackoverflow.com/questions/7327689/how-to-generate-a-sequence-of-future-datetimes-in-python-and-determine-nearest-d
+                rows = r.resource.select(["created_on", "body"], limit=2000, as_rows=True)
+
+            data = {'dateTimeFormat': 'iso8601',
+                    }
+
+            tl_start = tl_end = r.utcnow
+            events = []
+            import re
+            for row in rows:
+                # Dates
+                start = row.created_on or ""
+                if start:
+                    if start < tl_start:
+                        tl_start = start
+                    if start > tl_end:
+                        tl_end = start
+                    start = start.isoformat()
+
+                title = (re.sub(r"(?<=^|(?<=[^a-zA-Z0-9-_\.]))@([A-Za-z]+[A-Za-z0-9]+)|RT", "", row.body))
+                if len(title) > 30:
+                    title = title[:30]
+
+                events.append({'start': start,
+                               'title': title,
+                               'description' : row.body,
+                            })
+            data["events"] = events
+            data = json.dumps(data)
+
+            code = "".join((
+'''S3.timeline.data=''', data, '''
+S3.timeline.tl_start="''', tl_start.isoformat(), '''"
+S3.timeline.tl_end="''', tl_end.isoformat(), '''"
+S3.timeline.now="''', r.utcnow.isoformat(), '''"
+'''))
+
+            # Control our code in static/scripts/S3/s3.timeline.js
+            s3.js_global.append(code)
+
+            # Create the DIV
+            item = DIV(_id="s3timeline", _class="timeline-twitter")
+
+            output = dict(item=item)
+
+            # Maintain RHeader for consistency
+            if attr.get("rheader"):
+                rheader = attr["rheader"](r)
+                if rheader:
+                    output["rheader"] = rheader
+
+            output["title"] = current.T("Twitter Timeline")
+            response.view = "timeline.html"
+            return output
+
+        else:
+            r.error(405, r.ERROR.BAD_METHOD)
 # =============================================================================
 class S3XFormsModel(S3Model):
     """
