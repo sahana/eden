@@ -169,23 +169,23 @@ def person():
         msg_no_match = T("No Persons currently reported missing"))
 
     s3db.configure("pr_group_membership",
-                    list_fields=["id",
-                                 "group_id",
-                                 "group_head",
-                                 "description"
+                   list_fields=["id",
+                                "group_id",
+                                "group_head",
+                                "comments"
                                 ])
 
     s3db.configure("pr_person",
-                    listadd=False,
-                    editable=False,
-                    deletable=False,
-                    list_fields=["id",
-                                 "first_name",
-                                 "middle_name",
-                                 "last_name",
-                                 "picture",
-                                 "gender",
-                                 "age_group"
+                   listadd=False,
+                   editable=False,
+                   deletable=False,
+                   list_fields=["id",
+                                "first_name",
+                                "middle_name",
+                                "last_name",
+                                "picture",
+                                "gender",
+                                "age_group"
                                 ])
 
     def prep(r):

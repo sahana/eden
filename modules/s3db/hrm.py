@@ -5303,6 +5303,11 @@ def hrm_person_controller(**attr):
                method="contacts",
                action=s3db.pr_contacts)
 
+    # Custom Method for CV
+    set_method("pr", "person",
+               method="cv",
+               action=hrm_cv)
+
     # Plug-in role matrix for Admins/OrgAdmins
     realms = auth.user is not None and auth.user.realms or []
     system_roles = auth.get_system_roles()
@@ -5468,7 +5473,6 @@ def hrm_person_controller(**attr):
                         f.widget = None
                     else:
                         f.default = org
-                        f.comment = None
                         f.readable = f.writable = False
                         table.site_id.requires = IS_EMPTY_OR(
                             IS_ONE_OF(db,
@@ -5476,6 +5480,7 @@ def hrm_person_controller(**attr):
                                       s3db.org_site_represent,
                                       filterby="organisation_id",
                                       filter_opts=[session.s3.hrm.org]))
+
                 elif r.component_name == "physical_description":
                     # Hide all but those details that we want
                     # Lock all the fields
@@ -5487,6 +5492,7 @@ def hrm_person_controller(**attr):
                     table.blood_type.writable = table.blood_type.readable = True
                     table.medical_conditions.writable = table.medical_conditions.readable = True
                     table.other_details.writable = table.other_details.readable = True
+
                 elif r.component_name == "asset":
                     # Edits should always happen via the Asset Log
                     # @ToDo: Allow this method too, if we can do so safely
@@ -5494,6 +5500,7 @@ def hrm_person_controller(**attr):
                               insertable = False,
                               editable = False,
                               deletable = False)
+
                 elif r.component_name == "group_membership":
                     s3db.hrm_configure_pr_group_membership()
 
@@ -5796,9 +5803,17 @@ def hrm_cv(r, **attr):
                                  )
             profile_widgets.append(skills_widget)
 
+        if r.representation == "html":
+            response = current.response
+            # Maintain normal rheader for consistency
+            profile_header = TAG[""](H2(response.s3.crud_strings["pr_person"].title_display),
+                                     DIV(hrm_rheader(r),
+                                     _id="rheader"))
+        else:
+            profile_header = None
+
         s3db.configure(tablename,
-                       # Maintain normal rheader for consistency
-                       profile_header = hrm_rheader,
+                       profile_header = profile_header,
                        profile_widgets = profile_widgets,
                        )
 
@@ -5806,7 +5821,8 @@ def hrm_cv(r, **attr):
         profile.tablename = tablename
         profile.request = r
         output = profile.profile(r, **attr)
-        current.response.title = T("CV")
+        if r.representation == "html":
+            output["title"] = response.title = T("CV")
         return output
 
     else:

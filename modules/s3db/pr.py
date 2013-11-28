@@ -1537,10 +1537,6 @@ class S3GroupModel(S3Model):
                                    default=False,
                                    represent = lambda group_head: \
                                     (group_head and [T("yes")] or [""])[0]),
-                             s3_comments("description",
-                                         label = T("Description"),
-                                         comment = None,
-                                         ),
                              s3_comments(),
                              *s3_meta_fields())
 
@@ -1590,15 +1586,16 @@ class S3GroupModel(S3Model):
                           )]
 
         configure(tablename,
-                  onaccept = self.group_membership_onaccept,
-                  ondelete = self.group_membership_onaccept,
                   filter_widgets = filter_widgets,
                   list_fields = ["id",
                                  "group_id",
                                  "group_id$description",
                                  "person_id",
                                  "group_head",
-                                 ])
+                                 ],
+                  onaccept = self.group_membership_onaccept,
+                  ondelete = self.group_membership_onaccept,
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

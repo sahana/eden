@@ -689,6 +689,11 @@ def customize_pr_person(**attr):
         vnrc = True
         settings.hrm.use_skills = True
         settings.hrm.vol_experience = "both"
+        try:
+            settings.modules.pop("asset")
+        except:
+            # Must be already removed
+            pass
     else:
         vnrc = False
 
@@ -721,7 +726,7 @@ def customize_pr_person(**attr):
                 table.type.requires = IS_IN_SET(pr_id_type_opts,
                                                 zero=None)
 
-            elif r.component_name == "experience":
+            elif r.method == "cv" or r.component_name == "experience":
                 table = s3db.hrm_experience
                 # Use simple free-text variants
                 table.organisation.readable = True
@@ -736,14 +741,14 @@ def customize_pr_person(**attr):
                                             "end_date",
                                             )
                 s3db.configure("hrm_experience",
-                               crud_form=crud_form,
-                               list_fields=["id",
-                                            "organisation",
-                                            "job_title",
-                                            "comments",
-                                            "start_date",
-                                            "end_date",
-                                            ],
+                               crud_form = crud_form,
+                               list_fields = ["id",
+                                              "organisation",
+                                              "job_title",
+                                              "comments",
+                                              "start_date",
+                                              "end_date",
+                                              ],
                                )
 
         return result

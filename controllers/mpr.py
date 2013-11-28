@@ -103,24 +103,24 @@ def person():
         msg_list_empty = T("No Persons currently reported missing"))
 
     s3db.configure("pr_group_membership",
-                    list_fields=["id",
-                                 "group_id",
-                                 "group_head",
-                                 "description"
+                   list_fields=["id",
+                                "group_id",
+                                "group_head",
+                                "comments"
                                 ])
 
     s3db.configure(tablename,
-                    create_next = URL(c="mpr", f="person",
-                                      args=["[id]", "note", "create"],
-                                      vars=dict(status="missing")),
-                    list_fields=["id",
-                                 "first_name",
-                                 "middle_name",
-                                 "last_name",
-                                 "picture",
-                                 "gender",
-                                 "age_group",
-                                 "missing"
+                   create_next = URL(c="mpr", f="person",
+                                     args=["[id]", "note", "create"],
+                                     vars=dict(status="missing")),
+                   list_fields=["id",
+                                "first_name",
+                                "middle_name",
+                                "last_name",
+                                "picture",
+                                "gender",
+                                "age_group",
+                                "missing"
                                 ])
 
     def prep(r):

@@ -184,7 +184,7 @@ def person():
                    list_fields=["id",
                                 "group_id",
                                 "group_head",
-                                "description",
+                                "comments",
                                 ])
 
     # Basic tabs
@@ -354,7 +354,7 @@ def group():
                     list_fields=["id",
                                  "person_id",
                                  "group_head",
-                                 "description"
+                                 "comments"
                                  ])
 
     rheader = lambda r: s3db.pr_rheader(r, tabs = [(T("Group Details"), None),
