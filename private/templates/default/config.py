@@ -920,4 +920,9 @@ settings.modules = OrderedDict([
     #       restricted = False,
     #       module_type = None,
     #   )),
+    #("bug", Storage(
+    #        name_nice = T("Report bug"),
+    #        restricted = False,
+    #        module_type = None,
+    #    ))
 ])
