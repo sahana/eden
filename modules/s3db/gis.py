@@ -4749,26 +4749,29 @@ class gis_LocationRepresent(S3Represent):
             return text
 
     # -----------------------------------------------------------------------
-    '''
-        A function that outputs the 
-        given degree in form of degrees ,minutes
-        and seconds
-    '''
-
-    def  lat_lon_dms_represent(self, row):
+       def lat_lon_dms_represent(self, row):
+        '''
+            A function that outputs the 
+            given degree in form of degrees ,minutes
+            and seconds
+        '''   
+           
         lat = row.lat
         lon = row.lon
-        deg_sign= u'\N{DEGREE SIGN}'
+        deg_sign= u"\N{DEGREE SIGN}"
+        #latitude
         d1 = int(lat)             
         md1 = abs(lat - d) * 60
         m1 = int(md)
         sd1 = (md - m) * 60
         lat_value = """%d%s %d' %d" """ %(d1,deg_sign,md1,sd1)
+        #longittude
         d = int(lon)             
         md = abs(lon - d) * 60
         m = int(md)
         sd = (md - m) * 60
         lon_value = """%d%s %d' %d" """ %(d,deg_sign,md,sd)
+        
         text = "%s , %s" %(lat_value,lon_value)
         return text
      
