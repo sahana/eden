@@ -1496,6 +1496,16 @@ class S3Config(Storage):
         """
         return self.hrm.get("teams", "Team")
 
+    def get_hrm_cv_tab(self):
+        """
+            Whether Human Resources should consolidate tabs into 1x CV page:
+            * Education
+            * Experience
+            * Training
+            * Skills
+        """
+        return self.hrm.get("cv_tab", False)
+
     def get_hrm_use_awards(self):
         """
             Whether Volunteers should use Awards

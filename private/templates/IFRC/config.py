@@ -281,6 +281,8 @@ settings.hrm.use_credentials = False
 settings.hrm.use_education = True
 # Custom label for Organisations in HR module
 settings.hrm.organisation_label = "National Society / Branch"
+# Uncomment to consolidate tabs into a single CV
+settings.hrm.cv_tab = True
 
 # RDRT
 # Enable the use of Organisation Regions

@@ -150,6 +150,7 @@
 'Add Disaster Assessments': 'Thêm báo cáo đánh giá thảm họa',
 'Add Distribution': 'Thêm thông tin hàng hóa đóng góp',
 'Add Donor': 'Thêm tên người quyên góp vào danh sách',
+'Add Education': 'Thêm trình độ học vấn',
 'Add Education Detail': 'Thêm trình độ học vấn',
 'Add Educational Achievements': 'Thêm thành tích học tập',
 'Add Email Settings': 'Thêm cài đặt email',

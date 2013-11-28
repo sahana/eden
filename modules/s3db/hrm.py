@@ -4346,6 +4346,7 @@ def hrm_rheader(r, tabs=[],
                 group = "volunteer"
             else:
                 group = "staff"
+        use_cv = settings.get_hrm_cv_tab()
         experience_tab = None
         service_record = ""
         tbl = TABLE(TR(TH(name,
@@ -4464,11 +4465,11 @@ def hrm_rheader(r, tabs=[],
                                       ),
                                     _style="margin-bottom:10px;"
                                     )
-                if vol_experience == "both":
+                if vol_experience == "both" and not use_cv:
                     experience_tab2 = (T("Experience"), "experience")
-            elif vol_experience == "experience":
+            elif vol_experience == "experience" and not use_cv:
                 experience_tab = (T("Experience"), "experience")
-        elif settings.get_hrm_staff_experience() == "experience":
+        elif settings.get_hrm_staff_experience() == "experience" and not use_cv:
             experience_tab = (T("Experience"), "experience")
 
         if settings.get_hrm_use_certificates():
@@ -4486,7 +4487,7 @@ def hrm_rheader(r, tabs=[],
         else:
             description_tab = None
 
-        if settings.get_hrm_use_education():
+        if settings.get_hrm_use_education() and not use_cv:
             education_tab = (T("Education"), "education")
         else:
             education_tab = None
@@ -4496,7 +4497,7 @@ def hrm_rheader(r, tabs=[],
         else:
             id_tab = None
 
-        if settings.get_hrm_use_skills():
+        if settings.get_hrm_use_skills() and not use_cv:
             skills_tab = (T("Skills"), "competency")
         else:
             skills_tab = None
@@ -4511,10 +4512,13 @@ def hrm_rheader(r, tabs=[],
         else:
             teams_tab = None
 
-        if settings.get_hrm_use_trainings():
+        if settings.get_hrm_use_trainings() and not use_cv:
             trainings_tab = (T("Trainings"), "training")
         else:
             trainings_tab = None
+
+        if use_cv:
+            trainings_tab = (T("CV"), "cv")
 
         if profile:
             # Configure for personal mode
@@ -5547,7 +5551,7 @@ def hrm_person_controller(**attr):
     else:
         orgname = None
 
-    _attr = dict(rheader=s3db.hrm_rheader,
+    _attr = dict(rheader=hrm_rheader,
                  orgname=orgname,
                  replace_option=T("Remove existing data before import"),
                  csv_template="staff",
@@ -5689,8 +5693,8 @@ def hrm_training_event_controller():
     s3.postp = postp
 
     output = current.rest_controller("hrm", "training_event",
-                                     hide_filter=False,
-                                     rheader=hrm_rheader,
+                                     hide_filter = False,
+                                     rheader = hrm_rheader,
                                      )
     return output
 
@@ -5709,6 +5713,7 @@ def hrm_cv(r, **attr):
        r.representation in ("html", "aadata"):
         T = current.T
         s3db = current.s3db
+        settings = current.deployment_settings
         tablename = r.tablename
         if r.controller == "vol":
             controller = "vol"
@@ -5731,70 +5736,77 @@ def hrm_cv(r, **attr):
                  "_class": "action-btn delete-btn delete-btn-ajax",
                 },
             ]
-        education_widget = dict(label = "Education",
-                                title_create = "Add Education",
-                                type = "datatable",
-                                actions = dt_row_actions("education"),
-                                tablename = "pr_education",
-                                context = "person",
-                                create_controller = controller,
-                                create_function = "person",
-                                create_component = "education",
-                                colspan = 2,
-                                pagesize = None, # all records
-                                )
-        experience_widget = dict(label = "Experience",
-                                 title_create = "Add Experience",
+
+        profile_widgets = []
+        if settings.get_hrm_use_education():
+            education_widget = dict(label = "Education",
+                                    title_create = "Add Education",
+                                    type = "datatable",
+                                    actions = dt_row_actions("education"),
+                                    tablename = "pr_education",
+                                    context = "person",
+                                    create_controller = controller,
+                                    create_function = "person",
+                                    create_component = "education",
+                                    colspan = 2,
+                                    pagesize = None, # all records
+                                    )
+            profile_widgets.append(education_widget)
+        vol_experience = settings.get_hrm_vol_experience()
+        if vol_experience in ("both", "experience"):
+            experience_widget = dict(label = "Experience",
+                                     title_create = "Add Experience",
+                                     type = "datatable",
+                                     actions = dt_row_actions("experience"),
+                                     tablename = "hrm_experience",
+                                     context = "person",
+                                     create_controller = controller,
+                                     create_function = "person",
+                                     create_component = "experience",
+                                     colspan = 2,
+                                     pagesize = None, # all records
+                                     )
+            profile_widgets.append(experience_widget)
+        if settings.get_hrm_use_trainings():
+            training_widget = dict(label = "Training",
+                                   title_create = "Add Training",
+                                   type = "datatable",
+                                   actions = dt_row_actions("training"),
+                                   tablename = "hrm_training",
+                                   context = "person",
+                                   create_controller = controller,
+                                   create_function = "person",
+                                   create_component = "training",
+                                   colspan = 2,
+                                   pagesize = None, # all records
+                                   )
+            profile_widgets.append(training_widget)
+        if settings.get_hrm_use_skills():
+            skills_widget = dict(label = "Skills",
+                                 title_create = "Add Skill",
                                  type = "datatable",
-                                 actions = dt_row_actions("experience"),
-                                 tablename = "hrm_experience",
+                                 actions = dt_row_actions("competency"),
+                                 tablename = "hrm_competency",
                                  context = "person",
                                  create_controller = controller,
                                  create_function = "person",
-                                 create_component = "experience",
+                                 create_component = "competency",
                                  colspan = 2,
                                  pagesize = None, # all records
                                  )
-        training_widget = dict(label = "Training",
-                               title_create = "Add Training",
-                               type = "datatable",
-                               actions = dt_row_actions("training"),
-                               tablename = "hrm_training",
-                               context = "person",
-                               create_controller = controller,
-                               create_function = "person",
-                               create_component = "training",
-                               colspan = 2,
-                               pagesize = None, # all records
-                               )
-        skills_widget = dict(label = "Skills",
-                             title_create = "Add Skill",
-                             type = "datatable",
-                             actions = dt_row_actions("competency"),
-                             tablename = "hrm_competency",
-                             context = "person",
-                             create_controller = controller,
-                             create_function = "person",
-                             create_component = "competency",
-                             colspan = 2,
-                             pagesize = None, # all records
-                             )
+            profile_widgets.append(skills_widget)
+
         s3db.configure(tablename,
                        # Maintain normal rheader for consistency
-                       profile_header = s3db.hrm_rheader,
-                       profile_widgets = [education_widget,
-                                          experience_widget,
-                                          training_widget,
-                                          skills_widget,
-                                          ]
+                       profile_header = hrm_rheader,
+                       profile_widgets = profile_widgets,
                        )
 
         profile = S3Profile()
         profile.tablename = tablename
         profile.request = r
         output = profile.profile(r, **attr)
-        if r.repesentation == "html":
-            output["title"] = T("CV")
+        current.response.title = T("CV")
         return output
 
     else:

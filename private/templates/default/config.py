@@ -399,6 +399,8 @@ settings.L10n.decimal_separator = "."
 #settings.hrm.vol_experience = False
 # Uncomment to show the Organisation name in HR represents
 #settings.hrm.show_organisation = True
+# Uncomment to consolidate tabs into a single CV
+#settings.hrm.cv_tab = True
 # Uncomment to disable the use of Volunteer Awards
 #settings.hrm.use_awards = False
 # Uncomment to disable the use of HR Certificates
