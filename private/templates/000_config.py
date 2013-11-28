@@ -154,14 +154,6 @@ settings.frontpage.rss = [
 # Print Service URL: http://eden.sahanafoundation.org/wiki/BluePrintGISPrinting
 #settings.gis.print_service = "/geoserver/pdf/"
 
-# Twitter settings:
-# Register an app at https://dev.twitter.com/apps
-# (select Application Type: Client)
-# Leave callback URL blank to allow entry of PIN for Tweepy
-# - should be changed sot aht we can have one to use for Auth!
-#settings.msg.twitter_oauth_consumer_key = ""
-#settings.msg.twitter_oauth_consumer_secret = ""
-
 # UI options
 # Should user be prompted to save before navigating away?
 #settings.ui.navigate_away_confirm = False

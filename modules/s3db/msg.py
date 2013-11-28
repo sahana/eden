@@ -1564,6 +1564,10 @@ class S3TwitterModel(S3Model):
                                                       [T("Out")])[0],
                                    label = T("Direction"),
                                    ),
+                             Field("msg_id", # Twitter Message ID
+                                   readable = False,
+                                   writable = False,
+                                   ),
                              *s3_meta_fields())
 
         table.created_on.readable = True
@@ -1805,12 +1809,14 @@ class S3TwitterSearchModel(S3ChannelModel):
             S3Method for interactive requests
         """
 
+        id = r.id
         tablename = r.tablename
-        current.s3task.async("msg_twitter_search", args=[r.id])
+        current.s3task.async("msg_twitter_search", args=[id])
         current.session.confirmation = \
             current.T("The search request has been submitted, so new messages should appear shortly - refresh to see them")
-        # @ToDo: Filter to this Search
-        redirect(URL(f="twitter_result"))
+        # Filter results to this Search
+        redirect(URL(f="twitter_result",
+                     vars=["~.search_id": id]))
 
     # -----------------------------------------------------------------------------
     @staticmethod
@@ -1825,7 +1831,7 @@ class S3TwitterSearchModel(S3ChannelModel):
         current.s3task.async("msg_process_keygraph", args=[r.id])
         current.session.confirmation = \
             current.T("The search results are now being processed with KeyGraph")
-        # @ToDo: Link to results
+        # @ToDo: Link to KeyGraph results
         redirect(URL(f="twitter_result"))
 
 # =============================================================================

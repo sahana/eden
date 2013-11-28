@@ -355,15 +355,6 @@ def newsfeed():
                                    _class="filter-search",
                                    #_placeholder=T("Search").upper(),
                                    ),
-                      S3OptionsFilter("series_id",
-                                      label=T("Filter by Type"),
-                                      # We want translations
-                                      #represent="%(name)s",
-                                      # @ToDo: deployment_setting or introspect when vals > 3?
-                                      #widget="multiselect",
-                                      cols=2,
-                                      hidden=True,
-                                      ),
                       S3LocationFilter("location_id",
                                        label=T("Filter by Location"),
                                        levels=levels,
@@ -383,6 +374,38 @@ def newsfeed():
                                    hidden=True,
                                    ),
                       ]
+
+    if settings.get_cms_show_tags():
+        filter_widgets.insert(1, S3OptionsFilter("tag_post.tag_id",
+                                                 label=T("Filter by Tag"),
+                                                 represent="%(name)s",
+                                                 widget="multiselect",
+                                                 hidden=True,
+                                                 ))
+
+    len_series = db(s3db.cms_series.deleted == False).count()
+    if len_series > 3:
+        # Multiselect widget
+        filter_widgets.insert(1, S3OptionsFilter("series_id",
+                                                 label=T("Filter by Type"),
+                                                 # We want translations
+                                                 #represent="%(name)s",
+                                                 widget="multiselect",
+                                                 hidden=True,
+                                                 ))
+                      
+    elif len_series > 1:
+        # Checkboxes
+        filter_widgets.insert(1, S3OptionsFilter("series_id",
+                                                 label=T("Filter by Type"),
+                                                 # We want translations
+                                                 #represent="%(name)s",
+                                                 cols=2,
+                                                 hidden=True,
+                                                 ))
+    else:
+        # No Widget
+        pass
 
     s3db.configure("cms_post",
                    # We could use a custom Advanced widget

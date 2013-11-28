@@ -254,11 +254,13 @@ class S3ContentModel(S3Model):
         add_component("cms_post_user", cms_post=dict(name="bookmark",
                                                      joinby="post_id"))
 
-        add_component("cms_tag", cms_post=dict(name="tag",
-                                               link="cms_tag_post",
+        add_component("cms_tag", cms_post=dict(link="cms_tag_post",
                                                joinby="post_id",
                                                key="tag_id",
                                                actuate="hide"))
+
+        # For FilterWidget
+        add_component("cms_post_tag", cms_post="post_id")
 
         add_component("cms_post_organisation",
                       cms_post=dict(joinby="post_id",
@@ -1100,8 +1102,8 @@ def cms_customize_post_fields():
         # @ToDo: Hook this into dl scrolling
         script = \
 '''$('.s3-tags').tagit({autocomplete:{source:'%s'},%s})''' % (URL(c="cms", f="tag",
-                                                                 args="search_ac.json"),
-                                                             readonly)
+                                                                  args="search_ac.json"),
+                                                              readonly)
         s3.jquery_ready.append(script)
 
     s3db.configure("cms_post",

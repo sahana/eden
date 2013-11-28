@@ -474,19 +474,6 @@ def twitter():
         @ToDo: Action Button to update async
     """
 
-    def prep(r):
-        if r.interactive:
-            table = r.table
-            if not db(table.id > 0).select(table.id,
-                                           limitby=(0, 1)).first():
-                # Update results
-                result = msg.poll("msg_twitter_channel", channel_id)
-                if not result:
-                    session.error = T("Need to configure Twitter Authentication")
-                    redirect(URL(f="twitter_channel", args=[1, "update"]))
-        return True
-    s3.prep = prep
-
     s3db.configure("msg_twitter",
                    insertable=False,
                    editable=False,

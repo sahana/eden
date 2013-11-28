@@ -1058,45 +1058,29 @@ class S3Msg(object):
             s3_debug("s3msg", "Tweepy not available, so non-Tropo Twitter support disabled")
             return None
 
+        table = current.s3db.msg_twitter_channel
         if not channel_id:
-            # Try 000_config.py
-            settings = current.deployment_settings
-            oauth_key = settings.get_msg_twitter_oauth_consumer_key()
-            oauth_secret = settings.get_msg_twitter_oauth_consumer_secret()
-            twitter_account = None
-            if not oauth_key or not oauth_secret:
-                # Try the 1st enabled one in the DB
-                table = current.s3db.msg_twitter_channel
-                query = (table.enabled == True)
+            # Try the 1st enabled one in the DB
+            query = (table.enabled == True)
         else:
-            table = current.s3db.msg_twitter_channel
             query = (table.channel_id == channel_id)
 
-        if query:
-            c = current.db(query).select(table.consumer_key,
-                                         table.consumer_secret,
-                                         table.twitter_account,
-                                         limitby=(0, 1)
-                                         ).first()
-            if not c:
-                return None
-            oauth_key = c.consumer_key
-            oauth_secret = c.consumer_secret
-            twitter_account = c.twitter_account
-
-        if oauth_key and oauth_secret:
-            try:
-                oauth = tweepy.OAuthHandler(oauth_key,
-                                            oauth_secret)
-                oauth.set_access_token(oauth_key,
-                                       oauth_secret)
-                twitter_api = tweepy.API(oauth)
-                return dict(twitter_api=twitter_api,
-                            twitter_account=twitter_account)
-            except:
-                pass
-
-        return None
+        c = current.db(query).select(table.twitter_account,
+                                     table.consumer_key,
+                                     table.consumer_secret,
+                                     table.access_token,
+                                     table.access_token_secret,
+                                     limitby=(0, 1)
+                                     ).first()
+        try:
+            oauth = tweepy.OAuthHandler(c.consumer_key,
+                                        c.consumer_secret)
+            oauth.set_access_token(c.access_token,
+                                   c.access_token_secret)
+            twitter_api = tweepy.API(oauth)
+            return (twitter_api, c.twitter_account)
+        except:
+            return None
 
     # -------------------------------------------------------------------------
     def send_tweet(self, text="", recipient=None):
@@ -1118,14 +1102,8 @@ class S3Msg(object):
 
         import tweepy
 
-        twitter_api = None
-        if twitter_settings:
-            twitter_api = twitter_settings["twitter_api"]
-            twitter_account = twitter_settings["twitter_account"]
-
-        if not twitter_api and text:
-            # Abort
-            return False
+        twitter_api = twitter_settings[0]
+        twitter_account = twitter_settings[1]
 
         if recipient:
             recipient = self._sanitise_twitter_account(recipient)
@@ -1676,63 +1654,45 @@ class S3Msg(object):
 
         import tweepy
 
-        twitter_api = twitter_settings["twitter_api"]
-
-        if not twitter_api:
-            # Abort
-            return False
+        twitter_api = twitter_settings[0]
 
         db = current.db
         s3db = current.s3db
-        inbox_table = s3db.msg_twitter
+        table = s3db.msg_twitter
+        mtable = s3db.msg_message
 
-        # Get the latest updated post time to use it as since_id
-        recent_time = inbox_table.created_on.max()
+        # Get the latest Twitter message ID to use it as since_id
+        query = (mtable.channel_id == channel_id) & \
+                (mtable.inbound == True) & \
+                (mtable.message_id == table.message_id)
+        latest = db(query).select(table.msg_id,
+                                  orderby=~table.created_on,
+                                  limitby=(0, 1)
+                                  ).first()
 
         try:
-            if recent_time:
-                messages = twitter_api.direct_messages(since_id=recent_time)
+            if latest:
+                messages = twitter_api.direct_messages(since_id=latest.msg_id)
             else:
                 messages = twitter_api.direct_messages()
-
-            messages.reverse()
-
-            for message in messages:
-                # Check if the tweet already exists in the inbox_table
-                query = (inbox_table.from_address == message["sender"]["name"])
-                query = (query) & \
-                        (inbox_table.posted_at == message["created_on"])
-                tweet_exists = db(query).select(inbox_table.id,
-                                                limitby=(0, 1)
-                                                ).first()
-
-                if tweet_exists:
-                    continue
-                else:
-                    tweet = message.text
-                    posted_by = message["sender"]["name"]
-                    # @ToDO: restructure this parser
-                    # Parser should be connected via msg_parser as per other channels, not hard-wired like this
-                    #if message["geo_enabled"]:
-                    #    coordinates = message["geo"]["coordinates"]
-                    #else:
-                    #    coordinates = None
-                    #category, priority, location_id = parser("filter",
-                    #                                         tweet,
-                    #                                         posted_by,
-                    #                                         service="twitter",
-                    #                                         coordinates=coordinates)
-                    inbox_table.insert(body = tweet,
-                                       #category = category,
-                                       #priority = priority,
-                                       #location_id = location_id,
-                                       from_address = posted_by,
-                                       posted_at = message["created_on"],
-                                       inbound = True,
-                                       )
-        except tweepy.TweepError:
-            s3_debug("Unable to get the Tweets for the user.")
+        except tweepy.TweepError as e:
+            error = e.message[0]["message"]
+            s3_debug("Unable to get the Tweets for the user: %s" % error)
             return False
+
+        messages.reverse()
+
+        tinsert = table.insert
+        update_super = s3db.update_super
+        for message in messages:
+            id = tinsert(body = message.text,
+                         from_address = message.sender_screen_name,
+                         to_address = message.recipient_screen_name,
+                         created_on = message.created_at,
+                         inbound = True,
+                         msg_id = message.id,
+                         )
+            update_super(table, dict(id=id))
 
         return True
 
@@ -1798,6 +1758,7 @@ class S3Msg(object):
             return(str(e))
 
         from dateutil import parser
+        date_parse = parser.parse
 
         gtable = db.gis_location
         # Disable validation
@@ -1809,7 +1770,7 @@ class S3Msg(object):
             body = tweet["text"]
             tweet_id = tweet["id_str"]
             lang = tweet["lang"]
-            created_on = parser.parse(tweet["created_at"])
+            created_on = date_parse(tweet["created_at"])
             lat = None
             lon = None
             if tweet["coordinates"]:

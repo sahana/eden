@@ -225,7 +225,7 @@ if len(pop_list) > 0:
         id = table.insert(token_messaging = "")
         update_super(table, dict(id=id))
         table = db.msg_twitter_channel
-        id = table.insert(twitter_account = "")
+        id = table.insert(enabled = False)
         update_super(table, dict(id=id))
 
     # Budget Module

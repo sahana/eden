@@ -1198,13 +1198,6 @@ class S3Config(Storage):
         return self.msg.get("parser", "default")
 
     # -------------------------------------------------------------------------
-    # Twitter
-    def get_msg_twitter_oauth_consumer_key(self):
-        return self.msg.get("twitter_oauth_consumer_key", "")
-    def get_msg_twitter_oauth_consumer_secret(self):
-        return self.msg.get("twitter_oauth_consumer_secret", "")
-
-    # -------------------------------------------------------------------------
     # Notifications
     def get_msg_notify_subject(self):
         """
