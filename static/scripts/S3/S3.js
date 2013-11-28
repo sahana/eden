@@ -138,8 +138,8 @@ S3.addModals = function() {
         }
         return url_out;
     });
-    $('.s3_add_resource_link, .s3_modal').unbind('click')
-                                         .click(function() {
+    $('.s3_add_resource_link, .s3_modal').unbind('click.s3Modal')
+                                         .on('click.S3Modal', function() {
         var title = this.title;
         var url = this.href;
         var id = S3.uid();
@@ -179,6 +179,21 @@ S3.popup_remove = function() {
     // - called from s3.popup.js but in parent scope
     $('iframe.ui-dialog-content').dialog('close');
 };
+
+// Functions to re-run after new page elements are brought in via AJAX
+// - an be added-to dynamically
+S3.redraw_fns = [// jQueryUI Dialog Modal Popups
+                 'addModals',
+                 // Help Tooltips
+                 'addTooltips'
+                 ];
+S3.redraw = function() {
+    var redraw_fns = S3.redraw_fns;
+    var len = redraw_fns.length;
+    for (var i=0; i< len; i++) {
+        S3[redraw_fns[i]]();
+    }
+}
 
 // Geolocation
 // - called from Auth.login()
@@ -1072,11 +1087,8 @@ $(document).ready(function() {
         }
     );
 
-    // jQueryUI Dialog Modal Popups
-    S3.addModals();
-
-    // Help Tooltips
-    S3.addTooltips();
+    // Event Handlers for the page
+    S3.redraw();
 
     // De-duplication Event Handlers
     S3.deduplication();

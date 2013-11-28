@@ -549,11 +549,10 @@
                 }
             });
 
-            // Modals
-            S3.addModals();
+            // Add Event Handlers to new page elements
+            S3.redraw();
 
-            // Tooltips
-            S3.addTooltips();
+            // Other callbacks
 
             return;
         },

@@ -1816,7 +1816,7 @@ class S3TwitterSearchModel(S3ChannelModel):
             current.T("The search request has been submitted, so new messages should appear shortly - refresh to see them")
         # Filter results to this Search
         redirect(URL(f="twitter_result",
-                     vars=["~.search_id": id]))
+                     vars={"~.search_id": id}))
 
     # -----------------------------------------------------------------------------
     @staticmethod

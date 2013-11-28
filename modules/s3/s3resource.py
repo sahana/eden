@@ -4252,7 +4252,7 @@ class S3Resource(object):
                     # iSortCol_x is either not present in vars or specifies
                     # a non-existent column (i.e. iSortCol_x >= numcols) =>
                     # ignore silently
-                    columns.append({"field": None})
+                    columns.append(Storage(field=None))
                 else:
                     columns.append(rfield)
 

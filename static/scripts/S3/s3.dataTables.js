@@ -988,37 +988,43 @@
                 }
                 // Set the action buttons in the id column for each row
                 if (tableConfig['rowActions'].length || tableConfig['bulkActions']) {
-                    var Buttons = '';
+                    var Buttons = '', add_modals = false;
                     if (tableConfig['rowActions'].length) {
-                        var Actions = tableConfig['rowActions'];
+                        var Actions = tableConfig['rowActions'], action;
                         // Loop through each action to build the button
                         for (var i=0; i < Actions.length; i++) {
+                            action = Actions[i];
 
                             //$('th:eq(0)').css( { 'width': 'auto' } );
 
                             // Check if action is restricted to a subset of records
-                            if ('restrict' in Actions[i]) {
-                                if (inList(action_id, Actions[i].restrict) == -1) {
+                            if ('restrict' in action) {
+                                if (inList(action_id, action.restrict) == -1) {
                                     continue;
                                 }
                             }
-                            var c = Actions[i]._class;
-                            var label = S3.Utf8.decode(Actions[i].label);
+                            var c = action._class;
+                            var label = S3.Utf8.decode(action.label);
                             re = /%5Bid%5D/g;
-                            if (Actions[i]._onclick) {
+                            if (action._onclick) {
                                 var oc = Actions[i]._onclick.replace(re, action_id);
                                 Buttons = Buttons + '<a class="' + c + '" onclick="' + oc + '">' + label + '</a>' + '&nbsp;';
-                            } else if (Actions[i]._jqclick) {
+                            } else if (action._jqclick) {
                                 Buttons = Buttons + '<span class="' + c + '" id="' + action_id + '">' + label + '</span>' + '&nbsp;';
                                 if (typeof S3ActionCallBack != 'undefined') {
                                     fnActionCallBacks.push([action_id, S3ActionCallBack]);
                                 }
-                            } else {
-                                if (Actions[i].icon) {
-                                    label = '<img src="' + Actions[i].icon + '" alt="' + label + '" title="' + label + '">';
+                            } else if (action.url) {
+                                if (action.icon) {
+                                    label = '<img src="' + action.icon + '" alt="' + label + '" title="' + label + '">';
                                 }
-                                var url = Actions[i].url.replace(re, action_id);
+                                var url = action.url.replace(re, action_id);
                                 Buttons = Buttons + '<a db_id="'+ action_id + '" class="' + c + '" href="' + url + '" title="' + label + '">' + label + '</a>' + '&nbsp;';
+                            } else {
+                                if (action.icon) {
+                                    label = '<img src="' + action.icon + '" alt="' + label + '" title="' + label + '">';
+                                }
+                                Buttons = Buttons + '<a db_id="'+ action_id + '" class="' + c + '" title="' + label + '">' + label + '</a>' + '&nbsp;';
                             }
                         } // end of loop through for each row Action for this table
                     } // end of if there are to be Row Actions for this table
@@ -1079,8 +1085,6 @@
             'fnDrawCallback': function(oSettings) {
                 //var table = '#' + oSettings.nTable.id;
                 //var t = tableIdReverse(table);
-                // If using Modals for Update forms:
-                //S3.addModals();
                 bindButtons(t, tableConfig, fnActionCallBacks);
                 if (oSettings.aiDisplay.length === 0) {
                     return;
@@ -1145,6 +1149,11 @@
                     $(id + '_paginate').css('display', 'block');
                 } else {
                     $(id + '_paginate').css('display', 'none');
+                }
+                // Add modals if necessary
+                // - in future maybe use S3.redraw() to catach all elements
+                if ($(id).find('.s3_modal').length) {
+                    S3.addModals();
                 }
             } // end of fnDrawCallback
         }); // end of call to $(id).datatable()

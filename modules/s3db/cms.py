@@ -1099,11 +1099,12 @@ def cms_customize_post_fields():
 },'''
         else:
             readonly = '''readOnly:true'''
-        # @ToDo: Hook this into dl scrolling
         script = \
-'''$('.s3-tags').tagit({autocomplete:{source:'%s'},%s})''' % (URL(c="cms", f="tag",
-                                                                  args="search_ac.json"),
-                                                              readonly)
+'''S3.tagit=function(){$('.s3-tags').tagit({autocomplete:{source:'%s'},%s})}
+S3.tagit()
+S3.redraw_fns.push('tagit')''' % (URL(c="cms", f="tag",
+                                      args="search_ac.json"),
+                                  readonly)
         s3.jquery_ready.append(script)
 
     s3db.configure("cms_post",
