@@ -1873,10 +1873,11 @@ class S3TwitterSearchModel(S3ChannelModel):
                 # http://stackoverflow.com/questions/7327689/how-to-generate-a-sequence-of-future-datetimes-in-python-and-determine-nearest-d
                 rows = r.resource.select(["created_on", "body"], limit=2000, as_rows=True)
 
-            data = {'dateTimeFormat': 'iso8601',
+            data = {"dateTimeFormat": "iso8601",
                     }
 
-            tl_start = tl_end = r.utcnow
+            now = r.utcnow
+            tl_start = tl_end = now
             events = []
             import re
             for row in rows:
@@ -1893,10 +1894,10 @@ class S3TwitterSearchModel(S3ChannelModel):
                 if len(title) > 30:
                     title = title[:30]
 
-                events.append({'start': start,
-                               'title': title,
-                               'description' : row.body,
-                            })
+                events.append({"start": start,
+                               "title": title,
+                               "description": row.body,
+                               })
             data["events"] = events
             data = json.dumps(data)
 
@@ -1904,14 +1905,14 @@ class S3TwitterSearchModel(S3ChannelModel):
 '''S3.timeline.data=''', data, '''
 S3.timeline.tl_start="''', tl_start.isoformat(), '''"
 S3.timeline.tl_end="''', tl_end.isoformat(), '''"
-S3.timeline.now="''', r.utcnow.isoformat(), '''"
+S3.timeline.now="''', now.isoformat(), '''"
 '''))
 
             # Control our code in static/scripts/S3/s3.timeline.js
             s3.js_global.append(code)
 
             # Create the DIV
-            item = DIV(_id="s3timeline", _class="timeline-twitter")
+            item = DIV(_id="s3timeline", _class="s3-timeline")
 
             output = dict(item=item)
 

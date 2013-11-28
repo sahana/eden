@@ -1411,6 +1411,14 @@ div.fm-cancel {
     width: 75px;
 }
 
+/* Simile Timeline */
+.s3-timeline  {
+    height: 400px;
+    border: 1px solid #aaa;
+    font-family: Trebuchet MS,sans-serif;
+    font-size: 85%;
+}
+
 /* Videos Page */
 #video-toc {
     clear: left;

@@ -3145,7 +3145,6 @@ S3OptionsFilter({
             request = current.request
             response = current.response
             s3 = response.s3
-            now = request.utcnow   
 
             # Add core Simile Code
             s3.scripts.append("/%s/static/scripts/simile/timeline/timeline-api.js" % request.application)
@@ -3173,14 +3172,13 @@ S3OptionsFilter({
                 rows = r.resource._rows
             
             
-            data = {'dateTimeFormat': 'iso8601',
-                    'events': []
+            data = {"dateTimeFormat": "iso8601",
                     }
 
-            tl_start = now
-            tl_end = now
+            now = request.utcnow
+            tl_start = tl_end = now
             events = []
-            if r.name is "send" :
+            if r.name is "send":
                 rr = (rows, rows2)
             else:
                 rr = (rows1, rows)
@@ -3201,14 +3199,14 @@ S3OptionsFilter({
                     end = end.isoformat()
                     
                 # append events
-                events.append({'start': start,
-                            'end': end,
-                            # 'title': row.name,
-                            # 'caption': row.comments or "",
-                            # 'description': row.comments or "",
+                events.append({"start": start,
+                               "end": end,
+                               #"title": row.name,
+                               #"caption": row.comments or "",
+                               #"description": row.comments or "",
                                # @ToDo: Colour based on Category (More generically: Resource or Resource Type)
-                               # 'color' : 'blue'
-                            })
+                               # "color" : "blue",
+                               })
 
             data["events"] = events
             data = json.dumps(data)
@@ -3224,7 +3222,7 @@ S3.timeline.now="''', now.isoformat(), '''"
             s3.js_global.append(code)
 
             # Create the DIV
-            item = DIV(_id="s3timeline", _style="height:400px;border:1px solid #aaa;font-family:Trebuchet MS,sans-serif;font-size:85%;")
+            item = DIV(_id="s3timeline", _class="s3-timeline")
 
             output = dict(item = item)
 

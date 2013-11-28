@@ -912,7 +912,7 @@ class S3ProjectModel(S3Model):
 
             # Create the DIV
             item = DIV(_id="s3timeline",
-                       _style="height:400px;border:1px solid #aaa;font-family:Trebuchet MS,sans-serif;font-size:85%;")
+                       _style="s3-timeline")
 
             output = dict(item=item)
 

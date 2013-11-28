@@ -784,7 +784,6 @@ class S3IRSModel(S3Model):
             request = current.request
             response = current.response
             s3 = response.s3
-            now = request.utcnow
 
             itable = s3db.doc_image
             dtable = s3db.doc_document
@@ -811,12 +810,11 @@ class S3IRSModel(S3Model):
                 r.resource.load(limit=2000)
                 rows = r.resource._rows
 
-            data = {'dateTimeFormat': 'iso8601',
-                    'events': []
+            data = {"dateTimeFormat": "iso8601",
                     }
 
-            tl_start = now
-            tl_end = now
+            now = request.utcnow
+            tl_start = tl_end = now
             events = []
             for row in rows:
                 # Dates
@@ -842,15 +840,15 @@ class S3IRSModel(S3Model):
                     image = image.url or ""
                 # URL
                 link = URL(args=[row.id])
-                events.append({'start': start,
-                               'end': end,
-                               'title': row.name,
-                               'caption': row.message or "",
-                               'description': row.message or "",
-                               'image': image or "",
-                               'link': link or ""
+                events.append({"start": start,
+                               "end": end,
+                               "title": row.name,
+                               "caption": row.message or "",
+                               "description": row.message or "",
+                               "image": image or "",
+                               "link": link or "",
                                # @ToDo: Colour based on Category (More generically: Resource or Resource Type)
-                               #'color' : 'blue'
+                               #"color" : "blue',
                             })
             data["events"] = events
             data = json.dumps(data)
@@ -866,7 +864,7 @@ S3.timeline.now="''', now.isoformat(), '''"
             s3.js_global.append(code)
 
             # Create the DIV
-            item = DIV(_id="s3timeline", _style="height:400px;border:1px solid #aaa;font-family:Trebuchet MS,sans-serif;font-size:85%;")
+            item = DIV(_id="s3timeline", _class="s3-timeline")
 
             output = dict(item = item)
 
