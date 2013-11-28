@@ -4728,9 +4728,10 @@ class gis_LocationRepresent(S3Represent):
         return formatted
 
     # -------------------------------------------------------------------------
-    def lat_lon_dms_represent(degrees):
+    def dms_represent(degrees):
         """
-            Outputs given data as degrees minutes and seconds . 
+            Outputs given data as degrees minutes and seconds .
+            
         """
         deg_sign = u"\N{DEGREE SIGN}"  
         d = int(degrees)             
@@ -4755,9 +4756,9 @@ class gis_LocationRepresent(S3Represent):
             else:
                 lon_suffix = "W"
                 lon = -lon
-            text = "%s %s, %s %s" % (self.lat_lon_dms_represent(lat),
+            text = "%s %s, %s %s" % (self.lat_lon_format(lat),
                                      lat_suffix,
-                                     self.lat_lon_dms_represent(lon),
+                                     self.lat_lon_format(lon),
                                      lon_suffix)
             return text
 
@@ -4900,7 +4901,7 @@ class gis_LocationRepresent(S3Represent):
                    (row.inherited == False) and \
                    (row.lat is not None) and \
                    (row.lon is not None):
-                    represent = self.lat_lon_represent(row)
+                    represent = self.dms_represent(row.lat) + " , " + self.dms_represent(row.lon)
                 if row.parent:
                     if row.path:
                         path = row.path
