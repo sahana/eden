@@ -314,6 +314,17 @@ def group_membership():
                 (htable.type == 1) & \
                 (htable.person_id == table.person_id)
 
+    def prep(r):
+        if r.method in ("create", "create.popup", "update", "update.popup"):
+            # Coming from Profile page?
+            person_id = current.request.get_vars.get("~.person_id", None)
+            if person_id:
+                field = table.person_id
+                field.default = person_id
+                field.readable = field.writable = False
+        return True
+    s3.prep = prep
+
     output = s3_rest_controller("pr", "group_membership",
                                 hide_filter=False,
                                 csv_template="group_membership",

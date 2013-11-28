@@ -1492,9 +1492,9 @@ class S3Config(Storage):
     def get_hrm_teams(self):
         """
             Whether Human Resources should use Teams
-            & what to call them
+            & what to call them (Teams or Groups currently supported)
         """
-        return self.hrm.get("teams", "Team")
+        return self.hrm.get("teams", "Teams")
 
     def get_hrm_cv_tab(self):
         """

@@ -89,10 +89,15 @@ def human_resource():
                                 hidden=True,
                                 ),
                 ]
-            if settings.get_hrm_teams():
+            teams = settings.get_hrm_teams()
+            if teams:
+                if teams == "Teams":
+                    teams = "Team"
+                elif teams == "Groups":
+                    teams = "Group"
                 filter_widgets.append(
                     S3OptionsFilter("group_membership.group_id",
-                                    label = T("Team"),
+                                    label = T(teams),
                                     widget="multiselect",
                                     hidden=True,
                                     ))
@@ -426,6 +431,11 @@ def person():
                method="cv",
                action=s3db.hrm_cv)
 
+    # Custom Method for HR Record
+    set_method("pr", resourcename,
+               method="record",
+               action=s3db.hrm_record)
+
     # Plug-in role matrix for Admins/OrgAdmins
     realms = auth.user is not None and auth.user.realms or []
     if ADMIN in realms or ORG_ADMIN in realms:
@@ -580,30 +590,7 @@ def person():
                 set_org_dependent_field("pr_person_details", "company")
 
             else:
-                if r.component_name == "human_resource":
-                    table = r.component.table
-                    table.code.writable = table.code.readable = False
-                    table.department_id.writable = table.department_id.readable = False
-                    table.essential.writable = table.essential.readable = False
-                    #table.location_id.readable = table.location_id.writable = True
-                    table.site_id.writable = table.site_id.readable = False
-                    table.site_contact.writable = table.site_contact.readable = False
-                    org = session.s3.hrm.org
-                    field = table.organisation_id
-                    if org is None:
-                        field.widget = None
-                    else:
-                        field.default = org
-                        field.readable = field.writable = False
-
-                    # Organisation Dependent Fields
-                    set_org_dependent_field = settings.set_org_dependent_field
-                    set_org_dependent_field("vol_details", "availability")
-                    set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_type_id")
-                    set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_id")
-                    set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_position_id")
-
-                elif r.component_name == "hours":
+                if r.component_name == "hours":
                     # Exclude records which are just to link to Programme
                     filter = (r.component.table.hours != None)
                     r.resource.add_component_filter("hours", filter)
@@ -630,6 +617,29 @@ def person():
 
                 elif r.component_name == "group_membership":
                     s3db.hrm_configure_pr_group_membership()
+
+            if r.method == "record" or r.component_name == "human_resource":
+                table = s3db.hrm_human_resource
+                table.code.writable = table.code.readable = False
+                table.department_id.writable = table.department_id.readable = False
+                table.essential.writable = table.essential.readable = False
+                #table.location_id.readable = table.location_id.writable = True
+                table.site_id.writable = table.site_id.readable = False
+                table.site_contact.writable = table.site_contact.readable = False
+                org = session.s3.hrm.org
+                field = table.organisation_id
+                if org is None:
+                    field.widget = None
+                else:
+                    field.default = org
+                    field.readable = field.writable = False
+
+                # Organisation Dependent Fields
+                set_org_dependent_field = settings.set_org_dependent_field
+                set_org_dependent_field("vol_details", "availability")
+                set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_type_id")
+                set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_id")
+                set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_position_id")
 
             resource = r.resource
             if mode is not None:
@@ -769,10 +779,10 @@ def group_membership():
 
     # Change Labels
     s3db.hrm_configure_pr_group_membership()
-    
+
     table = db.pr_group_membership
+
     # Amend list_fields
-    table.group_id.label = T("Team Name")
     s3db.configure("pr_group_membership",
                    list_fields=["id",
                                 "group_id",
@@ -794,6 +804,17 @@ def group_membership():
                 (gtable.group_type == 3) & \
                 (htable.type == 2) & \
                 (htable.person_id == table.person_id)
+
+    def prep(r):
+        if r.method in ("create", "create.popup", "update", "update.popup"):
+            # Coming from Profile page?
+            person_id = current.request.get_vars.get("~.person_id", None)
+            if person_id:
+                field = table.person_id
+                field.default = person_id
+                field.readable = field.writable = False
+        return True
+    s3.prep = prep
 
     output = s3_rest_controller("pr", "group_membership",
                                 hide_filter=False,

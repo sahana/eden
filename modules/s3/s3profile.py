@@ -45,7 +45,6 @@ class S3Profile(S3CRUD):
 
         @ToDo: Make more configurable:
            * Currently assumes a max of 2 widgets per row
-           * Currently uses Bootstrap classes
            * Currently uses internal widgets rather than S3Method widgets
 
         @todo:
@@ -154,14 +153,16 @@ class S3Profile(S3CRUD):
 
                     # Render the widget
                     w_type = widget["type"]
-                    if w_type == "map":
-                        w = self._map(r, widget, **attr)
-                    elif w_type == "comments":
+                    if w_type == "comments":
                         w = self._comments(r, widget, **attr)
                     elif w_type == "datalist":
                         w = self._datalist(r, widget, **attr)
                     elif w_type == "datatable":
                         w = self._datatable(r, widget, **attr)
+                    elif w_type == "form":
+                        w = self._form(r, widget, **attr)
+                    elif w_type == "map":
+                        w = self._map(r, widget, **attr)
                     else:
                         if response.s3.debug:
                             raise SyntaxError("Unsupported widget type %s" %
@@ -643,6 +644,67 @@ class S3Profile(S3CRUD):
             r.error(501, r.ERROR.BAD_FORMAT)
 
     # -------------------------------------------------------------------------
+    def _form(self, r, widget, **attr):
+        """
+            Generate a Form widget
+
+            @param r: the S3Request instance
+            @param widget: the widget as a tuple: (label, type, icon)
+            @param attr: controller attributes for the request
+        """
+
+        s3db = current.s3db
+
+        label = widget.get("label", "")
+        if label:
+            label = current.T(label)
+        icon = widget.get("icon", "")
+        if icon:
+            icon = TAG[""](I(_class=icon), " ")
+
+        tablename = widget.get("tablename")
+
+        context = widget.get("context", None)
+        if context:
+            context = self._resolve_context(context, r.id)
+        s3db.context = context
+        resource = s3db.resource(tablename, context=True)
+        record = resource.select(["id"], limit=1, as_rows=True).first()
+        if record:
+            record_id = record.id
+        else:
+            record_id = None
+
+        if record_id:
+            readonly = not current.auth.s3_has_permission("update", tablename, record_id)
+        else:
+            readonly = not current.auth.s3_has_permission("create", tablename)
+
+        sqlform = widget.get("sqlform", None)
+        if not sqlform:
+            sqlform = current.deployment_settings.get_ui_crud_form(tablename)
+            if not sqlform:
+                from s3forms import S3SQLDefaultForm
+                sqlform = S3SQLDefaultForm()
+
+        form = sqlform(request = r,
+                       resource = resource,
+                       record_id = record_id,
+                       readonly = readonly,
+                       format = "html",
+                       )
+
+        # Render the widget
+        output = DIV(H4(icon,
+                        label,
+                        _class="profile-sub-header"),
+                     DIV(form,
+                         _class="form-container thumbnail"),
+                     _class="span12")
+
+        return output
+
+    # -------------------------------------------------------------------------
     def _map(self, r, widget, **attr):
         """
             Generate a Map widget
@@ -887,10 +949,10 @@ class S3Profile(S3CRUD):
                     if not createid:
                         createid = "%s-add-button" % listid
                         create.update(_id=createid)
-                    script = '''
-$('#%(listid)s').on('listUpdate', function() {
-$('#%(createid)s').css({display: $(this).datalist('getTotalItems') ? 'none' : 'block'});
-});''' % dict(listid=listid, createid=createid)
+                    script = \
+'''$('#%(listid)s').on('listUpdate',function(){
+$('#%(createid)s').css({display:$(this).datalist('getTotalItems')?'none':'block'})
+})''' % dict(listid=listid, createid=createid)
                     s3.jquery_ready.append(script)
 
         return create

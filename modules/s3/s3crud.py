@@ -76,11 +76,10 @@ class S3CRUD(S3Method):
             @return: output object to send to the view
         """
 
-        settings = current.deployment_settings
-
-        self.sqlform = settings.get_ui_crud_form(self.tablename)
-        if not self.sqlform:
-            self.sqlform = self._config("crud_form", S3SQLDefaultForm())
+        sqlform = current.deployment_settings.get_ui_crud_form(self.tablename)
+        if not sqlform:
+            sqlform = self._config("crud_form", S3SQLDefaultForm())
+        self.sqlform = sqlform
 
         self.settings = current.response.s3.crud
 

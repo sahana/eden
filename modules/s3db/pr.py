@@ -1494,7 +1494,7 @@ class S3GroupModel(S3Model):
 
         # Reusable field
         if current.request.controller in ("hrm", "vol") and \
-           current.deployment_settings.get_hrm_teams() == "Team":
+           current.deployment_settings.get_hrm_teams() == "Teams":
             label = T("Add Team")
             title = T("Create Team")
             tooltip = T("Create a new Team.")
@@ -1586,6 +1586,8 @@ class S3GroupModel(S3Model):
                           )]
 
         configure(tablename,
+                  context = {"person": "person_id",
+                             },
                   filter_widgets = filter_widgets,
                   list_fields = ["id",
                                  "group_id",
