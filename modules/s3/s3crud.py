@@ -1223,24 +1223,16 @@ class S3CRUD(S3Method):
                                                     distinct=distinct)
             displayrows = totalrows
 
-            if dt is None:
+            if not dt.data:
                 # Empty table - or just no match?
-
-                table = resource.table
-                if "deleted" in table:
-                    available_records = current.db(table.deleted != True)
-                else:
-                    available_records = current.db(table._id > 0)
-                if available_records.select(table._id,
-                                            limitby=(0, 1)).first():
-                    datatable = DIV(self.crud_string(resource.tablename,
-                                                     "msg_no_match"),
-                                    _class="empty")
-                else:
+                if dt.empty:
                     datatable = DIV(self.crud_string(resource.tablename,
                                                      "msg_list_empty"),
                                     _class="empty")
-
+                else:
+                    datatable = DIV(self.crud_string(resource.tablename,
+                                                     "msg_no_match"),
+                                    _class="empty")
                 s3.no_formats = True
 
                 if r.component and "showadd_btn" in output:

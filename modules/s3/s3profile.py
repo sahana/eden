@@ -526,38 +526,36 @@ class S3Profile(S3CRUD):
                                                     orderby=orderby)
             displayrows = totalrows
 
-            if dt is None:
-                # Empty table - or just no match?
-                if "deleted" in table:
-                    available_records = current.db(table.deleted != True)
-                else:
-                    available_records = current.db(table._id > 0)
-                if available_records.select(table._id,
-                                            limitby=(0, 1)).first():
-                    datatable = DIV(self.crud_string(resource.tablename,
-                                                     "msg_no_match"),
-                                    _class="empty")
-                else:
-                    datatable = DIV(self.crud_string(resource.tablename,
-                                                     "msg_list_empty"),
-                                    _class="empty")
+            if dt.empty:
+                empty_str = self.crud_string(tablename,
+                                             "msg_list_empty")
             else:
-                dtargs["dt_pagination"] = dt_pagination
-                dtargs["dt_displayLength"] = display_length
-                # @todo: fix base URL (make configurable?) to fix export options
-                s3.no_formats = True
-                dtargs["dt_base_url"] = r.url(method="", vars={})
-                dtargs["dt_ajax_url"] = r.url(vars={"update": widget["index"]},
-                                              representation="aadata")
-                actions = widget.get("actions")
-                if callable(actions):
-                    actions = actions(r, listid)
-                if actions:
-                    dtargs["dt_row_actions"] = actions
-                datatable = dt.html(totalrows,
-                                    displayrows,
-                                    id=listid,
-                                    **dtargs)
+                empty_str = self.crud_string(tablename,
+                                             "msg_no_match")
+            empty = DIV(empty_str, _class="empty")
+
+            dtargs["dt_pagination"] = dt_pagination
+            dtargs["dt_displayLength"] = display_length
+            # @todo: fix base URL (make configurable?) to fix export options
+            s3.no_formats = True
+            dtargs["dt_base_url"] = r.url(method="", vars={})
+            dtargs["dt_ajax_url"] = r.url(vars={"update": widget["index"]},
+                                            representation="aadata")
+            actions = widget.get("actions")
+            if callable(actions):
+                actions = actions(r, listid)
+            if actions:
+                dtargs["dt_row_actions"] = actions
+            datatable = dt.html(totalrows,
+                                displayrows,
+                                id=listid,
+                                **dtargs)
+
+            if dt.data:
+                empty.update(_style="display:none;")
+            else:
+                datatable.update(_style="display:none;")
+            contents = DIV(datatable, empty, _class="dt-contents")
 
             # Link for create-popup
             create_popup = self._create_popup(r,
@@ -579,7 +577,7 @@ class S3Profile(S3CRUD):
             output = DIV(create_popup,
                          H4(icon, label,
                             _class="profile-sub-header"),
-                         DIV(datatable,
+                         DIV(contents,
                              _class="card-holder"),
                          _class="span6")
 
@@ -917,7 +915,7 @@ class S3Profile(S3CRUD):
 
             if callable(insert):
                 # Custom widget
-                create = insert(r, title_create, add_url)
+                create = insert(r, listid, title_create, add_url)
                 
             elif current.response.s3.crud.formstyle == "bootstrap":
                 # Bootstrap-style action icon

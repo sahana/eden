@@ -262,7 +262,7 @@ class S3DeploymentModel(S3Model):
                   filter_widgets = [
                     S3TextFilter(["name",
                                   "code",
-                                  "event_type",
+                                  "event_type_id$name",
                                   ],
                                  label=T("Search")
                                  ),

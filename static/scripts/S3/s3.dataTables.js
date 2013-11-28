@@ -1155,6 +1155,21 @@
                 if ($(id).find('.s3_modal').length) {
                     S3.addModals();
                 }
+                // Do we have any records? => toggle empty section
+                var numrows = oSettings.fnRecordsDisplay();
+                if (numrows > 0) {
+                    $(id).closest('.dt-contents')
+                         .find('.empty')
+                         .hide()
+                         .siblings('.dt-wrapper')
+                         .show();
+                } else {
+                    $(id).closest('.dt-contents')
+                         .find('.empty')
+                         .show()
+                         .siblings('.dtwrapper')
+                         .hide();
+                }
             } // end of fnDrawCallback
         }); // end of call to $(id).datatable()
 
