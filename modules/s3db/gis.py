@@ -4728,20 +4728,9 @@ class gis_LocationRepresent(S3Represent):
         return formatted
 
     # -------------------------------------------------------------------------
-    def dms_represent(degrees):
-        """
-            Outputs given data as degrees minutes and seconds .
-            
-        """
-        deg_sign = u"\N{DEGREE SIGN}"  
-        d = int(degrees)             
-        md = abs(degrees - d) * 60
-        m = int(md)
-        sd = (md - m) * 60
-        dms_value = """%d%s %d' %d" """ %(d,deg_sign,md,sd)
-        return dms_value
+   
      
-    # ------------------------------------------------------------------------
+   
     def lat_lon_represent(self, row):
         lat = row.lat
         lon = row.lon
@@ -4763,6 +4752,19 @@ class gis_LocationRepresent(S3Represent):
             return text
 
     # -----------------------------------------------------------------------
+     def dms_represent(degrees):
+        """
+            Outputs given data as degrees minutes and seconds .
+            
+        """
+        deg_sign = u"\N{DEGREE SIGN}"  
+        d = int(degrees)             
+        md = abs(degrees - d) * 60
+        m = int(md)
+        sd = (md - m) * 60
+        dms_value = """%d%s %d' %d" """ %(d,deg_sign,md,sd)
+        return dms_value
+    # ------------------------------------------------------------------------     
     def lat_lon_dms_represent(self,row):
         lat = row.lat
         lon = row.lon
