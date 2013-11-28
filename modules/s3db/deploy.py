@@ -139,8 +139,8 @@ class S3DeploymentModel(S3Model):
 
         # Profile
         alert_widget = dict(label="Alerts",
-                            insert=lambda r, add_title, add_url: \
-                                   A(add_title,
+                            insert=lambda r, listid, title, url: \
+                                   A(title,
                                      _href=r.url(component="alert",
                                                  method="create"),
                                      _class="action-btn profile-add-btn"),
@@ -197,8 +197,8 @@ class S3DeploymentModel(S3Model):
         #]
         # @todo: generalize terminology (currently RDRT specific)
         assignment_widget = dict(label="Members Deployed",
-                                 insert=lambda r, add_title, add_url: \
-                                        A(add_title,
+                                 insert=lambda r, listid, title, url: \
+                                        A(title,
                                           _href=r.url(component="human_resource_assignment",
                                                       method="create"),
                                           _class="action-btn profile-add-btn"),
