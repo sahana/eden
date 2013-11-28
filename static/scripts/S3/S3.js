@@ -138,8 +138,8 @@ S3.addModals = function() {
         }
         return url_out;
     });
-    $('.s3_add_resource_link, .s3_modal').unbind('click')
-                                         .click(function() {
+    $('.s3_add_resource_link, .s3_modal').unbind('click.s3Modal')
+                                         .on('click.S3Modal', function() {
         var title = this.title;
         var url = this.href;
         var id = S3.uid();

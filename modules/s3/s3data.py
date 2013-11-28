@@ -696,7 +696,7 @@ class S3DataTable(object):
         config.rowStyles = attr.get("dt_styles", [])
 
 
-        rowActions = s3.actions
+        rowActions = attr.get("dt_row_actions", s3.actions)
         if rowActions:
             config.rowActions = rowActions
         else:

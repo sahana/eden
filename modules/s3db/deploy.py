@@ -179,6 +179,22 @@ class S3DeploymentModel(S3Model):
                                pagesize = 10,
                                )
 
+        ## Test code for profile data tables (@todo: remove after completion)
+        #dt_row_actions = lambda r, listid: [
+            #{"label": T("Open"),
+             #"url": r.url(component="human_resource_assignment",
+                          #component_id="[id]",
+                          #method="update.popup",
+                          #vars={"refresh": listid}),
+             #"_class": "action-btn edit s3_modal",
+            #},
+            #{"label": T("Delete"),
+             #"url": r.url(component="human_resource_assignment",
+                          #component_id="[id]",
+                          #method="delete"),
+             #"_class": "action-btn delete-btn delete-btn-ajax",
+            #},
+        #]
         # @todo: generalize terminology (currently RDRT specific)
         assignment_widget = dict(label="Members Deployed",
                                  insert=lambda r, add_title, add_url: \
@@ -188,6 +204,8 @@ class S3DeploymentModel(S3Model):
                                           _class="action-btn profile-add-btn"),
                                  title_create="Deploy New Member",
                                  type="datalist",
+                                 #type="datatable",
+                                 #actions=dt_row_actions,
                                  list_fields = [
                                      "human_resource_id$id",
                                      "human_resource_id$person_id",
@@ -411,7 +429,6 @@ class S3DeploymentModel(S3Model):
 
         # Table configuration
         configure(tablename,
-                  super_entity="doc_entity",
                   context = {"mission": "mission_id"},
                   )
 

@@ -2251,7 +2251,7 @@ def customize_org_organisation(**attr):
             if not result:
                 return False
 
-        if r.interactive:
+        if r.interactive or r.representation == "aadata":
             # Load normal Model
             s3db = current.s3db
             table = s3db.org_organisation

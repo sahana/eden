@@ -47,6 +47,12 @@ class S3Profile(S3CRUD):
            * Currently assumes a max of 2 widgets per row
            * Currently uses Bootstrap classes
            * Currently uses internal widgets rather than S3Method widgets
+
+        @todo:
+            - unify datalist and datatable methods with the superclass
+              methods (requires re-design of the superclass methods)
+            - allow as default handler for interactive single-record-no-method
+              GET requests (include read/update from superclass)
     """
 
     # -------------------------------------------------------------------------
@@ -123,6 +129,20 @@ class S3Profile(S3CRUD):
                         # something different if no permission
                         datalist = self._datalist(r, widgets[index], **attr)
                 output["item"] = datalist
+            elif r.representation == "aadata":
+                # Ajax-update of one datalist
+                get_vars = r.get_vars
+                index = r.get_vars.get("update", None)
+                if index:
+                    try:
+                        index = int(index)
+                    except ValueError:
+                        datalist = ""
+                    else:
+                        # @ToDo: Check permissions to the Resource & do
+                        # something different if no permission
+                        datatable = self._datatable(r, widgets[index], **attr)
+                return datatable
             else:
                 # Default page-load
                 rows = []
@@ -138,6 +158,8 @@ class S3Profile(S3CRUD):
                         w = self._comments(r, widget, **attr)
                     elif w_type == "datalist":
                         w = self._datalist(r, widget, **attr)
+                    elif w_type == "datatable":
+                        w = self._datatable(r, widget, **attr)
                     else:
                         if response.s3.debug:
                             raise SyntaxError("Unsupported widget type %s" %
@@ -234,10 +256,10 @@ class S3Profile(S3CRUD):
     # -------------------------------------------------------------------------
     def _datalist(self, r, widget, **attr):
         """
-            Generate a dataList
+            Generate a data list
 
             @param r: the S3Request instance
-            @param widget: the widget as a tuple: (label, tablename, icon, filter)
+            @param widget: the widget definition as dict
             @param attr: controller attributes for the request
         """
 
@@ -342,68 +364,6 @@ class S3Profile(S3CRUD):
 
         s3 = current.response.s3
 
-        # Permission to create new items?
-        create = ""
-        insert = widget.get("insert", True)
-        if insert and current.auth.s3_has_permission("create", table):
-            #if r.tablename = "org_organisation":
-                # @ToDo: Special check for creating resources on Organisation profile
-            if filter:
-                vars = filter.serialize_url(filter)
-            else:
-                vars = Storage()
-            vars.refresh = listid
-            if context:
-                filters = context.serialize_url(resource)
-                for f in filters:
-                    vars[f] = filters[f]
-            default = widget.get("default", None)
-            if default:
-                k, v = default.split("=", 1)
-                vars[k] = v
-            title_create = widget.get("title_create", None)
-            if title_create:
-                title_create = T(title_create)
-            else:
-                title_create = S3CRUD.crud_string(tablename, "title_create")
-            c, f = tablename.split("_", 1)
-            c = widget.get("create_controller", c)
-            f = widget.get("create_function", f)
-            add_url = URL(c=c, f=f, args=["create.popup"], vars=vars)
-            if callable(insert):
-                create = insert(r, title_create, add_url)
-            elif s3.crud.formstyle == "bootstrap":
-                create = A(I(_class="icon icon-plus-sign small-add"),
-                           _href=add_url,
-                           _class="s3_modal",
-                           _title=title_create,
-                           )
-            else:
-                create = A(title_create,
-                           _href=add_url,
-                           _class="action-btn s3_modal",
-                           )
-
-            multiple = widget.get("multiple", True)
-            if not multiple and hasattr(create, "update"):
-                # If this is a multiple=False widget and we already
-                # have a record, we hide the create-button
-                if numrows:
-                    create.update(_style="display:none;")
-                else:
-                    create.update(_style="display:block;")
-                # Script to hide/unhide the create-button on Ajax
-                # list updates
-                createid = create["_id"]
-                if not createid:
-                    createid = "%s-add-button" % listid
-                    create.update(_id=createid)
-                script = '''
-$('#%(listid)s').on('listUpdate', function() {
- $('#%(createid)s').css({display: $(this).datalist('getTotalItems') ? 'none' : 'block'});
-});''' % dict(listid=listid, createid=createid)
-                s3.jquery_ready.append(script)
-
         if pagesize and numrows > pagesize:
             # Button to display the rest of the records in a Modal
             more = numrows - pagesize
@@ -431,8 +391,16 @@ $('#%(listid)s').on('listUpdate', function() {
         else:
             more = ""
 
+        # Link for create-popup
+        create_popup = self._create_popup(r,
+                                          widget,
+                                          listid,
+                                          resource,
+                                          context,
+                                          numrows)
+
         # Render the widget
-        output = DIV(create,
+        output = DIV(create_popup,
                      H4(icon,
                         label,
                         _class="profile-sub-header"),
@@ -442,6 +410,230 @@ $('#%(listid)s').on('listUpdate', function() {
                      _class="span6")
 
         return output
+
+    # -------------------------------------------------------------------------
+    def _datatable(self, r, widget, **attr):
+        """
+            Generate a data table.
+
+            @param r: the S3Request instance
+            @param widget: the widget definition as dict
+            @param attr: controller attributes for the request
+
+            @todo: fix export formats
+        """
+
+        T = current.T
+
+        # Parse context
+        s3db = current.s3db
+        record_id = r.id
+        context = widget.get("context", None)
+        if context:
+            context = self._resolve_context(context, record_id)
+        s3db.context = context
+
+        # Define target resource
+        tablename = widget.get("tablename", None)
+        resource = s3db.resource(tablename, context=True)
+        table = resource.table
+        get_config = resource.get_config
+
+        # List fields
+        list_fields = widget.get("list_fields",
+                                 get_config("list_fields", None))
+
+        # Widget filter option
+        widget_filter = widget.get("filter", None)
+        if widget_filter:
+            resource.add_filter(widget_filter)
+
+        # Use the widget-index to create a unique ID
+        listid = "profile-list-%s-%s" % (tablename, widget["index"])
+
+        # Default ORDERBY
+        def default_orderby():
+            for f in list_fields:
+                rfield = resource.resolve_selector(f)
+                if rfield.field:
+                    return rfield.field
+            return None
+
+        # Pagination
+        representation = r.representation
+        get_vars = self.request.get_vars
+        if representation == "aadata":
+            start = get_vars.get("iDisplayStart", None)
+            limit = get_vars.get("iDisplayLength", 0)
+        else:
+            start = get_vars.get("start", None)
+            limit = get_vars.get("limit", 0)
+        if limit:
+            if limit.lower() == "none":
+                limit = None
+            else:
+                try:
+                    start = int(start)
+                    limit = int(limit)
+                except ValueError:
+                    start = None
+                    limit = 0 # use default
+        else:
+            # Use defaults
+            start = None
+
+        dtargs = attr.get("dtargs", {})
+        
+        if r.interactive:
+            s3 = current.response.s3
+            
+            # How many records per page?
+            if s3.dataTable_iDisplayLength:
+                display_length = s3.dataTable_iDisplayLength
+            else:
+                display_length = widget.get("pagesize", 10)
+            if not display_length:
+                display_length = 10
+
+            # ORDERBY fallbacks: widget->resource->default
+            orderby = widget.get("orderby")
+            if not orderby:
+                orderby = get_config("orderby")
+            if not orderby:
+                orderby = default_orderby()
+
+            # Server-side pagination?
+            if not s3.no_sspag:
+                dt_pagination = "true"
+                if not limit:
+                    limit = 2 * display_length
+            else:
+                dt_pagination = "false"
+
+            # Get the data table
+            dt, totalrows, ids = resource.datatable(fields=list_fields,
+                                                    start=start,
+                                                    limit=limit,
+                                                    orderby=orderby)
+            displayrows = totalrows
+
+            if dt is None:
+                # Empty table - or just no match?
+                table = resource.table
+                if "deleted" in table:
+                    available_records = current.db(table.deleted != True)
+                else:
+                    available_records = current.db(table._id > 0)
+                if available_records.select(table._id,
+                                            limitby=(0, 1)).first():
+                    datatable = DIV(self.crud_string(resource.tablename,
+                                                     "msg_no_match"),
+                                    _class="empty")
+                else:
+                    datatable = DIV(self.crud_string(resource.tablename,
+                                                     "msg_list_empty"),
+                                    _class="empty")
+            else:
+                dtargs["dt_pagination"] = dt_pagination
+                dtargs["dt_displayLength"] = display_length
+                # @todo: fix base URL (make configurable?) to fix export options
+                s3.no_formats = True
+                dtargs["dt_base_url"] = r.url(method="", vars={})
+                dtargs["dt_ajax_url"] = r.url(vars={"update": widget["index"]},
+                                              representation="aadata")
+                actions = widget.get("actions")
+                if callable(actions):
+                    actions = actions(r, listid)
+                if actions:
+                    dtargs["dt_row_actions"] = actions
+                datatable = dt.html(totalrows,
+                                    displayrows,
+                                    id=listid,
+                                    **dtargs)
+
+            # Link for create-popup
+            create_popup = self._create_popup(r,
+                                              widget,
+                                              listid,
+                                              resource,
+                                              context,
+                                              totalrows)
+
+            # Card holder label and icon
+            label = widget.get("label", "")
+            if label:
+                label = T(label)
+            icon = widget.get("icon", "")
+            if icon:
+                icon = TAG[""](I(_class=icon), " ")
+
+            # Render the widget
+            output = DIV(create_popup,
+                         H4(icon, label,
+                            _class="profile-sub-header"),
+                         DIV(datatable,
+                             _class="card-holder"),
+                         _class="span6")
+
+            return output
+
+        elif representation == "aadata":
+
+            # Parse datatable filter/sort query
+            searchq, orderby, left = resource.datatable_filter(list_fields,
+                                                               get_vars)
+                                                               
+            # ORDERBY fallbacks - datatable->widget->resource->default
+            if not orderby:
+                orderby = widget.get("orderby")
+            if not orderby:
+                orderby = get_config("orderby")
+            if not orderby:
+                orderby = default_orderby()
+
+            # DataTable filtering
+            if searchq is not None:
+                totalrows = resource.count()
+                resource.add_filter(searchq)
+            else:
+                totalrows = None
+
+            # Get the data table
+            if totalrows != 0:
+                dt, displayrows, ids = resource.datatable(fields=list_fields,
+                                                          start=start,
+                                                          limit=limit,
+                                                          left=left,
+                                                          orderby=orderby,
+                                                          getids=False)
+            else:
+                dt, displayrows = None, 0
+                
+            if totalrows is None:
+                totalrows = displayrows
+
+            # Echo
+            sEcho = int(get_vars.sEcho or 0)
+
+            # Representation
+            if dt is not None:
+                data = dt.json(totalrows,
+                               displayrows,
+                               listid,
+                               sEcho,
+                               **dtargs)
+            else:
+                data = '{"iTotalRecords":%s,' \
+                       '"iTotalDisplayRecords":0,' \
+                       '"dataTable_id":"%s",' \
+                       '"sEcho":%s,' \
+                       '"aaData":[]}' % (totalrows, listid, sEcho)
+
+            return data
+            
+        else:
+            # Really raise an exception here?
+            r.error(501, r.ERROR.BAD_FORMAT)
 
     # -------------------------------------------------------------------------
     def _map(self, r, widget, **attr):
@@ -587,5 +779,107 @@ $('#%(listid)s').on('listUpdate', function() {
                      _class="span6")
 
         return output
+
+    # -------------------------------------------------------------------------
+    def _create_popup(self, r, widget, listid, resource, context, numrows):
+        """
+            Render an action link for a create-popup (used in data lists
+            and data tables).
+
+            @param r: the S3Request instance
+            @param widget: the widget definition as dict
+            @param listid: the list ID
+            @param resource: the target resource
+            @param context: the context filter
+            @param numrows: the total number of rows in the list/table
+        """
+        
+        create = ""
+        insert = widget.get("insert", True)
+        
+        table = resource.table
+        if insert and current.auth.s3_has_permission("create", table):
+            
+            tablename = resource.tablename
+            
+            #if tablename = "org_organisation":
+                # @ToDo: Special check for creating resources on Organisation profile
+
+            # URL-serialize the widget filter
+            widget_filter = widget.get(filter)
+            if widget_filter:
+                vars = widget_filter.serialize_url(widget_filter)
+            else:
+                vars = Storage()
+
+            # URL-serialize the context filter
+            if context:
+                filters = context.serialize_url(resource)
+                for f in filters:
+                    vars[f] = filters[f]
+
+            # URL-serialize the widget default
+            default = widget.get("default")
+            if default:
+                k, v = default.split("=", 1)
+                vars[k] = v
+
+            # URL-serialize the list ID (refresh-target of the popup)
+            vars.refresh = listid
+
+            # CRUD string
+            title_create = widget.get("title_create", None)
+            if title_create:
+                title_create = current.T(title_create)
+            else:
+                title_create = S3CRUD.crud_string(tablename, "title_create")
+
+            # Popup URL
+            c, f = tablename.split("_", 1)
+            c = widget.get("create_controller", c)
+            f = widget.get("create_function", f)
+            add_url = URL(c=c, f=f, args=["create.popup"], vars=vars)
+            
+            if callable(insert):
+                # Custom widget
+                create = insert(r, title_create, add_url)
+                
+            elif current.response.s3.crud.formstyle == "bootstrap":
+                # Bootstrap-style action icon
+                create = A(I(_class="icon icon-plus-sign small-add"),
+                           _href=add_url,
+                           _class="s3_modal",
+                           _title=title_create,
+                           )
+            else:
+                # Standard action button
+                create = A(title_create,
+                           _href=add_url,
+                           _class="action-btn s3_modal",
+                           )
+
+            if widget.get("type") == "datalist":
+                
+                # If this is a multiple=False widget and we already
+                # have a record, we hide the create-button
+                multiple = widget.get("multiple", True)
+                if not multiple and hasattr(create, "update"):
+                    if numrows:
+                        create.update(_style="display:none;")
+                    else:
+                        create.update(_style="display:block;")
+                    # Script to hide/unhide the create-button on Ajax
+                    # list updates
+                    createid = create["_id"]
+                    if not createid:
+                        createid = "%s-add-button" % listid
+                        create.update(_id=createid)
+                    script = '''
+$('#%(listid)s').on('listUpdate', function() {
+$('#%(createid)s').css({display: $(this).datalist('getTotalItems') ? 'none' : 'block'});
+});''' % dict(listid=listid, createid=createid)
+                    s3.jquery_ready.append(script)
+
+        return create
 
 # END =========================================================================
