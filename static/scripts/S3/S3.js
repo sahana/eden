@@ -661,7 +661,7 @@ var S3OptionsFilter = function(settings) {
             currentValue = targetField.val();
             if (!currentValue) {
                 // Options list not populated yet?
-                currentValue = targetField.attr('value');
+                currentValue = targetField.attr('value'); // jQuery Migrate doesn't like this
             }
         } else if (targetField.length > 1) {
             // Checkboxes

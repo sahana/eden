@@ -607,6 +607,7 @@ def person():
                     # Exclude records which are just to link to Programme
                     filter = (r.component.table.hours != None)
                     r.resource.add_component_filter("hours", filter)
+
                 elif r.component_name == "physical_description":
                     # Hide all but those details that we want
                     # Lock all the fields
@@ -618,6 +619,7 @@ def person():
                     table.blood_type.writable = table.blood_type.readable = True
                     table.medical_conditions.writable = table.medical_conditions.readable = True
                     table.other_details.writable = table.other_details.readable = True
+
                 elif r.component_name == "asset":
                     # Edits should always happen via the Asset Log
                     # @ToDo: Allow this method too, if we can do so safely
@@ -625,6 +627,7 @@ def person():
                               insertable = False,
                               editable = False,
                               deletable = False)
+
                 elif r.component_name == "group_membership":
                     s3db.hrm_configure_pr_group_membership()
 

@@ -129,6 +129,7 @@ class S3Profile(S3CRUD):
                         # something different if no permission
                         datalist = self._datalist(r, widgets[index], **attr)
                 output["item"] = datalist
+
             elif r.representation == "aadata":
                 # Ajax-update of one datalist
                 get_vars = r.get_vars
@@ -143,6 +144,7 @@ class S3Profile(S3CRUD):
                         # something different if no permission
                         datatable = self._datatable(r, widgets[index], **attr)
                 return datatable
+
             else:
                 # Default page-load
                 rows = []
@@ -273,7 +275,6 @@ class S3Profile(S3CRUD):
 
         tablename = widget.get("tablename", None)
         resource = s3db.resource(tablename, context=True)
-        table = resource.table
 
         # Config Options:
         # 1st choice: Widget
@@ -442,6 +443,10 @@ class S3Profile(S3CRUD):
         # List fields
         list_fields = widget.get("list_fields",
                                  get_config("list_fields", None))
+        if not list_fields:
+            list_fields = [f for f in table.fields if table[f].readable]
+            if "id" not in list_fields:
+                list_fields.append("id")
 
         # Widget filter option
         widget_filter = widget.get("filter", None)
@@ -452,8 +457,11 @@ class S3Profile(S3CRUD):
         listid = "profile-list-%s-%s" % (tablename, widget["index"])
 
         # Default ORDERBY
+        # - first field actually in this table
         def default_orderby():
             for f in list_fields:
+                if f == "id":
+                    continue
                 rfield = resource.resolve_selector(f)
                 if rfield.field:
                     return rfield.field
@@ -519,7 +527,6 @@ class S3Profile(S3CRUD):
 
             if dt is None:
                 # Empty table - or just no match?
-                table = resource.table
                 if "deleted" in table:
                     available_records = current.db(table.deleted != True)
                 else:
@@ -835,11 +842,17 @@ class S3Profile(S3CRUD):
                 title_create = S3CRUD.crud_string(tablename, "title_create")
 
             # Popup URL
+            # Default to primary REST controller for the resource being added
             c, f = tablename.split("_", 1)
             c = widget.get("create_controller", c)
             f = widget.get("create_function", f)
-            add_url = URL(c=c, f=f, args=["create.popup"], vars=vars)
-            
+            component = widget.get("create_component", None)
+            if component:
+                args = [r.id, component, "create.popup"]
+            else:
+                args = ["create.popup"]
+            add_url = URL(c=c, f=f, args=args, vars=vars)
+
             if callable(insert):
                 # Custom widget
                 create = insert(r, title_create, add_url)
@@ -855,7 +868,7 @@ class S3Profile(S3CRUD):
                 # Standard action button
                 create = A(title_create,
                            _href=add_url,
-                           _class="action-btn s3_modal",
+                           _class="action-btn profile-add-btn s3_modal",
                            )
 
             if widget.get("type") == "datalist":

@@ -2490,16 +2490,19 @@ class S3PersonEducationModel(S3Model):
             msg_list_empty = T("No education details currently registered"))
 
         self.configure("pr_education",
-                       deduplicate=self.pr_education_deduplicate,
-                       list_fields=["id",
-                                    "person_id",
-                                    "year",
-                                    "level",
-                                    "award",
-                                    "major",
-                                    "grade",
-                                    "institute",
-                                    ],
+                       context = {"person": "person_id",
+                                  },
+                       deduplicate = self.pr_education_deduplicate,
+                       list_fields = ["id",
+                                      # Normally accessed via component
+                                      #"person_id",
+                                      "year",
+                                      "level",
+                                      "award",
+                                      "major",
+                                      "grade",
+                                      "institute",
+                                      ],
                        orderby = ~table.year,
                        sortby = [[1, "desc"]]
                        )
