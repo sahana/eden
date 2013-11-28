@@ -4728,6 +4728,19 @@ class gis_LocationRepresent(S3Represent):
         return formatted
 
     # -------------------------------------------------------------------------
+    def lat_lon_dms_represent(degrees):
+        """
+            Outputs given data as degrees minutes and seconds . 
+        """
+        deg_sign = u"\N{DEGREE SIGN}"  
+        d = int(degrees)             
+        md = abs(degrees - d) * 60
+        m1 = int(md)
+        sd = (md - m) * 60
+        dms_value = """%d%s %d' %d" """ %(d,deg_sign,md,sd)
+        return dms_value
+     
+    # ------------------------------------------------------------------------
     def lat_lon_represent(self, row):
         lat = row.lat
         lon = row.lon
@@ -4742,40 +4755,14 @@ class gis_LocationRepresent(S3Represent):
             else:
                 lon_suffix = "W"
                 lon = -lon
-            text = "%s %s, %s %s" % (self.lat_lon_format(lat),
+            text = "%s %s, %s %s" % (self.lat_lon_dms_represent(lat),
                                      lat_suffix,
-                                     self.lat_lon_format(lon),
+                                     self.lat_lon_dms_represent(lon),
                                      lon_suffix)
             return text
 
     # -----------------------------------------------------------------------
-       def lat_lon_dms_represent(self, row):
-        '''
-            A function that outputs the 
-            given degree in form of degrees ,minutes
-            and seconds
-        '''   
-           
-        lat = row.lat
-        lon = row.lon
-        deg_sign= u"\N{DEGREE SIGN}"
-        #latitude
-        d1 = int(lat)             
-        md1 = abs(lat - d) * 60
-        m1 = int(md)
-        sd1 = (md - m) * 60
-        lat_value = """%d%s %d' %d" """ %(d1,deg_sign,md1,sd1)
-        #longittude
-        d = int(lon)             
-        md = abs(lon - d) * 60
-        m = int(md)
-        sd = (md - m) * 60
-        lon_value = """%d%s %d' %d" """ %(d,deg_sign,md,sd)
-        
-        text = "%s , %s" %(lat_value,lon_value)
-        return text
-     
-    # ------------------------------------------------------------------------
+    
     def represent_row(self, row):
         """
             Represent a single Row
@@ -4913,7 +4900,7 @@ class gis_LocationRepresent(S3Represent):
                    (row.inherited == False) and \
                    (row.lat is not None) and \
                    (row.lon is not None):
-                    represent = self.lat_lon_dms_represent(row)
+                    represent = self.lat_lon_represent(row)
                 if row.parent:
                     if row.path:
                         path = row.path
