@@ -1545,6 +1545,7 @@ class S3TwitterModel(S3Model):
         table = define_table(tablename,
                              # Instance
                              self.super_link("message_id", "msg_message"),
+                             self.msg_channel_id(),
                              Field("body", length=140,
                                    label = T("Message"),
                                    ),

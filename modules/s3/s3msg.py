@@ -1659,12 +1659,10 @@ class S3Msg(object):
         db = current.db
         s3db = current.s3db
         table = s3db.msg_twitter
-        mtable = s3db.msg_message
 
         # Get the latest Twitter message ID to use it as since_id
-        query = (mtable.channel_id == channel_id) & \
-                (mtable.inbound == True) & \
-                (mtable.message_id == table.message_id)
+        query = (table.channel_id == channel_id) & \
+                (table.inbound == True)
         latest = db(query).select(table.msg_id,
                                   orderby=~table.created_on,
                                   limitby=(0, 1)
@@ -1685,7 +1683,8 @@ class S3Msg(object):
         tinsert = table.insert
         update_super = s3db.update_super
         for message in messages:
-            id = tinsert(body = message.text,
+            id = tinsert(channel_id = channel_id,
+                         body = message.text,
                          from_address = message.sender_screen_name,
                          to_address = message.recipient_screen_name,
                          created_on = message.created_at,
