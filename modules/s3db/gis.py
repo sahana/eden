@@ -4763,6 +4763,14 @@ class gis_LocationRepresent(S3Represent):
             return text
 
     # -----------------------------------------------------------------------
+    def lat_lon_dms_represent(self,row):
+        lat = row.lat
+        lon = row.lon
+        text = "%s , %s" %(self.dms_represent(lat) ,
+                         self.dms_represent(lon) )
+        return = text                  
+       
+    # -----------------------------------------------------------------------  
     
     def represent_row(self, row):
         """
@@ -4901,7 +4909,7 @@ class gis_LocationRepresent(S3Represent):
                    (row.inherited == False) and \
                    (row.lat is not None) and \
                    (row.lon is not None):
-                    represent = self.dms_represent(row.lat) + " , " + self.dms_represent(row.lon)
+                    represent = self.lat_lon_dms_represent(row)
                 if row.parent:
                     if row.path:
                         path = row.path
