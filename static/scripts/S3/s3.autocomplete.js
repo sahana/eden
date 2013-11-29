@@ -842,6 +842,9 @@
         } else if (group == 'volunteer') {
             // Search Volunteers
             var url = S3.Ap.concat('/vol/person_search/search_ac');
+        } else if (group == 'deploy') {
+            // Search Deployables
+            var url = S3.Ap.concat('/deploy/person_search/search_ac');
         } else {
             // Search all HRs
             var url = S3.Ap.concat('/hrm/person_search/search_ac');

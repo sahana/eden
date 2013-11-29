@@ -176,7 +176,8 @@ class S3Resource(object):
                     self._alias = self.table._tablename
                     tablename = tablename.tablename
                 else:
-                    raise SyntaxError("illegal argument")
+                    error= manager.error = "%s is not a valid type for a tablename" % tablename
+                    raise SyntaxError(error)
             if "_" in tablename:
                 prefix, name = tablename.split("_", 1)
             else:

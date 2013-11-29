@@ -205,6 +205,21 @@ def assignment():
 
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
+def person_search():
+    """
+        Human Resource REST controller
+        - limited to just search_ac for use in Autocompletes
+        - allows differential access permissions
+    """
+
+    # Filter to just deployables
+    # Currently this is RDRT Members, but in future may need to filter by other factors
+    s3.filter = S3FieldSelector("application.active") == True
+
+    s3.prep = lambda r: r.method == "search_ac"
+    return s3_rest_controller("hrm", "human_resource")
+
 # =============================================================================
 def alert():
     """ RESTful CRUD Controller """

@@ -2384,7 +2384,7 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
                  post_process = "",
                  delay = 450,   # milliseconds
                  min_length=2,  # Increase this for large deployments
-                 group = "",    # Filter to staff/volunteers
+                 group = "",    # Filter to staff/volunteers/deployables
                  ):
 
         self.post_process = post_process
@@ -2393,6 +2393,10 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
         self.group = group
 
     def __call__(self, field, value, **attributes):
+
+        group = self.group
+        if not group and current.request.controller == "deploy":
+            group = "deploy"
 
         default = dict(
             _type = "text",
@@ -2423,7 +2427,7 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
             represent = ""
 
         script = '''S3.autocomplete.hrm('%(group)s','%(input)s',"%(postprocess)s",%(delay)s,%(min_length)s)''' % \
-            dict(group = self.group,
+            dict(group = group,
                  input = real_input,
                  postprocess = self.post_process,
                  delay = self.delay,

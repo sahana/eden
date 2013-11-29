@@ -753,7 +753,7 @@ def person_search():
         - allows differential access permissions
     """
 
-    # Filter
+    # Filter to just Volunteers
     s3.filter = (s3db.hrm_human_resource.type == 2)
 
     s3.prep = lambda r: r.method == "search_ac"
