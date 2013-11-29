@@ -95,21 +95,20 @@ class S3TranslateModel(S3Model):
         """
 
         import os
-        from ..s3.s3translate import CsvToWeb2py
+        from ..s3.s3translate import Strings
 
-        vars = form.vars
-        code = vars.code
+        form_vars = form.vars
+        lang_code = form_vars.code
 
         # Merge the existing translations with the new translations
         csvfilename = os.path.join(current.request.folder, "uploads",
-                                   vars.file)
-        csvfilelist = [csvfilename]
-        C = CsvToWeb2py()
-        C.convert_to_w2p(csvfilelist, "%s.py" % code, "m")
+                                   form_vars.file)
+        S = Strings()
+        S.write_w2p([csvfilename], lang_code, "m")
 
         # Mark the percentages as dirty
         ptable = current.s3db.translate_percentage
-        current.db(ptable.code == code).update(dirty=True)
+        current.db(ptable.code == lang_code).update(dirty=True)
 
         return
 

@@ -38,31 +38,26 @@ from gluon.languages import read_dict, write_dict
     List of classes with description :
 
 
-    TranslateAPI           : API class to retreive strings and files by module
+    TranslateAPI           : API class to retrieve strings and files by module
 
     TranslateGetFiles      : Class to traverse the eden directory and
                              categorize files based on module
 
-    TranslateParseFiles    : Class to parse python code using its parse tree
-                             and obtain the required strings and data
+    TranslateParseFiles    : Class to extract strings to translate from code files
 
     TranslateReadFiles     : Class to open a file, read its contents and build
                              a parse tree (for .py files) or use regex
                              (for html/js files) to obtain a list of strings
                              by calling methods from TranslateParseFiles
 
+    Strings                : Class to manipulate strings and their files
+
+    Pootle                 : Class to synchronise a Pootle server's translation
+                             with the local one
+
     TranslateReportStatus  : Class to report the translated percentage of each
                              language file for each module. It also updates
                              these percentages as and when required
-
-    Strings                : Class which obtains strings for translation based
-                             on given modules, adds existing translations from
-                             corresponding language file to this list, and then
-                             outputs the list to a file for translators
-
-    CsvToWeb2py            : Class which reads a list of csv files containing
-                             translations, merges translations, and updates
-                             existing language file with new translations
 """
 
 # =============================================================================
@@ -296,7 +291,7 @@ class TranslateGetFiles:
 # =============================================================================
 class TranslateParseFiles:
         """
-            Class to extract strings from files depending on module and file
+            Class to extract strings to translate from code files
         """
 
         def __init__(self):
@@ -624,7 +619,7 @@ class TranslateParseFiles:
 
 # =============================================================================
 class TranslateReadFiles:
-        """ Class to open and read files """
+        """ Class to read code files """
 
         # ---------------------------------------------------------------------
         @staticmethod
@@ -645,6 +640,7 @@ class TranslateReadFiles:
                     f = open(fileName)
                 except:
                     return
+
             # Read all contents of file
             fileContent = f.read()
             # Remove CL-RF and NOEOL characters
@@ -803,24 +799,6 @@ class TranslateReadFiles:
 
         # ---------------------------------------------------------------------
         @staticmethod
-        def read_w2pfile(fileName):
-            """
-                Function to read a web2py language file and
-                return a list of translation string pairs
-            """
-
-            data = read_dict(fileName)
-
-            # Convert to list of tuples
-            # @ToDo: Why?
-            strings = []
-            sappend = strings.append
-            for s in data:
-                sappend((s, data[s]))
-            return strings
-
-        # ---------------------------------------------------------------------
-        @staticmethod
         def get_database_strings(all_template_flag):
             """
                 Function to get database strings from csv files
@@ -851,6 +829,7 @@ class TranslateReadFiles:
 
             # Using bulk importer class to parse tasks.cfg in template folder
             bi = S3BulkImporter()
+            S = Strings()
             for template in template_list:
                 pth = path.join(base_dir, "private", "templates", template)
                 if path.exists(path.join(pth, "tasks.cfg")) == False:
@@ -885,8 +864,7 @@ class TranslateReadFiles:
                             fields = represent.fields
 
                         # Consider it for transation (csv[3])
-                        obj = CsvToWeb2py()
-                        data = obj.read_csvfile(csv[3])
+                        data = S.read_csv(csv[3])
                         title_row = data[0]
                         idx = 0
                         idxlist = []
@@ -909,6 +887,613 @@ class TranslateReadFiles:
                                         database_strings.append((loc, row[idx]))
 
             return database_strings
+
+# =============================================================================
+class Strings:
+        """ Class to manipulate strings and their files """
+
+        # ---------------------------------------------------------------------
+        @staticmethod
+        def remove_quotes(Strings):
+            """
+                Function to remove single or double quotes around the strings
+            """
+
+            l = []
+            lappend = l.append
+
+            for (d1, d2) in Strings:
+                if (d1[0] == '"' and d1[-1] == '"') or \
+                   (d1[0] == "'" and d1[-1] == "'"):
+                    d1 = d1[1:-1]
+                if (d2[0] == '"' and d2[-1] == '"') or \
+                   (d2[0] == "'" and d2[-1] == "'"):
+                    d2 = d2[1:-1]
+                lappend((d1, d2))
+
+            return l
+
+        # ---------------------------------------------------------------------
+        @staticmethod
+        def remove_duplicates(Strings):
+            """
+                Function to club all the duplicate strings into one row
+                with ";" separated locations
+            """
+
+            uniq = {}
+            appname = current.request.application
+
+            for (loc, data) in Strings:
+                uniq[data] = ""
+
+            for (loc, data) in Strings:
+
+                # Remove the prefix from the filename
+                loc = loc.split(appname, 1)[1]
+                if uniq[data] != "":
+                    uniq[data] = uniq[data] + ";" + loc
+                else:
+                    uniq[data] = loc
+
+            l = []
+            lappend = l.append
+
+            for data in uniq.keys():
+                lappend((uniq[data], data))
+
+            return l
+
+        # ---------------------------------------------------------------------
+        @staticmethod
+        def remove_untranslated(lang_code):
+            """
+                Function to remove all untranslated strings from a lang_code.py
+            """
+
+            w2pfilename = os.path.join(current.request.folder, "languages",
+                                       "%s.py" % lang_code)
+
+            data = read_dict(w2pfilename)
+            try:
+                # Python 2.7
+                data = {k: v for k, v in data.iteritems() if k != v}
+            except:
+                # Python 2.6
+                newdata = {}
+                for k, v in data.iteritems():
+                    if k != v:
+                        new_data[k] = v
+                data = new_data
+
+            write_dict(w2pfilename, data)
+
+        # ---------------------------------------------------------------------
+        def export_file(self, langfile, modlist, filelist, filetype, all_template_flag):
+            """
+                Function to get the strings by module(s)/file(s), merge with
+                those strings from existing w2p language file which are already
+                translated and call the "write_xls()" method if the
+                default filetype "xls" is chosen. If "po" is chosen, then the
+                write_po()" method is called.
+            """
+
+            request = current.request
+            settings = current.deployment_settings
+            appname = request.application
+            langcode = langfile[:-3]
+            langfile = os.path.join(request.folder, "languages", langfile)
+            # If the language file doesn't exist, create it
+            if not os.path.exists(langfile):
+                f = open(langfile, "w")
+                f.write("")
+                f.close()
+
+            NewStrings = []
+            A = TranslateAPI()
+
+            if all_template_flag == 1:
+                # Select All Templates
+                A.grp.group_files(os.path.join(request.folder, "private", "templates"), "", 0)
+            else:
+                # A specific template is selected
+                template_folder = os.path.join(request.folder, "private", "templates", settings.get_template())
+                A.grp.group_files(template_folder, "", 0)
+            R = TranslateReadFiles()
+
+            # Select Modules
+
+            # Core Modules are always included
+            core_modules = ["auth", "default"]
+            for mod in core_modules:
+                modlist.append(mod)
+
+            # appadmin and error are part of admin
+            if "admin" in modlist:
+                modlist.append("appadmin")
+                modlist.append("error")
+
+            # Select dependent modules
+            models = current.models
+            for mod in modlist:
+                if hasattr(models, mod):
+                    obj = getattr(models, mod)
+                    # Currently only inv module has a depends list
+                    if hasattr(obj, "depends"):
+                        for element in obj.depends:
+                            if element not in modlist:
+                                modlist.append(element)
+
+            for mod in modlist:
+                NewStrings += A.get_strings_by_module(mod)
+
+            # Retrieve strings in a file
+            for f in filelist:
+                NewStrings += A.get_strings_by_file(f)
+
+            # Remove quotes
+            NewStrings = self.remove_quotes(NewStrings)
+            # Add database strings
+            NewStrings += R.get_database_strings(all_template_flag)
+            # Add user-supplied strings
+            NewStrings += R.get_user_strings()
+            # Remove duplicates
+            NewStrings = self.remove_duplicates(NewStrings)
+            NewStrings.sort(key=lambda tup: tup[1])
+
+            # Retrieve strings from existing w2p language file
+            OldStrings = self.read_w2p(langfile)
+            OldStrings.sort(key=lambda tup: tup[0])
+
+            # Merge those strings which were already translated earlier
+            Strings = []
+            i = 0
+            lim = len(OldStrings)
+
+            for (l, s) in NewStrings:
+
+                while i < lim and OldStrings[i][0] < s:
+                    i += 1
+
+                if i != lim and OldStrings[i][0] == s and \
+                   OldStrings[i][1].startswith("*** ") == False:
+                    Strings.append((l, s, OldStrings[i][1]))
+                else:
+                    Strings.append((l, s, ""))
+
+            if filetype == "xls":
+                # Create excel file
+                return self.write_xls(Strings, langcode)
+            elif filetype == "po":
+                # Create pootle file
+                return self.write_po(Strings)
+
+        # ---------------------------------------------------------------------
+        @staticmethod
+        def read_csv(fileName):
+            """ Function to read a CSV file and return a list of rows """
+
+            import csv
+
+            data = []
+            dappend = data.append
+            f = open(fileName, "rb")
+            transReader = csv.reader(f)
+            for row in transReader:
+                dappend(row)
+            f.close()
+            return data
+
+        # ---------------------------------------------------------------------
+        @staticmethod
+        def read_w2p(fileName):
+            """
+                Function to read a web2py language file and
+                return a list of translation string pairs
+            """
+
+            data = read_dict(fileName)
+
+            # Convert to list of tuples
+            # @ToDo: Why?
+            strings = []
+            sappend = strings.append
+            for s in data:
+                sappend((s, data[s]))
+            return strings
+
+        # ---------------------------------------------------------------------
+        @staticmethod
+        def write_csv(fileName, data):
+            """ Function to write a list of rows into a csv file """
+
+            import csv
+
+            f = open(fileName, "wb")
+
+            # Quote all the elements while writing
+            transWriter = csv.writer(f, delimiter=" ",
+                                     quotechar='"', quoting = csv.QUOTE_ALL)
+            transWriter.writerow(["location", "source", "target"])
+            for row in data:
+                transWriter.writerow(row)
+
+            f.close()
+
+        # ---------------------------------------------------------------------
+        def write_po(self, data):
+            """ Returns a ".po" file constructed from given strings """
+
+            from subprocess import call
+            from tempfile import NamedTemporaryFile
+            from gluon.contenttype import contenttype
+
+            f = NamedTemporaryFile(delete=False)
+            csvfilename = "%s.csv" % f.name
+            self.write_csv(csvfilename, data)
+
+            g = NamedTemporaryFile(delete=False)
+            pofilename = "%s.po" % g.name
+            # Shell needed on Win32
+            # @ToDo: Copy relevant parts of Translate Toolkit internally to avoid external dependencies
+            call(["csv2po", "-i", csvfilename, "-o", pofilename], shell=True)
+
+            h = open(pofilename, "r")
+
+            # Modify headers to return the po file for download
+            filename = "trans.po"
+            disposition = "attachment; filename=\"%s\"" % filename
+            response = current.response
+            response.headers["Content-Type"] = contenttype(".po")
+            response.headers["Content-disposition"] = disposition
+
+            h.seek(0)
+            return h.read()
+
+        # ---------------------------------------------------------------------
+        def write_w2p(self, csvfiles, lang_code, option):
+            """
+                Function to merge multiple translated csv files into one
+                and then merge/overwrite the existing w2p language file
+            """
+
+            w2pfilename = os.path.join(current.request.folder, "languages",
+                                       "%s.py" % lang_code)
+
+            # Dictionary to store translated strings
+            # with untranslated string as the key
+            data = {}
+
+            errors = 0
+            for f in csvfiles:
+                newdata = self.read_csv(f)
+                # Test: 2 cols or 3?
+                cols = len(newdata[0])
+                if cols == 1:
+                    current.session.error = T("CSV file needs to have at least 2 columns!")
+                    redirect(URL(c="admin", f="translate"))
+                elif cols == 2:
+                    # 1st column is source, 2nd is target
+                    for row in newdata:
+                        data[row[0]] = row[1]
+                else:
+                    # 1st column is location, 2nd is source, 3rd is target
+                    for row in newdata:
+                        data[row[1]] = row[2]
+
+            if option == "m":
+                # Merge strings with existing .py file
+                keys = data.keys()
+                olddata = read_dict(w2pfilename)
+                for s in olddata:
+                    if s not in keys:
+                        data[s] = olddata[s]
+
+            write_dict(w2pfilename, data)
+
+        # ---------------------------------------------------------------------
+        @staticmethod
+        def write_xls(Strings, langcode):
+            """
+                Function to create a spreadsheet (.xls file) of strings with
+                location, original string and translated string as columns
+            """
+
+            try:
+                from cStringIO import StringIO    # Faster, where available
+            except:
+                from StringIO import StringIO
+            import xlwt
+
+            from gluon.contenttype import contenttype
+
+            from s3.s3utils import s3_debug
+
+            # Define spreadsheet properties
+            wbk = xlwt.Workbook("utf-8")
+            sheet = wbk.add_sheet("Translate")
+            style = xlwt.XFStyle()
+            font = xlwt.Font()
+            font.name = "Times New Roman"
+            style.font = font
+
+            sheet.write(0, 0, "location", style)
+            sheet.write(0, 1, "source", style)
+            sheet.write(0, 2, "target", style)
+
+            row_num = 1
+
+            # Write the data to spreadsheet
+            for (loc, d1, d2) in Strings:
+                d2 = d2.decode("string-escape").decode("utf-8")
+                sheet.write(row_num, 0, loc, style)
+                try:
+                    sheet.write(row_num, 1, d1, style)
+                except:
+                    s3_debug("Invalid source string!", loc)
+                    sheet.write(row_num, 1, "", style)
+                sheet.write(row_num, 2, d2, style)
+                row_num += 1
+
+            # Set column width
+            for colx in range(0, 3):
+                sheet.col(colx).width = 15000
+
+            # Initialize output
+            output = StringIO()
+
+            # Save the spreadsheet
+            wbk.save(output)
+
+            # Modify headers to return the xls file for download
+            filename = "%s.xls" % langcode
+            disposition = "attachment; filename=\"%s\"" % filename
+            response = current.response
+            response.headers["Content-Type"] = contenttype(".xls")
+            response.headers["Content-disposition"] = disposition
+
+            output.seek(0)
+            return output.read()
+
+# =============================================================================
+class Pootle:
+        """
+            Class to synchronise a Pootle server's translation with the local
+            one
+
+            @ToDo: Before uploading file to Pootle, ensure all relevant
+                   untranslated strings are present.
+        """
+
+        # ---------------------------------------------------------------------
+        def upload(self, lang_code, filename):
+            """
+                Upload a file to Pootle
+            """
+
+            import mechanize
+            import re
+            from s3.s3utils import s3_debug
+
+            br = mechanize.Browser()
+            br.addheaders = [("User-agent", "Firefox")]
+
+            br.set_handle_equiv(False)
+            # Ignore robots.txt
+            br.set_handle_robots(False)
+            # Don't add Referer (sic) header
+            br.set_handle_referer(False)
+
+            settings = current.deployment_settings
+
+            username = settings.get_L10n_pootle_username()
+            if username is False:
+                s3_debug("No login information found")
+                return
+
+            pootle_url = settings.get_L10n_pootle_url()
+            login_url = "%saccounts/login" % pootle_url
+            try:
+                br.open(login_url)
+            except:
+                s3_debug("Connecton Error")
+                return
+
+            br.select_form("loginform")
+
+            br.form["username"] = username
+            br.form["password"] = settings.get_L10n_pootle_password()
+            br.submit()
+
+            current_url = br.geturl()
+            if current_url.endswith("login/"):
+                s3_debug("Login Error")
+                return
+
+            pattern = "<option value=(.+?)>%s.po" % lang_code
+
+            # Process lang_code (if of form ab_cd --> convert to ab_CD)
+            if len(lang_code) > 2:
+                lang_code = "%s_%s" % (lang_code[:2], lang_code[-2:].upper())
+
+            link = "%s%s/eden/" % (pootle_url, lang_code)
+
+            page_source = br.open(link).read()
+            # Use Regex to extract the value for field : "upload to"
+            regex = re.search(pattern, page_source)
+            result = regex.group(0)
+            result = re.split(r'[="]', result)
+            upload_code = result[2]
+
+            try:
+                br.select_form("uploadform")
+                # If user is not admin then overwrite option is not there
+                br.form.find_control(name="overwrite").value = ["overwrite"]
+                br.form.find_control(name ="upload_to").value = [upload_code]
+                br.form.add_file(open(filename), "text/plain", file_name)
+                br.submit()
+            except:
+                s3_debug("Error in Uploading form")
+                return
+
+        # ---------------------------------------------------------------------
+        def download(self, lang_code):
+            """
+                Download a file from Pootle
+
+                @ToDo: Allow selection between different variants of language files
+            """
+
+            import requests
+            import zipfile
+            try:
+                from cStringIO import StringIO    # Faster, where available
+            except:
+                from StringIO import StringIO
+            from subprocess import call
+            from tempfile import NamedTemporaryFile
+
+            code = lang_code
+            if len(lang_code) > 2:
+                code = "%s_%s" % (lang_code[:2], lang_code[-2:].upper())
+
+            pootle_url = current.deployment_settings.get_L10n_pootle_url()
+            link = "%s%s/eden/export/zip" % (pootle_url, code)
+            try:
+                r = requests.get(link)
+            except:
+                from s3.s3utils import s3_debug
+                s3_debug("Connection Error")
+                return False		
+
+            zipf = zipfile.ZipFile(StringIO.StringIO(r.content))
+            zipf.extractall()
+            file_name_po = "%s.po" % lang_code
+            file_name_py = "%s.py" % lang_code
+
+            f = NamedTemporaryFile(delete=False)
+            w2pfilename = "%s.py" % f.name
+
+            call(["po2web2py", "-i", file_name_po, "-o", w2pfilename])
+
+            S = Strings()
+            path = os.path.join(current.request.folder, "languages", file_name_py)
+            pystrings = S.read_w2p(path)
+            pystrings.sort(key=lambda tup: tup[0])
+
+            postrings = S.read_w2p(w2pfilename)
+            # Remove untranslated strings
+            postrings = [tup for tup in postrings if tup[0] != tup[1]]
+            postrings.sort(key=lambda tup: tup[0])
+
+            os.unlink(file_name_po)
+            os.unlink(w2pfilename)
+            return (postrings, pystrings)
+
+        # ---------------------------------------------------------------------
+        def merge_strings(self, postrings, pystrings, preference):
+            """
+                Merge strings from a PO file and a Py file
+            """
+
+            lim_po = len(postrings)
+            lim_py = len(pystrings)
+            i = 0
+            j = 0
+
+            # Store strings which are missing from pootle
+            extra = []
+            eappend = extra.append
+
+            while i < lim_py and j < lim_po:
+                if pystrings[i][0] < postrings[j][0]:
+                    if preference == False:
+                        eappend(pystrings[i])
+                    i += 1
+                elif pystrings[i][0] > postrings[j][0]:
+                    j += 1
+
+                # pystrings[i] == postrings[j]
+                else:
+                    # Pootle is being given preference
+                    if preference:
+                        # Check if string is not empty
+                        if postrings[j][1] and not postrings[j][1].startswith("***"):
+                            pystrings[i] = postrings[j]
+                    # Py is being given prefernece
+                    else:
+                        if pystrings[i][1] and not pystrings[i][1].startswith("***"):
+                            postrings[j] = pystrings[i]
+                    i += 1
+                    j += 1
+
+            if preference:
+                return pystrings
+
+            else:
+                # Add strings which were left
+                while i < lim_py:
+                    extra.append(pystrings[i])
+                    i += 1
+                # Add extra strings to Pootle list
+                for st in extra:
+                    postrings.append(st)
+
+                postrings.sort(key=lambda tup: tup[0])
+                return postrings
+
+        # ---------------------------------------------------------------------
+        def merge_pootle(self, preference, lang_code):
+
+            # returns a tuple (postrings, pystrings)
+            ret = self.download(lang_code)
+            if not ret:
+                return
+
+            from subprocess import call
+            from tempfile import NamedTemporaryFile
+            import sys
+
+            # returns pystrings if preference was True else returns postrings
+            ret = self.merge_strings(ret[0], ret[1], preference)
+
+            S = Strings()
+
+            data = []
+            dappend = data.append
+
+            temp_csv = NamedTemporaryFile(delete=False)
+            csvfilename = "%s.csv" % temp_csv.name
+
+            if preference:
+                # Only python file has been changed
+                for i in ret:
+                    dappend(("", i[0], i[1].decode("string-escape")))
+
+                S.write_csv(csvfilename, data)
+                # overwrite option
+                S.write_w2p([csvfilename], lang_code, "o")
+
+                os.unlink(csvfilename)
+
+            else:
+                # Only Pootle file has been changed
+                for i in ret:
+                    dappend(("", i[0], i[1].decode("string-escape")))
+
+                S.write_csv(csvfilename, data)
+
+                temp_po = NamedTemporaryFile(delete=False)
+                pofilename = "%s.po" % temp_po.name
+
+                # Shell needed on Win32
+                # @ToDo: Copy relevant parts of Translate Toolkit internally to avoid external dependencies
+                call(["csv2po", "-i", csvfilename, "-o", pofilename], shell=True)
+                self.upload(lang_code, pofilename)
+
+                # Clean up extra created files
+                os.unlink(csvfilename)
+                os.unlink(pofilename)
 
 # =============================================================================
 class TranslateReportStatus:
@@ -978,7 +1563,10 @@ class TranslateReportStatus:
         def update_percentages(lang_code):
             """
                Update the translation percentages for all modules for a given
-               language
+               language.
+
+               @ToDo: Generate fresh .py files with all relevant strings for this
+                      (since we don't store untranslated strings)
             """
 
             try:
@@ -1073,559 +1661,5 @@ class TranslateReportStatus:
 
             # Return the dictionary
             return percent_dict
-
-# =============================================================================
-class Strings:
-        """ Class to export strings to a file """
-
-        # ---------------------------------------------------------------------
-        @staticmethod
-        def remove_quotes(Strings):
-            """
-                Function to remove single or double quotes around the strings
-            """
-
-            l = []
-            lappend = l.append
-
-            for (d1, d2) in Strings:
-                if (d1[0] == '"' and d1[-1] == '"') or \
-                   (d1[0] == "'" and d1[-1] == "'"):
-                    d1 = d1[1:-1]
-                if (d2[0] == '"' and d2[-1] == '"') or \
-                   (d2[0] == "'" and d2[-1] == "'"):
-                    d2 = d2[1:-1]
-                lappend((d1, d2))
-
-            return l
-
-        # ---------------------------------------------------------------------
-        @staticmethod
-        def remove_duplicates(Strings):
-            """
-                Function to club all the duplicate strings into one row
-                with ";" separated locations
-            """
-
-            uniq = {}
-            appname = current.request.application
-
-            for (loc, data) in Strings:
-                uniq[data] = ""
-
-            for (loc, data) in Strings:
-
-                # Remove the prefix from the filename
-                loc = loc.split(appname, 1)[1]
-                if uniq[data] != "":
-                    uniq[data] = uniq[data] + ";" + loc
-                else:
-                    uniq[data] = loc
-
-            l = []
-            lappend = l.append
-
-            for data in uniq.keys():
-                lappend((uniq[data], data))
-
-            return l
-
-        # ---------------------------------------------------------------------
-        @staticmethod
-        def create_spreadsheet(Strings, langcode):
-            """
-                Function to create a spreadsheet (.xls file) of strings with
-                location, original string and translated string as columns
-            """
-
-            try:
-                from cStringIO import StringIO    # Faster, where available
-            except:
-                from StringIO import StringIO
-            import xlwt
-
-            from gluon.contenttype import contenttype
-
-            from s3.s3utils import s3_debug
-
-            # Define spreadsheet properties
-            wbk = xlwt.Workbook("utf-8")
-            sheet = wbk.add_sheet("Translate")
-            style = xlwt.XFStyle()
-            font = xlwt.Font()
-            font.name = "Times New Roman"
-            style.font = font
-
-            sheet.write(0, 0, "location", style)
-            sheet.write(0, 1, "source", style)
-            sheet.write(0, 2, "target", style)
-
-            row_num = 1
-
-            # Write the data to spreadsheet
-            for (loc, d1, d2) in Strings:
-                d2 = d2.decode("string-escape").decode("utf-8")
-                sheet.write(row_num, 0, loc, style)
-                try:
-                    sheet.write(row_num, 1, d1, style)
-                except:
-                    s3_debug("Invalid source string!", loc)
-                    sheet.write(row_num, 1, "", style)
-                sheet.write(row_num, 2, d2, style)
-                row_num += 1
-
-            # Set column width
-            for colx in range(0, 3):
-                sheet.col(colx).width = 15000
-
-            # Initialize output
-            output = StringIO()
-
-            # Save the spreadsheet
-            wbk.save(output)
-
-            # Modify headers to return the xls file for download
-            filename = "%s.xls" % langcode
-            disposition = "attachment; filename=\"%s\"" % filename
-            response = current.response
-            response.headers["Content-Type"] = contenttype(".xls")
-            response.headers["Content-disposition"] = disposition
-
-            output.seek(0)
-            return output.read()
-
-        # ---------------------------------------------------------------------
-        def export_file(self, langfile, modlist, filelist, filetype, all_template_flag):
-            """
-                Function to get the strings by module(s)/file(s), merge with
-                those strings from existing w2p language file which are already
-                translated and call the "create_spreadsheet()" method if the
-                default filetype "xls" is chosen. If "po" is chosen, then the
-                export_to_po()" method is called.
-            """
-
-            request = current.request
-            settings = current.deployment_settings
-            appname = request.application
-            langcode = langfile[:-3]
-            langfile = os.path.join(request.folder, "languages", langfile)
-            # If the language file doesn't exist, create it
-            if not os.path.exists(langfile):
-                f = open(langfile, "w")
-                f.write("")
-                f.close()
-
-            NewStrings = []
-            A = TranslateAPI()
-
-            if all_template_flag == 1:
-                # Select All Templates
-                A.grp.group_files(os.path.join(request.folder, "private", "templates"), "", 0)
-            else:
-                # A specific template is selected
-                template_folder = os.path.join(request.folder, "private", "templates", settings.get_template())
-                A.grp.group_files(template_folder, "", 0)
-            R = TranslateReadFiles()
-
-            # Select Modules
-
-            # Core Modules are always included
-            core_modules = ["auth", "default"]
-            for mod in core_modules:
-                modlist.append(mod)
-
-            # appadmin and error are part of admin
-            if "admin" in modlist:
-                modlist.append("appadmin")
-                modlist.append("error")
-
-            # Select dependent modules
-            models = current.models
-            for mod in modlist:
-                if hasattr(models, mod):
-                    obj = getattr(models, mod)
-                    # Currently only inv module has a depends list
-                    if hasattr(obj, "depends"):
-                        for element in obj.depends:
-                            if element not in modlist:
-                                modlist.append(element)
-
-            for mod in modlist:
-                NewStrings += A.get_strings_by_module(mod)
-
-            # Retrieve strings in a file
-            for f in filelist:
-                NewStrings += A.get_strings_by_file(f)
-
-            # Remove quotes
-            NewStrings = self.remove_quotes(NewStrings)
-            # Add database strings
-            NewStrings += R.get_database_strings(all_template_flag)
-            # Add user-supplied strings
-            NewStrings += R.get_user_strings()
-            # Remove duplicates
-            NewStrings = self.remove_duplicates(NewStrings)
-            NewStrings.sort(key=lambda tup: tup[1])
-
-            # Retrieve strings from existing w2p language file
-            OldStrings = R.read_w2pfile(langfile)
-            OldStrings.sort(key=lambda tup: tup[0])
-
-            # Merge those strings which were already translated earlier
-            Strings = []
-            i = 0
-            lim = len(OldStrings)
-
-            for (l, s) in NewStrings:
-
-                while i < lim and OldStrings[i][0] < s:
-                    i += 1
-
-                if i != lim and OldStrings[i][0] == s and \
-                   OldStrings[i][1].startswith("*** ") == False:
-                    Strings.append((l, s, OldStrings[i][1]))
-                else:
-                    Strings.append((l, s, ""))
-
-            if filetype == "xls":
-                # Create excel file
-                return self.create_spreadsheet(Strings, langcode)
-            elif filetype == "po":
-                # Create pootle file
-                C = CsvToWeb2py()
-                return C.export_to_po(Strings)
-
-# =============================================================================
-class CsvToWeb2py:
-        """ Class to convert a group of csv files to a web2py language file"""
-
-        # ---------------------------------------------------------------------
-        @staticmethod
-        def write_csvfile(fileName, data):
-            """ Function to write a list of rows into a csv file """
-
-            import csv
-
-            f = open(fileName, "wb")
-
-            # Quote all the elements while writing
-            transWriter = csv.writer(f, delimiter=" ",
-                                     quotechar='"', quoting = csv.QUOTE_ALL)
-            transWriter.writerow(["location", "source", "target"])
-            for row in data:
-                transWriter.writerow(row)
-
-            f.close()
-
-        # ---------------------------------------------------------------------
-        def export_to_po(self, data):
-            """ Returns a ".po" file constructed from given strings """
-
-            from subprocess import call
-            from tempfile import NamedTemporaryFile
-            from gluon.contenttype import contenttype
-
-            f = NamedTemporaryFile(delete=False)
-            csvfilename = "%s.csv" % f.name
-            self.write_csvfile(csvfilename, data)
-
-            g = NamedTemporaryFile(delete=False)
-            pofilename = "%s.po" % g.name
-            # Shell needed on Win32
-            # @ToDo: Copy relevant parts of Translate Toolkit internally to avoid external dependencies
-            call(["csv2po", "-i", csvfilename, "-o", pofilename], shell=True)
-
-            h = open(pofilename, "r")
-
-            # Modify headers to return the po file for download
-            filename = "trans.po"
-            disposition = "attachment; filename=\"%s\"" % filename
-            response = current.response
-            response.headers["Content-Type"] = contenttype(".po")
-            response.headers["Content-disposition"] = disposition
-
-            h.seek(0)
-            return h.read()
-
-        # ---------------------------------------------------------------------
-        def convert_to_w2p(self, csvfiles, w2pfilename, option):
-            """
-                Function to merge multiple translated csv files into one
-                and then merge/overwrite the existing w2p language file
-            """
-
-            w2pfilename = os.path.join(current.request.folder, "languages",
-                                       w2pfilename)
-
-            # Dictionary to store translated strings
-            # with untranslated string as the key
-            data = {}
-
-            errors = 0
-            for f in csvfiles:
-                newdata = self.read_csvfile(f)
-                # Test: 2 cols or 3?
-                cols = len(newdata[0])
-                if cols == 1:
-                    current.session.error = T("CSV file needs to have at least 2 columns!")
-                    redirect(URL(c="admin", f="translate"))
-                elif cols == 2:
-                    # 1st column is source, 2nd is target
-                    for row in newdata:
-                        data[row[0]] = row[1]
-                else:
-                    # 1st column is location, 2nd is source, 3rd is target
-                    for row in newdata:
-                        data[row[1]] = row[2]
-
-            if option == "m":
-                # Merge strings with existing .py file
-                keys = data.keys()
-                olddata = read_dict(w2pfilename)
-                for s in olddata:
-                    if s not in keys:
-                        data[s] = olddata[s]
-
-            write_dict(w2pfilename, data)
-
-        # ---------------------------------------------------------------------
-        @staticmethod
-        def read_csvfile(fileName):
-            """ Function to read a csv file and return a list of rows """
-
-            import csv
-
-            data = []
-            dappend = data.append
-            f = open(fileName, "rb")
-            transReader = csv.reader(f)
-            for row in transReader:
-                dappend(row)
-            f.close()
-            return data
-
-# =============================================================================
-class Pootle:
-        """
-            Class to synchronise a Pootle server's translation with the local
-            one
-        """
-
-        # ---------------------------------------------------------------------
-        def upload_to_pootle(self, lang_code, filename):
-
-            import mechanize
-            import re
-            from s3.s3utils import s3_debug
-
-            br = mechanize.Browser()
-            br.addheaders = [("User-agent", "Firefox")]
-
-            br.set_handle_equiv(False)
-            # Ignore robots.txt
-            br.set_handle_robots(False)
-            # Don't add Referer (sic) header
-            br.set_handle_referer(False)
-
-            settings = current.deployment_settings
-            url = "%saccounts/login" % settings.get_L10n_pootle_url()
-            try:
-                br.open(url)
-            except:
-                s3_debug("Connecton Error")
-                return
-
-            br.select_form("loginform")
-            username = settings.get_L10n_pootle_username()
-            if username == False:
-                s3_debug("No login information found")
-                return
-
-            password = settings.get_L10n_pootle_password()
-            br.form["username"] = username
-            br.form["password"] = password
-            br.submit()
-
-            current_url = br.geturl()
-            if current_url.endswith("login/"):
-                s3_debug("Login Error")
-                return
-
-            pattern = "<option value=(.+?)>%s.po" % lang_code
-
-            # Process lang_code (if of form ab_cd --> convert to ab_CD)
-            if len(lang_code) > 2:
-                lang_code = "%s_%s" % (lang_code[:2], lang_code[-2:].upper())
-
-            link = "%s%s/eden/" % (settings.get_L10n_pootle_url(), lang_code)
-
-            page_source = br.open(link).read()
-            # Use Regex to extract the value for field : "upload to"
-            regex = re.search(pattern, page_source)
-            result = regex.group(0)
-            result = re.split(r'[="]', result)
-            upload_code = result[2]
-
-            try:
-                br.select_form("uploadform")
-                # If user is not admin then overwrite option is not there
-                br.form.find_control(name="overwrite").value = ["overwrite"]
-                br.form.find_control(name ="upload_to").value = [upload_code]
-                br.form.add_file(open(filename), "text/plain", file_name)
-                br.submit()
-            except:
-                s3_debug("Error in Uploading form")
-                return
-
-        # ---------------------------------------------------------------------
-        def download_strings(self, lang_code):
-
-            import requests
-            import zipfile
-            try:
-                from cStringIO import StringIO    # Faster, where available
-            except:
-                from StringIO import StringIO
-            from subprocess import call
-            from tempfile import NamedTemporaryFile
-
-            from s3.s3utils import s3_debug
-
-            code = lang_code
-            if len(lang_code) > 2:
-                code = "%s_%s" % (lang_code[:2], lang_code[-2:].upper())
-
-            settings = current.deployment_settings
-            link = "%s%s/eden/export/zip" % (settings.get_L10n_pootle_url(), code)
-            try:
-                r = requests.get(link)
-            except:
-                s3_debug("Connection Error")
-                return False		
-
-            zipf = zipfile.ZipFile(StringIO.StringIO(r.content))
-            zipf.extractall()
-            file_name_po = "%s.po" % lang_code
-            file_name_py = "%s.py" % lang_code
-
-            f = NamedTemporaryFile(delete=False)
-            w2pfilename = "%s.py" % f.name
-
-            call(["po2web2py", "-i", file_name_po, "-o", w2pfilename])
-
-            tfile = TranslateReadFiles()
-            path = os.path.join(current.request.folder, "languages", file_name_py)
-            pystrings = tfile.read_w2pfile(path)
-            pystrings.sort(key=lambda tup: tup[0])
-
-            postrings = tfile.read_w2pfile(w2pfilename)
-            postrings.sort(key=lambda tup: tup[0])
-
-            os.unlink(file_name_po)
-            os.unlink(w2pfilename)
-            return (postrings, pystrings)
-
-        # ---------------------------------------------------------------------
-        def merge_strings(self, postrings, pystrings, preference):
-
-            lim_po = len(postrings)
-            lim_py = len(pystrings)
-            i = 0
-            j = 0
-
-            # Store strings which are missing from pootle
-            extra = []
-            eappend = extra.append
-
-            while i < lim_py and j < lim_po:
-                if pystrings[i][0] < postrings[j][0]:
-                    if preference == False:
-                        eappend(pystrings[i])
-                    i += 1
-                elif pystrings[i][0] > postrings[j][0]:
-                    j += 1
-
-                # pystrings[i] == postrings[j]
-                else:
-                    # Pootle is being given preference
-                    if preference:
-                        # Check if string is not empty
-                        if postrings[j][1] and not postrings[j][1].startswith("***"):
-                            pystrings[i] = postrings[j]
-                    # Py is being given prefernece
-                    else:
-                        if pystrings[i][1] and not pystrings[i][1].startswith("***"):
-                            postrings[j] = pystrings[i]
-                    i += 1
-                    j += 1
-
-            if preference:
-                return pystrings
-
-            else:
-                # Add strings which were left
-                while i < lim_py:
-                    extra.append(pystrings[i])
-                    i += 1
-                # Add extra strings to Pootle list
-                for st in extra:
-                    postrings.append(st)
-
-                postrings.sort(key=lambda tup: tup[0])
-                return postrings
-
-        # ---------------------------------------------------------------------
-        def merge_pootle(self, preference, lang_code):
-
-            from subprocess import call
-            from tempfile import NamedTemporaryFile
-            import sys
-
-            # returns a tuple (postrings, pystrings)
-            ret = self.download_strings(lang_code)
-            if not ret:
-                return
-
-            # returns pystrings if preference was True else returns postrings
-            ret = self.merge_strings(ret[0], ret[1], preference)
-
-            cfile = CsvToWeb2py()
-
-            data = []
-            dappend = data.append
-
-            temp_csv = NamedTemporaryFile(delete=False)
-            csvfilename = "%s.csv" % temp_csv.name
-
-            if preference:
-                # Only python file has been changed
-                file_name_py = "%s.py" %lang_code
-                for i in ret:
-                    dappend(("", i[0], i[1].decode("string-escape")))
-
-                cfile.write_csvfile(csvfilename, data)
-                # overwrite option
-                cfile.convert_to_w2p([csvfilename], file_name_py, "o")
-
-                os.unlink(csvfilename)
-
-            else:
-                # Only Pootle file has been changed
-                for i in ret:
-                    dappend(("", i[0], i[1].decode("string-escape")))
-
-                cfile.write_csvfile(csvfilename, data)
-
-                temp_po = NamedTemporaryFile(delete=False)
-                pofilename = "%s.po" % temp_po.name
-
-                # Shell needed on Win32
-                # @ToDo: Copy relevant parts of Translate Toolkit internally to avoid external dependencies
-                call(["csv2po", "-i", csvfilename, "-o", pofilename], shell=True)
-                self.upload_to_pootle(lang_code, pofilename)
-
-                # Clean up extra created files
-                os.unlink(csvfilename)
-                os.unlink(pofilename)
 
 # END =========================================================================

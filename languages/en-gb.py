@@ -1,4 +1,4 @@
-# coding: utf8
+# -*- coding: utf-8 -*-
 {
 "A volunteer is defined as active if they've participated in an average of 8 or more hours of Program work or Trainings per month in the last year": "A volunteer is defined as active if they've participated in an average of 8 or more hours of Programme work or Trainings per month in the last year",
 'Ability to customize the list of details tracked at a Shelter': 'Ability to customise the list of details tracked at a Shelter',
@@ -12,7 +12,6 @@
 'Add New Organization': 'Add New Organisation',
 'Add New Organization Domain': 'Add New Organisation Domain',
 'Add New Organization Type': 'Add New Organisation Type',
-'Add New Program': 'Add New Program',
 'Add Organization': 'Add Organisation',
 'Add Organization Domain': 'Add Organisation Domain',
 'Add Organization to Project': 'Add Organisation to Project',
@@ -39,7 +38,6 @@
 'Competency Rating Catalog': 'Competency Rating Catalogue',
 'Configure resources to synchronize, update methods and policies': 'Configure resources to synchronise, update methods and policies',
 'Configure/Monitor Synchronization': 'Configure/Monitor Synchronisation',
-'Confirming Organization': 'Confirming Organization',
 'Course Catalog': 'Course Catalogue',
 'Create New Catalog': 'Create New Catalogue',
 'Create New Catalog Item': 'Create New Catalogue Item',
@@ -84,7 +82,6 @@
 'International Organization': 'International Organisation',
 'Item Catalog Details': 'Item Catalogue Details',
 'Item Catalogs': 'Item Catalogues',
-'Item Catalogues': 'Item Catalogues',
 'Job Role Catalog': 'Job Role Catalogue',
 'Job Title Catalog': 'Job Title Catalogue',
 'Kit canceled': 'Kit cancelled',
