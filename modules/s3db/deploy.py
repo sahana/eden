@@ -30,7 +30,7 @@
 __all__ = ["S3DeploymentModel",
            "S3DeploymentAlertModel",
            "deploy_rheader",
-           "deploy_application",
+           "deploy_apply",
            "deploy_alert_select_recipients",
            "deploy_response_select_mission",
            ]
@@ -59,8 +59,9 @@ class S3DeploymentModel(S3Model):
              "deploy_mission_id",
              "deploy_mission_document",
              "deploy_role_type",
-             "deploy_human_resource_application",
-             "deploy_human_resource_assignment",
+             "deploy_application",
+             "deploy_assignment",
+             "deploy_assignment_experience",
              ]
 
     def model(self):
@@ -98,13 +99,15 @@ class S3DeploymentModel(S3Model):
                              self.gis_country_id(),
                              # @ToDo: Link to event_type via event_id link table instead of duplicating
                              self.event_type_id(label=T("Disaster Type")),
+                             # When moving beyond RDRT, we'll need this:
+                             #self.org_organisation_id(),
                              # Is this an Event code or a Mission code?
-                             Field("code",
-                                   length = 24,
+                             Field("code", length = 24,
                                    represent = lambda v: s3_unicode(v) \
                                                          if v else NONE,
                                    readable = False,
-                                   writable = False),
+                                   writable = False,
+                                   ),
                              Field("status", "integer",
                                    requires = IS_IN_SET(mission_status_opts),
                                    represent = lambda opt: \
@@ -182,14 +185,14 @@ class S3DeploymentModel(S3Model):
         ## Test code for profile data tables (@todo: remove after completion)
         #dt_row_actions = lambda r, listid: [
             #{"label": T("Open"),
-             #"url": r.url(component="human_resource_assignment",
+             #"url": r.url(component="assignment",
                           #component_id="[id]",
                           #method="update.popup",
                           #vars={"refresh": listid}),
              #"_class": "action-btn edit s3_modal",
             #},
             #{"label": T("Delete"),
-             #"url": r.url(component="human_resource_assignment",
+             #"url": r.url(component="assignment",
                           #component_id="[id]",
                           #method="delete"),
              #"_class": "action-btn delete-btn delete-btn-ajax",
@@ -199,7 +202,7 @@ class S3DeploymentModel(S3Model):
         assignment_widget = dict(label="Members Deployed",
                                  insert=lambda r, listid, title, url: \
                                         A(title,
-                                          _href=r.url(component="human_resource_assignment",
+                                          _href=r.url(component="assignment",
                                                       method="create"),
                                           _class="action-btn profile-add-btn"),
                                  title_create="Deploy New Member",
@@ -215,10 +218,10 @@ class S3DeploymentModel(S3Model):
                                      "role_type_id",
                                      "rating",
                                  ],
-                                 tablename = "deploy_human_resource_assignment",
+                                 tablename = "deploy_assignment",
                                  context = "mission",
                                  colspan = 2,
-                                 list_layout = deploy_render_human_resource_assignment,
+                                 list_layout = deploy_render_assignment,
                                  pagesize = None, # all records
                                  )
 
@@ -286,7 +289,7 @@ class S3DeploymentModel(S3Model):
                   )
 
         # Components
-        add_component("deploy_human_resource_assignment",
+        add_component("deploy_assignment",
                       deploy_mission="mission_id")
 
         add_component("deploy_alert",
@@ -389,14 +392,12 @@ class S3DeploymentModel(S3Model):
         # - agreement that an HR is generally available for assignments
         # - can come with certain restrictions
         #
-        # @ToDo: Better Name. human_resource_member perhaps.
-        #
-        tablename = "deploy_human_resource_application"
+        tablename = "deploy_application"
         table = define_table(tablename,
                              self.hrm_human_resource_id(empty=False,
                                                         label=T("Member")),
                              Field("active", "boolean",
-                                   default=True,
+                                   default = True,
                                    ),
                              *s3_meta_fields())
 
@@ -404,13 +405,13 @@ class S3DeploymentModel(S3Model):
         # Assignment of human resources
         # - actual assignment of an HR to a mission
         #
-        tablename = "deploy_human_resource_assignment"
+        tablename = "deploy_assignment"
         table = define_table(tablename,
                              mission_id(),
                              self.hrm_human_resource_id(empty=False,
                                                         label=T("Member")),
                              role_type_id(),
-                             # Use hrm_experience
+                             # These get copied to hrm_experience
                              # rest of fields may not be filled-out, but are in attachments
                              s3_date("start_date", # Only field visible when deploying from Mission profile
                                      label = T("Start Date"),
@@ -429,7 +430,11 @@ class S3DeploymentModel(S3Model):
 
         # Table configuration
         configure(tablename,
-                  context = {"mission": "mission_id"},
+                  context = {"mission": "mission_id",
+                             },
+                  create_onaccept = self.deploy_assignment_create_onaccept,
+                  ondelete = self.deploy_assignment_ondelete,
+                  update_onaccept = self.deploy_assignment_update_onaccept,
                   )
 
         # CRUD Strings
@@ -449,6 +454,15 @@ class S3DeploymentModel(S3Model):
             msg_record_modified = T("Deployment Details updated"),
             msg_record_deleted = T("Deployment deleted"),
             msg_list_empty = T("No Deployments currently registered"))
+
+        # ---------------------------------------------------------------------
+        # Link Assignments to Experience
+        #
+        tablename = "deploy_assignment_experience"
+        table = define_table(tablename,
+                             Field("assignment_id", table),
+                             Field("experience_id", self.hrm_experience),
+                             *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Assignment of assets
@@ -480,6 +494,135 @@ class S3DeploymentModel(S3Model):
                  _class="action-btn",
                  )
                 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def deploy_assignment_create_onaccept(form):
+        """
+            Create linked hrm_experience record
+        """
+
+        db = current.db
+        s3db = current.s3db
+        form_vars = form.vars
+        assignment_id = form_vars.id
+
+        # Lookup person_id
+        human_resource_id = form_vars.human_resource_id
+        hrtable = s3db.hrm_human_resource
+        hr = db(hrtable.id == human_resource_id).select(hrtable.person_id,
+                                                        limitby=(0, 1)
+                                                        ).first()
+        if not hr:
+            return
+
+        # Lookup Mission
+        mission_id = form_vars.mission_id
+        if not mission_id:
+            # Need to look it up
+            atable = db.deploy_assignment
+            assignment = db(atable.id == assignment_id).select(atable.mission_id,
+                                                               limitby=(0, 1)
+                                                               ).first()
+            if assignment:
+                mission_id = assignment.mission_id
+        mtable = db.deploy_mission
+        mission = db(mtable.id == mission_id).select(mtable.code,
+                                                     mtable.location_id,
+                                                     #mtable.organisation_id,
+                                                     limitby=(0, 1)
+                                                     ).first()
+        if mission:
+            code = mission.code
+            location_id = mission.location_id
+            #organisation_id = mission.organisation_id
+        else:
+            code = None
+            location_id = None
+            #organisation_id = None
+
+        # Lookup Organisation
+        # - currently hardcoded to IFRC!
+        # - later should look this up in the Mission
+        otable = s3db.org_organisation
+        query = \
+            (otable.name == "International Federation of Red Cross and Red Crescent Societies")
+        organisation = db(query).select(otable.id,
+                                        limitby=(0, 1)
+                                        ).first()
+        if organisation:
+            organisation_id = organisation.id
+        else:
+            organisation_id = None
+
+        # Create hrm_experience
+        etable = s3db.hrm_experience
+        id = etable.insert(person_id = hr.person_id,
+                           code = code,
+                           location_id = location_id,
+                           organisation_id = organisation_id,
+                           start_date = form_vars.start_date,
+                           # In case coming from update
+                           end_date = form_vars.get("end_date", None),
+                           )
+
+        # Create link
+        ltable = db.deploy_assignment_experience
+        ltable.insert(assignment_id = assignment_id,
+                      experience_id = id,
+                      )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def deploy_assignment_ondelete(form):
+        """
+            Remove linked hrm_experience record
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Lookup experience & link
+        ltable = s3db.deploy_assignment_experience
+        link = db(ltable.assignment_id == form.id).select(ltable.id,
+                                                          ltable.experience_id,
+                                                          limitby=(0, 1)
+                                                          ).first()
+        if not link:
+            return
+
+        create_resource = s3db.resource
+
+        # Delete experience
+        create_resource("hrm_experience", id=link.experience_id).delete()
+
+        # Delete link
+        create_resource("deploy_assignment_experience", id=link.id).delete()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def deploy_assignment_update_onaccept(form):
+        """
+            Update linked hrm_experience record
+        """
+
+        form_vars = form.vars
+
+        # Lookup Experience
+        ltable = s3db.deploy_assignment_experience
+        link = db(ltable.assignment_id == form_vars.id).select(ltable.experience_id,
+                                                               limitby=(0, 1)
+                                                               ).first()
+        if link:
+            # Update Experience
+            # - likely to be just end_date
+            etable = s3db.hrm_experience
+            db(etable.id == link.experience_id).update(start_date = form_vars.start_date,
+                                                       end_date = form_vars.end_date,
+                                                       )
+        else:
+            # Create Experience
+            S3DeploymentModel.deploy_assignment_create_onaccept(form)
+
     # -------------------------------------------------------------------------
     @staticmethod
     def deploy_role_type_duplicate(item):
@@ -610,8 +753,7 @@ class S3DeploymentAlertModel(S3Model):
         # Reusable field
         represent = S3Represent(lookup=tablename)
         alert_id = S3ReusableField("alert_id", table,
-                                   requires = IS_ONE_OF(db,
-                                                        "deploy_alert.id",
+                                   requires = IS_ONE_OF(db, "deploy_alert.id",
                                                         represent),
                                    represent = represent,
                                    label = T("Alert"),
@@ -799,10 +941,10 @@ class S3DeploymentAlertModel(S3Model):
         # Get message ID and human resource ID
         if "human_resource_id" not in data or "message_id" not in data:
             rtable = s3db.deploy_response
-            response = db(rtable.id == data.id) \
-                         .select(rtable.human_resource_id,
-                                 rtable.message_id,
-                                 limitby=(0, 1)).first()
+            response = db(rtable.id == data.id).select(rtable.human_resource_id,
+                                                       rtable.message_id,
+                                                       limitby=(0, 1)
+                                                       ).first()
             if not response:
                 return
             human_resource_id = response.human_resource_id
@@ -826,8 +968,9 @@ class S3DeploymentAlertModel(S3Model):
             doc_id = None
             if human_resource_id:
                 htable = s3db.hrm_human_resource
-                hr = db(htable.id == human_resource_id) \
-                       .select(htable.doc_id, limitby=(0, 1)).first()
+                hr = db(htable.id == human_resource_id).select(htable.doc_id,
+                                                               limitby=(0, 1)
+                                                               ).first()
                 if hr:
                     doc_id = hr.doc_id
             db(dtable.id.belongs(attachments)).update(doc_id=doc_id)
@@ -938,7 +1081,7 @@ def deploy_mission_hrquantity(row):
         return 0
 
     db = current.db
-    table = db.deploy_human_resource_assignment
+    table = db.deploy_assignment
     count = table.id.count()
     row = db(table.mission_id == mission_id).select(count).first()
     if row:
@@ -1202,7 +1345,7 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
     # Member deployed?
     # @todo: bulk lookup instead of per-card
     if human_resource_id:
-        table = current.s3db.deploy_human_resource_assignment
+        table = current.s3db.deploy_assignment
         query = (table.mission_id == mission_id) & \
                 (table.human_resource_id == human_resource_id) & \
                 (table.deleted != True)
@@ -1218,9 +1361,9 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
                                    _class="card-action"),
                               _href=URL(f="mission",
                                         args=[mission_id,
-                                              "human_resource_assignment",
+                                              "assignment",
                                               "create"
-                                             ],
+                                              ],
                                         vars={"member_id": human_resource_id}),
                               _class="action-lnk"
                               )
@@ -1230,7 +1373,7 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
     # Number of previous deployments and average rating
     # @todo: bulk lookup instead of per-card
     if human_resource_id:
-        table = current.s3db.deploy_human_resource_assignment
+        table = current.s3db.deploy_assignment
         query = (table.human_resource_id == human_resource_id) & \
                 (table.deleted != True)
         dcount = table.id.count()
@@ -1386,8 +1529,8 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
     return item
 
 # =============================================================================
-def deploy_render_human_resource_assignment(listid, resource, rfields, record, 
-                                            **attr):
+def deploy_render_assignment(listid, resource, rfields, record, 
+                             **attr):
     """
         Item renderer for data list of deployed human resources
 
@@ -1398,7 +1541,7 @@ def deploy_render_human_resource_assignment(listid, resource, rfields, record,
         @param attr: additional attributes
     """
 
-    pkey = "deploy_human_resource_assignment.id"
+    pkey = "deploy_assignment.id"
 
     # Construct the item ID
     if pkey in record:
@@ -1429,7 +1572,7 @@ def deploy_render_human_resource_assignment(listid, resource, rfields, record,
                                                          columns=columns)
 
     # Toolbox
-    update_url = URL(c="deploy", f="human_resource_assignment",
+    update_url = URL(c="deploy", f="assignment",
                      args=[record_id, "update.popup"],
                      vars={"refresh": listid, "record": record_id})
     toolbox = deploy_render_profile_toolbox(resource, record_id,
@@ -1451,10 +1594,10 @@ def deploy_render_human_resource_assignment(listid, resource, rfields, record,
                            DIV(organisation,
                                _class="card-category"),
                            _class="media-heading"),
-                       render("deploy_human_resource_assignment.start_date",
-                              "deploy_human_resource_assignment.end_date",
-                              "deploy_human_resource_assignment.role_type_id",
-                              "deploy_human_resource_assignment.rating",
+                       render("deploy_assignment.start_date",
+                              "deploy_assignment.end_date",
+                              "deploy_assignment.role_type_id",
+                              "deploy_assignment.rating",
                        ),
                        _class="media-body",
                    ),
@@ -1470,7 +1613,7 @@ def deploy_render_human_resource_assignment(listid, resource, rfields, record,
 def deploy_member_filter():
     """
         Filter widgets for members (hrm_human_resource), used in
-        custom methods for member selection, e.g. deploy_application
+        custom methods for member selection, e.g. deploy_apply
         or deploy_alert_select_recipients
     """
 
@@ -1495,7 +1638,7 @@ def deploy_member_filter():
     return widgets
     
 # =============================================================================
-def deploy_application(r, **attr):
+def deploy_apply(r, **attr):
     """
         Custom method to select new RDRT members
 
@@ -1521,7 +1664,7 @@ def deploy_application(r, **attr):
                 selected = []
 
             db = current.db
-            atable = s3db.deploy_human_resource_application
+            atable = s3db.deploy_application
             if selected:
                 # Handle exclusion filter
                 if post_vars.mode == "Exclusive":
@@ -1701,7 +1844,7 @@ def deploy_alert_select_recipients(r, **attr):
     s3db = current.s3db
 
     response = current.response
-    member_query = S3FieldSelector("human_resource_application.active") == True
+    member_query = S3FieldSelector("application.active") == True
 
     if r.http == "POST":
 

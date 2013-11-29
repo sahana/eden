@@ -48,7 +48,7 @@ def mission():
                                update_next=next_url,
                                delete_next=next_url)
             s3.cancel = next_url
-            if r.component_name == "human_resource_assignment":
+            if r.component_name == "assignment":
                 member_id = r.get_vars.get("member_id", None)
                 if member_id and str(member_id).isdigit():
                     # Deploy-this-member action
@@ -57,13 +57,13 @@ def mission():
                             (htable.deleted != True)
                     row = db(query).select(htable.id, limitby=(0, 1)).first()
                     if row:
-                        field = s3db.deploy_human_resource_assignment \
+                        field = s3db.deploy_assignment \
                                     .human_resource_id
                         field.default = row.id
                         field.writable = False
                         field.comment = None
                 elif r.method == "create":
-                    atable = s3db.deploy_human_resource_assignment
+                    atable = s3db.deploy_assignment
                     atable.end_date.writable = atable.end_date.readable = False
                     atable.rating.writable = atable.rating.readable = False
             if not r.component and r.method == "profile":
@@ -131,7 +131,7 @@ def human_resource():
     s3db.add_component("deploy_alert_recipient",
                        hrm_human_resource = "human_resource_id")
 
-    q = s3base.S3FieldSelector("human_resource_application.active") == True
+    q = s3base.S3FieldSelector("application.active") == True
     output = s3db.hrm_human_resource_controller(extra_filter=q)
     if isinstance(output, dict) and "title" in output:
         output["title"] = T("RDRT Members")
@@ -182,7 +182,7 @@ def application():
         if not r.method:
             r.method = "select"
         if r.method == "select":
-            r.custom_action = s3db.deploy_application
+            r.custom_action = s3db.deploy_apply
         return True
     s3.prep = prep
 
@@ -190,7 +190,7 @@ def application():
     return s3_rest_controller("hrm", "human_resource")
 
 # -----------------------------------------------------------------------------
-def human_resource_assignment():
+def assignment():
     """ RESTful CRUD Controller """
 
     def prep(r):

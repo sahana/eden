@@ -748,7 +748,7 @@ def person():
 # -----------------------------------------------------------------------------
 def person_search():
     """
-        Person REST controller
+        Human Resource REST controller
         - limited to just search_ac for use in Autocompletes
         - allows differential access permissions
     """

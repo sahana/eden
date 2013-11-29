@@ -55,11 +55,10 @@ class S3SituationModel(S3Model):
         # ---------------------------------------------------------------------
         # Situation Super-Entity
         #
-        situation_types = Storage(
-            irs_incident = T("Incident"),
-            rms_req = T("Request"),
-            pr_presence = T("Presence")
-        )
+        situation_types = Storage(irs_incident = T("Incident"),
+                                  rms_req = T("Request"),
+                                  pr_presence = T("Presence"),
+                                  )
 
         tablename = "sit_situation"
         table = super_entity(tablename, "sit_id", situation_types,
@@ -67,7 +66,10 @@ class S3SituationModel(S3Model):
                              location_id())
 
         configure(tablename,
-                  editable=False, deletable=False, listadd=False)
+                  deletable = False,
+                  editable = False,
+                  listadd = False,
+                  )
 
         # ---------------------------------------------------------------------
         # Trackable Types
@@ -76,11 +78,10 @@ class S3SituationModel(S3Model):
         #   - add a field with super_link("track_id", "sit_trackable")
         #   - add as super-entity in configure (super_entity=s3db.sit_trackable)
         #
-        trackable_types = Storage(
-            asset_asset = T("Asset"),
-            pr_person = T("Person"),
-            dvi_body = T("Dead Body")
-        )
+        trackable_types = Storage(asset_asset = T("Asset"),
+                                  pr_person = T("Person"),
+                                  dvi_body = T("Dead Body"),
+                                  )
 
         tablename = "sit_trackable"
         sit_trackable = super_entity(tablename, "track_id",
@@ -90,7 +91,10 @@ class S3SituationModel(S3Model):
                                            writable=False))
 
         configure(tablename,
-                  editable=False, deletable=False, listadd=False)
+                  deletable = False,
+                  editable = False,
+                  listadd = False,
+                  )
 
         # ---------------------------------------------------------------------
         # Presence Records for trackables
@@ -102,11 +106,13 @@ class S3SituationModel(S3Model):
         table = self.define_table(tablename,
                                   self.super_link("track_id", sit_trackable),
                                   Field("timestmp", "datetime",
-                                        label=T("Date/Time")),
+                                        label = T("Date/Time"),
+                                        ),
                                   location_id(),
                                   Field("interlock",
-                                        readable=False,
-                                        writable=False),
+                                        readable = False,
+                                        writable = False,
+                                        ),
                                   *s3_meta_fields())
 
         # Shared component of all trackable types
@@ -116,6 +122,6 @@ class S3SituationModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage()
+        return dict()
 
 # END =========================================================================

@@ -837,14 +837,14 @@
         }
 
         if (group == 'staff') {
-            // Search Staff using S3HRSearch
-            var url = S3.Ap.concat('/hrm/person_search/search_ac.json?group=staff');
+            // Search Staff
+            var url = S3.Ap.concat('/hrm/person_search/search_ac?group=staff');
         } else if (group == 'volunteer') {
-            // Search Volunteers using S3HRSearch
-            var url = S3.Ap.concat('/vol/person_search/search_ac.json');
+            // Search Volunteers
+            var url = S3.Ap.concat('/vol/person_search/search_ac');
         } else {
-            // Search all HRs using S3HRSearch
-            var url = S3.Ap.concat('/hrm/person_search/search_ac.json');
+            // Search all HRs
+            var url = S3.Ap.concat('/hrm/person_search/search_ac');
         }
 
         var real_input = $('#' + input);

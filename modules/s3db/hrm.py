@@ -544,12 +544,12 @@ class S3HRModel(S3Model):
         # Custom Method for S3HumanResourceAutocompleteWidget and S3AddPersonWidget2
         set_method = self.set_method
         set_method("hrm", "human_resource",
-                   method="search_ac",
-                   action=self.hrm_search_ac)
+                   method = "search_ac",
+                   action = self.hrm_search_ac)
 
         set_method("hrm", "human_resource",
-                   method="lookup",
-                   action=self.hrm_lookup)
+                   method = "lookup",
+                   action = self.hrm_lookup)
 
         # Components
         # Email
@@ -591,6 +591,13 @@ class S3HRModel(S3Model):
                                               pkey="person_id",
                                               ))
         add_component("hrm_credential",
+                      hrm_human_resource=dict(link="pr_person",
+                                              joinby="id",
+                                              key="id",
+                                              fkey="person_id",
+                                              pkey="person_id",
+                                              ))
+        add_component("hrm_experience",
                       hrm_human_resource=dict(link="pr_person",
                                               joinby="id",
                                               key="id",
@@ -641,8 +648,8 @@ class S3HRModel(S3Model):
             add_component("hrm_job_title_human_resource",
                           hrm_human_resource="human_resource_id")
 
-        # Deploy (RDRT)
-        add_component("deploy_human_resource_application",
+        # Application for Deployment (RDRT)
+        add_component("deploy_application",
                       hrm_human_resource="human_resource_id")
 
         # Availability
@@ -3114,34 +3121,41 @@ class S3HRExperienceModel(S3Model):
         tablename = "hrm_experience"
         table = self.define_table(tablename,
                                   person_id(),
+                                  # For Mission or Event
+                                  Field("code",
+                                        label = T("Code"),
+                                        readable = False,
+                                        writable = False,
+                                        ),
                                   self.org_organisation_id(widget = org_widget),
                                   # Alternate free-text form especially suitable for volunteers
                                   Field("organisation",
+                                        label = T("Organization"),
                                         readable = False,
                                         writable = False,
-                                        label=T("Organization"),
                                         ),
                                   self.hrm_job_title_id(),
                                   # Alternate free-text form especially suitable for volunteers
                                   Field("job_title",
+                                        label = T("Position"),
                                         readable = False,
                                         writable = False,
-                                        label=T("Position"),
                                         ),
                                   s3_date("start_date",
-                                          label=T("Start Date"),
+                                          label = T("Start Date"),
                                           ),
                                   s3_date("end_date",
                                           label=T("End Date"),
                                           ),
                                   Field("hours", "double",
-                                        label=T("Hours"),
+                                        label = T("Hours"),
                                         ),
-                                  Field("place",              # We could make this an event_id?
-                                        label=T("Place"),
-                                        ),
+                                  #Field("place",
+                                  #      label = T("Place"),
+                                  #      ),
+                                  self.gis_location_id(),
                                   person_id("supervisor_id",
-                                            label=T("Supervisor"),
+                                            label = T("Supervisor"),
                                             requires = IS_NULL_OR(
                                                         IS_ADD_PERSON_WIDGET()
                                                         ),
@@ -3150,7 +3164,7 @@ class S3HRExperienceModel(S3Model):
                                             #requires = IS_ADD_PERSON_WIDGET2(),
                                             #widget = S3AddPersonWidget2(),
                                             ),
-                                  s3_comments(comment=None),
+                                  s3_comments(),
                                   *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
@@ -3180,11 +3194,15 @@ class S3HRExperienceModel(S3Model):
                                       "end_date",
                                       "organisation_id",
                                       "job_title_id",
+                                      "location_id",
                                       "comments",
                                       ],
                        list_layout = hrm_render_experience,
                        orderby = ~table.start_date,
                        )
+
+        self.add_component("deploy_assignment",
+                           hrm_experience="experience_id")
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -4999,8 +5017,8 @@ def hrm_human_resource_controller(extra_filter=None):
                                           "start_date",
                                           "end_date",
                                           "hours",
-                                          "place",
-                                          "person_id",
+                                          "location_id",
+                                          "supervisor_id",
                                           "comments",
                                           ],
                            )
@@ -6206,14 +6224,20 @@ def hrm_render_experience(listid, resource, rfields, record, **attr):
                              _class="card_1_line",
                              )
 
-    place = raw["hrm_experience.place"] or ""
-    if place:
-        place = P(I(_class="icon-home"),
-                  " ",
-                  SPAN(place),
-                  " ",
-                  _class="card_1_line",
-                  )
+    location_id = raw["hrm_experience.location_id"]
+    if location_id:
+        #location_url = URL(c="gis", f="location", args=[location_id, "profile"])
+        location_url = URL(c="gis", f="location", args=[location_id])
+        location = SPAN(I(_class="icon-globe"),
+                        " ",
+                        SPAN(A(record["hrm_experience.location_id"],
+                               _href=location_url),
+                             ),
+                        " ",
+                        _class="card_1_line",
+                        )
+    else:
+        location = ""
 
     hours = raw["hrm_experience.hours"] or ""
     if hours:
@@ -6224,13 +6248,13 @@ def hrm_render_experience(listid, resource, rfields, record, **attr):
                   _class="card_1_line",
                   )
 
-    super = raw["hrm_experience.person_id"] or ""
+    super = raw["hrm_experience.supervisor_id"] or ""
     if super:
         #person_url = URL(c="hrm", f="person", args=[super, "profile"])
         person_url = URL(c="hrm", f="person", args=[super])
         super = P(I(_class="icon-user"),
                   " ",
-                  SPAN(A(record["hrm_experience.person_id"],
+                  SPAN(A(record["hrm_experience.supervisor_id"],
                          _href=person_url)
                        ),
                   " ",
@@ -6296,7 +6320,7 @@ def hrm_render_experience(listid, resource, rfields, record, **attr):
                    _class="card-header",
                    ),
                DIV(DIV(DIV(organisation,
-                           place,
+                           location,
                            date,
                            hours,
                            super,
