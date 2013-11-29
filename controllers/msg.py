@@ -1378,8 +1378,12 @@ def twitter_search():
         glayertable = s3db.gis_layer_config
         glayer_id = glayertable.insert(layer_id = layer_id,config_id = 2, enabled = 'Yes',visible = 'Yes', base = 'No', uuid = uuid_entity.uuid)
 
+        symbologytable = s3db.gis_symbology
+        symid = db(symbologytable.name == "US").select(symbologytable.id,limitby=(0,1)).first()
+        sym_marker = s3db.gis_marker
+        marker_id = db(sym_marker.name == "twitter").select(sym_marker.id,limitby=(0,1)).first()
         symtable = s3db.gis_layer_symbology
-        symtable.insert(layer_id = layer_id,symbology_id = 3,marker_id = 42)
+        symtable.insert(layer_id = layer_id,symbology_id = symid.id,marker_id = marker_id.id)
 
     keyword_str = request.post_vars.get("keywords")
 
@@ -1449,16 +1453,16 @@ def twitter_result():
     """
 
     tablename = "msg_twitter_result"
+    table = s3db[tablename]
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
         title_display = T("Twitter Search Results"),
         title_list = T("Twitter Search Results"),
-        label_list_button = T("View Tweet"),
-        msg_record_deleted = T("Tweet deleted"),
+        label_list_button = T("View Tweet"),        msg_record_deleted = T("Tweet deleted"),
         msg_list_empty = T("No Tweets Available."),
         )
 
-    from s3.s3filter import S3DateFilter, S3TextFilter
+    from s3.s3filter import S3DateFilter, S3TextFilter, S3OptionsFilter
 
     filter_widgets = [
         S3DateFilter("created_on",
@@ -1471,7 +1475,20 @@ def twitter_result():
                      label=T("Tweeted By"),
                      _class="tweeter-filter-class",
                      comment=T("Filter Tweets by who tweeted them"),
-                     )
+                     ),
+        S3OptionsFilter("image_url",
+                        label=T("With Image"),
+                        _class="image-filter-class",
+                        options=dict(yes="Yes"),
+                        widget="groupedopts",
+                        _name="image_url"
+                        ),
+        S3OptionsFilter("video_url",
+                        label=T("With Video"),
+                        _class="video-filter-class",
+                        options=dict(yes="Yes"),
+                        widget="groupedopts",
+                        _name="video_url")
         ]
 
     report_fields = ["search_id",
