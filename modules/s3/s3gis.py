@@ -2212,6 +2212,7 @@ class GIS(object):
                         for fieldname in popup_cols:
                             represent = row[fieldname]
                             if represent and represent != NONE:
+                                represent = s3_unicode(represent)
                                 # Skip empty fields
                                 if first:
                                     tooltip = "%s %s" % (represent, tooltip)

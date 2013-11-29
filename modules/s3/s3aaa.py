@@ -3795,22 +3795,13 @@ S3OptionsFilter({
         def decorator(action):
 
             def f(*a, **b):
+                
                 if self.override:
                     return action(*a, **b)
 
-                if not self.s3_logged_in():
-                    import urllib
-                    request = current.request
-                    next = URL(args=request.args, vars=request.get_vars)
-                    redirect("%s?_next=%s" % (self.settings.login_url,
-                                              urllib.quote(next)))
-
-                system_roles = self.get_system_roles()
-                ADMIN = system_roles.ADMIN
+                ADMIN = self.get_system_roles().ADMIN
                 if not self.s3_has_role(role) and not self.s3_has_role(ADMIN):
-                    current.session.error = self.messages.access_denied
-                    next = self.settings.on_failed_authorization
-                    redirect(next)
+                    self.permission.fail()
 
                 return action(*a, **b)
 

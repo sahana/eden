@@ -1601,9 +1601,9 @@ class S3XML(S3Codec):
                 except:
                     pass
 
+        TAG = cls.TAG
         if options:
             ATTRIBUTE = cls.ATTRIBUTE
-            TAG = cls.TAG
             SubElement = etree.SubElement
             if parent is not None:
                 select = SubElement(parent, TAG.select)
