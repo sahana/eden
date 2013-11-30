@@ -1108,7 +1108,8 @@ class S3Msg(object):
         if recipient:
             recipient = self._sanitise_twitter_account(recipient)
             try:
-                can_dm = twitter_api.exists_friendship(recipient, twitter_account)
+                can_dm = recipient == twitter_account or\
+                         twitter_api.get_user(recipient).id in twitter_api.followers_ids(twitter_account)
             except tweepy.TweepError: # recipient not found
                 return False
             if can_dm:
@@ -1120,8 +1121,11 @@ class S3Msg(object):
                         rec = recipient
                         if twitter_api.send_direct_message(screen_name=rec,
                                                            text=c):
+                            s3db = current.s3db
+                            db = current.db
+
                             table = s3db.msg_twitter
-                            myname = twitter_api.me()["screen_name"]
+                            myname = twitter_api.me().screen_name
                             id = table.insert(body=c,
                                               from_address=myname,
                                               )
