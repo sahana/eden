@@ -1297,11 +1297,21 @@ def twitter_search():
     table.is_processed.readable = False
     table.is_searched.readable = False
 
-    # @ToDo: I'm sure there will be other language oddities to fix
     langs = settings.get_L10n_languages().keys()
-    if "en-gb" in langs:
-        langs.remove("en-gb")
-        langs.insert(0, "en")
+
+    #Logic to remove languages not supported by Twitter and substitute where possible
+    langs_not_supported = {'en-gb': 'en', 'zh-cn': None, 'zh-tw': None, 'pt-br': 'pt'}
+    new_langs = []
+
+    for l in langs:
+        if l not in langs_not_supported.keys():
+            new_langs.append(l)
+        else:
+            supported_substitute = langs_not_supported.get(l)
+            if supported_substitute and supported_substitute not in langs:
+                new_langs.append(supported_substitute)
+    langs = new_langs
+
     table.lang.requires = IS_IN_SET(langs)
     lang_default = current.response.s3.language
     if lang_default == "en-gb":
