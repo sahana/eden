@@ -1299,8 +1299,12 @@ def twitter_search():
 
     langs = settings.get_L10n_languages().keys()
 
-    #Logic to remove languages not supported by Twitter and substitute where possible
-    langs_not_supported = {'en-gb': 'en', 'zh-cn': None, 'zh-tw': None, 'pt-br': 'pt'}
+    # Tweak languages to those supported by Twitter
+    langs_not_supported = {"en-gb": "en",
+                           "pt-br": "pt",
+                           "zh-cn": None,
+                           "zh-tw": None,
+                           }
     new_langs = []
 
     for l in langs:
@@ -1315,6 +1319,10 @@ def twitter_search():
     table.lang.requires = IS_IN_SET(langs)
     lang_default = current.response.s3.language
     if lang_default == "en-gb":
+        lang_default = "en"
+    elif lang_default == "pt-br":
+        lang_default = "pt"
+    elif lang_default in ("zh-cn", "zh-tw"):
         lang_default = "en"
     table.lang.default = lang_default
 
