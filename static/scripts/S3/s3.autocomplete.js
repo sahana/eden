@@ -1157,30 +1157,49 @@
             // No Match
             return item.label;
         }
-        var name = item.name;
-        var address = item.address;
-        if (address) {
-            name += ' (' + address + ')';
-        }
-        var location = item.location;
-        if (location) {
-            location = represent_location(location);
-            name += ' (' + location + ')';
-        }
-        var org = item.org;
-        var instance_type = item.instance_type;
-        if (org || instance_type) {
-            if (instance_type) {
-                name += ' (' + S3.org_site_types[item.instance_type];
-                if (org) {
-                    name += ', ' + org;
-                }
-                name += ')';
-            } else {
-                name += ' (' + org + ')';
+
+        if (item.match_type) {
+            // use next gen site autocomplete
+            var label = item.match_string + '<b>' + item.next_string + '</b>';
+            var context = '';
+            if (item.match_type == 'name') {
+                context = item.L1;
             }
+            else {
+                context = item.name;
+            }
+            if (context != '' && item.next_string) {
+                label += ' - ' + context;
+            }
+            return label;
         }
-        return name;
+        else {
+            // use old site auto complete
+            var name = item.name;
+            var address = item.address;
+            if (address) {
+                name += ' (' + address + ')';
+            }
+            var location = item.location;
+            if (location) {
+                location = represent_location(location);
+                name += ' (' + location + ')';
+            }
+            var org = item.org;
+            var instance_type = item.instance_type;
+            if (org || instance_type) {
+                if (instance_type) {
+                    name += ' (' + S3.org_site_types[item.instance_type];
+                    if (org) {
+                        name += ', ' + org;
+                    }
+                    name += ')';
+                } else {
+                    name += ' (' + org + ')';
+                }
+            }
+            return name;
+        }
     }
 
     /**
