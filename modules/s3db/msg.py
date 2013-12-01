@@ -1615,7 +1615,7 @@ class S3TwitterModel(S3Model):
                 # Assume person
                 ptable = s3db.pr_person
                 row = db(ptable.pe_id == row.pe_id).select(ptable.id,
-                                                           limitby=(0, 1))
+                                                           limitby=(0, 1)).first()
                 if row:
                     link = URL(c="pr", f="person", args=[row.id])
                     return A(repr, _href=link)
