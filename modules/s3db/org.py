@@ -5264,7 +5264,7 @@ def org_render_org_resources(listid, resource, rfields, record, **attr):
     date = record["org_resource.modified_on"]
     quantity = record["org_resource.value"]
     resource_type = record["org_resource.parameter_id"]
-    body = "%s %s" % (quantity, T(resource_type))
+    body = "%s %s" % (quantity, current.T(resource_type))
     comments = raw["org_resource.comments"]
     organisation = record["org_resource.organisation_id"]
     organisation_id = raw["org_resource.organisation_id"]

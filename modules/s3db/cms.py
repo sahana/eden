@@ -507,7 +507,7 @@ class S3ContentModel(S3Model):
                                       limitby=(0, 1)
                                       ).first()
             if person:
-                db(table.id == post_id).update(person_id=person_id)
+                db(table.id == post_id).update(person_id=person.id)
 
     # -----------------------------------------------------------------------------
     @staticmethod

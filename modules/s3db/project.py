@@ -5900,15 +5900,19 @@ def project_task_form_inject(r, output, project=True):
         @ToDo: Re-implement using http://eden.sahanafoundation.org/wiki/S3SQLForm
     """
 
+    settings = current.deployment_settings
+    s3_formstyle = settings.get_ui_formstyle()
+    if s3_formstyle == "bootstrap":
+        # Bail: this doesn't work for bootstrap theme
+        return output
+
+    sep = ": "
+
     T = current.T
     db = current.db
     s3db = current.s3db
     auth = current.auth
     s3 = current.response.s3
-    settings = current.deployment_settings
-
-    sep = ": "
-    s3_formstyle = settings.get_ui_formstyle()
 
     table = s3db.project_task_activity
     field = table.activity_id

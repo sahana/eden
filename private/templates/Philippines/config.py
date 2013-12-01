@@ -167,7 +167,7 @@ settings.ui.summary = [#{"common": True,
                         "widgets": [{"method": "map", "ajax_init": True}],
                         },
                        {"name": "charts",
-                        "label": "Charts",
+                        "label": "Reports",
                         "widgets": [{"method": "report2", "ajax_init": True}]
                         },
                        ]
@@ -2543,8 +2543,30 @@ def customize_org_resource(**attr):
             # Don't add new Locations here
             location_field.comment = None
 
-            # Return to List view after create/update/delete (unless done via Modal)
-            url_next = URL(c="org", f="resource")
+            # Return to Sumamry view after create/update/delete (unless done via Modal)
+            url_next = URL(c="org", f="resource", args="summary")
+
+            # @ToDo: Month/Year Lazy virtual fields
+            report_fields = ["organisation_id",
+                             "parameter_id",
+                             "location_id$L1",
+                             "location_id$L2",
+                             "location_id$L3",
+                             "location_id$L4",
+                             "value"
+                             ]
+
+            report_options = Storage(rows = report_fields,
+                                     cols = report_fields,
+                                     fact = report_fields,
+                                     defaults=Storage(rows = "location_id$L2",
+                                                      cols = "parameter_id",
+                                                      fact = "sum(value)",
+                                                      totals = True,
+                                                      chart = "barchart:rows",
+                                                      #table = "collapse",
+                                                      )
+                                     )
 
             s3db.configure("org_resource",
                            create_next = url_next,
@@ -2552,6 +2574,7 @@ def customize_org_resource(**attr):
                            update_next = url_next,
                            # Don't include a Create form in 'More' popups
                            listadd = False if r.method=="datalist" else True,
+                           report_options = report_options,
                            )
 
             s3.cancel = True
@@ -3102,8 +3125,96 @@ def customize_req_commit(**attr):
 
 settings.ui.customize_req_commit = customize_req_commit
 
+# -----------------------------------------------------------------------------
+def customize_project_task(**attr):
+    """
+        Customize project_task controller
+    """
+
+    s3 = current.response.s3
+    s3db = current.s3db
+
+    tablename = "project_task"
+    table = s3db[tablename]
+
+    # Custom PreP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+
+        from s3.s3filter import S3TextFilter, S3OptionsFilter, S3RangeFilter
+        filter_widgets = [
+            S3TextFilter(["name",
+                          "description",
+                          ],
+                         label=T("Description"),
+                         _class="filter-search",
+                         ),
+            S3OptionsFilter("priority",
+                            label=T("Priority"),
+                            #represent="%(name)s",
+                            #widget="multiselect",
+                            #options=project_task_priority_opts,
+                            cols=4,
+                            ),
+            S3OptionsFilter("pe_id",
+                            label=T("Assigned To"),
+                            # @ToDo: Implement support for this in S3OptionsFilter
+                            #null = T("Unassigned"),
+                            #represent="%(name)s",
+                            #widget="multiselect",
+                            cols=4,
+                            ),
+            S3RangeFilter("created_on",
+                          label=T("Date Created"),
+                          hide_time=True,
+                          hidden=True,
+                          ),
+            S3OptionsFilter("status",
+                            label=T("Status"),
+                            #options=project_task_status_opts,
+                            #represent="%(name)s",
+                            #widget="multiselect",
+                            cols=4,
+                            ),
+            ]
+
+        list_fields=["priority",
+                     "name",
+                     "pe_id",
+                     "status",
+                     ]
+
+        table.description.label = T("Detailed Description")
+
+        crud_form = S3SQLCustomForm("name",
+                                    "description",
+                                    "pe_id",
+                                    "priority",
+                                    "status",
+                                    )
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
+
+        return True
+    s3.prep = custom_prep
+
+    attr["hide_filter"] = False
+    attr["rheader"] = None
+    return attr
+
+settings.ui.customize_project_task = customize_project_task
+
 # =============================================================================
-# Template Modules
+# Modules
 # Comment/uncomment modules here to disable/enable them
 settings.modules = OrderedDict([
     # Core modules which shouldn't be disabled
@@ -3188,23 +3299,23 @@ settings.modules = OrderedDict([
         # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
         module_type = None,
     )),
-    #("event", Storage(
-    #    name_nice = "Disasters",
-    #    #description = "Events",
-    #    restricted = True,
-    #    module_type = None
-    #)),
+    ("event", Storage(
+        name_nice = "Disasters",
+        #description = "Events",
+        restricted = True,
+        module_type = None
+    )),
     ("req", Storage(
             name_nice = "Requests",
             #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
             restricted = True,
             module_type = None,
         )),
-    #("project", Storage(
-    #    name_nice = "Projects",
-    #    restricted = True,
-    #    module_type = None
-    #)),
+    ("project", Storage(
+        name_nice = "Projects",
+        restricted = True,
+        module_type = None
+    )),
     ("stats", Storage(
         name_nice = "Statistics",
         restricted = True,
