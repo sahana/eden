@@ -26,16 +26,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-
-
-
 from tests.web2unittest import SeleniumUnitTest
 
-def _kwsearch(instance, column, items, keyword):
-    for item in [instance.dt_data_item(i, column) for i in xrange(1, items + 1)]:
-        if not (keyword.strip().lower() in item.strip().lower()):
-            return False
-    return True
 
 class SearchItems(SeleniumUnitTest):
     def setup(self):
@@ -49,10 +41,17 @@ class SearchItems(SeleniumUnitTest):
             @case: inv018
             @description: Search Items - Simple Search
         """
-        key="Air"
         self.search(self.search.simple_form,
             True,
-            [],
-            {"tablename":"inv_inv_item", "key":key, "filters":[("type",1)]},
-            manual_check=functools.partial(_kwsearch, keyword=key, items=1, column=2)
-        )
+            ({
+                "name":"inv_inv_item",
+                "value":"A"
+                },),1,
+            match_row=(1,"ATM"))
+        
+
+
+
+
+
+
