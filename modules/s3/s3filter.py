@@ -1551,6 +1551,7 @@ class S3FilterForm(object):
         attr["_autocomplete"] = "off"
 
         opts = self.opts
+        settings = current.deployment_settings
 
         # Form style
         formstyle = opts.get("formstyle", None)
@@ -1564,7 +1565,7 @@ class S3FilterForm(object):
                                     formstyle=formstyle)
 
         # Other filter form controls
-        controls = self._render_controls()
+        controls = self._render_controls(resource)
         if controls:
             rows.append(formstyle(None, "", controls, ""))
 
@@ -1572,10 +1573,7 @@ class S3FilterForm(object):
         ajax = opts.get("ajax", False)
         submit = opts.get("submit", False)
         if submit:
-
-            settings = current.deployment_settings
-            
-            # Auto-submit
+            # Auto-submit?
             auto_submit = settings.get_ui_filter_auto_submit()
             if auto_submit and opts.get("auto_submit", True):
                 script = '''S3.search.filterFormAutoSubmit('%s',%s)''' % \
@@ -1632,7 +1630,7 @@ class S3FilterForm(object):
             if filter_manager:
                 fmrow = formstyle(None, "", filter_manager, "")
                 if hasattr(fmrow, "add_class"):
-                    fmrow.add_class("filter-manager-row")
+                    fmrow.add_class("hide filter-manager-row")
                 rows.append(fmrow)
 
         # Adapt to formstyle: render a TABLE only if formstyle returns TRs
@@ -1676,7 +1674,7 @@ class S3FilterForm(object):
                                     alias=alias,
                                     formstyle=formstyle)
 
-        controls = self._render_controls()
+        controls = self._render_controls(resource)
         if controls:
             rows.append(formstyle(None, "", controls, ""))
         
@@ -1695,18 +1693,19 @@ class S3FilterForm(object):
         return fields
 
     # -------------------------------------------------------------------------
-    def _render_controls(self):
+    def _render_controls(self, resource):
         """
             Render optional additional filter form controls: advanced
             options toggle, clear filters.
         """
 
+        T = current.T
         controls = []
+        opts = self.opts
     
-        advanced = self.opts.get("advanced", False)
+        advanced = opts.get("advanced", False)
         if advanced:
             _class = "filter-advanced"
-            T = current.T
             if advanced is True:
                 label = T("More Options")
             elif isinstance(advanced, (list, tuple)):
@@ -1724,11 +1723,11 @@ class S3FilterForm(object):
                              _class=_class)
             controls.append(advanced)
 
-        clear = self.opts.get("clear", True)
+        clear = opts.get("clear", True)
         if clear:
             _class = "filter-clear"
             if clear is True:
-                label = current.T("Clear filter")
+                label = T("Clear filter")
             elif isinstance(clear, (list, tuple)):
                 label = clear[0]
                 _class = "%s %s" % (clear[1], _class)
@@ -1737,6 +1736,12 @@ class S3FilterForm(object):
             clear = A(label, _class=_class)
             clear.add_class("action-lnk")
             controls.append(clear)
+
+        fm = current.deployment_settings.get_search_filter_manager()
+        if fm and opts.get("filter_manager", resource is not None):
+            show_fm = A(T("Saved filters"),
+                        _class="show-filter-manager action-lnk")
+            controls.append(show_fm)
 
         if controls:
             return DIV(controls, _class="filter-controls")

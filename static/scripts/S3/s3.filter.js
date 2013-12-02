@@ -1551,6 +1551,12 @@ S3.search = {};
             clearFilters(form);
         });
 
+        // Show Filter Manager
+        $('.show-filter-manager').click(function() {
+            $('.filter-manager-row').removeClass('hide').show();
+            $('.show-filter-manager').hide();
+        });
+
         // Filter-form submission
         $('.filter-submit').click(function() {
             filterSubmit($(this).closest('form.filter-form'));

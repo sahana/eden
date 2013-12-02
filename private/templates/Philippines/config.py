@@ -2577,7 +2577,8 @@ def customize_org_resource(**attr):
                            report_options = report_options,
                            )
 
-            s3.cancel = True
+            # This is awful in Popups & inconsistent in dataTable view (People/Documents don't have this & it breaks the styling of the main Save button)
+            #s3.cancel = URL(c="org", f="resource")
 
         return True
     s3.prep = custom_prep
@@ -3172,7 +3173,7 @@ def customize_project_task(**attr):
             S3RangeFilter("created_on",
                           label=T("Date Created"),
                           hide_time=True,
-                          hidden=True,
+                          #hidden=True,
                           ),
             S3OptionsFilter("status",
                             label=T("Status"),
