@@ -1638,7 +1638,6 @@ def group_membership():
     table = s3db.pr_group_membership
 
     # Hide unnecessary fields
-    table.description.readable = table.description.writable = False
     table.comments.readable = table.comments.writable = False
     table.group_head.readable = table.group_head.writable = False
 
