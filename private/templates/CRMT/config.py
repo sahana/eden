@@ -900,8 +900,16 @@ def customize_org_organisation(**attr):
             table.logo.readable = table.logo.writable = False 
 
             if method in ("summary", "report2"):
-                from s3.s3filter import S3OptionsFilter
-                filter_widgets = [S3OptionsFilter("group_membership.group_id",
+                from s3.s3filter import S3OptionsFilter, S3TextFilter
+                filter_widgets = [S3TextFilter(["name",
+                                                "group_membership.group_id",
+                                                "sector_organisation.sector_id",
+                                                "service_organisation.service_id",
+                                                "comments"
+                                                ],
+                                                label = T("Search"),
+                                               ),
+                                  S3OptionsFilter("group_membership.group_id",
                                                   label=T("Coalition"),
                                                   represent="%(name)s",
                                                   widget="multiselect",
@@ -1279,8 +1287,20 @@ def customize_org_facility(**attr):
                 msg_list_empty = T("No Places currently recorded"))
 
             if method in ("summary", "report2"):
-                from s3.s3filter import S3OptionsFilter
-                filter_widgets = [S3OptionsFilter("site_org_group.group_id",
+                from s3.s3filter import S3OptionsFilter, S3TextFilter
+                filter_widgets = [S3TextFilter(["name",
+                                                "site_org_group.group_id",
+                                                "site_facility_type.facility_type_id",
+                                                "organisation_id",
+                                                "location_id",
+                                                "contact",
+                                                "phone1",
+                                                "email",
+                                                "comments"
+                                                ],
+                                                label = T("Search"),
+                                               ),
+                                 S3OptionsFilter("site_org_group.group_id",
                                                   label=T("Coalition"),
                                                   represent="%(name)s",
                                                   widget="multiselect",
@@ -1518,8 +1538,18 @@ def customize_stats_people(**attr):
                 msg_list_empty = T("No People currently recorded"))
             
             if method in ("summary", "report2"):
-                from s3.s3filter import S3OptionsFilter
-                filter_widgets = [S3OptionsFilter("people_group.group_id",
+                from s3.s3filter import S3OptionsFilter, S3TextFilter
+                filter_widgets = [S3TextFilter(["name",
+                                                "people_group.group_id",
+                                                "parameter_id",
+                                                "organisation_id",
+                                                "location_id",
+                                                "person_id",
+                                                "comments"
+                                                ],
+                                                label = T("Search"),
+                                               ),
+                                  S3OptionsFilter("people_group.group_id",
                                                   label=T("Coalition"),
                                                   represent="%(name)s",
                                                   widget="multiselect",
@@ -1714,8 +1744,15 @@ def customize_vulnerability_evac_route(**attr):
             s3db.vulnerability_evac_route_group.group_id.label = T("Coalition")
 
             if method in ("summary", "report2"):
-                from s3.s3filter import S3OptionsFilter
-                filter_widgets = [S3OptionsFilter("evac_route_group.group_id",
+                from s3.s3filter import S3OptionsFilter, S3TextFilter
+                filter_widgets = [S3TextFilter(["name",
+                                                "evac_route_group.group_id",
+                                                "location_id",
+                                                "comments"
+                                                ],
+                                                label = T("Search"),
+                                               ),
+                                  S3OptionsFilter("evac_route_group.group_id",
                                                   label=T("Coalition"),
                                                   represent="%(name)s",
                                                   widget="multiselect",
@@ -1901,8 +1938,15 @@ def customize_vulnerability_risk(**attr):
                 #group_filter = (S3FieldSelector("group.id") != None)
                 #r.resource.add_filter(group_filter)
 
-                from s3.s3filter import S3OptionsFilter
-                filter_widgets = [S3OptionsFilter("risk_group.group_id",
+                from s3.s3filter import S3OptionsFilter, S3TextFilter
+                filter_widgets = [S3TextFilter(["name",
+                                                "risk_group.group_id",
+                                                "location_id",
+                                                "comments"
+                                                ],
+                                                label = T("Search"),
+                                               ),
+                                  S3OptionsFilter("risk_group.group_id",
                                                   label=T("Coalition"),
                                                   represent="%(name)s",
                                                   widget="multiselect",

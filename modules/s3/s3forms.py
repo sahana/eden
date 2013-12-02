@@ -344,9 +344,9 @@ class S3SQLDefaultForm(S3SQLForm):
             if settings.submit_style:
                 submit_button.add_class(settings.submit_style)
             buttons = [submit_button,
-                       A(current.T("Cancel"),
+                       A(T("Cancel"),
                          _href=s3.cancel,
-                         _class="action-lnk")]
+                         _class="cancel-form-btn action-lnk")]
 
         # Generate the form
         if record is None:
@@ -858,9 +858,9 @@ class S3SQLCustomForm(S3SQLForm):
             if settings.submit_style:
                 submit_button.add_class(settings.submit_style)
             buttons = [submit_button,
-                       A(current.T("Cancel"),
+                       A(T("Cancel"),
                          _href=s3.cancel,
-                         _class="action-lnk")]
+                         _class="cancel-form-btn action-lnk")]
 
         # Render the form
         tablename = self.tablename

@@ -2295,7 +2295,8 @@ def customize_cms_post(**attr):
                            list_layout = render_posts,
                            )
 
-            s3.cancel = True
+            # This is awful in Popups & it breaks the styling of the main Save button
+            #s3.cancel = URL(c="cms", f="post")
         elif r.representation == "xls":
             table = r.table
             table.created_by.represent = s3_auth_user_represent_name
@@ -3020,7 +3021,8 @@ def customize_org_office(**attr):
                 location_field.widget = S3LocationSelectorWidget2(levels=("L0", "L1"),
                                                                   show_address=True,
                                                                   show_map=False)
-            s3.cancel = True
+            # This is awful in Popups & inconsistent in dataTable view (People/Documents don't have this & it breaks the styling of the main Save button)
+            #s3.cancel = URL(c="org", f="office")
 
         return True
     s3.prep = custom_prep
@@ -3773,7 +3775,8 @@ def customize_project_project(**attr):
                            filter_widgets = filter_widgets,
                            )
 
-            s3.cancel = True
+            # This is awful in Popups & inconsistent in dataTable view (People/Documents don't have this & it breaks the styling of the main Save button)
+            #s3.cancel = URL(c="project", f="project")
 
         return True
     s3.prep = custom_prep
@@ -3924,7 +3927,8 @@ def customize_project_beneficiary(**attr):
                        report_options = report_options,
                        )
 
-        s3.cancel = True
+        # This is awful in Popups & inconsistent in dataTable view (People/Documents don't have this & it breaks the styling of the main Save button)
+        #s3.cancel = URL(c="project", f="beneficiary")
 
         return True
     s3.prep = custom_prep

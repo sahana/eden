@@ -561,8 +561,6 @@ def newsfeed():
                            list_layout = s3db.cms_render_posts,
                            )
 
-            #s3.cancel = True
-
         elif r.representation == "xls":
             table.created_by.represent = s3base.s3_auth_user_represent_name
             #table.created_on.represent = datetime_represent

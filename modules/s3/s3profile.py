@@ -860,13 +860,14 @@ class S3Profile(S3CRUD):
             @param context: the context filter
             @param numrows: the total number of rows in the list/table
         """
-        
+
         create = ""
         insert = widget.get("insert", True)
         
         table = resource.table
         if insert and current.auth.s3_has_permission("create", table):
-            
+
+            s3 = current.response.s3
             tablename = resource.tablename
             
             #if tablename = "org_organisation":
@@ -917,7 +918,7 @@ class S3Profile(S3CRUD):
                 # Custom widget
                 create = insert(r, listid, title_create, add_url)
                 
-            elif current.response.s3.crud.formstyle == "bootstrap":
+            elif s3.crud.formstyle == "bootstrap":
                 # Bootstrap-style action icon
                 create = A(I(_class="icon icon-plus-sign small-add"),
                            _href=add_url,
