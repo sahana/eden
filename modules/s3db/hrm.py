@@ -30,6 +30,7 @@
 __all__ = ["S3HRModel",
            "S3HRSiteModel",
            "S3HRSkillModel",
+           "S3HRAppraisalModel",
            "S3HRCourseSectorModel",
            "S3HRExperienceModel",
            "S3HRProgrammeModel",
@@ -1988,29 +1989,26 @@ class S3HRSkillModel(S3Model):
 
         # Used by Courses
         # & 6-monthly rating (Portuguese Bombeiros)
-        hrm_pass_fail_opts = {
-            8: T("Pass"),
-            9: T("Fail")
-        }
+        hrm_pass_fail_opts = {8: T("Pass"),
+                              9: T("Fail"),
+                              }
         # 12-monthly rating (Portuguese Bombeiros)
         # - this is used to determine rank progression (need 4-5 for 5 years)
-        hrm_five_rating_opts = {
-            1: T("Poor"),
-            2: T("Fair"),
-            3: T("Good"),
-            4: T("Very Good"),
-            5: T("Excellent")
-        }
+        hrm_five_rating_opts = {1: T("Poor"),
+                                2: T("Fair"),
+                                3: T("Good"),
+                                4: T("Very Good"),
+                                5: T("Excellent"),
+                                }
         # Lookup to represent both sorts of ratings
-        hrm_performance_opts = {
-            1: T("Poor"),
-            2: T("Fair"),
-            3: T("Good"),
-            4: T("Very Good"),
-            5: T("Excellent"),
-            8: T("Pass"),
-            9: T("Fail")
-        }
+        hrm_performance_opts = {1: T("Poor"),
+                                2: T("Fair"),
+                                3: T("Good"),
+                                4: T("Very Good"),
+                                5: T("Excellent"),
+                                8: T("Pass"),
+                                9: T("Fail"),
+                                }
 
         tablename = "hrm_credential"
         table = define_table(tablename,
@@ -3102,6 +3100,99 @@ def hrm_training_onaccept(form):
         hrm_certification_onaccept(form)
 
 # =============================================================================
+class S3HRAppraisalModel(S3Model):
+    """
+        Appraisal for an HR
+        - can be for a specific Mission or routine annual appraisal
+    """
+
+    names = ["hrm_appraisal",
+             ]
+
+    def model(self):
+
+        T = current.T
+        person_id = self.pr_person_id
+
+        if current.deployment_settings.get_org_autocomplete():
+            org_widget = S3OrganisationAutocompleteWidget(default_from_profile=True)
+        else:
+            org_widget = None
+
+        # =====================================================================
+        # Appraisal
+        #
+
+        tablename = "hrm_appraisal"
+        table = self.define_table(tablename,
+                                  person_id(),
+                                  # For Mission or Event
+                                  Field("code",
+                                        label = T("Code"),
+                                        readable = False,
+                                        writable = False,
+                                        ),
+                                  self.org_organisation_id(widget = org_widget),
+                                  self.hrm_job_title_id(),
+                                  s3_date(),
+                                  person_id("supervisor_id",
+                                            label = T("Supervisor"),
+                                            requires = IS_NULL_OR(
+                                                        IS_ADD_PERSON_WIDGET()
+                                                        ),
+                                            widget = S3AddPersonWidget(),
+                                            # Doesn't work outside of Bootstrap yet
+                                            #requires = IS_ADD_PERSON_WIDGET2(),
+                                            #widget = S3AddPersonWidget2(),
+                                            ),
+                                  Field("rating", "integer",
+                                        label = T("Rating"),
+                                        requires = IS_INT_IN_RANGE(0, 6), # Need 6 to allow 5!?
+                                        default = 0,
+                                        ),
+                                  s3_comments(),
+                                  *s3_meta_fields())
+
+        ADD_APPRAISAL = T("Add Appraisal")
+        current.response.s3.crud_strings[tablename] = Storage(
+            title_create = ADD_APPRAISAL,
+            title_display = T("Appraisal Details"),
+            title_list = T("Appraisals"),
+            title_update = T("Edit Appraisal"),
+            title_search = T("Search Appraisals"),
+            subtitle_create = ADD_APPRAISAL,
+            label_list_button = T("List of Appraisals"),
+            label_create_button = T("Add New Appraisal"),
+            label_delete_button = T("Delete Appraisal"),
+            msg_record_created = T("Appraisal added"),
+            msg_record_modified = T("Appraisal updated"),
+            msg_record_deleted = T("Appraisal deleted"),
+            msg_no_match = T("No Appraisals found"),
+            msg_list_empty = T("Currently no Appraisals entered"))
+
+        self.configure(tablename,
+                       context = {"person": "person_id",
+                                  #"organisation": "organisation_id",
+                                  },
+                       list_fields = ["id",
+                                      # Normally accessed via component
+                                      #"person_id",
+                                      "date",
+                                      "organisation_id",
+                                      "job_title_id",
+                                      "supervisor_id",
+                                      "comments",
+                                      ],
+                       #list_layout = hrm_render_appraisal,
+                       orderby = ~table.date,
+                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return dict()
+
+# =============================================================================
 class S3HRCourseSectorModel(S3Model):
     """
         Link tables between Training Courses & Sectors
@@ -3207,13 +3298,14 @@ class S3HRExperienceModel(S3Model):
                                   s3_comments(),
                                   *s3_meta_fields())
 
+        ADD_EXPERIENCE = T("Add Professional Experience")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = T("Add Professional Experience"),
+            title_create = ADD_EXPERIENCE,
             title_display = T("Professional Experience Details"),
             title_list = T("Professional Experience"),
             title_update = T("Edit Professional Experience"),
             title_search = T("Search Professional Experience"),
-            subtitle_create = T("Add Professional Experience"),
+            subtitle_create = ADD_EXPERIENCE,
             label_list_button = T("List of Professional Experience"),
             label_create_button = T("Add New Professional Experience"),
             label_delete_button = T("Delete Professional Experience"),
@@ -3223,7 +3315,7 @@ class S3HRExperienceModel(S3Model):
             msg_no_match = T("No Professional Experience found"),
             msg_list_empty = T("Currently no Professional Experience entered"))
 
-        self.configure("hrm_experience",
+        self.configure(tablename,
                        context = {"person": "person_id",
                                   "organisation": "organisation_id",
                                   },
@@ -3343,7 +3435,7 @@ class S3HRProgrammeModel(S3Model):
                                                  joinby="programme_id"))
 
         configure(tablename,
-                  deduplicate=self.hrm_programme_duplicate,
+                  deduplicate = self.hrm_programme_duplicate,
                   )
 
         # =========================================================================

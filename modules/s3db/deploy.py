@@ -61,6 +61,7 @@ class S3DeploymentModel(S3Model):
              "deploy_application",
              "deploy_sector",
              "deploy_assignment",
+             "deploy_assignment_appraisal",
              "deploy_assignment_experience",
              ]
 
@@ -204,7 +205,7 @@ class S3DeploymentModel(S3Model):
                                      "start_date",
                                      "end_date",
                                      "sector_id",
-                                     "rating",
+                                     "appraisal.rating",
                                  ],
                                  context = "mission",
                                  colspan = 2,
@@ -344,6 +345,8 @@ class S3DeploymentModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Sectors that a Person is deemed competent in
+        # - like hrm_credential, but these are just within RDRT
+        # (based on sector, not job title, don't expire & aren't to be editable by anyone else)
         #
         tablename = "deploy_sector"
         table = define_table(tablename,
@@ -374,13 +377,6 @@ class S3DeploymentModel(S3Model):
                              s3_date("end_date",
                                      label = T("End Date"),
                                      ),
-                             # Use hrm_appraisal 'Upload Appraisal' Action button in Assignment card
-                             # Averaged in response cards
-                             Field("rating", "integer",
-                                   label = T("Rating"),
-                                   requires = IS_INT_IN_RANGE(0, 5),
-                                   default = 0,
-                                   ),
                              *s3_meta_fields())
 
         # Table configuration
@@ -409,6 +405,23 @@ class S3DeploymentModel(S3Model):
             msg_record_modified = T("Deployment Details updated"),
             msg_record_deleted = T("Deployment deleted"),
             msg_list_empty = T("No Deployments currently registered"))
+
+        # Components
+        add_component("hrm_appraisal",
+                      deploy_assignment=dict(name="appraisal",
+                                             link="deploy_assignment_appraisal",
+                                             joinby="assignment_id",
+                                             key="appraisal_id",
+                                             autodelete=False))
+
+        # ---------------------------------------------------------------------
+        # Link Assignments to Appraisals
+        #
+        tablename = "deploy_assignment_appraisal"
+        table = define_table(tablename,
+                             Field("assignment_id", table),
+                             Field("appraisal_id", self.hrm_appraisal),
+                             *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Link Assignments to Experience
@@ -953,7 +966,7 @@ def deploy_rheader(r, tabs=[], profile=False):
                 (T("Recipients (%(number)s Total)") %
                    dict(number=recipients),
                  "recipient"),
-               ]
+                ]
         if unsent:
             # Insert tab to select recipients
             tabs.insert(1, (T("Select Recipients"), "select"))
@@ -1183,14 +1196,16 @@ def deploy_render_alert(listid, resource, rfields, record, **attr):
     rcount = htable.id.count()
     rows = current.db(query).select(region, rcount, left=left, groupby=region)
 
+    recips = 0
     if rows:
         represent = otable.region_id.represent
         regions = represent.bulk([row[region] for row in rows])
-        none=None
+        none = None
         recipients = []
         for row in rows:
             region_id = row[region]
             num = row[rcount]
+            recips += num
             if region_id:
                 region_name = regions.get(region_id)
             else:
@@ -1235,6 +1250,14 @@ def deploy_render_alert(listid, resource, rfields, record, **attr):
     open_url = URL(f="alert", args=[record_id])
     toolbox = deploy_render_profile_toolbox(resource, record_id,
                                             open_url=open_url)
+    if not sent and recips and \
+       current.auth.s3_has_permission("update", resource.table, record_id=record_id):
+        send_btn = A(I(" ", _class="icon icon-envelope-alt"),
+                     _onclick="window.location.href='%s';" %
+                        URL(c="deploy", f="alert",
+                            args=[record_id, "send"]))
+        toolbox.insert(0, send_btn)
+                                            
     # Render the item
     item = DIV(DIV(A(IMG(_class="media-object",
                          _src=URL(c="static",
@@ -1323,19 +1346,25 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
         deploy_action = ""
 
     # Number of previous deployments and average rating
-    # @todo: bulk lookup instead of per-card
+    # @todo: bulk lookups instead of per-card
     if human_resource_id:
-        table = current.s3db.deploy_assignment
+        s3db = current.s3db
+        table = s3db.deploy_assignment
         query = (table.human_resource_id == human_resource_id) & \
                 (table.deleted != True)
-        dcount = table.id.count()
+        dcount = db(query).count()
+
+        table = s3db.hrm_appraisal
+        htable = s3db.hrm_human_resource
+        query = (htable.id == human_resource_id) & \
+                (htable.person_id == table.person_id) & \
+                (table.deleted != True)
+        dcount = db(query).count()
         avgrat = table.rating.avg()
-        row = db(query).select(dcount, avgrat).first()
+        row = db(query).select(avgrat).first()
         if row:
-            dcount = row[dcount]
             avgrat = row[avgrat]
         else:
-            dcount = 0
             avgrat = None
     else:
         dcount = avgrat = "?"
@@ -1506,12 +1535,14 @@ def deploy_render_assignment(listid, resource, rfields, record,
 
     item_class = "thumbnail"
 
+    T = current.T
     raw = record["_row"]
     human_resource_id = raw["hrm_human_resource.id"]
 
     profile_url = URL(f="human_resource", args=[human_resource_id, "profile"])
-    profile_title = current.T("Open Member Profile (in a new tab)")
-    
+    profile_title = T("Open Member Profile (in a new tab)")
+
+    person_id = raw["hrm_human_resource.person_id"]
     person = A(record["hrm_human_resource.person_id"],
                _href=profile_url,
                _target="_blank",
@@ -1530,16 +1561,44 @@ def deploy_render_assignment(listid, resource, rfields, record,
     toolbox = deploy_render_profile_toolbox(resource, record_id,
                                             update_url=update_url)
 
+    
+    s3db = current.s3db
+    atable = s3db.hrm_appraisal
+    ltable = s3db.deploy_assignment_appraisal
+    query = (ltable.assignment_id == record_id) & \
+            (atable.id == ltable.appraisal_id) & \
+            (atable.deleted != True)
+    appraisal = current.db(query).select(atable.id,
+                                         limitby=(0, 1)).first()
+    permit = current.auth.s3_has_permission
+    if appraisal and permit("update", atable, record_id=appraisal.id):
+        upload_btn = A(I(" ", _class="icon icon-paperclip"),
+                       _href=URL(c="deploy", f="person",
+                                 args=[person_id, "appraisal", appraisal.id, "update.popup"]),
+                       _class="s3_modal",
+                       _title=T("Upload Appraisal"),
+                       )
+        toolbox.insert(0, upload_btn)
+    elif permit("update", resource.table, record_id=record_id):
+        # Currently we assume that anyone who can edit the assignment can upload the appraisal
+        upload_btn = A(I(" ", _class="icon icon-paperclip"),
+                       _href=URL(c="deploy", f="person",
+                                 args=[person_id, "appraisal", "create.popup"]),
+                       _class="s3_modal",
+                       _title=T("Upload Appraisal"),
+                       )
+        toolbox.insert(0, upload_btn)
+
     # Render the item
     item = DIV(DIV(A(IMG(_class="media-object",
                          _src=URL(c="static",
                                   f="themes",
                                   args=["IFRC", "img", "member.png"]),
                          ),
-                         _class="pull-left",
-                         #_href=profile_url,
-                         #_title=profile_title,
-                   ),
+                     _class="pull-left",
+                     #_href=profile_url,
+                     #_title=profile_title,
+                     ),
                    toolbox,
                    DIV(DIV(DIV(person,
                                _class="card-title"),
@@ -1549,15 +1608,15 @@ def deploy_render_assignment(listid, resource, rfields, record,
                        render("deploy_assignment.start_date",
                               "deploy_assignment.end_date",
                               "deploy_assignment.sector_id",
-                              "deploy_assignment.rating",
-                       ),
+                              "hrm_appraisal.rating",
+                              ),
                        _class="media-body",
-                   ),
+                       ),
                    _class="media",
-               ),
+                   ),
                _class=item_class,
                _id=item_id,
-           )
+               )
 
     return item
 

@@ -707,11 +707,10 @@ class S3PersonModel(S3Model):
         # ---------------------------------------------------------------------
         # Person
         #
-        pr_gender_opts = {
-            1:"",
-            2:T("female"),
-            3:T("male")
-        }
+        pr_gender_opts = {1: "",
+                          2: T("female"),
+                          3: T("male"),
+                          }
         pr_gender = S3ReusableField("gender", "integer",
                                     requires = IS_IN_SET(pr_gender_opts, zero=None),
                                     default = 1,
@@ -719,13 +718,12 @@ class S3PersonModel(S3Model):
                                     represent = lambda opt: \
                                                 pr_gender_opts.get(opt, UNKNOWN_OPT))
 
-        pr_impact_tags = {
-            1: T("injured"),
-            4: T("diseased"),
-            2: T("displaced"),
-            5: T("separated from family"),
-            3: T("suffered financial losses")
-        }
+        pr_impact_tags = {1: T("injured"),
+                          2: T("displaced"),
+                          3: T("suffered financial losses"),
+                          4: T("diseased"),
+                          5: T("separated from family"),
+                          }
 
         if settings.get_L10n_mandatory_lastname():
             last_name_validate = IS_NOT_EMPTY(error_message = T("Please enter a last name"))
@@ -948,6 +946,9 @@ class S3PersonModel(S3Model):
         add_component("hrm_experience", pr_person="person_id")
         add_component("hrm_programme_hours", pr_person=dict(name="hours",
                                                             joinby="person_id"))
+
+        # Appraisals
+        add_component("hrm_appraisal", pr_person="person_id")
 
         # Awards
         add_component("vol_volunteer_award", pr_person=dict(name="award",

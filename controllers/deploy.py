@@ -19,7 +19,7 @@ def index():
     module_name = settings.modules[module].name_nice
     response.title = module_name
     return dict(module_name=module_name)
-    
+
 # =============================================================================
 def mission():
     """ RESTful CRUD Controller """
@@ -115,7 +115,7 @@ def response_message():
 
     return s3_rest_controller("deploy", "response",
                               custom_crud_buttons = {"list_btn": None})
-    
+
 # =============================================================================
 def human_resource():
     """
@@ -154,7 +154,7 @@ def person():
     # Replace default title in imports:
     retitle = lambda r: {"title": T("Import Members")} \
                         if r.method == "import" else None
-    
+
     return s3db.hrm_person_controller(replace_option=None,
                                       csv_extra_fields=[
                                             dict(label="Deployable",
@@ -241,7 +241,7 @@ def alert():
     settings.hrm.staff_experience = True
     settings.hrm.use_skills = True
     settings.search.filter_manager = True
-    
+
     def prep(r):
         if r.component:
             if r.component.alias == "select":
