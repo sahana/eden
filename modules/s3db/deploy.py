@@ -1587,9 +1587,6 @@ def deploy_render_sectors(listid, resource, rfields, record,
 
     item_class = "thumbnail"
 
-    row = record["_row"]
-    sector_id = raw["deploy_sector.sector_id"]
-
     # Toolbox
     update_url = URL(c="deploy", f="sector",
                      args=[record_id, "update.popup"],
@@ -1598,25 +1595,8 @@ def deploy_render_sectors(listid, resource, rfields, record,
                                             update_url=update_url)
 
     # Render the item
-    item = DIV(DIV(A(IMG(_class="media-object",
-                         _src=URL(c="static",
-                                  f="themes",
-                                  args=["IFRC", "img", "member.png"]),
-                         ),
-                         _class="pull-left",
-                         #_href=profile_url,
-                         #_title=profile_title,
-                   ),
-                   toolbox,
-                   DIV(DIV(DIV(person,
-                               _class="card-title"),
-                           DIV(organisation,
-                               _class="card-category"),
-                           _class="media-heading"),
-                       render("deploy_assignment.start_date",
-                              "deploy_assignment.end_date",
-                              "deploy_assignment.sector_id",
-                              "deploy_assignment.rating",
+    item = DIV(DIV(toolbox,
+                   DIV(render("deploy_sector.sector_id",
                        ),
                        _class="media-body",
                    ),

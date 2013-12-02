@@ -955,16 +955,17 @@ class Strings:
                                        "%s.py" % lang_code)
 
             data = read_dict(w2pfilename)
-            try:
-                # Python 2.7
-                data = {k: v for k, v in data.iteritems() if k != v}
-            except:
-                # Python 2.6
-                newdata = {}
-                for k, v in data.iteritems():
-                    if k != v:
-                        new_data[k] = v
-                data = new_data
+            #try:
+            #    # Python 2.7
+            #    # - won't even compile
+            #    data = {k: v for k, v in data.iteritems() if k != v}
+            #except:
+            # Python 2.6
+            newdata = {}
+            for k, v in data.iteritems():
+                if k != v:
+                    new_data[k] = v
+            data = new_data
 
             write_dict(w2pfilename, data)
 

@@ -213,8 +213,6 @@ def sector():
         if r.record:
             table = r.resource.table
             table.person_id.writable = False
-        if r.representation == "popup":
-            r.resource.configure(insertable=False)
         return True
     s3.prep = prep
 

@@ -5160,6 +5160,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                                 ),
                            profile_widgets = [contacts_widget,
                                               address_widget,
+                                              sectors_widget,
                                               skills_widget,
                                               trainings_widget,
                                               experience_widget,
