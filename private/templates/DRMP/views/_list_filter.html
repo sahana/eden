@@ -49,6 +49,11 @@
 {{script = '''$('#list-add').show()
 $('#show-add-btn').hide()'''}}
 {{else:}}
-{{script = '''$('#show-add-btn').click(function(){$('#list-add').show()
- $('#show-add-btn').hide()})'''}}
+{{script = '''
+ $('#show-add-btn').click(function(){$('#list-add').show()
+  $('#show-add-btn').hide()})
+ $('.cancel-form-btn').click(function(event){$('#list-add').hide()
+  event.preventDefault()
+  $('#show-add-btn').show()})
+'''}}
 {{pass}}{{s3.jquery_ready.append(script)}}

@@ -860,7 +860,7 @@ class S3Profile(S3CRUD):
             @param context: the context filter
             @param numrows: the total number of rows in the list/table
         """
-        
+
         create = ""
         insert = widget.get("insert", True)
         
@@ -951,7 +951,7 @@ class S3Profile(S3CRUD):
 '''$('#%(listid)s').on('listUpdate',function(){
 $('#%(createid)s').css({display:$(this).datalist('getTotalItems')?'none':'block'})
 })''' % dict(listid=listid, createid=createid)
-                    s3.jquery_ready.append(script)
+                    current.response.s3.jquery_ready.append(script)
 
         return create
 

@@ -5248,6 +5248,7 @@ def org_render_org_resources(listid, resource, rfields, record, **attr):
     """
 
     pkey = "org_resource.id"
+    T = current.T
 
     # Construct the item ID
     if pkey in record:
