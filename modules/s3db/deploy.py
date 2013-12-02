@@ -607,6 +607,8 @@ class S3DeploymentModel(S3Model):
             Update linked hrm_experience record
         """
 
+        db = current.db
+        s3db = current.s3db
         form_vars = form.vars
 
         # Lookup Experience
