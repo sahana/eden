@@ -206,6 +206,21 @@ def assignment():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def sector():
+    """ RESTful CRUD Controller """
+
+    def prep(r):
+        if r.record:
+            table = r.resource.table
+            table.person_id.writable = False
+        if r.representation == "popup":
+            r.resource.configure(insertable=False)
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def person_search():
     """
         Human Resource REST controller

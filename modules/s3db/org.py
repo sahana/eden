@@ -2055,7 +2055,8 @@ class S3SiteModel(S3Model):
                                     "instance_type",
                                     "name",
                                     "organisation_id",
-                                    "location_id"]
+                                    "location_id",
+                                    ]
                        )
 
         # Coalitions

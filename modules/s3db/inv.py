@@ -355,7 +355,7 @@ class S3WarehouseModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage()
+        return dict()
 
     # -------------------------------------------------------------------------
     #@staticmethod
@@ -725,12 +725,11 @@ S3OptionsFilter({
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                    inv_item_id = inv_item_id,
+        return dict(inv_item_id = inv_item_id,
                     inv_item_represent = self.inv_item_represent,
                     inv_remove = self.inv_remove,
                     inv_prep = self.inv_prep,
-                )
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1389,9 +1388,10 @@ class S3TrackingModel(S3Model):
                                      writable = False),
                              s3_datetime(label = T("Date Received"),
                                          represent = "date",
-                                         comment = DIV(_class="tooltip",
-                                                       _title="%s|%s" % (T("Date Received"),
-                                                                         T("Will be filled automatically when the Shipment has been Received"))),
+                                         # Can also be set manually (when catching up with backlog of paperwork)
+                                         #comment = DIV(_class="tooltip",
+                                         #              _title="%s|%s" % (T("Date Received"),
+                                         #                                T("Will be filled automatically when the Shipment has been Received"))),
                                          ),
                              send_ref(),
                              recv_ref(),
@@ -1891,12 +1891,12 @@ S3OptionsFilter({
         #---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(inv_send_controller = self.inv_send_controller,
-                       inv_send_onaccept = self.inv_send_onaccept,
-                       inv_send_process = self.inv_send_process,
-                       inv_track_item_deleting = self.inv_track_item_deleting,
-                       inv_track_item_onaccept = self.inv_track_item_onaccept,
-                       )
+        return dict(inv_send_controller = self.inv_send_controller,
+                    inv_send_onaccept = self.inv_send_onaccept,
+                    inv_send_process = self.inv_send_process,
+                    inv_track_item_deleting = self.inv_track_item_deleting,
+                    inv_track_item_onaccept = self.inv_track_item_onaccept,
+                    )
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -3737,48 +3737,47 @@ def inv_send_pdf_footer(r):
     """
 
     if r.record:
-        footer = DIV (TABLE (TR(TH(T("Commodities Loaded")),
-                                TH(T("Date")),
-                                TH(T("Function")),
-                                TH(T("Name")),
-                                TH(T("Signature")),
-                                TH(T("Location (Site)")),
-                                TH(T("Condition")),
-                                ),
-                             TR(TD(T("Loaded By")),
-                                TD(),
-                                TD(),
-                                TD(),
-                                TD(),
-                                TD(),
-                                TD(),
-                                ),
-                             TR(TD(T("Transported By")),
-                                TD(),
-                                TD(),
-                                TD(),
-                                TD(),
-                                TD(),
-                                TD(),
-                                ),
-                             TR(TH(T("Reception")),
-                                TH(T("Date")),
-                                TH(T("Function")),
-                                TH(T("Name")),
-                                TH(T("Signature")),
-                                TH(T("Location (Site)")),
-                                TH(T("Condition")),
-                                ),
-                             TR(TD(T("Received By")),
-                                TD(),
-                                TD(),
-                                TD(),
-                                TD(),
-                                TD(),
-                                TD(),
-                                ),
-                            )
-                     )
+        footer = DIV(TABLE(TR(TH(T("Commodities Loaded")),
+                              TH(T("Date")),
+                              TH(T("Function")),
+                              TH(T("Name")),
+                              TH(T("Signature")),
+                              TH(T("Location (Site)")),
+                              TH(T("Condition")),
+                              ),
+                           TR(TD(T("Loaded By")),
+                              TD(),
+                              TD(),
+                              TD(),
+                              TD(),
+                              TD(),
+                              TD(),
+                              ),
+                           TR(TD(T("Transported By")),
+                              TD(),
+                              TD(),
+                              TD(),
+                              TD(),
+                              TD(),
+                              TD(),
+                              ),
+                           TR(TH(T("Reception")),
+                              TH(T("Date")),
+                              TH(T("Function")),
+                              TH(T("Name")),
+                              TH(T("Signature")),
+                              TH(T("Location (Site)")),
+                              TH(T("Condition")),
+                              ),
+                           TR(TD(T("Received By")),
+                              TD(),
+                              TD(),
+                              TD(),
+                              TD(),
+                              TD(),
+                              TD(),
+                              ),
+                           ))
         return footer
     return None
 
@@ -3806,41 +3805,40 @@ def inv_recv_rheader(r):
             site_id = record.site_id
             org_id = s3db.org_site[site_id].organisation_id
             logo = s3db.org_organisation_logo(org_id)
-            rData = TABLE(
-                           TR(TD(T(current.deployment_settings.get_inv_recv_form_name()),
-                                 _colspan=2, _class="pdf_title"),
-                              TD(logo, _colspan=2),
-                              ),
-                           TR(TH("%s: " % table.recv_ref.label),
-                              TD(table.recv_ref.represent(record.recv_ref))
-                              ),
-                           TR( TH("%s: " % table.status.label),
-                               table.status.represent(record.status),
-                              ),
-                           TR( TH( "%s: " % table.eta.label),
-                               table.eta.represent(record.eta),
-                               TH( "%s: " % table.date.label),
-                               table.date.represent(record.date),
-                              ),
-                           TR( TH( "%s: " % table.from_site_id.label),
-                               table.from_site_id.represent(record.from_site_id),
-                               TH( "%s: " % table.site_id.label),
-                               table.site_id.represent(record.site_id),
-                              ),
-                           TR( TH( "%s: " % table.sender_id.label),
-                               s3_fullname(record.sender_id),
-                               TH( "%s: " % table.recipient_id.label),
-                               s3_fullname(record.recipient_id),
-                              ),
-                           TR( TH( "%s: " % table.send_ref.label),
-                               table.send_ref.represent(record.send_ref),
-                               TH( "%s: " % table.recv_ref.label),
-                               table.recv_ref.represent(record.recv_ref),
-                              ),
-                           TR( TH( "%s: " % table.comments.label),
-                               TD(record.comments or "", _colspan=3),
-                              ),
-                            )
+            rData = TABLE(TR(TD(T(current.deployment_settings.get_inv_recv_form_name()),
+                                _colspan=2, _class="pdf_title"),
+                             TD(logo, _colspan=2),
+                             ),
+                          TR(TH("%s: " % table.recv_ref.label),
+                             TD(table.recv_ref.represent(record.recv_ref))
+                             ),
+                          TR(TH("%s: " % table.status.label),
+                             table.status.represent(record.status),
+                             ),
+                          TR(TH("%s: " % table.eta.label),
+                             table.eta.represent(record.eta),
+                             TH("%s: " % table.date.label),
+                             table.date.represent(record.date),
+                             ),
+                          TR(TH("%s: " % table.from_site_id.label),
+                             table.from_site_id.represent(record.from_site_id),
+                             TH("%s: " % table.site_id.label),
+                             table.site_id.represent(record.site_id),
+                             ),
+                          TR(TH("%s: " % table.sender_id.label),
+                             s3_fullname(record.sender_id),
+                             TH("%s: " % table.recipient_id.label),
+                             s3_fullname(record.recipient_id),
+                             ),
+                          TR(TH("%s: " % table.send_ref.label),
+                             table.send_ref.represent(record.send_ref),
+                             TH("%s: " % table.recv_ref.label),
+                             table.recv_ref.represent(record.recv_ref),
+                             ),
+                          TR(TH("%s: " % table.comments.label),
+                             TD(record.comments or "", _colspan=3),
+                             ),
+                           )
 
             rfooter = TAG[""]()
             action = DIV()
@@ -3855,15 +3853,14 @@ def inv_recv_rheader(r):
                                                   "inv_recv",
                                                   record_id=record.id):
                     if cnt > 0:
-                        action.append( A( T("Receive Shipment"),
-                                              _href = URL(c = "inv",
-                                                          f = "recv_process",
-                                                          args = [record.id]
-                                                          ),
-                                              _id = "recv_process",
-                                              _class = "action-btn"
-                                        )
-                                      )
+                        action.append(A(T("Receive Shipment"),
+                                        _href = URL(c = "inv",
+                                                    f = "recv_process",
+                                                    args = [record.id]
+                                                    ),
+                                        _id = "recv_process",
+                                        _class = "action-btn"
+                                        ))
                         recv_btn_confirm = SCRIPT("S3.confirmClick('#recv_process', '%s')"
                                                   % T("Do you want to receive this shipment?") )
                         rfooter.append(recv_btn_confirm)
@@ -3876,33 +3873,31 @@ def inv_recv_rheader(r):
             #        if current.auth.s3_has_permission("delete",
             #                                          "inv_recv",
             #                                          record_id=record.id):
-            #            action.append( A( T("Cancel Shipment"),
+            #            action.append(A(T("Cancel Shipment"),
             #                            _href = URL(c = "inv",
             #                                        f = "recv_cancel",
             #                                        args = [record.id]
             #                                        ),
             #                            _id = "recv_cancel",
             #                            _class = "action-btn"
-            #                            )
-            #                         )
+            #                            ))
 
             #            cancel_btn_confirm = SCRIPT("S3.confirmClick('#recv_cancel', '%s')"
             #                                         % T("Do you want to cancel this received shipment? The items will be removed from the Warehouse. This action CANNOT be undone!") )
             #            rfooter.append(cancel_btn_confirm)
             msg = ""
             if cnt == 1:
-                msg = T("This shipment contains one item")
+                msg = T("This shipment contains one line item")
             elif cnt > 1:
                 msg = T("This shipment contains %s items") % cnt
-            rData.append(
-                         TR( TH(action, _colspan=2),
-                             TD(msg)
-                           )
-                        )
+            rData.append(TR(TH(action,
+                               _colspan=2),
+                            TD(msg)
+                            ))
 
             current.response.s3.rfooter = rfooter
-            rheader = DIV (rData,
-                           rheader_tabs,
+            rheader = DIV(rData,
+                          rheader_tabs,
                           )
             return rheader
     return None
@@ -3914,32 +3909,31 @@ def inv_recv_pdf_footer(r):
 
     record = r.record
     if record:
-        footer = DIV (TABLE (TR(TH(T("Delivered By")),
-                                TH(T("Date")),
-                                TH(T("Function")),
-                                TH(T("Name")),
-                                TH(T("Signature")),
-                                ),
-                             TR(TD(),
-                                TD(),
-                                TD(),
-                                TD(),
-                                TD(),
-                                ),
-                            TR(TH(T("Received By")),
-                                TH(T("Date")),
-                                TH(T("Function")),
-                                TH(T("Name")),
-                                TH(T("Signature / Stamp")),
-                                ),
-                             TR(TD(),
-                                TD(),
-                                TD(),
-                                TD(),
-                                TD(),
-                                ),
-                            )
-                     )
+        footer = DIV(TABLE(TR(TH(T("Delivered By")),
+                              TH(T("Date")),
+                              TH(T("Function")),
+                              TH(T("Name")),
+                              TH(T("Signature")),
+                              ),
+                           TR(TD(),
+                              TD(),
+                              TD(),
+                              TD(),
+                              TD(),
+                              ),
+                           TR(TH(T("Received By")),
+                              TH(T("Date")),
+                              TH(T("Function")),
+                              TH(T("Name")),
+                              TH(T("Signature / Stamp")),
+                              ),
+                           TR(TD(),
+                              TD(),
+                              TD(),
+                              TD(),
+                              TD(),
+                              ),
+                           ))
         return footer
     return None
 
@@ -3979,10 +3973,10 @@ class S3AdjustModel(S3Model):
         #
         adjust_type = {0 : T("Shipment"),
                        1 : T("Inventory"),
-                      }
+                       }
         adjust_status = {0 : T("In Process"),
                          1 : T("Complete"),
-                        }
+                         }
 
         tablename = "inv_adj"
         table = define_table(tablename,
@@ -4059,7 +4053,7 @@ class S3AdjustModel(S3Model):
                          6 : T("Transfer Ownership"),
                          7 : T("Issued without Record"),
                          7 : T("Distributed without Record"),
-                        }
+                         }
 
         # CRUD strings
         if settings.get_inv_stock_count():
@@ -4202,9 +4196,8 @@ class S3AdjustModel(S3Model):
         self.add_component("inv_adj_item",
                            inv_adj="adj_id")
 
-        return Storage(
-                    inv_adj_item_id = adj_item_id,
-                )
+        return dict(inv_adj_item_id = adj_item_id,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod

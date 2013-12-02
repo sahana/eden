@@ -138,7 +138,7 @@ S3.addModals = function() {
         }
         return url_out;
     });
-    $('.s3_add_resource_link, .s3_modal').unbind('click.s3Modal')
+    $('.s3_add_resource_link, .s3_modal').unbind('click.S3Modal')
                                          .on('click.S3Modal', function() {
         var title = this.title;
         var url = this.href;

@@ -58,8 +58,8 @@ class S3DeploymentModel(S3Model):
              "deploy_mission",
              "deploy_mission_id",
              "deploy_mission_document",
-             "deploy_role_type",
              "deploy_application",
+             "deploy_sector",
              "deploy_assignment",
              "deploy_assignment_experience",
              ]
@@ -78,7 +78,9 @@ class S3DeploymentModel(S3Model):
 
         NONE = current.messages["NONE"]
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
-        
+
+        human_resource_id = self.hrm_human_resource_id
+
         # ---------------------------------------------------------------------
         # Mission
         #
@@ -182,22 +184,6 @@ class S3DeploymentModel(S3Model):
                                pagesize = 10,
                                )
 
-        ## Test code for profile data tables (@todo: remove after completion)
-        #dt_row_actions = lambda r, listid: [
-            #{"label": T("Open"),
-             #"url": r.url(component="assignment",
-                          #component_id="[id]",
-                          #method="update.popup",
-                          #vars={"refresh": listid}),
-             #"_class": "action-btn edit s3_modal",
-            #},
-            #{"label": T("Delete"),
-             #"url": r.url(component="assignment",
-                          #component_id="[id]",
-                          #method="delete"),
-             #"_class": "action-btn delete-btn delete-btn-ajax",
-            #},
-        #]
         # @todo: generalize terminology (currently RDRT specific)
         assignment_widget = dict(label="Members Deployed",
                                  insert=lambda r, listid, title, url: \
@@ -206,6 +192,7 @@ class S3DeploymentModel(S3Model):
                                                       method="create"),
                                           _class="action-btn profile-add-btn"),
                                  title_create="Deploy New Member",
+                                 tablename = "deploy_assignment",
                                  type="datalist",
                                  #type="datatable",
                                  #actions=dt_row_actions,
@@ -215,10 +202,9 @@ class S3DeploymentModel(S3Model):
                                      "human_resource_id$organisation_id",
                                      "start_date",
                                      "end_date",
-                                     "role_type_id",
+                                     "sector_id",
                                      "rating",
                                  ],
-                                 tablename = "deploy_assignment",
                                  context = "mission",
                                  colspan = 2,
                                  list_layout = deploy_render_assignment,
@@ -341,65 +327,32 @@ class S3DeploymentModel(S3Model):
                              *s3_meta_fields())
                             
         # ---------------------------------------------------------------------
-        # Role Type ('Sector' in RDRT)
-        # - used to classify Assignments & Trainings
-        #
-        # @ToDo: Replace with real Sectors
-        #
-        tablename = "deploy_role_type"
-        table = define_table(tablename,
-                             Field("name", notnull=True,
-                                   length=64,
-                                   label=T("Name")),
-                             s3_comments(),
-                             *s3_meta_fields())
-
-        crud_strings[tablename] = Storage(
-            title_create = T("Add Sector"),
-            title_display = T("Sector Details"),
-            title_list = T("Sectors"),
-            title_update = T("Edit Sector"),
-            title_search = T("Search Sectors"),
-            title_upload = T("Import Sectors"),
-            subtitle_create = T("Add New Sector"),
-            label_list_button = T("List Sectors"),
-            label_create_button = T("Add Sector"),
-            label_delete_button = T("Remove Sector from this event"),
-            msg_record_created = T("Sector added"),
-            msg_record_modified = T("Sector updated"),
-            msg_record_deleted = T("Sector removed"),
-            msg_list_empty = T("No Sectors currently registered")
-            )
-
-        represent = S3Represent(lookup=tablename)
-        role_type_id = S3ReusableField("role_type_id", table,
-                                       sortby="name",
-                                       requires = IS_NULL_OR(
-                                                    IS_ONE_OF(db, "deploy_role_type.id",
-                                                              represent,
-                                                              orderby="deploy_role_type.name",
-                                                              sort=True)),
-                                       represent = represent,
-                                       label = T("Sector"),
-                                       ondelete = "RESTRICT",
-                                       )
-        configure(tablename,
-                  deduplicate=self.deploy_role_type_duplicate
-                  )
-
-        # ---------------------------------------------------------------------
         # Application of human resources
         # - agreement that an HR is generally available for assignments
         # - can come with certain restrictions
         #
         tablename = "deploy_application"
         table = define_table(tablename,
-                             self.hrm_human_resource_id(empty=False,
-                                                        label=T("Member")),
+                             human_resource_id(empty=False,
+                                               label=T("Member")),
                              Field("active", "boolean",
                                    default = True,
                                    ),
                              *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Sectors that a Person is deemed competent in
+        #
+        tablename = "deploy_sector"
+        table = define_table(tablename,
+                             self.pr_person_id(empty=False,
+                                               label=T("Member")),
+                             self.org_sector_id(),
+                             *s3_meta_fields())
+
+        configure(tablename,
+                  list_layout = deploy_render_sectors,
+                  )
 
         # ---------------------------------------------------------------------
         # Assignment of human resources
@@ -408,9 +361,9 @@ class S3DeploymentModel(S3Model):
         tablename = "deploy_assignment"
         table = define_table(tablename,
                              mission_id(),
-                             self.hrm_human_resource_id(empty=False,
-                                                        label=T("Member")),
-                             role_type_id(),
+                             human_resource_id(empty=False,
+                                               label=T("Member")),
+                             self.org_sector_id(),
                              # These get copied to hrm_experience
                              # rest of fields may not be filled-out, but are in attachments
                              s3_date("start_date", # Only field visible when deploying from Mission profile
@@ -605,6 +558,8 @@ class S3DeploymentModel(S3Model):
             Update linked hrm_experience record
         """
 
+        db = current.db
+        s3db = current.s3db
         form_vars = form.vars
 
         # Lookup Experience
@@ -622,31 +577,6 @@ class S3DeploymentModel(S3Model):
         else:
             # Create Experience
             S3DeploymentModel.deploy_assignment_create_onaccept(form)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def deploy_role_type_duplicate(item):
-        """
-            Deduplication of Role Types
-        """
-
-        if item.tablename != "deploy_role_type":
-            return
-
-        data = item.data
-        name = data.get("name", None)
-
-        if not name:
-            return
-
-        table = item.table
-        query = (table.name == name)
-        _duplicate = current.db(query).select(table.id,
-                                              limitby=(0, 1)).first()
-        if _duplicate:
-            item.id = _duplicate.id
-            item.data.id = _duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3DeploymentAlertModel(S3Model):
@@ -1596,7 +1526,74 @@ def deploy_render_assignment(listid, resource, rfields, record,
                            _class="media-heading"),
                        render("deploy_assignment.start_date",
                               "deploy_assignment.end_date",
-                              "deploy_assignment.role_type_id",
+                              "deploy_assignment.sector_id",
+                              "deploy_assignment.rating",
+                       ),
+                       _class="media-body",
+                   ),
+                   _class="media",
+               ),
+               _class=item_class,
+               _id=item_id,
+           )
+
+    return item
+
+# =============================================================================
+def deploy_render_sectors(listid, resource, rfields, record, 
+                          **attr):
+    """
+        Item renderer for data list of sectors that an HR is competent in
+
+        @param listid: the list ID
+        @param resource: the S3Resource
+        @param rfields: the list fields resolved as S3ResourceFields
+        @param record: the record
+        @param attr: additional attributes
+    """
+
+    pkey = "deploy_sector.id"
+
+    # Construct the item ID
+    if pkey in record:
+        record_id = record[pkey]
+        item_id = "%s-%s" % (listid, record_id)
+    else:
+        # template
+        record_id = None
+        item_id = "%s-[id]" % listid
+
+    item_class = "thumbnail"
+
+    row = record["_row"]
+    sector_id = raw["deploy_sector.sector_id"]
+
+    # Toolbox
+    update_url = URL(c="deploy", f="sector",
+                     args=[record_id, "update.popup"],
+                     vars={"refresh": listid, "record": record_id})
+    toolbox = deploy_render_profile_toolbox(resource, record_id,
+                                            update_url=update_url)
+
+    # Render the item
+    item = DIV(DIV(A(IMG(_class="media-object",
+                         _src=URL(c="static",
+                                  f="themes",
+                                  args=["IFRC", "img", "member.png"]),
+                         ),
+                         _class="pull-left",
+                         #_href=profile_url,
+                         #_title=profile_title,
+                   ),
+                   toolbox,
+                   DIV(DIV(DIV(person,
+                               _class="card-title"),
+                           DIV(organisation,
+                               _class="card-category"),
+                           _class="media-heading"),
+                       render("deploy_assignment.start_date",
+                              "deploy_assignment.end_date",
+                              "deploy_assignment.sector_id",
                               "deploy_assignment.rating",
                        ),
                        _class="media-body",

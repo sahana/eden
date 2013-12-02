@@ -30,6 +30,7 @@
 __all__ = ["S3HRModel",
            "S3HRSiteModel",
            "S3HRSkillModel",
+           "S3HRCourseSectorModel",
            "S3HRExperienceModel",
            "S3HRProgrammeModel",
            "hrm_human_resource_represent",
@@ -605,6 +606,14 @@ class S3HRModel(S3Model):
                                               pkey="person_id",
                                               ))
         add_component("hrm_training",
+                      hrm_human_resource=dict(link="pr_person",
+                                              joinby="id",
+                                              key="id",
+                                              fkey="person_id",
+                                              pkey="person_id",
+                                              ))
+
+        add_component("deploy_sector",
                       hrm_human_resource=dict(link="pr_person",
                                               joinby="id",
                                               key="id",
@@ -1600,6 +1609,7 @@ class S3HRSkillModel(S3Model):
              "hrm_certificate_skill",
              "hrm_course",
              "hrm_course_certificate",
+             "hrm_course_id",
              "hrm_skill_id",
              "hrm_multi_skill_id",
              ]
@@ -2107,6 +2117,8 @@ class S3HRSkillModel(S3Model):
         # Components
         add_component("hrm_course_certificate", hrm_course="course_id")
 
+        add_component("hrm_course_sector", hrm_course="course_id")
+
         # =========================================================================
         # Training Events
         #
@@ -2562,7 +2574,8 @@ class S3HRSkillModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(hrm_skill_id = skill_id,
+        return dict(hrm_course_id = course_id,
+                    hrm_skill_id = skill_id,
                     hrm_multi_skill_id = multi_skill_id,
                     hrm_certification_onaccept = self.hrm_certification_onaccept,
                     )
@@ -3087,6 +3100,33 @@ def hrm_training_onaccept(form):
         # Propagate to Skills
         vars.id = id
         hrm_certification_onaccept(form)
+
+# =============================================================================
+class S3HRCourseSectorModel(S3Model):
+    """
+        Link tables between Training Courses & Sectors
+        - currently just used by RDRT (deploy module)
+    """
+
+    names = ["hrm_course_sector",
+             ]
+
+    def model(self):
+
+        # =====================================================================
+        # Training Courses <> Sectors
+        #
+
+        tablename = "hrm_course_sector"
+        table = self.define_table(tablename,
+                                  self.hrm_course_id(empty=False),
+                                  self.org_sector_id(empty=False),
+                                  *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return dict()
 
 # =============================================================================
 class S3HRExperienceModel(S3Model):
@@ -5001,6 +5041,7 @@ def hrm_human_resource_controller(extra_filter=None):
                 S3DateTime.date_represent(d, utc=True)
             s3db.configure("hrm_training",
                            list_fields = ["course_id",
+                                          "course_id$course_sector.sector_id",
                                           "training_event_id$site_id",
                                           "date",
                                           "hours",
@@ -5039,15 +5080,16 @@ def hrm_human_resource_controller(extra_filter=None):
             comments = r.table.organisation_id.represent(record.organisation_id)
             if record.job_title_id:
                 comments = "%s, %s" % (r.table.job_title_id.represent(record.job_title_id), comments)
+
             contacts_widget = dict(label = "Contacts",
                                    title_create = "Add New Contact",
-                                   type = "datalist",
                                    tablename = "pr_contact",
-                                   orderby = "priority asc",
+                                   type = "datalist",
                                    filter = S3FieldSelector("pe_id") == pe_id,
                                    icon = "icon-phone",
                                    # Default renderer:
                                    #list_layout = s3db.pr_render_contacts,
+                                   orderby = "priority asc",
                                    )
             address_widget = dict(label = "Address",
                                   title_create = "Add New Address",
@@ -5057,6 +5099,15 @@ def hrm_human_resource_controller(extra_filter=None):
                                   icon = "icon-home",
                                   # Default renderer:
                                   #list_layout = s3db.pr_render_address,
+                                  )
+            sectors_widget = dict(label = "Sectors",
+                                  title_create = "Add New Sector",
+                                  type = "datalist",
+                                  tablename = "deploy_sector",
+                                  filter = S3FieldSelector("person_id") == person_id,
+                                  icon = "icon-tags",
+                                  # Default renderer:
+                                  #list_layout = deploy_render_sectors,
                                   )
             skills_widget = dict(label = "Skills",
                                  title_create = "Add New Skill",
@@ -5116,6 +5167,13 @@ def hrm_human_resource_controller(extra_filter=None):
                                               ])
         elif method == "summary":
             s3.crud_strings["hrm_human_resource"]["title_list"] = T("Staff & Volunteers")
+
+            # Which levels of Hierarchy are we using?
+            hierarchy = current.gis.get_location_hierarchy()
+            levels = hierarchy.keys()
+            if len(settings.get_gis_countries()) == 1:
+                levels.remove("L0")
+
             filter_widgets = [
                 S3TextFilter(["person_id$first_name",
                               "person_id$middle_name",
@@ -5137,10 +5195,15 @@ def hrm_human_resource_controller(extra_filter=None):
                 S3LocationFilter("location_id",
                                  label = T("Location"),
                                  widget="multiselect",
-                                 levels=["L0", "L1", "L2", "L3"],
+                                 levels=levels,
                                  hidden=True,
                                  ),
                 S3OptionsFilter("site_id",
+                                widget="multiselect",
+                                hidden=True,
+                                ),
+                S3OptionsFilter("sector.sector_id",
+                                label = T("Sector"),
                                 widget="multiselect",
                                 hidden=True,
                                 ),
@@ -5176,11 +5239,13 @@ def hrm_human_resource_controller(extra_filter=None):
                              "person_id$gender",
                              "job_title_id",
                              (T("Training"), "training.course_id"),
-                             "location_id$L1",
-                             "location_id$L2",
                              "site_id",
                              "department_id",
                              ]
+
+            for level in levels:
+                report_fields.append("location_id$%s" % level)
+
             if teams:
                 report_fields.append((teams, "group_membership.group_id"))
 
@@ -6366,6 +6431,7 @@ def hrm_render_trainings(listid, resource, rfields, record, **attr):
 
     raw = record._row
     title = record["hrm_training.course_id"]
+
     date = raw["hrm_training.date"] or ""
     if date:
         date = P(I(_class="icon-calendar"),
@@ -6374,6 +6440,7 @@ def hrm_render_trainings(listid, resource, rfields, record, **attr):
                  " ",
                  _class="card_1_line",
                  )
+
     grade = raw["hrm_training.grade"] or ""
     if grade:
         grade = P(I(_class="icon-certificate"),
@@ -6382,6 +6449,7 @@ def hrm_render_trainings(listid, resource, rfields, record, **attr):
                   " ",
                   _class="card_1_line",
                   )
+
     hours = raw["hrm_training.hours"] or ""
     if hours:
         hours = P(I(_class="icon-time"),
@@ -6390,6 +6458,7 @@ def hrm_render_trainings(listid, resource, rfields, record, **attr):
                   " ",
                   _class="card_1_line",
                   )
+
     site = raw["hrm_training_event.site_id"] or ""
     if site:
         #site_id = raw["hrm_training_event.site_id"]
@@ -6403,6 +6472,19 @@ def hrm_render_trainings(listid, resource, rfields, record, **attr):
                  " ",
                  _class="card_1_line",
                  )
+
+    sector = raw["hrm_course_sector.sector_id"] or ""
+    if sector:
+        sector = P(I(_class="icon-tags"),
+                   " ",
+                   SPAN(record["hrm_course_sector.sector_id"],
+                        ),
+                   " ",
+                   _class="card_1_line",
+                   )
+    else:
+        sector = ""
+
     comments = raw["hrm_training.comments"] or ""
 
     # Edit Bar
@@ -6441,7 +6523,8 @@ def hrm_render_trainings(listid, resource, rfields, record, **attr):
                    edit_bar,
                    _class="card-header",
                    ),
-               DIV(DIV(DIV(site,
+               DIV(DIV(DIV(sector,
+                           site,
                            date,
                            hours,
                            grade,

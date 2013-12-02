@@ -14,10 +14,8 @@ function s3_popup_refresh_main_form() {
     if (typeof refresh != 'undefined') {
         // Update DataList/DataTable
         var selector = self.parent.$('#' + refresh);
-        if (typeof selector.dataTable !== 'undefined') {
-            // refresh dataTable
-            selector.dataTable().fnReloadAjax();
-        } else {
+        if (selector.hasClass('dl')) {
+             // Refresh dataList
             var record = $_GET['record'];
             if (record !== undefined) {
                 // reload a single item
@@ -26,6 +24,9 @@ function s3_popup_refresh_main_form() {
                 // reload the whole list
                 selector.datalist('ajaxReload');
             }
+        } else {
+            // refresh dataTable
+            selector.dataTable().fnReloadAjax();
         }
         // Also update the layer on the Maps (if any)
         var maps = self.parent.S3.gis.maps

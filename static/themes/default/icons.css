@@ -105,6 +105,9 @@
 .icon-sitemap:before {
   content: "\f0e8";
 }
+.icon-tags:before {
+  content: "\f02c";
+}
 .icon-user:before {
   content: "\f007";
 }

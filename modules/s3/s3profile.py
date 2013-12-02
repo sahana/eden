@@ -685,11 +685,27 @@ class S3Profile(S3CRUD):
                 from s3forms import S3SQLDefaultForm
                 sqlform = S3SQLDefaultForm()
 
+        get_config = s3db.get_config
+        if record_id:
+            # Update form
+            onvalidation = get_config(tablename, "create_onvalidation") or \
+                           get_config(tablename, "onvalidation")
+            onaccept = get_config(tablename, "create_onaccept") or \
+                       get_config(tablename, "onaccept")
+        else:
+            # Create form
+            onvalidation = get_config(tablename, "create_onvalidation") or \
+                           get_config(tablename, "onvalidation")
+            onaccept = get_config(tablename, "create_onaccept") or \
+                       get_config(tablename, "onaccept")
+
         form = sqlform(request = r,
                        resource = resource,
                        record_id = record_id,
                        readonly = readonly,
                        format = "html",
+                       onvalidation = onvalidation,
+                       onaccept = onaccept,
                        )
 
         # Render the widget
