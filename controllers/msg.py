@@ -1300,30 +1300,33 @@ def twitter_search():
     langs = settings.get_L10n_languages().keys()
 
     # Tweak languages to those supported by Twitter
-    langs_not_supported = {"en-gb": "en",
-                           "pt-br": "pt",
-                           "zh-cn": None,
-                           "zh-tw": None,
-                           }
+    # List according to Twitter 1.1 API https://dev.twitter.com/docs/api/1.1/get/help/languages
+    # @Todo Fetch list directly from Twitter
+    langs_supported = ['fr', 'en', 'ar', 'ja', 'es', 'de', 'it', 'id', 'pt', 'ko', 'tr', 'ru', 'nl', 'fil',
+                       'msa', 'zh-tw', 'zh-cn', 'hi', 'no', 'sv', 'fi', 'da', 'pl', 'hu', 'fa', 'he', 'ur', 'th']
+
+    substitute_list = {"en-gb": "en",
+                       "pt-br": "pt"}
+
     new_langs = []
+    lang_default = current.response.s3.language
 
     for l in langs:
-        if l not in langs_not_supported.keys():
+        if l in langs_supported:
             new_langs.append(l)
         else:
-            supported_substitute = langs_not_supported.get(l)
+            supported_substitute = substitute_list.get(l)
             if supported_substitute and supported_substitute not in langs:
                 new_langs.append(supported_substitute)
+                if lang_default == l:
+                    lang_default = supported_substitute
+            else:
+                if lang_default == l:
+                    lang_default = 'en'
+
     langs = new_langs
 
     table.lang.requires = IS_IN_SET(langs)
-    lang_default = current.response.s3.language
-    if lang_default == "en-gb":
-        lang_default = "en"
-    elif lang_default == "pt-br":
-        lang_default = "pt"
-    elif lang_default in ("zh-cn", "zh-tw"):
-        lang_default = "en"
     table.lang.default = lang_default
 
     comment = "Add the keywords separated by single spaces."
