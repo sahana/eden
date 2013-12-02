@@ -5030,6 +5030,7 @@ def hrm_human_resource_controller(extra_filter=None):
         if method in ("form", "lookup"):
             return True
         elif method == "profile":
+            deploy = r.controller == "deploy"
             # Configure Widgets
             s3db.pr_address # Load normal model
             list_fields = s3db.get_config("pr_address",
@@ -5039,16 +5040,19 @@ def hrm_human_resource_controller(extra_filter=None):
             # Show Date without Time
             s3db.hrm_training.date.represent = lambda d: \
                 S3DateTime.date_represent(d, utc=True)
+            list_fields = ["course_id",
+                           "training_event_id$site_id",
+                           "date",
+                           "hours",
+                           "grade",
+                           "comments", 
+                           ]
+            if deploy:
+                list_fields.append("course_id$course_sector.sector_id")
             s3db.configure("hrm_training",
-                           list_fields = ["course_id",
-                                          "course_id$course_sector.sector_id",
-                                          "training_event_id$site_id",
-                                          "date",
-                                          "hours",
-                                          "grade",
-                                          "comments", 
-                                          ],
+                           list_fields = list_fields,
                            )
+
             s3db.hrm_experience # Load normal model
             s3db.configure("hrm_experience",
                            list_fields = ["organisation_id",
@@ -5145,6 +5149,15 @@ def hrm_human_resource_controller(extra_filter=None):
                                # Default renderer:
                                #list_layout = s3db.doc_render_documents,
                                )
+            profile_widgets = [contacts_widget,
+                               address_widget,
+                               skills_widget,
+                               trainings_widget,
+                               experience_widget,
+                               docs_widget,
+                               ]
+            if deploy:
+                profile_widgets.insert(2, sectors_widget)
             s3db.configure("hrm_human_resource",
                            profile_title = "%s : %s" % (s3.crud_strings["hrm_human_resource"].title_display, 
                                                         name),
@@ -5158,16 +5171,11 @@ def hrm_human_resource_controller(extra_filter=None):
                                                 P(comments),
                                                 _class="profile_header",
                                                 ),
-                           profile_widgets = [contacts_widget,
-                                              address_widget,
-                                              sectors_widget,
-                                              skills_widget,
-                                              trainings_widget,
-                                              experience_widget,
-                                              docs_widget,
-                                              ])
+                           profile_widgets = profile_widgets,
+                           )
         elif method == "summary":
             s3.crud_strings["hrm_human_resource"]["title_list"] = T("Staff & Volunteers")
+            deploy = r.controller == "deploy"
 
             # Which levels of Hierarchy are we using?
             hierarchy = current.gis.get_location_hierarchy()
@@ -5203,17 +5211,19 @@ def hrm_human_resource_controller(extra_filter=None):
                                 widget="multiselect",
                                 hidden=True,
                                 ),
-                S3OptionsFilter("sector.sector_id",
-                                label = T("Sector"),
-                                widget="multiselect",
-                                hidden=True,
-                                ),
                 S3OptionsFilter("training.course_id",
                                 label = T("Training"),
                                 widget="multiselect",
                                 hidden=True,
                                 ),
                 ]
+            if deploy:
+                filter_widgets.insert(5,
+                    S3OptionsFilter("sector.sector_id",
+                                    label = T("Sector"),
+                                    widget="multiselect",
+                                    hidden=True,
+                                    ))
 
             regions = settings.get_org_regions()
             if regions:
@@ -5246,6 +5256,9 @@ def hrm_human_resource_controller(extra_filter=None):
 
             for level in levels:
                 report_fields.append("location_id$%s" % level)
+
+            if deploy:
+                report_fields.append("sector.sector_id")
 
             if teams:
                 report_fields.append((teams, "group_membership.group_id"))
@@ -5338,7 +5351,7 @@ def hrm_human_resource_controller(extra_filter=None):
                 s3.jquery_ready.append(
 '''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
 
-                if current.request.controller == "deploy":
+                if r.controller == "deploy":
                     # Open Profile page
                     read_url = URL(args = ["[id]", "profile"])
                     update_url = URL(args = ["[id]", "profile"])

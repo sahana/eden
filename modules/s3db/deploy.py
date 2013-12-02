@@ -1506,8 +1506,8 @@ def deploy_render_assignment(listid, resource, rfields, record,
 
     item_class = "thumbnail"
 
-    row = record["_row"]
-    human_resource_id = row["hrm_human_resource.id"]
+    raw = record["_row"]
+    human_resource_id = raw["hrm_human_resource.id"]
 
     profile_url = URL(f="human_resource", args=[human_resource_id, "profile"])
     profile_title = current.T("Open Member Profile (in a new tab)")
@@ -1595,13 +1595,12 @@ def deploy_render_sectors(listid, resource, rfields, record,
                                             update_url=update_url)
 
     # Render the item
-    item = DIV(DIV(toolbox,
-                   DIV(render("deploy_sector.sector_id",
-                       ),
-                       _class="media-body",
+    item = DIV(DIV(I(_class="icon"),
+                   SPAN(" %s" % record["deploy_sector.sector_id"],
+                        _class="card-title"),
+                   toolbox,
+                   _class="card-header",
                    ),
-                   _class="media",
-               ),
                _class=item_class,
                _id=item_id,
            )
@@ -1616,16 +1615,22 @@ def deploy_member_filter():
         or deploy_alert_select_recipients
     """
 
+    T = current.T
     widgets = [S3TextFilter(["person_id$first_name",
                              "person_id$middle_name",
                              "person_id$last_name",
                              ],
-                            label=current.T("Name"),
+                            label=T("Name"),
                             ),
                S3OptionsFilter("organisation_id",
                                widget="multiselect",
                                filter=True,
                                header="",
+                               hidden=True,
+                               ),
+               S3OptionsFilter("sector.sector_id",
+                               label = T("Sector"),
+                               widget="multiselect",
                                hidden=True,
                                ),
                ]
