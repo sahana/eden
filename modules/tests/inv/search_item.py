@@ -30,7 +30,7 @@ from tests.web2unittest import SeleniumUnitTest
 
 
 class SearchItems(SeleniumUnitTest):
-    def setup(self):
+    def setUp(self):
         super(SeleniumUnitTest, self).setUp()
         print "\n"
         self.login(account="admin", nexturl="supply/item/search")
