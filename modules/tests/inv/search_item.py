@@ -44,8 +44,8 @@ class SearchItems(SeleniumUnitTest):
         self.search(self.search.simple_form,
             True,
             ({
-                "name":"inv_inv_item",
-                "value":"A"
+                "name":"item_search_text",
+                "value":"ATM"
                 },),1,
             match_row=(1,"ATM"))
         
