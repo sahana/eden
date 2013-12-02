@@ -15,7 +15,7 @@ function s3_popup_refresh_main_form() {
         // Update DataList/DataTable
         var selector = self.parent.$('#' + refresh);
         if (selector.hasClass('dl')) {
-             // Refresh dataList
+            // Refresh dataList
             var record = $_GET['record'];
             if (record !== undefined) {
                 // reload a single item
@@ -25,7 +25,7 @@ function s3_popup_refresh_main_form() {
                 selector.datalist('ajaxReload');
             }
         } else {
-            // refresh dataTable
+            // Refresh dataTable
             selector.dataTable().fnReloadAjax();
         }
         // Also update the layer on the Maps (if any)
