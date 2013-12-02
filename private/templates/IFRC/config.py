@@ -819,7 +819,7 @@ def customize_deploy_mission(**attr):
     code = table.code
     code.readable = True
     code.writable = True
-    code.label = T("M-Code")
+    code.label = T("Operation Code")
 
     return attr
 

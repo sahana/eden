@@ -120,8 +120,9 @@ class S3DeploymentModel(S3Model):
                              *s3_meta_fields())
 
         # Virtual field
-        # @todo: move to real field written onaccept?
+        # @todo: change into real fields written onaccept?
         table.hrquantity = Field.Lazy(deploy_mission_hrquantity)
+        table.response_count = Field.Lazy(deploy_mission_response_count)
 
         # CRUD Form
         crud_form = S3SQLCustomForm("name",
@@ -237,7 +238,8 @@ class S3DeploymentModel(S3Model):
                                  "event_type_id",
                                  (T("Country"), "location_id"),
                                  "code",
-                                 (T("Members"), "hrquantity"),
+                                 (T("Responses"), "response_count"),
+                                 (T("Members Deployed"), "hrquantity"),
                                  "status",
                                  ],
                   profile_header = lambda r: \
@@ -1082,6 +1084,26 @@ def deploy_mission_hrquantity(row):
 
     db = current.db
     table = db.deploy_assignment
+    count = table.id.count()
+    row = db(table.mission_id == mission_id).select(count).first()
+    if row:
+        return row[count]
+    else:
+        return 0
+
+# =============================================================================
+def deploy_mission_response_count(row):
+    """ Number of responses to a mission """
+
+    if hasattr(row, "deploy_mission"):
+        row = row.deploy_mission
+    try:
+        mission_id = row.id
+    except AttributeError:
+        return 0
+
+    db = current.db
+    table = db.deploy_response
     count = table.id.count()
     row = db(table.mission_id == mission_id).select(count).first()
     if row:
