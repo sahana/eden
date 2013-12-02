@@ -607,7 +607,15 @@ class S3SQLDefaultForm(S3SQLForm):
                 current.manager.store_session(prefix, name, vars.id)
 
             # Execute onaccept
-            callback(onaccept, form, tablename=tablename)
+            try:
+                callback(onaccept, form, tablename=tablename)
+            except:
+                from s3utils import s3_debug
+                error = "onaccept failed: %s" % onaccept
+                s3_debug(error)
+                current.manager.error = error
+                # This is getting swallowed
+                raise
 
         else:
             success = False
@@ -906,7 +914,14 @@ class S3SQLCustomForm(S3SQLForm):
             # already updated the form data with any new keys here):
             postprocess = self.opts.get("postprocess", None)
             if postprocess:
-                callback(postprocess, form, tablename=tablename)
+                try:
+                    callback(postprocess, form, tablename=tablename)
+                except:
+                    from s3utils import s3_debug
+                    error = "postprocess failed: %s" % postprocess
+                    s3_debug(error)
+                    current.manager.error = error
+                    raise
             response.confirmation = message
 
         if form.errors:
@@ -936,7 +951,14 @@ class S3SQLCustomForm(S3SQLForm):
             onvalidation = config("create_onvalidation",
                            config("onvalidation", None))
         if onvalidation is not None:
-            callback(onvalidation, form, tablename=self.tablename)
+            try:
+                callback(onvalidation, form, tablename=self.tablename)
+            except:
+                from s3utils import s3_debug
+                error = "onvalidation failed: %s" % onvalidation
+                s3_debug(error)
+                current.manager.error = error
+                raise
 
         # Validate against all subtables
         get_config = s3db.get_config
@@ -967,8 +989,15 @@ class S3SQLCustomForm(S3SQLForm):
 
             # Validate against the subtable, store errors in form
             if subonvalidation is not None:
-                callback(subonvalidation, subform,
-                            tablename = subtable._tablename)
+                try:
+                    callback(subonvalidation, subform,
+                             tablename = subtable._tablename)
+                except:
+                    from s3utils import s3_debug
+                    error = "onvalidation failed: %s" % subonvalidation
+                    s3_debug(error)
+                    current.manager.error = error
+                    raise
                 for fn in subform.errors:
                     dummy = "sub_%s_%s" % (alias, fn)
                     form.errors[dummy] = subform.errors[fn]
@@ -1163,7 +1192,15 @@ class S3SQLCustomForm(S3SQLForm):
             current.manager.store_session(prefix, name, accept_id)
 
             # Execute onaccept
-            callback(onaccept, form, tablename=tablename)
+            try:
+                callback(onaccept, form, tablename=tablename)
+            except:
+                from s3utils import s3_debug
+                error = "onaccept failed: %s" % onaccept
+                s3_debug(error)
+                current.manager.error = error
+                # This is getting swallowed
+                raise
 
         if alias is None:
             # Return master_form_vars

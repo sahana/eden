@@ -57,15 +57,13 @@ def mission():
                             (htable.deleted != True)
                     row = db(query).select(htable.id, limitby=(0, 1)).first()
                     if row:
-                        field = s3db.deploy_assignment \
-                                    .human_resource_id
+                        field = s3db.deploy_assignment.human_resource_id
                         field.default = row.id
                         field.writable = False
                         field.comment = None
                 elif r.method == "create":
                     atable = s3db.deploy_assignment
                     atable.end_date.writable = atable.end_date.readable = False
-                    atable.rating.writable = atable.rating.readable = False
             if not r.component and r.method == "profile":
                 represent = lambda d: \
                             s3base.S3DateTime.datetime_represent(d, utc=True)
