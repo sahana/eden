@@ -1542,7 +1542,6 @@ def twitter_result():
             video_url = r.record.video_url
             if image_url:
                 output["item"].append(IMG(_src=image_url,
-                                          # @ToDo: capture the size on upload & have controller resize where-required on-download
                                           _width=120,
                                           _height=100))
             if video_url:
