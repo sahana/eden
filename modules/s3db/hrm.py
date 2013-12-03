@@ -5907,7 +5907,7 @@ def hrm_training_controller():
 
             if r.method in ("create", "create.popup", "update", "update.popup"):
                 # Coming from Profile page?
-                person_id = current.request.get_vars.get("~.person_id", None)
+                person_id = r.get_vars.get("~.person_id", None)
                 if person_id:
                     field = s3db.hrm_training.person_id
                     field.default = person_id
