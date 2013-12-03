@@ -1296,6 +1296,9 @@ def twitter_search():
     table.is_searched.writable = False
     table.is_processed.readable = False
     table.is_searched.readable = False
+    entity_id = ""
+    gtable = s3db.gis_layer_feature
+    keyword_str = ""
 
     langs = settings.get_L10n_languages().keys()
 
@@ -1353,6 +1356,47 @@ def twitter_search():
     else:
         url_after_save = None
 
+    if request.post_vars.get("include_to_map"):
+        etable = s3db.gis_layer_entity
+        layer_id = etable.insert(deleted = False,
+                      instance_type = "Feature Layer",
+                      name = request.post_vars.get("keywords"),
+                      description = "Twitter"
+                      )
+
+        entity_id = gtable.insert(name = request.post_vars.get("keywords"),
+                      description = "Twitter",
+                      controller = "msg",
+                      function = "twitter_result",
+                      popup_label = "Tweet",
+                      popup_fields = "body",
+                      dir = "Twitter",
+                      opacity = 1.0,
+                      refresh = 900,
+                      cluster_distance = 20,
+                      cluster_threshold = 2,
+                      mci = 2,
+                      layer_id = layer_id,
+                      )
+
+        uuid_entity = db(gtable.id == entity_id).select(gtable.uuid,limitby=(0,1)).first()
+        db(etable.id == layer_id).update(uuid = uuid_entity.uuid)
+
+        ctable = s3db.gis_config
+        config_id = db(ctable.name == 'Default').select(ctable.id,limitby=(0,1)).first()
+
+        glayertable = s3db.gis_layer_config
+        glayer_id = glayertable.insert(layer_id = layer_id,config_id = config_id.id, enabled = 'Yes',visible = 'Yes', base = 'No', uuid = uuid_entity.uuid,mci=2)
+
+        symbologytable = s3db.gis_symbology
+        symid = db(symbologytable.name == "US").select(symbologytable.id,limitby=(0,1)).first()
+        sym_marker = s3db.gis_marker
+        marker_id = db(sym_marker.name == "twitter").select(sym_marker.id,limitby=(0,1)).first()
+        symtable = s3db.gis_layer_symbology
+        symtable.insert(layer_id = layer_id,symbology_id = symid.id,marker_id = marker_id.id,mci=2)
+
+    keyword_str = request.post_vars.get("keywords")
+
     s3db.configure(tablename,
                    listadd=True,
                    deletable=True,
@@ -1388,6 +1432,11 @@ def twitter_search():
             records = db(query).select(rtable.id)
 
             restrict_k = [str(record.id) for record in records]
+
+            search_id_db = db(rtable.keywords == keyword_str).select(rtable.id,limitby=(0,1)).first()
+
+            if search_id_db:
+                db(gtable.name == keyword_str).update(filter = "~.search_id="+str(search_id_db.id))
 
             # @ToDo: Make these S3Methods rather than additional controllers
             s3.actions += [dict(label=str(T("Search")),
@@ -1461,7 +1510,55 @@ def twitter_result():
                    insertable=False,
                    filter_widgets=filter_widgets,
                    report_options=report_options,
+                    summary = [{"common": True,
+                        "name": "cms",
+                        "widgets": [{"method": "cms"}]
+                        },
+                       {"name": "table",
+                        "label": "Table",
+                        "widgets": [{"method": "datatable"}]
+                        },
+                       {"name": "charts",
+                        "label": "Charts",
+                        "widgets": [{"method": "report2", "ajax_init": True}]
+                        },
+                       {"name": "map",
+                        "label": "Map",
+                        "widgets": [{"method": "map", "ajax_init": True}],
+                        },
+                       ],
                    )
+
+    def prep(r):
+        if r.interactive:
+            pass
+        elif r.representation == "plain" and \
+             r.method !="search":
+            # Map Popups
+            r.table.image_url.readable = False
+            r.table.video_url.readable = False
+        return True
+    s3.prep = prep
+
+    def postp(r, output):
+        if r.interactive:
+            pass
+        elif r.representation == "plain" and \
+             r.method !="search":
+            # Map Popups
+            # use the Image URL
+            image_url = r.record.image_url
+            video_url = r.record.video_url
+            if image_url:
+                output["item"].append(IMG(_src=image_url,
+                                          _width=120,
+                                          _height=100))
+            if video_url:
+                output["item"].append(EMBED(_src=video_url,
+                                          _width=400,
+                                          _height=310))
+        return output
+    s3.postp = postp
 
     return s3_rest_controller(hide_filter=False)
 

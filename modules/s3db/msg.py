@@ -1718,6 +1718,11 @@ class S3TwitterSearchModel(S3ChannelModel):
                                    label = T("Searched?"),
                                    represent = s3_yes_no_represent,
                                    ),
+                             Field("include_to_map", "boolean",
+                                    default = True,
+                                    label = T("Include on Map?"),
+                                    represent = s3_yes_no_represent,
+                                   ),
                              *s3_meta_fields())
 
         configure(tablename,
@@ -1782,6 +1787,12 @@ class S3TwitterSearchModel(S3ChannelModel):
                                    default = True,
                                    readable = False,
                                    writable = False,
+                                   ),
+                             Field("image_url","text",
+                                   label = T("Image URL")
+                                   ),
+                             Field("video_url","text",
+                                   label = T("Video URL")
                                    ),
                              *s3_meta_fields())
 
