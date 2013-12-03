@@ -24,9 +24,9 @@ class SearchItems(SeleniumUnitTest):
             True,
             ({
                 "name":"item_search_text",
-                "value":"ATM"
+                "value":"B"
                 },),1,
-            match_row=(1,"ATM"))
+            match_row=(1,"Blankets"))
         
 
 
