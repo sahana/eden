@@ -1300,9 +1300,18 @@ def twitter_search():
     langs = settings.get_L10n_languages().keys()
 
     # Tweak languages to those supported by Twitter
-    # List according to Twitter 1.1 API https://dev.twitter.com/docs/api/1.1/get/help/languages
-    # @Todo Fetch list directly from Twitter
-    langs_supported = ['fr', 'en', 'ar', 'ja', 'es', 'de', 'it', 'id', 'pt', 'ko', 'tr', 'ru', 'nl', 'fil',
+
+    S3Msg = s3base.S3Msg()
+    import tweepy
+
+    twitter_settings = S3Msg.get_twitter_api()
+    twitter_api = twitter_settings[0]
+
+    try:
+        supported_languages = map(lambda x: str(x["code"]), twitter_api.supported_languages())
+    except tweepy.TweepError:
+        # List according to Twitter 1.1 API https://dev.twitter.com/docs/api/1.1/get/help/languages
+        supported_languages = ['fr', 'en', 'ar', 'ja', 'es', 'de', 'it', 'id', 'pt', 'ko', 'tr', 'ru', 'nl', 'fil',
                        'msa', 'zh-tw', 'zh-cn', 'hi', 'no', 'sv', 'fi', 'da', 'pl', 'hu', 'fa', 'he', 'ur', 'th']
 
     substitute_list = {"en-gb": "en",
@@ -1312,14 +1321,15 @@ def twitter_search():
     lang_default = current.response.s3.language
 
     for l in langs:
-        if l in langs_supported:
+        if l in supported_languages:
             new_langs.append(l)
         else:
             supported_substitute = substitute_list.get(l)
-            if supported_substitute and supported_substitute not in langs:
-                new_langs.append(supported_substitute)
+            if supported_substitute:
                 if lang_default == l:
                     lang_default = supported_substitute
+                if supported_substitute not in langs:
+                    new_langs.append(supported_substitute)
             else:
                 if lang_default == l:
                     lang_default = 'en'
