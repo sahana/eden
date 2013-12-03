@@ -1376,14 +1376,14 @@ def twitter_search():
         db(etable.id == layer_id).update(uuid = uuid_entity.uuid)
 
         glayertable = s3db.gis_layer_config
-        glayer_id = glayertable.insert(layer_id = layer_id,config_id = 2, enabled = 'Yes',visible = 'Yes', base = 'No', uuid = uuid_entity.uuid)
+        glayer_id = glayertable.insert(layer_id = layer_id,config_id = 1, enabled = 'Yes',visible = 'Yes', base = 'No', uuid = uuid_entity.uuid,mci=2)
 
         symbologytable = s3db.gis_symbology
         symid = db(symbologytable.name == "US").select(symbologytable.id,limitby=(0,1)).first()
         sym_marker = s3db.gis_marker
         marker_id = db(sym_marker.name == "twitter").select(sym_marker.id,limitby=(0,1)).first()
         symtable = s3db.gis_layer_symbology
-        symtable.insert(layer_id = layer_id,symbology_id = symid.id,marker_id = marker_id.id)
+        symtable.insert(layer_id = layer_id,symbology_id = symid.id,marker_id = marker_id.id,mci=2)
 
     keyword_str = request.post_vars.get("keywords")
 
