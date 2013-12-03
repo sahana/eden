@@ -1720,7 +1720,7 @@ class S3TwitterSearchModel(S3ChannelModel):
                                    readable = False,
                                    writable = False,
                                    ),
-                             Field("inmage_url","text",
+                             Field("image_url","text",
                                    label = T("Image URL")
                                    ),
                              Field("video_url","text",

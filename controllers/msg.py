@@ -1476,19 +1476,6 @@ def twitter_result():
                      _class="tweeter-filter-class",
                      comment=T("Filter Tweets by who tweeted them"),
                      ),
-        S3OptionsFilter("image_url",
-                        label=T("With Image"),
-                        _class="image-filter-class",
-                        options=dict(yes="Yes"),
-                        widget="groupedopts",
-                        _name="image_url"
-                        ),
-        S3OptionsFilter("video_url",
-                        label=T("With Video"),
-                        _class="video-filter-class",
-                        options=dict(yes="Yes"),
-                        widget="groupedopts",
-                        _name="video_url")
         ]
 
     report_fields = ["search_id",
@@ -1513,7 +1500,57 @@ def twitter_result():
                    insertable=False,
                    filter_widgets=filter_widgets,
                    report_options=report_options,
+                   summary = [{"common": True,
+                        "name": "cms",
+                        "widgets": [{"method": "cms"}]
+                        },
+                       {"name": "table",
+                        "label": "Table",
+                        "widgets": [{"method": "datatable"}]
+                        },
+                       {"name": "charts",
+                        "label": "Charts",
+                        "widgets": [{"method": "report2", "ajax_init": True}]
+                        },
+                       {"name": "map",
+                        "label": "Map",
+                        "widgets": [{"method": "map", "ajax_init": True}],
+                        },
+                       ],
                    )
+
+    def prep(r):
+        if r.interactive:
+            pass
+        elif r.representation == "plain" and \
+             r.method !="search":
+            # Map Popups
+            r.table.image_url.readable = False
+            r.table.video_url.readable = False
+        return True
+    s3.prep = prep
+
+    def postp(r, output):
+        if r.interactive:
+            pass
+        elif r.representation == "plain" and \
+             r.method !="search":
+            # Map Popups
+            # use the Image URL
+            # @ToDo: The default photo not the 1st
+            image_url = r.record.image_url
+            video_url = r.record.video_url
+            if image_url:
+                output["item"].append(IMG(_src=image_url,
+                                          # @ToDo: capture the size on upload & have controller resize where-required on-download
+                                          _width=120,
+                                          _height=100))
+            if video_url:
+                output["item"].append(EMBED(_src=video_url,
+                                          _width=400,
+                                          _height=310))
+        return output
+    s3.postp = postp
 
     return s3_rest_controller(hide_filter=False)
 
