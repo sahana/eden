@@ -857,14 +857,10 @@
             <xsl:with-param name="arg">email</xsl:with-param>
         </xsl:call-template>
 
-        <xsl:if test="col[@field='Mobile Phone']!=''">
-            <resource name="pr_contact">
-                <data field="contact_method" value="SMS"/>
-                <data field="value">
-                    <xsl:value-of select="col[@field='Mobile Phone']/text()"/>
-                </data>
-            </resource>
-        </xsl:if>
+        <xsl:call-template name="splitList">
+            <xsl:with-param name="list"><xsl:value-of select="col[@field='Mobile Phone']"/></xsl:with-param>
+            <xsl:with-param name="arg">mobile_phone</xsl:with-param>
+        </xsl:call-template>
 
         <xsl:if test="col[@field='Home Phone']!=''">
             <resource name="pr_contact">
@@ -1245,6 +1241,12 @@
             <xsl:when test="$arg='email'">
                 <resource name="pr_contact">
                     <data field="contact_method" value="EMAIL"/>
+                    <data field="value"><xsl:value-of select="$item"/></data>
+                </resource>
+            </xsl:when>
+            <xsl:when test="$arg='mobile_phone'">
+                <resource name="pr_contact">
+                    <data field="contact_method" value="SMS"/>
                     <data field="value"><xsl:value-of select="$item"/></data>
                 </resource>
             </xsl:when>

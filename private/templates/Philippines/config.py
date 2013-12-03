@@ -515,18 +515,33 @@ def render_locations(listid, resource, rfields, record, **attr):
     stable = s3db.org_site
     query = (stable.deleted == False) & \
             (stable.location_id.belongs(locations))
-    tally_sites = db(query).count()
+    count = stable.id.count()
+    row = db(query).select(count).first()
+    if row:
+        tally_sites = row[count]
+    else:
+        tally_sites = 0
 
     table = s3db.req_req
     query = (table.deleted == False) & \
             (stable.site_id == table.site_id) & \
             (stable.location_id.belongs(locations))
-    tally_reqs = db(query).count()
+    count = table.id.count()
+    row = db(query).select(count).first()
+    if row:
+        tally_reqs = row[count]
+    else:
+        tally_reqs = 0
 
     table = s3db.req_commit
     query = (table.deleted == False) & \
             (table.location_id.belongs(locations))
-    tally_commits = db(query).count()
+    count = table.id.count()
+    row = db(query).select(count).first()
+    if row:
+        tally_commits = row[count]
+    else:
+        tally_commits = 0
 
     if level == "L4":
         next_Lx = ""
@@ -548,7 +563,12 @@ def render_locations(listid, resource, rfields, record, **attr):
         query = (table.deleted == False) & \
                 (table.level == next_Lx) & \
                 (table.parent == record_id)
-        tally_Lx = db(query).count()
+        count = table.id.count()
+        row = db(query).select(count).first()
+        if row:
+            tally_Lx = row[count]
+        else:
+            tally_Lx = 0
         next_url = URL(c="gis", f="location",
                        args=["datalist"],
                        vars={"~.level": next_Lx,
