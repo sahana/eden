@@ -1458,11 +1458,12 @@ def twitter_result():
     s3.crud_strings[tablename] = Storage(
         title_display = T("Twitter Search Results"),
         title_list = T("Twitter Search Results"),
-        label_list_button = T("View Tweet"),        msg_record_deleted = T("Tweet deleted"),
+        label_list_button = T("View Tweet"),
+        msg_record_deleted = T("Tweet deleted"),
         msg_list_empty = T("No Tweets Available."),
         )
 
-    from s3.s3filter import S3DateFilter, S3TextFilter, S3OptionsFilter
+    from s3.s3filter import S3DateFilter, S3TextFilter
 
     filter_widgets = [
         S3DateFilter("created_on",
@@ -1475,7 +1476,7 @@ def twitter_result():
                      label=T("Tweeted By"),
                      _class="tweeter-filter-class",
                      comment=T("Filter Tweets by who tweeted them"),
-                     ),
+                     )
         ]
 
     report_fields = ["search_id",
@@ -1537,12 +1538,10 @@ def twitter_result():
              r.method !="search":
             # Map Popups
             # use the Image URL
-            # @ToDo: The default photo not the 1st
             image_url = r.record.image_url
             video_url = r.record.video_url
             if image_url:
                 output["item"].append(IMG(_src=image_url,
-                                          # @ToDo: capture the size on upload & have controller resize where-required on-download
                                           _width=120,
                                           _height=100))
             if video_url:

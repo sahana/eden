@@ -34,7 +34,6 @@
     OTHER DEALINGS IN THE SOFTWARE.
 
 """
-from itertools import imap
 
 __all__ = ["S3Msg",
            "S3Compose",
@@ -1781,17 +1780,19 @@ class S3Msg(object):
             image_url = None
             video_url = None
 
-            try:
-                if tweet["entities"]:
+
+            if tweet["entities"]:
+                try:
                     if tweet["entities"]["media"]:
                         image_url = tweet["entities"]["media"][0]["media_url"]
+                except:
+                    image_url = None
 
+                try:
                     if tweet["entities"]["urls"]:
                         video_url = tweet["entities"]["urls"][0]["expanded_url"]
-
-            except:
-                image_url = None
-                video_url = None
+                except:
+                    video_url = None
 
             id = rtable.insert(from_address = user,
                                search_id = search_id,
