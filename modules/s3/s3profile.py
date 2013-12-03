@@ -44,7 +44,6 @@ class S3Profile(S3CRUD):
         Configure widgets using s3db.configure(tablename, profile_widgets=[])
 
         @ToDo: Make more configurable:
-           * Currently assumes a max of 2 widgets per row
            * Currently uses internal widgets rather than S3Method widgets
 
         @todo:
@@ -106,6 +105,10 @@ class S3Profile(S3CRUD):
 
         output = dict(title=title, header=header)
 
+        cols = get_config(tablename, "profile_cols")
+        if not cols:
+            cols = 2
+
         # Get the page widgets
         widgets = get_config(tablename, "profile_widgets")
         if widgets:
@@ -149,6 +152,7 @@ class S3Profile(S3CRUD):
                 rows = []
                 append = rows.append
                 row = None
+                row_cols = 0
                 for widget in widgets:
 
                     # Render the widget
@@ -171,24 +175,23 @@ class S3Profile(S3CRUD):
                             # ignore
                             continue
 
-                    colspan = widget.get("colspan", 1)
-                    if colspan > 1 and row:
-                        # Close previous row
-                        append(row)
-                        row = None
-                        
                     if row is None:
                         # Start new row
                         row = DIV(_class="row profile")
-                        
+                        row_cols = 0
+
                     # Append widget to row
                     row.append(w)
-                    
-                    if colspan > 1 or len(row) > 1:
+                    colspan = widget.get("colspan", 1)
+                    row_cols += colspan
+                    if row_cols == cols:
                         # Close this row
                         append(row)
                         row = None
 
+                if row:
+                    # We have an incomplete row of widgets
+                    append(row)
                 output["rows"] = rows
                 response.view = self._view(r, "profile.html")
 

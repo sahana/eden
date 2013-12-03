@@ -161,7 +161,6 @@ class S3DeploymentModel(S3Model):
                                            ],
                             tablename = "deploy_alert",
                             context = "mission",
-                            colspan = 2,
                             list_layout = deploy_render_alert,
                             pagesize = 10,
                             )
@@ -181,7 +180,6 @@ class S3DeploymentModel(S3Model):
                                tablename = "deploy_response",
                                list_fields = list_fields,
                                context = "mission",
-                               colspan = 2,
                                list_layout = deploy_render_response,
                                pagesize = 10,
                                )
@@ -208,7 +206,6 @@ class S3DeploymentModel(S3Model):
                                      "appraisal.rating",
                                  ],
                                  context = "mission",
-                                 colspan = 2,
                                  list_layout = deploy_render_assignment,
                                  pagesize = None, # all records
                                  )
@@ -216,41 +213,9 @@ class S3DeploymentModel(S3Model):
         # Table configuration
         profile = URL(c="deploy", f="mission", args=["[id]", "profile"])
         configure(tablename,
-                  super_entity = "doc_entity",
-                  crud_form = crud_form,
                   create_next = profile,
-                  update_next = profile,
-                  list_fields = ["name",
-                                 (T("Date"), "created_on"),
-                                 "event_type_id",
-                                 (T("Country"), "location_id"),
-                                 "code",
-                                 (T("Responses"), "response_count"),
-                                 (T("Members Deployed"), "hrquantity"),
-                                 "status",
-                                 ],
-                  profile_header = lambda r: \
-                                   deploy_rheader(r, profile=True),
-                  profile_widgets = [alert_widget,
-                                     response_widget,
-                                     assignment_widget,
-                                    ],
-                  summary=[{"name": "rheader",
-                            "common": True,
-                            "widgets": [
-                                {"method": self.add_button}
-                            ]
-                           },
-                           {"name": "table",
-                            "label": "Table",
-                            "widgets": [{"method": "datatable"}]
-                            },
-                            {"name": "map",
-                             "label": "Map",
-                             "widgets": [{"method": "map",
-                                          "ajax_init": True}],
-                            },
-                  ],
+                  crud_form = crud_form,
+                  delete_next = URL(c="deploy", f="mission", args="summary"),
                   filter_widgets = [
                     S3TextFilter(["name",
                                   "code",
@@ -273,8 +238,39 @@ class S3DeploymentModel(S3Model):
                                     hidden=True
                                     ),
                     ],
-                  orderby="deploy_mission.created_on desc",
-                  delete_next=URL(c="deploy", f="mission", args="summary"),
+                  list_fields = ["name",
+                                 (T("Date"), "created_on"),
+                                 "event_type_id",
+                                 (T("Country"), "location_id"),
+                                 "code",
+                                 (T("Responses"), "response_count"),
+                                 (T("Members Deployed"), "hrquantity"),
+                                 "status",
+                                 ],
+                  orderby = "deploy_mission.created_on desc",
+                  profile_cols = 1,
+                  profile_header = lambda r: \
+                                   deploy_rheader(r, profile=True),
+                  profile_widgets = [alert_widget,
+                                     response_widget,
+                                     assignment_widget,
+                                     ],
+                  summary = [{"name": "rheader",
+                              "common": True,
+                              "widgets": [{"method": self.add_button}]
+                              },
+                             {"name": "table",
+                              "label": "Table",
+                              "widgets": [{"method": "datatable"}]
+                              },
+                             {"name": "map",
+                              "label": "Map",
+                              "widgets": [{"method": "map",
+                                           "ajax_init": True}],
+                              },
+                             ],
+                  super_entity = "doc_entity",
+                  update_next = profile,
                   )
 
         # Components
@@ -414,12 +410,15 @@ class S3DeploymentModel(S3Model):
                                              key="appraisal_id",
                                              autodelete=False))
 
+        assignment_id = S3ReusableField("assignment_id", table,
+                                        ondelete = "CASCADE")
+
         # ---------------------------------------------------------------------
         # Link Assignments to Appraisals
         #
         tablename = "deploy_assignment_appraisal"
         table = define_table(tablename,
-                             Field("assignment_id", table),
+                             assignment_id(empty=False),
                              Field("appraisal_id", self.hrm_appraisal),
                              *s3_meta_fields())
 
@@ -428,7 +427,7 @@ class S3DeploymentModel(S3Model):
         #
         tablename = "deploy_assignment_experience"
         table = define_table(tablename,
-                             Field("assignment_id", table),
+                             assignment_id(empty=False),
                              Field("experience_id", self.hrm_experience),
                              *s3_meta_fields())
 

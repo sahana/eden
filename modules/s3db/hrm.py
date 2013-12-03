@@ -3107,11 +3107,14 @@ class S3HRAppraisalModel(S3Model):
     """
 
     names = ["hrm_appraisal",
+             "hrm_appraisal_document",
              ]
 
     def model(self):
 
         T = current.T
+        configure = self.configure
+        define_table = self.define_table
         person_id = self.pr_person_id
 
         if current.deployment_settings.get_org_autocomplete():
@@ -3124,34 +3127,34 @@ class S3HRAppraisalModel(S3Model):
         #
 
         tablename = "hrm_appraisal"
-        table = self.define_table(tablename,
-                                  person_id(),
-                                  # For Mission or Event
-                                  Field("code",
-                                        label = T("Code"),
-                                        readable = False,
-                                        writable = False,
-                                        ),
-                                  self.org_organisation_id(widget = org_widget),
-                                  self.hrm_job_title_id(),
-                                  s3_date(),
-                                  person_id("supervisor_id",
-                                            label = T("Supervisor"),
-                                            requires = IS_NULL_OR(
-                                                        IS_ADD_PERSON_WIDGET()
-                                                        ),
-                                            widget = S3AddPersonWidget(),
-                                            # Doesn't work outside of Bootstrap yet
-                                            #requires = IS_ADD_PERSON_WIDGET2(),
-                                            #widget = S3AddPersonWidget2(),
-                                            ),
-                                  Field("rating", "integer",
-                                        label = T("Rating"),
-                                        requires = IS_INT_IN_RANGE(0, 6), # Need 6 to allow 5!?
-                                        default = 0,
-                                        ),
-                                  s3_comments(),
-                                  *s3_meta_fields())
+        table = define_table(tablename,
+                             person_id(),
+                             # For Mission or Event
+                             Field("code",
+                                   label = T("Code"),
+                                   readable = False,
+                                   writable = False,
+                                   ),
+                             self.org_organisation_id(widget = org_widget),
+                             self.hrm_job_title_id(),
+                             s3_date(),
+                             Field("rating", "integer",
+                                   label = T("Rating"),
+                                   requires = IS_INT_IN_RANGE(0, 6), # Need 6 to allow 5!?
+                                   default = 0,
+                                   ),
+                             person_id("supervisor_id",
+                                       label = T("Supervisor"),
+                                       requires = IS_NULL_OR(
+                                                    IS_ADD_PERSON_WIDGET()
+                                                    ),
+                                       widget = S3AddPersonWidget(),
+                                       # Doesn't work outside of Bootstrap yet
+                                       #requires = IS_ADD_PERSON_WIDGET2(),
+                                       #widget = S3AddPersonWidget2(),
+                                       ),
+                             s3_comments(),
+                             *s3_meta_fields())
 
         ADD_APPRAISAL = T("Add Appraisal")
         current.response.s3.crud_strings[tablename] = Storage(
@@ -3170,27 +3173,86 @@ class S3HRAppraisalModel(S3Model):
             msg_no_match = T("No Appraisals found"),
             msg_list_empty = T("Currently no Appraisals entered"))
 
-        self.configure(tablename,
-                       context = {"person": "person_id",
-                                  #"organisation": "organisation_id",
-                                  },
-                       list_fields = ["id",
-                                      # Normally accessed via component
-                                      #"person_id",
-                                      "date",
-                                      "organisation_id",
-                                      "job_title_id",
-                                      "supervisor_id",
-                                      "comments",
-                                      ],
-                       #list_layout = hrm_render_appraisal,
-                       orderby = ~table.date,
-                       )
+        crud_form = S3SQLCustomForm("organisation_id",
+                                    "job_title_id",
+                                    "date",
+                                    "rating",
+                                    "supervisor_id",
+                                    S3SQLInlineComponent("document",
+                                                         label = T("Files"),
+                                                         link = False,
+                                                         fields = ["file"],
+                                                         ),
+                                    "comments",
+                                    )
+
+        configure(tablename,
+                  context = {"person": "person_id",
+                             #"organisation": "organisation_id",
+                             },
+                  crud_form = crud_form,
+                  list_fields = ["id",
+                                 # Normally accessed via component
+                                 #"person_id",
+                                 "date",
+                                 "organisation_id",
+                                 "job_title_id",
+                                 "supervisor_id",
+                                 "comments",
+                                 "document.file",
+                                 ],
+                  #list_layout = hrm_render_appraisal,
+                  orderby = ~table.date,
+                  )
+
+        self.add_component("doc_document",
+                           hrm_appraisal=dict(link="hrm_appraisal_document",
+                                              joinby="appraisal_id",
+                                              key="document_id",
+                                              autodelete=False))
+
+        # =====================================================================
+        # Appraisal Documents
+        #
+
+        tablename = "hrm_appraisal_document"
+        table = define_table(tablename,
+                             Field("appraisal_id", table),
+                             self.doc_document_id(empty=False),
+                             *s3_meta_fields())
+
+        configure(tablename,
+                  onaccept = self.hrm_appraisal_document_onaccept,
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
         return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hrm_appraisal_document_onaccept(form):
+        """
+            Set the doc_id to that of the HRM, so that it also appears there
+        """
+
+        db = current.db
+        s3db = current.s3db
+        atable = db.hrm_appraisal
+        ltable = db.hrm_appraisal_document
+        htable = s3db.hrm_human_resource
+        query = (ltable.id == form.vars.id) & \
+                (ltable.appraisal_id == atable.id) & \
+                (atable.person_id == htable.person_id) & \
+                (htable.deleted != False)
+        row = db(query).select(htable.doc_id,
+                               ltable.document_id,
+                               limitby=(0, 1)).first()
+        if row:
+            document_id = row["hrm_appraisal_document.document_id"]
+            doc_id = row["hrm_human_resource.doc_id"]
+            db(db.doc_document.id == document_id).update(doc_id = doc_id)
 
 # =============================================================================
 class S3HRCourseSectorModel(S3Model):
@@ -5251,8 +5313,7 @@ def hrm_human_resource_controller(extra_filter=None):
             if deploy:
                 profile_widgets.insert(2, sectors_widget)
             s3db.configure("hrm_human_resource",
-                           profile_title = "%s : %s" % (s3.crud_strings["hrm_human_resource"].title_display, 
-                                                        name),
+                           profile_cols = 1,
                            profile_header = DIV(A(s3_avatar_represent(person_id,
                                                                       tablename="pr_person",
                                                                       _class="media-object"),
@@ -5263,6 +5324,8 @@ def hrm_human_resource_controller(extra_filter=None):
                                                 P(comments),
                                                 _class="profile_header",
                                                 ),
+                           profile_title = "%s : %s" % (s3.crud_strings["hrm_human_resource"].title_display, 
+                                                        name),
                            profile_widgets = profile_widgets,
                            )
         elif method == "summary":
@@ -5959,7 +6022,6 @@ def hrm_cv(r, **attr):
                                     create_controller = controller,
                                     create_function = "person",
                                     create_component = "education",
-                                    colspan = 2,
                                     pagesize = None, # all records
                                     )
             profile_widgets.append(education_widget)
@@ -5974,7 +6036,6 @@ def hrm_cv(r, **attr):
                                      create_controller = controller,
                                      create_function = "person",
                                      create_component = "experience",
-                                     colspan = 2,
                                      pagesize = None, # all records
                                      )
             profile_widgets.append(experience_widget)
@@ -5988,7 +6049,6 @@ def hrm_cv(r, **attr):
                                    create_controller = controller,
                                    create_function = "person",
                                    create_component = "training",
-                                   colspan = 2,
                                    pagesize = None, # all records
                                    )
             profile_widgets.append(training_widget)
@@ -6002,7 +6062,6 @@ def hrm_cv(r, **attr):
                                  create_controller = controller,
                                  create_function = "person",
                                  create_component = "competency",
-                                 colspan = 2,
                                  pagesize = None, # all records
                                  )
             profile_widgets.append(skills_widget)
@@ -6017,6 +6076,7 @@ def hrm_cv(r, **attr):
             profile_header = None
 
         s3db.configure(tablename,
+                       profile_cols = 1,
                        profile_header = profile_header,
                        profile_widgets = profile_widgets,
                        )
@@ -6080,7 +6140,6 @@ def hrm_record(r, **attr):
                  type = "form",
                  tablename = "hrm_human_resource",
                  context = "person",
-                 colspan = 2,
                  )
             ]
 
@@ -6106,7 +6165,6 @@ def hrm_record(r, **attr):
                                     create_controller = controller,
                                     create_function = "person",
                                     create_component = "hours",
-                                    colspan = 2,
                                     pagesize = None, # all records
                                     )
                 profile_widgets.append(hours_widget)
@@ -6127,7 +6185,6 @@ def hrm_record(r, **attr):
                                 create_controller = controller,
                                 create_function = "person",
                                 create_component = "group_membership",
-                                colspan = 2,
                                 pagesize = None, # all records
                                 )
             profile_widgets.append(teams_widget)
@@ -6143,6 +6200,7 @@ def hrm_record(r, **attr):
             profile_header = None
 
         s3db.configure(tablename,
+                       profile_cols = 1,
                        profile_header = profile_header,
                        profile_widgets = profile_widgets,
                        )
