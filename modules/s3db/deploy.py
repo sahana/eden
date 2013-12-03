@@ -1357,7 +1357,9 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
         htable = s3db.hrm_human_resource
         query = (htable.id == human_resource_id) & \
                 (htable.person_id == table.person_id) & \
-                (table.deleted != True)
+                (table.deleted != True) & \
+                (table.rating != None) & \
+                (table.rating > 0)
         avgrat = table.rating.avg()
         row = db(query).select(avgrat).first()
         if row:
@@ -2325,11 +2327,12 @@ def deploy_response_select_mission(r, **attr):
                             TR(TH("%s: " % T("Message Text")),
                                ),
                             ),
-                            record.body,
+                            DIV(record.body, _class="message-body s3-truncate"),
                             attachments,
                             )
         output["rheader"] = rheader
-
+        s3_trunk8(lines=5)
+        
         response.view = "list_filter.html"
         return output
 

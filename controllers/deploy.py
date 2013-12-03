@@ -208,8 +208,15 @@ def sector():
     """ RESTful CRUD Controller """
 
     def prep(r):
+        table = r.table
+        if r.method in ("create", "create.popup", "update", "update.popup"):
+            # Coming from Profile page?
+            person_id = r.get_vars.get("~.person_id", None)
+            if person_id:
+                field = table.person_id
+                field.default = person_id
+                field.readable = field.writable = False
         if r.record:
-            table = r.resource.table
             table.person_id.writable = False
         return True
     s3.prep = prep
