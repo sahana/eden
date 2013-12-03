@@ -114,20 +114,28 @@ a h5.media-heading:hover {
     float: right;
 }
 
-.icon.icon-edit,
-.icon.icon-trash,
-.icon.icon-remove-sign {
+.edit-bar .icon-bookmark,
+.edit-bar .icon-bookmark-empty,
+.edit-bar .icon-edit,
+.edit-bar .icon-file-alt,
+.edit-bar .icon-paperclip,
+.edit-bar .icon-trash,
+.edit-bar .icon-remove-sign {
     color: #999;
     padding-left: 2px;
 }
 
-.icon.icon-edit:hover {
+.edit-bar .icon-bookmark:hover,
+.edit-bar .icon-bookmark-empty:hover,
+.edit-bar .icon-edit:hover
+.edit-bar .icon-file-alt:hover,
+.edit-bar .icon-paperclip:hover {
     color: #0095fe;
     text-decoration: none;
 }
 
-.icon.icon-trash:hover,
-.icon.icon-remove-sign:hover {
+.edit-bar .icon-trash:hover,
+.edit-bar .icon-remove-sign:hover {
     color: #E74C3C;
     text-decoration: none;
 }

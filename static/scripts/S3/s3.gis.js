@@ -2819,75 +2819,82 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     // Supports highlightControl for All Vector Layers
     var tooltipSelect = function(event) {
         var feature = event.feature;
-        if (feature.cluster) {
-            // Cluster: no tooltip
-        } else {
-            // Single Feature: show tooltip
-            // Ensure only 1 Tooltip Popup / map
-            var map = feature.layer.map;
-            var lastFeature = map.s3.lastFeature;
-            var tooltipPopup = map.s3.tooltipPopup;
-            //map.s3.selectedFeature = feature;
-            // if there is already an opened details window, don\'t draw the tooltip
-            if (feature.popup !== null) {
-                return;
-            }
-            // if there are other tooltips active, destroy them
-            if ((tooltipPopup !== null) && (tooltipPopup !== undefined)) {
-                map.removePopup(tooltipPopup);
-                tooltipPopup.destroy();
-                if (lastFeature !== null) {
-                    delete lastFeature.popup;
+        var map = feature.layer.map;
+        var map_id = map.s3.id;
+        S3.gis.maps[map_id].tooltipTimeout = setTimeout(function() {
+            if (feature.cluster) {
+                // Cluster: no tooltip
+            } else {
+                // Single Feature: show tooltip
+                // Ensure only 1 Tooltip Popup / map
+                var lastFeature = map.s3.lastFeature;
+                var tooltipPopup = map.s3.tooltipPopup;
+                //map.s3.selectedFeature = feature;
+                // if there is already an opened details window, don\'t draw the tooltip
+                if (feature.popup !== null) {
+                    return;
                 }
-                tooltipPopup = null;
-            }
-            lastFeature = feature;
-            var centerPoint = feature.geometry.getBounds().getCenterLonLat();
-            var attributes = feature.attributes;
-            var tooltip;
-            if (undefined != attributes.popup) {
-                // GeoJSON Feature Layers or Theme Layers
-                tooltip = attributes.popup;
-            } else if (undefined != attributes.name) {
-                // GeoJSON, GeoRSS or Legacy Features
-                tooltip = attributes.name;
-            } else if (undefined != feature.layer.title) {
-                // KML or WFS
-                var a = attributes[feature.layer.title];
-                var type = typeof a;
-                if ('object' == type) {
-                    tooltip = a.value;
-                } else {
-                    tooltip = a;
+                // if there are other tooltips active, destroy them
+                if ((tooltipPopup !== null) && (tooltipPopup !== undefined)) {
+                    map.removePopup(tooltipPopup);
+                    tooltipPopup.destroy();
+                    if (lastFeature !== null) {
+                        delete lastFeature.popup;
+                    }
+                    tooltipPopup = null;
+                }
+                lastFeature = feature;
+                var centerPoint = feature.geometry.getBounds().getCenterLonLat();
+                var attributes = feature.attributes;
+                var tooltip;
+                if (undefined != attributes.popup) {
+                    // GeoJSON Feature Layers or Theme Layers
+                    tooltip = attributes.popup;
+                } else if (undefined != attributes.name) {
+                    // GeoJSON, GeoRSS or Legacy Features
+                    tooltip = attributes.name;
+                } else if (undefined != feature.layer.title) {
+                    // KML or WFS
+                    var a = attributes[feature.layer.title];
+                    var type = typeof a;
+                    if ('object' == type) {
+                        tooltip = a.value;
+                    } else {
+                        tooltip = a;
+                    }
+                }
+                if (tooltip) {
+                    tooltipPopup = new OpenLayers.Popup(
+                        'activetooltip',
+                        centerPoint,
+                        new OpenLayers.Size(80, 12),
+                        tooltip,
+                        false
+                    );
+                }
+                if ((tooltipPopup !== null) && (tooltipPopup !== undefined)) {
+                    // should be moved to CSS
+                    tooltipPopup.contentDiv.style.backgroundColor = 'ffffcb';
+                    tooltipPopup.contentDiv.style.overflow = 'hidden';
+                    tooltipPopup.contentDiv.style.padding = '3px';
+                    tooltipPopup.contentDiv.style.margin = '10px';
+                    tooltipPopup.closeOnMove = true;
+                    tooltipPopup.autoSize = true;
+                    tooltipPopup.opacity = 0.7;
+                    feature.popup = tooltipPopup;
+                    map.addPopup(tooltipPopup);
                 }
             }
-            if (tooltip) {
-                tooltipPopup = new OpenLayers.Popup(
-                    'activetooltip',
-                    centerPoint,
-                    new OpenLayers.Size(80, 12),
-                    tooltip,
-                    false
-                );
-            }
-            if ((tooltipPopup !== null) && (tooltipPopup !== undefined)) {
-                // should be moved to CSS
-                tooltipPopup.contentDiv.style.backgroundColor = 'ffffcb';
-                tooltipPopup.contentDiv.style.overflow = 'hidden';
-                tooltipPopup.contentDiv.style.padding = '3px';
-                tooltipPopup.contentDiv.style.margin = '10px';
-                tooltipPopup.closeOnMove = true;
-                tooltipPopup.autoSize = true;
-                tooltipPopup.opacity = 0.7;
-                feature.popup = tooltipPopup;
-                map.addPopup(tooltipPopup);
-            }
-        }
+        }, 500);
     };
     var tooltipUnselect = function(event) {
         var feature = event.feature;
+        var map = feature.layer.map;
+        var map_id = map.s3.id;
+        // Prevent any pending tooltip from loading
+        clearTimeout(S3.gis.maps[map_id].tooltipTimeout);
+        // Close any open tooltip
         if (feature !== null && feature.popup !== null) {
-            var map = feature.layer.map;
             map.removePopup(feature.popup);
             feature.popup.destroy();
             delete feature.popup;

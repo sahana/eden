@@ -24,104 +24,18 @@
   speak: none;
 }
 
-/* General */
-.icon-calendar:before {
-  content: "\f073";
-}
-.icon-certificate:before {
-  content: "\f0a3";
-}
-.icon-check:before {
-  content: "\f046";
-}
-.icon-check-empty:before {
-  content: "\f096";
-}
-.icon-circle:before {
-  content: "\f111";
-}
-.icon-cog:before {
-  content: "\f013";
-}
-.icon-cogs:before {
-  content: "\f085";
-}
-.icon-comment-alt:before {
-  content: "\f0e5";
-}
-.icon-external-link:before {
-  content: "\f08e";
-}
-.icon-file-alt:before {
-  content: "\f016";
-}
-.icon-filter:before {
-  content: "\f0b0";
-}
-.icon-flag:before {
-  content: "\f024";
-}
-.icon-fullscreen:before {
-  content: "\f0b2";
-}
-.icon-list:before {
-  content: "\f03a";
-}
-.icon-lock:before {
-  content: "\f023";
-}
-.icon-off:before {
-  content: "\f011";
-}
-.icon-paperclip:before {
-  content: "\f0c6";
-}
-.icon-plus-sign:before {
-  content: "\f055";
-}
-.icon-signin:before {
-  content: "\f090";
-}
-.icon-tasks:before {
-  content: "\f0ae";
-}
-.icon-time:before {
-  content: "\f017";
-}
-.icon-trash:before {
-  content: "\f014";
-}
-.icon-truck:before {
-  content: "\f0d1";
-}
-.icon-wrench:before {
-  content: "\f0ad";
-}
-
-/* Orgs & People */
-.icon-home:before {
-  content: "\f015";
-}
-.icon-sitemap:before {
-  content: "\f0e8";
-}
-.icon-tags:before {
-  content: "\f02c";
-}
-.icon-user:before {
-  content: "\f007";
-}
-
 /* Map */
 .icon-map-marker:before {
   content: "\f041";
 }
 .icon-globe:before {
+  /* Used for Locations */
   content: "\f0ac";
 }
 
 /* Contacts */
 .icon-envelope-alt:before {
+  /* Used for Email fields & 'Send' action */
   content: "\f003";
 }
 .icon-facebook:before {
@@ -143,6 +57,119 @@
   content: "\f099";
 }
 
-
-
-
+/* General */
+.icon-bookmark:before {
+  /* Used to show that there is already a bookmark, & allow it's removal */
+  content: "\f02e";
+}
+.icon-bookmark-empty:before {
+  /* Used to show that there is not yet a bookmark, & allow it's addition */
+  content: "\f097";
+}
+.icon-calendar:before {
+  /* Used for Planned Events & Date fields */
+  content: "\f073";
+}
+.icon-certificate:before {
+  content: "\f0a3";
+}
+.icon-check:before {
+  content: "\f046";
+}
+.icon-check-empty:before {
+  content: "\f096";
+}
+.icon-circle:before {
+  content: "\f111";
+}
+.icon-cog:before {
+  content: "\f013";
+}
+.icon-cogs:before {
+  /* Used for Admin menu */
+  content: "\f085";
+}
+.icon-comment-alt:before {
+  /* Used for Language Menu & Comments */
+  content: "\f0e5";
+}
+.icon-edit:before {
+  /* Used for 'Edit' action */
+  content: "\f044";
+}
+.icon-external-link:before {
+  /* Used for 'Link to Mission' action */
+  content: "\f08e";
+}
+.icon-file-alt:before {
+  /* Used for 'Open' action (Read-only) & 'Documents' menu */
+  content: "\f016";
+}
+.icon-filter:before {
+  content: "\f0b0";
+}
+.icon-flag:before {
+  /* Used for Requests */
+  content: "\f024";
+}
+.icon-fullscreen:before {
+  content: "\f0b2";
+}
+.icon-home:before {
+  /* Used for Sites */
+  content: "\f015";
+}
+.icon-list:before {
+  content: "\f03a";
+}
+.icon-lock:before {
+  /* Used for 'Change Password' */
+  content: "\f023";
+}
+.icon-off:before {
+  /* Used for 'Logout' */
+  content: "\f011";
+}
+.icon-paperclip:before {
+  /* Used for Attachments */
+  content: "\f0c6";
+}
+.icon-plus-sign:before {
+  content: "\f055";
+}
+.icon-signin:before {
+  /* Used for Login */
+  content: "\f090";
+}
+.icon-sitemap:before {
+  /* Used for Organisations */
+  content: "\f0e8";
+}
+.icon-tags:before {
+  /* Used for Sectors */
+  content: "\f02c";
+}
+.icon-tasks:before {
+  /* Used for Tasks & Demographics */
+  content: "\f0ae";
+}
+.icon-time:before {
+  /* Used for Hours fields */
+  content: "\f017";
+}
+.icon-trash:before {
+  /* Used for 'Delete' action */
+  content: "\f014";
+}
+.icon-truck:before {
+  /* Used for Commits (& Resource Inventory) */
+  content: "\f0d1";
+}
+.icon-user:before {
+  /* Used for User Profile */
+  content: "\f007";
+}
+.icon-wrench:before {
+  /* Used for Resource Inventory */
+  content: "\f0ad";
+}

@@ -3140,8 +3140,11 @@ class S3HRAppraisalModel(S3Model):
                              s3_date(),
                              Field("rating", "integer",
                                    label = T("Rating"),
-                                   requires = IS_INT_IN_RANGE(0, 6), # Need 6 to allow 5!?
-                                   default = 0,
+                                   # @ToDo: make this configurable
+                                   # 1 to 4
+                                   requires = IS_NULL_OR(
+                                                IS_INT_IN_RANGE(1, 5)
+                                                ),
                                    ),
                              person_id("supervisor_id",
                                        label = T("Supervisor"),
@@ -3190,6 +3193,7 @@ class S3HRAppraisalModel(S3Model):
                   context = {"person": "person_id",
                              #"organisation": "organisation_id",
                              },
+                  create_onaccept = self.hrm_appraisal_create_onaccept,
                   crud_form = crud_form,
                   list_fields = ["id",
                                  # Normally accessed via component
@@ -3229,6 +3233,36 @@ class S3HRAppraisalModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hrm_appraisal_create_onaccept(form):
+        """
+            Link Appraisal to Assignment
+        """
+
+        mission_id = current.request.get_vars.get("mission_id", None)
+        if not mission_id:
+            return
+
+        id = form.vars.id
+        db = current.db
+        s3db = current.s3db
+        atable = s3db.deploy_assignment
+        hatable = db.hrm_appraisal
+        hrtable = db.hrm_human_resource
+        query = (hatable.id == id) & \
+                (hrtable.person_id == hatable.person_id) & \
+                (atable.human_resource_id == hrtable.id) & \
+                (atable.mission_id == mission_id)
+        assignment = db(query).select(atable.id,
+                                      limitby=(0, 1)
+                                      ).first()
+        if not assignment:
+            return
+        db.deploy_assignment_appraisal.insert(assignment_id = assignment.id,
+                                              appraisal_id = id,
+                                              )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -6364,7 +6398,7 @@ def hrm_render_competencies(listid, resource, rfields, record, **attr):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+        delete_btn = A(I(" ", _class="icon icon-trash"),
                        _class="dl-item-delete",
                        )
     else:
@@ -6531,7 +6565,7 @@ def hrm_render_experience(listid, resource, rfields, record, **attr):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+        delete_btn = A(I(" ", _class="icon icon-trash"),
                        _class="dl-item-delete",
                        )
     else:
@@ -6670,7 +6704,7 @@ def hrm_render_trainings(listid, resource, rfields, record, **attr):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+        delete_btn = A(I(" ", _class="icon icon-trash"),
                        _class="dl-item-delete",
                        )
     else:

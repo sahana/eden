@@ -161,37 +161,50 @@ div.media a.pull-left img.media-object {
     vertical-align: text-top;
 }
 
-.icon.icon-search,
-.icon.icon-open,
-.icon.icon-edit,
-.icon.icon-remove-sign {
+.edit-bar .icon-edit,
+.edit-bar .icon-envelope-alt,
+.edit-bar .icon-file-alt,
+.edit-bar .icon-paperclip,
+.edit-bar .icon-search,
+.edit-bar .icon-trash {
     color: #999;
     padding-left: 2px;
     margin-right: 4px;
 }
-
-.icon.icon-edit:hover {
+.edit-bar .icon-edit:hover,
+.edit-bar .icon-envelope-alt:hover,
+.edit-bar .icon-file-alt:hover,
+.edit-bar .icon-paperclip:hover,
+.edit-bar .icon-search:hover {
+    /* Color doesn't work with Images, only with Fonts */
     color: #0095fe;
     text-decoration: none;
 }
-
-.icon.icon-remove-sign:hover {
+.edit-bar .icon-trash:hover {
+    /* Color doesn't work with Images, only with Fonts */
     color: #E74C3C;
 }
-
-.icon.icon-search {
-    background: url(img/magnifier.png) no-repeat;
+.edit-bar .icon-edit:before,
+.edit-bar .icon-envelope-alt:before,
+.edit-bar .icon-file-alt:before,
+.edit-bar .icon-trash:before {
+    /* Override font-awesome icons */
+    content: none;
 }
 
-.icon.icon-open {
+.icon.icon-envelope-alt {
+    background: url(img/envelope.png) no-repeat;
+}
+.icon.icon-file-alt {
     background: url(img/file.png) no-repeat;
 }
-
 .icon.icon-edit {
     background: url(img/pencil.png) no-repeat;
 }
-
-.icon.icon-remove-sign {
+.icon.icon-search {
+    background: url(img/magnifier.png) no-repeat;
+}
+.icon.icon-trash {
     background: url(img/trashbin.png) no-repeat;
 }
 

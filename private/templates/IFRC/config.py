@@ -708,6 +708,22 @@ def customize_pr_person(**attr):
         else:
             result = True
 
+        if r.component_name == "appraisal":
+            # Organisation needs to be an NS
+            ns_only(s3db.hrm_appraisal.organisation_id,
+                    required=True,
+                    branches=False,
+                    )
+            mission_id = r.get_vars.get("mission_id", None)
+            if mission_id:
+                # Lookup Code
+                mtable = s3db.deploy_mission
+                mission = db(mtable.id == mission_id).select(mtable.code,
+                                                             limitby=(0, 1)
+                                                             ).first()
+                if mission:
+                    r.component.table.code.default = mission.code
+
         if vnrc:
             if r.component_name == "address":
                 settings.gis.building_name = False

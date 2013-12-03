@@ -1262,7 +1262,7 @@ def cms_render_posts(listid, resource, rfields, record,
     else:
         title = series = ""
 
-    # Edit Bar
+    # Tool box
     if updateable:
         edit_btn = A(I(" ", _class="icon icon-edit"),
                      _href=URL(c="cms", f="newsfeed",
@@ -1280,10 +1280,37 @@ def cms_render_posts(listid, resource, rfields, record,
                        )
     else:
         delete_btn = ""
-    edit_bar = DIV(edit_btn,
-                   delete_btn,
-                   _class="edit-bar fright",
-                   )
+    user = current.auth.user
+    if user and settings.get_cms_bookmarks():
+        ltable = current.s3db.cms_post_user
+        query = (ltable.post_id == record_id) & \
+                (ltable.user_id == user.id)
+        exists = db(query).select(ltable.id,
+                                  limitby=(0, 1)
+                                  ).first()
+        if exists:
+            bookmark_btn = A(I(" ", _class="icon icon-bookmark"),
+                             _href=URL(c="cms", f="post",
+                                       args=[record_id, "remove_bookmark"],
+                                       vars={"refresh": listid,
+                                             "record": record_id}),
+                             _title=T("Remove Bookmark"),
+                             )
+        else:
+            bookmark_btn = A(I(" ", _class="icon icon-bookmark-empty"),
+                             _href=URL(c="cms", f="post",
+                                       args=[record_id, "add_bookmark"],
+                                       vars={"refresh": listid,
+                                             "record": record_id}),
+                             _title=T("Add Bookmark"),
+                             )
+    else:
+        bookmark_btn = ""
+    toolbox = DIV(bookmark_btn,
+                  edit_btn,
+                  delete_btn,
+                  _class="edit-bar fright",
+                  )
 
     # Dropdown of available documents
     documents = raw["doc_document.file"]
@@ -1343,7 +1370,7 @@ def cms_render_posts(listid, resource, rfields, record,
                           _class="date-title event",
                           ),
                      location,
-                     edit_bar,
+                     toolbox,
                      _class="card-header",
                      )
     else:
@@ -1352,7 +1379,7 @@ def cms_render_posts(listid, resource, rfields, record,
                      SPAN(date,
                           _class="date-title",
                           ),
-                     edit_bar,
+                     toolbox,
                      _class="card-header",
                      )
 

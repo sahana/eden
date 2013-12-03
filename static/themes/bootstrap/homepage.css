@@ -148,11 +148,11 @@ p.quote.mb4 {
 #homepage-layer .icon-calendar,
 #homepage-layer .icon-flag,
 #homepage-layer .icon-truck,
-.icon-bullhorn,
-.icon-bookmark-empty {
+#homepage-layer .icon-bullhorn,
+#what-they-do .icon-bookmark-empty {
     font-size: 34px;
 }
-.icon-bullhorn{
+#homepage-layer .icon-bullhorn{
     color: #bd382e;	
 }
 #homepage-layer .icon-calendar,
@@ -162,7 +162,7 @@ p.quote.mb4 {
 #homepage-layer .icon-truck {
     color: #1ebaa6;	
 }
-.icon-bookmark-empty {
+#what-they-do .icon-bookmark-empty {
     color: #1c94d4;
 }
 
