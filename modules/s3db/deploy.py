@@ -1351,12 +1351,7 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
         table = s3db.deploy_assignment
         query = (table.human_resource_id == human_resource_id) & \
                 (table.deleted != True)
-        dcount = table.id.count()
-        row = db(query).select(dcount).first()
-        if row:
-            dcount = row[dcount]
-        else:
-            dcount = None
+        dcount = db(query).count()
 
         table = s3db.hrm_appraisal
         htable = s3db.hrm_human_resource

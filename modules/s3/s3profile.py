@@ -893,9 +893,9 @@ class S3Profile(S3CRUD):
                 # @ToDo: Special check for creating resources on Organisation profile
 
             # URL-serialize the widget filter
-            widget_filter = widget.get(filter)
+            widget_filter = widget.get("filter")
             if widget_filter:
-                vars = widget_filter.serialize_url(widget_filter)
+                vars = widget_filter.serialize_url(resource)
             else:
                 vars = Storage()
 
