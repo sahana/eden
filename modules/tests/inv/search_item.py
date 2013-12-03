@@ -41,7 +41,7 @@ class SearchItems(SeleniumUnitTest):
             @case: inv018
             @description: Search Items - Simple Search
         """
-        self.search(self.search.simple_form,
+        self.search(self.search.advanced_form,
             True,
             ({
                 "name":"item_search_text",
