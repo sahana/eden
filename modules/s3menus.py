@@ -147,9 +147,11 @@ class S3MainMenu(object):
     def menu_help(cls, **attr):
         """ Help Menu """
 
-        menu_help = MM("Help", c="default", f="help", **attr)(
+        menu_help = MM("Help", c='default',f="help", **attr)(
             MM("Contact us", f="contact"),
-            MM("About", f="about")
+            MM("About", f="about"),
+            MM("Report a bug",c='bug',f="report")
+           
         )
 
         # -------------------------------------------------------------------
@@ -421,6 +423,7 @@ class S3OptionsMenu(object):
                 )
 
     # -------------------------------------------------------------------------
+ 
     def assess(self):
         """ ASSESS Menu """
 

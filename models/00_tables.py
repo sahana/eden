@@ -15,6 +15,7 @@ current.models = models
 import s3db.assess
 import s3db.asset
 import s3db.auth
+import s3db.bug
 import s3db.cap
 import s3db.climate
 import s3db.cms
@@ -56,7 +57,6 @@ import s3db.vehicle
 import s3db.vol
 import s3db.vulnerability
 import s3db.water
-
 current.s3db = s3db = S3Model()
 
 # =============================================================================
