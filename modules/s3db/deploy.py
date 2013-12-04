@@ -422,6 +422,10 @@ class S3DeploymentModel(S3Model):
                              Field("appraisal_id", self.hrm_appraisal),
                              *s3_meta_fields())
 
+        configure(tablename,
+                  ondelete_cascade = \
+                    self.deploy_assignment_appraisal_ondelete_cascade)
+
         # ---------------------------------------------------------------------
         # Link Assignments to Experience
         #
@@ -569,6 +573,32 @@ class S3DeploymentModel(S3Model):
             link.update_record(experience_id=None)
             
         s3db.resource("hrm_experience", id=link.experience_id).delete()
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def deploy_assignment_appraisal_ondelete_cascade(row, tablename=None):
+        """
+            Remove linked hrm_appraisal record
+
+            @param row: the link to be deleted
+            @param tablename: the tablename (ignored)
+        """
+
+        s3db = current.s3db
+
+        # Lookup experience ID
+        table = s3db.deploy_assignment_appraisal
+        link = current.db(table.id == row.id).select(table.id,
+                                                     table.appraisal_id,
+                                                     limitby=(0, 1)).first()
+        if not link:
+            return
+        else:
+            # Prevent infinite cascade
+            link.update_record(appraisal_id=None)
+
+        s3db.resource("hrm_appraisal", id=link.appraisal_id).delete()
         return
 
     # -------------------------------------------------------------------------
