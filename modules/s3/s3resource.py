@@ -6717,16 +6717,19 @@ class S3ResourceFilter(object):
                     fields = table.fields
 
                     fname = None
+                    sname = None
                     if k.find(".") != -1:
                         fname = k.split(".")[1]
+                        if fname not in fields:
+                            # Field not found - ignore
+                            continue
                     elif tablename not in tablenames:
                         for f in fields:
-                            if str(table[f].type) == "reference gis_location":
+                            if not fname and str(table[f].type) == "reference gis_location":
                                 fname = f
                                 break
-                    if fname is not None and fname not in fields:
-                        # Field not found - ignore
-                        continue
+                            if not sname and str(table[f].type) == "reference org_site":
+                                sname = f
                     try:
                         minLon, minLat, maxLon, maxLat = v.split(",")
                     except:
@@ -6766,6 +6769,12 @@ class S3ResourceFilter(object):
                         if fname is not None:
                             # Need a join
                             join = (gtable.id == table[fname])
+                            bbox = (join & bbox_filter)
+                        elif sname is not None:
+                            # Need a double join
+                            stable = current.s3db.org_site
+                            join = (stable.site_id == table[sname]) & \
+                                   (gtable.id == stable.location_id)
                             bbox = (join & bbox_filter)
                         else:
                             bbox = bbox_filter
