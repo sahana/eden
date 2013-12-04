@@ -381,7 +381,6 @@ class S3DeploymentModel(S3Model):
                   context = {"mission": "mission_id",
                              },
                   create_onaccept = self.deploy_assignment_create_onaccept,
-                  ondelete = self.deploy_assignment_ondelete,
                   update_onaccept = self.deploy_assignment_update_onaccept,
                   )
 
@@ -432,6 +431,10 @@ class S3DeploymentModel(S3Model):
                              Field("experience_id", self.hrm_experience),
                              *s3_meta_fields())
 
+        configure(tablename,
+                  ondelete_cascade = \
+                    self.deploy_assignment_experience_ondelete_cascade)
+
         # ---------------------------------------------------------------------
         # Assignment of assets
         #
@@ -474,25 +477,28 @@ class S3DeploymentModel(S3Model):
         form_vars = form.vars
         assignment_id = form_vars.id
 
-        # Lookup person_id
+        # Extract required data
         human_resource_id = form_vars.human_resource_id
+        mission_id = form_vars.mission_id
+        
+        if not mission_id or not human_resource_id:
+            # Need to reload the record
+            atable = db.deploy_assignment
+            query = (atable.id == assignment_id)
+            assignment = db(query).select(atable.mission_id,
+                                          atable.human_resource_id,
+                                          limitby=(0, 1)).first()
+            if assignment:
+                mission_id = assignment.mission_id
+                human_resource_id = assignment.human_resource_id
+                
+        # Lookup the person ID
         hrtable = s3db.hrm_human_resource
         hr = db(hrtable.id == human_resource_id).select(hrtable.person_id,
                                                         limitby=(0, 1)
                                                         ).first()
-        if not hr:
-            return
 
-        # Lookup Mission
-        mission_id = form_vars.mission_id
-        if not mission_id:
-            # Need to look it up
-            atable = db.deploy_assignment
-            assignment = db(atable.id == assignment_id).select(atable.mission_id,
-                                                               limitby=(0, 1)
-                                                               ).first()
-            if assignment:
-                mission_id = assignment.mission_id
+        # Lookup mission details
         mtable = db.deploy_mission
         mission = db(mtable.id == mission_id).select(mtable.code,
                                                      mtable.location_id,
@@ -541,30 +547,29 @@ class S3DeploymentModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def deploy_assignment_ondelete(form):
+    def deploy_assignment_experience_ondelete_cascade(row, tablename=None):
         """
             Remove linked hrm_experience record
+
+            @param row: the link to be deleted
+            @param tablename: the tablename (ignored)
         """
 
-        db = current.db
         s3db = current.s3db
 
-        # Lookup experience & link
-        ltable = s3db.deploy_assignment_experience
-        link = db(ltable.assignment_id == form.id).select(ltable.id,
-                                                          ltable.experience_id,
-                                                          limitby=(0, 1)
-                                                          ).first()
+        # Lookup experience ID
+        table = s3db.deploy_assignment_experience
+        link = current.db(table.id == row.id).select(table.id,
+                                                     table.experience_id,
+                                                     limitby=(0, 1)).first()
         if not link:
             return
-
-        create_resource = s3db.resource
-
-        # Delete experience
-        create_resource("hrm_experience", id=link.experience_id).delete()
-
-        # Delete link
-        create_resource("deploy_assignment_experience", id=link.id).delete()
+        else:
+            # Prevent infinite cascade
+            link.update_record(experience_id=None)
+            
+        s3db.resource("hrm_experience", id=link.experience_id).delete()
+        return
 
     # -------------------------------------------------------------------------
     @staticmethod
