@@ -715,6 +715,7 @@ def customize_pr_person(**attr):
                     branches=False,
                     )
             mission_id = r.get_vars.get("mission_id", None)
+            table = r.component.table
             if mission_id:
                 # Lookup Code
                 mtable = s3db.deploy_mission
@@ -722,7 +723,9 @@ def customize_pr_person(**attr):
                                                              limitby=(0, 1)
                                                              ).first()
                 if mission:
-                    r.component.table.code.default = mission.code
+                    table.code.default = mission.code
+            field = table.supervisor_id
+            field.readable = field.writable = False
 
         if vnrc:
             if r.component_name == "address":
