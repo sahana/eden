@@ -2274,7 +2274,7 @@ class S3SiteModel(S3Model):
                 if instance_type:
                     record["instance_type"] = instance_type
                 if location:
-                    record["location"] = location
+                    record["location"] = location.as_dict()
                 if org:
                     record["org"] = org
                 append(record)
