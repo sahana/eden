@@ -383,6 +383,17 @@ def newsfeed():
                                                  hidden=True,
                                                  ))
 
+    if settings.get_cms_bookmarks() and auth.user:
+        filter_widgets.insert(1, S3OptionsFilter("bookmark.user_id",
+                                                 label = T("Filter by Bookmark"),
+                                                 # Can't just use "" as this is then omitted from rendering
+                                                 options = {"*": T("All"),
+                                                            auth.user.id: T("My Bookmarks"),
+                                                            },
+                                                 hidden = True,
+                                                 multiple = False,
+                                                 ))
+
     len_series = db(s3db.cms_series.deleted == False).count()
     if len_series > 3:
         # Multiselect widget

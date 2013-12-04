@@ -1290,18 +1290,20 @@ def cms_render_posts(listid, resource, rfields, record,
                                   ).first()
         if exists:
             bookmark_btn = A(I(" ", _class="icon icon-bookmark"),
-                             _href=URL(c="cms", f="post",
-                                       args=[record_id, "remove_bookmark"],
-                                       vars={"refresh": listid,
-                                             "record": record_id}),
+                             _onclick="$.getS3('%s',function(){$('#%s').datalist('ajaxReloadItem',%s)})" %
+                                (URL(c="cms", f="post",
+                                     args=[record_id, "remove_bookmark"]),
+                                 listid,
+                                 record_id),
                              _title=T("Remove Bookmark"),
                              )
         else:
             bookmark_btn = A(I(" ", _class="icon icon-bookmark-empty"),
-                             _href=URL(c="cms", f="post",
-                                       args=[record_id, "add_bookmark"],
-                                       vars={"refresh": listid,
-                                             "record": record_id}),
+                             _onclick="$.getS3('%s',function(){$('#%s').datalist('ajaxReloadItem',%s)})" %
+                                (URL(c="cms", f="post",
+                                     args=[record_id, "add_bookmark"]),
+                                 listid,
+                                 record_id),
                              _title=T("Add Bookmark"),
                              )
     else:

@@ -378,6 +378,9 @@ var S3EnableNavigateAwayConfirm = function() {
         ).done(function(data, status) {
             S3.hideAlerts();
             this.tryCount = 0;
+            if (data.message) {
+                S3.showAlert(data.message, 'success');
+            }
             // @ToDo: support drop-in replacement functions by calling .done()
             if (s.success) {
                 // Calling function's success callback

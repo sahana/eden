@@ -950,7 +950,7 @@ def deploy_rheader(r, tabs=[], profile=False):
         if unsent:
             send_button = BUTTON(T("Send Alert"), _class="alert-send-btn")
             if recipients:
-                send_button.update(_onclick="window.location.href='%s';" %
+                send_button.update(_onclick="window.location.href='%s'" %
                                             URL(c="deploy",
                                                 f="alert",
                                                 args=[alert_id, "send"]))
@@ -1255,7 +1255,7 @@ def deploy_render_alert(listid, resource, rfields, record, **attr):
                                       record_id=record_id):
         send_btn = A(I(" ", _class="icon icon-envelope-alt"),
                      SPAN(T("Send this Alert"), _class="card-action"),
-                     _onclick="window.location.href='%s';" %
+                     _onclick="window.location.href='%s'" %
                         URL(c="deploy", f="alert", args=[record_id, "send"]),
                      _class="action-lnk")
         #toolbox.insert(0, send_btn)
