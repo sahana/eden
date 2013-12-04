@@ -1681,6 +1681,7 @@ class S3TwitterSearchModel(S3ChannelModel):
         configure = self.configure
         define_table = self.define_table
         set_method = self.set_method
+        add_component = self.add_component
 
         # ---------------------------------------------------------------------
         # Twitter Search Query
@@ -1749,6 +1750,13 @@ class S3TwitterSearchModel(S3ChannelModel):
         set_method("msg", "twitter_result",
                    method="timeline",
                    action=self.twitter_timeline)
+
+        add_component("scheduler_task", msg_twitter_search= {
+            "name": "task",
+            "joinby": "id",
+            "multiple": False
+        }
+        )
 
         # ---------------------------------------------------------------------
         # Twitter Search Results
