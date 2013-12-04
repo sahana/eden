@@ -832,7 +832,21 @@ class S3Profile(S3CRUD):
                 layer["marker"] = marker
 
             fappend(layer)
-
+        # Show site on map
+        app_name = r.application
+        facility_id = str(r.id)
+        if(r.controller == "org" and r.function == "facility"):
+            layer = dict() 
+            layer["name"] = T("show sites")
+            layer["id"] = "1"
+            layer["active"] = True
+            layer["tablename"] = "org_facility"
+            layer["url"] = "/%s/org/facility.geojson?facility.id=%s" % (app_name,facility_id)
+            layer["marker"] = db(mtable.name > 0).select(mtable.image,
+                                                          mtable.height,
+                                                          mtable.width,
+                                                          limitby=(0, 1)).first()
+            fappend(layer)
         map = current.gis.show_map(height=height,
                                    width=width,
                                    bbox=bbox,
