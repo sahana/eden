@@ -1248,13 +1248,21 @@ def deploy_render_alert(listid, resource, rfields, record, **attr):
     open_url = URL(f="alert", args=[record_id])
     toolbox = deploy_render_profile_toolbox(resource, record_id,
                                             open_url=open_url)
+
+    # Workflow actions
     if not sent and recips and \
-       current.auth.s3_has_permission("update", resource.table, record_id=record_id):
+       current.auth.s3_has_permission("update", resource.table,
+                                      record_id=record_id):
         send_btn = A(I(" ", _class="icon icon-envelope-alt"),
+                     SPAN(T("Send this Alert"), _class="card-action"),
                      _onclick="window.location.href='%s';" %
-                        URL(c="deploy", f="alert",
-                            args=[record_id, "send"]))
-        toolbox.insert(0, send_btn)
+                        URL(c="deploy", f="alert", args=[record_id, "send"]),
+                     _class="action-lnk")
+        #toolbox.insert(0, send_btn)
+    else:
+        send_btn = ""
+    card_actions = DIV(send_btn,
+                       _class="card-actions")
                                             
     # Render the item
     item = DIV(DIV(A(IMG(_class="media-object",
@@ -1273,6 +1281,7 @@ def deploy_render_alert(listid, resource, rfields, record, **attr):
                            _class="media-heading"),
                        DIV(modified_on, status, _class="card-subtitle"),
                        DIV(body, _class="message-body s3-truncate"),
+                       card_actions,
                        _class="media-body",
                    ),
                    _class="media",
@@ -1314,34 +1323,6 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
     mission_id = raw["deploy_response.mission_id"]
 
     db = current.db
-
-    # Member deployed?
-    # @todo: bulk lookup instead of per-card
-    if human_resource_id:
-        table = current.s3db.deploy_assignment
-        query = (table.mission_id == mission_id) & \
-                (table.human_resource_id == human_resource_id) & \
-                (table.deleted != True)
-        row = db(query).select(table.id, limitby=(0, 1)).first()
-        if row:
-            deploy_action = A(I(" ", _class="icon icon-deployed"),
-                              SPAN(T("Member Deployed"), _class="card-action"),
-                              _class="action-lnk"
-                             )
-        else:
-            deploy_action = A(I(" ", _class="icon icon-deploy"),
-                              SPAN(T("Deploy this Member"),
-                                   _class="card-action"),
-                              _href=URL(f="mission",
-                                        args=[mission_id,
-                                              "assignment",
-                                              "create"
-                                              ],
-                                        vars={"member_id": human_resource_id}),
-                              _class="action-lnk"
-                              )
-    else:
-        deploy_action = ""
 
     # Number of previous deployments and average rating
     # @todo: bulk lookups instead of per-card
@@ -1476,6 +1457,37 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
     toolbox = deploy_render_profile_toolbox(resource, record_id,
                                             update_url=update_url)
 
+    # Workflow actions
+    # @todo: bulk lookup instead of per-card
+    if human_resource_id:
+        table = current.s3db.deploy_assignment
+        query = (table.mission_id == mission_id) & \
+                (table.human_resource_id == human_resource_id) & \
+                (table.deleted != True)
+        row = db(query).select(table.id, limitby=(0, 1)).first()
+        if row:
+            deploy_action = A(I(" ", _class="icon icon-deployed"),
+                              SPAN(T("Member Deployed"),
+                                   _class="card-action"),
+                              _class="action-lnk"
+                             )
+        else:
+            deploy_action = A(I(" ", _class="icon icon-deploy"),
+                              SPAN(T("Deploy this Member"),
+                                   _class="card-action"),
+                              _href=URL(f="mission",
+                                        args=[mission_id,
+                                              "assignment",
+                                              "create"
+                                              ],
+                                        vars={"member_id": human_resource_id}),
+                              _class="action-lnk"
+                              )
+    else:
+        deploy_action = ""
+    card_actions = DIV(deploy_action,
+                       _class="card-actions")
+
     # Render the item
     item = DIV(DIV(A(IMG(_class="media-object",
                          _src=URL(c="static", f="themes",
@@ -1494,9 +1506,7 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
                        DIV(message, _class="message-body s3-truncate"),
                        docs,
                        dinfo,
-                       DIV(deploy_action,
-                           _class="card-actions",
-                           ),
+                       card_actions,
                        _class="media-body",
                        ),
                    _class="media",
@@ -1559,7 +1569,7 @@ def deploy_render_assignment(listid, resource, rfields, record,
     toolbox = deploy_render_profile_toolbox(resource, record_id,
                                             update_url=update_url)
 
-    
+    # Workflow actions
     s3db = current.s3db
     atable = s3db.hrm_appraisal
     ltable = s3db.deploy_assignment_appraisal
@@ -1570,13 +1580,14 @@ def deploy_render_assignment(listid, resource, rfields, record,
                                          limitby=(0, 1)).first()
     permit = current.auth.s3_has_permission
     if appraisal and permit("update", atable, record_id=appraisal.id):
-        if current.response.s3.crud.formstyle == "bootstrap":
-            _class = "btn"
-        else:
-            _class = "action-btn"
+        #if current.response.s3.crud.formstyle == "bootstrap":
+            #_class = "btn"
+        #else:
+            #_class = "action-btn"
+        _class = "action-lnk"
         EDIT_APPRAISAL = T("Open Appraisal")
         upload_btn = A(I(" ", _class="icon icon-paperclip"),
-                       EDIT_APPRAISAL,
+                       SPAN(EDIT_APPRAISAL, _class="card-action"),
                        _href=URL(c="deploy", f="person",
                                  args=[person_id, "appraisal",
                                        appraisal.id, "update.popup"],
@@ -1587,16 +1598,17 @@ def deploy_render_assignment(listid, resource, rfields, record,
                        _class="s3_modal %s" % _class,
                        _title=EDIT_APPRAISAL,
                        )
-        toolbox.insert(0, upload_btn)
+        #toolbox.insert(0, upload_btn)
     elif permit("update", resource.table, record_id=record_id):
         # Currently we assume that anyone who can edit the assignment can upload the appraisal
-        if current.response.s3.crud.formstyle == "bootstrap":
-            _class = "btn"
-        else:
-            _class = "action-btn"
+        #if current.response.s3.crud.formstyle == "bootstrap":
+            #_class = "btn"
+        #else:
+            #_class = "action-btn"
+        _class = "action-lnk"
         UPLOAD_APPRAISAL = T("Upload Appraisal")
         upload_btn = A(I(" ", _class="icon icon-paperclip"),
-                       UPLOAD_APPRAISAL,
+                       SPAN(UPLOAD_APPRAISAL, _class="card-action"),
                        _href=URL(c="deploy", f="person",
                                  args=[person_id, "appraisal", "create.popup"],
                                  vars={"mission_id": raw["deploy_assignment.mission_id"],
@@ -1607,7 +1619,11 @@ def deploy_render_assignment(listid, resource, rfields, record,
                        _class="s3_modal %s" % _class,
                        _title=UPLOAD_APPRAISAL,
                        )
-        toolbox.insert(0, upload_btn)
+        #toolbox.insert(0, upload_btn)
+    else:
+        upload_btn = ""
+    card_actions = DIV(upload_btn,
+                       _class="card-actions")
 
     # Render the item
     item = DIV(DIV(A(IMG(_class="media-object",
@@ -1629,6 +1645,7 @@ def deploy_render_assignment(listid, resource, rfields, record,
                               "deploy_assignment.sector_id",
                               "hrm_appraisal.rating",
                               ),
+                       card_actions,
                        _class="media-body",
                        ),
                    _class="media",

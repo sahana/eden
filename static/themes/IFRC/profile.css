@@ -192,9 +192,9 @@ div.media a.pull-left img.media-object {
     content: none;
 }
 
-.icon.icon-envelope-alt {
+/*.icon.icon-envelope-alt {
     background: url(img/envelope.png) no-repeat;
-}
+}*/
 .icon.icon-file-alt {
     background: url(img/file.png) no-repeat;
 }
