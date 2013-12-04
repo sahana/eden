@@ -833,6 +833,12 @@ class S3Profile(S3CRUD):
 
             fappend(layer)
 
+        # Show site on map
+        profile_layers = s3db.get_config(r.tablename,"profile_layers")
+        if profile_layers:
+            for layer in profile_layers:
+                fappend(layer)
+        
         map = current.gis.show_map(height=height,
                                    width=width,
                                    bbox=bbox,

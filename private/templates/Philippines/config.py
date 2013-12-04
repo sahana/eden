@@ -2067,7 +2067,43 @@ def customize_org_facility(**attr):
                 else:
                     # @ToDo: Placeholder
                     logo = "#"
+                
+                # Show additional layers
+                config = current.gis.get_config()
+                mtable = s3db.gis_marker 
+                appname = r.application
+                facility_id = r.id
+                query= (s3db.org_facility == r.id) & \
+                       (s3db.org_facility.site_id == \
+                       s3db.org_site_facility_type.site_id) & \
+                       (s3db.org_site_facility_type.facility_type_id > 0)
+                facility_type_id = db(query).select(s3db.org_site_facility_type.facility_type_id,
+                                                    limitby = (0,1)).first()
+                layer_filter = "facility_type.facility_type_id=%s" % (facility_type_id)
+                query = (s3db.gis_layer_feature.controller == "org") & \
+                        (s3db.gis_layer_feature.function == "facility") & \
+                        (s3db.gis_layer_feature.filter == layer_filter)
+                layer_id=db(query).select(s3db.gis_layer_feature.layer_id,
+                                          limitby = (0,1)).first()
+                query = query & \
+                        (s3db.gis_layer_feature.layer_id == s3db.gis_layer_symbology.layer_id) & \
+                        (s3db.gis_layer_symbology.marker_id == mtable.id)
+                layer = dict(name = record.name,
+                             id = layer_id,
+                             active = True,
+                             tablename = r.tablename,
+                             url = "/%s/org/facility.geojson?facility.id=%s" % (appname,facility_id),
+                             marker = db(query).select(mtable.image,
+                                                   mtable.height,
+                                                   mtable.width,
+                                                   limitby = (0,1)).first()
+                             )
+                if not layer["marker"]:
+                    layer["marker"] = config.marker
+                profile_layers = [layer]
+
                 s3db.configure("org_facility",
+                               profile_layers = profile_layers,
                                list_fields = list_fields,
                                profile_title = "%s : %s" % (s3.crud_strings["org_facility"].title_list, 
                                                             name),
