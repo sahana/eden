@@ -202,7 +202,7 @@ class S3Profile(S3CRUD):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _resolve_context(context, id):
+    def _resolve_context(r, tablename, context):
         """
             Resolve a context filter
 
@@ -210,27 +210,42 @@ class S3Profile(S3CRUD):
             @param id: the record_id
         """
 
-        if context == "location":
+        record_id = r.id
+        if not record_id:
+            return None
+
+        s3db = current.s3db
+
+        if not context:
+            query = None
+
+        elif type(context) is tuple:
+            context, field = context
+            query = S3FieldSelector(context) == r.record[field]
+
+        elif context == "location":
             # Show records linked to this Location & all it's Child Locations
             s = "(location)$path"
             # This version doesn't serialize_url
             #m = ("%(id)s/*,*/%(id)s/*" % dict(id=id)).split(",")
             #filter = (S3FieldSelector(s).like(m)) | (S3FieldSelector(s) == id)
-            m = ("%(id)s,%(id)s/*,*/%(id)s/*,*/%(id)s" % dict(id=id)).split(",")
+            m = ("%(id)s,%(id)s/*,*/%(id)s/*,*/%(id)s" % dict(id=record_id)).split(",")
             m = [f.replace("*", "%") for f in m]
-            filter = S3FieldSelector(s).like(m)
+            query = S3FieldSelector(s).like(m)
         # @ToDo:
         #elif context == "organisation":
         #    # Show records linked to this Organisation and all it's Branches
         #    s = "(%s)" % context
-        #    filter = S3FieldSelector(s) == id
+        #    query = S3FieldSelector(s) == id
         else:
             # Normal: show just records linked directly to this master resource
             s = "(%s)" % context
-            filter = S3FieldSelector(s) == id
+            query = S3FieldSelector(s) == record_id
 
-        return filter
-
+        # Define target resource
+        resource = s3db.resource(tablename, filter=query)
+        return resource, query
+        
     # -------------------------------------------------------------------------
     def _comments(self, r, widget, **attr):
         """
@@ -271,14 +286,10 @@ class S3Profile(S3CRUD):
 
         T = current.T
         s3db = current.s3db
-        id = r.id
+        
         context = widget.get("context", None)
-        if context:
-            context = self._resolve_context(context, id)
-        s3db.context = context
-
         tablename = widget.get("tablename", None)
-        resource = s3db.resource(tablename, context=True)
+        resource, context = self._resolve_context(r, tablename, context)
 
         # Config Options:
         # 1st choice: Widget
@@ -432,15 +443,12 @@ class S3Profile(S3CRUD):
 
         # Parse context
         s3db = current.s3db
-        record_id = r.id
+        
         context = widget.get("context", None)
-        if context:
-            context = self._resolve_context(context, record_id)
-        s3db.context = context
+        tablename = widget.get("tablename", None)
+        resource, context = self._resolve_context(r, tablename, context)
 
         # Define target resource
-        tablename = widget.get("tablename", None)
-        resource = s3db.resource(tablename, context=True)
         table = resource.table
         get_config = resource.get_config
 
@@ -663,13 +671,10 @@ class S3Profile(S3CRUD):
         if icon:
             icon = TAG[""](I(_class=icon), " ")
 
-        tablename = widget.get("tablename")
-
         context = widget.get("context", None)
-        if context:
-            context = self._resolve_context(context, r.id)
-        s3db.context = context
-        resource = s3db.resource(tablename, context=True)
+        tablename = widget.get("tablename", None)
+        resource, context = self._resolve_context(r, tablename, context)
+
         record = resource.select(["id"], limit=1, as_rows=True).first()
         if record:
             record_id = record.id
@@ -743,10 +748,14 @@ class S3Profile(S3CRUD):
         icon = widget.get("icon", "")
         if icon:
             icon = TAG[""](I(_class=icon), " ")
+            
         context = widget.get("context", None)
+        tablename = widget.get("tablename", None)
+        resource, context = self._resolve_context(r, tablename, context)
         if context:
-            context = self._resolve_context(context, r.id)
             cserialize_url = context.serialize_url
+        else:
+            cserialize_url = lambda res: {}
 
         height = widget.get("height", 383)
         width = widget.get("width", 568) # span6 * 99.7%

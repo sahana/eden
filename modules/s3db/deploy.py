@@ -214,6 +214,16 @@ class S3DeploymentModel(S3Model):
                                  pagesize = None, # all records
                                  )
 
+        docs_widget = dict(label = "Documents",
+                           title_create = "Add New Document",
+                           type = "datalist",
+                           tablename = "doc_document",
+                           context = ("~.doc_id", "doc_id"),
+                           icon = "icon-paperclip",
+                           # Default renderer:
+                           #list_layout = s3db.doc_render_documents,
+                           )
+
         # Table configuration
         profile = URL(c="deploy", f="mission", args=["[id]", "profile"])
         configure(tablename,
@@ -258,6 +268,7 @@ class S3DeploymentModel(S3Model):
                   profile_widgets = [alert_widget,
                                      response_widget,
                                      assignment_widget,
+                                     docs_widget,
                                      ],
                   summary = [{"name": "rheader",
                               "common": True,
