@@ -18,15 +18,15 @@ class SearchItems(SeleniumUnitTest):
     def test_inv018_01_inv_search_simple(self):
         """
             @case: inv018
-            @description: Search Items - Simple Search
+            @description: Search Items 
         """
         self.search(self.search.advanced_form,
             True,
             ({
                 "name":"item_search_text",
-                "value":"B"
-                },),1,
-            match_row=(1,"Blankets"))
+                "value":"Blank"
+                },),2,
+            match_row=(2,"Blankets"))
         
 
 
