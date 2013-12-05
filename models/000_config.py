@@ -50,14 +50,14 @@ settings.base.template = "default"
 #settings.base.system_name = T("Sahana Eden Humanitarian Management Platform")
 #settings.base.system_name_short = T("Sahana Eden")
 # Set this to the Public URL of the instance
-settings.base.public_url = "http://152.46.18.169:8000"
+#settings.base.public_url = "http://127.0.0.1:8000"
 
 # Uncomment to set pootle url
 # settings.L10n.pootle_url = "http://pootle.sahanafoundation.org/"
 
 # Uncomment to set pootle username and password
- #settings.L10n.pootle_username = "amoolya.perugupalli@gmail.com"
- #settings.L10n.pootle_password = "ihateburger123"
+# settings.L10n.pootle_username = "username"
+# settings.L10n.pootle_password = "*****"
 
 # Switch to "False" in Production for a Performance gain
 # (need to set to "True" again when Table definitions are changed)
@@ -132,8 +132,8 @@ settings.frontpage.rss = [
 
 # Fill these to allow users to Login using Facebook
 # https://developers.facebook.com/apps
-settings.auth.facebook_id = "201669786682287"
-settings.auth.facebook_secret = "9b7ef7442f88ea7ad13f34d7b27b3a78"
+#settings.auth.facebook_id = ""
+#settings.auth.facebook_secret = ""
 # Fill these to allow users to Login using Google
 # https://code.google.com/apis/console/
 #settings.auth.google_id = ""
