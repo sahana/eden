@@ -126,12 +126,12 @@ class S3MainMenu(object):
     def menu_lang(cls, **attr):
         """ Language menu """
 
-        languages = current.response.s3.l10n_languages
-        request = current.request
-
         settings = current.deployment_settings
         if not settings.get_L10n_display_toolbar():
             return None
+
+        languages = current.response.s3.l10n_languages
+        request = current.request
 
         menu_lang = MM("Language", **attr)
         for language in languages:
@@ -182,7 +182,6 @@ class S3MainMenu(object):
                                     restrict=row.role
                                     )
                                  )
-        # -------------------------------------------------------------------
 
         return menu_help
 
@@ -347,22 +346,6 @@ class S3MainMenu(object):
                     )
                 )
         return gis_menu
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def menu_climate(cls, **attr):
-        """ Climate module menu """
-
-        name_nice = current.deployment_settings.modules["climate"].name_nice
-        ADMIN = current.session.s3.system_roles.ADMIN
-
-        menu_climate = MM(name_nice, c="climate", **attr)(
-                MM("Station Parameters", f="station_parameter"),
-                #MM("Saved Queries", f="save_query"),
-                MM("Purchase Data", f="purchase"),
-                MM("DataSet Prices", f="prices", restrict=[ADMIN]),
-            )
-        return menu_climate
 
 # =============================================================================
 class S3OptionsMenu(object):
@@ -584,15 +567,29 @@ class S3OptionsMenu(object):
                 )
 
     # -------------------------------------------------------------------------
-    def climate(self):
-        """ CLIMATE Controller """
+    def cap(self):
+        """ CAP menu """
 
-        return M(c="climate")(
-                    M("Home", f="index"),
-                    M("Station Parameters", f="station_parameter"),
-                    M("Saved Queries", f="save_query"),
-                    M("Purchase Data", f="purchase"),
+        T = current.T
+
+        session = current.session
+        ADMIN = session.s3.system_roles.ADMIN
+
+        return M(c="cap")(
+                    M("Alerts", f="alert", vars={'alert.is_template': 'false'})(
+                        M("List alerts", f="alert", vars={'alert.is_template': 'false'}),
+                        M("Create alert", f="alert", m="create"),
+                        M("Search & Subscribe", m="search"),
+                    ),
+                    M("Templates", f="template", vars={'alert.is_template': 'true'})(
+                        M("List templates", f="template", vars={'alert.is_template': 'true'}),
+                        M("Create template", f="template", m="create"),
+                    ),
+                    #M("CAP Profile", f="profile")(
+                    #    M("Edit profile", f="profile")
+                    #)
                 )
+
     # -------------------------------------------------------------------------
     def cr(self):
         """ CR / Shelter Registry """
@@ -611,8 +608,8 @@ class S3OptionsMenu(object):
                         M("New", m="create"),
                         M("List All"),
                         M("Map", m="map"),
-                        M("Search", m="search"),
-                        M("Report", m="report"),
+                        #M("Search", m="search"),
+                        M("Report", m="report2"),
                         M("Import", m="import", p="create"),
                     ),
                     M(types, restrict=[ADMIN])(
@@ -660,6 +657,15 @@ class S3OptionsMenu(object):
                         #M("Problems", f="problem"),
                     #)
                 )
+
+    # -------------------------------------------------------------------------
+    def deploy(self):
+        """ Deployments """
+
+        return M()(
+            M("Human Resources",
+              c="deploy", f="human_resource", m="summary"),
+              )
 
     # -------------------------------------------------------------------------
     def doc(self):
@@ -898,8 +904,8 @@ class S3OptionsMenu(object):
                         M("New", m="create"),
                         M("List All"),
                         M("Map", m="map"),
-                        M("Search", m="search"),
-                        M("Report", m="report"),
+                        #M("Search", m="search"),
+                        M("Report", m="report2"),
                         M("Import", m="import", p="create"),
                         #SEP(),
                         #M("Show Map", c="gis", f="map_viewing_client",
@@ -1239,12 +1245,7 @@ class S3OptionsMenu(object):
                         M("Map", m="map"),
                         M("Timeline", args="timeline"),
                         M("Import", m="import"),
-                        M("Search", m="search"),
-                        M("Report", m="report",
-                          vars=dict(rows="L1",
-                                    cols="category",
-                                    fact="datetime",
-                                    aggregate="count"))
+                        M("Report", m="report2")
                     ),
                     M("Incident Categories", f="icategory", restrict=[ADMIN])(
                         M("New", m="create"),
@@ -1252,30 +1253,6 @@ class S3OptionsMenu(object):
                     ),
                     M("Ushahidi Import", f="ireport", restrict=[ADMIN],
                       args="ushahidi")
-                )
-
-    # -------------------------------------------------------------------------
-    def cap(self):
-        """ CAP menu """
-
-        T = current.T
-
-        session = current.session
-        ADMIN = session.s3.system_roles.ADMIN
-
-        return M(c="cap")(
-                    M("Alerts", f="alert", vars={'alert.is_template': 'false'})(
-                        M("List alerts", f="alert", vars={'alert.is_template': 'false'}),
-                        M("Create alert", f="alert", m="create"),
-                        M("Search & Subscribe", m="search"),
-                    ),
-                    M("Templates", f="template", vars={'alert.is_template': 'true'})(
-                        M("List templates", f="template", vars={'alert.is_template': 'true'}),
-                        M("Create template", f="template", m="create"),
-                    ),
-                    #M("CAP Profile", f="profile")(
-                    #    M("Edit profile", f="profile")
-                    #)
                 )
 
     # -------------------------------------------------------------------------
@@ -1432,35 +1409,38 @@ class S3OptionsMenu(object):
         ADMIN = current.session.s3.system_roles.ADMIN
 
         if current.request.function in ("sms_outbound_gateway",
-                                        "email_inbound_channel",
+                                        "email_channel",
                                         "sms_modem_channel",
                                         "sms_smtp_channel",
                                         "sms_webapi_channel",
                                         "tropo_channel",
-                                        "twitter_channel"):
+                                        "twitter_channel",
+                                        "facebook_channel"):
             return self.admin()
 
         settings_messaging = self.settings_messaging()
 
         return M(c="msg")(
                     M("Compose", f="compose"),
+                    M("InBox", f="inbox")(
+                        M("Email", f="email_inbox"),
+                        M("RSS", f="rss"),
+                        M("SMS", f="sms_inbox"),
+                        M("Twitter", f="twitter_inbox"),
+                    ),
+                    M("Outbox", f="outbox")(
+                       M("Email", f="email_outbox"),
+                       M("SMS", f="sms_outbox"),
+                       M("Twitter", f="twitter_outbox"),
+                       M("Facebook", f="facebook_outbox"),
+                    ),
+                    M("Message Log", f="message"),
                     M("Distribution groups", f="group")(
                         M("List/Add", f="group"),
                         M("Group Memberships", f="group_membership"),
                     ),
-                    M("InBox", f="inbox"),
-                    M("Email InBox", f="email_inbox"),
-                    M("RSS Feeds", f="rss_feed"),
-                    M("Twilio SMS InBox", f="twilio_inbox"),
-                    M("Message Log", f="message"),
-                    M("Outbox", f="outbox"),
-                    M("Twitter", f="twitter_channel")(
-                       M("Twitter InBox", f="twitter_inbox"),
-                       M("Twitter Outbox", f="twitter_outbox"),
-                    ),
                     M("Twitter Search", f="twitter_result")(
-                       M("Twitter Settings", f="twitter_search_channel"),
-                       M("Twitter Queries", f="twitter_search_query"),
+                       M("Search Queries", f="twitter_search"),
                        M("Results", f="twitter_result"),
                        # @ToDo KeyGraph Results
                     ),
@@ -1881,15 +1861,18 @@ class S3OptionsMenu(object):
         """
 
         return [
-            M("Email Settings", c="msg", f="email_inbound_channel"),
+            M("Email Settings", c="msg", f="email_channel"),
             M("Parsing Settings", c="msg", f="workflow"),
             M("RSS Settings", c="msg", f="rss_channel"),
             M("SMS Gateway Settings", c="msg", f="sms_outbound_gateway",
                 args=[1], m="update"),
             M("Mobile Commons SMS Settings", c="msg", f="mcommons_channel"),
-            M("Twilio SMS Settings", c="msg", f="twilio_inbound_channel"),
+            M("Twilio SMS Settings", c="msg", f="twilio_channel"),
             M("Twitter Settings", c="msg", f="twitter_channel",
+                args=[1], m="update"),
+            M("Facebook Settings", c="msg", f="facebook_channel",
                 args=[1], m="update")
+            
         ]
 
     # -------------------------------------------------------------------------
