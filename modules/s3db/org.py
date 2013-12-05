@@ -1035,14 +1035,49 @@ class S3OrganisationGroupModel(S3Model):
                              s3_comments(),
                              *s3_meta_fields())
 
-        # CRUD Strings not defined to allow each template to define as-required
+        # CRUD Strings
+        label = current.deployment_settings.get_org_groups()
+        if label == "Coalition":
+            current.response.s3.crud_strings[tablename] = Storage(
+                title_create = T("Add Coalition"),
+                title_display = T("Coalition Details"),
+                title_list = T("Coalitions"),
+                title_update = T("Update Coalition"),
+                title_search = T("Search Coalitions"),
+                subtitle_create = T("Add New Coalition"),
+                label_list_button = T("List Coalitions"),
+                label_create_button = T("Add Coalition"),
+                label_delete_button = T("Remove Coalition"),
+                msg_record_created = T("Coalition added"),
+                msg_record_modified = T("Coalition updated"),
+                msg_record_deleted = T("Coalition removed"),
+                msg_list_empty = T("No Coalitions currently recorded"))
+        elif label == "Network":
+            current.response.s3.crud_strings[tablename] = Storage(
+                title_create = T("Add Network"),
+                title_display = T("Network Details"),
+                title_list = T("Networks"),
+                title_update = T("Edit Network"),
+                title_search = T("Search Networks"),
+                subtitle_create = T("Add New Network"),
+                label_list_button = T("List Networks"),
+                label_create_button = T("Add Network"),
+                label_delete_button = T("Remove Network"),
+                msg_record_created = T("Network added"),
+                msg_record_modified = T("Network updated"),
+                msg_record_deleted = T("Network removed"),
+                msg_list_empty = T("No Networks currently recorded"))
+        else:
+            # Functionality is disabled but model is being loaded via load_all_models()
+            label = "Group"
 
         configure(tablename,
-                  super_entity="pr_pentity",
+                  super_entity = "pr_pentity",
                   )
 
         represent = S3Represent(lookup=tablename)
         group_id = S3ReusableField("group_id", table,
+                                   label = T(label),
                                    sortby="name",
                                    requires=IS_NULL_OR(
                                                 IS_ONE_OF(db, "org_group.id",
@@ -2505,13 +2540,14 @@ class S3FacilityModel(S3Model):
         tablename = "org_facility_type"
         table = define_table(tablename,
                              Field("name",
-                                   label=T("Name"),
+                                   label = T("Name"),
                                    ),
                              s3_comments(),
                              *s3_meta_fields()
                              )
 
         # CRUD strings
+        # @ToDo: Flexible Labelling: 'Facility, 'Place', 'Site'
         ADD_FAC = T("Add Facility Type")
         crud_strings[tablename] = Storage(
             title_create=ADD_FAC,
@@ -2531,22 +2567,21 @@ class S3FacilityModel(S3Model):
 
         represent = S3Represent(lookup=tablename, translate=True)
         facility_type_id = S3ReusableField("facility_type_id", table,
-                                           sortby="name",
-                                           # Only used by org_site_facility_type
-                                           requires=IS_ONE_OF(db, "org_facility_type.id",
-                                                              represent,
-                                                              sort=True,
-                                                              ),
-                                           represent=represent,
-                                           label=T("Facility Type"),
-                                           comment=S3AddResourceLink(
-                                            c="org",
-                                            f="facility_type",
-                                            label=ADD_FAC,
-                                            title=T("Facility Type"),
-                                            tooltip=T("If you don't see the Type in the list, you can add a new one by clicking link 'Add Facility Type'.")),
-                                           ondelete="CASCADE",
-                                           )
+            sortby = "name",
+            # Only used by org_site_facility_type
+            requires = IS_ONE_OF(db, "org_facility_type.id",
+                                 represent,
+                                 sort = True,
+                                 ),
+            represent = represent,
+            label = T("Facility Type"),
+            comment = S3AddResourceLink(c = "org",
+                                        f = "facility_type",
+                                        label = ADD_FAC,
+                                        title = T("Facility Type"),
+                                        tooltip = T("If you don't see the Type in the list, you can add a new one by clicking link 'Add Facility Type'.")),
+            ondelete = "CASCADE",
+            )
 
         configure(tablename,
                   deduplicate = self.org_facility_type_duplicate,
@@ -2562,47 +2597,53 @@ class S3FacilityModel(S3Model):
                              super_link("pe_id", "pr_pentity"),
                              super_link("site_id", "org_site"),
                              Field("name", notnull=True,
-                                   length=64, # Mayon Compatibility
-                                   label=T("Name"),
+                                   length = 64, # Mayon Compatibility
+                                   label = T("Name"),
                                    ),
                              Field("code", length=10, # Mayon compatibility
-                                   # Deployments that don't wants office codes can hide them
-                                   #readable=False, writable=False,
                                    # @ToDo: Deployment Setting to add validator to make these unique
                                    #notnull=True, unique=True,
+                                   label = T("Code"),
+                                   # Deployments that don't wants office codes can hide them
+                                   #readable=False, writable=False,
                                    represent = lambda v: v or NONE,
-                                   label=T("Code"),
                                    ),
                              self.org_organisation_id(widget=org_widget),
                              self.gis_location_id(),
                              Field("opening_times",
+                                   label = T("Opening Times"),
                                    represent = lambda v: v or NONE,
-                                   label=T("Opening Times")),
+                                   ),
                              Field("contact",
                                    represent = lambda v: v or NONE,
                                    label=T("Contact")),
                              Field("phone1",
-                                   label=T("Phone 1"),
+                                   label = T("Phone 1"),
+                                   requires=IS_NULL_OR(s3_phone_requires),
                                    represent = lambda v: v or NONE,
-                                   requires=IS_NULL_OR(s3_phone_requires)),
+                                   ),
                              Field("phone2",
-                                   label=T("Phone 2"),
+                                   label = T("Phone 2"),
+                                   requires = IS_NULL_OR(s3_phone_requires),
                                    represent = lambda v: v or NONE,
-                                   requires=IS_NULL_OR(s3_phone_requires)),
+                                   ),
                              Field("email",
-                                   label=T("Email"),
+                                   label = T("Email"),
+                                   requires = IS_NULL_OR(IS_EMAIL()),
                                    represent = lambda v: v or NONE,
-                                   requires=IS_NULL_OR(IS_EMAIL())),
+                                   ),
                              Field("website",
+                                   label = T("Website"),
                                    represent = lambda v: v or NONE,
-                                   label=T("Website")),
+                                   ),
                              Field("obsolete", "boolean",
-                                   label=T("Obsolete"),
-                                   represent=lambda bool: \
+                                   default = False,
+                                   label = T("Obsolete"),
+                                   represent = lambda bool: \
                                      (bool and [T("Obsolete")] or [current.messages["NONE"]])[0],
-                                   default=False,
-                                   readable=False,
-                                   writable=False),
+                                   readable = False,
+                                   writable = False,
+                                   ),
                              s3_comments(),
                              *s3_meta_fields())
 
@@ -2625,93 +2666,102 @@ class S3FacilityModel(S3Model):
             msg_record_deleted=T("Facility deleted"),
             msg_list_empty=T("No Facilities currently registered"))
 
-        # Search method
-        def facility_type_opts():
-            table = self.org_facility_type
-            rows = db(table.deleted == False).select(table.id, table.name)
-            opts = {}
-            for row in rows:
-                name = row.name
-                id = row.id
-                opts[id] = name
-            return opts
+        # Which levels of Hierarchy are we using?
+        hierarchy = current.gis.get_location_hierarchy()
+        levels = hierarchy.keys()
+        if len(settings.get_gis_countries()) == 1:
+            levels.remove("L0")
 
-        org_facility_search = [
-            S3SearchSimpleWidget(
-                name="facility_search_advanced",
-                label=T("Name, Address, Organization and/or Code"),
-                comment=T("To search for a facility, enter the name, address or code of the facility, or the organisation name or acronym, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all facilities."),
-                field=["name",
+        text_fields = ["name",
                        "code",
-                       "location_id$address",
+                       "comments",
                        "organisation_id$name",
-                       "organisation_id$acronym"
+                       "organisation_id$acronym",
                        ]
-            ),
-            S3SearchOptionsWidget(
-                name="facility_search_type",
-                label=T("Type"),
-                field="site_facility_type.facility_type_id",
-                options = facility_type_opts,
-                cols=3,
-            ),
-            S3SearchOptionsWidget(
-                name="facility_search_org",
-                label=T("Organization"),
-                field="organisation_id",
-                cols=3,
-            ),
-            #S3SearchOptionsWidget(
-            #  name="facility_search_L1",
-            #  field="location_id$L1",
-            #  location_level="L1",
-            #  cols = 3,
-            #),
-            #S3SearchOptionsWidget(
-            #  name="facility_search_L2",
-            #  field="location_id$L2",
-            #  location_level="L2",
-            #  cols = 3,
-            #),
-            S3SearchOptionsWidget(
-                name="facility_search_L3",
-                field="location_id$L3",
-                location_level="L3",
-                cols = 3,
-            ),
-            S3SearchOptionsWidget(
-                name="facility_search_L4",
-                field="location_id$L4",
-                location_level="L4",
-                cols = 3,
-            ),
-            ]
 
         report_fields = ["name",
-                         "facility_type.name",
+                         "site_facility_type.facility_type_id",
                          "organisation_id",
-                         #"location_id$L1",
-                         #"location_id$L2",
-                         "location_id$L3",
-                         "location_id$L4",
                          ]
+
+        for level in levels:
+            lfield = "location_id$%s" % level
+            report_fields.append(lfield)
+            text_fields.append(lfield)
+
+        filter_widgets = [
+            S3TextFilter(text_fields,
+                         label = T("Search"),
+                         #_class = "filter-search",
+                         ),
+            S3OptionsFilter("site_facility_type.facility_type_id",
+                            # @ToDo: Introspect need for header based on # records
+                            #header = True,
+                            label = T("Type"),
+                            represent = "%(name)s",
+                            widget = "multiselect",
+                            ),
+            S3OptionsFilter("organisation_id",
+                            # @ToDo: Introspect need for header based on # records
+                            #header = True,
+                            label = T("Organization"),
+                            represent = "%(name)s",
+                            widget = "multiselect",
+                            ),
+            S3LocationFilter("location_id",
+                             # @ToDo: Display by default in Summary Views but not others?
+                             #hidden = True,
+                             label = T("Location"),
+                             levels = levels,
+                             widget = "multiselect",
+                             ),
+            ]
+
+        groups = settings.get_org_groups()
+        if groups:
+            report_fields.append("site_org_group.group_id")
+            filter_widgets.insert(1,
+               S3OptionsFilter("site_org_group.group_id",
+                               # @ToDo: Introspect need for header based on # records
+                               #header = True,
+                               represent = "%(name)s",
+                               widget = "multiselect",
+                               ))
+
+        regions = settings.get_org_regions()
+        if regions:
+            report_fields.append("organisation_id$region_id")
+            filter_widgets.insert(1,
+               S3HierarchyFilter("organisation_id$region_id",
+                                 #hidden = True,
+                                 label = T("Region"),
+                                 ))
+
         if settings.has_module("req"):
             # "reqs" virtual field: the highest priority of
             # all open requests for this site:
-            table.reqs = Field.Lazy(
-                            lambda row: \
-                            org_site_top_req_priority(row,
-                                                      tablename=tablename))
-            widget = S3SearchOptionsWidget(
-                        name="facility_search_reqs",
-                        field="reqs",
-                        label = T("Highest Priority Open Requests"),
-                        options = self.req_priority_opts,
-                        cols = 3,
-                      )
-            org_facility_search.append(widget)
+            table.reqs = Field.Lazy(lambda row: org_site_top_req_priority(row))
             # @ToDo: Report should show Closed Requests?
-            #report_fields.append((T("High Priority Open Requests"), "reqs"))
+            report_fields.append((T("Highest Priority Open Requests"), "reqs"))
+            filter_widgets.append(
+                S3OptionsFilter("reqs",
+                                label = T("Highest Priority Open Requests"),
+                                options = self.req_priority_opts,
+                                cols = 3,
+                                ))
+
+        report_options = Storage(
+            rows = report_fields,
+            cols = report_fields,
+            fact = [(T("Number of Facilities"), "count(id)"),
+                    (T("List of Facilities"), "list(name)"),
+                    ],
+            defaults = Storage(rows = lfield, # Lowest-level of hierarchy
+                               cols = "site_facility_type.facility_type_id",
+                               fact = "count(id)",
+                               totals = True,
+                               ),
+            )
 
         # Custom Form
         crud_form = S3SQLCustomForm("name",
@@ -2730,38 +2780,17 @@ class S3FacilityModel(S3Model):
                                     "phone2",
                                     "email",
                                     "website",
-                                    #"status.last_contacted",
+                                    #S3SQLInlineComponent(
+                                    #    "status",
+                                    #    label = T("Status"),
+                                    #    fields = ["last_contacted"],
+                                    #    multiple = False,
+                                    #),
                                     "obsolete",
                                     "comments",
                                     )
 
-        filter_widgets = [
-            S3TextFilter(["name",
-                          "code",
-                          "comments",
-                          "organisation_id$name",
-                          "organisation_id$acronym",
-                          "location_id$name",
-                          "location_id$L1",
-                          "location_id$L2",
-                          ],
-                         label=T("Name"),
-                         _class="filter-search",
-                         ),
-            S3OptionsFilter("site_facility_type.facility_type_id",
-                            label=T("Type"),
-                            represent="%(name)s",
-                            widget="multiselect",
-                            ),
-            S3OptionsFilter("organisation_id",
-                            label=T("Organization"),
-                            represent="%(name)s",
-                            widget="multiselect",
-                            ),
-            ]
-
         configure(tablename,
-                  super_entity=("org_site", "doc_entity", "pr_pentity"),
                   context = {"location": "location_id",
                              "organisation": "organisation_id",
                              "org_group": "organisation_id$group_membership.group_id",
@@ -2769,23 +2798,8 @@ class S3FacilityModel(S3Model):
                              },
                   crud_form = crud_form,
                   deduplicate = self.org_facility_duplicate,
-                  onaccept = self.org_facility_onaccept,
                   filter_widgets = filter_widgets,
-                  search_method=S3Search(simple=(),
-                                         advanced=org_facility_search),
-                  report_options = Storage(
-                    search=org_facility_search,
-                    rows=report_fields,
-                    cols=report_fields,
-                    #facts=report_fields,
-                    #methods=["count", "list", "sum"],
-                    fact = [("id", "count", T("Number of Facilities")),
-                            ("name", "list", T("List of Facilities"))],
-                    defaults=Storage(rows="location_id$L4",
-                                     cols="facility_type.name",
-                                     fact="name",
-                                     aggregate="count")
-                    ),
+                  onaccept = self.org_facility_onaccept,
                   realm_components = ["contact_emergency",
                                       "physical_description",
                                       "config",
@@ -2803,6 +2817,23 @@ class S3FacilityModel(S3Model):
                                       "recv",
                                       "address",
                                       ],
+                  report_options = report_options,
+                  summary = [{"name": "table",
+                              "label": "Table",
+                              "widgets": [{"method": "datatable"}]
+                              },
+                             {"name": "report",
+                              "label": "Report",
+                              "widgets": [{"method": "report2",
+                                           "ajax_init": True}]
+                              },
+                             {"name": "map",
+                              "label": "Map",
+                              "widgets": [{"method": "map",
+                                           "ajax_init": True}],
+                              },
+                             ],
+                  super_entity = ("doc_entity", "org_site", "pr_pentity"),
                   update_realm = True,
                   )
 
@@ -4764,7 +4795,6 @@ def org_facility_controller():
     db = current.db
     s3db = current.s3db
     s3 = current.response.s3
-    request = current.request
 
     # Pre-processor
     def prep(r):
@@ -4836,7 +4866,7 @@ def org_facility_controller():
                 field = r.table.obsolete
                 field.readable = field.writable = True
             elif r.method in ("create", "create.popup"):
-                name = request.get_vars.get("name", None)
+                name = r.get_vars.get("name", None)
                 if name:
                     r.table.name.default = name
 
@@ -4904,10 +4934,10 @@ def org_facility_controller():
                                         )
                 if reqs:
                     append(TR(TD(B("%s:" % T("Requests")))))
-                    req_types = {1:"req_item",
-                                 3:"req_skill",
-                                 8:"",
-                                 9:"",
+                    req_types = {1: "req_item",
+                                 3: "req_skill",
+                                 8: "",
+                                 9: "",
                                  }
                     vals = [A(req.req_ref,
                               _href=URL(c="req", f="req",
@@ -4959,16 +4989,9 @@ def org_facility_controller():
         return output
     s3.postp = postp
 
-    if "map" in request.args:
-        # S3Map has migrated
-        hide_filter = False
-    else:
-        # Not yet ready otherwise
-        hide_filter = True
-
     output = current.rest_controller("org", "facility",
-                                     rheader=s3db.org_rheader,
-                                     hide_filter=hide_filter,
+                                     hide_filter = False,
+                                     rheader = s3db.org_rheader,
                                      )
     return output
 

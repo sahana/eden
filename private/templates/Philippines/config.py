@@ -216,7 +216,6 @@ settings.org.site_autocomplete_fields = ["location_id$L1",
                                          "location_id$L3",
                                          "location_id$L4",
                                          ]
-#settings.org.site_address_autocomplete = True
 
 # -----------------------------------------------------------------------------
 # Project

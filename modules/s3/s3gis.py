@@ -2027,6 +2027,7 @@ class GIS(object):
     @staticmethod
     def get_marker(controller=None,
                    function=None,
+                   filter=None,
                    ):
         """
             Returns a Marker dict
@@ -2053,6 +2054,8 @@ class GIS(object):
                     (ftable.layer_id == ltable.layer_id) & \
                     (ltable.symbology_id == symbology_id) & \
                     (ltable.marker_id == mtable.id)
+            if filter:
+                query &= (ftable.filter == filter)
             marker = db(query).select(mtable.image,
                                       mtable.height,
                                       mtable.width,

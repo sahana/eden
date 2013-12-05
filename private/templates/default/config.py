@@ -342,6 +342,9 @@ settings.L10n.decimal_separator = "."
 #settings.org.autocomplete = True
 # Enable the use of Organisation Branches
 #settings.org.branches = True
+# Enable the use of Organisation Groups & what their name is
+#settings.org.groups = "Coalition"
+#settings.org.groups = "Network"
 # Enable the use of Organisation Regions
 #settings.org.regions = True
 # Set the length of the auto-generated org/site code the default is 10

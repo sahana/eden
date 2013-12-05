@@ -623,7 +623,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Facilities", c="inv", f="facility")(
                         M("New", m="create", t="org_facility"),
                         M("List All"),
-                        #M("Search", m="search"),
                     ),
                     M("Facility Types", c="inv", f="facility_type",
                       restrict=[ADMIN])(

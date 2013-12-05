@@ -81,7 +81,7 @@ class S3Config(Storage):
     # Template
     def get_template(self):
         """
-            Which deployment template to use for config.py, parser.py, menus.py, etc
+            Which deployment template to use for config.py, layouts.py, menus.py
             http://eden.sahanafoundation.org/wiki/BluePrint/Templates
         """
         return self.base.get("template", "default")
@@ -1700,13 +1700,22 @@ class S3Config(Storage):
 
     def get_org_branches(self):
         """
-            Whether to support Organisation branches or not
+            Whether to support Organisation Branches or not
         """
         return self.org.get("branches", False)
 
+    def get_org_groups(self):
+        """
+            Whether to support Organisation Groups or not
+            & what their name is:
+            'Coalition'
+            'Network'
+        """
+        return self.org.get("groups", False)
+
     def get_org_regions(self):
         """
-            Whether to support Organisation regions or not
+            Whether to support Organisation Regions or not
         """
         return self.org.get("regions", False)
 
