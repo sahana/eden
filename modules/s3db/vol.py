@@ -93,14 +93,16 @@ class S3VolunteerModel(S3Model):
             Represent the Active status of a Volunteer
         """
 
-        args = current.request.args
-        if "search" in args:
+        request = current.request
+        args = request.args
+        if "report" in args or \
+           "report2" in args:
+            # We can't use a represent
+            return opt
+        elif "search" in args:
             # We can't use an HTML represent, but can use a LazyT
             # if we match in the search options
             return current.T("Yes") if opt else current.T("No")
-        elif "report" in args:
-            # We can't use a represent
-            return opt
 
         # List view, so HTML represent is fine
         if opt:

@@ -4458,13 +4458,15 @@ class HRMActiveVirtualField:
         if person_id:
             active = current.s3db.vol_active(person_id)
             args = current.request.args
-            if "search" in args:
+            if "report" in args or\
+               "report2" in args:
+                # We can't use a represent
+                return active
+            elif "search" in args:
                 # We can't use an HTML represent, but can use a LazyT
                 # if we match in the search options
                 return current.T("Yes") if active else current.T("No")
-            elif "report" in args:
-                # We can't use a represent
-                return active
+
             # List view, so HTML represent is fine
             if active:
                 active = DIV(current.T("Yes"),

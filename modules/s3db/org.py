@@ -2737,11 +2737,37 @@ class S3FacilityModel(S3Model):
                                  label = T("Region"),
                                  ))
 
+        if settings.has_module("inv"):
+            # "inv" virtual field: Whether a Site has Inventory
+            table.inv = Field.Lazy(lambda row: org_site_has_inv(row))
+            report_fields.append((T("Inventory"), "inv"))
+            filter_widgets.append(
+                S3OptionsFilter("inv",
+                                label = T("Inventory"),
+                                options = {True: T("Yes"),
+                                           False: T("No"),
+                                           },
+                                cols = 2,
+                                ))
+
+        if settings.has_module("asset"):
+            # "assets" virtual field: Whether a Site has Assets
+            table.assets = Field.Lazy(lambda row: org_site_has_assets(row))
+            report_fields.append((T("Assets"), "assets"))
+            filter_widgets.append(
+                S3OptionsFilter("assets",
+                                label = T("Assets"),
+                                options = {True: T("Yes"),
+                                           False: T("No"),
+                                           },
+                                cols = 2,
+                                ))
+
         if settings.has_module("req"):
             # "reqs" virtual field: the highest priority of
             # all open requests for this site:
             table.reqs = Field.Lazy(lambda row: org_site_top_req_priority(row))
-            # @ToDo: Report should show Closed Requests?
+            # @ToDo: Report should show Total Open/Closed Requests
             report_fields.append((T("Highest Priority Open Requests"), "reqs"))
             filter_widgets.append(
                 S3OptionsFilter("reqs",
@@ -4084,6 +4110,61 @@ class org_SiteRepresent(S3Represent):
         return s3_unicode(name)
 
 # =============================================================================
+def org_site_has_assets(row, tablename="org_facility"):
+    """ Whether a Site has Assets """
+
+    if hasattr(row, tablename):
+        row = row[tablename]
+    try:
+        id = row.id
+    except AttributeError:
+        return None
+
+    s3db = current.s3db
+    atable = s3db.asset_asset
+    stable = s3db[tablename]
+
+    query = (atable.deleted != True) & \
+            (stable.id == id) & \
+            (atable.site_id == stable.site_id)
+
+    asset = current.db(query).select(atable.id,
+                                     limitby=(0, 1)).first()
+
+    if asset:
+        return True
+    else:
+        return False
+
+# =============================================================================
+def org_site_has_inv(row, tablename="org_facility"):
+    """ Whether a Site has Inventory """
+
+    if hasattr(row, tablename):
+        row = row[tablename]
+    try:
+        id = row.id
+    except AttributeError:
+        return None
+
+    s3db = current.s3db
+    itable = s3db.inv_inv_item
+    stable = s3db[tablename]
+
+    query = (itable.deleted != True) & \
+            (stable.id == id) & \
+            (itable.site_id == stable.site_id) & \
+            (itable.quantity > 0)
+
+    inv = current.db(query).select(itable.id,
+                                   limitby=(0, 1)).first()
+
+    if inv:
+        return True
+    else:
+        return False
+
+# =============================================================================
 def org_site_top_req_priority(row, tablename="org_facility"):
     """ Highest priority of open requests for a site """
 
@@ -4091,7 +4172,7 @@ def org_site_top_req_priority(row, tablename="org_facility"):
         from req import REQ_STATUS_COMPLETE
     except ImportError:
         return None
-    
+
     if hasattr(row, tablename):
         row = row[tablename]
     try:
@@ -4102,18 +4183,18 @@ def org_site_top_req_priority(row, tablename="org_facility"):
     s3db = current.s3db
     rtable = s3db.req_req
     stable = s3db[tablename]
-    
+
     query = (rtable.deleted != True) & \
             (stable.id == id) & \
             (rtable.site_id == stable.site_id) & \
             (rtable.fulfil_status != REQ_STATUS_COMPLETE) & \
             (rtable.is_template == False)
-            
+
     req = current.db(query).select(rtable.id,
                                    rtable.priority,
                                    orderby=~rtable.priority,
                                    limitby=(0, 1)).first()
-                                   
+
     if req:
         return req.priority
     else:
