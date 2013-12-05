@@ -58,6 +58,9 @@
                 <xsl:when test="$Type='2' or $Type='VOLUNTEER' or $Type='VOL'">
                     <data field="type">2</data>
                 </xsl:when>
+                <xsl:when test="$Type='4' or $Type='DEPLOY' or $Type='RDRT'">
+                    <data field="type">4</data>
+                </xsl:when>
                 <xsl:otherwise>
                     <!-- Both -->
                     <data field="type">3</data>

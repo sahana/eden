@@ -901,16 +901,43 @@ var S3OptionsFilter = function(settings) {
 /**
  * Add a Slider to a field - used by S3SliderWidget
  */
-S3.slider = function(fieldname, minval, maxval, steprange, value) {
-    $('#' + fieldname).slider({
-        min: parseFloat(minval),
-        max: parseFloat(maxval),
-        step: parseFloat(steprange),
-        value: parseFloat(value),
+S3.slider = function(fieldname, min, max, step, value) {
+    var selector = '#' + fieldname + '_slider'
+    $(selector).slider({
+        min: min,
+        max: max,
+        step: step,
+        value: value,
         slide: function (event, ui) {
-            $( '#' + fieldname + '_input' ).val( ui.value );
+            // Set the value of the real input
+            $('#' + fieldname).val(ui.value);
+        },
+        change: function(event, ui) {
+            if (value == null) {
+                // Set a default value
+                // - halfway between min & max
+                value = (min + max) / 2;
+                // - rounded to nearest step
+                var modulo = value % step;
+                if (modulo != 0) {
+                    if (modulo < (step / 2)) {
+                        // round down
+                        value = value - modulo;
+                    } else {
+                        // round up
+                        value = value + modulo;
+                    }
+                }
+                $(selector).slider('option', 'value', value);
+                // Show the control
+                $(selector + ' .ui-slider-handle').show();
+            }
         }
     });
+    if (value == null) {
+        // Don't show a value until Slider is touched
+        $(selector + ' .ui-slider-handle').hide();
+    }
 };
 
 // ============================================================================

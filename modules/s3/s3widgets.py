@@ -5200,40 +5200,51 @@ class S3SliderWidget(FormWidget):
     """
         Standard Slider Widget
 
-        @ToDo: The range of the slider should ideally be picked up from the Validator
-        @ToDo: Show the value of the slider numerically as well as simply a position
+        @ToDo: The range of the slider should ideally be picked up from the
+               Validator
     """
 
     def __init__(self,
-                 minval,
-                 maxval,
-                 steprange,
+                 min,
+                 max,
+                 step = 1,
+                 type = "int",
                  ):
-        self.minval = minval
-        self.maxval = maxval
-        self.steprange = steprange
+        self.min = min
+        self.max = max
+        self.step = step
+        self.type = type
 
     def __call__(self, field, value, **attributes):
 
-        response = current.response
+        field = str(field)
+        fieldname = field.replace(".", "_")
+        input = INPUT(_name = field.split(".")[1],
+                      _id = fieldname,
+                      _style = "border:0",
+                      _value = value)
+        slider = DIV(_id="%s_slider" % fieldname, **attributes)
 
-        fieldname = str(field).replace(".", "_")
-        sliderdiv = DIV(_id=fieldname, **attributes)
-        inputid = "%s_input" % fieldname
-        localfield = str(field).split(".")
-        sliderinput = INPUT(_name=localfield[1],
-                            _id=inputid,
-                            _class="hide",
-                            _value=value)
+        if value is None:
+            # JSONify
+            value = "null"
 
-        response.s3.jquery_ready.append('''S3.slider('%s','%f','%f','%f','%s')''' % \
-          (fieldname,
-           self.minval,
-           self.maxval,
-           self.steprange,
-           value))
+        if self.type == "int":
+            script = '''S3.slider('%s',%i,%i,%i,%s)''' % (fieldname,
+                                                          self.min,
+                                                          self.max,
+                                                          self.step,
+                                                          value)
+        else:
+            # Float
+            script = '''S3.slider('%s',%f,%f,%f,%s)''' % (fieldname,
+                                                          self.min,
+                                                          self.max,
+                                                          self.step,
+                                                          value)
+        current.response.s3.jquery_ready.append(script)
 
-        return TAG[""](sliderdiv, sliderinput)
+        return TAG[""](input, slider)
 
 # =============================================================================
 class S3TimeIntervalWidget(FormWidget):

@@ -54,6 +54,7 @@ class S3Config(Storage):
         self.cap = Storage()
         self.cms = Storage()
         self.database = Storage()
+        self.deploy = Storage()
         self.fin = Storage()
         # @ToDo: Move to self.ui
         self.frontpage = Storage()
@@ -1396,6 +1397,16 @@ class S3Config(Storage):
             Whether to show Tags in News Feed
         """
         return self.cms.get("show_tags", False)
+
+    # -------------------------------------------------------------------------
+    # Deployments
+    #
+    def get_deploy_hr_label(self):
+        """
+            Label for deployable Human Resources
+            e.g. 'Staff', 'Volunteer' (CERT), 'Member' (RDRT)
+        """
+        return self.deploy.get("hr_label", "Staff")
 
     # -------------------------------------------------------------------------
     # Hospital Registry

@@ -282,8 +282,9 @@ class S3LocationModel(S3Model):
                                       #widget = S3LocationAutocompleteWidget(),
                                       ondelete = "RESTRICT")
 
+        represent = S3Represent(lookup=tablename, translate=True)
         country_requires = IS_NULL_OR(IS_ONE_OF(db, "gis_location.id",
-                                                self.gis_country_represent,
+                                                represent,
                                                 filterby = "level",
                                                 filter_opts = ["L0"],
                                                 sort=True))
@@ -292,7 +293,7 @@ class S3LocationModel(S3Model):
                                      label = messages.COUNTRY,
                                      requires = country_requires,
                                      widget = S3SelectChosenWidget(),
-                                     represent = self.gis_country_represent,
+                                     represent = represent,
                                      ondelete = "RESTRICT")
 
         list_fields = ["id",
@@ -384,42 +385,6 @@ class S3LocationModel(S3Model):
 
         return current.gis.get_country(code, key_type="code") or \
                current.messages.UNKNOWN_OPT
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def gis_country_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.gis_location
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
-        except:
-            return current.messages.UNKNOWN_OPT
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def gis_countries_represent(ids):
-        """ FK representation """
-
-        if not ids:
-            return current.messages["NONE"]
-
-        if not isinstance(ids, (list, tuple)):
-            ids = [ids]
-
-        db = current.db
-        table = db.gis_location
-        rows = db(table.id.belongs(ids)).select(table.name)
-        locations = [r.name for r in rows]
-        return ", ".join(locations)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4456,7 +4421,7 @@ def gis_opacity():
     OPACITY = T("Opacity")
     return S3ReusableField("opacity", "double", default=1.0,
                            requires = IS_FLOAT_IN_RANGE(0, 1),
-                           widget = S3SliderWidget(minval=0, maxval=1, steprange=0.01),
+                           widget = S3SliderWidget(0, 1, 0.01, "float"),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (OPACITY,
                                                            T("Left-side is fully transparent (0), right-side is opaque (1.0)."))),

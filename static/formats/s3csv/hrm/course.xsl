@@ -10,7 +10,7 @@
          Name............................hrm_course.name
          Organisation....................hrm_course.organisation_id
          Certificate.....................hrm_course_certificate.certificate_id
-         Sectors.........................hrm_course_sector.sector_id
+         Job Titles......................hrm_course_job_title.job_title_id
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -18,7 +18,6 @@
     <xsl:include href="../../xml/commons.xsl"/>
 
     <xsl:variable name="CertPrefix" select="'Cert:'"/>
-    <xsl:variable name="SectorPrefix" select="'Sector:'"/>
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
@@ -58,7 +57,7 @@
 
         <xsl:variable name="CertName" select="col[@field='Certificate']/text()"/>
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
-        <xsl:variable name="Sectors" select="col[@field='Sectors']"/>
+        <xsl:variable name="JobTitles" select="col[@field='Job Titles']"/>
 
         <!-- HRM Course -->
         <resource name="hrm_course">
@@ -80,21 +79,21 @@
                     </xsl:attribute>
                 </reference>
             </xsl:if>
-            <!-- Sectors -->
+            <!-- Job Titles -->
             <xsl:call-template name="splitList">
                 <xsl:with-param name="list">
-                    <xsl:value-of select="$Sectors"/>
+                    <xsl:value-of select="$JobTitles"/>
                 </xsl:with-param>
                 <xsl:with-param name="listsep" select="';'"/>
-                <xsl:with-param name="arg">sector_ref</xsl:with-param>
+                <xsl:with-param name="arg">job_title_ref</xsl:with-param>
             </xsl:call-template>
             
         </resource>
 
         <xsl:call-template name="splitList">
-            <xsl:with-param name="list"><xsl:value-of select="$Sectors"/></xsl:with-param>
+            <xsl:with-param name="list"><xsl:value-of select="$JobTitles"/></xsl:with-param>
             <xsl:with-param name="listsep" select="';'"/>
-            <xsl:with-param name="arg">sector_res</xsl:with-param>
+            <xsl:with-param name="arg">job_title_res</xsl:with-param>
         </xsl:call-template>
 
     </xsl:template>
@@ -142,19 +141,19 @@
 
         <xsl:choose>
             <!-- Sectors -->
-            <xsl:when test="$arg='sector_ref'">
-                <resource name="hrm_course_sector">
-                    <reference field="sector_id" resource="org_sector">
+            <xsl:when test="$arg='job_title_ref'">
+                <resource name="hrm_course_job_title">
+                    <reference field="job_title_id" resource="hrm_job_title">
                         <xsl:attribute name="tuid">
-                            <xsl:value-of select="concat($SectorPrefix, $item)"/>
+                            <xsl:value-of select="$item"/>
                         </xsl:attribute>
                     </reference>
                 </resource>
             </xsl:when>
-            <xsl:when test="$arg='sector_res'">
-                <resource name="org_sector">
+            <xsl:when test="$arg='job_title_res'">
+                <resource name="hrm_job_title">
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat($SectorPrefix, $item)"/>
+                        <xsl:value-of select="$item"/>
                     </xsl:attribute>
                     <data field="name"><xsl:value-of select="$item"/></data>
                 </resource>

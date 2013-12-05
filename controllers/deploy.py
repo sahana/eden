@@ -131,8 +131,6 @@ def human_resource():
 
     q = s3base.S3FieldSelector("application.active") == True
     output = s3db.hrm_human_resource_controller(extra_filter=q)
-    if isinstance(output, dict) and "title" in output:
-        output["title"] = T("RDRT Members")
     return output
 
 # -----------------------------------------------------------------------------
@@ -149,20 +147,16 @@ def person():
     settings.hrm.use_skills = True
     settings.search.filter_manager = True
 
-    # Replace default title in imports:
-    retitle = lambda r: {"title": T("Import Members")} \
-                        if r.method == "import" else None
-
-    return s3db.hrm_person_controller(replace_option=None,
-                                      csv_extra_fields=[
+    return s3db.hrm_person_controller(replace_option = None,
+                                      csv_extra_fields = [
                                             dict(label="Deployable",
                                                  value="true"),
                                             # Assume volunteer if not
                                             # specified in CSV
                                             dict(label="Type",
                                                  value="volunteer"),
-                                      ],
-                                      retitle=retitle)
+                                            ]
+                                      )
 
 # -----------------------------------------------------------------------------
 def application():
@@ -204,26 +198,6 @@ def assignment():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def sector():
-    """ RESTful CRUD Controller """
-
-    def prep(r):
-        table = r.table
-        if r.method in ("create", "create.popup", "update", "update.popup"):
-            # Coming from Profile page?
-            person_id = r.get_vars.get("~.person_id", None)
-            if person_id:
-                field = table.person_id
-                field.default = person_id
-                field.readable = field.writable = False
-        if r.record:
-            table.person_id.writable = False
-        return True
-    s3.prep = prep
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
 def person_search():
     """
         Human Resource REST controller
@@ -231,9 +205,8 @@ def person_search():
         - allows differential access permissions
     """
 
-    # Filter to just deployables
-    # Currently this is RDRT Members, but in future may need to filter by other factors
-    s3.filter = S3FieldSelector("application.active") == True
+    # Filter to just deployables (RDRT Members)
+    s3.filter = s3base.S3FieldSelector("application.active") == True
 
     s3.prep = lambda r: r.method == "search_ac"
     return s3_rest_controller("hrm", "human_resource")

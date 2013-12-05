@@ -285,6 +285,7 @@ settings.hrm.organisation_label = "National Society / Branch"
 settings.hrm.cv_tab = True
 
 # RDRT
+settings.deploy.hr_label = "Member"
 # Enable the use of Organisation Regions
 settings.org.regions = True
 # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
@@ -325,9 +326,9 @@ def ns_only(f, required=True, branches=True, updateable=True):
     from s3.s3validators import IS_ONE_OF
     requires = IS_ONE_OF(db, "org_organisation.id",
                          current.s3db.org_OrganisationRepresent(),
-                         filterby="organisation_type_id",
-                         filter_opts=[type_id],
-                         not_filterby=not_filterby,
+                         filterby = "organisation_type_id",
+                         filter_opts = [type_id],
+                         not_filterby = not_filterby,
                          not_filter_opts=not_filter_opts,
                          updateable = updateable,
                          orderby = "org_organisation.name",
@@ -398,6 +399,149 @@ def customize_auth_user(**attr):
 settings.ui.customize_auth_user = customize_auth_user
 
 # -----------------------------------------------------------------------------
+def customize_deploy_alert(**attr):
+    """
+        Customize deploy_alert controller
+    """
+
+    current.s3db.deploy_alert.human_resource_id.label = T("Member")
+
+    return attr
+
+settings.ui.customize_deploy_alert = customize_deploy_alert
+
+# -----------------------------------------------------------------------------
+def customize_deploy_application(**attr):
+    """
+        Customize deploy_application controller
+    """
+
+    current.s3db.deploy_application.human_resource_id.label = T("Member")
+
+    return attr
+
+settings.ui.customize_deploy_application = customize_deploy_application
+
+# -----------------------------------------------------------------------------
+def customize_deploy_assignment(**attr):
+    """
+        Customize deploy_assignment controller
+    """
+
+    # CRUD Strings
+    current.response.s3.crud_strings["deploy_assignment"] = Storage(
+        title_create = T("New Deployment"),
+        title_display = T("Deployment Details"),
+        title_list = T("Deployments"),
+        title_update = T("Edit Deployment Details"),
+        title_search = T("Search Deployments"),
+        title_upload = T("Import Deployments"),
+        subtitle_create = T("Add New Deployment"),
+        label_list_button = T("List Deployments"),
+        label_create_button = T("Add Deployment"),
+        label_delete_button = T("Delete Deployment"),
+        msg_record_created = T("Deployment added"),
+        msg_record_modified = T("Deployment Details updated"),
+        msg_record_deleted = T("Deployment deleted"),
+        msg_list_empty = T("No Deployments currently registered"))
+
+    return attr
+
+
+settings.ui.customize_deploy_assignment = customize_deploy_assignment
+
+# -----------------------------------------------------------------------------
+def customize_deploy_mission(**attr):
+    """
+        Customize deploy_mission controller
+    """
+
+    db = current.db
+    s3db = current.s3db
+    s3 = current.response.s3
+    MEMBER = T("Member")
+    from gluon.html import DIV
+    hr_comment =  \
+        DIV(_class="tooltip",
+            _title="%s|%s" % (MEMBER,
+                              T("Enter some characters to bring up "
+                                "a list of possible matches")))
+
+    table = s3db.deploy_mission
+    table.code.label = T("Operation Code")
+    table.event_type_id.label = T("Disaster Type")
+    table.organisation_id.readable = table.organisation_id.writable = False
+
+    # Restrict Location to just Countries
+    from s3.s3fields import S3Represent
+    from s3.s3widgets import S3SelectChosenWidget
+    field = table.location_id
+    field.label = current.messages.COUNTRY
+    field.requires = s3db.gis_country_requires
+    field.widget = S3SelectChosenWidget()
+    field.represent = S3Represent(lookup="gis_location", translate=True)
+
+    rtable = s3db.deploy_response
+    rtable.human_resource_id.label = MEMBER
+    rtable.human_resource_id.comment = hr_comment
+
+    from s3.s3validators import IS_ONE_OF
+    atable = s3db.deploy_assignment
+    atable.human_resource_id.label = MEMBER
+    atable.human_resource_id.comment = hr_comment
+    field = atable.job_title_id
+    field.comment = None
+    field.label = T("Sector")
+    field.requires = IS_ONE_OF(db, "hrm_job_title.id",
+                               field.represent,
+                               filterby = "type",
+                               filter_opts = (4,),
+                               )
+
+    # CRUD Strings
+    s3.crud_strings["deploy_assignment"] = Storage(
+        title_create = T("New Deployment"),
+        title_display = T("Deployment Details"),
+        title_list = T("Deployments"),
+        title_update = T("Edit Deployment Details"),
+        title_search = T("Search Deployments"),
+        title_upload = T("Import Deployments"),
+        subtitle_create = T("Add New Deployment"),
+        label_list_button = T("List Deployments"),
+        label_create_button = T("Add Deployment"),
+        label_delete_button = T("Delete Deployment"),
+        msg_record_created = T("Deployment added"),
+        msg_record_modified = T("Deployment Details updated"),
+        msg_record_deleted = T("Deployment deleted"),
+        msg_list_empty = T("No Deployments currently registered"))
+
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        if not r.component and r.method == "create":
+            # Org is always IFRC
+            otable = s3db.org_organisation
+            query = (otable.name == "International Federation of Red Cross and Red Crescent Societies")
+            organisation = db(query).select(otable.id,
+                                            limitby = (0, 1),
+                                            ).first()
+            if organisation:
+                r.table.organisation_id.default = organisation.id
+
+        return result
+    s3.prep = custom_prep
+
+    return attr
+
+settings.ui.customize_deploy_mission = customize_deploy_mission
+
+# -----------------------------------------------------------------------------
 def customize_hrm_certificate(**attr):
     """
         Customize hrm_certificate controller
@@ -430,6 +574,32 @@ def customize_hrm_course(**attr):
 settings.ui.customize_hrm_course = customize_hrm_course
 
 # -----------------------------------------------------------------------------
+def customize_hrm_credential(**attr):
+    """
+        Customize hrm_credential controller
+    """
+
+    # Currently just used by RDRT
+    table = current.s3db.hrm_credential
+    field = table.job_title_id
+    field.comment = None
+    field.label = T("Sector")
+    from s3.s3validators import IS_ONE_OF
+    field.requires = IS_ONE_OF(current.db, "hrm_job_title.id",
+                               field.represent,
+                               filterby = "type",
+                               filter_opts = (4,),
+                               )
+    table.organisation_id.readable = table.organisation_id.writable = False
+    table.performance_rating.readable = table.performance_rating.writable = False
+    table.start_date.readable = table.start_date.writable = False
+    table.end_date.readable = table.end_date.writable = False
+
+    return attr
+
+settings.ui.customize_hrm_credential = customize_hrm_credential
+
+# -----------------------------------------------------------------------------
 def customize_hrm_department(**attr):
     """
         Customize hrm_department controller
@@ -456,6 +626,22 @@ def customize_hrm_human_resource(**attr):
             required=True,
             branches=True,
             )
+
+    s3 = current.response.s3
+
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        if r.controller == "deploy" and \
+           isinstance(output, dict) and "title" in output:
+            output["title"] = T("RDRT Members")
+
+        return output
+    s3.postp = custom_postp
 
     return attr
 
@@ -697,6 +883,11 @@ def customize_pr_person(**attr):
     else:
         vnrc = False
 
+    if current.request.controller == "deploy":
+        # Replace default title in imports:
+        attr["retitle"] = lambda r: {"title": T("Import Members")} \
+                            if r.method == "import" else None
+
     s3 = current.response.s3
 
     # Custom prep
@@ -709,23 +900,23 @@ def customize_pr_person(**attr):
             result = True
 
         if r.component_name == "appraisal":
+            atable = r.component.table
             # Organisation needs to be an NS
-            ns_only(s3db.hrm_appraisal.organisation_id,
+            ns_only(atable.organisation_id,
                     required=True,
                     branches=False,
                     )
-            mission_id = r.get_vars.get("mission_id", None)
-            table = r.component.table
-            if mission_id:
-                # Lookup Code
-                mtable = s3db.deploy_mission
-                mission = db(mtable.id == mission_id).select(mtable.code,
-                                                             limitby=(0, 1)
-                                                             ).first()
-                if mission:
-                    table.code.default = mission.code
-            field = table.supervisor_id
+            field = atable.supervisor_id
             field.readable = field.writable = False
+            field = atable.job_title_id
+            field.comment = None
+            field.label = T("Sector")
+            from s3.s3validators import IS_ONE_OF
+            field.requires = IS_ONE_OF(db, "hrm_job_title.id",
+                                       field.represent,
+                                       filterby = "type",
+                                       filter_opts = (4,),
+                                       )
 
         if vnrc:
             if r.component_name == "address":
@@ -820,29 +1011,6 @@ def customize_survey_series(**attr):
     return attr
 
 settings.ui.customize_survey_series = customize_survey_series
-
-# -----------------------------------------------------------------------------
-def customize_deploy_mission(**attr):
-    """
-        Customize deploy/mission controller
-    """
-
-    T = current.T
-    table = current.s3db.deploy_mission
-
-    event_type_id = table.event_type_id
-    event_type_id.readable = True
-    event_type_id.writable = True
-    event_type_id.label = T("Disaster Type")
-
-    code = table.code
-    code.readable = True
-    code.writable = True
-    code.label = T("Operation Code")
-
-    return attr
-
-settings.ui.customize_deploy_mission = customize_deploy_mission
 
 # -----------------------------------------------------------------------------
 # Projects
