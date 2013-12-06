@@ -160,6 +160,7 @@ class S3DeploymentModel(S3Model):
 
         list_fields = ["created_on",
                        "mission_id",
+                       "comments",
                        "human_resource_id$id",
                        "human_resource_id$person_id",
                        "human_resource_id$organisation_id",
@@ -740,16 +741,17 @@ class S3DeploymentAlertModel(S3Model):
         tablename = "deploy_response"
         table = define_table(tablename,
                              mission_id(),
-                             human_resource_id(empty=False,
-                                               label = T(hr_label)),
+                             human_resource_id(label = T(hr_label)),
                              message_id(label=T("Message"),
                                         writable=False),
+                             s3_comments(),
                              *s3_meta_fields())
 
         crud_form = S3SQLCustomForm(
                         "mission_id",
                         "human_resource_id",
                         "message_id",
+                        "comments",
                         # @todo:
                         #S3SQLInlineComponent("document"),
                     )
@@ -1260,8 +1262,7 @@ def deploy_render_alert(listid, resource, rfields, record, **attr):
         #toolbox.insert(0, send_btn)
     else:
         send_btn = ""
-    card_actions = DIV(send_btn,
-                       _class="card-actions")
+    toolbox.insert(0, DIV(send_btn, _class="card-actions"))
                                             
     # Render the item
     item = DIV(DIV(A(IMG(_class="media-object",
@@ -1278,7 +1279,6 @@ def deploy_render_alert(listid, resource, rfields, record, **attr):
                            _class="media-heading"),
                        DIV(modified_on, status, _class="card-subtitle"),
                        DIV(body, _class="message-body s3-truncate"),
-                       card_actions,
                        _class="media-body",
                    ),
                    _class="media",
@@ -1447,6 +1447,17 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
     else:
         docs = ""
 
+    # Comments
+    comments_id = "profile-data-comments-%s" % record_id
+    comments = DIV(LABEL("%s:" % T("Comments"),
+                         _for=comments_id,
+                         _class="profile-data-label"),
+                   SPAN(record["deploy_response.comments"],
+                        _id=comments_id,
+                        _class="profile-data-value s3-truncate"),
+                   _class="profile-data",
+                  )
+
     # Toolbox
     update_url = URL(f="response_message",
                      args=[record_id, "update.popup"],
@@ -1482,8 +1493,7 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
                               )
     else:
         deploy_action = ""
-    card_actions = DIV(deploy_action,
-                       _class="card-actions")
+    toolbox.insert(0, DIV(deploy_action, _class="card-actions"))
 
     # Render the item
     item = DIV(DIV(A(IMG(_class="media-object",
@@ -1503,7 +1513,7 @@ def deploy_render_response(listid, resource, rfields, record, **attr):
                        DIV(message, _class="message-body s3-truncate"),
                        docs,
                        dinfo,
-                       card_actions,
+                       comments,
                        _class="media-body",
                        ),
                    _class="media",
@@ -1577,10 +1587,6 @@ def deploy_render_assignment(listid, resource, rfields, record,
                                          limitby=(0, 1)).first()
     permit = current.auth.s3_has_permission
     if appraisal and permit("update", atable, record_id=appraisal.id):
-        #if current.response.s3.crud.formstyle == "bootstrap":
-            #_class = "btn"
-        #else:
-            #_class = "action-btn"
         _class = "action-lnk"
         EDIT_APPRAISAL = T("Open Appraisal")
         upload_btn = A(I(" ", _class="icon icon-paperclip"),
@@ -1595,13 +1601,8 @@ def deploy_render_assignment(listid, resource, rfields, record,
                        _class="s3_modal %s" % _class,
                        _title=EDIT_APPRAISAL,
                        )
-        #toolbox.insert(0, upload_btn)
     elif permit("update", resource.table, record_id=record_id):
         # Currently we assume that anyone who can edit the assignment can upload the appraisal
-        #if current.response.s3.crud.formstyle == "bootstrap":
-            #_class = "btn"
-        #else:
-            #_class = "action-btn"
         _class = "action-lnk"
         UPLOAD_APPRAISAL = T("Upload Appraisal")
         upload_btn = A(I(" ", _class="icon icon-paperclip"),
@@ -1616,11 +1617,9 @@ def deploy_render_assignment(listid, resource, rfields, record,
                        _class="s3_modal %s" % _class,
                        _title=UPLOAD_APPRAISAL,
                        )
-        #toolbox.insert(0, upload_btn)
     else:
         upload_btn = ""
-    card_actions = DIV(upload_btn,
-                       _class="card-actions")
+    toolbox.insert(0, DIV(upload_btn, _class="card-actions"))
 
     # Render the item
     item = DIV(DIV(A(IMG(_class="media-object",
@@ -1642,7 +1641,6 @@ def deploy_render_assignment(listid, resource, rfields, record,
                               "deploy_assignment.job_title_id",
                               "hrm_appraisal.rating",
                               ),
-                       card_actions,
                        _class="media-body",
                        ),
                    _class="media",
