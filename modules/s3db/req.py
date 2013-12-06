@@ -2436,11 +2436,6 @@ class S3CommitModel(S3Model):
                                     ondelete = "CASCADE")
 
         self.configure(tablename,
-                       # Commitments should only be made to a specific request
-                       listadd = unsolicited_commit,
-                       onvalidation = self.commit_onvalidation,
-                       onaccept = self.commit_onaccept,
-                       ondelete = self.commit_ondelete,
                        context = {"event": "req_id$event_id",
                                   "location": "location_id",
                                   "organisation": "organisation_id",
@@ -2462,6 +2457,11 @@ class S3CommitModel(S3Model):
                                       "date_available",
                                       "comments",
                                       ],
+                       # Commitments should only be made to a specific request
+                       listadd = unsolicited_commit,
+                       onaccept = self.commit_onaccept,
+                       ondelete = self.commit_ondelete,
+                       onvalidation = self.commit_onvalidation,
                        )
 
         # Components

@@ -736,8 +736,6 @@ class S3Profile(S3CRUD):
             @param attr: controller attributes for the request
         """
 
-        from s3gis import Marker
-
         T = current.T
         db = current.db
         s3db = current.s3db
@@ -750,7 +748,8 @@ class S3Profile(S3CRUD):
             icon = TAG[""](I(_class=icon), " ")
             
         context = widget.get("context", None)
-        tablename = widget.get("tablename", None)
+        # Map widgets have no separate tablename
+        tablename = r.tablename
         resource, context = self._resolve_context(r, tablename, context)
         if context:
             cserialize_url = context.serialize_url
@@ -766,7 +765,7 @@ class S3Profile(S3CRUD):
         mtable = s3db.gis_marker
         feature_resources = []
         fappend = feature_resources.append
-        widgets = s3db.get_config(r.tablename, "profile_widgets")
+        widgets = s3db.get_config(tablename, "profile_widgets")
         s3dbresource = s3db.resource
         for widget in widgets:
             if widget["type"] != "datalist":
@@ -842,12 +841,12 @@ class S3Profile(S3CRUD):
 
             fappend(layer)
 
-        # Show site on map
-        profile_layers = s3db.get_config(r.tablename,"profile_layers")
+        # Additional layers, e.g. for primary resource
+        profile_layers = s3db.get_config(r.tablename, "profile_layers")
         if profile_layers:
             for layer in profile_layers:
                 fappend(layer)
-        
+
         map = current.gis.show_map(height=height,
                                    width=width,
                                    bbox=bbox,
