@@ -89,13 +89,16 @@ h4.profile-sub-header {
 }
 
 .card-holder .card-actions {
-    margin-top: 8px;
+    float: left;
+    font-size: 13px;
 }
 
 .card-holder .card-actions .card-action {
     vertical-align: middle;
-    padding-top: 3px;
-    padding-left: 2px;
+}
+
+.card-holder .card-actions .card-action:last-child {
+    margin-right: 30px;
 }
 
 .card-holder .dl-header {
@@ -125,7 +128,8 @@ div.media a.pull-left img.media-object {
 }
 .media-body {
     margin-left: 40px;
-    margin-bottom: 2px;
+    margin-top: 6px;
+    margin-bottom: 6px;
 }
 .profile-data {
     margin-top: 6px;
@@ -167,7 +171,7 @@ div.media a.pull-left img.media-object {
 .edit-bar .icon-paperclip,
 .edit-bar .icon-search,
 .edit-bar .icon-trash {
-    color: #999;
+/*     color: #999; */
     padding-left: 2px;
     margin-right: 4px;
 }
@@ -185,16 +189,12 @@ div.media a.pull-left img.media-object {
     color: #E74C3C;
 }
 .edit-bar .icon-edit:before,
-.edit-bar .icon-envelope-alt:before,
 .edit-bar .icon-file-alt:before,
 .edit-bar .icon-trash:before {
     /* Override font-awesome icons */
     content: none;
 }
 
-/*.icon.icon-envelope-alt {
-    background: url(img/envelope.png) no-repeat;
-}*/
 .icon.icon-file-alt {
     background: url(img/file.png) no-repeat;
 }
@@ -210,6 +210,8 @@ div.media a.pull-left img.media-object {
 
 .icon.icon-deploy,
 .icon.icon-deployed {
+    margin-left: 2px;
+    margin-right: 4px;
     background: url(img/deploy.png) no-repeat;
 }
 .icon.icon-deploy {
