@@ -628,7 +628,7 @@ def newsfeed():
     s3.postp = postp
 
     output = s3_rest_controller("cms", "post",
-                                hide_filter=False,
+                                hide_filter = False,
                                 )
     return output
 

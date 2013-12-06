@@ -60,6 +60,7 @@ class S3Parser(object):
                                                                    table.from_address,
                                                                    table.body,
                                                                    table.created_on,
+                                                                   table.location_id,
                                                                    table.tags,
                                                                    table.author,
                                                                    limitby=(0, 1)
@@ -105,6 +106,7 @@ class S3Parser(object):
         post_id = table.insert(title = record.title,
                                body = body,
                                created_on = record.created_on,
+                               location_id = record.location_id,
                                person_id = person_id,
                                series_id = series_id,
                                )

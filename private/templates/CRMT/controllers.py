@@ -257,7 +257,7 @@ class filters(S3CustomController):
         # Script for inline-editing of filter title
         options = {"cssclass": "jeditable-input",
                    "tooltip": str(T("Click to edit"))}
-        script = '''$('.jeditable').editable('%s', %s);''' % \
+        script = '''$('.jeditable').editable('%s',%s)''' % \
                  (URL(args="filters"), json.dumps(options))
         s3.jquery_ready.append(script)
         return output
@@ -318,7 +318,7 @@ class filters(S3CustomController):
                                  _href=links["map"]))
             if "table" in links:
                 actions.append(A(I(" ", _class="icon icon-list"),
-                                 _title=T("Open Chart"),
+                                 _title=T("Open Table"),
                                  _href=links["table"]))
             if "chart" in links:
                 actions.append(A(I(" ", _class="icon icon-list"),
@@ -326,8 +326,7 @@ class filters(S3CustomController):
                                  _href=links["chart"]))
 
         # Render the item
-        item = DIV(
-                   DIV(DIV(actions,
+        item = DIV(DIV(DIV(actions,
                            _class="action-bar fleft"),
                        SPAN(T("%(resource)s Filter") % \
                             dict(resource=resource_name),
@@ -337,8 +336,7 @@ class filters(S3CustomController):
                               _class="dl-item-delete"),
                             _class="edit-bar fright"),
                        _class="card-header"),
-                   DIV(
-                       DIV(H5(title,
+                   DIV(DIV(H5(title,
                               _id="filter-title-%s" % record_id,
                               _class="media-heading jeditable"),
                            DIV(query),
@@ -414,5 +412,5 @@ class filters(S3CustomController):
             tab_idx += 1
 
         return links
-        
+
 # END =========================================================================

@@ -1581,6 +1581,8 @@ class S3Msg(object):
         if not channel:
             return "No Such RSS Channel: %s" % channel_id
 
+        gtable = db.gis_location
+        ginsert = gtable.insert
         mtable = db.msg_rss
         minsert = mtable.insert
         update_super = s3db.update_super
@@ -1603,8 +1605,9 @@ class S3Msg(object):
             d = feedparser.parse(channel.url)
         now = current.request.utcnow
         data = dict(date=now)
-        if d.etag:
-            data["etag"] = d.etag
+        etag = d.get("etag", None)
+        if etag:
+            data["etag"] = etag
         db(query).update(**data)
         utcfromtimestamp = datetime.datetime.utcfromtimestamp
         from time import mktime, struct_time
@@ -1614,6 +1617,7 @@ class S3Msg(object):
                 content = content[0].value
             else:
                 content = entry.get("description", None)
+
             # Consider using dateutil.parser.parse(entry.get("published"))
             # http://www.deadlybloodyserious.com/2007/09/feedparser-v-django/
             date_published = entry.get("published_parsed", entry.get("updated_parsed"))
@@ -1621,18 +1625,41 @@ class S3Msg(object):
                 date_published = utcfromtimestamp(mktime(date_published))
             else:
                 date_published = now
+
             tags = entry.get("tags", None)
             if tags:
                 tags = [t.term for t in tags]
+
+            location_id = None
+            lat = entry.get("geo_lat", None)
+            if lat is not None:
+                lon = entry.get("geo_long", None)
+                if lon is not None:
+                    try:
+                        location_id = ginsert(lat=lat, lon=lon)
+                    except:
+                        # Don't die on badly-formed GeoRSS
+                        pass
+            else:
+                # Try GeoRSS
+                georss = entry.get("georss_point", None)
+                if georss:
+                    try:
+                        lat, lon = georss.split(" ")
+                        location_id = ginsert(lat=lat, lon=lon)
+                    except:
+                        # Don't die on badly-formed GeoRSS
+                        pass
+
             id = minsert(channel_id = channel_id,
                          title = entry.title,
                          from_address = entry.get("link", None),
                          body = content,
                          author = entry.get("author", None),
                          created_on = date_published,
+                         location_id = location_id,
                          tags = tags,
                          # @ToDo: Enclosures
-                         # @ToDo: geo
                          )
             record = dict(id=id)
             update_super(mtable, record)

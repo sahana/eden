@@ -58,6 +58,10 @@
 }
 
 /* General */
+.icon-bar-chart:before {
+  /* Used for Reports/Charts */
+  content: "\f080";
+}
 .icon-bookmark:before {
   /* Used to show that there is already a bookmark, & allow it's removal */
   content: "\f02e";
@@ -106,6 +110,7 @@
   content: "\f016";
 }
 .icon-filter:before {
+  /* Used for Saved Filters */
   content: "\f0b0";
 }
 .icon-flag:before {
@@ -144,6 +149,14 @@
 .icon-sitemap:before {
   /* Used for Organisations */
   content: "\f0e8";
+}
+.icon-table:before {
+  /* Used for Table view */
+  content: "\f0ce";
+}
+.icon-tag:before {
+  /* Used for Codes */
+  content: "\f02b";
 }
 .icon-tags:before {
   /* Used for Sectors */

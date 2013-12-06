@@ -305,10 +305,10 @@ class S3DeploymentModel(S3Model):
             msg_list_empty = T("No Missions currently registered"))
 
         # Reusable field
-        represent = S3Represent(lookup=tablename,
-                                linkto=URL(f="mission",
-                                           args=["[id]", "profile"]),
-                                show_link=True)
+        represent = S3Represent(lookup = tablename,
+                                linkto = URL(f="mission",
+                                             args=["[id]", "profile"]),
+                                show_link = True)
                                 
         mission_id = S3ReusableField("mission_id", table,
                                      requires = IS_ONE_OF(db,
@@ -328,7 +328,7 @@ class S3DeploymentModel(S3Model):
                              self.msg_message_id(),
                              self.doc_document_id(),
                              *s3_meta_fields())
-                            
+
         # ---------------------------------------------------------------------
         # Application of human resources
         # - agreement that an HR is generally available for assignments
@@ -336,7 +336,7 @@ class S3DeploymentModel(S3Model):
         #
         tablename = "deploy_application"
         table = define_table(tablename,
-                             human_resource_id(empty=False,
+                             human_resource_id(empty = False,
                                                label = T(hr_label)),
                              Field("active", "boolean",
                                    default = True,
@@ -393,7 +393,8 @@ class S3DeploymentModel(S3Model):
 
         configure(tablename,
                   ondelete_cascade = \
-                    self.deploy_assignment_appraisal_ondelete_cascade)
+                    self.deploy_assignment_appraisal_ondelete_cascade,
+                  )
 
         # ---------------------------------------------------------------------
         # Link Assignments to Experience
@@ -406,7 +407,8 @@ class S3DeploymentModel(S3Model):
 
         configure(tablename,
                   ondelete_cascade = \
-                    self.deploy_assignment_experience_ondelete_cascade)
+                    self.deploy_assignment_experience_ondelete_cascade,
+                  )
 
         # ---------------------------------------------------------------------
         # Assignment of assets
@@ -453,6 +455,7 @@ class S3DeploymentModel(S3Model):
         # Extract required data
         human_resource_id = form_vars.human_resource_id
         mission_id = form_vars.mission_id
+        job_title_id = form_vars.mission_id
         
         if not mission_id or not human_resource_id:
             # Need to reload the record
@@ -460,11 +463,13 @@ class S3DeploymentModel(S3Model):
             query = (atable.id == assignment_id)
             assignment = db(query).select(atable.mission_id,
                                           atable.human_resource_id,
+                                          atable.job_title_id,
                                           limitby=(0, 1)).first()
             if assignment:
                 mission_id = assignment.mission_id
                 human_resource_id = assignment.human_resource_id
-                
+                job_title_id = assignment.job_title_id
+
         # Lookup the person ID
         hrtable = s3db.hrm_human_resource
         hr = db(hrtable.id == human_resource_id).select(hrtable.person_id,
@@ -492,6 +497,7 @@ class S3DeploymentModel(S3Model):
         id = etable.insert(person_id = hr.person_id,
                            code = code,
                            location_id = location_id,
+                           job_title_id = job_title_id,
                            organisation_id = organisation_id,
                            start_date = form_vars.start_date,
                            # In case coming from update

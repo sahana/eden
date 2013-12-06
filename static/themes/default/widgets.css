@@ -1411,6 +1411,37 @@ div.fm-cancel {
     width: 75px;
 }
 
+/* Saved Filters Page - Inline Editor for Filter Titles */
+form.jeditable-input input {
+    max-width: 400px !important;
+}
+
+.pt-form legend {
+    font-size: 14px;
+    margin-bottom: 0;
+    border: 0 !important;
+}
+button.toggle-text {
+    font-size: 10px !important;
+    margin-left: 12px !important;
+}
+
+/* Action Toolbar */
+.action-bar {
+    color: #8a8989;
+    font-size: 14px;
+    position: relative;
+    top: 4px;
+}
+.action-bar.fleft {
+    margin-right: 8px;
+}
+.action-bar a:hover,
+.action-bar a:visited:hover {
+    color: #ffa500;
+    text-decoration: none;
+}
+
 /* Simile Timeline */
 .s3-timeline  {
     height: 400px;

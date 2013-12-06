@@ -83,11 +83,13 @@ __all__ = ["S3PersonEntity",
            "pr_image_resize",
            "pr_image_format",
            #"pr_render_address",
-           #"pr_render_contacts",
+           #"pr_render_contact",
+           #"pr_render_filter",
            ]
 
 import os
 import re
+from urllib import urlencode
 
 try:
     import json # try stdlib (Python 2.6)
@@ -1748,7 +1750,7 @@ class S3ContactModel(S3Model):
                                # Used by list_layout & anyway it's useful
                                "comments",
                                ],
-                  list_layout = pr_render_contacts,
+                  list_layout = pr_render_contact,
                   )
 
         # ---------------------------------------------------------------------
@@ -2706,6 +2708,17 @@ class S3SavedFilterModel(S3Model):
                                     represent = represent,
                                     label = T("Filter"),
                                     ondelete = "SET NULL")
+
+        self.configure(tablename,
+                       list_fields = ["title",
+                                      "resource",
+                                      "url",
+                                      "query",
+                                      ],
+                       listadd = False,
+                       list_layout = pr_render_filter,
+                       orderby = "resource",
+                       )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -5936,9 +5949,9 @@ def pr_render_address(listid, resource, rfields, record,
     return item
 
 # =============================================================================
-def pr_render_contacts(listid, resource, rfields, record, 
-                       type = None,
-                       **attr):
+def pr_render_contact(listid, resource, rfields, record, 
+                      type = None,
+                      **attr):
     """
         Custom dataList item renderer for Contacts on the HRM Profile
 
@@ -6036,5 +6049,180 @@ def pr_render_contacts(listid, resource, rfields, record,
                )
 
     return item
+
+# =============================================================================
+def pr_render_filter(listid, resource, rfields, record,
+                     type = None,
+                     **attr):
+    """
+        Custom dataList item renderer for Saved Filters
+
+        @param listid: the HTML ID for this list
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+        @param attr: additional HTML attributes for the item
+    """
+
+    pkey = "pr_filter.id"
+
+    # Construct the item ID
+    if pkey in record:
+        record_id = record[pkey]
+        item_id = "%s-%s" % (listid, record_id)
+    else:
+        # template
+        record_id = None
+        item_id = "%s-[id]" % listid
+
+    item_class = "thumbnail"
+
+    raw = record._row
+
+    T = current.T
+    resource_name = raw["pr_filter.resource"]
+    resource = current.s3db.resource(resource_name)
+
+    # Resource title
+    crud_strings = current.response.s3.crud_strings.get(resource.tablename)
+    if crud_strings:
+        resource_name = crud_strings.title_list
+    else:
+        resource_name = string.capwords(resource.name, "_")
+
+    # Filter title
+    title = record["pr_filter.title"]
+
+    # Filter Query
+    fstring = S3FilterString(resource, raw["pr_filter.query"])
+    query = fstring.represent()
+
+    # Actions
+    actions = filter_actions(resource,
+                             raw["pr_filter.url"],
+                             fstring.get_vars)
+
+    # Render the item
+    item = DIV(DIV(DIV(actions,
+                       _class="action-bar fleft"),
+                   SPAN(T("%(resource)s Filter") % \
+                        dict(resource=resource_name),
+                        _class="card-title"),
+                    DIV(A(I(" ", _class="icon icon-trash"),
+                          _title=T("Delete this Filter"),
+                          _class="dl-item-delete"),
+                        _class="edit-bar fright"),
+                   _class="card-header"),
+               DIV(DIV(H5(title,
+                          _id="filter-title-%s" % record_id,
+                          _class="media-heading jeditable"),
+                       DIV(query),
+                       _class="media-body"),
+                   _class="media"),
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
+
+# -----------------------------------------------------------------------------
+def filter_actions(resource, url, filters):
+    """
+        Helper to construct the actions for a saved filter.
+
+        @param resource: the S3Resource
+        @param url: the filter page URL
+        @param filters: the filter GET vars
+    """
+
+    if not url:
+        return ""
+
+    T = current.T
+    actions = []
+    append = actions.append
+    tablename = resource.tablename
+    filter_actions = current.s3db.get_config(tablename,
+                                             "filter_actions")
+    if filter_actions:
+        controller, fn = tablename.split("_", 1)
+        for action in filter_actions:
+            c = action.get("controller", controller)
+            f = action.get("function", fn)
+            m = action.get("method", None)
+            if m:
+                args = [m]
+            else:
+                args = []
+            e = action.get("format", None)
+            link = URL(c=c, f=f, args=args, extension=e,
+                       vars=filters)
+            append(A(I(" ", _class="icon icon-%s" % \
+                                action.get("icon", "circle")),
+                     _title=T(action.get("label", "Open")),
+                     _href=link))
+    else:
+        # Default to using Summary Tabs
+        links = summary_urls(resource, url, filters)
+        if links:
+            if "map" in links:
+                append(A(I(" ", _class="icon icon-globe"),
+                         _title=T("Open Map"),
+                         _href=links["map"]))
+            if "table" in links:
+                append(A(I(" ", _class="icon icon-table"),
+                         _title=T("Open Table"),
+                         _href=links["table"]))
+            if "chart" in links:
+                append(A(I(" ", _class="icon icon-bar-chart"),
+                         _title=T("Open Chart"),
+                         _href=links["chart"]))
+            if "report" in links:
+                append(A(I(" ", _class="icon icon-bar-chart"),
+                         _title=T("Open Report"),
+                         _href=links["report"]))
+
+    return actions
+
+# -----------------------------------------------------------------------------
+def summary_urls(resource, url, filters):
+    """
+        Helper to get URLs for summary tabs to use as Actions for a Saved Filter
+
+        @param resource: the S3Resource
+        @param url: the filter page URL
+        @param filters: the filter GET vars
+    """
+
+    links = {}
+
+    get_vars = S3URLQuery.parse_url(url)
+    get_vars.pop("t", None)
+    get_vars.pop("w", None)
+    get_vars.update(filters)
+
+    list_vars = []
+    for (k, v) in get_vars.items():
+        if v is None:
+            continue
+        values = v if type(v) is list else [v]
+        for value in values:
+            if value is not None:
+                list_vars.append((k, value))
+    base_url = url.split("?", 1)[0]
+
+    summary_config = S3Summary._get_config(resource)
+    tab_idx = 0
+    for section in summary_config:
+
+        if section.get("common"):
+            continue
+        section_id = section["name"]
+
+        tab_vars = list_vars + [("t", str(tab_idx))]
+        links[section["name"]] = "%s?%s" % (base_url, urlencode(tab_vars))
+        tab_idx += 1
+
+    return links
 
 # END =========================================================================

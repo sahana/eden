@@ -1075,6 +1075,7 @@ class S3RSSModel(S3ChannelModel):
                              Field("tags", "list:string",
                                    label = T("Tags"),
                                    ),
+                             self.gis_location_id(),
                              # Just present for Super Entity
                              Field("inbound", "boolean",
                                    default = True,

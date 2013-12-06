@@ -4,7 +4,7 @@
     xmlns:s3="http://eden.sahanafoundation.org/wiki/S3">
 
     <!-- **********************************************************************
-         GeoJSON Export Templates for Sahana-Eden
+         GeoJSON Export Templates for Sahana Eden
 
          Copyright (c) 2012-13 Sahana Software Foundation
 

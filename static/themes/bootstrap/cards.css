@@ -106,12 +106,11 @@ a h5.media-heading:hover {
 }
 
 /* Edit Toolbar */
-.edit-bar.fright {
+.edit-bar {
     color: #8a8989;
     font-size: 14px;
     position: relative;
     top: 4px;
-    float: right;
 }
 
 .edit-bar .icon-bookmark,

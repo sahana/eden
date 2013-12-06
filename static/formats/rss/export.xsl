@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <xsl:stylesheet
-            xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#">
 
     <!-- **********************************************************************
-         RSS Export Templates for S3XRC
+         RSS Export Templates for Sahana Eden
 
-         Version 0.1 / 2010-06-17 / by nursix
-
-         Copyright (c) 2010 Sahana Software Foundation
+         Copyright (c) 2010-13 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -34,6 +34,7 @@
     <xsl:output method="xml"/>
 
     <!-- ****************************************************************** -->
+    <!-- Used by base.xsl -->
     <xsl:param name="domain"/>
     <xsl:param name="base_url"/>
     <xsl:param name="title"/>
@@ -51,68 +52,47 @@
     <xsl:include href="../xml/commons.xsl"/>
 
     <!-- ****************************************************************** -->
-    <!-- pr_person -->
-    <xsl:template match="resource[@name='pr_person']" mode="contents">
-        <xsl:variable name="first_name" select="./data[@field='first_name']/text()"/>
-        <xsl:variable name="middle_name" select="./data[@field='middle_name']/text()"/>
-        <xsl:variable name="last_name" select="./data[@field='last_name']/text()"/>
+    <!-- cms_post -->
+    <xsl:template match="resource[@name='cms_post']" mode="contents">
         <title>
-            <xsl:choose>
-                <xsl:when test="$middle_name and $last_name">
-                    <xsl:value-of select="concat($first_name, ' ', $middle_name, ' ', $last_name)"/>
-                </xsl:when>
-                <xsl:when test="$last_name">
-                    <xsl:value-of select="concat($first_name, ' ', $last_name)"/>
-                </xsl:when>
-                <xsl:otherwise>
-                    <xsl:value-of select="$first_name"/>
-                </xsl:otherwise>
-            </xsl:choose>
+            <xsl:value-of select="./data[@field='title']/text()"/>
         </title>
         <description>
-            <xsl:if test="./data[@field='pr_pe_label']/text()">
-                <xsl:text>ID Label:</xsl:text>
-                <xsl:value-of select="./data[@field='pr_pe_label']/text()"/>
-            </xsl:if>
+            <xsl:value-of select="./data[@field='body']/text()"/>
         </description>
+        <!-- Author -->
+        <xsl:if test="./reference[@field='person_id']">
+            <dc:author>
+                <xsl:value-of select="./reference[@field='person_id']/text()"/>
+            </dc:author>
+        </xsl:if>
+        <!-- Location -->
+        <xsl:if test="./reference[@field='location_id']">
+            <geo:lat>
+                <xsl:value-of select="./reference[@field='location_id']/@lat"/>
+            </geo:lat>
+            <geo:long>
+                <xsl:value-of select="./reference[@field='location_id']/@lon"/>
+            </geo:long>
+        </xsl:if>
+        <!-- Tags -->
+        <xsl:for-each select="./resource[@name='cms_tag_post']">
+            <xsl:variable name="uuid" select="reference[@field='tag_id']/@uuid"/>
+            <xsl:variable name="category" select="//resource[@uuid=$uuid]/data[@field='name']/text()"/>
+            <category>
+                <xsl:value-of select="$category"/>
+            </category>
+        </xsl:for-each>
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <!-- pr_presence -->
-    <xsl:template match="resource[@name='pr_presence']" mode="contents">
+    <!-- dvi_recreq -->
+    <xsl:template match="resource[@name='dvi_recreq']" mode="contents">
         <title>
-            <xsl:value-of select="./data[@field='time']/text()"/>
+            <xsl:value-of select="./data[@field='marker']/text()"/>
         </title>
         <description>
-            &lt;b&gt;
-            <xsl:value-of select="./data[@field='opt_pr_presence_condition']/text()"/>
-            &lt;/b&gt;
-            <xsl:text>: </xsl:text>
-            <xsl:value-of select="./data[@field='location_details']/text()"/>
-            <xsl:if test="./reference[@field='location_id']/text()">
-                <xsl:value-of select="concat(' [',./reference[@field='location_id']/text(),']')"/>
-            </xsl:if>
-            <xsl:if test="./data[@field='proc_desc']/text()">
-                &lt;br/&gt;
-                <xsl:value-of select="./data[@field='proc_desc']/text()"/>
-            </xsl:if>
-        </description>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <!-- req_req -->
-    <xsl:template match="resource[@name='req_req']" mode="contents">
-        <title>
-            <xsl:value-of select="./data[@field='req_ref']/text()"/>
-        </title>
-        <description>
-            <xsl:value-of select="./reference[@field='site_id']/text()"/>
-            <xsl:value-of select="$newline"/>
-            <xsl:value-of select="./data[@field='priority']/text()"/>
-            <xsl:value-of select="$newline"/>
-            <xsl:value-of select="./data[@field='purpose']/text()"/>
-            <xsl:value-of select="$newline"/>
-            <xsl:value-of select="./data[@field='comments']/text()"/>
+            <xsl:value-of select="./data[@field='date']/text()"/>
         </description>
     </xsl:template>
 
@@ -193,13 +173,68 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <!-- dvi_recreq -->
-    <xsl:template match="resource[@name='dvi_recreq']" mode="contents">
+    <!-- pr_person -->
+    <xsl:template match="resource[@name='pr_person']" mode="contents">
+        <xsl:variable name="first_name" select="./data[@field='first_name']/text()"/>
+        <xsl:variable name="middle_name" select="./data[@field='middle_name']/text()"/>
+        <xsl:variable name="last_name" select="./data[@field='last_name']/text()"/>
         <title>
-            <xsl:value-of select="./data[@field='marker']/text()"/>
+            <xsl:choose>
+                <xsl:when test="$middle_name and $last_name">
+                    <xsl:value-of select="concat($first_name, ' ', $middle_name, ' ', $last_name)"/>
+                </xsl:when>
+                <xsl:when test="$last_name">
+                    <xsl:value-of select="concat($first_name, ' ', $last_name)"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="$first_name"/>
+                </xsl:otherwise>
+            </xsl:choose>
         </title>
         <description>
-            <xsl:value-of select="./data[@field='date']/text()"/>
+            <xsl:if test="./data[@field='pr_pe_label']/text()">
+                <xsl:text>ID Label:</xsl:text>
+                <xsl:value-of select="./data[@field='pr_pe_label']/text()"/>
+            </xsl:if>
+        </description>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- pr_presence -->
+    <xsl:template match="resource[@name='pr_presence']" mode="contents">
+        <title>
+            <xsl:value-of select="./data[@field='time']/text()"/>
+        </title>
+        <description>
+            &lt;b&gt;
+            <xsl:value-of select="./data[@field='opt_pr_presence_condition']/text()"/>
+            &lt;/b&gt;
+            <xsl:text>: </xsl:text>
+            <xsl:value-of select="./data[@field='location_details']/text()"/>
+            <xsl:if test="./reference[@field='location_id']/text()">
+                <xsl:value-of select="concat(' [',./reference[@field='location_id']/text(),']')"/>
+            </xsl:if>
+            <xsl:if test="./data[@field='proc_desc']/text()">
+                &lt;br/&gt;
+                <xsl:value-of select="./data[@field='proc_desc']/text()"/>
+            </xsl:if>
+        </description>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- req_req -->
+    <xsl:template match="resource[@name='req_req']" mode="contents">
+        <title>
+            <xsl:value-of select="./data[@field='req_ref']/text()"/>
+        </title>
+        <description>
+            <xsl:value-of select="./reference[@field='site_id']/text()"/>
+            <xsl:value-of select="$newline"/>
+            <xsl:value-of select="./data[@field='priority']/text()"/>
+            <xsl:value-of select="$newline"/>
+            <xsl:value-of select="./data[@field='purpose']/text()"/>
+            <xsl:value-of select="$newline"/>
+            <xsl:value-of select="./data[@field='comments']/text()"/>
         </description>
     </xsl:template>
 

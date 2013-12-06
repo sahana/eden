@@ -455,10 +455,38 @@ def tooltip():
         response.view = "pr/ajaxtips/%s.html" % request.vars.formfield
     return dict()
 
+# =============================================================================
+def filter():
+    """
+        REST controller for new S3Filter saved searches
+    """
+
+    # Page length
+    s3.dl_pagelength = 10
+
+    def postp(r, output):
+        if r.interactive and isinstance(output, dict):
+            # Hide side menu
+            menu.options = None
+
+            output["title"] = T("Saved Filters")
+
+            # Script for inline-editing of filter title
+            options = {"cssclass": "jeditable-input",
+                       "tooltip": str(T("Click to edit"))}
+            script = '''$('.jeditable').editable('%s',%s)''' % \
+                     (URL(), json.dumps(options))
+            s3.jquery_ready.append(script)
+        return output
+    s3.postp = postp
+
+    output = s3_rest_controller()
+    return output
+
 # -----------------------------------------------------------------------------
 def saved_search():
     """
-        REST controller for saving and loading saved searches
+        REST controller for old S3Search saved searches
     """
 
     return s3_rest_controller()
@@ -467,7 +495,8 @@ def saved_search():
 def human_resource():
     """
         RESTful CRUD controller for options.s3json lookups
-        - needed for DRMP template where HRM fields are embedded inside pr_person form
+        - needed for templates, like DRMP, where HRM fields are embedded inside
+          pr_person form
     """
 
     if auth.permission.format != "s3json":

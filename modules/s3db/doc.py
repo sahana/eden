@@ -29,7 +29,7 @@
 
 __all__ = ["S3DocumentLibrary",
            "doc_image_represent",
-           "doc_render_documents",
+           "doc_render_document",
           ]
 
 import os
@@ -207,7 +207,7 @@ class S3DocumentLibrary(S3Model):
                              "site": "site_id",
                              },
                   deduplicate = self.document_duplicate,
-                  list_layout = doc_render_documents,
+                  list_layout = doc_render_document,
                   onaccept = onaccept,
                   ondelete = ondelete,
                   onvalidation = self.document_onvalidation,
@@ -526,7 +526,7 @@ def doc_checksum(docstr):
     return converted
 
 # =============================================================================
-def doc_render_documents(listid, resource, rfields, record, 
+def doc_render_document(listid, resource, rfields, record, 
                          type = None,
                          **attr):
     """

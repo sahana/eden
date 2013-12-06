@@ -378,31 +378,6 @@ form#summary-filter-form
     width: 50px;
 }
 
-/* Action Toolbar */
-.action-bar.fleft {
-    color: #8a8989;
-    font-size: 14px;
-    position: relative;
-    top: 4px;
-    float: left;
-    margin-right: 8px;
-}
-
-/* Saved Filters Page - Inline Editor for Filter Titles */
-form.jeditable-input input {
-    max-width: 400px !important;
-}
-
-.pt-form legend {
-    font-size: 14px;
-    margin-bottom: 0;
-    border: 0 !important;
-}
-button.toggle-text {
-    font-size: 10px !important;
-    margin-left: 12px !important;
-}
-
 /* Map Borders*/
 div.map_save_button,
 div.map_save_panel,

@@ -50,9 +50,9 @@ __all__ = ["S3HRModel",
            "hrm_record",
            "hrm_configure_pr_group_membership",
            "hrm_human_resource_onaccept",
-           #"hrm_render_competencies",
-           #"hrm_render_credentials",
-           #"hrm_render_trainings",
+           #"hrm_render_competency",
+           #"hrm_render_credential",
+           #"hrm_render_training",
            #"hrm_render_experience",
            ]
 
@@ -1917,7 +1917,7 @@ class S3HRSkillModel(S3Model):
                                  "competency_id",
                                  "comments",
                                  ],
-                  list_layout = hrm_render_competencies,
+                  list_layout = hrm_render_competency,
                   )
 
         # =====================================================================
@@ -2066,7 +2066,7 @@ class S3HRSkillModel(S3Model):
                                  "start_date",
                                  "end_date",
                                  ],
-                  list_layout = hrm_render_credentials,
+                  list_layout = hrm_render_credential,
                   )
 
         # =========================================================================
@@ -2382,7 +2382,7 @@ class S3HRSkillModel(S3Model):
                                  "course_id",
                                  "hours",
                                  ],
-                  list_layout = hrm_render_trainings,
+                  list_layout = hrm_render_training,
                   onaccept = hrm_training_onaccept,
                   ondelete = hrm_training_onaccept,
                   orderby = ~table.date,
@@ -3842,7 +3842,10 @@ def hrm_vars():
 
 # -------------------------------------------------------------------------
 def hrm_human_resource_represent(id, row=None, show_link=False):
-    """ Representation of human resource records """
+    """
+        Representation of human resource records
+        - @ToDo: Subclass S3Represent instead
+    """
 
     if row:
         id = row.id
@@ -3894,7 +3897,10 @@ def hrm_human_resource_represent(id, row=None, show_link=False):
 
 # =============================================================================
 def hrm_training_event_represent(id, row=None):
-    """ Represent a Training Event """
+    """
+        Represent a Training Event
+        - @ToDo: Subclass S3Represent instead
+    """
 
     if not id:
         return current.messages["NONE"]
@@ -3962,6 +3968,102 @@ def hrm_training_event_represent(id, row=None):
 #    except:
 #        return current.messages["NONE"]
 #    return represent
+
+# =============================================================================
+class org_OrganisationRepresent(S3Represent):
+    """ Representation of Organisations """
+
+    def __init__(self,
+                 translate=False,
+                 show_link=False,
+                 parent=True,
+                 acronym=True,
+                 multiple=False):
+
+        self.acronym = acronym
+
+        if parent and current.deployment_settings.get_org_branches():
+            # Need a custom lookup
+            self.parent = True
+            self.lookup_rows = self.custom_lookup_rows
+            fields = ["org_organisation.name",
+                      "org_organisation.acronym",
+                      "org_parent_organisation.name",
+                      ]
+        else:
+            # Can use standard lookup of fields
+            self.parent = False
+            fields = ["name", "acronym"]
+
+        super(org_OrganisationRepresent,
+              self).__init__(lookup="org_organisation",
+                             fields=fields,
+                             show_link=show_link,
+                             translate=translate,
+                             multiple=multiple)
+
+    # -------------------------------------------------------------------------
+    def custom_lookup_rows(self, key, values, fields=[]):
+        """
+            Custom lookup method for organisation rows, does a
+            left join with the parent organisation. Parameters
+            key and fields are not used, but are kept for API
+            compatibility reasons.
+
+            @param values: the organisation IDs
+        """
+
+        db = current.db
+        s3db = current.s3db
+        otable = s3db.org_organisation
+        btable = s3db.org_organisation_branch
+        ptable = db.org_organisation.with_alias("org_parent_organisation")
+
+        left = [btable.on(btable.branch_id == otable.id),
+                ptable.on(ptable.id == btable.organisation_id)]
+
+        qty = len(values)
+        if qty == 1:
+            query = (otable.id == values[0])
+            limitby = (0, 1)
+        else:
+            query = (otable.id.belongs(values))
+            limitby = (0, qty)
+
+        rows = db(query).select(otable.id,
+                                otable.name,
+                                otable.acronym,
+                                ptable.name,
+                                left=left,
+                                limitby=limitby)
+        self.queries += 1
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a single Row
+
+            @param row: the org_organisation Row
+        """
+
+        if self.parent:
+            # Custom Row (with the parent left-joined)
+            name = row["org_organisation.name"]
+            acronym = row["org_organisation.acronym"]
+            parent = row["org_parent_organisation.name"]
+        else:
+            # Standard row (from fields)
+            name = row["name"]
+            acronym = row["acronym"]
+
+        if not name:
+            return self.default
+        if self.acronym and acronym:
+            name = "%s (%s)" % (name, acronym)
+        if self.parent and parent:
+            name = "%s > %s" % (parent, name)
+        return s3_unicode(name)
 
 # =============================================================================
 def hrm_human_resource_onaccept(form):
@@ -5252,7 +5354,8 @@ def hrm_human_resource_controller(extra_filter=None):
 
             s3db.hrm_experience # Load normal model
             s3db.configure("hrm_experience",
-                           list_fields = ["organisation_id",
+                           list_fields = ["code",
+                                          "organisation_id",
                                           "organisation",
                                           "job_title_id",
                                           "job_title",
@@ -5289,7 +5392,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                    filter = S3FieldSelector("pe_id") == pe_id,
                                    icon = "icon-phone",
                                    # Default renderer:
-                                   #list_layout = s3db.pr_render_contacts,
+                                   #list_layout = s3db.pr_render_contact,
                                    orderby = "priority asc",
                                    )
             address_widget = dict(label = "Address",
@@ -5309,7 +5412,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                       filter = S3FieldSelector("person_id") == person_id,
                                       icon = "icon-tags",
                                       # Default renderer:
-                                      #list_layout = hrm_render_credentials,
+                                      #list_layout = hrm_render_credential,
                                       )
             skills_widget = dict(label = "Skills",
                                  title_create = "Add New Skill",
@@ -5318,7 +5421,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                  filter = S3FieldSelector("person_id") == person_id,
                                  icon = "icon-comment-alt",
                                  # Default renderer:
-                                 #list_layout = hrm_render_competencies,
+                                 #list_layout = hrm_render_competency,
                                  )
             trainings_widget = dict(label = "Trainings",
                                     title_create = "Add New Training",
@@ -5327,7 +5430,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                     filter = S3FieldSelector("person_id") == person_id,
                                     icon = "icon-wrench",
                                     # Default renderer:
-                                    #list_layout = hrm_render_trainings,
+                                    #list_layout = hrm_render_training,
                                     )
             experience_widget = dict(label = "Experience",
                                      title_create = "Add New Experience",
@@ -5345,7 +5448,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                filter = S3FieldSelector("doc_id") == record.doc_id,
                                icon = "icon-paperclip",
                                # Default renderer:
-                               #list_layout = s3db.doc_render_documents,
+                               #list_layout = s3db.doc_render_document,
                                )
             profile_widgets = [contacts_widget,
                                address_widget,
@@ -6367,7 +6470,7 @@ def hrm_configure_pr_group_membership():
                    orderby=orderby)
 
 # =============================================================================
-def hrm_render_competencies(listid, resource, rfields, record, **attr):
+def hrm_render_competency(listid, resource, rfields, record, **attr):
     """
         Custom dataList item renderer for Skills on the HRM Profile
 
@@ -6469,7 +6572,7 @@ def hrm_render_competencies(listid, resource, rfields, record, **attr):
     return item
 
 # =============================================================================
-def hrm_render_credentials(listid, resource, rfields, record, **attr):
+def hrm_render_credential(listid, resource, rfields, record, **attr):
     """
         Item renderer for data list of credentials for an HR
 
@@ -6589,12 +6692,35 @@ def hrm_render_experience(listid, resource, rfields, record, **attr):
     item_class = "thumbnail"
 
     raw = record._row
+
+    code = raw["hrm_experience.code"] or ""
+    if code:
+        # Lookup Mission
+        # @ToDo: S3Represent to do this in bulk
+        mtable = current.s3db.deploy_mission
+        mission = current.db(mtable.code == code).select(mtable.id,
+                                                         limitby=(0, 1)
+                                                         ).first()
+        if mission:
+            mission_url = URL(c="deploy", f="mission",
+                              args=[mission.id, "profile"])
+            code = A(code,
+                     _href=mission_url,
+                     _target="_blank")
+        code = P(I(_class="icon-tag"),
+                 " ",
+                 SPAN(code),
+                 " ",
+                 _class="card_1_line",
+                 )
+
     job_title = raw["hrm_experience.job_title_id"]
     if job_title:
         job_title = record["hrm_experience.job_title_id"]
     else:
         # Try free-text field
         job_title = raw["hrm_experience.job_title"] or ""
+
     organisation = raw["hrm_experience.organisation_id"]
     if organisation:
         #org_url = URL(c="org", f="organisation", args=[organisation, "profile"])
@@ -6713,7 +6839,8 @@ def hrm_render_experience(listid, resource, rfields, record, **attr):
                    edit_bar,
                    _class="card-header",
                    ),
-               DIV(DIV(DIV(organisation,
+               DIV(DIV(DIV(code,
+                           organisation,
                            location,
                            date,
                            hours,
@@ -6735,7 +6862,7 @@ def hrm_render_experience(listid, resource, rfields, record, **attr):
     return item
 
 # =============================================================================
-def hrm_render_trainings(listid, resource, rfields, record, **attr):
+def hrm_render_training(listid, resource, rfields, record, **attr):
     """
         Custom dataList item renderer for Trainings on the HRM Profile
 

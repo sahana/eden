@@ -157,9 +157,9 @@ class S3MainMenu(default.S3MainMenu):
 
         auth = current.auth
         logged_in = auth.is_logged_in()
-        self_registration = current.deployment_settings.get_security_self_registration()
 
         if not logged_in:
+            self_registration = current.deployment_settings.get_security_self_registration()
             request = current.request
             login_next = URL(args=request.args, vars=request.vars)
             if request.controller == "default" and \
@@ -180,16 +180,23 @@ class S3MainMenu(default.S3MainMenu):
                         )
         else:
             # Logged-in
-            menu_auth = MM(auth.user.email, c="default", f="user",
+            filter_manager = current.deployment_settings.get_search_filter_manager()
+            user = auth.user
+            menu_auth = MM(user.email, c="default", f="user",
                            translate=False, link=False, _id="auth_menu_email",
                            **attr)(
                             MM("Logout", m="logout", _id="auth_menu_logout",
-                               icon="icon-off"),
+                               icon="icon-off",
+                               ),
                             MM("Profile", c="default", f="person", m="update",
-                               icon="icon-user"
+                               icon="icon-user",
+                               ),
+                            MM("Saved Filters", c="pr", f="filter", m="datalist",
+                               vars={"~.pe_id": user.pe_id},
+                               icon="icon-filter",
                                ),
                             MM("Change Password", m="change_password",
-                               icon="icon-lock"
+                               icon="icon-lock",
                                ),
                             # @ToDo:
                             #SEP(),
@@ -318,7 +325,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Facilities", c="inv", f="facility", m="summary")(
                         M("New", m="create"),
                         M("List All", m="summary"),
-                        M("Map", m="map"),
                         M("Import", m="import")
                     ),
                     M("Warehouse Stock", c="inv", f="inv_item")(
@@ -377,7 +383,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("New", m="create"),
                         M("List All", m="summary"),
                         #M("Review/Approve New", m="review"),
-                        M("Map", m="map"),
                         M("Import", m="import")
                     ),
                     M("Organizations", f="organisation")(
