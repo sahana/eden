@@ -1305,14 +1305,16 @@ def twitter_search():
     import tweepy
 
     twitter_settings = S3Msg.get_twitter_api()
-    twitter_api = twitter_settings[0]
-
-    try:
-        supported_languages = map(lambda x: str(x["code"]), twitter_api.supported_languages())
-    except tweepy.TweepError:
-        # List according to Twitter 1.1 API https://dev.twitter.com/docs/api/1.1/get/help/languages
-        supported_languages = ['fr', 'en', 'ar', 'ja', 'es', 'de', 'it', 'id', 'pt', 'ko', 'tr', 'ru', 'nl', 'fil',
+    supported_languages = ['fr', 'en', 'ar', 'ja', 'es', 'de', 'it', 'id', 'pt', 'ko', 'tr', 'ru', 'nl', 'fil',
                        'msa', 'zh-tw', 'zh-cn', 'hi', 'no', 'sv', 'fi', 'da', 'pl', 'hu', 'fa', 'he', 'ur', 'th']
+    if twitter_settings:
+        twitter_api = twitter_settings[0]
+
+        try:
+            supported_languages = map(lambda x: str(x["code"]), twitter_api.supported_languages())
+        except tweepy.TweepError:
+            # List according to Twitter 1.1 API https://dev.twitter.com/docs/api/1.1/get/help/languages
+            pass
 
     substitute_list = {"en-gb": "en",
                        "pt-br": "pt"}
