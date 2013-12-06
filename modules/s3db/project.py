@@ -207,7 +207,7 @@ class S3ProjectModel(S3Model):
                                    requires = [IS_NOT_EMPTY(error_message=T("Please fill this!")),
                                                IS_NOT_ONE_OF(db, "project_project.name")]
                                    ),
-                             Field("code",
+                             Field("code", length=128,
                                    label = T("Short Title / ID"),
                                    readable = use_codes,
                                    writable = use_codes,
@@ -432,28 +432,13 @@ class S3ProjectModel(S3Model):
         #report_fact_default = "theme.name"
 
         configure(tablename,
-                  super_entity="doc_entity",
-                  deduplicate=self.project_project_deduplicate,
-                  onaccept=self.project_project_onaccept,
-                  create_next=create_next,
-                  search_method=project_search,
-                  list_fields=list_fields,
-                  report_options=Storage(
-                    search = [status_search_widget] + advanced,
-                    rows=report_fields,
-                    cols=report_fields,
-                    fact=report_fact_fields,
-                    defaults=Storage(
-                        rows="hazard.name",
-                        cols=report_col_default,
-                        fact=report_fact_default,
-                        aggregate="count",
-                        totals=True
-                    )
-                  ),
                   context = {"location": "location.location_id",
                              "organisation": "organisation_id",
                              },
+                  create_next = create_next,
+                  deduplicate = self.project_project_deduplicate,
+                  list_fields = list_fields,
+                  onaccept = self.project_project_onaccept,
                   realm_components = ["human_resource",
                                       "task",
                                       "organisation",
@@ -467,7 +452,22 @@ class S3ProjectModel(S3Model):
                                       "document",
                                       "image",
                                       ],
-                  update_realm=True,
+                  report_options = Storage(
+                    search = [status_search_widget] + advanced,
+                    rows=report_fields,
+                    cols=report_fields,
+                    fact=report_fact_fields,
+                    defaults=Storage(
+                        rows="hazard.name",
+                        cols=report_col_default,
+                        fact=report_fact_default,
+                        aggregate="count",
+                        totals=True
+                    )
+                  ),
+                  search_method = project_search,
+                  super_entity = "doc_entity",
+                  update_realm = True,
                   )
 
         # Reusable Field

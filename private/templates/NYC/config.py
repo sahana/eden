@@ -670,7 +670,7 @@ settings.ui.customize_hrm_human_resource = customize_hrm_human_resource
 
 # -----------------------------------------------------------------------------
 # Projects
-# Use codes for projects
+# Use codes for projects (called 'blurb' in NYC)
 settings.project.codes = True
 # Uncomment this to use settings suitable for detailed Task management
 settings.project.mode_task = False
@@ -701,6 +701,7 @@ def customize_project_project(**attr):
             s3db = current.s3db
 
             table = r.table
+            tablename = "project_project"
             table.code.label = T("Project blurb (max. 100 characters)")
             table.code.max_length = 100 
             table.comments.label = T("How people can help")
@@ -806,9 +807,19 @@ def customize_project_project(**attr):
                              ),
                 ]
 
-            s3db.configure("project_project",
-                           crud_form=crud_form,
+            list_fields = ["id",
+                           "name",
+                           "code",
+                           "organisation_id",
+                           "start_date",
+                           "end_date",
+                           (T("Locations"), "location.location_id"),
+                           ]
+
+            s3db.configure(tablename,
+                           crud_form = crud_form,
                            filter_widgets = filter_widgets,
+                           list_fields = list_fields,
                            )
 
         return result

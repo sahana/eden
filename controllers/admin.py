@@ -104,12 +104,15 @@ def user():
         lappend("org_group_id")
     if settings.get_auth_registration_requests_site():
         lappend("site_id")
-    if settings.get_auth_registration_link_user_to() and settings.get_auth_show_link():
+    link_user_to = settings.get_auth_registration_link_user_to()
+    if link_user_to and len(link_user_to) > 1 and settings.get_auth_show_link():
         lappend("link_user_to")
+    lappend((T("Registration"), "created_on"))
+    table.created_on.represent = s3base.S3DateTime.date_represent
     lappend((T("Roles"), "membership.group_id"))
 
     s3db.configure("auth_user",
-                   main="first_name",
+                   main = "first_name",
                    create_next = URL(c="admin", f="user", args=["[id]", "roles"]),
                    create_onaccept = lambda form: auth.s3_approve_user(form.vars),
                    list_fields = list_fields,
