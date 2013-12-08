@@ -3883,16 +3883,12 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     // Clear the one from the Current Location in S3LocationSelector
                     draftLayer.features[0].destroy();
                 }
-                var lon_field = $('#gis_location_lon');
-                if (lon_field.length) {
-                    // Update form fields in S3LocationSelectorWidget
-                    // (S3LocationSelectorWidget2 does this in s3.locationselector.widget2.js, which is a better design)
-                    var centerPoint = feature.geometry.getBounds().getCenterLonLat();
-                    centerPoint.transform(map.getProjectionObject(), proj4326);
-                    lon_field.val(centerPoint.lon);
-                    $('#gis_location_lat').val(centerPoint.lat);
-                    $('#gis_location_wkt').val('');
+
+                if (undefined != map.s3.pointPlaced) {
+                    // Call Custom Call-back
+                    map.s3.pointPlaced(feature);
                 }
+
                 // Prepare in case user selects a new point
                 map.s3.lastDraftFeature = feature;
             }

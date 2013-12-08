@@ -5508,8 +5508,8 @@ class GIS(object):
                  catalogue_layers = False,
                  legend = False,
                  toolbar = False,
-                 nav = None,
                  area = False,
+                 nav = None,
                  save = False,
                  search = False,
                  mouse_position = None,
@@ -5592,8 +5592,8 @@ class GIS(object):
                                      Defaults to False: Just show the default Base layer
             @param legend: True: Show the GeoExt Legend panel, False: No Panel, "floating": New floating Legend Panel
             @param toolbar: Show the Icon Toolbar of Controls
-            @param nav: Show the Navigation controls on the Toolbar
             @param area: Show the Area tool on the Toolbar
+            @param nav: Show the Navigation controls on the Toolbar
             @param save: Show the Save tool on the Toolbar
             @param search: Show the Geonames search box
             @param mouse_position: Show the current coordinates in the bottom-right of the map. 3 Options: 'normal', 'mgrs', False (defaults to checking deployment_settings, which defaults to 'normal')
@@ -5645,8 +5645,8 @@ class GIS(object):
                    catalogue_layers = catalogue_layers,
                    legend = legend,
                    toolbar = toolbar,
-                   nav = nav,
                    area = area,
+                   nav = nav,
                    save = save,
                    search = search,
                    mouse_position = mouse_position,

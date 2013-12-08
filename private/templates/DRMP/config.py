@@ -141,6 +141,8 @@ settings.gis.layer_properties = False
 settings.gis.nav_controls = False
 # Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
+# Uncomment to disable the ability to add PoIs to the main map
+settings.gis.pois = False
 
 # -----------------------------------------------------------------------------
 # Finance settings

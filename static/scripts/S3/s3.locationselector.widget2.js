@@ -821,12 +821,13 @@
                         }
                     }
                     if (control) {
-                        var pointPlaced = function(event) {
+                        // Callback function for when a feature is added
+                        map.s3.pointPlaced = function(feature) {
                             // Hide any Geocoder messages
                             $(selector + '_geocode .geocode_fail').hide();
                             $(selector + '_geocode .geocode_success').hide();
                             // Update the Form fields
-                            var geometry = event.feature.geometry;
+                            var geometry = feature.geometry;
                             if (geometry.CLASS_NAME == 'OpenLayers.Geometry.Point') {
                                 var centerPoint = geometry.getBounds().getCenterLonLat();
                                 centerPoint.transform(map.getProjectionObject(), gis.proj4326);
@@ -846,7 +847,7 @@
                             // Update the Hidden Fields
                             resetHidden(fieldname);
                         }
-                        control.events.register('featureadded', null, pointPlaced);
+                        //control.events.register('featureadded', null, pointPlaced);
                     }
                 } else {
                     // Map already instantiated
@@ -869,9 +870,10 @@
      * - to the appropriate bounds
      */
     var zoomMap = function(fieldname, id) {
-        if (S3.gis.maps) {
+        var gis = S3.gis;
+        if (gis.maps) {
             var map_id = 'location_selector_' + fieldname;
-            var map = S3.gis.maps[map_id];
+            var map = gis.maps[map_id];
             if (map) {
                 // Zoom to extent of the Lx, if we have it
                 var bounds = l[id].b;
@@ -901,7 +903,7 @@
                 }
                 if (bounds) {
                     bounds = OpenLayers.Bounds.fromArray(bounds)
-                                              .transform(S3.gis.proj4326,
+                                              .transform(gis.proj4326,
                                                          map.getProjectionObject());
                     map.zoomToExtent(bounds);
                 }

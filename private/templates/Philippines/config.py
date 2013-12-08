@@ -1994,6 +1994,7 @@ def customize_org_facility(**attr):
 
                 record = r.record
                 record_id = record.id
+                # @ToDo: Center on the Site
                 map_widget = dict(label = "Map",
                                   type = "map",
                                   context = "site",

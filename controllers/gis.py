@@ -127,19 +127,23 @@ def define_map(height = None,
     else:
         print_tool = {}
 
+    # Do we allow creation of PoIs from the main Map?
+    pois = settings.get_gis_pois()
+
     map = gis.show_map(height = height,
                        width = width,
-                       window = window,
-                       wms_browser = wms_browser,
+                       add_feature = pois,
                        toolbar = toolbar,
-                       collapsed = collapsed,
-                       closable = closable,
-                       maximizable = maximizable,
+                       wms_browser = wms_browser,
                        legend = legend,
                        save = True,
                        search = search,
                        catalogue_layers = True,
                        print_tool = print_tool,
+                       window = window,
+                       closable = closable,
+                       maximizable = maximizable,
+                       collapsed = collapsed,
                        )
 
     return map
@@ -2804,6 +2808,20 @@ def feature_query():
     output = r()
 
     return output
+
+# =============================================================================
+def poi_type():
+    """
+        RESTful CRUD controller for PoI Types
+    """
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def poi():
+    """
+        RESTful CRUD controller for PoIs
+    """
+    return s3_rest_controller()
 
 # =============================================================================
 def display_feature():

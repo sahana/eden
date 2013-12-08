@@ -242,6 +242,8 @@ settings.L10n.decimal_separator = "."
 #settings.gis.overview = False
 # Uncomment to hide the permalink control
 #settings.gis.permalink = False
+# Uncomment to disable the ability to add PoIs to the main map
+#settings.gis.pois = False
 # PoIs to export in KML/OSM feeds from Admin locations
 #settings.gis.poi_resources = ["cr_shelter", "hms_hospital", "org_office"]
 # Uncomment to hide the ScaleLine control

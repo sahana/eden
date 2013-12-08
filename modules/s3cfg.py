@@ -749,6 +749,12 @@ class S3Config(Storage):
         """
         return self.gis.get("permalink", True)
 
+    def get_gis_pois(self):
+        """
+            Should the Map allow the addition of PoIs?
+        """
+        return self.gis.get("pois", True)
+
     def get_gis_poi_resources(self):
         """
             List of resources (tablenames) to import/export as PoIs from Admin Locations

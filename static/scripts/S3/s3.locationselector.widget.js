@@ -3,7 +3,8 @@
  * This script is in Static to allow caching
  * Dynamic constants (e.g. Internationalised strings) are set in server-generated script
  *
- * @ToDo: Support more than 1/page by not using fixed ids but varying with fieldname (see locationselector.widget2)
+ * @ToDo: Support more than 1/page by not using fixed ids but varying with fieldname
+ *        - see locationselector.widget2
  */
 
 // Document.onReady
@@ -137,33 +138,74 @@ function s3_gis_locationselector_onReady() {
     // Map Popup
     var mapButton = $('#gis_location_map-btn');
     if (mapButton) {
-        mapButton.click(function() {
-            // Find the map
-            var map_id = mapButton.attr('map');
-            if (undefined == map_id) {
-                map_id = 'default_map';
-            }
-            var map = S3.gis.maps[map_id];
-            map.s3.mapWin.show();
-            if (map.s3.polygonButton) {
-                var wkt = $('#gis_location_wkt').val();
-                if (!wkt) {
-                    // Enable the crosshair on the Map Selector
-                    $('.olMapViewport').addClass('crosshair');
-                    // Enable the Control
-                    map.s3.polygonButton.control.activate();
+        var map_id = mapButton.attr('map');
+        // Find the map
+        if (undefined == map_id) {
+            map_id = 'default_map';
+        }
+        /**
+         * Check that Map JS is Loaded
+         * - used if a tab containing a Map is unhidden
+         */
+        var jsLoaded = function() {
+            var dfd = new jQuery.Deferred();
+
+            // Test every half-second
+            setTimeout(function working() {
+                if (S3.gis.maps != undefined) {
+                    dfd.resolve('loaded');
+                } else if (dfd.state() === 'pending') {
+                    // Notify progress
+                    dfd.notify('waiting for JS to load...');
+                    // Loop
+                    setTimeout(working, 500);
+                } else {
+                    // Failed!?
                 }
-            } else {
-                var lat = $('#gis_location_lat').val();
-                var lon = $('#gis_location_lon').val();
-                if (!lat || !lon) {
-                    // Enable the crosshair on the Map Selector
-                    $('.olMapViewport').addClass('crosshair');
-                    // Enable the Control
-                    map.s3.pointButton.control.activate();
+            }, 1);
+
+            // Return the Promise so caller can't change the Deferred
+            return dfd.promise();
+        };
+
+        // Check if Maps JS is Loaded
+        $.when(jsLoaded()).then(
+            function(status) {
+                // Success: Instantiate Maps
+                var map = S3.gis.maps[map_id];
+
+                // Point Placed callback
+                map.s3.pointPlaced = function(feature) {
+                    var centerPoint = feature.geometry.getBounds().getCenterLonLat();
+                    centerPoint.transform(map.getProjectionObject(), S3.gis.proj4326);
+                    $('#gis_location_lon').val(centerPoint.lon);
+                    $('#gis_location_lat').val(centerPoint.lat);
+                    $('#gis_location_wkt').val('');
                 }
+
+                mapButton.click(function() {
+                    map.s3.mapWin.show();
+                    if (map.s3.polygonButton) {
+                        var wkt = $('#gis_location_wkt').val();
+                        if (!wkt) {
+                            // Enable the crosshair on the Map Selector
+                            $('.olMapViewport').addClass('crosshair');
+                            // Enable the Control
+                            map.s3.polygonButton.control.activate();
+                        }
+                    } else {
+                        var lat = $('#gis_location_lat').val();
+                        var lon = $('#gis_location_lon').val();
+                        if (!lat || !lon) {
+                            // Enable the crosshair on the Map Selector
+                            $('.olMapViewport').addClass('crosshair');
+                            // Enable the Control
+                            map.s3.pointButton.control.activate();
+                        }
+                    }
+                });
             }
-        });
+        );
     }
 }
 

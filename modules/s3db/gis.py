@@ -39,6 +39,7 @@ __all__ = ["S3LocationModel",
            "S3FeatureLayerModel",
            "S3MapModel",
            "S3GISThemeModel",
+           "S3POIModel",
            "S3POIFeedModel",
            "gis_location_filter",
            "gis_LocationRepresent",
@@ -4356,15 +4357,73 @@ class S3GISThemeModel(S3Model):
         return json.dumps(style)
 
 # =============================================================================
+class S3POIModel(S3Model):
+    """
+        Data Model for PoIs (Points of Interest)
+    """
+
+    names = ["gis_poi_type",
+             #"gis_poi_type_tag",
+             "gis_poi",
+             ]
+
+    def model(self):
+
+        T = current.T
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        # PoI Category
+        #
+        tablename = "gis_poi_type"
+        table = define_table(tablename,
+                             Field("name",
+                                   label = T("Name"),
+                                   requires = IS_NOT_EMPTY(),
+                                   ),
+                             s3_comments(),
+                             *s3_meta_fields())
+
+        represent = S3Represent(lookup=tablename, translate=True)
+        poi_type_id = S3ReusableField("poi_type_id", table,
+                                      sortby="name",
+                                      requires = IS_NULL_OR(
+                                        IS_ONE_OF(current.db, "gis_poi_type.id",
+                                                  represent)),
+                                      represent = represent,
+                                      label = T("Type"),
+                                      ondelete = "SET NULL",
+                                      )
+
+        # ---------------------------------------------------------------------
+        # PoI
+        #
+        tablename = "gis_poi"
+        table = define_table(tablename,
+                             poi_type_id(),
+                             Field("name",
+                                   label = T("Title"),
+                                   requires = IS_NOT_EMPTY(),
+                                   ),
+                             s3_comments(comment = None,
+                                         label = T("Description"),
+                                         ),
+                             self.gis_location_id(),
+                             *s3_meta_fields())
+
+        # Pass names back to global scope (s3.*)
+        return dict()
+
+# =============================================================================
 class S3POIFeedModel(S3Model):
-    """ Data Model for POI feeds """
+    """ Data Model for PoI feeds """
 
     names = ["gis_poi_feed"]
 
     def model(self):
 
-        # =====================================================================
-        # Table to store last update time for a POI feed
+        # ---------------------------------------------------------------------
+        # Store last update time for a PoI feed
         #
         tablename = "gis_poi_feed"
         table = self.define_table(tablename,
