@@ -124,6 +124,7 @@ def human_resource():
                 )
 
             s3db.configure("hrm_human_resource",
+                           filter_widgets = filter_widgets,
                            # Match staff
                            list_fields = ["id",
                                           "person_id",
@@ -134,26 +135,25 @@ def human_resource():
                                           (T("Email"), "email.value"),
                                           (settings.get_ui_label_mobile_phone(), "phone.value"),
                                           ],
-                           summary=[{"name": "table",
-                                     "label": "Table",
-                                     "widgets": [{"method": "datatable"}]
-                                    },
-                                    {"name": "report",
-                                     "label": "Report",
-                                     "widgets": [{"method": "report2",
-                                                  "ajax_init": True}]
-                                    },
-                                    {"name": "map",
-                                     "label": "Map",
-                                     "widgets": [{"method": "map",
-                                                  "ajax_init": True}],
-                                    },
-                            ],
-                            filter_widgets = filter_widgets,
-                            report_options = report_options,
-                            # Needed for Age Group VirtualField to avoid extra DB calls
-                            report_fields = ["person_id$date_of_birth"],
-                            )
+                           # Needed for Age Group VirtualField to avoid extra DB calls
+                           report_fields = ["person_id$date_of_birth"],
+                           report_options = report_options,
+                           summary = [{"name": "table",
+                                       "label": "Table",
+                                       "widgets": [{"method": "datatable"}]
+                                       },
+                                      {"name": "report",
+                                       "label": "Report",
+                                       "widgets": [{"method": "report2",
+                                                    "ajax_init": True}]
+                                       },
+                                      {"name": "map",
+                                       "label": "Map",
+                                       "widgets": [{"method": "map",
+                                                    "ajax_init": True}],
+                                       },
+                                      ],
+                           )
             s3.filter = None
         else:
             # Default to Volunteers

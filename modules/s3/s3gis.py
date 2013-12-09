@@ -8015,19 +8015,30 @@ class S3Map(S3Method):
         gis = current.gis
         s3db = current.s3db
         tablename = self.tablename
-        prefix, name = tablename.split("_", 1)
+        
         ftable = s3db.gis_layer_feature
-        query = (ftable.controller == prefix) & \
-                (ftable.function == name)
-        layers = current.db(query).select(ftable.layer_id,
-                                          ftable.style_default,
-                                          )
-        if len(layers) > 1:
-            layers.exclude(lambda row: row.style_default == False)
-        if len(layers) == 1:
-            layer_id = layers.first().layer_id
-        else:
-            layer_id = None
+
+        def lookup_layer(prefix, name):
+            query = (ftable.controller == prefix) & \
+                    (ftable.function == name)
+            layers = current.db(query).select(ftable.layer_id,
+                                              ftable.style_default,
+                                              )
+            if len(layers) > 1:
+                layers.exclude(lambda row: row.style_default == False)
+            if len(layers) == 1:
+                layer_id = layers.first().layer_id
+            else:
+                layer_id = None
+            return layer_id
+
+        prefix = r.controller
+        name = r.function
+        layer_id = lookup_layer(prefix, name)
+        if not layer_id:
+            # Try the tablename
+            prefix, name = tablename.split("_", 1)
+            layer_id = lookup_layer(prefix, name)
 
         marker_fn = s3db.get_config(tablename, "marker_fn")
         if marker_fn:

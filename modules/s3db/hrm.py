@@ -5611,6 +5611,9 @@ def hrm_human_resource_controller(extra_filter=None):
                                       ],
                            )
             s3.filter = None
+        elif r.representation == "geojson":
+            # No filter
+            pass
         else:
             # Default to Staff
             type_filter = S3FieldSelector("type") == 1

@@ -4370,6 +4370,7 @@ class S3POIModel(S3Model):
     def model(self):
 
         T = current.T
+        crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
         # ---------------------------------------------------------------------
@@ -4395,6 +4396,23 @@ class S3POIModel(S3Model):
                                       ondelete = "SET NULL",
                                       )
 
+        ADD_POI_TYPE = T("Add PoI Type")
+        crud_strings[tablename] = Storage(
+            title_create = ADD_POI_TYPE,
+            title_display = T("PoI Type Details"),
+            title_list = T("PoI Types"),
+            title_update = T("Edit PoI Type"),
+            title_search = T("Search PoI Types"),
+            title_upload = T("Import PoI Types"),
+            subtitle_create = T("Add New PoI Type"),
+            label_list_button = T("List PoI Types"),
+            label_create_button = ADD_POI_TYPE,
+            label_delete_button = T("Delete PoI Type"),
+            msg_record_created = T("PoI Type added"),
+            msg_record_modified = T("PoI Type updated"),
+            msg_record_deleted = T("PoI Type deleted"),
+            msg_list_empty = T("No PoI Types currently available"))
+
         # ---------------------------------------------------------------------
         # PoI
         #
@@ -4410,6 +4428,23 @@ class S3POIModel(S3Model):
                                          ),
                              self.gis_location_id(),
                              *s3_meta_fields())
+
+        ADD_POI = T("Add Point of Interest")
+        crud_strings[tablename] = Storage(
+            title_create = ADD_POI,
+            title_display = T("Point of Interest Details"),
+            title_list = T("Points of Interest"),
+            title_update = T("Edit Point of Interest"),
+            title_search = T("Search Points of Interest"),
+            title_upload = T("Import Points of Interest"),
+            subtitle_create = T("Add New Point of Interest"),
+            label_list_button = T("List Points of Interest"),
+            label_create_button = ADD_POI,
+            label_delete_button = T("Delete Point of Interest"),
+            msg_record_created = T("Point of Interest added"),
+            msg_record_modified = T("Point of Interest updated"),
+            msg_record_deleted = T("Point of Interest deleted"),
+            msg_list_empty = T("No Points of Interest currently available"))
 
         # Pass names back to global scope (s3.*)
         return dict()

@@ -818,7 +818,9 @@ class S3OptionsMenu(object):
 
         MAP_ADMIN = current.session.s3.system_roles.MAP_ADMIN
 
-        gis_menu = current.deployment_settings.get_gis_menu()
+        settings = current.deployment_settings
+        gis_menu = settings.get_gis_menu()
+        pois = settings.get_gis_pois()
 
         def config_menu(i):
             auth = current.auth
@@ -875,6 +877,7 @@ class S3OptionsMenu(object):
                           restrict=[MAP_ADMIN]),
                         #M("Geocode", f="geocode_manual"),
                     ),
+                    M("PoIs", f="poi", check=[pois])(),
                     #M("Population Report", f="location", m="report",
                     #  vars=dict(rows="name",
                     #            fact="population",
@@ -888,6 +891,8 @@ class S3OptionsMenu(object):
                         M("Markers", f="marker"),
                         M("Menu", f="menu",
                           check=[gis_menu]),
+                        M("PoI Types", f="poi_type",
+                          check=[pois]),
                         M("Projections", f="projection"),
                         M("Symbology", f="symbology"),
                     )
