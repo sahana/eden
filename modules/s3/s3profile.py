@@ -741,6 +741,8 @@ class S3Profile(S3CRUD):
         s3db = current.s3db
 
         label = widget.get("label", "")
+        lat = widget.get("lat", None)
+        lon = widget.get("lon", None)
         if label:
             label = current.T(label)
         icon = widget.get("icon", "")
@@ -848,6 +850,8 @@ class S3Profile(S3CRUD):
                 fappend(layer)
 
         map = current.gis.show_map(height=height,
+                                   lat=lat,
+                                   lon=lon,
                                    width=width,
                                    bbox=bbox,
                                    collapsed=True,

@@ -2085,6 +2085,19 @@ def customize_org_facility(**attr):
                 marker = current.gis.get_marker(controller = "org",
                                                 function = "facility",
                                                 filter = layer_filter)
+                lat = None
+                lon = None
+                gtable=s3db.gis_location
+                query = (r.id == ftable.id) & \
+                        (ftable.location_id == gtable.id)
+                lat_lon = db(query).select(gtable.lat,
+                                           gtable.lon,
+                                           limitby = (0,1)).first()
+                if lat_lon:
+                    lat = lat_lon["gis_location.lat"]
+                    lon = lat_lon["gis_location.lon"]
+                map_widget["lat"] = lat
+                map_widget["lon"] = lon
                 tablename = "org_facility"
                 layer = dict(name = record.name,
                              id = "profile-header-%s-%s" % (tablename, record_id),
