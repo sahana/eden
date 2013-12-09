@@ -43,18 +43,29 @@ def membership():
         REST Controller
     """
 
-    tablename = "member_membership"
-    table = s3db[tablename]
-
     def prep(r):
         if r.interactive:
             if r.id and r.component is None and r.method != "delete":
                 # Redirect to person controller
                 vars = {"membership.id": r.id}
                 redirect(URL(f="person", vars=vars))
-            else:
-                # Assume members under 120
-                s3db.pr_person.date_of_birth.widget = S3DateWidget(past=1440)
+
+            # Assume members under 120
+            s3db.pr_person.date_of_birth.widget = S3DateWidget(past=1440)
+
+        elif r.representation == "xls":
+            # Split person_id into first/middle/last to make it match Import sheets
+            list_fields = s3db.get_config("member_membership",
+                                          "list_fields")
+            list_fields.remove("person_id")
+            list_fields = ["person_id$first_name",
+                           "person_id$middle_name",
+                           "person_id$last_name",
+                           ] + list_fields
+
+            s3db.configure("member_membership",
+                           list_fields = list_fields)
+
         return True
     s3.prep = prep
 
@@ -66,7 +77,9 @@ def membership():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.member_rheader)
+    output = s3_rest_controller(hide_filter = False,
+                                rheader = s3db.member_rheader,
+                                )
     return output
 
 # =============================================================================
@@ -183,8 +196,9 @@ def person():
     s3.postp = postp
 
     output = s3_rest_controller("pr", resourcename,
-                                rheader=s3db.member_rheader,
-                                replace_option=T("Remove existing data before import"))
+                                replace_option = T("Remove existing data before import"),
+                                rheader = s3db.member_rheader,
+                                )
     return output
 
 # END =========================================================================

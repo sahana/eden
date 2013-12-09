@@ -4925,7 +4925,7 @@ def hrm_rheader(r, tabs=[],
                 awards_tab = None
             elif group == "volunteer":
                 hr_record = T("Volunteer Record")
-                if settings.get_hrm_use_awards():
+                if settings.get_hrm_use_awards() and not use_cv:
                     awards_tab = (T("Awards"), "award")
                 else:
                     awards_tab = None
@@ -5490,33 +5490,33 @@ def hrm_human_resource_controller(extra_filter=None):
                               "person_id$middle_name",
                               "person_id$last_name",
                               ],
-                             label=T("Name"),
+                             label = T("Name"),
                              ),
                 S3OptionsFilter("type",
-                                label="",
-                                options=s3db.hrm_type_opts,
-                                hidden=True,
+                                label = "",
+                                options = s3db.hrm_type_opts,
+                                hidden = True,
                                 ),
                 S3OptionsFilter("organisation_id",
-                                widget="multiselect",
-                                filter=True,
-                                header="",
-                                hidden=True,
+                                filter = True,
+                                header = "",
+                                widget = "multiselect",
+                                hidden = True,
                                 ),
                 S3LocationFilter("location_id",
                                  label = T("Location"),
-                                 widget="multiselect",
-                                 levels=levels,
-                                 hidden=True,
+                                 levels = levels,
+                                 widget = "multiselect",
+                                 hidden = True,
                                  ),
                 S3OptionsFilter("site_id",
-                                widget="multiselect",
-                                hidden=True,
+                                widget = "multiselect",
+                                hidden = True,
                                 ),
                 S3OptionsFilter("training.course_id",
                                 label = T("Training"),
-                                widget="multiselect",
-                                hidden=True,
+                                widget = "multiselect",
+                                hidden = True,
                                 ),
                 ]
             if deploy:
@@ -5571,14 +5571,14 @@ def hrm_human_resource_controller(extra_filter=None):
                report_fields.append("organisation_id$region_id")
 
             report_options = Storage(
-                rows=report_fields,
-                cols=report_fields,
-                fact=report_fields,
-                defaults=Storage(rows="organisation_id",
-                                 cols="training.course_id",
-                                 fact="count(person_id)",
-                                 totals=True
-                                 )
+                rows = report_fields,
+                cols = report_fields,
+                fact = report_fields,
+                defaults = Storage(rows = "organisation_id",
+                                   cols = "training.course_id",
+                                   fact = "count(person_id)",
+                                   totals = True,
+                                   )
                 )
 
             s3db.configure("hrm_human_resource",
@@ -5711,18 +5711,18 @@ def hrm_person_controller(**attr):
 
     # Custom Method for Contacts
     set_method("pr", "person",
-               method="contacts",
-               action=s3db.pr_contacts)
+               method = "contacts",
+               action = s3db.pr_contacts)
 
     # Custom Method for CV
     set_method("pr", "person",
-               method="cv",
-               action=hrm_cv)
+               method = "cv",
+               action = hrm_cv)
 
     # Custom Method for HR Record
     set_method("pr", "person",
-               method="record",
-               action=hrm_record)
+               method = "record",
+               action = hrm_record)
 
     # Plug-in role matrix for Admins/OrgAdmins
     realms = auth.user is not None and auth.user.realms or []
@@ -5927,8 +5927,8 @@ def hrm_person_controller(**attr):
 
             if r.method == "record" or r.component_name == "human_resource":
                 table = s3db.hrm_human_resource
-                table.site_id.writable = True
-                table.site_id.readable = True
+                table.person_id.writable = table.person_id.readable = False
+                table.site_id.readable = table.site_id.writable = True
                 org = session.s3.hrm.org
                 f = table.organisation_id
                 if org is None:
@@ -6149,6 +6149,7 @@ def hrm_cv(r, **attr):
     """
         Curriculum Vitae
         - Custom Profile page with multiple DataTables:
+        * Awards
         * Education
         * Experience
         * Training
@@ -6163,8 +6164,10 @@ def hrm_cv(r, **attr):
         tablename = r.tablename
         if r.controller == "vol":
             controller = "vol"
+            vol = True
         else:
             controller = "hrm"
+            vol = False
 
         def dt_row_actions(component):
             return lambda r, listid: [
@@ -6184,6 +6187,19 @@ def hrm_cv(r, **attr):
             ]
 
         profile_widgets = []
+        if vol and settings.get_hrm_use_awards():
+            awards_widget = dict(label = "Awards",
+                                 title_create = "Add Award",
+                                 type = "datatable",
+                                 actions = dt_row_actions("award"),
+                                 tablename = "vol_volunteer_award",
+                                 context = "person",
+                                 create_controller = "vol",
+                                 create_function = "person",
+                                 create_component = "award",
+                                 pagesize = None, # all records
+                                 )
+            profile_widgets.append(awards_widget)
         if settings.get_hrm_use_education():
             education_widget = dict(label = "Education",
                                     title_create = "Add Education",
@@ -6197,8 +6213,12 @@ def hrm_cv(r, **attr):
                                     pagesize = None, # all records
                                     )
             profile_widgets.append(education_widget)
-        vol_experience = settings.get_hrm_vol_experience()
-        if vol_experience in ("both", "experience"):
+        if vol:
+            vol_experience = settings.get_hrm_vol_experience()
+            experience = vol_experience in ("both", "experience")
+        else:
+            experience = settings.get_hrm_staff_experience()
+        if experience:
             experience_widget = dict(label = "Experience",
                                      title_create = "Add Experience",
                                      type = "datatable",

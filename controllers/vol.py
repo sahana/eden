@@ -36,9 +36,8 @@ def human_resource():
 
     # Custom method for Service Record
     s3db.set_method("hrm", "human_resource",
-                    method="form",
-                    action=s3db.vol_service_record
-                    )
+                    method = "form",
+                    action = s3db.vol_service_record)
 
     def prep(r):
         if r.method in ("form", "lookup"):
@@ -214,8 +213,7 @@ def volunteer():
     s3.filter = (_type == 2)
     _location = table.location_id
     _location.label = T("Home Address")
-    list_fields = ["id",
-                   "person_id",
+    list_fields = ["person_id",
                    "job_title_id",
                    "organisation_id",
                    (settings.get_ui_label_mobile_phone(), "phone.value"),
@@ -238,8 +236,8 @@ def volunteer():
                                                                enable_field = False)
         # Add to List Fields
         if enable_active_field:
-            list_fields.insert(4, (T("Active?"), "details.active"))
-        list_fields.insert(7, "person_id$hours.programme_id")
+            list_fields.insert(3, (T("Active?"), "details.active"))
+        list_fields.insert(6, "person_id$hours.programme_id")
         # Add to Report Options
         report_fields = report_options.rows
         report_fields.append("person_id$hours.programme_id")
@@ -353,6 +351,20 @@ def volunteer():
                 redirect(URL(f="person",
                              args="import",
                              vars={"group": "volunteer"}))
+
+        elif r.representation == "xls":
+            # Split person_id into first/middle/last to make it match Import sheets
+            list_fields = s3db.get_config(tablename,
+                                          "list_fields")
+            list_fields.remove("person_id")
+            list_fields = ["person_id$first_name",
+                           "person_id$middle_name",
+                           "person_id$last_name",
+                           ] + list_fields
+
+            s3db.configure(tablename,
+                           list_fields = list_fields)
+
         return True
     s3.prep = prep
 
@@ -400,10 +412,12 @@ def volunteer():
                         output["form"][0].insert(4, programme[0])
                     except:
                         pass
+
         elif r.representation == "plain" and \
              r.method !="search":
             # Map Popups
             output = s3db.hrm_map_popup(r)
+
         return output
     s3.postp = postp
 
@@ -423,29 +437,30 @@ def person():
 
     # Custom Method for Contacts
     set_method("pr", resourcename,
-               method="contacts",
-               action=s3db.pr_contacts)
+               method = "contacts",
+               action = s3db.pr_contacts)
 
     # Custom Method for CV
     set_method("pr", resourcename,
-               method="cv",
-               action=s3db.hrm_cv)
+               method = "cv",
+               action = s3db.hrm_cv)
 
     # Custom Method for HR Record
     set_method("pr", resourcename,
-               method="record",
-               action=s3db.hrm_record)
+               method = "record",
+               action = s3db.hrm_record)
 
     # Plug-in role matrix for Admins/OrgAdmins
     realms = auth.user is not None and auth.user.realms or []
     if ADMIN in realms or ORG_ADMIN in realms:
-        set_method("pr", resourcename, method="roles",
-                   action=s3base.S3PersonRoleManager())
+        set_method("pr", resourcename,
+                   method = "roles",
+                   action = s3base.S3PersonRoleManager())
 
     if settings.has_module("asset"):
         # Assets as component of people
         s3db.add_component("asset_asset",
-                           pr_person="assigned_to_id")
+                           pr_person = "assigned_to_id")
         # Edits should always happen via the Asset Log
         # @ToDo: Allow this method too, if we can do so safely
         configure("asset_asset",
@@ -475,7 +490,7 @@ def person():
     tablename = "pr_person"
     table = s3db[tablename]
     configure(tablename,
-              deletable=False)
+              deletable = False)
 
     mode = session.s3.hrm.mode
     if mode is not None:
@@ -624,6 +639,7 @@ def person():
                 table.department_id.writable = table.department_id.readable = False
                 table.essential.writable = table.essential.readable = False
                 #table.location_id.readable = table.location_id.writable = True
+                table.person_id.writable = table.person_id.readable = False
                 table.site_id.writable = table.site_id.readable = False
                 table.site_contact.writable = table.site_contact.readable = False
                 org = session.s3.hrm.org
@@ -733,15 +749,15 @@ def person():
         orgname = None
 
     output = s3_rest_controller("pr", resourcename,
-                                rheader=s3db.hrm_rheader,
-                                orgname=orgname,
-                                replace_option=T("Remove existing data before import"),
-                                csv_template=("hrm", "volunteer"),
-                                csv_stylesheet=("hrm", "person.xsl"),
-                                csv_extra_fields=[
+                                csv_template = ("hrm", "volunteer"),
+                                csv_stylesheet = ("hrm", "person.xsl"),
+                                csv_extra_fields = [
                                     dict(label="Type",
                                          field=s3db.hrm_human_resource.type)
-                                                  ]
+                                                  ],
+                                orgname = orgname,
+                                replace_option = T("Remove existing data before import"),
+                                rheader = s3db.hrm_rheader,
                                 )
     return output
 
@@ -756,7 +772,9 @@ def person_search():
     # Filter to just Volunteers
     s3.filter = (s3db.hrm_human_resource.type == 2)
 
+    # Only allow use in the search_ac method
     s3.prep = lambda r: r.method == "search_ac"
+
     return s3_rest_controller("hrm", "human_resource")
 
 # =============================================================================
@@ -784,8 +802,7 @@ def group_membership():
 
     # Amend list_fields
     s3db.configure("pr_group_membership",
-                   list_fields=["id",
-                                "group_id",
+                   list_fields=["group_id",
                                 "group_id$description",
                                 "group_head",
                                 "person_id$first_name",
@@ -808,7 +825,7 @@ def group_membership():
     def prep(r):
         if r.method in ("create", "create.popup", "update", "update.popup"):
             # Coming from Profile page?
-            person_id = current.request.get_vars.get("~.person_id", None)
+            person_id = request.get_vars.get("~.person_id", None)
             if person_id:
                 field = table.person_id
                 field.default = person_id
@@ -1120,8 +1137,7 @@ def programme():
     def prep(r):
         if r.component_name == "person":
             s3db.configure("hrm_programme_hours",
-                           list_fields=["id",
-                                        "person_id",
+                           list_fields=["person_id",
                                         "training",
                                         "programme_id",
                                         "date",
@@ -1164,13 +1180,27 @@ def award():
 
 # -----------------------------------------------------------------------------
 def volunteer_award():
-    """ ONLY FOR RETURNING options to the S3AddResourceLink PopUp """
+    """
+        Used for returning options to the S3AddResourceLink PopUp
+    """
+
+    # We use component form instead
+    #def prep(r):
+    #    if r.method in ("create", "create.popup", "update", "update.popup"):
+    #        # Coming from Profile page?
+    #        person_id = request.get_vars.get("~.person_id", None)
+    #        if person_id:
+    #            field = table.person_id
+    #            field.default = person_id
+    #            field.readable = field.writable = False
+    #    return True
+    #s3.prep = prep
 
     return s3_rest_controller()
 
 # =============================================================================
 def cluster_type():
-    """ Volunteer Clusters controller """
+    """ Volunteer Cluster Types controller """
 
     return s3_rest_controller()
 

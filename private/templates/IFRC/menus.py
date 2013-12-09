@@ -167,7 +167,7 @@ class S3MainMenu(default.S3MainMenu):
                    image = "graphic_volunteers.png",
                    title = "Volunteers",
                    text = "Add new and manage existing volunteers."),
-                DB("Members", c="member", f="index",
+                DB("Members", c="member", f="membership",
                    image = "graphic_members.png",
                    title = "Members",
                    text = "Add new and manage existing members."),

@@ -60,8 +60,7 @@ def staff():
                        # Remove the Add button
                        insertable=False
                        )
-        list_fields = ["id",
-                       (T("Contract End Date"), "end_date"),
+        list_fields = [(T("Contract End Date"), "end_date"),
                        "person_id",
                        "job_title_id",
                        "organisation_id",
@@ -70,8 +69,7 @@ def staff():
                        #"site_contact",
                        ]
     else:
-        list_fields = ["id",
-                       "person_id",
+        list_fields = ["person_id",
                        "job_title_id",
                        "organisation_id",
                        "department_id",
@@ -136,6 +134,20 @@ def staff():
                 redirect(URL(f="person",
                              args="import",
                              vars={"group": "staff"}))
+
+        elif r.representation == "xls":
+            # Split person_id into first/middle/last to make it match Import sheets
+            list_fields = s3db.get_config(tablename,
+                                          "list_fields")
+            list_fields.remove("person_id")
+            list_fields = ["person_id$first_name",
+                           "person_id$middle_name",
+                           "person_id$last_name",
+                           ] + list_fields
+
+            s3db.configure(tablename,
+                           list_fields = list_fields)
+
         return True
     s3.prep = prep
 
