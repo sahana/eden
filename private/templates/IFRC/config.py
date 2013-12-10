@@ -404,7 +404,7 @@ def customize_deploy_alert(**attr):
         Customize deploy_alert controller
     """
 
-    current.s3db.deploy_alert.human_resource_id.label = T("Member")
+    current.s3db.deploy_alert_recipient.human_resource_id.label = T("Member")
 
     return attr
 
