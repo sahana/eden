@@ -708,6 +708,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           c="deploy", f="email_channel",
                         ),
                    ),
+                   M("Deployments",
+                     c="deploy", f="assignment", m="summary"
+                   ),
                    M("RDRT Members",
                      c="deploy", f="human_resource", m="summary")(
                         M("Add Member", c="deploy", f="application", m="select"),
