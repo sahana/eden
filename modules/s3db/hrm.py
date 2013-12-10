@@ -5611,7 +5611,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                       ],
                            )
             s3.filter = None
-        elif r.representation == "geojson":
+        elif r.representation in ("geojson", "plain"):
             # No filter
             pass
         else:
