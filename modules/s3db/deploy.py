@@ -381,6 +381,14 @@ class S3DeploymentModel(S3Model):
                              },
                   create_onaccept = self.deploy_assignment_create_onaccept,
                   update_onaccept = self.deploy_assignment_update_onaccept,
+                  summary = [{"name": "table",
+                              "label": "Table",
+                              "widgets": [{"method": "datatable"}]
+                              },
+                             {"name": "report",
+                              "label": "Report",
+                              "widgets": [{"method": "report2"}]
+                              },                             ],
                   )
 
         # Components

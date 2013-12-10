@@ -125,6 +125,8 @@ class S3HRModel(S3Model):
         if not group:
             if controller == "vol":
                 group = "volunteer"
+            elif controller == "deploy":
+                group = None
             #elif controller in ("hrm", "org", "inv", "cr", "hms", "req"):
             else:
                 group = "staff"
@@ -5611,7 +5613,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                       ],
                            )
             s3.filter = None
-        elif r.representation == "geojson":
+        elif r.representation in ("geojson", "plain"):
             # No filter
             pass
         else:

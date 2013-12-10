@@ -1812,34 +1812,37 @@ class AccessibleQueryTests(unittest.TestCase):
         accessible_query = auth.s3_accessible_query
         table = current.s3db.dvi_body
 
+        ALL = (table.id > 0)
+        NONE = (table.id == 0)
+        
         # Check anonymous
         auth.s3_impersonate(None)
         query = accessible_query("read", table, c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id = 0)")
+        assertEqual(query, NONE)
 
         # Check authenticated
         auth.s3_impersonate("normaluser@example.com")
         query = accessible_query("read", table, c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id = 0)")
+        assertEqual(query, NONE)
 
         # Test with TESTDVIREADER
         auth.s3_assign_role(auth.user.id, self.dvi_reader)
         query = accessible_query("read", "dvi_body", c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id > 0)")
+        assertEqual(query, ALL)
         query = accessible_query("update",table,  c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id = 0)")
+        assertEqual(query, NONE)
         query = accessible_query("delete", table, c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id = 0)")
+        assertEqual(query, NONE)
         auth.s3_retract_role(auth.user.id, self.dvi_reader)
 
         # Test with TESTDVIEDITOR
         auth.s3_assign_role(auth.user.id, self.dvi_editor)
         query = accessible_query("read", table, c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id > 0)")
+        assertEqual(query, ALL)
         query = accessible_query("update", table, c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id > 0)")
+        assertEqual(query, ALL)
         query = accessible_query("delete", table, c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id = 0)")
+        assertEqual(query, NONE)
         auth.s3_retract_role(auth.user.id, self.dvi_editor)
 
     # -------------------------------------------------------------------------
@@ -1855,43 +1858,42 @@ class AccessibleQueryTests(unittest.TestCase):
         accessible_query = auth.s3_accessible_query
         table = current.s3db.dvi_body
 
+        ALL = (table.id > 0)
+        NONE = (table.id == 0)
+        
         # Check anonymous
         auth.s3_impersonate(None)
         query = accessible_query("read", table, c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id = 0)")
+        assertEqual(query, NONE)
 
         # Check authenticated
         auth.s3_impersonate("normaluser@example.com")
         query = accessible_query("read", table, c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id = 0)")
+        assertEqual(query, NONE)
 
         # Test with TESTDVIREADER
         auth.s3_assign_role(auth.user.id, self.dvi_reader)
         query = accessible_query("read", "dvi_body", c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id > 0)")
+        assertEqual(query, ALL)
         query = accessible_query("update",table,  c="dvi", f="body")
-        roles = ",".join([str(r) for r in auth.user.realms if r is not None])
-        assertEqual(str(query), "(((dvi_body.owned_by_user = %s) OR "
-                                "((dvi_body.owned_by_user IS NULL) AND "
-                                "(dvi_body.owned_by_group IS NULL))) OR "
-                                "(dvi_body.owned_by_group IN (%s)))" %
-                                    (auth.user.id, roles))
+        roles = [r for r in auth.user.realms if r is not None]
+        OWNED = (((table.owned_by_user == auth.user.id) | \
+                ((table.owned_by_user == None) & \
+                (table.owned_by_group == None))) | \
+                (table.owned_by_group.belongs(roles)))
+        assertEqual(query, OWNED)
         query = accessible_query("delete", table, c="dvi", f="body")
-        assertEqual(str(query), "(((dvi_body.owned_by_user = %s) OR "
-                                "((dvi_body.owned_by_user IS NULL) AND "
-                                "(dvi_body.owned_by_group IS NULL))) OR "
-                                "(dvi_body.owned_by_group IN (%s)))" %
-                                    (auth.user.id, roles))
+        assertEqual(query, OWNED)
         auth.s3_retract_role(auth.user.id, self.dvi_reader)
 
         # Test with TESTDVIEDITOR
         auth.s3_assign_role(auth.user.id, self.dvi_editor)
         query = accessible_query("read", table, c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id > 0)")
+        assertEqual(query, ALL)
         query = accessible_query("update", table, c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id > 0)")
+        assertEqual(query, ALL)
         query = accessible_query("delete", table, c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id = 0)")
+        assertEqual(query, NONE)
         auth.s3_retract_role(auth.user.id, self.dvi_editor)
 
     # -------------------------------------------------------------------------
@@ -1907,39 +1909,42 @@ class AccessibleQueryTests(unittest.TestCase):
         accessible_query = auth.s3_accessible_query
         table = current.s3db.dvi_body
 
+        ALL = (table.id > 0)
+        NONE = (table.id == 0)
+
         # Check anonymous
         auth.s3_impersonate(None)
         query = accessible_query("read", table, c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id = 0)")
+        assertEqual(query, NONE)
 
         # Check authenticated
         auth.s3_impersonate("normaluser@example.com")
         query = accessible_query("read", table, c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id = 0)")
+        assertEqual(query, NONE)
 
         # Test with TESTDVIREADER
         auth.s3_assign_role(auth.user.id, self.dvi_reader)
         query = accessible_query("read", "dvi_body", c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id > 0)")
+        assertEqual(query, ALL)
         query = accessible_query("update",table,  c="dvi", f="body")
-        roles = ",".join([str(r) for r in auth.user.realms if r is not None])
-        assertEqual(str(query), "(((dvi_body.owned_by_user = %s) OR "
-                                "((dvi_body.owned_by_user IS NULL) AND "
-                                "(dvi_body.owned_by_group IS NULL))) OR "
-                                "(dvi_body.owned_by_group IN (%s)))" %
-                                    (auth.user.id, roles))
+        roles = [r for r in auth.user.realms if r is not None]
+        OWNED = (((table.owned_by_user == auth.user.id) | \
+                ((table.owned_by_user == None) & \
+                (table.owned_by_group == None))) | \
+                (table.owned_by_group.belongs(roles)))
+        assertEqual(query, OWNED)
         query = accessible_query("delete", table, c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id = 0)")
+        assertEqual(query, NONE)
         auth.s3_retract_role(auth.user.id, self.dvi_reader)
 
         # Test with TESTDVIEDITOR
         auth.s3_assign_role(auth.user.id, self.dvi_editor)
         query = accessible_query("read", table, c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id > 0)")
+        assertEqual(query, ALL)
         query = accessible_query("update", table, c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id > 0)")
+        assertEqual(query, ALL)
         query = accessible_query("delete", table, c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id = 0)")
+        assertEqual(query, NONE)
         auth.s3_retract_role(auth.user.id, self.dvi_editor)
 
     # -------------------------------------------------------------------------
@@ -1954,60 +1959,59 @@ class AccessibleQueryTests(unittest.TestCase):
 
         accessible_query = auth.s3_accessible_query
         table = current.s3db.dvi_body
+        
+        ALL = (table.id > 0)
+        NONE = (table.id == 0)
 
         # Check anonymous
         auth.s3_impersonate(None)
         query = accessible_query("read", table, c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id = 0)")
+        assertEqual(query, NONE)
 
         # Check authenticated
         auth.s3_impersonate("normaluser@example.com")
         query = accessible_query("read", table, c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id = 0)")
+        assertEqual(query, NONE)
 
         # Test with TESTDVIREADER
         auth.s3_assign_role(auth.user.id, self.dvi_reader, for_pe=self.org1)
+        expected = (((table.realm_entity == self.org1) | \
+                   (table.realm_entity == None)) | \
+                   (((table.owned_by_user == auth.user.id) | \
+                   (((table.owned_by_user == None) & \
+                   (table.owned_by_group == None)) & \
+                   (table.realm_entity == None))) | \
+                   (table.owned_by_group.belongs([2,3]))))
         query = accessible_query("read", "dvi_body", c="dvi", f="body")
-        assertEqual(str(query), "(((dvi_body.realm_entity = %s) OR "
-                                "(dvi_body.realm_entity IS NULL)) OR "
-                                "(((dvi_body.owned_by_user = %s) OR "
-                                "(((dvi_body.owned_by_user IS NULL) AND "
-                                "(dvi_body.owned_by_group IS NULL)) AND "
-                                "(dvi_body.realm_entity IS NULL))) OR "
-                                "(dvi_body.owned_by_group IN (2,3))))" % (self.org1, auth.user.id))
+        assertEqual(query, expected)
         query = accessible_query("update",table,  c="dvi", f="body")
-        assertEqual(str(query), "(((dvi_body.owned_by_user = %s) OR "
-                                "(((dvi_body.owned_by_user IS NULL) AND "
-                                "(dvi_body.owned_by_group IS NULL)) AND "
-                                "(dvi_body.realm_entity IS NULL))) OR "
-                                "(((dvi_body.owned_by_group = %s) AND "
-                                "(dvi_body.realm_entity IN (%s))) OR "
-                                "(dvi_body.owned_by_group IN (2,3))))" %
-                                    (auth.user.id, self.dvi_reader, self.org1))
+        expected = (((table.owned_by_user == auth.user.id) | \
+                   (((table.owned_by_user == None) & \
+                   (table.owned_by_group == None)) & \
+                   (table.realm_entity == None))) | \
+                   (((table.owned_by_group == self.dvi_reader) & \
+                   (table.realm_entity.belongs([self.org1]))) | \
+                   (table.owned_by_group.belongs([2,3]))))
+        assertEqual(query, expected)
         query = accessible_query("delete", table, c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id = 0)")
+        assertEqual(query, NONE)
         auth.s3_retract_role(auth.user.id, self.dvi_reader)
 
         # Test with TESTDVIEDITOR
         auth.s3_assign_role(auth.user.id, self.dvi_editor, for_pe=self.org1)
         query = accessible_query("read", table, c="dvi", f="body")
-        assertEqual(str(query), "(((dvi_body.realm_entity = %s) OR "
-                                "(dvi_body.realm_entity IS NULL)) OR "
-                                "(((dvi_body.owned_by_user = %s) OR "
-                                "(((dvi_body.owned_by_user IS NULL) AND "
-                                "(dvi_body.owned_by_group IS NULL)) AND "
-                                "(dvi_body.realm_entity IS NULL))) OR "
-                                "(dvi_body.owned_by_group IN (2,3))))" % (self.org1, auth.user.id))
+        expected = (((table.realm_entity == self.org1) | \
+                   (table.realm_entity == None)) | \
+                   (((table.owned_by_user == auth.user.id) | \
+                   (((table.owned_by_user == None) & \
+                   (table.owned_by_group == None)) & \
+                   (table.realm_entity == None))) | \
+                   (table.owned_by_group.belongs([2,3]))))
+        assertEqual(query, expected)
         query = accessible_query("update", table, c="dvi", f="body")
-        assertEqual(str(query), "(((dvi_body.realm_entity = %s) OR "
-                                "(dvi_body.realm_entity IS NULL)) OR "
-                                "(((dvi_body.owned_by_user = %s) OR "
-                                "(((dvi_body.owned_by_user IS NULL) AND "
-                                "(dvi_body.owned_by_group IS NULL)) AND "
-                                "(dvi_body.realm_entity IS NULL))) OR "
-                                "(dvi_body.owned_by_group IN (2,3))))" % (self.org1, auth.user.id))
+        assertEqual(query, expected)
         query = accessible_query("delete", table, c="dvi", f="body")
-        assertEqual(str(query), "(dvi_body.id = 0)")
+        assertEqual(query, NONE)
         auth.s3_retract_role(auth.user.id, self.dvi_editor)
 
         # Logout
@@ -2025,15 +2029,18 @@ class AccessibleQueryTests(unittest.TestCase):
         accessible_query = auth.s3_accessible_query
         table = s3db.dvi_body
 
+        ALL = (table.id > 0)
+        NONE = (table.id == 0)
+
         # Check anonymous
         auth.s3_impersonate(None)
         query = accessible_query("read", table, c="dvi", f="body")
-        self.assertEqual(str(query), "(dvi_body.id = 0)")
+        self.assertEqual(query, NONE)
 
         # Check authenticated
         auth.s3_impersonate("normaluser@example.com")
         query = accessible_query("read", table, c="dvi", f="body")
-        self.assertEqual(str(query), "(dvi_body.id = 0)")
+        self.assertEqual(query, NONE)
 
 
         # Test with TESTDVIREADER
@@ -2041,31 +2048,33 @@ class AccessibleQueryTests(unittest.TestCase):
 
         current.deployment_settings.security.strict_ownership = True
         query = accessible_query("read", "dvi_body", c="dvi", f="body")
-        self.assertEqual(str(query), "(((dvi_body.realm_entity = %s) OR "
-                                     "(dvi_body.realm_entity IS NULL)) OR "
-                                     "((dvi_body.owned_by_user = %s) OR "
-                                     "(dvi_body.owned_by_group IN (2,3))))" % (self.org1, auth.user.id))
+        expected = (((table.realm_entity == self.org1) | \
+                   (table.realm_entity == None)) | \
+                   ((table.owned_by_user == auth.user.id) | \
+                   (table.owned_by_group.belongs([2,3]))))
+        self.assertEqual(query, expected)
 
         current.deployment_settings.security.strict_ownership = False
         query = accessible_query("read", "dvi_body", c="dvi", f="body")
-        self.assertEqual(str(query), "(((dvi_body.realm_entity = %s) OR "
-                                     "(dvi_body.realm_entity IS NULL)) OR "
-                                     "(((dvi_body.owned_by_user = %s) OR "
-                                     "(((dvi_body.owned_by_user IS NULL) AND "
-                                     "(dvi_body.owned_by_group IS NULL)) AND "
-                                     "(dvi_body.realm_entity IS NULL))) OR "
-                                     "(dvi_body.owned_by_group IN (2,3))))" % (self.org1, auth.user.id))
+        expected = (((table.realm_entity == self.org1) | \
+                   (table.realm_entity == None)) | \
+                   (((table.owned_by_user == auth.user.id) | \
+                   (((table.owned_by_user == None) & \
+                   (table.owned_by_group == None)) & \
+                   (table.realm_entity == None))) | \
+                   (table.owned_by_group.belongs([2,3]))))
+        self.assertEqual(query, expected)
         query = accessible_query("update",table,  c="dvi", f="body")
-        self.assertEqual(str(query), "(((dvi_body.owned_by_user = %s) OR "
-                                     "(((dvi_body.owned_by_user IS NULL) AND "
-                                     "(dvi_body.owned_by_group IS NULL)) AND "
-                                     "(dvi_body.realm_entity IS NULL))) OR "
-                                     "(((dvi_body.owned_by_group = %s) AND "
-                                     "(dvi_body.realm_entity IN (%s))) OR "
-                                     "(dvi_body.owned_by_group IN (2,3))))" %
-                                     (auth.user.id, self.dvi_reader, self.org1))
+        expected = (((table.owned_by_user == auth.user.id) | \
+                   (((table.owned_by_user == None) & \
+                   (table.owned_by_group == None)) & \
+                   (table.realm_entity == None))) | \
+                   (((table.owned_by_group == self.dvi_reader) & \
+                   (table.realm_entity.belongs([self.org1]))) | \
+                   (table.owned_by_group.belongs([2,3]))))
+        self.assertEqual(query, expected)
         query = accessible_query("delete", table, c="dvi", f="body")
-        self.assertEqual(str(query), "(dvi_body.id = 0)")
+        self.assertEqual(query, NONE)
 
         # Make org2 a sub-entity of org1
         s3db.pr_add_affiliation(self.org1, self.org2, role="TestOrgUnit")
@@ -2074,27 +2083,25 @@ class AccessibleQueryTests(unittest.TestCase):
 
         # Re-check queries
         query = accessible_query("read", "dvi_body", c="dvi", f="body")
-        qstr = ("(((dvi_body.realm_entity IN (%s,%s)) OR "
-                "(dvi_body.realm_entity IS NULL)) OR "
-                "(((dvi_body.owned_by_user = %s) OR "
-                "(((dvi_body.owned_by_user IS NULL) AND "
-                "(dvi_body.owned_by_group IS NULL)) AND "
-                "(dvi_body.realm_entity IS NULL))) OR "
-                "(dvi_body.owned_by_group IN (2,3))))")
-        self.assertTrue(str(query) == qstr % (self.org1, self.org2, auth.user.id) or
-                        str(query) == qstr % (self.org2, self.org1, auth.user.id))
+        expected = (((table.realm_entity.belongs([self.org1, self.org2])) | \
+                   (table.realm_entity == None)) | \
+                   (((table.owned_by_user == auth.user.id) | \
+                   (((table.owned_by_user == None) & \
+                   (table.owned_by_group == None)) & \
+                   (table.realm_entity == None))) | \
+                   (table.owned_by_group.belongs([2,3]))))
+        self.assertEqual(query, expected)
         query = accessible_query("update",table,  c="dvi", f="body")
-        qstr = ("(((dvi_body.owned_by_user = %s) OR "
-                "(((dvi_body.owned_by_user IS NULL) AND "
-                "(dvi_body.owned_by_group IS NULL)) AND "
-                "(dvi_body.realm_entity IS NULL))) OR "
-                "(((dvi_body.owned_by_group = %s) AND "
-                "(dvi_body.realm_entity IN (%s,%s))) OR "
-                "(dvi_body.owned_by_group IN (2,3))))")
-        self.assertTrue(str(query) == qstr % (auth.user.id, self.dvi_reader, self.org1, self.org2) or
-                        str(query) == qstr % (auth.user.id, self.dvi_reader, self.org2, self.org1))
+        expected = (((table.owned_by_user == auth.user.id) | \
+                   (((table.owned_by_user == None) & \
+                   (table.owned_by_group == None)) & \
+                   (table.realm_entity == None))) | \
+                   (((table.owned_by_group == self.dvi_reader) & \
+                   (table.realm_entity.belongs([self.org1, self.org2]))) | \
+                   (table.owned_by_group.belongs([2,3]))))
+        self.assertEqual(query, expected)
         query = accessible_query("delete", table, c="dvi", f="body")
-        self.assertEqual(str(query), "(dvi_body.id = 0)")
+        self.assertEqual(query, NONE)
 
         s3db.pr_remove_affiliation(self.org1, self.org2, role="TestOrgUnit")
         auth.s3_retract_role(auth.user.id, self.dvi_reader)
@@ -2102,23 +2109,18 @@ class AccessibleQueryTests(unittest.TestCase):
         # Test with TESTDVIEDITOR
         auth.s3_assign_role(auth.user.id, self.dvi_editor, for_pe=self.org1)
         query = accessible_query("read", table, c="dvi", f="body")
-        self.assertEqual(str(query), "(((dvi_body.realm_entity = %s) OR "
-                                     "(dvi_body.realm_entity IS NULL)) OR "
-                                     "(((dvi_body.owned_by_user = %s) OR "
-                                     "(((dvi_body.owned_by_user IS NULL) AND "
-                                     "(dvi_body.owned_by_group IS NULL)) AND "
-                                     "(dvi_body.realm_entity IS NULL))) OR "
-                                     "(dvi_body.owned_by_group IN (2,3))))" % (self.org1, auth.user.id))
+        expected = (((table.realm_entity == self.org1) | \
+                   (table.realm_entity == None)) | \
+                   (((table.owned_by_user == auth.user.id) | \
+                   (((table.owned_by_user == None) & \
+                   (table.owned_by_group == None)) & \
+                   (table.realm_entity == None))) | \
+                   (table.owned_by_group.belongs([2,3]))))
+        self.assertEqual(query, expected)
         query = accessible_query("update", table, c="dvi", f="body")
-        self.assertEqual(str(query), "(((dvi_body.realm_entity = %s) OR "
-                                     "(dvi_body.realm_entity IS NULL)) OR "
-                                     "(((dvi_body.owned_by_user = %s) OR "
-                                     "(((dvi_body.owned_by_user IS NULL) AND "
-                                     "(dvi_body.owned_by_group IS NULL)) AND "
-                                     "(dvi_body.realm_entity IS NULL))) OR "
-                                     "(dvi_body.owned_by_group IN (2,3))))" % (self.org1, auth.user.id))
+        self.assertEqual(query, expected)
         query = accessible_query("delete", table, c="dvi", f="body")
-        self.assertEqual(str(query), "(dvi_body.id = 0)")
+        self.assertEqual(query, NONE)
 
         # Make org2 a sub-entity of org1
         s3db.pr_add_affiliation(self.org1, self.org2, role="TestOrgUnit")
@@ -2126,21 +2128,19 @@ class AccessibleQueryTests(unittest.TestCase):
         auth.s3_impersonate("normaluser@example.com")
 
         # Re-check queries
-        qstr = ("(((dvi_body.realm_entity IN (%s,%s)) OR "
-                "(dvi_body.realm_entity IS NULL)) OR "
-                "(((dvi_body.owned_by_user = %s) OR "
-                "(((dvi_body.owned_by_user IS NULL) AND "
-                "(dvi_body.owned_by_group IS NULL)) AND "
-                "(dvi_body.realm_entity IS NULL))) OR "
-                "(dvi_body.owned_by_group IN (2,3))))")
+        expected = (((table.realm_entity.belongs([self.org1, self.org2])) | \
+                   (table.realm_entity == None)) | \
+                   (((table.owned_by_user == auth.user.id) | \
+                   (((table.owned_by_user == None) & \
+                   (table.owned_by_group == None)) & \
+                   (table.realm_entity == None))) | \
+                   (table.owned_by_group.belongs([2,3]))))
         query = accessible_query("read", table, c="dvi", f="body")
-        self.assertTrue(str(query) == qstr % (self.org1, self.org2, auth.user.id) or
-                        str(query) == qstr % (self.org2, self.org1, auth.user.id))
+        self.assertEqual(query, expected)
         query = accessible_query("update", table, c="dvi", f="body")
-        self.assertTrue(str(query) == qstr % (self.org1, self.org2, auth.user.id) or
-                        str(query) == qstr % (self.org2, self.org1, auth.user.id))
+        self.assertTrue(query, expected)
         query = accessible_query("delete", table, c="dvi", f="body")
-        self.assertEqual(str(query), "(dvi_body.id = 0)")
+        self.assertEqual(query, NONE)
 
         s3db.pr_remove_affiliation(self.org1, self.org2, role="TestOrgUnit")
         auth.s3_retract_role(auth.user.id, self.dvi_editor)
@@ -2157,15 +2157,18 @@ class AccessibleQueryTests(unittest.TestCase):
         accessible_query = auth.s3_accessible_query
         table = s3db.dvi_body
 
+        ALL = (table.id > 0)
+        NONE = (table.id == 0)
+
         # Check anonymous
         auth.s3_impersonate(None)
         query = accessible_query("read", table, c="dvi", f="body")
-        self.assertEqual(str(query), "(dvi_body.id = 0)")
+        self.assertEqual(query, NONE)
 
         # Check authenticated
         auth.s3_impersonate("normaluser@example.com")
         query = accessible_query("read", table, c="dvi", f="body")
-        self.assertEqual(str(query), "(dvi_body.id = 0)")
+        self.assertEqual(query, NONE)
 
         record = None
         try:
@@ -2174,24 +2177,19 @@ class AccessibleQueryTests(unittest.TestCase):
             user = auth.s3_user_pe_id(auth.s3_get_user_id("normaluser@example.com"))
             s3db.pr_add_affiliation(self.org3, user, role="TestStaff")
             auth.s3_assign_role(auth.user.id, self.dvi_editor, for_pe=self.org3)
+            expected = (((table.realm_entity == self.org3) | \
+                       (table.realm_entity == None)) | \
+                       (((table.owned_by_user == auth.user.id) | \
+                       (((table.owned_by_user == None) & \
+                       (table.owned_by_group == None)) & \
+                       (table.realm_entity == None))) | \
+                       (table.owned_by_group.belongs([2,3]))))
 
             # User should only be able to access records of org3
             query = accessible_query("read", table, c="dvi", f="body")
-            self.assertEqual(str(query), "(((dvi_body.realm_entity = %s) OR "
-                                         "(dvi_body.realm_entity IS NULL)) OR "
-                                         "(((dvi_body.owned_by_user = %s) OR "
-                                         "(((dvi_body.owned_by_user IS NULL) AND "
-                                         "(dvi_body.owned_by_group IS NULL)) AND "
-                                         "(dvi_body.realm_entity IS NULL))) OR "
-                                         "(dvi_body.owned_by_group IN (2,3))))" % (self.org3, auth.user.id))
+            self.assertEqual(query, expected)
             query = accessible_query("update", table, c="dvi", f="body")
-            self.assertEqual(str(query), "(((dvi_body.realm_entity = %s) OR "
-                                         "(dvi_body.realm_entity IS NULL)) OR "
-                                         "(((dvi_body.owned_by_user = %s) OR "
-                                         "(((dvi_body.owned_by_user IS NULL) AND "
-                                         "(dvi_body.owned_by_group IS NULL)) AND "
-                                         "(dvi_body.realm_entity IS NULL))) OR "
-                                         "(dvi_body.owned_by_group IN (2,3))))" % (self.org3, auth.user.id))
+            self.assertEqual(query, expected)
 
             # Make org3 and OU of org2
             s3db.pr_add_affiliation(self.org2, self.org3, role="TestOrgUnit")
@@ -2203,24 +2201,23 @@ class AccessibleQueryTests(unittest.TestCase):
 
             # User should now be able to read records of org1 and org3, but update only org3
             query = accessible_query("read", table, c="dvi", f="body")
-            qstr = ("(((dvi_body.realm_entity IN (%s,%s)) OR "
-                    "(dvi_body.realm_entity IS NULL)) OR "
-                    "(((dvi_body.owned_by_user = %s) OR "
-                    "(((dvi_body.owned_by_user IS NULL) AND "
-                    "(dvi_body.owned_by_group IS NULL)) AND "
-                    "(dvi_body.realm_entity IS NULL))) OR "
-                    "(dvi_body.owned_by_group IN (2,3))))")
-            self.assertTrue(str(query) == qstr % (self.org1, self.org3, auth.user.id) or
-                            str(query) == qstr % (self.org3, self.org1, auth.user.id))
+            expected = (((table.realm_entity.belongs([self.org1, self.org3])) | \
+                       (table.realm_entity == None)) | \
+                       (((table.owned_by_user == auth.user.id) | \
+                       (((table.owned_by_user == None) & \
+                       (table.owned_by_group == None)) & \
+                       (table.realm_entity == None))) | \
+                       (table.owned_by_group.belongs([2,3]))))
+            self.assertEqual(query, expected)
             query = accessible_query("update", table, c="dvi", f="body")
-            qstr = ("(((dvi_body.realm_entity = %s) OR "
-                    "(dvi_body.realm_entity IS NULL)) OR "
-                    "(((dvi_body.owned_by_user = %s) OR "
-                    "(((dvi_body.owned_by_user IS NULL) AND "
-                    "(dvi_body.owned_by_group IS NULL)) AND "
-                    "(dvi_body.realm_entity IS NULL))) OR "
-                    "(dvi_body.owned_by_group IN (2,3))))")
-            self.assertEqual(str(query), qstr % (self.org3, auth.user.id))
+            expected = (((table.realm_entity == self.org3) | \
+                       (table.realm_entity == None)) | \
+                       (((table.owned_by_user == auth.user.id) | \
+                       (((table.owned_by_user == None) & \
+                       (table.owned_by_group == None)) & \
+                       (table.realm_entity == None))) | \
+                       (table.owned_by_group.belongs([2,3]))))
+            self.assertEqual(query, expected)
 
             # Remove the affiliation with org2
             s3db.pr_remove_affiliation(self.org2, self.org3, role="TestOrgUnit")
@@ -2230,21 +2227,16 @@ class AccessibleQueryTests(unittest.TestCase):
 
             # Check queries again
             query = accessible_query("read", table, c="dvi", f="body")
-            self.assertEqual(str(query), "(((dvi_body.realm_entity = %s) OR "
-                                         "(dvi_body.realm_entity IS NULL)) OR "
-                                         "(((dvi_body.owned_by_user = %s) OR "
-                                         "(((dvi_body.owned_by_user IS NULL) AND "
-                                         "(dvi_body.owned_by_group IS NULL)) AND "
-                                         "(dvi_body.realm_entity IS NULL))) OR "
-                                         "(dvi_body.owned_by_group IN (2,3))))" % (self.org3, auth.user.id))
+            expected = (((table.realm_entity == self.org3) | \
+                       (table.realm_entity == None)) | \
+                       (((table.owned_by_user == auth.user.id) | \
+                       (((table.owned_by_user == None) & \
+                       (table.owned_by_group == None)) & \
+                       (table.realm_entity == None))) | \
+                       (table.owned_by_group.belongs([2,3]))))
+            self.assertEqual(query, expected)
             query = accessible_query("update", table, c="dvi", f="body")
-            self.assertEqual(str(query), "(((dvi_body.realm_entity = %s) OR "
-                                         "(dvi_body.realm_entity IS NULL)) OR "
-                                         "(((dvi_body.owned_by_user = %s) OR "
-                                         "(((dvi_body.owned_by_user IS NULL) AND "
-                                         "(dvi_body.owned_by_group IS NULL)) AND "
-                                         "(dvi_body.realm_entity IS NULL))) OR "
-                                         "(dvi_body.owned_by_group IN (2,3))))" % (self.org3, auth.user.id))
+            self.assertEqual(query, expected)
         finally:
 
             # Remove delegation, affiliation and role
@@ -3172,7 +3164,8 @@ class RecordApprovalTests(unittest.TestCase):
             # Admin can always see all records
             auth.s3_impersonate("admin@example.com")
             query = accessible_query("read", table, c="pr", f="person")
-            self.assertEqual(str(query), "(pr_person.id > 0)")
+            expected = (table.id > 0)
+            self.assertEqual(str(query), str(expected))
 
             # User can only see their own records - approved_by not relevant
             auth.s3_impersonate("normaluser@example.com")
@@ -3184,7 +3177,8 @@ class RecordApprovalTests(unittest.TestCase):
             # Approval not required by default
             auth.s3_impersonate("normaluser@example.com")
             query = accessible_query("read", table, c="org", f="organisation")
-            self.assertEqual(str(query), "(org_organisation.id > 0)")
+            expected = (table.id > 0)
+            self.assertEqual(str(query), str(expected))
 
             settings.auth.record_approval_required_for = ["org_organisation"]
 
@@ -3193,29 +3187,35 @@ class RecordApprovalTests(unittest.TestCase):
 
             # See only approved records in read
             query = accessible_query("read", table, c="org", f="organisation")
-            self.assertEqual(str(query), "((org_organisation.approved_by IS NOT NULL) OR " \
-                                         "(org_organisation.owned_by_user = %s))" % auth.user.id)
+            expected = (table.approved_by != None) | \
+                       (table.owned_by_user == auth.user.id)
+            self.assertEqual(str(query), str(expected))
             # See only unapproved records in review
             query = accessible_query("review", table, c="org", f="organisation")
-            self.assertEqual(str(query), "(org_organisation.approved_by IS NULL)")
+            expected = (table.approved_by == None)
+            self.assertEqual(str(query), str(expected))
             # See all records with both
             query = accessible_query(["read", "review"], table, c="org", f="organisation")
-            self.assertEqual(str(query), "(org_organisation.id > 0)")
+            expected = (table.id > 0)
+            self.assertEqual(str(query), str(expected))
 
             # User can only see approved records
             auth.s3_impersonate("normaluser@example.com")
 
             # See only approved and personally owned records in read
             query = accessible_query("read", table, c="org", f="organisation")
-            self.assertEqual(str(query), "((org_organisation.approved_by IS NOT NULL) OR " \
-                                         "(org_organisation.owned_by_user = %s))" % auth.user.id)
+            expected = (table.approved_by != None) | \
+                       (table.owned_by_user == auth.user.id)
+            self.assertEqual(str(query), str(expected))
             # See no records in approve
             query = accessible_query("review", table, c="org", f="organisation")
-            self.assertEqual(str(query), "(org_organisation.id = 0)")
+            expected = (table.id == 0)
+            self.assertEqual(str(query), str(expected))
             # See only approved and personally owned records with both
             query = accessible_query(["read", "review"], table, c="org", f="organisation")
-            self.assertEqual(str(query), "((org_organisation.approved_by IS NOT NULL) OR " \
-                                         "(org_organisation.owned_by_user = %s))" % auth.user.id)
+            expected = (table.approved_by != None) | \
+                       (table.owned_by_user == auth.user.id)
+            self.assertEqual(str(query), str(expected))
 
             # Give user review and approve permissions on this table
             acl.update_acl(AUTHENTICATED,
@@ -3233,25 +3233,29 @@ class RecordApprovalTests(unittest.TestCase):
 
             # See only approved records in read
             query = accessible_query("read", table, c="org", f="organisation")
-            self.assertTrue("((org_organisation.approved_by IS NOT NULL) OR " \
-                            "(org_organisation.owned_by_user = %s))" % auth.user.id \
-                            in str(query))
+            expected = (table.approved_by != None) | \
+                       (table.owned_by_user == auth.user.id)
+            self.assertTrue(str(expected) in str(query))
             # See only unapproved records in review
             query = accessible_query("review", table, c="org", f="organisation")
-            self.assertFalse("(org_organisation.approved_by IS NOT NULL)" in str(query))
-            self.assertTrue("(org_organisation.approved_by IS NULL)" in str(query))
+            expected = (table.approved_by != None)
+            self.assertFalse(str(expected) in str(query))
+            expected = (table.approved_by == None)
+            self.assertTrue(str(expected) in str(query))
             # See all records with both
             query = accessible_query(["read", "approve"], table, c="org", f="organisation")
-            self.assertTrue("((org_organisation.approved_by IS NOT NULL) OR " \
-                            "(org_organisation.owned_by_user = %s))" % auth.user.id \
-                            in str(query))
-            self.assertTrue("(org_organisation.approved_by IS NULL)" in str(query))
+            expected = (table.approved_by != None) | \
+                       (table.owned_by_user == auth.user.id)
+            self.assertTrue(str(expected) in str(query))
+            expected = (table.approved_by == None)
+            self.assertTrue(str(expected) in str(query))
 
             # Turn off record approval and check the default query
             settings.auth.record_approval = False
 
             query = accessible_query("read", table, c="org", f="organisation")
-            self.assertEqual(str(query), "(org_organisation.id > 0)")
+            expected = (table.id > 0)
+            self.assertEqual(str(query), str(expected))
 
         finally:
             settings.auth.record_approval = approval
