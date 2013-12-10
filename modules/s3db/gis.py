@@ -4426,7 +4426,11 @@ class S3POIModel(S3Model):
                              s3_comments(comment = None,
                                          label = T("Description"),
                                          ),
-                             self.gis_location_id(),
+                             self.gis_location_id(
+                                label = "",
+                                requires = IS_LAT_LON("gis_poi_location_id"),
+                                widget = S3LocationLatLonWidget(),
+                                ),
                              *s3_meta_fields())
 
         ADD_POI = T("Add Point of Interest")

@@ -44,6 +44,7 @@ __all__ = ["single_phone_number_pattern",
            "IS_HTML_COLOUR",
            "IS_LAT",
            "IS_LON",
+           "IS_LAT_LON",
            "IS_LOCATION",
            "IS_LOCATION_SELECTOR",
            "IS_LOCATION_SELECTOR2",
@@ -223,28 +224,90 @@ class IS_LON(object):
                 sec = ""
                 posn = sep[1]
                 while posn != (count-1):
-                    sec = sec + val[0][posn+1]#to join the numbers for seconds
+                    # join the numbers for seconds
+                    sec = sec + val[0][posn+1]
                     posn += 1
                 posn2 = sep[0]
                 mins = ""
                 while posn2 != (sep[1]-1):
-                    mins = mins + val[0][posn2+1]# to join the numbers for minutes
+                    # join the numbers for minutes
+                    mins = mins + val[0][posn2+1]
                     posn2 += 1
                 deg = ""
                 posn3 = 0
                 while posn3 != (sep[0]):
-                    deg = deg + val[0][posn3] # to join the numbers for degree
+                    # join the numbers for degree
+                    deg = deg + val[0][posn3]
                     posn3 += 1
-                e = int(sec)/60 #formula to get back decimal degree
+                e = int(sec) / 60 #formula to get back decimal degree
                 f = int(mins) + e #formula
                 g = int(f) / 60 #formula
                 value = int(deg) + g                
                 return (value, None)
 
 # =============================================================================
+class IS_LAT_LON(Validator):
+    """
+        Designed for use within the S3LocationLatLonWidget.
+        For Create forms, this will create a new location from the additional fields
+        For Update forms, this will check that we have a valid location_id FK and update any changes
+
+        @ToDo: Audit
+    """
+
+    def __init__(self,
+                 field,
+                 ):
+
+        self.field = field
+        # Tell s3_mark_required that this validator doesn't accept NULL values
+        self.mark_required = True
+
+    # -------------------------------------------------------------------------
+    def __call__(self, value):
+
+        if current.response.s3.bulk:
+            # Pointless in imports
+            return (value, None)
+
+        selector = str(self.field).replace(".", "_")
+        post_vars = current.request.post_vars
+        lat = post_vars.get("%s_lat" % selector, None)
+        if lat == "":
+            lat = None
+        lon = post_vars.get("%s_lon" % selector, None)
+        if lon == "":
+            lon = None
+
+        if lat is None or lon is None:
+            # We don't accept None
+            return (value, current.T("Latitude and Longitude are required"))
+
+        # Check Lat
+        lat, error = IS_LAT()(lat)
+        if error:
+            return (value, error)
+
+        # Check Lon
+        lon, error = IS_LON()(lon)
+        if error:
+            return (value, error)
+
+        if value:
+            # update
+            db = current.db
+            db(db.gis_location.id == value).update(lat=lat, lon=lon)
+        else:
+            # create
+            value = current.db.gis_location.insert(lat=lat, lon=lon)
+
+        # OK
+        return (value, None)
+
+# =============================================================================
 class IS_NUMBER(object):
     """
-        Used by s3data.py to wrap IS_INT_AMOUNT & IS_LOAT_AMOUNT
+        Used by s3data.py to wrap IS_INT_AMOUNT & IS_FLOAT_AMOUNT
     """
 
     # -------------------------------------------------------------------------
@@ -1147,9 +1210,9 @@ class IS_LOCATION_SELECTOR(Validator):
         """
 
         # Rough check for valid Lat/Lon (detailed later)
-        vars = current.request.vars
-        lat = vars.get("gis_location_lat", None)
-        lon = vars.get("gis_location_lon", None)
+        post_vars = current.request.post_vars
+        lat = post_vars.get("gis_location_lat", None)
+        lon = post_vars.get("gis_location_lon", None)
         if lat:
             try:
                 lat = float(lat)
@@ -1163,7 +1226,7 @@ class IS_LOCATION_SELECTOR(Validator):
         if self.errors:
             return None
 
-        L0 = vars.get("gis_location_L0", None)
+        L0 = post_vars.get("gis_location_L0", None)
 
         db = current.db
         table = db.gis_location
@@ -1214,11 +1277,11 @@ class IS_LOCATION_SELECTOR(Validator):
 
         onaccept = current.gis.update_location_tree
 
-        L1 = vars.get("gis_location_L1", None)
-        L2 = vars.get("gis_location_L2", None)
-        L3 = vars.get("gis_location_L3", None)
-        L4 = vars.get("gis_location_L4", None)
-        L5 = vars.get("gis_location_L5", None)
+        L1 = post_vars.get("gis_location_L1", None)
+        L2 = post_vars.get("gis_location_L2", None)
+        L3 = post_vars.get("gis_location_L3", None)
+        L4 = post_vars.get("gis_location_L4", None)
+        L5 = post_vars.get("gis_location_L5", None)
 
         # Check if we have parents to create
         # L1
@@ -1543,27 +1606,27 @@ class IS_LOCATION_SELECTOR(Validator):
                     L5 = None
 
         # Check if we have a specific location to create
-        name = vars.get("gis_location_name", None)
-        wkt = vars.get("gis_location_wkt", None)
-        street = vars.get("gis_location_street", None)
-        postcode = vars.get("gis_location_postcode", None)
+        name = post_vars.get("gis_location_name", None)
+        wkt = post_vars.get("gis_location_wkt", None)
+        street = post_vars.get("gis_location_street", None)
+        postcode = post_vars.get("gis_location_postcode", None)
         parent = L5 or L4 or L3 or L2 or L1 or L0 or None
 
         # Move vars into form.
         form = Storage()
         form.errors = dict()
         form.vars = Storage()
-        vars = form.vars
-        vars.lat = lat
-        vars.lon = lon
-        vars.wkt = wkt
+        form_vars = form.vars
+        form_vars.lat = lat
+        form_vars.lon = lon
+        form_vars.wkt = wkt
         if wkt:
             # Polygon (will be corrected as-required by wkt_centroid)
-            vars.gis_feature_type = "3"
+            form_vars.gis_feature_type = "3"
         else:
             # Point
-            vars.gis_feature_type = "1"
-        vars.parent = parent
+            form_vars.gis_feature_type = "1"
+        form_vars.parent = parent
         if self.id:
             # Provide the old record to check inherited
             form.record = db(table.id == self.id).select(table.inherited,
@@ -1576,18 +1639,18 @@ class IS_LOCATION_SELECTOR(Validator):
             self.errors = form.errors
             return None
         location = Storage(name=name,
-                           lat=vars.lat,
-                           lon=vars.lon,
-                           inherited=vars.inherited,
+                           lat=form_vars.lat,
+                           lon=form_vars.lon,
+                           inherited=form_vars.inherited,
                            street=street,
                            postcode=postcode,
                            parent=parent,
-                           wkt = vars.wkt,
-                           gis_feature_type = vars.gis_feature_type,
-                           lon_min = vars.lon_min,
-                           lon_max = vars.lon_max,
-                           lat_min = vars.lat_min,
-                           lat_max = vars.lat_max
+                           wkt = form_vars.wkt,
+                           gis_feature_type = form_vars.gis_feature_type,
+                           lon_min = form_vars.lon_min,
+                           lon_max = form_vars.lon_max,
+                           lat_min = form_vars.lat_min,
+                           lat_max = form_vars.lat_max
                            )
 
         return location

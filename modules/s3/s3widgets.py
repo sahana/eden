@@ -49,9 +49,11 @@ __all__ = ["S3ACLWidget",
            "S3ImageCropWidget",
            "S3InvBinWidget",
            "S3KeyValueWidget",
+           # Only used inside this module
            #"S3LatLonWidget",
            "S3LocationAutocompleteWidget",
            "S3LocationDropdownWidget",
+           "S3LocationLatLonWidget",
            "S3LocationSelectorWidget",
            "S3LocationSelectorWidget2",
            "S3MultiSelectWidget",
@@ -2700,21 +2702,27 @@ class S3LatLonWidget(DoubleWidget):
         of degrees, minutes and seconds
     """
 
-    def __init__(self, type, switch_button=False, disabled=False):
-        self._id = "gis_location_%s" % type
-        self._name = self._id
+    def __init__(self, type, switch=False, disabled=False):
+        self.type = type
         self.disabled = disabled
-        self.switch_button = switch_button
+        self.switch = switch
 
     def widget(self, field=None, value=None):
 
         T = current.T
         s3 = current.response.s3
+        switch = self.switch
 
+        if field:
+            # LocationLatLonWidget
+            id = name = "%s_%s" % (str(field).replace(".", "_"), self.type)
+        else:
+            # LocationSelectorWidget[2]
+            id = name = "gis_location_%s" % self.type
         attr = dict(value=value,
                     _class="decimal %s" % self._class,
-                    _id=self._id,
-                    _name=self._name)
+                    _id=id,
+                    _name=name)
 
         attr_dms = dict()
 
@@ -2722,26 +2730,24 @@ class S3LatLonWidget(DoubleWidget):
             attr["_disabled"] = "disabled"
             attr_dms["_disabled"] = "disabled"
 
-        dms_boxes = SPAN(
-                        INPUT(_class="degrees", **attr_dms), "° ",
-                        INPUT(_class="minutes", **attr_dms), "' ",
-                        INPUT(_class="seconds", **attr_dms), "\" ",
-                        ["",
-                            DIV(A(T("Use decimal"),
-                                    _class="action-btn gis_coord_switch_decimal"))
-                        ][self.switch_button],
-                        _style="display: none;",
-                        _class="gis_coord_dms"
-                    )
+        dms_boxes = SPAN(INPUT(_class="degrees", **attr_dms), "° ",
+                         INPUT(_class="minutes", **attr_dms), "' ",
+                         INPUT(_class="seconds", **attr_dms), "\" ",
+                         ["",
+                          DIV(A(T("Use decimal"),
+                                _class="action-btn gis_coord_switch_decimal"))
+                          ][switch],
+                         _style="display:none",
+                         _class="gis_coord_dms",
+                         )
 
-        decimal = SPAN(
-                        INPUT(**attr),
-                        ["",
-                            DIV(A(T("Use deg, min, sec"),
-                                    _class="action-btn gis_coord_switch_dms"))
-                        ][self.switch_button],
-                        _class="gis_coord_decimal"
-                  )
+        decimal = SPAN(INPUT(**attr),
+                       ["",
+                        DIV(A(T("Use deg, min, sec"),
+                              _class="action-btn gis_coord_switch_dms"))
+                        ][switch],
+                       _class="gis_coord_decimal",
+                       )
 
         if not s3.lat_lon_i18n_appended:
             s3.js_global.append('''
@@ -2758,19 +2764,19 @@ i18n.gis_range_error={degrees:{lat:'%s',lon:'%s'},minutes:'%s',seconds:'%s',deci
         T("Latitude must be between -90 and 90."),
         T("Longitude must be between -180 and 180.")))
 
+            if s3.debug:
+                script = "/%s/static/scripts/S3/s3.gis.latlon.js" % \
+                            current.request.application
+            else:
+                script = "/%s/static/scripts/S3/s3.gis.latlon.min.js" % \
+                            current.request.application
+            s3.scripts.append(script)
             s3.lat_lon_i18n_appended = True
 
-        if (field == None):
-            return SPAN(decimal,
-                        dms_boxes,
-                        _class="gis_coord_wrap")
-        else:
-            return SPAN(decimal,
-                        dms_boxes,
-                        *controls,
-                        requires = field.requires,
-                        _class="gis_coord_wrap"
-                        )
+        return SPAN(decimal,
+                    dms_boxes,
+                    _class="gis_coord_wrap",
+                    )
 
 # =============================================================================
 class S3LocationAutocompleteWidget(FormWidget):
@@ -2911,6 +2917,115 @@ class S3LocationDropdownWidget(FormWidget):
 
         return TAG[""](SELECT(*opts, **attr_dropdown),
                        requires=field.requires
+                       )
+
+# =============================================================================
+class S3LocationLatLonWidget(FormWidget):
+    """
+        Renders a Lat & Lon input for a Location
+
+    """
+
+    def __init__(self, empty=False):
+        """ Set Defaults """
+        self.empty = empty
+
+    def __call__(self, field, value, **attributes):
+
+        T = current.T
+        empty = self.empty
+        requires = IS_LAT_LON(field)
+        if empty:
+            requires = IS_EMPTY_OR(requires)
+
+        defaults = dict(_type = "text",
+                        value = (value != None and str(value)) or "")
+        attr = StringWidget._attributes(field, defaults, **attributes)
+        # Hide the real field
+        attr["_class"] = "hide"
+
+        if value:
+            db = current.db
+            table = db.gis_location
+            record = db(table.id == value).select(table.lat,
+                                                  table.lon,
+                                                  limitby=(0, 1)
+                                                  ).first()
+            try:
+                lat = record.lat
+                lon = record.lon
+            except:
+                lat = None
+                lon = None
+        else:
+            lat = None
+            lon = None
+
+        formstyle = current.response.s3.crud.formstyle
+        if formstyle == "bootstrap":
+            bootstrap = True
+        elif callable(formstyle):
+            bootstrap = False
+            comment = ""
+        else:
+            # Unsupported
+            raise
+
+        rows = TAG[""]()
+        selector = str(field).replace(".", "_")
+        id = "%s_lat" % selector
+        label = T("Latitude")
+        widget = S3LatLonWidget("lat").widget(field, lat)
+        if bootstrap:
+            label = LABEL("%s:" % label, _class="control-label",
+                                         _for=id)
+            if not empty:
+                label = DIV(label,
+                            SPAN(" *", _class="req"))
+            #widget.add_class("input-xlarge")
+            _controls = DIV(widget, _class="controls")
+            row = DIV(label, _controls, _class="control-group",
+                                        _id="%s__row" % id)
+        else:
+            label = "%s:" % label
+            if not empty:
+                label = DIV(label,
+                            SPAN(" *", _class="req"))
+            row = formstyle(id, label, widget, comment)
+        if isinstance(row, tuple):
+            for r in row:
+                rows.append(r)
+        else:
+            rows.append(row)
+
+        id = "%s_lon" % selector
+        label = T("Longitude")
+        widget = S3LatLonWidget("lon", switch=True).widget(field, lon)
+        if bootstrap:
+            label = LABEL("%s:" % label, _class="control-label",
+                                         _for=id)
+            if not empty:
+                label = DIV(label,
+                            SPAN(" *", _class="req"))
+            #widget.add_class("input-xlarge")
+            _controls = DIV(widget, _class="controls")
+            row = DIV(label, _controls, _class="control-group",
+                                        _id="%s__row" % id)
+        else:
+            label = "%s:" % label
+            if not empty:
+                label = DIV(label,
+                            SPAN(" *", _class="req"))
+            row = formstyle(id, label, widget, comment)
+        if isinstance(row, tuple):
+            for r in row:
+                rows.append(r)
+        else:
+            rows.append(row)
+
+        return TAG[""](INPUT(**attr),
+                       *rows,
+                       requires = requires
                        )
 
 # =============================================================================
@@ -3425,10 +3540,9 @@ S3.gis.tab="%s"''' % s3.gis.tab
                                         _name="gis_location_postcode",
                                         _disabled="disabled")
 
-            lat_widget = S3LatLonWidget("lat",
-                                        disabled=True).widget(value=lat)
+            lat_widget = S3LatLonWidget("lat", disabled=True).widget(value=lat)
             lon_widget = S3LatLonWidget("lon",
-                                        switch_button=True,
+                                        switch=True,
                                         disabled=True).widget(value=lon)
 
             for level in levels:
@@ -3478,7 +3592,7 @@ S3.gis.tab="%s"''' % s3.gis.tab
                 postcode_widget = INPUT(_id="gis_location_postcode",
                                         _name="gis_location_postcode")
             lat_widget = S3LatLonWidget("lat").widget()
-            lon_widget = S3LatLonWidget("lon", switch_button=True).widget()
+            lon_widget = S3LatLonWidget("lon", switch=True).widget()
 
             for level in levels:
                 hidden = ""

@@ -1190,7 +1190,7 @@ def volunteer_award():
     #        # Coming from Profile page?
     #        person_id = request.get_vars.get("~.person_id", None)
     #        if person_id:
-    #            field = table.person_id
+    #            field = r.table.person_id
     #            field.default = person_id
     #            field.readable = field.writable = False
     #    return True

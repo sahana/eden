@@ -330,6 +330,8 @@ def dojs(dogis = False, warnings = True):
                      "embed_component",
                      "gis",
                      "gis.fullscreen",
+                     "gis.latlon",
+                     "gis.pois",
                      "locationselector.widget",
                      "locationselector.widget2",
                      "msg",

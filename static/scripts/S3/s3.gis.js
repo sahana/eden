@@ -2912,8 +2912,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         div.html(contents);
         // Load data into Popup
         var map = S3.gis.maps[map_id];
-        $.get(url,
-              function(data) {
+        $.getS3(
+            url,
+            function(data) {
                 div.html(data);
                 // @ToDo: Don't assume we're the only popup on this map
                 map.popups[0].updateSize();
@@ -2928,8 +2929,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     // Enable the Bootstrap dropdowns in the popups
                     dropdowns.dropdown();
                 }
-              },
-              'html'
+            },
+            'html'
         );
     };
     // Pass to global scope to access from HTML
@@ -2953,7 +2954,39 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     // Pass to global scope to access from HTML
     S3.gis.zoomToSelectedFeature = zoomToSelectedFeature;
 
-    // Used by onFeatureSelect
+    // Add a Popup to map
+    var addPopup = function(feature, popup_url, contents, popup_id) {
+        if (undefined == contents) {
+            contents = i18n.gis_loading + "...<div class='throbber'></div>";
+        }
+        if (undefined == popup_id) {
+            popup_id = S3.uid();
+        }
+        var centerPoint = feature.geometry.getBounds().getCenterLonLat();
+        var popup = new OpenLayers.Popup.FramedCloud(
+            popup_id,
+            centerPoint,
+            new OpenLayers.Size(400, 400),
+            contents,
+            null,        // anchor
+            true,        // closeBox
+            onPopupClose // closeBoxCallback
+        );
+        //popup.disableFirefoxOverflowHack = true; // Still needed
+        //popup.keepInMap = false; // Not working
+        feature.popup = popup;
+        popup.feature = feature;
+        feature.layer.map.addPopup(popup);
+        if (undefined != popup_url) {
+            // call AJAX to get the contentHTML
+            loadDetails(popup_url, popup_id + '_contentDiv', popup);
+        }
+        return popup
+    }
+    // Pass to global scope to access from external scripts (e.g. s3.gis.pois.js)
+    S3.gis.addPopup = addPopup;
+
+    // Used by addPopup and onFeatureSelect
     var loadDetails = function(url, id, popup) {
         // Load the Popup Details asynchronously
         if (url.indexOf('http://') === 0) {
@@ -2969,28 +3002,32 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         $('#' + id).load(url, url_parts[1], function() {
             popup.updateSize();
         });*/
-        $.ajax({
-            'url': url,
-            'dataType': 'html'
-        }).done(function(data) {
-            try {
-                // Load response into page
-                $('#' + id).html(data);
-            } catch(e) {
-                // Page is probably trying to load 'local' resources from us
-                // @ToDo: Load in iframe instead...
+        $.ajaxS3({
+            url: url,
+            dataType: 'html',
+            // gets moved to 'done' inside AjaxS3
+            success: function(data) {
+                try {
+                    // Load response into page
+                    $('#' + id).html(data);
+                    popup.updateSize();
+                    // Resize when images are loaded
+                    //popup.registerImageListeners();
+                } catch(e) {
+                    // Page is probably trying to load 'local' resources from us
+                    // @ToDo: Load in iframe instead...
+                }
+            },
+            // gets moved to 'fail' inside AjaxS3
+            error: function(jqXHR, textStatus, errorThrown) {
+                if (errorThrown == 'UNAUTHORIZED') {
+                    msg = i18n.gis_requires_login;
+                } else {
+                    msg = jqXHR.responseText;
+                }
+                $('#' + id + '_contentDiv').html(msg);
+                popup.updateSize();
             }
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            if (errorThrown == 'UNAUTHORIZED') {
-                msg = i18n.gis_requires_login;
-            } else {
-                msg = jqXHR.responseText;
-            }
-            $('#' + id + '_contentDiv').html(msg);
-        }).always(function() {
-            popup.updateSize();
-            // Resize when images are loaded
-            //popup.registerImageListeners();
         });
     };
 
@@ -3162,27 +3199,11 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 }
             }
         }
-        var popup = new OpenLayers.Popup.FramedCloud(
-            popup_id,
-            centerPoint,
-            new OpenLayers.Size(400, 400),
-            contents,
-            null,        // anchor
-            true,        // closeBox
-            onPopupClose // closeBoxCallback
-        );
-        //popup.disableFirefoxOverflowHack = true; // Still needed
-        //popup.keepInMap = false; // Not working
-        if (undefined != popup_url) {
-            // call AJAX to get the contentHTML
-            loadDetails(popup_url, popup_id + '_contentDiv', popup);
-        } else if (data_link) {
-            // call AJAX to get the data
+        var popup = addPopup(feature, popup_url, contents, popup_id);
+        if (data_link) {
+            // call AJAX to get the linked data
             loadDetails(feature.attributes.data, data_id, popup);
         }
-        feature.popup = popup;
-        popup.feature = feature;
-        map.addPopup(popup);
     };
 
     // Supports popupControl for All Vector Layers
@@ -4635,12 +4656,14 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                                 }
                                 if (pcs.length > 0) {
                                     var query = pcs.join("&");
-                                    $.ajax({
+                                    $.ajaxS3({
                                         type: 'POST',
                                         url: update_url,
-                                        data: query
-                                    }).done(function(msg) {
-                                        $('#plain').html(msg);
+                                        data: query,
+                                        // gets moved to 'done' inside AjaxS3
+                                        success: function(msg) {
+                                            $('#plain').html(msg);
+                                        }
                                     });
                                 }
                                 return false;

@@ -175,6 +175,9 @@ def s3_mark_required(fields,
             fname, flabel = map_names[field.name]
         else:
             fname, flabel = field.name, field.label
+        if not flabel:
+            labels[fname] = ""
+            continue
         if field.writable:
             validators = field.requires
             if isinstance(validators, IS_EMPTY_OR) and field.name not in mark_required:

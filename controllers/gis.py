@@ -128,7 +128,13 @@ def define_map(height = None,
         print_tool = {}
 
     # Do we allow creation of PoIs from the main Map?
-    pois = settings.get_gis_pois()
+    pois = settings.get_gis_pois() and auth.s3_has_permission("create", s3db.gis_poi)
+    if pois:
+        if s3.debug:
+            script = "/%s/static/scripts/S3/s3.gis.pois.js" % appname
+        else:
+            script = "/%s/static/scripts/S3/s3.gis.pois.min.js" % appname
+        s3.scripts.append(script)
 
     map = gis.show_map(height = height,
                        width = width,
@@ -2814,6 +2820,7 @@ def poi_type():
     """
         RESTful CRUD controller for PoI Types
     """
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
@@ -2821,6 +2828,22 @@ def poi():
     """
         RESTful CRUD controller for PoIs
     """
+
+    def prep(r):
+        if r.method in ("create", "create.plain", "create.popup"):
+            # lat/Lon from Feature?
+            get_vars = request.get_vars
+            lat = get_vars.get("lat", None)
+            if lat is not None:
+                lon = get_vars.get("lon", None)
+                if lon is not None:
+                    script = \
+'''$('#gis_location_lat').val(%s);$('#gis_location_lon').val(%s)''' % (lat, lon)
+                    s3.scripts.append(script)
+
+        return True
+    s3.prep = prep
+
     return s3_rest_controller()
 
 # =============================================================================
