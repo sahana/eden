@@ -375,10 +375,25 @@ class S3CRUD(S3Method):
                 else:
                     self.next = create_next
 
-        elif representation == "url":
-            results = self.import_url(r)
-            return results
-
+        elif representation == "plain":
+            # NB formstyle will be "table3cols" so widgets need to support that
+            #    or else we need to be able to override this
+            response.view = self._view(r, "plain.html")
+            crud_string = self.crud_string
+            message = crud_string(tablename, "msg_record_created")
+            subheadings = _config("subheadings")
+            output["title"] = crud_string(tablename, "title_create")
+            output["details_btn"] = ""
+            output["item"] = self.sqlform(request=request,
+                                          resource=resource,
+                                          data=self.data,
+                                          onvalidation=onvalidation,
+                                          onaccept=onaccept,
+                                          #link=link,
+                                          message=message,
+                                          subheadings=subheadings,
+                                          format=representation)
+            
         elif representation == "csv":
             import cgi
             import csv
@@ -404,6 +419,10 @@ class S3CRUD(S3Method):
             from s3pdf import S3PDF
             exporter = S3PDF()
             return exporter(r, **attr)
+
+        elif representation == "url":
+            results = self.import_url(r)
+            return results
 
         else:
             r.error(501, r.ERROR.BAD_FORMAT)

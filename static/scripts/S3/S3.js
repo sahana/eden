@@ -144,7 +144,7 @@ S3.addModals = function() {
         var url = this.href;
         var id = S3.uid();
         // Open a jQueryUI Dialog showing a spinner until iframe is loaded
-        var dialog = $('<iframe id="' + id + '" class="loading" src=' + url + ' marginWidth="0" marginHeight="0" frameBorder="0" scrolling="auto" onload="S3.popup_loaded(\'' + id + '\')" style = "width:740px;"></iframe>')
+        var dialog = $('<iframe id="' + id + '" src=' + url + ' onload="S3.popup_loaded(\'' + id + '\')" class="loading" marginWidth="0" marginHeight="0" frameBorder="0" scrolling="auto" style = "width:740px;"></iframe>')
                       .appendTo('body');
         dialog.dialog({
             // add a close listener to prevent adding multiple divs to the document

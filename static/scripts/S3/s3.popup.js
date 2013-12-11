@@ -12,7 +12,7 @@ function s3_popup_refresh_main_form() {
     //    refresh this one record
     var refresh = $_GET['refresh'];
     if (typeof refresh != 'undefined') {
-        // Update DataList/DataTable
+        // Update DataList/DataTable (if appropriate)
         var selector = self.parent.$('#' + refresh);
         if (selector.hasClass('dl')) {
             // Refresh dataList
@@ -28,7 +28,7 @@ function s3_popup_refresh_main_form() {
             // Refresh dataTable
             selector.dataTable().fnReloadAjax();
         }
-        // Also update the layer on the Maps (if any)
+        // Update the layer on the Maps (if appropriate)
         var maps = self.parent.S3.gis.maps
         if (typeof maps != 'undefined') {
             var map_id, map, needle, layers, i, len, layer, strategies, j, jlen, strategy;
@@ -73,10 +73,8 @@ function s3_popup_refresh_main_form() {
 
     var caller = $_GET['caller'];
     if (caller === undefined) {
-        // Any following code is there to update the caller, so pointless
-        // to continue beyond this point without it. (Note: you may also
-        // end up here if you forgot to specify the refresh target for a
-        // datatable/datalist modal, see top of this script).
+        // All code after this is there to update the caller, so pointless
+        // to continue beyond this point without it.
         s3_debug('Neither calling element nor refresh-target specified in popup URL!');
         self.parent.S3.popup_remove();
         return;

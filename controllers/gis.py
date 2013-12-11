@@ -2831,15 +2831,16 @@ def poi():
 
     def prep(r):
         if r.method in ("create", "create.plain", "create.popup"):
-            # lat/Lon from Feature?
+            field = r.table.location_id
+            field.label = ""
+            # Lat/Lon from Feature?
             get_vars = request.get_vars
             lat = get_vars.get("lat", None)
             if lat is not None:
                 lon = get_vars.get("lon", None)
                 if lon is not None:
-                    script = \
-'''$('#gis_location_lat').val(%s);$('#gis_location_lon').val(%s)''' % (lat, lon)
-                    s3.scripts.append(script)
+                    id = s3db.gis_location.insert(lat=lat, lon=lon)
+                    field.default = id
 
         return True
     s3.prep = prep
