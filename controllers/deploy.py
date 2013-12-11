@@ -186,6 +186,9 @@ def assignment():
     """ RESTful CRUD Controller """
 
     def prep(r):
+        mission_date = s3db.deploy_mission.created_on
+        mission_date.represent = lambda d: \
+                                 s3base.S3DateTime.date_represent(d, utc=True)
         if r.record:
             table = r.resource.table
             table.mission_id.writable = False
@@ -195,7 +198,7 @@ def assignment():
         return True
     s3.prep = prep
 
-    return s3_rest_controller()
+    return s3_rest_controller(hide_filter=False)
 
 # -----------------------------------------------------------------------------
 def person_search():

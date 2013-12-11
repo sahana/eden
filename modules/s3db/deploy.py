@@ -252,6 +252,10 @@ class S3DeploymentModel(S3Model):
                                     options=mission_status_opts,
                                     hidden=True
                                     ),
+                    S3DateFilter("created_on",
+                                 hide_time=True,
+                                 hidden=True
+                                ),
                     ],
                   list_fields = ["name",
                                  (T("Date"), "created_on"),
@@ -278,6 +282,11 @@ class S3DeploymentModel(S3Model):
                              {"name": "table",
                               "label": "Table",
                               "widgets": [{"method": "datatable"}]
+                              },
+                             {"name": "report",
+                              "label": "Report",
+                              "widgets": [{"method": "report2",
+                                           "ajax_init": True}],
                               },
                              {"name": "map",
                               "label": "Map",
@@ -381,14 +390,44 @@ class S3DeploymentModel(S3Model):
                              },
                   create_onaccept = self.deploy_assignment_create_onaccept,
                   update_onaccept = self.deploy_assignment_update_onaccept,
-                  summary = [{"name": "table",
-                              "label": "Table",
-                              "widgets": [{"method": "datatable"}]
-                              },
-                             {"name": "report",
-                              "label": "Report",
-                              "widgets": [{"method": "report2"}]
-                              },                             ],
+                  filter_widgets = [
+                    S3TextFilter(["human_resource_id$person_id$first_name",
+                                  "human_resource_id$person_id$middle_name",
+                                  "human_resource_id$person_id$last_name",
+                                  "mission_id$code",
+                                 ],
+                                 label=T("Search")
+                                ),
+                    S3OptionsFilter("mission_id$event_type_id",
+                                    widget="multiselect",
+                                    hidden=True
+                                   ),
+                    S3LocationFilter("mission_id$location_id",
+                                     label=messages.COUNTRY,
+                                     widget="multiselect",
+                                     levels=["L0"],
+                                     hidden=True
+                                    ),
+                    S3OptionsFilter("job_title_id",
+                                    widget="multiselect",
+                                    hidden=True,
+                                   ),
+                    S3DateFilter("start_date",
+                                 hide_time=True,
+                                 hidden=True,
+                                ),
+                  ],
+                  summary = [
+                      {"name": "table",
+                       "label": "Table",
+                       "widgets": [{"method": "datatable"}]
+                      },
+                      {"name": "report",
+                       "label": "Report",
+                       "widgets": [{"method": "report2",
+                                    "ajax_init": True}]
+                      },
+                  ],
                   )
 
         # Components
