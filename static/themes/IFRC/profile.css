@@ -110,6 +110,12 @@ h4.profile-sub-header {
     background-color: #faf6ea !important;
 }
 
+.dl-item p a {
+    /* revert to standard */
+    color:#0065A6;
+    text-decoration:none;
+}
+
 div.media {
     position: relative;
 }

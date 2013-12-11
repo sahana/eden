@@ -126,13 +126,35 @@ class S3DeploymentModel(S3Model):
                                     "location_id",
                                     "code",
                                     "status",
-                                    S3SQLInlineComponent("document",
-                                                         name = "file",
-                                                         label = T("Attachments"),
-                                                         fields = ["file",
-                                                                   "comments",
-                                                                  ],
-                                                         ),
+                                    # Files
+                                    S3SQLInlineComponent(
+                                        "document",
+                                        name = "file",
+                                        label = T("Files"),
+                                        fields = ["file", "comments"],
+                                        filterby = dict(field = "file",
+                                                        options = "",
+                                                        invert = True,
+                                                        )
+                                    ),
+                                    # Links
+                                    S3SQLInlineComponent(
+                                        "document",
+                                        name = "url",
+                                        label = T("Links"),
+                                        fields = ["url", "comments"],
+                                        filterby = dict(field = "url",
+                                                        options = None,
+                                                        invert = True,
+                                                        )
+                                    ),
+                                    #S3SQLInlineComponent("document",
+                                                         #name = "file",
+                                                         #label = T("Attachments"),
+                                                         #fields = ["file",
+                                                                   #"comments",
+                                                                  #],
+                                                         #),
                                     "comments",
                                     "created_on",
                                     )
@@ -215,8 +237,8 @@ class S3DeploymentModel(S3Model):
                                  pagesize = None, # all records
                                  )
 
-        docs_widget = dict(label = "Documents",
-                           title_create = "Add New Document",
+        docs_widget = dict(label = "Documents & Links",
+                           title_create = "Add New Document / Link",
                            type = "datalist",
                            tablename = "doc_document",
                            context = ("~.doc_id", "doc_id"),
