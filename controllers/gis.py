@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
     GIS Controllers
@@ -135,6 +136,14 @@ def define_map(height = None,
         else:
             script = "/%s/static/scripts/S3/s3.gis.pois.min.js" % appname
         s3.scripts.append(script)
+        # @ToDo: Allow multiple PoI layers
+        ftable = s3db.gis_layer_feature
+        layer = db(ftable.name == "PoIs").select(ftable.layer_id,
+                                                 limitby=(0, 1)
+                                                 ).first()
+        if layer:
+            script = '''S3.gis.pois_layer=%s''' % layer.layer_id
+            s3.js_global.append(script)
 
     map = gis.show_map(height = height,
                        width = width,
@@ -2830,17 +2839,25 @@ def poi():
     """
 
     def prep(r):
-        if r.method in ("create", "create.plain", "create.popup"):
-            field = r.table.location_id
-            field.label = ""
-            # Lat/Lon from Feature?
-            get_vars = request.get_vars
-            lat = get_vars.get("lat", None)
-            if lat is not None:
-                lon = get_vars.get("lon", None)
-                if lon is not None:
-                    id = s3db.gis_location.insert(lat=lat, lon=lon)
-                    field.default = id
+        if r.http == "GET":
+            if r.method in ("create", "create.popup"):
+                field = r.table.location_id
+                field.label = ""
+                # Lat/Lon from Feature?
+                get_vars = request.get_vars
+                lat = get_vars.get("lat", None)
+                if lat is not None:
+                    lon = get_vars.get("lon", None)
+                    if lon is not None:
+                        id = s3db.gis_location.insert(lat=lat, lon=lon)
+                        field.default = id
+            elif r.method in ("update", "update.popup"):
+                table = r.table
+                table.location_id.label = ""
+                table.created_by.readable = True
+                table.created_on.readable = True
+                table.created_on.represent = lambda d: \
+                    s3base.S3DateTime.date_represent(d)
 
         return True
     s3.prep = prep

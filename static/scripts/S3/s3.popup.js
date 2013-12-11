@@ -3,7 +3,7 @@
  */
 
 function s3_popup_refresh_main_form() {
-    // The Get parameters
+    // The GET parameters
     var $_GET = getQueryParams(document.location.search);
 
     // Is this a modal that is to refresh a datatable/datalist/map?
@@ -26,27 +26,31 @@ function s3_popup_refresh_main_form() {
             }
         } else {
             // Refresh dataTable
-            selector.dataTable().fnReloadAjax();
+            try {
+                selector.dataTable().fnReloadAjax();
+            } catch(e) {}
         }
         // Update the layer on the Maps (if appropriate)
         var maps = self.parent.S3.gis.maps
         if (typeof maps != 'undefined') {
-            var map_id, map, needle, layers, i, len, layer, strategies, j, jlen, strategy;
+            var map_id, map, layer_id, layers, i, len, layer, strategies, j, jlen, strategy;
             for (map_id in maps) {
                 map = maps[map_id];
-                needle = refresh.replace(/-/g, '_');
+                layer_id = refresh.replace(/-/g, '_');
                 layers = map.layers;
                 for (i=0, len=layers.length; i < len; i++) {
                     layer = layers[i];
-                    if (layer.s3_layer_id == needle) {
+                    if (layer.s3_layer_id == layer_id) {
                         strategies = layer.strategies;
                         for (j=0, jlen=strategies.length; j < jlen; j++) {
                             strategy = strategies[j];
                             if (strategy.CLASS_NAME == 'OpenLayers.Strategy.Refresh') {
                                 // Reload the layer
                                 strategy.refresh();
+                                break;
                             }
                         }
+                        break;
                     }
                 }
             }
@@ -58,6 +62,56 @@ function s3_popup_refresh_main_form() {
         }
         // Remove popup
         self.parent.S3.popup_remove();
+        return;
+    }
+
+    // Is this a Map popup? (e.g. PoI entry)
+    var layer_id = $_GET['refresh_layer'];
+    if (typeof layer_id != 'undefined') {
+        var maps = self.parent.S3.gis.maps
+        if (typeof maps != 'undefined') {
+            layer_id = parseInt(layer_id);
+            var map_id, map, layers, i, len, layer, found, strategies, j, jlen, strategy;
+            for (map_id in maps) {
+                map = maps[map_id];
+                layers = map.layers;
+                for (i=0, len=layers.length; i < len; i++) {
+                    layer = layers[i];
+                    if (layer.s3_layer_id == layer_id) {
+                        found = true;
+                        strategies = layer.strategies;
+                        for (j=0, jlen=strategies.length; j < jlen; j++) {
+                            strategy = strategies[j];
+                            if (strategy.CLASS_NAME == 'OpenLayers.Strategy.Refresh') {
+                                // Reload the layer
+                                strategy.refresh();
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
+                if (found) {
+                    // Remove the Draft Feature & it's Popup
+                    var features, feature, popup;
+                    var gis_draft_layer = self.parent.i18n.gis_draft_layer;
+                    for (i=0, len=layers.length; i < len; i++) {
+                        layer = layers[i];
+                        if (layer.name == gis_draft_layer) {
+                            features = layer.features;
+                            for (j=features.length - 1; j >=0 ; j--) {
+                                feature = features[j];
+                                popup = feature.popup;
+                                map.removePopup(popup);
+                                popup.destroy();
+                                delete feature.popup;
+                                feature.destroy();
+                            }
+                        }
+                    }
+                }
+            }
+        }
         return;
     }
 

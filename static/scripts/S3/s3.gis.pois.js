@@ -42,10 +42,10 @@
         var centerPoint = feature.geometry.getBounds().getCenterLonLat();
         centerPoint.transform(current_projection, proj4326);
         // Build URL for create form
-        var url = S3.Ap.concat('/gis/poi/create.popup?lat=' + centerPoint.lat + '&lon=' + centerPoint.lon);
+        var url = S3.Ap.concat('/gis/poi/create.popup?refresh_layer=' + gis.pois_layer + '&lat=' + centerPoint.lat + '&lon=' + centerPoint.lon);
         // Convert geometry back for the marker
         centerPoint.transform(proj4326, current_projection);
-        // Create a iframe in the popup with an iframe
+        // Create a popup with an iframe inside
         gis.addPopup(feature, url, undefined, undefined, true);
     };
 

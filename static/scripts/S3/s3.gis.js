@@ -2903,24 +2903,6 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
     };
 
-    // Zoom to Selected Feature from within Cluster Popup
-    var zoomToSelectedFeature = function(map_id, lon, lat, zoomfactor) {
-        var map = S3.gis.maps[map_id];
-        var lonlat = new OpenLayers.LonLat(lon, lat);
-        // Get Current Zoom
-        var currZoom = map.getZoom();
-        // New Zoom
-        var newZoom = currZoom + zoomfactor;
-        // Center and Zoom
-        map.setCenter(lonlat, newZoom);
-        // Remove Popups
-        for (var i = 0; i < map.popups.length; i++) {
-            map.removePopup(map.popups[i]);
-        }
-    };
-    // Pass to global scope to access from HTML
-    S3.gis.zoomToSelectedFeature = zoomToSelectedFeature;
-
     // Add a Popup to map
     var addPopup = function(feature, url, contents, id, iframe) {
         if (undefined == id) {
@@ -2931,9 +2913,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 // Use Proxy for remote popups
                 url = OpenLayers.ProxyHost + encodeURIComponent(url);
             }
-            contents = '<iframe src="' + url + '" onload="S3.gis.popupLoaded(\'' + id + '\')" class="loading" marginWidth="0" marginHeight="0" frameBorder="0" scrolling="auto"></iframe>';
+            contents = '<iframe src="' + url + '" onload="S3.gis.popupLoaded(\'' + id + '\')" class="loading" marginWidth="0" marginHeight="0" frameBorder="0"></iframe>';
         } else if (undefined == contents) {
-            contents = i18n.gis_loading + "...<div class='throbber'></div>";
+            contents = i18n.gis_loading + '...<div class="throbber"></div>';
         }
         var centerPoint = feature.geometry.getBounds().getCenterLonLat();
         var popup = new OpenLayers.Popup.FramedCloud(
@@ -2951,7 +2933,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         popup.feature = feature;
         feature.layer.map.addPopup(popup);
         if (!iframe && undefined != url) {
-            // call AJAX to get the contentHTML
+            // use AJAX to get the contentHTML
             loadDetails(url, id + '_contentDiv', popup);
         }
         return popup
@@ -2963,7 +2945,21 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     S3.gis.popupLoaded = function(id) {
         // Display the hidden form
         $('#' + id + '_contentDiv iframe').contents().find('#popup form').show();
-        //popup.updateSize();
+        // Iterate through all Maps (usually just 1)
+        var maps = S3.gis.maps;
+        var map_id, map, popup, popups, i, len;
+        for (map_id in maps) {
+            map = maps[map_id];
+            // Iterate through all Popups (usually just 1)
+            popups = map.popups;
+            for (i=0, len=popups.length; i < len; i++) {
+                popup = popups[i];
+                if (popup.id == id) {
+                    // Update the Popup size
+                    popup.updateSize(true);
+                }
+            }
+        }
     }
 
     // Used by addPopup and onFeatureSelect
@@ -3206,6 +3202,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         // Close ALL popups
         // inc orphaned Popups (e.g. from Refresh)
         // @ToDo: Make this configurable to allow multiple popups open at once
+        //        - also see s3.popup.js
         while (map.popups.length) {
             map.removePopup(map.popups[0]);
         }
@@ -3243,6 +3240,24 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     };
     // Pass to global scope to access from HTML
     S3.gis.loadClusterPopup = loadClusterPopup;
+
+    // Zoom to Selected Feature from within Cluster Popup
+    var zoomToSelectedFeature = function(map_id, lon, lat, zoomfactor) {
+        var map = S3.gis.maps[map_id];
+        var lonlat = new OpenLayers.LonLat(lon, lat);
+        // Get Current Zoom
+        var currZoom = map.getZoom();
+        // New Zoom
+        var newZoom = currZoom + zoomfactor;
+        // Center and Zoom
+        map.setCenter(lonlat, newZoom);
+        // Remove Popups
+        for (var i = 0; i < map.popups.length; i++) {
+            map.removePopup(map.popups[i]);
+        }
+    };
+    // Pass to global scope to access from HTML
+    S3.gis.zoomToSelectedFeature = zoomToSelectedFeature;
 
     // Toolbar Buttons
     var addToolbar = function(map) {
@@ -3983,7 +3998,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             // Toolbar Button
             var lineButton = new GeoExt.Action({
                 control: control,
-                handler: function(){
+                handler: function() {
                     if (lineButton.items[0].pressed) {
                         $('.olMapViewport').addClass('crosshair');
                     } else {
@@ -4408,9 +4423,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var map = toolbar.map;
         var options = map.s3.options;
         selectPdfControl = new OpenLayers.Control();
-        OpenLayers.Util.extend( selectPdfControl, {
-            draw: function () {
-                this.box = new OpenLayers.Handler.Box( this, {
+        OpenLayers.Util.extend(selectPdfControl, {
+            draw: function() {
+                this.box = new OpenLayers.Handler.Box(this, {
                         'done': this.getPdf
                     });
                 this.box.activate();
@@ -4436,7 +4451,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 });
                 this.w.show();
             },
-            getPdf: function (bounds) {
+            getPdf: function(bounds) {
                 var current_projection = map.getProjectionObject()
                 var ll = map.getLonLatFromPixel(new OpenLayers.Pixel(bounds.left, bounds.bottom)).transform(current_projection, proj4326);
                 var ur = map.getLonLatFromPixel(new OpenLayers.Pixel(bounds.right, bounds.top)).transform(current_projection, proj4326);
@@ -4856,34 +4871,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             }
                         } else {
                             // Lookup from rule
-                            /* Done within OpenLayers.Rule
-                            var prop, value;
-                            $.each(style, function(index, elem) {
-                                if (undefined != elem.prop) {
-                                    prop = elem.prop;
-                                } else {
-                                    // Default (e.g. for Theme Layers)
-                                    prop = 'value';
-                                }
-                                value = feature.attributes[prop];
-                                if (undefined != elem.cat) {
-                                    // Category-based style
-                                    if (value == elem.cat) {
-                                        if (undefined != elem.graphic) {
-                                            graphic = style.graphic;
-                                        }
-                                        break;
-                                    }
-                                } else {
-                                    // Range-based style
-                                    if ((value >= elem.low) && (value < elem.high)) {
-                                        if (undefined != elem.graphic) {
-                                            graphic = style.graphic;
-                                        }
-                                        break;
-                                    }
-                                }
-                            }); */
+                            // - done within OpenLayers.Rule
                         }
                     }
                     return graphic;
@@ -4906,34 +4894,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             }
                         } else {
                             // Lookup from rule
-                            /* Done within OpenLayers.Rule
-                            var prop, value;
-                            $.each(style, function(index, elem) {
-                                if (undefined != elem.prop) {
-                                    prop = elem.prop;
-                                } else {
-                                    // Default (e.g. for Theme Layers)
-                                    prop = 'value';
-                                }
-                                value = feature.attributes[prop];
-                                if (undefined != elem.cat) {
-                                    // Category-based style
-                                    if (value == elem.cat) {
-                                        if (undefined != elem.externalGraphic) {
-                                            url = S3.Ap.concat('/static/' + elem.externalGraphic);
-                                        }
-                                        break;
-                                    }
-                                } else {
-                                    // Range-based style
-                                    if ((value >= elem.low) && (value < elem.high)) {
-                                        if (undefined != elem.externalGraphic) {
-                                            url = S3.Ap.concat('/static/' + elem.externalGraphic);
-                                        }
-                                        break;
-                                    }
-                                }
-                            }); */
+                            // - done within OpenLayers.Rule
                         }
                     } else {
                         // Use Layer Marker
@@ -4956,30 +4917,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             pix = style.size;
                         } else {
                             // Lookup from rule
-                            /* Done within OpenLayers.Rule
-                            var prop, value;
-                            $.each(style, function(index, elem) {
-                                if (undefined != elem.prop) {
-                                    prop = elem.prop;
-                                } else {
-                                    // Default (e.g. for Theme Layers)
-                                    prop = 'value';
-                                }
-                                value = feature.attributes[prop];
-                                if (undefined != elem.cat) {
-                                    // Category-based style
-                                    if (value == elem.cat) {
-                                        pix = elem.size;
-                                        break;
-                                    }
-                                } else {
-                                    // Range-based style
-                                    if ((value >= elem.low) && (value < elem.high)) {
-                                        pix = elem.size;
-                                        break;
-                                    }
-                                }
-                            }); */
+                            // - done within OpenLayers.Rule
                         }
                     }
                     return pix;
@@ -5003,30 +4941,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             color = style.fill;
                         } else {
                             // Lookup from rule
-                            /* Done within OpenLayers.Rule
-                            var prop, value;
-                            $.each(style, function(index, elem) {
-                                if (undefined != elem.prop) {
-                                    prop = elem.prop;
-                                } else {
-                                    // Default (e.g. for Theme Layers)
-                                    prop = 'value';
-                                }
-                                value = feature.attributes[prop];
-                                if (undefined != elem.cat) {
-                                    // Category-based style
-                                    if (value == elem.cat) {
-                                        color = elem.fill;
-                                        break;
-                                    }
-                                } else {
-                                    // Range-based style
-                                    if ((value >= elem.low) && (value < elem.high)) {
-                                        color = elem.fill;
-                                        break;
-                                    }
-                                }
-                            }); */
+                            // - done within OpenLayers.Rule
                         }
                         if (undefined != color) {
                             color = '#' + color;
@@ -5059,30 +4974,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             fillOpacity = style.fillOpacity;
                         } else {
                             // Lookup from rule
-                            /* Done within OpenLayers.Rule
-                            var prop, value;
-                            $.each(style, function(index, elem) {
-                                if (undefined != elem.prop) {
-                                    prop = elem.prop;
-                                } else {
-                                    // Default (e.g. for Theme Layers)
-                                    prop = 'value';
-                                }
-                                value = feature.attributes[prop];
-                                if (undefined != elem.cat) {
-                                    // Category-based style
-                                    if (value == elem.cat) {
-                                        fillOpacity = elem.fillOpacity;
-                                        break;
-                                    }
-                                } else {
-                                    // Range-based style
-                                    if ((value >= elem.low) && (value < elem.high)) {
-                                        fillOpacity = elem.fillOpacity;
-                                        break;
-                                    }
-                                }
-                            }); */
+                            // - done within OpenLayers.Rule
                         }
                     }
                     // default to layer's opacity
@@ -5107,30 +4999,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             color = style.stroke || style.fill;
                         } else {
                             // Lookup from rule
-                            /* Done within OpenLayers.Rule
-                            var prop, value;
-                            $.each(style, function(index, elem) {
-                                if (undefined != elem.prop) {
-                                    prop = elem.prop;
-                                } else {
-                                    // Default (e.g. for Theme Layers)
-                                    prop = 'value';
-                                }
-                                value = feature.attributes[prop];
-                                if (undefined != elem.cat) {
-                                    // Category-based style
-                                    if (value == elem.cat) {
-                                        color = elem.stroke || elem.fill;
-                                        break;
-                                    }
-                                } else {
-                                    // Range-based style
-                                    if ((value >= elem.low) && (value < elem.high)) {
-                                        color = elem.stroke || elem.fill;
-                                        break;
-                                    }
-                                }
-                            }); */
+                            // - done within OpenLayers.Rule
                         }
                         if (undefined != color) {
                             color = '#' + color;
@@ -5163,30 +5032,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             strokeOpacity = style.strokeOpacity;
                         } else {
                             // Lookup from rule
-                            /* Done within OpenLayers.Rule
-                            var prop, value;
-                            $.each(style, function(index, elem) {
-                                if (undefined != elem.prop) {
-                                    prop = elem.prop;
-                                } else {
-                                    // Default (e.g. for Theme Layers)
-                                    prop = 'value';
-                                }
-                                value = feature.attributes[prop];
-                                if (undefined != elem.cat) {
-                                    // Category-based style
-                                    if (value == elem.cat) {
-                                        strokeOpacity = elem.strokeOpacity;
-                                        break;
-                                    }
-                                } else {
-                                    // Range-based style
-                                    if ((value >= elem.low) && (value < elem.high)) {
-                                        strokeOpacity = elem.strokeOpacity;
-                                        break;
-                                    }
-                                }
-                            }); */
+                            // - done within OpenLayers.Rule
                         }
                     }
                     // default to layer's opacity
@@ -5209,30 +5055,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             width = style.strokeWidth;
                         } else {
                             // Lookup from rule
-                            /* Done within OpenLayers.Rule
-                            var prop, value;
-                            $.each(style, function(index, elem) {
-                                if (undefined != elem.prop) {
-                                    prop = elem.prop;
-                                } else {
-                                    // Default (e.g. for Theme Layers)
-                                    prop = 'value';
-                                }
-                                value = feature.attributes[prop];
-                                if (undefined != elem.cat) {
-                                    // Category-based style
-                                    if (value == elem.cat) {
-                                        width = elem.strokeWidth;
-                                        break;
-                                    }
-                                } else {
-                                    // Range-based style
-                                    if ((value >= elem.low) && (value < elem.high)) {
-                                        width = elem.strokeWidth;
-                                        break;
-                                    }
-                                }
-                            }); */
+                            // - done within OpenLayers.Rule
                         }
                     }
                     // Defalt width: 2
@@ -5255,34 +5078,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             }
                         } else {
                             // Lookup from rule
-                            /* Done within OpenLayers.Rule
-                            var prop, value;
-                            $.each(style, function(index, elem) {
-                                if (undefined != elem.prop) {
-                                    prop = elem.prop;
-                                } else {
-                                    // Default (e.g. for Theme Layers)
-                                    prop = 'value';
-                                }
-                                value = feature.attributes[prop];
-                                if (undefined != elem.cat) {
-                                    // Category-based style
-                                    if (value == elem.cat) {
-                                        if (elem.show_label) {
-                                            label = elem.label;
-                                        }
-                                        break;
-                                    }
-                                } else {
-                                    // Range-based style
-                                    if ((value >= elem.low) && (value < elem.high)) {
-                                        if (elem.show_label) {
-                                            label = elem.label;
-                                        }
-                                        break;
-                                    }
-                                }
-                            }); */
+                            // - done within OpenLayers.Rule
                         }
                     }
                     return label || '';
