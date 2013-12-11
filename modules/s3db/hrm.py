@@ -5530,6 +5530,19 @@ def hrm_human_resource_controller(extra_filter=None):
                                     widget="multiselect",
                                     hidden=True,
                                     ))
+                filter_widgets.insert(6,
+                    S3DateFilter("human_resource_id:deploy_assignment.start_date",
+                                 label = T("Deployed"),
+                                 hide_time=True,
+                                 hidden=True,
+                                ))
+                filter_widgets.insert(7,
+                    S3DateFilter("human_resource_id:deploy_response.created_on",
+                                 label = T("Responded"),
+                                 hide_time=True,
+                                 hidden=True,
+                                ))
+
 
             regions = settings.get_org_regions()
             if regions:
