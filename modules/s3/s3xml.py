@@ -2343,7 +2343,7 @@ class S3XML(S3Codec):
                         for key in extra_fields:
                             add_col(orow, key, None, extra_data[key])
                 record_idx += 1
-            
+
         return  etree.ElementTree(root)
         
     # -------------------------------------------------------------------------
