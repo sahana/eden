@@ -126,13 +126,35 @@ class S3DeploymentModel(S3Model):
                                     "location_id",
                                     "code",
                                     "status",
-                                    S3SQLInlineComponent("document",
-                                                         name = "file",
-                                                         label = T("Attachments"),
-                                                         fields = ["file",
-                                                                   "comments",
-                                                                  ],
-                                                         ),
+                                    # Files
+                                    S3SQLInlineComponent(
+                                        "document",
+                                        name = "file",
+                                        label = T("Files"),
+                                        fields = ["file", "comments"],
+                                        filterby = dict(field = "file",
+                                                        options = "",
+                                                        invert = True,
+                                                        )
+                                    ),
+                                    # Links
+                                    S3SQLInlineComponent(
+                                        "document",
+                                        name = "url",
+                                        label = T("Links"),
+                                        fields = ["url", "comments"],
+                                        filterby = dict(field = "url",
+                                                        options = None,
+                                                        invert = True,
+                                                        )
+                                    ),
+                                    #S3SQLInlineComponent("document",
+                                                         #name = "file",
+                                                         #label = T("Attachments"),
+                                                         #fields = ["file",
+                                                                   #"comments",
+                                                                  #],
+                                                         #),
                                     "comments",
                                     "created_on",
                                     )
@@ -215,8 +237,8 @@ class S3DeploymentModel(S3Model):
                                  pagesize = None, # all records
                                  )
 
-        docs_widget = dict(label = "Documents",
-                           title_create = "Add New Document",
+        docs_widget = dict(label = "Documents & Links",
+                           title_create = "Add New Document / Link",
                            type = "datalist",
                            tablename = "doc_document",
                            context = ("~.doc_id", "doc_id"),
@@ -252,6 +274,10 @@ class S3DeploymentModel(S3Model):
                                     options=mission_status_opts,
                                     hidden=True
                                     ),
+                    S3DateFilter("created_on",
+                                 hide_time=True,
+                                 hidden=True
+                                ),
                     ],
                   list_fields = ["name",
                                  (T("Date"), "created_on"),
@@ -278,6 +304,11 @@ class S3DeploymentModel(S3Model):
                              {"name": "table",
                               "label": "Table",
                               "widgets": [{"method": "datatable"}]
+                              },
+                             {"name": "report",
+                              "label": "Report",
+                              "widgets": [{"method": "report2",
+                                           "ajax_init": True}],
                               },
                              {"name": "map",
                               "label": "Map",
@@ -381,14 +412,44 @@ class S3DeploymentModel(S3Model):
                              },
                   create_onaccept = self.deploy_assignment_create_onaccept,
                   update_onaccept = self.deploy_assignment_update_onaccept,
-                  summary = [{"name": "table",
-                              "label": "Table",
-                              "widgets": [{"method": "datatable"}]
-                              },
-                             {"name": "report",
-                              "label": "Report",
-                              "widgets": [{"method": "report2"}]
-                              },                             ],
+                  filter_widgets = [
+                    S3TextFilter(["human_resource_id$person_id$first_name",
+                                  "human_resource_id$person_id$middle_name",
+                                  "human_resource_id$person_id$last_name",
+                                  "mission_id$code",
+                                 ],
+                                 label=T("Search")
+                                ),
+                    S3OptionsFilter("mission_id$event_type_id",
+                                    widget="multiselect",
+                                    hidden=True
+                                   ),
+                    S3LocationFilter("mission_id$location_id",
+                                     label=messages.COUNTRY,
+                                     widget="multiselect",
+                                     levels=["L0"],
+                                     hidden=True
+                                    ),
+                    S3OptionsFilter("job_title_id",
+                                    widget="multiselect",
+                                    hidden=True,
+                                   ),
+                    S3DateFilter("start_date",
+                                 hide_time=True,
+                                 hidden=True,
+                                ),
+                  ],
+                  summary = [
+                      {"name": "table",
+                       "label": "Table",
+                       "widgets": [{"method": "datatable"}]
+                      },
+                      {"name": "report",
+                       "label": "Report",
+                       "widgets": [{"method": "report2",
+                                    "ajax_init": True}]
+                      },
+                  ],
                   )
 
         # Components

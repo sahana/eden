@@ -428,6 +428,55 @@ def customize_deploy_assignment(**attr):
         Customize deploy_assignment controller
     """
 
+    s3db = current.s3db
+    table = s3db.deploy_assignment
+
+    # Labels
+    table.job_title_id.label = T("RDRT Type")
+    table.start_date.label = T("Deployment Date")
+    #table.end_date.label = T("EOM")
+
+    # List fields
+    list_fields = [(T("Operation"), "mission_id$code"),
+                   (T("Country"), "mission_id$location_id"),
+                   (T("Disaster Type"), "mission_id$event_type_id"),
+                   # @todo: replace by date of first alert?
+                   (T("Date"), "mission_id$created_on"),
+                   "job_title_id",
+                   (T("Member"), "human_resource_id$person_id"),
+                   (T("Deploying NS"), "human_resource_id$organisation_id"),
+                   "start_date",
+                   "end_date",
+                   "appraisal.rating",
+                   # @todo: Comments of the mission (=>XLS only)
+                  ]
+
+    # Report options
+    report_fact = [(T("Number of Deployments"), "count(human_resource_id)"),
+                   (T("Average Rating"), "avg(appraisal.rating)"),
+                   ]
+    report_axis = [(T("Operation"), "mission_id$code"),
+                   (T("Country"), "mission_id$location_id"),
+                   (T("Disaster Type"), "mission_id$event_type_id"),
+                   (T("RDRT Type"), "job_title_id"),
+                   (T("Deploying NS"), "human_resource_id$organisation_id"),
+                  ]
+    report_options = Storage(
+        rows=report_axis,
+        cols=report_axis,
+        fact=report_fact,
+        defaults=Storage(rows="mission_id$location_id",
+                         cols="mission_id$event_type_id",
+                         fact="count(human_resource_id)",
+                         totals=True
+                        )
+        )
+            
+    s3db.configure("deploy_assignment",
+                   list_fields=list_fields,
+                   report_options=report_options)
+    
+    
     # CRUD Strings
     current.response.s3.crud_strings["deploy_assignment"] = Storage(
         title_create = T("New Deployment"),
@@ -446,7 +495,6 @@ def customize_deploy_assignment(**attr):
         msg_list_empty = T("No Deployments currently registered"))
 
     return attr
-
 
 settings.ui.customize_deploy_assignment = customize_deploy_assignment
 
@@ -468,7 +516,7 @@ def customize_deploy_mission(**attr):
                                 "a list of possible matches")))
 
     table = s3db.deploy_mission
-    table.code.label = T("Operation Code")
+    table.code.label = T("Operation")
     table.event_type_id.label = T("Disaster Type")
     table.organisation_id.readable = table.organisation_id.writable = False
 
@@ -497,6 +545,33 @@ def customize_deploy_mission(**attr):
                                filterby = "type",
                                filter_opts = (4,),
                                )
+
+    # Report options
+    report_fact = [(T("Number of Missions"), "count(id)"),
+                   (T("Number of Operations"), "count(code)"),
+                   (T("Number of Countries"), "count(location_id)"),
+                   (T("Number of Disaster Types"), "count(event_type_id)"),
+                   (T("Number of Responses"), "sum(response_count)"),
+                   (T("Number of Deployments"), "sum(hrquantity)"),
+                  ]
+    report_axis = ["code",
+                   "location_id",
+                   "event_type_id",
+                   "status",
+                  ]
+    report_options = Storage(
+        rows=report_axis,
+        cols=report_axis,
+        fact=report_fact,
+        defaults=Storage(rows="location_id",
+                         cols="event_type_id",
+                         fact="sum(hrquantity)",
+                         totals=True
+                        )
+        )
+
+    s3db.configure("deploy_mission",
+                   report_options=report_options)
 
     # CRUD Strings
     s3.crud_strings["deploy_assignment"] = Storage(

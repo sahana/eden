@@ -772,7 +772,7 @@
 
             <!-- Link to deployment module -->
             <xsl:if test="col[@field='Deployable'] = 'true'">
-                <resource name="deploy_human_resource_application">
+                <resource name="deploy_application">
                     <data field="active" value="true"/>
                 </resource>
             </xsl:if>
