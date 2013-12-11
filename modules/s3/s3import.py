@@ -1290,7 +1290,7 @@ class S3Importer(S3Method):
             start = None # use default
 
         if not orderby:
-            orderby = ~(resource.table.error)
+            orderby = resource.table.error
 
         data = resource.select(list_fields,
                                start=start,
