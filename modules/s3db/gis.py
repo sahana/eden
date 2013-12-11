@@ -4427,7 +4427,7 @@ class S3POIModel(S3Model):
                                          label = T("Description"),
                                          ),
                              self.gis_location_id(
-                                label = "",
+                                ondelete = "CASCADE",
                                 requires = IS_LAT_LON("gis_poi_location_id"),
                                 widget = S3LocationLatLonWidget(),
                                 ),

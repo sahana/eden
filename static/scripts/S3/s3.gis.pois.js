@@ -41,11 +41,12 @@
         var current_projection = feature.layer.map.getProjectionObject();
         var centerPoint = feature.geometry.getBounds().getCenterLonLat();
         centerPoint.transform(current_projection, proj4326);
-        // Load create form
-        var url = S3.Ap.concat('/gis/poi/create.plain?lat=' + centerPoint.lat + '&lon=' + centerPoint.lon);
-        // Convert geometry back
+        // Build URL for create form
+        var url = S3.Ap.concat('/gis/poi/create.popup?lat=' + centerPoint.lat + '&lon=' + centerPoint.lon);
+        // Convert geometry back for the marker
         centerPoint.transform(proj4326, current_projection);
-        gis.addPopup(feature, url);
+        // Create a iframe in the popup with an iframe
+        gis.addPopup(feature, url, undefined, undefined, true);
     };
 
     /**
