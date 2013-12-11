@@ -4396,6 +4396,10 @@ class S3POIModel(S3Model):
                                       ondelete = "SET NULL",
                                       )
 
+        #self.configure(tablename,
+        #               onaccept = self.gis_poi_type_onaccept,
+        #               )
+
         ADD_POI_TYPE = T("Add PoI Type")
         crud_strings[tablename] = Storage(
             title_create = ADD_POI_TYPE,
@@ -4452,6 +4456,15 @@ class S3POIModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_poi_type_onaccept(form):
+        """
+            @ToDo: Create a Feature Layer for this type
+        """
+
+        return
 
 # =============================================================================
 class S3POIFeedModel(S3Model):
