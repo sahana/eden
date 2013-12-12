@@ -711,7 +711,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                      c="deploy", f="assignment", m="summary"
                    ),
                    M("Sectors",
-                     c="deploy", f="job_title"
+                     c="deploy", f="job_title", restrict=["ADMIN"],
                    ),
                    M("RDRT Members",
                      c="deploy", f="human_resource", m="summary")(

@@ -248,3 +248,7 @@ div.media a.pull-left img.media-object {
 .alert-status {
     padding-left: 20px;
 }
+
+.mission-comments {
+    white-space: pre-wrap;
+}

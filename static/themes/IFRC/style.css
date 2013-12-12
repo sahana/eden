@@ -386,3 +386,8 @@ button.alert-send-btn:enabled {
 .alert-rheader th {
     vertical-align: middle;
 }
+.mission-rheader td,
+.mission-rheader th {
+    padding-top: 0;
+    vertical-align: top;
+}
