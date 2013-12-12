@@ -5735,7 +5735,7 @@ class MAP(DIV):
 
         # Support bookmarks (such as from the control)
         # - these over-ride the arguments
-        vars = request.get_vars
+        get_vars = request.get_vars
 
         # JS Globals
         globals = {}
@@ -5786,14 +5786,14 @@ class MAP(DIV):
             # No bounds or we've been passed bounds which aren't sane
             bbox = None
             # Use Lat/Lon/Zoom to center instead
-            if "lat" in vars and vars.lat:
-                lat = float(vars.lat)
+            if "lat" in get_vars and get_vars.lat:
+                lat = float(get_vars.lat)
             else:
                 lat = opts.get("lat", None)
             if lat is None or lat == "":
                 lat = config.lat
-            if "lon" in vars and vars.lon:
-                lon = float(vars.lon)
+            if "lon" in get_vars and get_vars.lon:
+                lon = float(get_vars.lon)
             else:
                 lon = opts.get("lon", None)
             if lon is None or lon == "":
@@ -5810,8 +5810,8 @@ class MAP(DIV):
             options["lat"] = lat
             options["lon"] = lon
 
-        if "zoom" in vars:
-            zoom = int(vars.zoom)
+        if "zoom" in get_vars:
+            zoom = int(get_vars.zoom)
         else:
             zoom = opts.get("zoom", None)
         if not zoom:
@@ -6157,7 +6157,7 @@ class MAP(DIV):
             layer_types = []
             db = current.db
             ltable = s3db.gis_layer_config
-            etable = s3db.gis_layer_entity
+            etable = db.gis_layer_entity
             query = (etable.id == ltable.layer_id) & \
                     (ltable.config_id == config["id"]) & \
                     (ltable.base == True) & \
