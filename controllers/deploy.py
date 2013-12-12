@@ -155,7 +155,9 @@ def person():
                                             # specified in CSV
                                             dict(label="Type",
                                                  value="volunteer"),
-                                            ]
+                                            ],
+                                      csv_stylesheet = ("hrm", "person.xsl"),
+                                      csv_template = ("deploy", "person"),
                                       )
 
 # -----------------------------------------------------------------------------
@@ -199,6 +201,12 @@ def assignment():
     s3.prep = prep
 
     return s3_rest_controller(hide_filter=False)
+
+# -----------------------------------------------------------------------------
+def job_title():
+    """ RESTful CRUD Controller """
+
+    return s3_rest_controller("hrm", "job_title")
 
 # -----------------------------------------------------------------------------
 def person_search():

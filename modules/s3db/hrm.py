@@ -2030,8 +2030,9 @@ class S3HRSkillModel(S3Model):
                                    label = T("Performance Rating"),
                                    # Default to pass/fail (can override to 5-levels in Controller)
                                    # @ToDo: Build this onaccept of hrm_appraisal
-                                   requires = IS_IN_SET(hrm_pass_fail_opts,
-                                                        zero=None),
+                                   requires = IS_NULL_OR(
+                                                IS_IN_SET(hrm_pass_fail_opts)
+                                                ),
                                    represent = lambda opt: \
                                        hrm_performance_opts.get(opt,
                                                                 UNKNOWN_OPT)),
@@ -5106,7 +5107,7 @@ def hrm_competency_controller():
     return current.rest_controller("hrm", "competency",
                                    # @ToDo: Create these if-required
                                    #csv_stylesheet = ("hrm", "competency.xsl"),
-                                   #csv_template = ("hrm", "competency")
+                                   #csv_template = ("hrm", "competency"),
                                    )
 
 # =============================================================================

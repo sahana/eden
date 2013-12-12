@@ -662,10 +662,32 @@ class S3OptionsMenu(object):
     def deploy(self):
         """ Deployments """
 
-        return M()(
-            M("Human Resources",
-              c="deploy", f="human_resource", m="summary"),
-              )
+        return M()(M("Missions",
+                     c="deploy", f="mission", m="summary")(
+                        M("New", m="create"),
+                   ),
+                   M("Alerts",
+                     c="deploy", f="alert")(
+                        M("New", m="create"),
+                        M("InBox",
+                          c="deploy", f="email_inbox",
+                        ),
+                        M("Settings",
+                          c="deploy", f="email_channel",
+                        ),
+                   ),
+                   M("Assignments",
+                     c="deploy", f="assignment", m="summary"
+                   ),
+                   M("Job Titles",
+                     c="deploy", f="job_title"
+                   ),
+                   M("Human Resources",
+                     c="deploy", f="human_resource", m="summary")(
+                        M("Add Deployables", c="deploy", f="application", m="select"),
+                        M("Import Human Resources", c="deploy", f="person", m="import"),
+                   ),
+                  )
 
     # -------------------------------------------------------------------------
     def doc(self):

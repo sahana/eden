@@ -1222,7 +1222,7 @@ class S3Importer(S3Method):
                    represent={},
                    ajax_item_id=None,
                    dt_bulk_select=[],
-                  ):
+                   ):
         """
             Method to get the data for the dataTable
             This can be either a raw html representation or
@@ -1290,7 +1290,7 @@ class S3Importer(S3Method):
             start = None # use default
 
         if not orderby:
-            orderby = resource.table.error
+            orderby = ~resource.table.error
 
         data = resource.select(list_fields,
                                start=start,

@@ -78,6 +78,7 @@
          Volunteer Cluster..............optional.....volunteer_cluster cluster name
          Volunteer Cluster Position.....optional.....volunteer_cluster cluster_position name
          Deployable.....................optional.....link to deployments module (true|false)
+         Deployable Roles...............optional.....credentials (job_titles for which person is deployable)
 
          Column headers looked up in labels.xml:
 
@@ -453,6 +454,7 @@
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="BranchName" select="col[@field='Branch']/text()"/>
         <xsl:variable name="Teams" select="col[@field='Teams']"/>
+        <xsl:variable name="DeployableRoles" select="col[@field='Deployable Roles']"/>
 
         <xsl:variable name="gender">
             <xsl:call-template name="GetColumnValue">
@@ -624,9 +626,10 @@
                 <xsl:with-param name="skill_list" select="col[@field='Skills']"/>
             </xsl:call-template>
 
-            <!-- Trainings -->
-            <xsl:call-template name="Trainings">
-                <xsl:with-param name="course_list" select="col[@field='Trainings']"/>
+            <!-- Job Roles that a deployable is credentialled for -->
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list"><xsl:value-of select="$DeployableRoles"/></xsl:with-param>
+                <xsl:with-param name="arg">deployablerole_ref</xsl:with-param>
             </xsl:call-template>
 
             <!-- Teams -->
@@ -635,7 +638,18 @@
                 <xsl:with-param name="arg">team</xsl:with-param>
             </xsl:call-template>
 
+            <!-- Trainings -->
+            <xsl:call-template name="Trainings">
+                <xsl:with-param name="course_list" select="col[@field='Trainings']"/>
+            </xsl:call-template>
+
         </resource>
+
+        <!-- Job Roles that a deployable is credentialled for -->
+        <xsl:call-template name="splitList">
+            <xsl:with-param name="list"><xsl:value-of select="$DeployableRoles"/></xsl:with-param>
+            <xsl:with-param name="arg">deployablerole</xsl:with-param>
+        </xsl:call-template>
 
         <!-- Locations -->
         <xsl:if test="$home!='' or col[@field='Home Postcode']!='' or col[@field='Home L4']!='' or col[@field='Home L3']!='' or col[@field='Home L2']!='' or col[@field='Home L1']!=''">
@@ -770,7 +784,7 @@
                 </reference>
             </xsl:if>
 
-            <!-- Link to deployment module -->
+            <!-- Mark as deployable -->
             <xsl:if test="col[@field='Deployable'] = 'true'">
                 <resource name="deploy_application">
                     <data field="active" value="true"/>
@@ -1223,7 +1237,41 @@
         <xsl:param name="arg"/>
 
         <xsl:choose>
-            <!-- Team list -->
+            <!-- Contacts -->
+            <xsl:when test="$arg='email'">
+                <resource name="pr_contact">
+                    <data field="contact_method" value="EMAIL"/>
+                    <data field="value"><xsl:value-of select="$item"/></data>
+                </resource>
+            </xsl:when>
+            <xsl:when test="$arg='mobile_phone'">
+                <resource name="pr_contact">
+                    <data field="contact_method" value="SMS"/>
+                    <data field="value"><xsl:value-of select="$item"/></data>
+                </resource>
+            </xsl:when>
+            <!-- Deployable Roles -->
+            <xsl:when test="$arg='deployablerole'">
+                <resource name="hrm_job_title">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('DeployableRole:', $item)"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$item"/></data>
+                    <!-- Deployable -->
+                    <data field="type">4</data>
+                    <!-- No Organisation -->
+                </resource>
+            </xsl:when>
+            <xsl:when test="$arg='deployablerole_ref'">
+                <resource name="hrm_credential">
+                    <reference field="job_title_id" resource="hrm_job_title">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('DeployableRole:', $item)"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:when>
+            <!-- Teams -->
             <xsl:when test="$arg='team'">
                 <resource name="pr_group_membership">
                     <reference field="group_id" resource="pr_group">
@@ -1236,18 +1284,6 @@
                             <data field="group_type">3</data>
                         </resource>
                     </reference>
-                </resource>
-            </xsl:when>
-            <xsl:when test="$arg='email'">
-                <resource name="pr_contact">
-                    <data field="contact_method" value="EMAIL"/>
-                    <data field="value"><xsl:value-of select="$item"/></data>
-                </resource>
-            </xsl:when>
-            <xsl:when test="$arg='mobile_phone'">
-                <resource name="pr_contact">
-                    <data field="contact_method" value="SMS"/>
-                    <data field="value"><xsl:value-of select="$item"/></data>
                 </resource>
             </xsl:when>
         </xsl:choose>

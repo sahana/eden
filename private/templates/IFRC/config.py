@@ -469,12 +469,13 @@ def customize_deploy_assignment(**attr):
                          cols="mission_id$event_type_id",
                          fact="count(human_resource_id)",
                          totals=True
-                        )
+                         )
         )
             
     s3db.configure("deploy_assignment",
-                   list_fields=list_fields,
-                   report_options=report_options)
+                   list_fields = list_fields,
+                   report_options = report_options,
+                   )
     
     
     # CRUD Strings
@@ -728,11 +729,55 @@ def customize_hrm_job_title(**attr):
         Customize hrm_job_title controller
     """
 
-    # Organisation needs to be an NS/Branch
-    ns_only(current.s3db.hrm_job_title.organisation_id,
-            required=False,
-            branches=False,
-            )
+    s3 = current.response.s3
+    table = current.s3db.hrm_job_title
+    controller = current.request.controller
+    if controller == "deploy":
+        # Filter to just deployables
+        s3.filter = (table.type == 4)
+    else:
+        # Organisation needs to be an NS/Branch
+        ns_only(table.organisation_id,
+                required=False,
+                branches=False,
+                )
+    
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        if controller == "deploy":
+            field = table.type
+            field.default = 4
+            field.readable = field.writable = False
+            table.organisation_id.readable = False
+            table.organisation_id.writable = False
+
+            SECTOR = T("Sector")
+            ADD_SECTOR = T("Add New Sector")
+            help = T("If you don't see the Sector in the list, you can add a new one by clicking link 'Add New Sector'.")
+            s3.crud_strings["hrm_job_title"] = Storage(
+                title_create=T("Add Sector"),
+                title_display=T("Sector Details"),
+                title_list=T("Sectors"),
+                title_update=T("Edit Sector"),
+                title_search=T("Search Sectors"),
+                subtitle_create=ADD_SECTOR,
+                label_list_button=T("List Sectors"),
+                label_create_button=ADD_SECTOR,
+                label_delete_button=T("Delete Sector"),
+                msg_record_created=T("Sector added"),
+                msg_record_modified=T("Sector updated"),
+                msg_record_deleted=T("Sector deleted"),
+                msg_list_empty=T("No Sectors currently registered"))
+
+        return result
+    s3.prep = custom_prep
 
     return attr
 

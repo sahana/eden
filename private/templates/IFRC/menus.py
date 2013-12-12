@@ -693,8 +693,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def deploy(self):
         """ RDRT Alerting and Deployments """
 
-        return M()(
-                   M("Missions",
+        return M()(M("Missions",
                      c="deploy", f="mission", m="summary")(
                         M("New", m="create"),
                    ),
@@ -710,6 +709,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                    ),
                    M("Deployments",
                      c="deploy", f="assignment", m="summary"
+                   ),
+                   M("Sectors",
+                     c="deploy", f="job_title"
                    ),
                    M("RDRT Members",
                      c="deploy", f="human_resource", m="summary")(
