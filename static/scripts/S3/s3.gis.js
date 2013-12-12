@@ -2984,11 +2984,25 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             // gets moved to 'done' inside AjaxS3
             success: function(data) {
                 try {
-                    // Load response into page
+                    // Load response into div
                     $('#' + id).html(data);
                     popup.updateSize();
                     // Resize when images are loaded
                     //popup.registerImageListeners();
+                    // Check for links to load in iframe
+                    $('#' + id + ' a.btn.iframe').click(function() {
+                        var url = $(this).attr('href');
+                        if (url.indexOf('http://') === 0) {
+                            // Use Proxy for remote popups
+                            url = OpenLayers.ProxyHost + encodeURIComponent(url);
+                        }
+                        // Strip the '_contentDiv'
+                        var popup_id = id.slice(0, -11);
+                        var contents = '<iframe src="' + url + '" onload="S3.gis.popupLoaded(\'' + popup_id + '\')" class="loading" marginWidth="0" marginHeight="0" frameBorder="0"></iframe>';
+                        $('#' + id).html(contents);
+                        // Prevent default
+                        return false;
+                    });
                 } catch(e) {
                     // Page is probably trying to load 'local' resources from us
                     // @ToDo: Load in iframe instead...

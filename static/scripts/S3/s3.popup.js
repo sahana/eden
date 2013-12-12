@@ -92,21 +92,44 @@ function s3_popup_refresh_main_form() {
                     }
                 }
                 if (found) {
-                    // Remove the Draft Feature & it's Popup
-                    var features, feature, popup;
-                    var gis_draft_layer = self.parent.i18n.gis_draft_layer;
-                    for (i=0, len=layers.length; i < len; i++) {
-                        layer = layers[i];
-                        if (layer.name == gis_draft_layer) {
-                            features = layer.features;
-                            for (j=features.length - 1; j >=0 ; j--) {
-                                feature = features[j];
-                                popup = feature.popup;
+                    if (document.location.pathname.indexOf('/create') != -1) {
+                        // Remove the Draft Feature & it's Popup
+                        var gis_draft_layer = self.parent.i18n.gis_draft_layer;
+                        for (i=0, len=layers.length; i < len; i++) {
+                            layer = layers[i];
+                            if (layer.name == gis_draft_layer) {
+                                var features = layer.features,
+                                    feature,
+                                    popup;
+                                for (j=features.length - 1; j >= 0; j--) {
+                                    feature = features[j];
+                                    popup = feature.popup;
+                                    map.removePopup(popup);
+                                    popup.destroy();
+                                    delete feature.popup;
+                                    feature.destroy();
+                                }
+                                break;
+                            }
+                        }
+                    } else {
+                        // Remove the Update Popup
+                        /* Not working - for some reason the feature loses its ref to the popup
+                        var features = layer.features,
+                            feature,
+                            popup;
+                        for (j=features.length - 1; j >= 0; j--) {
+                            feature = features[j];
+                            popup = feature.popup;
+                            if (popup) {
                                 map.removePopup(popup);
                                 popup.destroy();
                                 delete feature.popup;
-                                feature.destroy();
                             }
+                        } */
+                        // Close ALL popups
+                        while (map.popups.length) {
+                            map.removePopup(map.popups[0]);
                         }
                     }
                 }

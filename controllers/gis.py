@@ -117,7 +117,8 @@ def define_map(height = None,
 
     if config.wmsbrowser_url:
         wms_browser = {"name" : config.wmsbrowser_name,
-                       "url" : config.wmsbrowser_url}
+                       "url" : config.wmsbrowser_url,
+                       }
     else:
         wms_browser = None
 
@@ -129,7 +130,8 @@ def define_map(height = None,
         print_tool = {}
 
     # Do we allow creation of PoIs from the main Map?
-    pois = settings.get_gis_pois() and auth.s3_has_permission("create", s3db.gis_poi)
+    pois = settings.get_gis_pois() and \
+           auth.s3_has_permission("create", s3db.gis_poi)
     if pois:
         if s3.debug:
             script = "/%s/static/scripts/S3/s3.gis.pois.js" % appname
@@ -2851,6 +2853,7 @@ def poi():
                     if lon is not None:
                         id = s3db.gis_location.insert(lat=lat, lon=lon)
                         field.default = id
+
             elif r.method in ("update", "update.popup"):
                 table = r.table
                 table.location_id.label = ""
@@ -2859,8 +2862,41 @@ def poi():
                 table.created_on.represent = lambda d: \
                     s3base.S3DateTime.date_represent(d)
 
+            elif r.representation == "plain":
+                # Map Popup
+                table = r.table
+                table.created_by.readable = True
+                table.created_on.readable = True
+                table.created_on.represent = lambda d: \
+                    s3base.S3DateTime.date_represent(d)
+                # @ToDo: Allow multiple PoI layers
+                ftable = s3db.gis_layer_feature
+                layer = db(ftable.name == "PoIs").select(ftable.layer_id,
+                                                         limitby=(0, 1)
+                                                         ).first()
+                if layer:
+                    popup_edit_url = r.url(method="update",
+                                           representation="popup",
+                                           vars={'refresh_layer':layer.layer_id},
+                                           )
+                else:
+                    popup_edit_url = r.url(method="update",
+                                           representation="popup",
+                                           )
+                    
+                s3db.configure("gis_poi",
+                               popup_edit_url = popup_edit_url,
+                               )
+
         return True
     s3.prep = prep
+
+    #def postp(r, output):
+    #    if r.representation == "plain":
+    #        # Map Popup
+    #        pass
+    #    return output
+    #s3.postp = postp
 
     return s3_rest_controller()
 

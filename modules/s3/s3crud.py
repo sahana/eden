@@ -573,17 +573,28 @@ class S3CRUD(S3Method):
                                     readonly=True,
                                     format=representation)
 
-                # Details Link
-                popup_url = _config("popup_url", None)
-                if popup_url is None:
-                    popup_url = r.url(method="read", representation="html")
-                if popup_url:
-                    details_btn = A(T("Open"),
-                                    _href=popup_url,
-                                    _class="btn",
-                                    _id="details-btn",
-                                    _target="_blank")
+                # Link to Open record
+                popup_edit_url = _config("popup_edit_url", None)
+                if popup_edit_url:
+                    # Open edit form in iframe
+                    details_btn = A(T("Edit"),
+                                    _href=popup_edit_url,
+                                    _class="btn iframe",
+                                    )
                     output["details_btn"] = details_btn
+                else:
+                    # Open read view in new tab
+                    # Set popup_url to "" to have no button present
+                    popup_url = _config("popup_url", None)
+                    if popup_url is None:
+                        popup_url = r.url(method="read", representation="html")
+                    if popup_url:
+                        details_btn = A(T("Open"),
+                                        _href=popup_url,
+                                        _class="btn",
+                                        _target="_blank",
+                                        )
+                        output["details_btn"] = details_btn
 
                 # Title and subtitle
                 title = self.crud_string(r.tablename, "title_display")
