@@ -2923,7 +2923,7 @@ class S3Resource(object):
         xml.gis_encode(self, record, element, rmap,
                        locations=locations, master=master)
 
-        # Restore user-ID representations
+        # Restore normal user_id representations
         for fn in auth_user_represent:
             ogetattr(table, fn).represent = auth_user_represent[fn]
 

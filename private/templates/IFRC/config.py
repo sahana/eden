@@ -618,6 +618,60 @@ def customize_deploy_mission(**attr):
 settings.ui.customize_deploy_mission = customize_deploy_mission
 
 # -----------------------------------------------------------------------------
+def poi_marker_fn(record):
+    """
+        Function to decide which Marker to use for PoI KML export
+    """
+
+    db = current.db
+    table = db.gis_poi_type
+    type = db(table.id == record.poi_type_id).select(table.name,
+                                                     limitby=(0, 1)
+                                                     ).first()
+    if type:
+        marker = type.name.lower().replace(" ", "_")\
+                                  .replace("_cccm", "_CCCM")\
+                                  .replace("_nfi_", "_NFI_")\
+                                  .replace("_ngo_", "_NGO_")\
+                                  .replace("_wash", "_WASH")
+        marker = "OCHA/%s_40px.png" % marker
+    else:
+        # Fallback
+        marker = "marker_red.png"
+
+    return Storage(image=marker)
+
+# -----------------------------------------------------------------------------
+def customize_gis_poi(**attr):
+    """
+        Customize gis_poi controller
+    """
+
+    s3 = current.response.s3
+
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        if r.representation == "kml":
+            # Custom Marker function
+            current.s3db.configure("gis_poi",
+                                   marker_fn = poi_marker_fn,
+                                   )
+
+        return result
+    s3.prep = custom_prep
+
+    return attr
+
+settings.ui.customize_gis_poi = customize_gis_poi
+
+# -----------------------------------------------------------------------------
 def customize_hrm_certificate(**attr):
     """
         Customize hrm_certificate controller

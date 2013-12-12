@@ -2112,9 +2112,9 @@ class GIS(object):
                                      limitby=(0, 1)).first()
 
         else:
+            # e.g. KML, geoRSS or GPX export
             # e.g. Search results loaded as a Feature Resource layer
             # e.g. Volunteer Layer in Vulnerability module
-            # e.g. KML, geoRSS or GPX export
             controller = request.controller
             function = request.function
             query = (ftable.controller == controller) & \

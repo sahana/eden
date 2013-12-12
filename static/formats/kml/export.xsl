@@ -3,10 +3,9 @@
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
     <!-- **********************************************************************
+         KML Export Templates for Sahana Eden
 
-         KML Export Templates for S3XRC
-
-         Copyright (c) 2010-11 Sahana Software Foundation
+         Copyright (c) 2010-13 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -282,6 +281,47 @@
                             <xsl:value-of select="./data[@field='quantity']/text()"/><xsl:text> </xsl:text><xsl:value-of select="./reference[@field='item_id']/text()"/>
                             <xsl:text>&lt;/td&gt;&lt;/tr&gt;</xsl:text>
                         </xsl:for-each>
+                        <xsl:text>&lt;/table&gt;</xsl:text>
+                    </description>
+
+                    <Point>
+                        <coordinates>
+                            <xsl:value-of select="reference[@field='location_id']/@lon"/>
+                            <xsl:text>,</xsl:text>
+                            <xsl:value-of select="reference[@field='location_id']/@lat"/>
+                        </coordinates>
+                    </Point>
+                </Placemark>
+            </xsl:if>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- Points of Interest -->
+    <xsl:template match="resource[@name='gis_poi']">
+        <xsl:if test="./reference[@field='location_id']">
+            <!-- Skip records without LatLon -->
+            <xsl:if test="./reference[@field='location_id']/@lon != 'null'">
+                <Style><xsl:attribute name="id"><xsl:value-of select="reference[@field='location_id']/@uuid"/></xsl:attribute>
+                    <IconStyle>
+                        <Icon>
+                            <href><xsl:value-of select="reference[@field='location_id']/@marker"/></href>
+                        </Icon>
+                    </IconStyle>
+                </Style>
+                <Placemark>
+                    <name><xsl:value-of select="data[@field='name']"/></name>
+                    <styleUrl>#<xsl:value-of select="reference[@field='location_id']/@uuid"/></styleUrl>
+                    <description>
+                        <xsl:text>&lt;table&gt;</xsl:text>
+                        <xsl:if test="./data[@field='comments'] != 'null'">
+                            <xsl:text>&lt;tr&gt;&lt;td&gt;</xsl:text>
+                            <xsl:value-of select="data[@field='comments']"/>
+                            <xsl:text>&lt;/td&gt;&lt;/tr&gt;</xsl:text>
+                        </xsl:if>
+                        <xsl:text>&lt;tr&gt;&lt;td&gt;&lt;a href=</xsl:text>
+                            <xsl:value-of select="@url"/>
+                        <xsl:text>&gt;Open&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;</xsl:text>
                         <xsl:text>&lt;/table&gt;</xsl:text>
                     </description>
 

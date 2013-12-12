@@ -1004,15 +1004,17 @@ class S3XML(S3Codec):
                                 # so use local URLs to keep filesize down
                                 download_url = "/%s/static/img/markers" % \
                                     request.application
+                                attr[ATTRIBUTE.marker_url] = "%s/%s" % (download_url,
+                                                                        m["image"])
+                                attr[ATTRIBUTE.marker_height] = str(m["height"])
+                                attr[ATTRIBUTE.marker_width] = str(m["width"])
                             else:
                                 # Assume being used outside the Sahana Mapping client
                                 # so use public URLs
                                 download_url = "%s/%s/static/img/markers" % \
                                     (settings.get_base_public_url(), request.application)
-                            attr[ATTRIBUTE.marker_url] = "%s/%s" % (download_url,
+                                attr[ATTRIBUTE.marker] = "%s/%s" % (download_url,
                                                                     m["image"])
-                            attr[ATTRIBUTE.marker_height] = str(m["height"])
-                            attr[ATTRIBUTE.marker_width] = str(m["width"])
 
             if LatLon or polygon:
                 # Build the URL for the onClick Popup contents => only for
