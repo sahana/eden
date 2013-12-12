@@ -18,8 +18,8 @@ def index():
     response.title = module_name
 
     # Read user request
-    vars = request.get_vars
-    config = vars.get("config", None)
+    get_vars = request.get_vars
+    config = get_vars.get("config", None)
     if config:
         try:
             config = int(config)
@@ -27,9 +27,9 @@ def index():
             pass
         else:
             gis.set_config(config)
-    height = vars.get("height", None)
-    width = vars.get("width", None)
-    toolbar = vars.get("toolbar", None)
+    height = get_vars.get("height", None)
+    width = get_vars.get("width", None)
+    toolbar = get_vars.get("toolbar", None)
     if toolbar is None:
         toolbar = settings.get_gis_toolbar()
     elif toolbar == "0":
@@ -37,11 +37,11 @@ def index():
     else:
         toolbar = True
 
-    collapsed = vars.get("collapsed", False)
+    collapsed = get_vars.get("collapsed", False)
     if collapsed:
         collapsed = True
 
-    iframe = vars.get("iframe", False)
+    iframe = get_vars.get("iframe", False)
     if iframe:
         response.view = "gis/iframe.html"
     else:
@@ -147,9 +147,44 @@ def define_map(height = None,
             script = '''S3.gis.pois_layer=%s''' % layer.layer_id
             s3.js_global.append(script)
 
+    # @ToDo: Generalise with feature/tablename?
+    poi = request.get_vars.get("poi", None)
+    if poi:
+        ptable = s3db.gis_poi
+        gtable = db.gis_location
+        query = (ptable.id == poi) & \
+                (ptable.location_id == gtable.id)
+        record = db(query).select(gtable.lat,
+                                  gtable.lon,
+                                  limitby=(0, 1)
+                                  ).first()
+        if record:
+            lat = record.lat
+            lon = record.lon
+            filter_url = "~.id=%s" % poi
+            feature_resources = [dict(name = T("PoI"),
+                                      id = "PoI",
+                                      layer_id = layer.layer_id,
+                                      filter = filter_url,
+                                      active = True,
+                                      ),
+                                 ]
+        else:
+            lat = None
+            lon = None
+            feature_resources = None
+    else:
+        # get_vars checks happen inside s3gis.py
+        lat = None
+        lon = None
+        feature_resources = None
+
     map = gis.show_map(height = height,
                        width = width,
+                       lat = lat,
+                       lon = lon,
                        add_feature = pois,
+                       feature_resources = feature_resources,
                        toolbar = toolbar,
                        wms_browser = wms_browser,
                        legend = legend,
@@ -2891,14 +2926,23 @@ def poi():
         return True
     s3.prep = prep
 
-    #def postp(r, output):
-    #    if r.representation == "plain":
-    #        # Map Popup
-    #        pass
-    #    return output
-    #s3.postp = postp
+    def postp(r, output):
+        if r.interactive:
+            # Normal Action Buttons
+            s3_action_buttons(r, deletable=False)
+            # Custom Action Buttons
+            s3.actions += [dict(label=str(T("Show on Map")),
+                                _class="action-btn",
+                                url=URL(f = "index",
+                                        vars = {"poi": "[id]"},
+                                        )),
+                           ]
+        return output
+    s3.postp = postp
 
-    return s3_rest_controller()
+    dt_bulk_actions = [(T("Delete"), "delete")]
+
+    return s3_rest_controller(dtargs=dict(dt_bulk_actions=dt_bulk_actions))
 
 # =============================================================================
 def display_feature():
