@@ -147,6 +147,7 @@ def define_map(height = None,
             script = '''S3.gis.pois_layer=%s''' % layer.layer_id
             s3.js_global.append(script)
 
+    # @ToDo: Generalise with feature/tablename?
     poi = request.get_vars.get("poi", None)
     if poi:
         ptable = s3db.gis_poi
@@ -2928,7 +2929,7 @@ def poi():
     def postp(r, output):
         if r.interactive:
             # Normal Action Buttons
-            s3_action_buttons(r)
+            s3_action_buttons(r, deletable=False)
             # Custom Action Buttons
             s3.actions += [dict(label=str(T("Show on Map")),
                                 _class="action-btn",
@@ -2939,7 +2940,9 @@ def poi():
         return output
     s3.postp = postp
 
-    return s3_rest_controller()
+    dt_bulk_actions = [(T("Delete"), "delete")]
+
+    return s3_rest_controller(dtargs=dict(dt_bulk_actions=dt_bulk_actions))
 
 # =============================================================================
 def display_feature():
