@@ -883,7 +883,7 @@ def asset_rheader(r):
             NONE = current.messages["NONE"]
 
             if record.type == ASSET_TYPE_VEHICLE:
-                tabs = [(T("Asset Details"), None),
+                tabs = [(T("Asset Details"), None, {"native": True}),
                         (T("Vehicle Details"), "vehicle"),
                         (T("GPS Data"), "gps")]
             else:

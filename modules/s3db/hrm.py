@@ -5329,10 +5329,10 @@ def hrm_human_resource_controller(extra_filter=None):
         if extra_filter is not None:
             r.resource.add_filter(extra_filter)
         method = r.method
+        deploy = r.controller == "deploy"
         if method in ("form", "lookup"):
             return True
         elif method == "profile":
-            deploy = r.controller == "deploy"
             # Configure Widgets
             s3db.pr_address # Load normal model
             list_fields = s3db.get_config("pr_address",
@@ -5480,7 +5480,6 @@ def hrm_human_resource_controller(extra_filter=None):
                            )
         elif method == "summary":
             s3.crud_strings["hrm_human_resource"]["title_list"] = T("Staff & Volunteers")
-            deploy = r.controller == "deploy"
 
             # Which levels of Hierarchy are we using?
             hierarchy = current.gis.get_location_hierarchy()
@@ -5627,7 +5626,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                       ],
                            )
             s3.filter = None
-        elif r.representation in ("geojson", "plain"):
+        elif r.representation in ("geojson", "plain") or deploy:
             # No filter
             pass
         else:
