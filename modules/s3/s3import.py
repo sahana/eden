@@ -2694,7 +2694,7 @@ class S3ImportItem(object):
                          item_id = self.item_id,
                          tablename = self.tablename,
                          record_uid = self.uid,
-                         error = self.error)
+                         error = self.error or "")
         if self.element is not None:
             element_str = current.xml.tostring(self.element,
                                                xml_declaration=False)
